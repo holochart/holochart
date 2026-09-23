@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+.turbo/
+
+# Docs site
+apps/docs/.vitepress/dist/
+apps/docs/.vitepress/cache/
+
+# Tests & benchmarks
+coverage/
+test-results/
+playwright-report/
+tests/visual/__diff__/
+tests/visual/__actual__/
+apps/bench/results/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+.npmrc
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
