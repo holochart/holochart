@@ -10,6 +10,13 @@
  * `configureText({ defaultFontURL })`, or troika's CDN-hosted fallback font when none is configured.
  * Deterministic offline visual tests therefore need a vendored font file (e.g. Inter, OFL-licensed)
  * registered here or set as the default font URL.
+ *
+ * The metrics oracle measures with canvas and CSS fonts, so it must be told which font troika will
+ * actually draw ({@link measurementFace}, plan E2.18): the registered family, else the default font
+ * (registered as a CSS `FontFace` under {@link DEFAULT_FONT_CSS_FAMILY}), else troika's CDN fallback
+ * font (registered lazily under {@link TROIKA_FALLBACK_CSS_FAMILY}). Measuring the CSS family list
+ * instead would pick whatever system font matches, which differs from what is drawn and across
+ * platforms.
  */
 
 /** CSS font weight: a number in 1–1000, or the `normal` (400) / `bold` (700) keywords. */
@@ -52,13 +59,29 @@ export interface RegisterFontOptions {
 }
 
 interface Face {
+  /** Family name as registered (original case). */
+  family: string;
   url: string;
   weight: number;
   style: TextFontStyle;
 }
 
+/** A registered face chosen for a font request (see {@link resolveFontFace}). */
+export interface ResolvedFontFace {
+  /** Registered family name. */
+  family: string;
+  /** Font file URL. */
+  url: string;
+  /** Weight of the registered face (not necessarily the requested one). */
+  weight: number;
+  /** Style of the registered face. */
+  style: TextFontStyle;
+}
+
 const registry = new Map<string, Face[]>();
 const listeners = new Set<() => void>();
+/** Memo of {@link measurementFace}, cleared on every font change (registration, load). */
+const measurementFaces = new Map<string, MeasurementFace>();
 
 /** CSS generic family keywords: never quoted, never registered. */
 const GENERIC_FAMILIES = new Set([
@@ -161,6 +184,7 @@ export function registerFont(
 ): () => void {
   const key = face.family.trim().toLowerCase();
   const entry: Face = {
+    family: face.family.trim(),
     url: face.url,
     weight: normalizeFontWeight(face.weight),
     style: normalizeFontStyle(face.style),
@@ -190,15 +214,15 @@ export function clearFontRegistry(): void {
 }
 
 /**
- * Resolve a CSS family list to a registered font URL: the first registered family in the list wins,
+ * Resolve a CSS family list to a registered face: the first registered family in the list wins,
  * then the best face by style (exact, else the other style) and weight ({@link fontWeightRank}).
  * Returns `undefined` when no family is registered, meaning "use troika's default font".
  */
-export function resolveFontURL(
+export function resolveFontFace(
   family: string,
   weight?: TextFontWeight,
   style?: TextFontStyle,
-): string | undefined {
+): ResolvedFontFace | undefined {
   const w = normalizeFontWeight(weight);
   const s = normalizeFontStyle(style);
   for (const name of parseFontFamilyList(family)) {
@@ -213,9 +237,238 @@ export function resolveFontURL(
         best = face;
       }
     }
-    if (best) return best.url;
+    if (best) return { ...best };
   }
   return undefined;
+}
+
+/**
+ * Resolve a CSS family list to a registered font URL ({@link resolveFontFace}). Returns `undefined`
+ * when no family is registered, meaning "use troika's default font".
+ */
+export function resolveFontURL(
+  family: string,
+  weight?: TextFontWeight,
+  style?: TextFontStyle,
+): string | undefined {
+  return resolveFontFace(family, weight, style)?.url;
+}
+
+// ---- Default font and measurement faces (E2.18) -------------------------------------------------
+
+/**
+ * CSS family under which the default font (`configureText({ defaultFontURL })`) is registered as a
+ * `FontFace`, so the canvas metrics oracle can measure with it. Internal: not meant for figures.
+ */
+export const DEFAULT_FONT_CSS_FAMILY = 'holochart-default';
+
+/**
+ * CSS family under which troika's CDN fallback font (Latin, sans-serif) is registered when no
+ * default font URL is configured. Internal: not meant for figures.
+ */
+export const TROIKA_FALLBACK_CSS_FAMILY = 'holochart-troika-fallback';
+
+/**
+ * troika's default `unicodeFontsURL` (unicode-font-resolver data, troika-three-text 0.52). Must
+ * track troika's version: the fallback faces below point at the same files troika downloads.
+ */
+export const TROIKA_UNICODE_FONTS_URL =
+  'https://cdn.jsdelivr.net/gh/lojjic/unicode-font-resolver@v1.0.1/packages/data';
+
+/**
+ * Code points of unicode-font-resolver's `latin` font (its `font-meta/latin.json`). Other scripts
+ * resolve to other fonts in troika; for those the canvas falls through to the CSS family list.
+ */
+const TROIKA_LATIN_RANGE =
+  'U+0-FF,U+131,U+152-153,U+2BB-2BC,U+2C6,U+2DA,U+2DC,U+300-301,U+303-304,U+308-309,U+323,' +
+  'U+329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD';
+
+/** Weights the `latin` sans-serif typeform ships in, both upright and italic. */
+const TROIKA_LATIN_WEIGHTS = [100, 200, 300, 400, 500, 600, 700, 800, 900] as const;
+
+/** The face the metrics oracle should measure a font request with ({@link measurementFace}). */
+export interface MeasurementFace {
+  /** CSS family list to measure with: the drawn font first, then the requested list as fallback. */
+  family: string;
+  weight: number;
+  style: TextFontStyle;
+  /**
+   * Which font troika draws: a registered family, the configured default font, or troika's CDN
+   * fallback font.
+   */
+  source: 'registered' | 'default' | 'troika';
+}
+
+interface DefaultFontState {
+  url: string;
+  cssFace: FontFace | null;
+}
+
+let defaultFont: DefaultFontState | null = null;
+let unicodeFontsURL = TROIKA_UNICODE_FONTS_URL;
+let troikaFaces: FontFace[] | null = null;
+
+/**
+ * Record the default font URL (troika's `defaultFontURL`, used for every unregistered family) and
+ * register it as a CSS `FontFace` under {@link DEFAULT_FONT_CSS_FAMILY} (browsers only), so text is
+ * measured with the font that is drawn. `configureText` calls this; call it directly only when
+ * configuring troika yourself. `null` forgets the default (troika's CDN fallback font applies).
+ *
+ * The face is loaded eagerly: `document.fonts` reports `loading` meanwhile (charts wait for it),
+ * and font-change subscribers are notified when it has loaded.
+ */
+export function setDefaultFontURL(url: string | null): void {
+  if ((defaultFont?.url ?? null) === url) return;
+  if (defaultFont?.cssFace && typeof document !== 'undefined') {
+    document.fonts?.delete(defaultFont.cssFace);
+  }
+  // troika draws every weight and style of an unregistered family with this one file (it never
+  // synthesizes bold or italic), so one upright 400 face describes it exactly.
+  defaultFont =
+    url === null
+      ? null
+      : {
+          url,
+          cssFace: addCSSFontFace(
+            DEFAULT_FONT_CSS_FAMILY,
+            url,
+            {
+              weight: '400',
+              style: 'normal',
+            },
+            true,
+          ),
+        };
+  notifyFontChange();
+}
+
+/** The configured default font URL, or `undefined` when troika's CDN fallback font applies. */
+export function getDefaultFontURL(): string | undefined {
+  return defaultFont?.url;
+}
+
+/**
+ * Record troika's `unicodeFontsURL` (where its fallback fonts come from), so the CDN fallback faces
+ * registered for measurement point at the same files. `configureText` calls this.
+ */
+export function setUnicodeFontsURL(url: string | null): void {
+  const next = (url ?? TROIKA_UNICODE_FONTS_URL).replace(/\/+$/, '');
+  if (next === unicodeFontsURL) return;
+  unicodeFontsURL = next;
+  if (troikaFaces && typeof document !== 'undefined') {
+    for (const face of troikaFaces) document.fonts?.delete(face);
+  }
+  troikaFaces = null;
+  notifyFontChange();
+}
+
+/**
+ * The weight troika's unicode-font-resolver picks for a requested weight: the nearest available
+ * one, the lighter on ties (it scans ascending and keeps strictly closer matches).
+ */
+export function troikaFallbackWeight(weight: TextFontWeight | undefined): number {
+  const w = normalizeFontWeight(weight);
+  let best: number = TROIKA_LATIN_WEIGHTS[0];
+  for (const candidate of TROIKA_LATIN_WEIGHTS) {
+    if (Math.abs(candidate - w) < Math.abs(best - w)) best = candidate;
+  }
+  return best;
+}
+
+/**
+ * The face to measure a font request with, i.e. the font troika will draw it with (plan E2.18):
+ *
+ * 1. A registered family ({@link resolveFontFace}): its name and the registered face's weight and
+ *    style (troika draws that file as is, without synthesizing bold or italic).
+ * 2. Else, with a default font URL: {@link DEFAULT_FONT_CSS_FAMILY} at 400/normal.
+ * 3. Else troika's CDN fallback font: {@link TROIKA_FALLBACK_CSS_FAMILY} at troika's nearest
+ *    weight and the requested style. The CSS faces are registered lazily on first use (browsers
+ *    only) and download only when the canvas measures with them, from the same URLs troika uses.
+ *
+ * The requested family list follows the drawn family as a CSS fallback, so measurements taken before
+ * a face has loaded use the requested font rather than the browser default (the cache is cleared
+ * when the face loads). Results are memoized until the next font change.
+ */
+export function measurementFace(face: Omit<TextFont, 'size'>): MeasurementFace {
+  const key = `${normalizeFontStyle(face.style)}|${normalizeFontWeight(face.weight)}|${face.family}`;
+  const hit = measurementFaces.get(key);
+  if (hit) return hit;
+  const requested = cssFontFamily(face.family);
+  let out: MeasurementFace;
+  const registered = resolveFontFace(face.family, face.weight, face.style);
+  if (registered) {
+    out = {
+      family: `${cssFontFamily(registered.family)}, ${requested}`,
+      weight: registered.weight,
+      style: registered.style,
+      source: 'registered',
+    };
+  } else if (defaultFont) {
+    out = {
+      family: `${DEFAULT_FONT_CSS_FAMILY}, ${requested}`,
+      weight: 400,
+      style: 'normal',
+      source: 'default',
+    };
+  } else {
+    ensureTroikaFallbackFaces();
+    out = {
+      family: `${TROIKA_FALLBACK_CSS_FAMILY}, ${requested}`,
+      weight: troikaFallbackWeight(face.weight),
+      style: normalizeFontStyle(face.style),
+      source: 'troika',
+    };
+  }
+  measurementFaces.set(key, out);
+  return out;
+}
+
+/** Register troika's Latin CDN fallback faces as lazily loading CSS font faces (once). */
+function ensureTroikaFallbackFaces(): void {
+  if (troikaFaces) return;
+  troikaFaces = [];
+  for (const style of ['normal', 'italic'] as const) {
+    for (const weight of TROIKA_LATIN_WEIGHTS) {
+      // Same naming as unicode-font-resolver: font-files/<id>/<category>.<style>.<weight>.woff.
+      const url = `${unicodeFontsURL}/font-files/latin/sans-serif.${style}.${weight}.woff`;
+      const face = addCSSFontFace(
+        TROIKA_FALLBACK_CSS_FAMILY,
+        url,
+        { weight: String(weight), style, unicodeRange: TROIKA_LATIN_RANGE },
+        false,
+      );
+      if (face) troikaFaces.push(face);
+    }
+  }
+}
+
+/**
+ * Add a CSS font face to `document.fonts` (browsers only) and notify font-change subscribers once
+ * it has loaded. `eager` starts the download now; otherwise the browser loads it when text is first
+ * measured or drawn with it. Returns `null` where CSS font faces are unavailable or rejected.
+ */
+function addCSSFontFace(
+  family: string,
+  url: string,
+  descriptors: FontFaceDescriptors,
+  eager: boolean,
+): FontFace | null {
+  if (typeof FontFace === 'undefined' || typeof document === 'undefined' || !document.fonts) {
+    return null;
+  }
+  try {
+    const cssFace = new FontFace(family, `url(${JSON.stringify(url)})`, descriptors);
+    document.fonts.add(cssFace);
+    // A failed load only affects metrics accuracy (the requested family list is measured instead);
+    // troika reports its own font errors.
+    const noop = (): void => undefined;
+    if (eager) cssFace.load().then(notifyFontChange, noop);
+    else cssFace.loaded.then(notifyFontChange, noop);
+    return cssFace;
+  } catch {
+    // Invalid descriptors or CSP restrictions: metrics fall back to the requested family list.
+    return null;
+  }
 }
 
 /**
@@ -228,23 +481,15 @@ export function subscribeFontChanges(listener: () => void): () => void {
 }
 
 function notifyFontChange(): void {
+  measurementFaces.clear();
   for (const listener of listeners) listener();
 }
 
 function loadCSSFontFace(face: RegisteredFontFace, entry: Face): void {
-  if (typeof FontFace === 'undefined' || typeof document === 'undefined' || !document.fonts) {
-    return;
-  }
-  try {
-    const cssFace = new FontFace(face.family.trim(), `url(${JSON.stringify(face.url)})`, {
-      weight: String(entry.weight),
-      style: entry.style,
-    });
-    document.fonts.add(cssFace);
-    cssFace.load().then(notifyFontChange, () => {
-      // A failed CSS load only affects metrics accuracy; troika reports its own font errors.
-    });
-  } catch {
-    // Invalid descriptors or CSP restrictions: metrics fall back to the browser's fallback font.
-  }
+  addCSSFontFace(
+    entry.family,
+    face.url,
+    { weight: String(entry.weight), style: entry.style },
+    true,
+  );
 }

@@ -471,11 +471,18 @@ describe('simplify (min/max decimation)', () => {
     expect(p.x.length).toBeLessThan(N);
   });
 
-  it('keeps buckets stable under a pure offset of x (pan)', () => {
+  it('uses absolute px columns: whole-column shifts and trimmed ends keep the other buckets', () => {
     const a = buildLinePath(dx, dy, opts({ simplify: true }));
-    const shifted = dx.map((v) => v + 0.375);
+    // A shift by whole columns keeps every bucket's points.
+    const shifted = dx.map((v) => v + 3);
     const b = buildLinePath(shifted, dy, opts({ simplify: true }));
     expect(Array.from(b.y)).toEqual(Array.from(a.y));
+    // Dropping points from the front (a rolling window) only changes the first column.
+    const k = 300; // mid-column
+    const c = buildLinePath(dx.slice(k), dy.slice(k), opts({ simplify: true }));
+    const col = Math.floor(dx[k]!);
+    const tail = (p: typeof a) => Array.from(p.x).findIndex((v) => Math.floor(v) > col);
+    expect(Array.from(c.y.subarray(tail(c)))).toEqual(Array.from(a.y.subarray(tail(a))));
   });
 });
 

@@ -82,6 +82,8 @@ export interface LabelItem {
   angle: number;
   font: TextFont;
   color: RGBA;
+  /** Alignment of the lines of a multi-line label (default: follows `anchorX`). */
+  align?: 'left' | 'center' | 'right';
 }
 
 /** Where an axis (or a mirror of it) is drawn. */

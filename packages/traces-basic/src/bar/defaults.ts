@@ -72,6 +72,7 @@ export function supplyBarDefaults(
   ctx.coerce('width');
   ctx.coerce('offsetgroup');
   ctx.coerce('alignmentgroup');
+  ctx.coerce('zorder');
 
   ctx.coerce('text');
   ctx.coerce('texttemplate');

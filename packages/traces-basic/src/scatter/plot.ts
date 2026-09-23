@@ -12,6 +12,8 @@ import {
   createTextPrimitive,
   LinePrimitive,
   type DataTransform,
+  type MarkerData,
+  type MarkerPatch,
   type MarkerSet,
   type Primitive,
   type RGBA,
@@ -23,6 +25,7 @@ import {
   formatTemplate,
   type AxisInfo,
   type TemplateContext,
+  type TraceAppend,
   type TracePlotContext,
   type TraceRenderer,
   type TraceUpdatePlan,
@@ -30,9 +33,12 @@ import {
 } from '@mk7s/holochart-runtime';
 import { toRGBA } from '@mk7s/holochart-core';
 import { ErrorBarLayer, errorBarStyle } from '../shared/error-bars/index.ts';
+import { traceRenderOrder } from '../shared/render-order.ts';
 import type { ScatterCalc } from './calc.ts';
+import { windowChange } from './calc-stream.ts';
 import { hasLines, hasMarkers, hasText } from './defaults.ts';
-import { buildLinePath, needsRebuild, pathDependsOnScale, type LineShape } from './line-path.ts';
+import { needsRebuild, pathDependsOnScale, type LineShape } from './line-path.ts';
+import { LinePathStream } from './line-stream.ts';
 import { lineStyle, markerStyle, traceOpacity } from './style.ts';
 import { lineCount, plainText, textPlacement, TEXT_LINE_HEIGHT } from './text-position.ts';
 
@@ -44,12 +50,7 @@ export { markerStyle } from './style.ts';
  */
 const LAYER = { errorBars: 0.1, line: 0.2, markers: 0.3, text: 0.4 } as const;
 
-/** Render order of a trace: `zorder` first (higher on top), then trace order (plan E2.14). */
-export function traceRenderOrder(trace: FullTrace, index: number): number {
-  const z = typeof trace['zorder'] === 'number' ? trace['zorder'] : 0;
-  // Trace indices stay far below 1e4 in practice; zorder dominates, ties keep trace order.
-  return z * 1e4 + index;
-}
+export { traceRenderOrder };
 
 // ---- Lines ------------------------------------------------------------------------------------
 
@@ -243,14 +244,98 @@ function markerPositions(
   return { x, y };
 }
 
+/** Whether `v` holds one value per point (as opposed to one value for all). */
+function perPoint(v: unknown): v is ArrayLike<unknown> {
+  return (
+    typeof v === 'object' && v !== null && typeof (v as { length?: unknown }).length === 'number'
+  );
+}
+
+function sliceOf<T>(v: T, a: number, b: number): T {
+  if (!perPoint(v)) return v;
+  if (ArrayBuffer.isView(v)) return (v as unknown as Float32Array).subarray(a, b) as T;
+  return Array.prototype.slice.call(v, a, b) as T;
+}
+
+/**
+ * Per-point colors are `Float32Array`s (4 per point); a single color is an RGBA tuple, which is an
+ * array too but applies to every point.
+ */
+function sliceColor<T>(v: T, a: number, b: number): T {
+  return v instanceof Float32Array ? (v.subarray(4 * a, 4 * b) as T) : v;
+}
+
+/** Marker data of points `[a, b)` for `MarkerSet.patch` (per-point fields sliced). */
+function markerSlice(
+  calc: ScatterCalc,
+  style: Partial<MarkerData>,
+  a: number,
+  b: number,
+): MarkerPatch {
+  return {
+    x: calc.x.subarray(a, b),
+    y: calc.y.subarray(a, b),
+    ...(style.size !== undefined ? { size: sliceOf(style.size, a, b) } : {}),
+    ...(style.color !== undefined ? { color: sliceColor(style.color, a, b) } : {}),
+    ...(style.colorValues ? { colorValues: sliceOf(style.colorValues, a, b) } : {}),
+    ...(style.lineColor !== undefined ? { lineColor: sliceColor(style.lineColor, a, b) } : {}),
+    ...(style.lineWidth !== undefined ? { lineWidth: sliceOf(style.lineWidth, a, b) } : {}),
+    ...(style.symbol !== undefined ? { symbol: sliceOf(style.symbol, a, b) } : {}),
+    ...(style.opacity !== undefined ? { opacity: sliceOf(style.opacity, a, b) } : {}),
+    ...(style.angle !== undefined ? { angle: sliceOf(style.angle, a, b) } : {}),
+  };
+}
+
+/** Hidden markers (NaN positions) for `n` instances. */
+function hidden(n: number): MarkerPatch {
+  const nan = new Float64Array(n).fill(NaN);
+  return { x: nan, y: nan };
+}
+
+/**
+ * `data` with `front` hidden instances before every point (room for prepends, E7.2): per-point
+ * fields get neutral values there.
+ */
+function padFront(data: Partial<MarkerData>, front: number): Partial<MarkerData> {
+  if (front === 0) return data;
+  const out: Record<string, unknown> = { ...data };
+  for (const [key, value] of Object.entries(data)) {
+    const color = key === 'color' || key === 'lineColor';
+    if (!perPoint(value) || key === 'nanColor' || key === 'colorscale' || key === 'origin')
+      continue;
+    // A single color (RGBA tuple) applies to every point: nothing to pad.
+    if (color && !(value instanceof Float32Array)) continue;
+    const stride = color ? 4 : 1;
+    const src = value as ArrayLike<unknown>;
+    if (ArrayBuffer.isView(src)) {
+      const ctor = (src as unknown as Float64Array).constructor as Float64ArrayConstructor;
+      const padded = new ctor(front * stride + src.length);
+      if (key === 'x' || key === 'y' || key === 'colorValues') padded.fill(NaN, 0, front * stride);
+      padded.set(src as unknown as Float64Array, front * stride);
+      out[key] = padded;
+    } else {
+      const fill = key === 'x' || key === 'y' || key === 'colorValues' ? NaN : 0;
+      out[key] = [...new Array<unknown>(front * stride).fill(fill), ...Array.from(src)];
+    }
+  }
+  return out as Partial<MarkerData>;
+}
+
 // ---- View -------------------------------------------------------------------------------------
 
 class ScatterView implements TraceView<ScatterCalc> {
   #errors: { x?: ErrorBarLayer; y?: ErrorBarLayer } = {};
   #line: LinePrimitive | undefined;
+  /** The line's vertex path, kept incrementally while streaming (E7.2). */
+  #path = new LinePathStream();
   /** Scales the line path was built for, when it depends on them (spline, decimation). */
-  #lineScales: { scaleX: number; scaleY: number } | undefined;
+  #lineScales: { scaleX: number; scaleY: number; spline: boolean } | undefined;
   #markers: MarkerSet | undefined;
+  /**
+   * Marker instances of points `[0, n)` are `[#markerHead, #markerHead + n)`; instances outside
+   * are hidden. Streaming (E7.2) slides this window instead of rewriting every instance.
+   */
+  #markerHead = 0;
   #text: TextPrimitive | undefined;
 
   constructor(ctx: TracePlotContext<ScatterCalc>) {
@@ -258,6 +343,10 @@ class ScatterView implements TraceView<ScatterCalc> {
   }
 
   update(ctx: TracePlotContext<ScatterCalc>, plan: TraceUpdatePlan): void {
+    if (plan.append && this.#append(ctx, plan.append)) {
+      if (plan.transform) this.#setTransform(ctx);
+      return;
+    }
     if (plan.calc || plan.plot) {
       this.#sync(ctx);
       return;
@@ -266,12 +355,9 @@ class ScatterView implements TraceView<ScatterCalc> {
     if (plan.transform) this.#setTransform(ctx);
   }
 
-  /** Create, remove or fully refresh every primitive to match the trace. */
-  #sync(ctx: TracePlotContext<ScatterCalc>): void {
+  /** Create, remove or refresh the error bar layers. */
+  #syncErrorBars(ctx: TracePlotContext<ScatterCalc>, order: number): void {
     const { trace, calc } = ctx;
-    const order = traceRenderOrder(trace, ctx.index);
-    const mode = trace['mode'];
-
     for (const letter of ['x', 'y'] as const) {
       const bars = letter === 'x' ? calc.errorX : calc.errorY;
       let layer = this.#errors[letter];
@@ -290,6 +376,104 @@ class ScatterView implements TraceView<ScatterCalc> {
       }
       layer.renderOrder = order + LAYER.errorBars;
     }
+  }
+
+  /**
+   * Streaming update (E7.2): upload only what the added and removed points change — marker
+   * instances at the ends of a sliding window, the line's vertex stream around the retained part
+   * — instead of redrawing the trace. Error bars and text labels are refreshed whole (they are
+   * rarely streamed). Returns false when the change needs a full sync (primitives to create or
+   * remove, `maxdisplayed`, an active selection).
+   */
+  #append(ctx: TracePlotContext<ScatterCalc>, append: TraceAppend): boolean {
+    const { trace, calc } = ctx;
+    const mode = trace['mode'];
+    if (calc.length === 0 || (ctx.selectedPoints ?? null) !== null) return false;
+    if (hasLines(mode) !== (this.#line !== undefined)) return false;
+    if (hasMarkers(mode) !== (this.#markers !== undefined)) return false;
+    if (hasText(mode) !== (this.#text !== undefined)) return false;
+    const maxdisplayed = (trace['marker'] as { maxdisplayed?: unknown } | undefined)?.maxdisplayed;
+    if (typeof maxdisplayed === 'number' && maxdisplayed > 0) return false;
+    const change = windowChange(append);
+    const order = traceRenderOrder(trace, ctx.index);
+
+    this.#syncErrorBars(ctx, order);
+
+    const line = this.#line;
+    if (line) {
+      const opts = lineOptions(trace, ctx.transform);
+      const built = this.#lineScales;
+      const stale =
+        built !== undefined &&
+        needsRebuild(built, { scaleX: opts.scaleX, scaleY: opts.scaleY }, { spline: built.spline });
+      const retain = stale ? undefined : this.#path.edit(calc.x, calc.y, change);
+      if (retain) line.splice(this.#path.x, this.#path.y, retain);
+      else line.update(stale ? this.#linePath(ctx) : { x: this.#path.x, y: this.#path.y });
+      this.#noteLineScales();
+    }
+
+    const markers = this.#markers;
+    if (markers) {
+      const style = markerStyle(trace, { calc, fullLayout: ctx.fullLayout, selectedPoints: null });
+      const colorscale = style.colorValues != null && style.colorscale != null;
+      const n = calc.length;
+      let head = this.#markerHead;
+      let end = head + append.previous;
+      if (colorscale !== markers.colorscaleMode || change.frontAdded > head) {
+        // Room for prepends is made by a full rewrite with hidden instances in front.
+        this.#markersFull(ctx, style, change.frontAdded > 0 ? n : 0);
+      } else {
+        if (change.frontRemoved > 0) {
+          markers.patch(head, change.frontRemoved, hidden(change.frontRemoved));
+          head += change.frontRemoved;
+        }
+        if (change.endRemoved > 0) {
+          markers.patch(end - change.endRemoved, change.endRemoved, hidden(change.endRemoved));
+          end -= change.endRemoved;
+        }
+        if (change.frontAdded > 0) {
+          head -= change.frontAdded;
+          markers.patch(head, change.frontAdded, markerSlice(calc, style, 0, change.frontAdded));
+        }
+        if (change.endAdded > 0) {
+          markers.patch(end, change.endAdded, markerSlice(calc, style, n - change.endAdded, n));
+        }
+        this.#markerHead = head;
+        if (colorscale) {
+          markers.update({
+            cmin: style.cmin!,
+            cmax: style.cmax!,
+            cmid: null,
+            reversescale: style.reversescale ?? false,
+          });
+        }
+        // Once the hidden instances outnumber the points, rewrite compactly (amortized O(1)).
+        if (markers.count - n > n + 64) this.#markersFull(ctx, style, 0);
+      }
+    }
+
+    this.#text?.update({ labels: this.#labels(ctx) });
+    return true;
+  }
+
+  /** Rewrite every marker instance, with `front` hidden instances first (room for prepends). */
+  #markersFull(
+    ctx: TracePlotContext<ScatterCalc>,
+    style: Partial<MarkerData>,
+    front: number,
+  ): void {
+    const data = { ...markerPositions(ctx.trace, ctx.calc), ...style };
+    this.#markers!.update(padFront(data, front));
+    this.#markerHead = front;
+  }
+
+  /** Create, remove or fully refresh every primitive to match the trace. */
+  #sync(ctx: TracePlotContext<ScatterCalc>): void {
+    const { trace, calc } = ctx;
+    const order = traceRenderOrder(trace, ctx.index);
+    const mode = trace['mode'];
+
+    this.#syncErrorBars(ctx, order);
 
     if (hasLines(mode) && calc.length > 0) {
       this.#line ??= this.#add(ctx, new LinePrimitive(ctx.primitives));
@@ -301,18 +485,17 @@ class ScatterView implements TraceView<ScatterCalc> {
     }
 
     if (hasMarkers(mode)) {
-      const data = {
-        ...markerPositions(trace, calc),
-        ...markerStyle(trace, {
-          calc,
-          fullLayout: ctx.fullLayout,
-          selectedPoints: ctx.selectedPoints ?? null,
-        }),
-      };
+      const style = markerStyle(trace, {
+        calc,
+        fullLayout: ctx.fullLayout,
+        selectedPoints: ctx.selectedPoints ?? null,
+      });
       if (!this.#markers) {
+        const data = { ...markerPositions(trace, calc), ...style };
         this.#markers = this.#add(ctx, createMarkers(ctx.primitives, data));
+        this.#markerHead = 0;
       } else {
-        this.#markers.update(data);
+        this.#markersFull(ctx, style, 0);
       }
       this.#markers.object.renderOrder = order + LAYER.markers;
     } else {
@@ -340,13 +523,19 @@ class ScatterView implements TraceView<ScatterCalc> {
       this.#errors[letter]?.update({ style: errorBarStyle(trace, letter) });
     }
     this.#line?.update(lineStyle(trace));
-    this.#markers?.update(
-      markerStyle(trace, {
+    if (this.#markers) {
+      const style = markerStyle(trace, {
         calc,
         fullLayout: ctx.fullLayout,
         selectedPoints: ctx.selectedPoints ?? null,
-      }),
-    );
+      });
+      // Per-point styles are indexed by point: a streamed (slid) window is rewritten aligned.
+      if (this.#markerHead !== 0 || this.#markers.count !== calc.length) {
+        this.#markersFull(ctx, style, 0);
+      } else {
+        this.#markers.update(style);
+      }
+    }
     // Labels are matched by layout, so a recolor re-packs colors without re-typesetting.
     this.#text?.update({ labels: this.#labels(ctx) });
   }
@@ -357,7 +546,8 @@ class ScatterView implements TraceView<ScatterCalc> {
     this.#errors.y?.setTransform(t);
     if (this.#line) {
       const scales = { scaleX: Math.abs(t.scaleX), scaleY: Math.abs(t.scaleY) };
-      if (!synced && this.#lineScales && needsRebuild(this.#lineScales, scales)) {
+      const built = this.#lineScales;
+      if (!synced && built && needsRebuild(built, scales, { spline: built.spline })) {
         this.#line.update(this.#linePath(ctx));
       }
       this.#line.setTransform(t);
@@ -367,12 +557,22 @@ class ScatterView implements TraceView<ScatterCalc> {
   }
 
   #linePath(ctx: TracePlotContext<ScatterCalc>): { x: Float64Array; y: Float64Array } {
-    const opts = lineOptions(ctx.trace, ctx.transform);
-    const path = buildLinePath(ctx.calc.x, ctx.calc.y, opts);
-    this.#lineScales = pathDependsOnScale(opts, path.decimated)
-      ? { scaleX: opts.scaleX, scaleY: opts.scaleY }
-      : undefined;
-    return { x: path.x, y: path.y };
+    this.#path.rebuild(ctx.calc.x, ctx.calc.y, lineOptions(ctx.trace, ctx.transform));
+    this.#noteLineScales();
+    return { x: this.#path.x, y: this.#path.y };
+  }
+
+  /** Remember the scales the path was built for when its shape depends on them. */
+  #noteLineScales(): void {
+    const opts = this.#path.options;
+    this.#lineScales =
+      opts && pathDependsOnScale(opts, this.#path.decimated)
+        ? {
+            scaleX: opts.scaleX,
+            scaleY: opts.scaleY,
+            spline: opts.shape === 'spline' && opts.smoothing > 0,
+          }
+        : undefined;
   }
 
   #labels(ctx: TracePlotContext<ScatterCalc>): TextLabel[] {

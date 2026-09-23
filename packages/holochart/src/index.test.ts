@@ -16,6 +16,10 @@ describe('@mk7s/holochart bundle', () => {
       Holochart.restyle,
       Holochart.relayout,
       Holochart.update,
+      Holochart.extendTraces,
+      Holochart.prependTraces,
+      Holochart.fromJSON,
+      Holochart.chartToJSON,
       Holochart.purge,
       Holochart.supplyDefaults,
     ]) {

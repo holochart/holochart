@@ -10,9 +10,9 @@ This tutorial builds a small chart with a line trace and a bar trace, then updat
 for clicks. It takes about five minutes.
 
 ::: info Status
-`createChart` is the chart runtime being built in milestone M1. The code on this page shows the
-API as it will ship in the first alpha. See [Installation](/getting-started/installation) for how
-to try Holochart from source today.
+Holochart is pre-alpha. Everything on this page runs today; see
+[Installation](/getting-started/installation) for how to use it from source until the first alpha
+is published.
 :::
 
 ## 1. Add a container
@@ -68,7 +68,9 @@ const chart = createChart(el, {
 });
 ```
 
-Because both traces have a `name`, the legend shows both.
+Because both traces have a `name`, the legend shows both. Bars always draw below lines and
+markers, as in Plotly, so the line stays visible even though the bar trace comes later. To change
+that, give a trace a higher `zorder`.
 
 ## 4. Add titles
 
@@ -90,6 +92,10 @@ const chart = createChart(el, {
 behavior, not appearance. See [Core concepts](/getting-started/core-concepts) for the difference
 between layout and config.
 
+This is the chart so far, live. Hover a point, drag to zoom, and double-click to zoom back out:
+
+<Example id="line/with-bars" />
+
 ## 5. Update the chart
 
 Change trace data or style with `chart.update`. The second argument picks which traces to change:
@@ -106,6 +112,14 @@ chart.relayout({ 'xaxis.range': [0, 6], 'title.text': 'Weekly traffic (updated)'
 
 Holochart works out which stages of its pipeline an update touches and re-runs only those. A
 color change restyles the existing GPU buffers. A data change recomputes that trace.
+
+Every update method returns a promise that resolves once the new frame is drawn, and
+`chart.ready` does the same for the first frame:
+
+```ts
+await chart.ready;
+await chart.update({ data: [{ y: [4, 2, 5, 3, 6] }] }, { traces: [0] });
+```
 
 ## 6. Listen for clicks
 
@@ -133,15 +147,12 @@ chart.destroy();
 ## What is underneath
 
 Every chart is drawn with a small set of GPU primitives: instanced markers, screen-space lines,
-rectangles, arcs, fills, and text. The demo below shows the marker primitive on its own, with
-different symbols. It is what the GPU marker primitive underneath looks like; chart-level live
-examples arrive with the M1 runtime.
-
-<Example id="_dev/markers-symbols" />
+rectangles, and text, all in one WebGL canvas. The figure you pass is the whole description of
+the chart: it is plain data, so you can build it on a server or store it as JSON.
 
 ## Next steps
 
 - [Core concepts](/getting-started/core-concepts): the figure model, schema, and pipeline
-- [Scatter](/charts/basic/scatter), [Line](/charts/basic/line), and [Bar](/charts/basic/bar)
-  chart pages
+- [Scatter](/charts/basic/scatter), [Line](/charts/basic/line), [Bar](/charts/basic/bar), and
+  [Horizontal bar](/charts/basic/horizontal-bar) chart pages
 - [Layout attribute reference](/reference/layout) and [config reference](/reference/config)

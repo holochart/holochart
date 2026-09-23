@@ -198,6 +198,12 @@ export const barAttributes = attr.object(
       editType: 'calc',
       description: 'Shrink labels (inside, outside, or both) so they are no larger than their bar.',
     }),
+    zorder: attr.integer({
+      dflt: 0,
+      editType: 'plot',
+      description:
+        'Stacking order among the traces of a subplot: higher is drawn on top. At equal `zorder`, bars draw below scatter traces (Plotly’s layer order), then in trace order.',
+    }),
     cliponaxis: attr.boolean({
       dflt: true,
       editType: 'plot',

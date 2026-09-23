@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { clearFontRegistry, registerFont, type TextFont } from './text-fonts.ts';
+import {
+  DEFAULT_FONT_CSS_FAMILY,
+  TROIKA_FALLBACK_CSS_FAMILY,
+  clearFontRegistry,
+  registerFont,
+  setDefaultFontURL,
+  type TextFont,
+} from './text-fonts.ts';
 import {
   TEXT_DEFAULT_LINE_HEIGHT,
   TEXT_ELLIPSIS,
@@ -10,9 +17,11 @@ import {
   fallbackCharWidth,
   getDefaultFontMetricsOracle,
   measureText,
+  renderedTextFace,
   setDefaultFontMetricsOracle,
   textFaceKey,
   wrapText,
+  type TextFace,
   type TextMeasurer,
 } from './text-metrics.ts';
 
@@ -205,5 +214,118 @@ describe('default oracle', () => {
     setDefaultFontMetricsOracle(custom);
     expect(getDefaultFontMetricsOracle()).toBe(custom);
     expect(measureText('abc', { family: 'x', size: 2 }).width).toBe(6);
+  });
+});
+
+describe('measuring with the rendered font (E2.18)', () => {
+  /** A canvas-like measurer recording the faces it is asked to measure. */
+  function recordingMeasurer(kind = 'canvas') {
+    const faces: TextFace[] = [];
+    const m: TextMeasurer = {
+      kind,
+      width(text, face) {
+        faces.push(face);
+        // Width depends on the family so a changed resolution is observable.
+        return text.length * (face.family.startsWith('"Inter"') ? 0.5 : 0.6);
+      },
+      vertical(face) {
+        faces.push(face);
+        return { ascent: 0.9, descent: 0.2 };
+      },
+    };
+    return { m, faces };
+  }
+
+  afterEach(() => setDefaultFontURL(null));
+
+  it('measures unregistered families with the default font', () => {
+    setDefaultFontURL('default.woff');
+    const { m, faces } = recordingMeasurer();
+    const o = createFontMetricsOracle({ measurer: m });
+    o.measureText('Legend', {
+      family: '"Open Sans", verdana, arial, sans-serif',
+      size: 12,
+      weight: 700,
+    });
+    expect(faces.map((f) => f.family)).toEqual([
+      `${DEFAULT_FONT_CSS_FAMILY}, "Open Sans", "verdana", "arial", sans-serif`,
+      `${DEFAULT_FONT_CSS_FAMILY}, "Open Sans", "verdana", "arial", sans-serif`,
+    ]);
+    // troika draws every weight of an unregistered family with the one default file.
+    expect(faces.every((f) => f.weight === 400 && f.style === 'normal')).toBe(true);
+  });
+
+  it("measures with troika's fallback font when no default font is configured", () => {
+    const { m, faces } = recordingMeasurer();
+    createFontMetricsOracle({ measurer: m }).measureWidth('x', { family: 'Open Sans', size: 10 });
+    expect(faces[0]).toEqual({
+      family: `${TROIKA_FALLBACK_CSS_FAMILY}, "Open Sans"`,
+      weight: 400,
+      style: 'normal',
+    });
+  });
+
+  it('keeps registered families (with the registered face)', () => {
+    setDefaultFontURL('default.woff');
+    registerFont({ family: 'Inter', url: 'inter.woff' }, { cssFontFace: false });
+    registerFont({ family: 'Inter', url: 'bold.woff', weight: 700 }, { cssFontFace: false });
+    const { m, faces } = recordingMeasurer();
+    const o = createFontMetricsOracle({ measurer: m });
+    expect(o.measureWidth('abcd', { family: 'Inter', size: 10, weight: 'bold' })).toBeCloseTo(20);
+    expect(faces[0]).toEqual({ family: '"Inter", "Inter"', weight: 700, style: 'normal' });
+  });
+
+  it('keys the cache by the resolved face, so registrations take effect without clear()', () => {
+    setDefaultFontURL('default.woff');
+    const { m } = recordingMeasurer();
+    const o = createFontMetricsOracle({ measurer: m });
+    const f: TextFont = { family: 'Inter', size: 10 };
+    expect(o.measureWidth('abcd', f)).toBeCloseTo(24);
+    registerFont({ family: 'Inter', url: 'inter.woff' }, { cssFontFace: false });
+    expect(o.measureWidth('abcd', f)).toBeCloseTo(20);
+  });
+
+  it('leaves non-canvas measurers (the deterministic fallback) unchanged', () => {
+    setDefaultFontURL('default.woff');
+    const { m, faces } = recordingMeasurer('fallback');
+    createFontMetricsOracle({ measurer: m }).measureWidth('x', {
+      family: 'Open Sans',
+      size: 10,
+      weight: 'bold',
+    });
+    expect(faces[0]).toEqual({ family: 'Open Sans', size: 10, weight: 'bold' });
+    // Bold stays wider in the fallback, as before.
+    const fb = createFontMetricsOracle({ measurer: createFallbackTextMeasurer() });
+    expect(fb.measureWidth('Hello', { family: 'x', size: 10, weight: 'bold' })).toBeGreaterThan(
+      fb.measureWidth('Hello', { family: 'x', size: 10 }),
+    );
+  });
+
+  it('supports a custom face resolver, or none', () => {
+    const { m, faces } = recordingMeasurer();
+    createFontMetricsOracle({ measurer: m, resolveFace: null }).measureWidth('x', font);
+    createFontMetricsOracle({
+      measurer: m,
+      resolveFace: (face) => ({ ...face, family: 'Custom' }),
+    }).measureWidth('x', font);
+    expect(faces.map((f) => f.family)).toEqual(['sans-serif', 'Custom']);
+  });
+
+  it('renderedTextFace drops the source tag', () => {
+    setDefaultFontURL('default.woff');
+    expect(renderedTextFace({ family: 'x', weight: 300 })).toEqual({
+      family: `${DEFAULT_FONT_CSS_FAMILY}, "x"`,
+      weight: 400,
+      style: 'normal',
+    });
+  });
+
+  it('the default oracle clears its cache when the default font changes or loads', () => {
+    const o = getDefaultFontMetricsOracle();
+    const clear = vi.spyOn(o, 'clear');
+    setDefaultFontURL('default.woff');
+    expect(clear).toHaveBeenCalledTimes(1);
+    setDefaultFontURL(null);
+    expect(clear).toHaveBeenCalledTimes(2);
   });
 });

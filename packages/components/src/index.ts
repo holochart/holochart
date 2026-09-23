@@ -1,10 +1,13 @@
 /**
- * @mk7s/holochart-components — figure components (axes, title, legend, modebar, …; plan E3.4, E5).
+ * @mk7s/holochart-components — figure components (axes, title, legend, colorbar, annotations,
+ * modebar, …; plan E3.4, E5).
  * Each is a runtime `ComponentModule`; register them with `register(...)`, or all via
  * `builtinComponents`.
  */
 import type { Registrable } from '@mk7s/holochart-runtime';
+import { annotationsComponent } from './annotations/annotations.ts';
 import { axesComponent } from './axes/axes.ts';
+import { colorbarComponent } from './colorbar/colorbar.ts';
 import { legendComponent } from './legend/legend.ts';
 import { modebarComponent } from './modebar/index.ts';
 import { titleComponent } from './title/title.ts';
@@ -47,6 +50,68 @@ export { legendAttributes, supplyLegendDefaults } from './legend/schema.ts';
 export type { FullLegend } from './legend/schema.ts';
 export { legendToggle } from './legend/toggle.ts';
 
+// Colorbar (E5.3)
+export { buildColorbarScenes, colorbarComponent } from './colorbar/colorbar.ts';
+export {
+  colorbarEntries,
+  colorbarMarginPush,
+  fullColorbar,
+  gradientRects,
+  layoutColorbar,
+} from './colorbar/layout.ts';
+export type {
+  ColorbarEntry,
+  ColorbarEnv,
+  ColorbarScene,
+  FullColorbar,
+  ModuleOf,
+} from './colorbar/layout.ts';
+
+// Annotations (E5.4)
+export {
+  annotationBatches,
+  annotationsComponent,
+  annotationsOf,
+  buildAnnotationGeometries,
+} from './annotations/annotations.ts';
+export type { AnnotationBatches } from './annotations/annotations.ts';
+export {
+  annotationGeometry,
+  ARROWHEADS,
+  arrowGeometry,
+  hitAnnotation,
+  parseRef,
+  pxToRef,
+  refToPx,
+  resolveAnchors,
+} from './annotations/layout.ts';
+export type {
+  AnnotationEnv,
+  AnnotationGeometry,
+  ArrowGeometry,
+  ArrowOptions,
+  AxisRef,
+  DragOffset,
+  ParsedRef,
+  Point,
+  RotatedBox,
+} from './annotations/layout.ts';
+export {
+  annotationItemAttributes,
+  annotationsAttributes,
+  supplyAnnotationDefaults,
+} from './annotations/schema.ts';
+export type { FullAnnotation } from './annotations/schema.ts';
+
+// Placement shared by boxed components
+export {
+  anchorFraction,
+  anchoredMarginPush,
+  anchoredOrigin,
+  anchorPoint,
+} from './shared/placement.ts';
+export type { AnchoredBox } from './shared/placement.ts';
+
 // Modebar (E5.8)
 export * from './modebar/index.ts';
 
@@ -58,6 +123,8 @@ export { plainText } from './shared/text.ts';
 export const builtinComponents: readonly Registrable[] = [
   axesComponent,
   titleComponent,
+  colorbarComponent,
   legendComponent,
+  annotationsComponent,
   modebarComponent,
 ];

@@ -112,7 +112,7 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
 
   const charts: Item[] = [
     { text: 'Overview', link: '/charts/' },
-    { text: 'Basic', items: pages('charts/basic/', ['scatter', 'line', 'bar']) },
+    { text: 'Basic', items: pages('charts/basic/', ['scatter', 'line', 'bar', 'horizontal-bar']) },
   ];
 
   const manifest = readJson<ReferenceManifest>(

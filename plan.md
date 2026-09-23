@@ -615,9 +615,9 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] GPU picking render target: renders ID-encoded colors in a 1×1 or small region around the cursor. Read back asynchronously with PBO/fence where available.
 - [x] Unified `pick(x, y) → { traceIndex, pointIndex, distance }[]` API
 
-#### E2.14 — Transparency & draw ordering   `P1` `M`   deps: E2.4, E2.11
+#### E2.14 — Transparency & draw ordering   `P1` `M`   deps: E2.4, E2.11   · 🟡 Partial (M1 wave 3)
 > As an end user, I want overlapping translucent traces to composite correctly, so that charts look right.
-- [ ] Trace order = render order for 2D (`renderOrder` from trace index, with `zorder` attribute support)
+- [x] 2D draw order matches Plotly (`plots/cartesian`): `zorder` groups first, then Plotly's trace-type layer order (bars below scatter), then trace order; `zorder` on scatter and bar (`traces-basic/src/shared/render-order.ts`)
 - [ ] 3D: sort transparent objects. Optional weighted-blended OIT for dense translucent meshes (`P2`).
 
 #### E2.15 — Resource manager   `P0` `S`   deps: E2.1   · ✅ Done (M0)
@@ -631,11 +631,11 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] Fix the single in-flight/queued pick logic (latest request must always resolve), and move it into the runtime's hover pipeline (E6.1) rather than each example
 - [x] Interaction test (E20.4) that sweeps the pointer and checks every readout matches a fresh pick
 
-#### E2.18 — Text metrics must match the rendered font   `P1` `S`   deps: E2.9
+#### E2.18 — Text metrics must match the rendered font   `P1` `S`   deps: E2.9   · ✅ Done (M1 wave 3)
 > As a developer using the default fonts, I want text measured with the font that is actually drawn, so that margins, legends, and labels are never clipped or misplaced.
 - [x] Re-run layout when web fonts finish loading, and make `chart.ready` wait for in-flight fonts — done 2026-09-23 (PR #8): legends measured with a fallback font were clipped ("2025 targe…") and baselines differed between macOS and Linux CI
-- [ ] When a trace or layout font family isn't registered, troika draws with the default font (Inter in the examples) but the metrics oracle measures the CSS family (`"Open Sans", verdana, arial, sans-serif`), i.e. whatever system font matches. Make the oracle measure with the font troika will use (e.g. register the default font under an internal CSS family and fall back to it)
-- [ ] Ship a default font with the library (or document that one must be registered) so out-of-the-box charts measure and render identically on every platform
+- [x] When a trace or layout font family isn't registered, troika draws with the default font (Inter in the examples) but the metrics oracle measures the CSS family (`"Open Sans", verdana, arial, sans-serif`), i.e. whatever system font matches. Make the oracle measure with the font troika will use (e.g. register the default font under an internal CSS family and fall back to it) — done: `configureText({ defaultFontURL })` also registers a `holochart-default` face; unregistered families measure with it (`_dev/text-default-font` fails at 1.8 % without the fix)
+- [x] Ship a default font with the library (or document that one must be registered) so out-of-the-box charts measure and render identically on every platform — decided: with no default font configured, troika's CDN fallback faces are registered for measuring (loaded on first use); offline/deterministic use must register a font (documented). Bundling a font remains open
 
 #### E2.16 — Shared renderer / context pooling   `P2` `M`   deps: E2.3
 > As a developer building a dashboard with 50 charts, I want charts to share a WebGL context, so that I don't hit the browser context limit.
@@ -769,17 +769,17 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] Scrolling when the content exceeds `maxheight` — *deferred: `maxheight` clips; scrolling later*
 - [ ] Pie/funnelarea/sunburst: legend entries per label — *deferred: comes with those traces (M2+)*
 
-#### E5.3 — Colorbar   `P0` `M`   deps: E3.3, E2.12
+#### E5.3 — Colorbar   `P0` `M`   deps: E3.3, E2.12   · ✅ Done (M1 wave 3)
 > As a developer, I want colorbars for colorscaled traces, so that color encodings are readable.
-- [ ] Full axis-like tick API (reuse E3.3) plus `thickness`, `thicknessmode`, `len`, `lenmode`, `x`, `y`, `xanchor`, `yanchor`, `orientation`, `outlinecolor`, `outlinewidth`, `bgcolor`, `title.{text, side, font}`
-- [ ] Shared `layout.coloraxis` so multiple traces use one colorbar
-- [ ] Discrete (stepped) colorscales render as blocks
+- [x] Full axis-like tick API (reuse E3.3) plus `thickness`, `thicknessmode`, `len`, `lenmode`, `x`, `y`, `xanchor`, `yanchor`, `orientation`, `outlinecolor`, `outlinewidth`, `bgcolor`, `title.{text, side, font}` — deferred: `tickformatstops`, minor ticks, `labelalias`, dragging (`edits.colorbarPosition`)
+- [x] Shared `layout.coloraxis` so multiple traces use one colorbar
+- [x] Discrete (stepped) colorscales render as blocks
 
-#### E5.4 — Annotations   `P0` `M`   deps: E2.9, E2.5
+#### E5.4 — Annotations   `P0` `M`   deps: E2.9, E2.5   · 🟡 Partial (M1 wave 3)
 > As a developer, I want text annotations with optional arrows anchored to data or paper, so that I can call out insights.
-- [ ] `annotations[]: { text, x, y, xref, yref, xanchor, yanchor, xshift, yshift, showarrow, ax, ay, axref, ayref, arrowhead (0–8), arrowsize, arrowwidth, arrowcolor, arrowside, startarrowhead, standoff, startstandoff, bgcolor, bordercolor, borderwidth, borderpad, font, align, valign, textangle, width, height, opacity, visible, clicktoshow, captureevents, hovertext, hoverlabel }`
-- [ ] Draggable when `config.editable` (moves the text and/or arrow tail)
-- [ ] 3D scene annotations (anchored to 3D points, projected to screen). See E14.1.
+- [x] `annotations[]: { text, x, y, xref, yref, xanchor, yanchor, xshift, yshift, showarrow, ax, ay, axref, ayref, arrowhead (0–8), arrowsize, arrowwidth, arrowcolor, arrowside, startarrowhead, standoff, startstandoff, bgcolor, bordercolor, borderwidth, borderpad, font, align, valign, textangle, width, height, opacity, visible, clicktoshow, captureevents, hovertext, hoverlabel }` — arrowhead 8 (undefined in Plotly) draws a bar; deferred: drawing `hovertext` labels
+- [x] Draggable when `config.editable` (moves the text and/or arrow tail) — written, with `clickannotation` and `clicktoshow`, but **no interaction test yet** (carry-forward)
+- [ ] 3D scene annotations (anchored to 3D points, projected to screen). See E14.1. — *M6*
 
 #### E5.5 — Shapes   `P0` `M`   deps: E2.5, E2.6
 > As a developer, I want lines, rectangles, circles, and SVG paths drawn in data or paper coordinates, so that I can mark thresholds and regions.
@@ -893,11 +893,11 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `null` resets to the default. `undefined` is ignored.
 - [x] Every call returns a Promise that resolves after render
 
-#### E7.2 — Streaming data (`extendTraces` / `prependTraces`)   `P0` `M`   deps: E7.1, E2.4, E2.5
+#### E7.2 — Streaming data (`extendTraces` / `prependTraces`)   `P0` `M`   deps: E7.1, E2.4, E2.5   · 🟡 Partial (M1 wave 3)
 > As a developer building real-time dashboards, I want to append points with a rolling window, so that live data renders at 60 fps.
-- [ ] `extendTraces(update, indices, maxPoints)`. GPU buffers use a ring buffer with partial uploads.
-- [ ] Incremental autorange and incremental spatial-index updates
-- [ ] Benchmark: 10 traces × 10k points appending 100 points/frame at 60 fps
+- [x] `extendTraces(update, indices, maxPoints)`. GPU buffers use a ring buffer with partial uploads. — done with sliding buffers (spare room, one relocation when full), `MarkerSet.patch` and `LinePrimitive.splice` (only vertices near the edit are rebuilt); `TraceUpdatePlan.append`, optional `calcAppend`/`extremesAppend`; unusual cases fall back to a full recalc. Error bars, text, dashes and decimated splines are still refreshed whole
+- [x] Incremental autorange and incremental spatial-index updates — autorange merges new extremes (full recompute only when a trimmed point was an extreme); the hover index rebuilds lazily on the next hover
+- [ ] Benchmark: 10 traces × 10k points appending 100 points/frame at 60 fps — *page ready (`_dev/streaming`); measured CPU-only (jsdom) at ~1.4 ms/frame vs ~5.5 ms for a full restyle; GPU measurement in the M7 benchmarking pass*
 
 #### E7.3 — Attribute transitions   `P1` `L`   deps: E7.1
 > As a developer, I want `layout.transition = { duration, easing, ordering }` to animate between states, so that updates feel smooth.
@@ -1023,7 +1023,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `x`, `y`, `x0`/`dx`, `y0`/`dy` (implicit coordinates), `ids`, `text`, `customdata`, `meta`, `uid`
 - [x] `mode` flaglist (`'markers'`, `'lines'`, `'text'`, combinations, `'none'`). Default: `'lines+markers'` below 20 points, else `'lines'` (Plotly rule).
 - [x] `marker.{symbol, size, sizemode: 'diameter' | 'area', sizeref, sizemin, color, opacity, angle, angleref, standoff, line.{color, width}, gradient.{type, color}, maxdisplayed}` (arrayOk where Plotly allows it) — `gradient`, `angleref` and `standoff` deferred (gradient needs a marker shader change)
-- [x] `marker.color` numeric arrays → colorscale with `colorscale`, `cmin`, `cmax`, `cmid`, `cauto`, `reversescale`, `showscale`, `colorbar`, `coloraxis` — color mapping done; the colorbar itself is E5.3 (wave 3)
+- [x] `marker.color` numeric arrays → colorscale with `colorscale`, `cmin`, `cmax`, `cmid`, `cauto`, `reversescale`, `showscale`, `colorbar`, `coloraxis` — color mapping done; colorbar done in E5.3 (wave 3)
 - [x] `opacity`, `visible: true | false | 'legendonly'`, `xaxis`/`yaxis` refs, `zorder`
 - [x] Selection styling (E6.3) and hover `closest`/`x`/`y`
 
@@ -1053,16 +1053,16 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] Size legend (a Holochart extension: `marker.sizelegend: { values, title }`), `P2`
 - [ ] Docs: bubble, bubble with colorscale, packed bubble recipe
 
-#### E9.6 — Dot plots & dumbbell / lollipop recipes   `P1` `S`   deps: E9.1, E3.6
+#### E9.6 — Dot plots & dumbbell / lollipop recipes   `P1` `S`   deps: E9.1, E3.6   · 🟡 Partial (M1 wave 3)
 > As an analyst, I want documented recipes for dot, dumbbell, and lollipop charts, so that I can build them from scatter + shapes.
-- [ ] Cleveland dot plot, dumbbell (lines connecting pairs), lollipop (error-bar stems or shapes) examples
+- [x] Cleveland dot plot, dumbbell (lines connecting pairs), lollipop (error-bar stems or shapes) examples — `examples/recipes/`
 - [ ] Optional helper `Holochart.recipes.dumbbell(...)`
 
 #### E9.7 — Error bars   `P0` `M`   deps: E9.1, E2.5   · ✅ Done (M1 wave 2)
 > As a scientist, I want error bars on points and bars, so that I can show uncertainty.
 - [x] `error_x`/`error_y`: `{ visible, type: 'percent' | 'constant' | 'sqrt' | 'data', symmetric, array, arrayminus, value, valueminus, traceref, tracerefminus, thickness, width, color, copy_ystyle }`
 - [x] Shared component used by `scatter`, `bar`, `histogram`, and `scatter3d` (`error_z`) — scatter and bar use it; histogram and scatter3d when they land
-- [ ] Continuous error bands recipe (fill between) in docs — *deferred: docs recipe comes with the chart pages (wave 3)*
+- [x] Continuous error bands recipe (fill between) in docs — done (M1 wave 3) with dense capless error bars and bound lines until `fill` lands (E9.4, M2)
 
 #### E9.8 — `bar`: basic vertical & horizontal   `P0` `L`   deps: E2.7, E3.6   · ✅ Done (M1 wave 2)
 > As a developer, I want bar charts in both orientations with full styling, so that I can compare categories.
@@ -1077,7 +1077,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `layout.barmode: 'group' | 'stack' | 'relative' | 'overlay'`, `bargap`, `bargroupgap`, `barnorm: '' | 'fraction' | 'percent'`
 - [x] `offsetgroup` and `alignmentgroup` for mixed grouping across traces and subplots
 - [x] Cross-trace calc (stacking) shared with histogram, funnel, and waterfall — shared `stack` helper; traces in the `'bar-like'` group stack together
-- [ ] Stacked totals labels recipe — *deferred: docs recipe (wave 3)*
+- [x] Stacked totals labels recipe — done (M1 wave 3): a text-only scatter trace at each stack total
 
 #### E9.10 — `bar`: 3D-native extrusion   `P2` `M`   deps: E9.8, E8.9
 > As a designer, I want bars with physical depth, rounded bevels, and lighting, so that I can create 3D-styled bar charts in 2D subplots.
@@ -1518,9 +1518,9 @@ Customization is a **cascade**. Each layer overrides the one above it:
 > As a developer, I want OffscreenCanvas rendering in a worker, so that the main thread is free.
 - [ ] `config.offscreen: true` path (no DOM text; interaction proxied via messages)
 
-#### E16.9 — Line primitive memory & dash cost   `P2` `M`   deps: E2.5
+#### E16.9 — Line primitive memory & dash cost   `P2` `M`   deps: E2.5   · 🟡 Partial (M1 wave 3)
 > As a developer plotting dense lines, I want line geometry and dashes to cost closer to `Line2`, so that 1M-segment charts stay smooth.
-- [ ] Count first, then allocate: `buildLineLayout` sizes for 2n vertices rounded to a power of two (2.6× over-allocation on 100k series; 110 MB for 10 × 100k)
+- [x] Count first, then allocate: `buildLineLayout` sizes for 2n vertices rounded to a power of two (2.6× over-allocation on 100k series; 110 MB for 10 × 100k) — done (M1 wave 3): buffers sized from the exact vertex count
 - [ ] Pack per-vertex colors as normalized u8 and skip them when one color is used
 - [ ] Cheaper dashes: look up the dash interval for the fragment's segment instead of looping over the pattern
 - [ ] Target (spike B, safe runner): ≤ 2× `Line2` GPU time solid, ≤ 3× dashed at 1M segments (today 5× / 10×)
@@ -1590,10 +1590,11 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] Exact for 2D primitives. 3D subplots embedded as raster images.
 - [ ] PDF via svg → pdf (e.g. `svg2pdf.js`)
 
-#### E18.3 — JSON serialization   `P0` `S`   deps: E1.1
+#### E18.3 — JSON serialization   `P0` `S`   deps: E1.1   · 🟡 Partial (M1 wave 3)
 > As a developer, I want `chart.toJSON()` and `Holochart.fromJSON()`, so that figures can be saved, shared, and reloaded.
-- [ ] Typed arrays encoded as base64 `{ dtype, bdata, shape }` (compatible with Plotly's encoding)
-- [ ] Functions warned about and evaluated (E8.6). Round-trip test over every example.
+- [x] Typed arrays encoded as base64 `{ dtype, bdata, shape }` (compatible with Plotly's encoding) — checked against plotly.js `lib/array.js`; `chart.toJSON()` (also via `JSON.stringify(chart)`), `chartToJSON`, `figureFromJSON`, `fromJSON`
+- [x] Functions warned about and evaluated (E8.6) — per-point (`arrayOk`) functions of registered traces are evaluated into arrays; all others (e.g. `config.renderHover`) are dropped; one warning per path
+- [ ] Round-trip test over every example — *deferred: examples build their figure inside `run(el)`; needs examples to export their figure*
 
 #### E18.4 — Plotly figure importer   `P1` `L`   deps: most trace epics
 > As a Plotly user, I want to load existing Plotly JSON figures, so that migrating is easy.
@@ -1811,7 +1812,7 @@ docs/
 > As a developer, I want to import only the traces I use, so that my bundle stays small.
 - [x] `import { createChart, register } from '@mk7s/holochart-runtime'; import { scatter, bar } from '@mk7s/holochart-traces-basic'; register(scatter, bar);` (core stays renderer-free, ADR-019)
 - [ ] Prebuilt CDN bundles: `holochart-basic`, `holochart-cartesian`, `holochart-3d`, `holochart-full` — *deferred: only the full IIFE so far*
-- [x] Size budgets (min+gz, excluding three): core+scatter ≤ 90 KB, basic ≤ 150 KB, full ≤ 450 KB — enforced by `pnpm size` and the CI bundle-size job; partial budgets raised to 165 / 200 kB after wave 2 (see E21.5)
+- [x] Size budgets (min+gz, excluding three): core+scatter ≤ 90 KB, basic ≤ 150 KB, full ≤ 450 KB — enforced by `pnpm size` and the CI bundle-size job; partial budgets raised to 165 / 200 kB after wave 2 and `basic` to 215 kB after wave 3 (see E21.5)
 
 #### E21.2 — Versioning & compatibility policy   `P0` `S`   · ✅ Done (M1 wave 1)
 - [x] SemVer. Deprecations live at least one minor version with console warnings before removal. Supported three.js range documented and tested in CI (min and latest).
@@ -1932,6 +1933,16 @@ gantt
 - Spikes ([docs/spikes](docs/spikes/README.md)): A, B, and E measured. **Deferred to the M7 benchmarking pass (by decision):** C (text, ADR-005), D (viewports, ADR-004). ADR-004 and ADR-005 stay Proposed until then.
 - Fixed after close-out: spike B's critical line GPU cost (a 1×1 default resolution made every quad cover the canvas when `setViewport` was missed; all primitives now sync from the renderer) and the join cracks. Carried forward: line GPU cost is ~5–10× `Line2` and geometry is over-allocated (E16); marker fill cost was cut from 3.5× to 1.4–1.7× a trivial shader by shader specialization (spike A); '@'-prefixed literal strings are re-read as dataset refs (E1.6).
 
+**M1 — First Plot: waves 1–3 done; exit review 2026-09-23** (PRs #7, #8 and the wave-3 PR).
+
+- Done in M1: every wave in §11.2. Wave 3 added the colorbar (E5.3), annotations (E5.4, partial), streaming (E7.2, partial), JSON (E18.3, partial), the text-metrics fix (E2.18), Plotly draw order (E2.14, 2D part), and the complete Scatter, Line, Bar and Horizontal bar docs pages with recipes (E19.4, E9.6, E9.7, E9.9).
+- Exit criteria:
+  - Public alpha: ⏳ the packages build, pass the bundle smoke test and are ready to publish as `0.1.0-alpha`, but nothing is on npm yet (needs the npm token set up for `release:publish`).
+  - Docs site live with scatter/line/bar pages: ✅ pages complete (9 complete pages, 0 lint errors); goes live on the next `pnpm docs:publish --deploy`.
+  - Attribute reference generated: ✅ (now includes `marker.colorbar`, `zorder` on bar, annotations).
+- Budget: the `basic` partial bundle grew to 209.6 kB gzipped with colorbar, annotations and streaming; its budget was raised to 215 kB by decision (core + scatter stays 165 kB, ~3 % headroom). E21.5 (diet) is due before M2.
+- Carry-forward (not blocking the alpha): an interaction test for annotation drag, `clickannotation` and `clicktoshow`; `categoryorder: 'total ascending'/'total descending'` (accepted but ignored); `<b>`/`<i>` in scatter `text` are stripped rather than drawn bold/italic; E18.3 round trip over every example; E7.2 GPU benchmark (M7); Playwright runs started in parallel must use separate `--output` folders (they share `test-results/` by default).
+
 ### 11.2 M1 execution plan
 
 M1 runs in three waves of parallel workstreams (≤ 4 at a time), each owning separate files. Shared
@@ -1947,7 +1958,7 @@ contracts are written first so workstreams don't block each other.
 | 2 | Scatter & error bars | E9.1–E9.3, E9.7 |
 | 2 | Bars | E9.8, E9.9 |
 | 2 | Hover, click, zoom/pan, modebar, selection, legend | E5.7, E6.1–E6.4, E5.8, E5.2, E2.17 |
-| 3 | Colorbar, annotations, streaming, JSON, chart docs pages, exit review | E5.3, E5.4, E7.2, E18.3, E19 pages |
+| 3 | Colorbar, annotations, streaming, JSON, chart docs pages, exit review | E5.3, E5.4, E7.2, E18.3, E2.18, E19 pages ✅ |
 
 Safety rule for all waves: GPU checks run only in headless Chromium (SwiftShader, or the isolated
 spike runner for Metal), never in an embedded app browser, one heavy run at a time.

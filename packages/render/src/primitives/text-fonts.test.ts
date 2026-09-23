@@ -1,16 +1,27 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  DEFAULT_FONT_CSS_FAMILY,
+  TROIKA_FALLBACK_CSS_FAMILY,
   clearFontRegistry,
   cssFontFamily,
   cssFontString,
   fontWeightRank,
+  getDefaultFontURL,
+  measurementFace,
   normalizeFontStyle,
   normalizeFontWeight,
   parseFontFamilyList,
   registerFont,
+  resolveFontFace,
   resolveFontURL,
+  setDefaultFontURL,
+  setUnicodeFontsURL,
   subscribeFontChanges,
+  troikaFallbackWeight,
 } from './text-fonts.ts';
+
+/** Plotly's default `font.family` (core's `DEFAULT_FONT_FAMILY`). */
+const DEFAULT_FONT_FAMILY_LIST = '"Open Sans", verdana, arial, sans-serif';
 
 afterEach(() => clearFontRegistry());
 
@@ -104,5 +115,159 @@ describe('font registry', () => {
     off();
     registerFont({ family: 'Inter', url: 'b.woff' });
     expect(listener).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('resolveFontFace', () => {
+  it('returns the registered family name, weight and style', () => {
+    registerFont({ family: 'Inter', url: 'b.woff', weight: 700 }, { cssFontFace: false });
+    expect(resolveFontFace('"Open Sans", inter', 'bold')).toEqual({
+      family: 'Inter',
+      url: 'b.woff',
+      weight: 700,
+      style: 'normal',
+    });
+    expect(resolveFontFace('Open Sans')).toBeUndefined();
+  });
+});
+
+/** Minimal `FontFace` / `document.fonts` stand-ins (node has neither). */
+function stubCSSFonts() {
+  const added: FakeFontFace[] = [];
+  class FakeFontFace {
+    readonly family: string;
+    readonly source: string;
+    readonly descriptors: FontFaceDescriptors;
+    loadCalls = 0;
+    #resolve!: () => void;
+    readonly loaded: Promise<FakeFontFace>;
+    constructor(family: string, source: string, descriptors: FontFaceDescriptors = {}) {
+      this.family = family;
+      this.source = source;
+      this.descriptors = descriptors;
+      this.loaded = new Promise((resolve) => {
+        this.#resolve = () => resolve(this);
+      });
+    }
+    load(): Promise<FakeFontFace> {
+      this.loadCalls++;
+      return this.loaded;
+    }
+    finish(): void {
+      this.#resolve();
+    }
+  }
+  const fonts = {
+    add: vi.fn((face: FakeFontFace) => added.push(face)),
+    delete: vi.fn((face: FakeFontFace) => {
+      const i = added.indexOf(face);
+      if (i >= 0) added.splice(i, 1);
+      return i >= 0;
+    }),
+  };
+  vi.stubGlobal('FontFace', FakeFontFace);
+  vi.stubGlobal('document', { fonts });
+  return { added, fonts };
+}
+
+describe('measurementFace (E2.18: measure what troika draws)', () => {
+  afterEach(() => {
+    setDefaultFontURL(null);
+    setUnicodeFontsURL(null);
+    vi.unstubAllGlobals();
+  });
+
+  it('uses a registered family with the registered face weight/style', () => {
+    registerFont({ family: 'Inter', url: 'r.woff' }, { cssFontFace: false });
+    registerFont({ family: 'Inter', url: 'b.woff', weight: 700 }, { cssFontFace: false });
+    expect(measurementFace({ family: 'Missing, Inter', weight: 600 })).toEqual({
+      family: '"Inter", "Missing", "Inter"',
+      weight: 700,
+      style: 'normal',
+      source: 'registered',
+    });
+    // Only an upright face exists: troika draws it upright, so measure upright.
+    expect(measurementFace({ family: 'Inter', style: 'italic' })).toMatchObject({
+      weight: 400,
+      style: 'normal',
+    });
+  });
+
+  it('maps unregistered families to the default font at 400/normal', () => {
+    setDefaultFontURL('default.woff');
+    expect(getDefaultFontURL()).toBe('default.woff');
+    expect(measurementFace({ family: DEFAULT_FONT_FAMILY_LIST, weight: 'bold' })).toEqual({
+      family: `${DEFAULT_FONT_CSS_FAMILY}, "Open Sans", "verdana", "arial", sans-serif`,
+      weight: 400,
+      style: 'normal',
+      source: 'default',
+    });
+  });
+
+  it("falls back to troika's CDN font (nearest weight, requested style) without a default", () => {
+    expect(getDefaultFontURL()).toBeUndefined();
+    expect(measurementFace({ family: 'Open Sans', weight: 650, style: 'italic' })).toEqual({
+      family: `${TROIKA_FALLBACK_CSS_FAMILY}, "Open Sans"`,
+      weight: 600,
+      style: 'italic',
+      source: 'troika',
+    });
+  });
+
+  it('is recomputed after font changes', () => {
+    setDefaultFontURL('default.woff');
+    expect(measurementFace({ family: 'Inter' }).source).toBe('default');
+    registerFont({ family: 'Inter', url: 'inter.woff' }, { cssFontFace: false });
+    expect(measurementFace({ family: 'Inter' }).source).toBe('registered');
+  });
+
+  it('troikaFallbackWeight picks the nearest weight, the lighter on ties', () => {
+    expect(troikaFallbackWeight('bold')).toBe(700);
+    expect(troikaFallbackWeight(450)).toBe(400);
+    expect(troikaFallbackWeight(1000)).toBe(900);
+    expect(troikaFallbackWeight(1)).toBe(100);
+  });
+
+  it('registers the default font as an eagerly loaded CSS face and notifies on load', async () => {
+    const { added, fonts } = stubCSSFonts();
+    const listener = vi.fn();
+    const off = subscribeFontChanges(listener);
+    setDefaultFontURL('a.woff');
+    expect(listener).toHaveBeenCalledTimes(1);
+    const face = added[0]!;
+    expect(face.family).toBe(DEFAULT_FONT_CSS_FAMILY);
+    expect(face.source).toBe('url("a.woff")');
+    expect(face.descriptors).toEqual({ weight: '400', style: 'normal' });
+    expect(face.loadCalls).toBe(1);
+    face.finish();
+    await face.loaded;
+    await Promise.resolve();
+    expect(listener).toHaveBeenCalledTimes(2);
+    // Replacing the default removes the old face; setting the same URL again is a no-op.
+    setDefaultFontURL('b.woff');
+    expect(fonts.delete).toHaveBeenCalledWith(face);
+    setDefaultFontURL('b.woff');
+    expect(fonts.add).toHaveBeenCalledTimes(2);
+    off();
+  });
+
+  it("registers troika's fallback faces lazily, at troika's URLs, without loading them", () => {
+    const { added } = stubCSSFonts();
+    setUnicodeFontsURL('https://fonts.example/data/');
+    expect(added).toHaveLength(0);
+    measurementFace({ family: 'Open Sans' });
+    expect(added).toHaveLength(18);
+    const bold = added.find(
+      (f) => f.descriptors.weight === '700' && f.descriptors.style === 'normal',
+    );
+    expect(bold?.family).toBe(TROIKA_FALLBACK_CSS_FAMILY);
+    expect(bold?.source).toBe(
+      'url("https://fonts.example/data/font-files/latin/sans-serif.normal.700.woff")',
+    );
+    expect(bold?.descriptors.unicodeRange).toMatch(/^U\+0-FF,/);
+    expect(added.every((f) => f.loadCalls === 0)).toBe(true);
+    // Registered once, not per request.
+    measurementFace({ family: 'Roboto', weight: 700 });
+    expect(added).toHaveLength(18);
   });
 });

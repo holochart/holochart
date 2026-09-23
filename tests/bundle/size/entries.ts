@@ -74,8 +74,9 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     // The future `holochart-basic` CDN variant: runtime, components, and the basic traces.
     id: 'partial-basic',
     name: 'partial: basic (runtime + components + traces-basic + themes)',
-    // Raised from 150 kB after M1 wave 2 (measured 181 kB); see E21.5.
-    limit: '200 kB',
+    // Raised from 150 kB after M1 wave 2 (measured 181 kB), then to 215 kB after wave 3 (colorbar,
+    // annotations, streaming: measured 209.6 kB); see E21.5.
+    limit: '215 kB',
     imports: [
       { pkg: 'runtime' },
       { pkg: 'components' },

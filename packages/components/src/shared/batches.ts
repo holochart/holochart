@@ -24,7 +24,7 @@ import { sameTransform } from './host.ts';
 import { LINE_HEIGHT } from './text.ts';
 
 /** Draw order inside a subplot viewport for things that must stay below every trace. */
-export const BELOW_TRACES_ORDER = -1_000_000;
+export const BELOW_TRACES_ORDER = -1e12;
 
 type Adder = Pick<ComponentDrawContext, 'add' | 'remove'>;
 
@@ -186,6 +186,7 @@ export function toTextLabel(l: LabelItem): TextLabel {
     font: l.font,
     color: l.color,
     lineHeight: LINE_HEIGHT,
+    ...(l.align ? { align: l.align } : {}),
   };
 }
 

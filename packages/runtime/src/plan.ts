@@ -5,6 +5,7 @@
 import {
   getIn,
   isPlainObject,
+  isTypedArray,
   parsePath,
   planUpdate,
   type Change,
@@ -206,4 +207,172 @@ export function tracePlan(
     layoutStages.has('crossTraceCalc');
   const style = plot || traceStages.has('style') || layoutStages.has('style');
   return { calc, plot, style, transform: options.layoutRan };
+}
+
+// ---- Streaming (extendTraces / prependTraces, E7.2) --------------------------------------------
+
+/**
+ * `maxPoints` of `extendTraces` / `prependTraces` (Plotly semantics): one number for every key
+ * and trace, or per attribute string an array with one number per listed trace. The options form
+ * `{ maxPoints: n }` (plan §7.2) is accepted too. Negative or non-numeric: no limit.
+ */
+export type MaxPoints =
+  number | Readonly<Record<string, readonly number[]>> | { readonly maxPoints: number };
+
+/** Streaming updates: per attribute string, one array of new values per listed trace. */
+export type StreamUpdate = Readonly<Record<string, readonly ArrayLike<unknown>[]>>;
+
+type TypedArray = Exclude<ReturnType<typeof asTyped>, undefined>;
+function asTyped(v: unknown) {
+  return isTypedArray(v) && !(v instanceof BigInt64Array || v instanceof BigUint64Array)
+    ? (v as Float64Array | Float32Array | Int32Array | Uint8Array)
+    : undefined;
+}
+
+function isArrayOrTyped(v: unknown): v is ArrayLike<unknown> {
+  return Array.isArray(v) || isTypedArray(v);
+}
+
+/**
+ * Plotly's argument checks for `extendTraces` / `prependTraces` (same error messages). Returns
+ * the normalized (non-negative) trace indices.
+ *
+ * @throws On a malformed update, bad or repeated indices, or a `maxPoints` object that does not
+ * match the update's keys and trace count.
+ */
+export function assertStreamArgs(
+  update: unknown,
+  indices: unknown,
+  maxPoints: unknown,
+  traceCount: number,
+): number[] {
+  if (!isPlainObject(update)) throw new Error('update must be a key:value object');
+  if (indices === undefined) throw new Error('indices must be an integer or array of integers');
+  const list = (Array.isArray(indices) ? indices : [indices]) as unknown[];
+  const out: number[] = [];
+  for (const index of list) {
+    if (typeof index !== 'number' || !Number.isInteger(index)) {
+      throw new Error('all values in indices must be integers');
+    }
+    if (index >= traceCount || index < -traceCount) {
+      throw new Error('indices must be valid indices for gd.data.');
+    }
+    const i = index < 0 ? traceCount + index : index;
+    if (out.includes(i)) throw new Error('each index in indices must be unique.');
+    out.push(i);
+  }
+  const perKey = isPlainObject(maxPoints) && !isOptionsForm(maxPoints);
+  for (const [key, value] of Object.entries(update)) {
+    if (!Array.isArray(value) || value.length !== out.length) {
+      throw new Error(`attribute ${key} must be an array of length equal to indices array length`);
+    }
+    const mp = perKey ? (maxPoints as Record<string, unknown>)[key] : undefined;
+    if (perKey && (!Array.isArray(mp) || mp.length !== value.length)) {
+      throw new Error(
+        'when maxPoints is set as a key:value object it must contain a 1:1 correspondence with the keys and number of traces in the update object',
+      );
+    }
+    value.forEach((insert: unknown, j: number) => {
+      if (!isArrayOrTyped(insert))
+        throw new Error(`attribute: ${key} index: ${j} must be an array`);
+    });
+  }
+  return out;
+}
+
+function isOptionsForm(v: Readonly<Record<string, unknown>>): boolean {
+  const keys = Object.keys(v);
+  return keys.length === 1 && keys[0] === 'maxPoints' && !Array.isArray(v['maxPoints']);
+}
+
+/** The point limit for attribute `key` of the `k`-th listed trace; -1 means no limit. */
+export function maxPointsFor(maxPoints: unknown, key: string, k: number): number {
+  let v: unknown = maxPoints;
+  if (isPlainObject(maxPoints)) {
+    v = isOptionsForm(maxPoints) ? maxPoints['maxPoints'] : (maxPoints[key] as unknown[])[k];
+  }
+  return typeof v === 'number' && Number.isFinite(v) ? Math.floor(v) : -1;
+}
+
+/** Result of {@link spliceArray}. */
+export interface SpliceResult {
+  readonly value: ArrayLike<unknown>;
+  /** Items removed from the other end by the limit. */
+  readonly removed: number;
+}
+
+/** Element ranges `[lo, hi)` written so far into buffers created by {@link spliceArray}. */
+const OWNED = new WeakMap<ArrayBufferLike, { lo: number; hi: number }>();
+
+/**
+ * `extendTraces` (`at: 'end'`) / `prependTraces` (`at: 'start'`) on one array (Plotly's
+ * `updateArray`): the values of `target` and `insert` joined, keeping at most `maxp` (≥ 0) from
+ * the end just written (extend keeps the last ones, prepend the first ones). Neither input is
+ * mutated.
+ *
+ * Plain arrays give a new plain array. Typed arrays give a typed array of the target's type (a
+ * plain or differently typed `insert` is converted, where Plotly throws), as a view into a buffer
+ * with room to grow: the next splice of that same view writes in place, so a steady stream
+ * allocates only when the room runs out (amortized O(inserted) per call). Earlier views are
+ * never written to.
+ */
+export function spliceArray(
+  target: ArrayLike<unknown>,
+  insert: ArrayLike<unknown>,
+  maxp: number,
+  at: 'end' | 'start',
+): SpliceResult {
+  const total = target.length + insert.length;
+  const keep = maxp >= 0 ? Math.min(maxp, total) : total;
+  const removed = total - keep;
+  const typed = asTyped(target);
+  if (!typed) {
+    const joined =
+      at === 'end'
+        ? [...Array.from(target), ...Array.from(insert)]
+        : [...Array.from(insert), ...Array.from(target)];
+    return { value: at === 'end' ? joined.slice(removed) : joined.slice(0, keep), removed };
+  }
+  const ctor = typed.constructor as new (n: number | ArrayBufferLike) => TypedArray;
+  const size = typed.BYTES_PER_ELEMENT;
+  const t0 = typed.byteOffset / size;
+  const t1 = t0 + typed.length;
+  const capacity = typed.buffer.byteLength / size;
+  const own = OWNED.get(typed.buffer);
+  const values = insert as ArrayLike<number>;
+  if (own && at === 'end' && own.hi === t1 && t1 + insert.length <= capacity) {
+    const all = new ctor(typed.buffer);
+    all.set(values, t1);
+    own.hi = t1 + insert.length;
+    return { value: all.subarray(own.hi - keep, own.hi), removed };
+  }
+  if (own && at === 'start' && own.lo === t0 && t0 - insert.length >= 0) {
+    const all = new ctor(typed.buffer);
+    all.set(values, t0 - insert.length);
+    own.lo = t0 - insert.length;
+    return { value: all.subarray(own.lo, own.lo + keep), removed };
+  }
+  // New buffer with as much room again on the growing side.
+  const room = keep + 64;
+  const all = new ctor(keep + room);
+  const lo = at === 'end' ? 0 : room;
+  if (at === 'end') {
+    const fromInsert = Math.min(keep, insert.length);
+    const fromTarget = keep - fromInsert;
+    all.set(typed.subarray(typed.length - fromTarget), lo);
+    all.set(sliceNumbers(values, insert.length - fromInsert, insert.length), lo + fromTarget);
+  } else {
+    const fromInsert = Math.min(keep, insert.length);
+    all.set(sliceNumbers(values, 0, fromInsert), lo);
+    all.set(typed.subarray(0, keep - fromInsert), lo + fromInsert);
+  }
+  OWNED.set(all.buffer, { lo, hi: lo + keep });
+  return { value: all.subarray(lo, lo + keep), removed };
+}
+
+function sliceNumbers(v: ArrayLike<number>, a: number, b: number): ArrayLike<number> {
+  if (a === 0 && b === v.length) return v;
+  return ArrayBuffer.isView(v)
+    ? (v as Float64Array).subarray(a, b)
+    : (Array.prototype.slice.call(v, a, b) as number[]);
 }
