@@ -485,7 +485,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 > As a developer, I want to pass plain arrays, typed arrays, or columnar data, so that I don't need to reshape my data.
 - [ ] `Array`, `Float32Array`, `Float64Array`, `Int*Array`, and `Date[]` accepted for data arrays
 - [ ] ISO date strings detected and parsed (with `xcalendar` hooks reserved)
-- [ ] Optional `dataset` + column-reference strings: `{ dataset: 'sales', x: '@date', y: '@revenue' }`
+- [ ] Optional `dataset` + column-reference strings: `{ dataset: 'sales', x: '@date', y: '@revenue' }`. A `'@…'` string is a reference only where it could not otherwise be a valid value: on `data_array` attributes, and on `arrayOk` attributes that reject it as a scalar (`marker.color: '@region'`). String attributes keep Plotly semantics (`text: '@handle'` is text), so there is no escape syntax and the full output is valid, idempotent input
 - [ ] Zero-copy path for typed arrays (no conversion when the dtype already fits)
 - [ ] Apache Arrow table adapter (`P2`, separate story E1.10)
 

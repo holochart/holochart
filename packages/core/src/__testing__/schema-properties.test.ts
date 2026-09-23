@@ -33,6 +33,7 @@ const quiet = { onIssue: () => {} };
 const MODES = ['valid', 'invalid'] as const;
 
 const asFigure = (f: GeneratedFigure): FigureInput => f as FigureInput;
+const datasetsOf = (f: GeneratedFigure): FigureInput['datasets'] => asFigure(f).datasets;
 
 /**
  * Freeze plain objects and arrays recursively, so any attempt to mutate the input throws (ES
@@ -90,6 +91,7 @@ describe.each(MODES)('supplyDefaults on %s figures', (mode) => {
         const first = supplyDefaults(asFigure(fig), registry, quiet);
         const again = supplyDefaults(
           {
+            datasets: datasetsOf(fig),
             data: stripInternal(first.fullData) as unknown[],
             layout: stripInternal(first.fullLayout),
             config: first.fullConfig,
@@ -112,6 +114,7 @@ describe.each(MODES)('supplyDefaults on %s figures', (mode) => {
         const { fullData, fullLayout, fullConfig } = supplyDefaults(asFigure(fig), registry, quiet);
         const issues = validate(stripInternal(fullData), stripInternal(fullLayout), registry, {
           config: fullConfig,
+          datasets: datasetsOf(fig),
         });
         // Unknown trace types are kept (hidden) in fullData, and a template object is passed
         // through as given; everything else in the full output must be valid.
@@ -129,7 +132,10 @@ describe('supplyDefaults in strict mode', () => {
   it('throws only ValidationError, and only when there is a non-deprecation issue', () => {
     fc.assert(
       fc.property(figureArbitrary(registry, { mode: 'invalid', allowStrict: true }), (fig) => {
-        const issues = validate(fig.data, fig.layout, registry, { config: fig.config });
+        const issues = validate(fig.data, fig.layout, registry, {
+          config: fig.config,
+          datasets: datasetsOf(fig),
+        });
         const strict = isPlainObject(fig.config) && fig.config['strict'] === true;
         const shouldThrow = strict && issues.some((i) => i.code !== 'deprecated');
         let thrown: unknown;
@@ -188,7 +194,10 @@ describe('validate', () => {
     fc.assert(
       fc.property(figureArbitrary(registry, { mode: 'invalid', allowStrict: true }), (fig) => {
         deepFreeze(fig);
-        const issues: Issue[] = validate(fig.data, fig.layout, registry, { config: fig.config });
+        const issues: Issue[] = validate(fig.data, fig.layout, registry, {
+          config: fig.config,
+          datasets: datasetsOf(fig),
+        });
         for (const issue of issues) {
           expect(typeof issue.path).toBe('string');
           expect(typeof issue.message).toBe('string');
@@ -348,24 +357,24 @@ describe('regressions found by the E20.2 properties', () => {
     expect(linked).toEqual([expect.objectContaining({ text: 'T', templateitemname: '1' })]);
   });
 
-  // KNOWN ISSUES: excluded from the generators (see `plainString` in schema-arbitrary.ts). These
-  // `it.fails` tests pass while the bug exists; when one starts failing, the bug is fixed — drop
-  // `.fails` and the generator exclusion.
-  it.fails("KNOWN ISSUE: '@@' escapes are not a fixed point", () => {
-    const first = supplyDefaults(
-      { data: [{ y: [1], mode: 'text', text: '@@handle' }] },
-      registry,
-      quiet,
-    );
-    expect(first.issues).toEqual([]);
-    expect(first.fullData[0]?.['text']).toBe('@handle');
-    const data = stripInternal(first.fullData) as unknown[];
-    const again = supplyDefaults({ data }, registry, quiet);
-    expect(again.issues).toEqual([]); // fails: "column reference '@handle' needs a `dataset`"
-    expect(again.fullData[0]?.['text']).toBe('@handle');
+  it("'@' strings on string attributes are literal text and a fixed point", () => {
+    // Counterexample: '@@handle' was unescaped to '@handle', which fed back in was read as a
+    // column reference ("column reference '@handle' needs a `dataset`"). Now '@…' strings are
+    // references only where they are not valid values, so no escape exists or is needed.
+    for (const text of ['@handle', '@@handle']) {
+      const first = supplyDefaults({ data: [{ y: [1], mode: 'text', text }] }, registry, quiet);
+      expect(first.issues).toEqual([]);
+      expect(first.fullData[0]?.['text']).toBe(text);
+      const data = stripInternal(first.fullData) as unknown[];
+      const again = supplyDefaults({ data }, registry, quiet);
+      expect(again.issues).toEqual([]);
+      expect(stripInternal(again.fullData)).toEqual(data);
+    }
   });
 
-  it.fails("KNOWN ISSUE: '@' strings from template traces make the full output invalid", () => {
+  it("'@' strings from template traces keep the full output valid", () => {
+    // Counterexample: a template's text '@literal' was copied into the full trace and then
+    // rejected there as a column reference without a `dataset`.
     const fig = {
       data: [{ y: [1], mode: 'text' }],
       layout: { template: { data: { scatter: [{ text: '@literal' }] } } },
@@ -373,7 +382,42 @@ describe('regressions found by the E20.2 properties', () => {
     expect(validate(fig.data, fig.layout, registry)).toEqual([]);
     const { fullData } = supplyDefaults(fig, registry, quiet);
     expect(fullData[0]?.['text']).toBe('@literal');
-    // fails: data[0].text "column reference '@literal' needs a `dataset`"
     expect(validate(stripInternal(fullData), undefined, registry)).toEqual([]);
+  });
+
+  it('resolved column references and literal text survive a round trip together', () => {
+    const date = ['2024-01-01', '2024-01-02'];
+    const region = ['north', 'south'];
+    const datasets = { sales: { date, region, rev: [1, 2] } };
+    const fig: FigureInput = {
+      datasets,
+      data: [
+        {
+          dataset: 'sales',
+          x: '@date',
+          y: '@rev',
+          mode: 'markers+text',
+          text: '@region', // a string attribute: literal text, not the column
+          marker: { color: '@region' },
+        },
+      ],
+      layout: { template: { data: { scatter: [{ text: '@ignored', marker: { size: 9 } }] } } },
+    };
+    expect(validate(fig.data, fig.layout, registry, { datasets })).toEqual([]);
+    const first = supplyDefaults(fig, registry, quiet);
+    expect(first.issues).toEqual([]);
+    const trace = first.fullData[0] as Record<string, unknown>;
+    expect(trace['x']).toBe(date);
+    expect(trace['text']).toBe('@region');
+    expect((trace['marker'] as Record<string, unknown>)['color']).toBe(region);
+    const data = stripInternal(first.fullData) as unknown[];
+    const layout = stripInternal(first.fullLayout);
+    expect(validate(data, layout, registry, { datasets })).toEqual([]);
+    const again = supplyDefaults({ datasets, data, layout }, registry, quiet);
+    expect(stripInternal(again.fullData)).toEqual(data);
+    expect(
+      diffFigures({ datasets, data }, { datasets, data: copyObjects(data) as unknown[] }, registry)
+        .empty,
+    ).toBe(true);
   });
 });

@@ -143,4 +143,24 @@ describe('schema-arbitrary helper', () => {
     expect(values.every((v) => !('locale' in v) || v['locale'] === 'fr-FR')).toBe(true);
     expect(values.some((v) => v['locale'] === 'fr-FR')).toBe(true);
   });
+
+  it('valid figures reference dataset columns and hold literal @-strings', () => {
+    const registry = fixtureRegistry();
+    const figs = fc.sample(figureArbitrary(registry), { numRuns: 300, seed: 8 });
+    const traces = figs.flatMap((f) => f.data as Record<string, unknown>[]);
+    const refs = traces.filter(
+      (t) => t['dataset'] === 'ds' && typeof t['x'] === 'string' && t['x'].startsWith('@'),
+    );
+    expect(refs.length).toBeGreaterThan(0);
+    const texts = traces.map((t) => t['text']);
+    expect(texts.some((t) => typeof t === 'string' && t.startsWith('@'))).toBe(true);
+    expect(texts.some((t) => typeof t === 'string' && t.startsWith('@@'))).toBe(true);
+    for (const f of figs) {
+      const issues = validate(f.data, f.layout, registry, {
+        config: f.config,
+        datasets: f.datasets as never,
+      });
+      expect(issues).toEqual([]);
+    }
+  });
 });

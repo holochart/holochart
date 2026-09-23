@@ -15,7 +15,8 @@
  *
  * Registry-level helpers ({@link layoutArbitrary}, {@link traceArbitrary},
  * {@link figureArbitrary}, …) add the few constraints that live outside the schema: trace `type`
- * must be registered, `layout.template` must be a template, and `dataset` must name a dataset.
+ * must be registered, `layout.template` must be a template, and `dataset` must name a dataset
+ * (figures carry {@link FIGURE_DATASETS}, and traces that name it reference its columns).
  *
  * Sizes are kept small on purpose (depth ≤ 4, arrays ≤ 3 items by default) so property suites
  * stay fast.
@@ -23,6 +24,7 @@
 import fc from 'fast-check';
 import { coerceValue } from '../coerce/coerce.ts';
 import { configSchema } from '../config/schema.ts';
+import { isColumnRef } from '../data/datasets.ts';
 import type { Registry } from '../registry/types.ts';
 import { attr } from '../schema/attr.ts';
 import type {
@@ -59,12 +61,6 @@ export interface SchemaArbitraryOptions {
   readonly maxDataLength?: number;
   /** Generate deprecated attributes. Default: `false` in valid mode, `true` in invalid mode. */
   readonly includeDeprecated?: boolean;
-  /**
-   * In invalid mode, sometimes put an unresolvable `'@column'` reference on array-taking
-   * attributes. Default `true`; {@link templateArbitrary} turns it off (see the KNOWN ISSUE on
-   * `plainString`: template values are copied into the full output verbatim).
-   */
-  readonly columnRefs?: boolean;
   /** Per-path generator overrides. */
   readonly override?: SchemaOverride;
 }
@@ -75,7 +71,6 @@ interface Resolved {
   readonly maxArrayLength: number;
   readonly maxDataLength: number;
   readonly includeDeprecated: boolean;
-  readonly columnRefs: boolean;
   readonly override: SchemaOverride | undefined;
 }
 
@@ -87,7 +82,6 @@ function resolveOptions(opts: SchemaArbitraryOptions = {}): Resolved {
     maxArrayLength: opts.maxArrayLength ?? 3,
     maxDataLength: opts.maxDataLength ?? 24,
     includeDeprecated: opts.includeDeprecated ?? mode === 'invalid',
-    columnRefs: opts.columnRefs ?? true,
     override: opts.override,
   };
 }
@@ -99,17 +93,14 @@ function resolveOptions(opts: SchemaArbitraryOptions = {}): Resolved {
 const noop = (): undefined => undefined;
 
 /**
- * Strings that never start with `@`: on array-taking attributes `'@name'` is a dataset column
- * reference (plan E1.6), which validation reports when the trace has no `dataset`.
- *
- * KNOWN ISSUE (E20.2): a full trace can hold a literal string starting with `@` on an
- * array-taking attribute — from an escaped input literal (`'@@name'` is unescaped to `'@name'`)
- * or from a template value (templates are not dataset-resolved). Fed back in, that string is a
- * column reference, so the full output is neither valid input nor a fixed point. Such strings are
- * therefore excluded here even though `'@@name'` is valid input; the `it.fails` tests "KNOWN
- * ISSUE: …" in `schema-properties.test.ts` pin the minimal counterexamples.
+ * Short strings, often starting with `@` (and `@@`): a string that is a valid value is never a
+ * dataset column reference (plan E1.6, see `isColumnRef`), so these must round-trip as text.
  */
-const plainString = fc.string({ maxLength: 8 }).filter((s) => !s.startsWith('@'));
+const plainString = fc.oneof(
+  { arbitrary: fc.string({ maxLength: 8 }), weight: 3 },
+  fc.string({ maxLength: 7 }).map((s) => `@${s}`),
+  fc.string({ maxLength: 6 }).map((s) => `@@${s}`),
+);
 
 const finite = fc.double({ min: -1e6, max: 1e6, noNaN: true, noDefaultInfinity: true });
 
@@ -608,11 +599,7 @@ function attrArb(spec: AttrSpec, o: Resolved): fc.Arbitrary<unknown> {
   if (o.mode === 'valid') return valid;
   const takesArrays = spec.valType === 'data_array' || spec.arrayOk === true;
   const bad = invalidValueArbitrary(spec, o);
-  const wildish =
-    takesArrays && o.columnRefs
-      ? // No '@@escaped' literals: see the KNOWN ISSUE on `plainString`.
-        fc.oneof(wild, fc.constant('@missingColumn'))
-      : wild;
+  const wildish = takesArrays ? fc.oneof(wild, fc.constant('@missingColumn')) : wild;
   return bad
     ? fc.oneof({ arbitrary: valid, weight: 3 }, { arbitrary: bad, weight: 2 }, wildish)
     : fc.oneof({ arbitrary: valid, weight: 3 }, wildish);
@@ -713,14 +700,50 @@ function chain(first: SchemaOverride | undefined, second: SchemaOverride): Schem
 }
 
 /**
- * Trace objects of one registered type. The `type` key is always present. In valid mode
- * `dataset` is never generated: a dataset name is only valid together with a matching
- * `figure.datasets` entry, which this generator does not produce.
+ * The `figure.datasets` that {@link figureArbitrary} generates. Columns are arrays, which every
+ * attribute that takes a column reference accepts.
+ */
+export const FIGURE_DATASETS: Readonly<
+  Record<string, Readonly<Record<string, readonly unknown[]>>>
+> = {
+  ds: {
+    n: [1, 2, 3],
+    s: ['a', '@b', 'c'],
+    d: ['2024-01-01', '2024-01-02', '2024-01-03'],
+  },
+};
+
+/** Options for {@link traceArbitrary} and {@link dataArbitrary}. */
+export interface TraceArbitraryOptions extends SchemaArbitraryOptions {
+  /**
+   * Datasets the figure carries. Some traces then name one as `dataset` and reference its columns
+   * (`'@name'`) on the attributes that take references. Without it, valid traces never set
+   * `dataset` (a name is only valid together with a matching `figure.datasets` entry).
+   */
+  readonly datasets?: typeof FIGURE_DATASETS;
+}
+
+/** Replace array-taking attributes' generators with a mix of the original and `refs`. */
+function withColumnRefs(
+  refs: readonly string[],
+  mode: ArbitraryMode,
+  includeDeprecated: boolean | undefined,
+): SchemaOverride {
+  const probe = refs[0] ?? '@';
+  return (_path, node) =>
+    node.kind === 'attr' && isColumnRef(probe, node)
+      ? fc.oneof(schemaArbitrary(node, { mode, includeDeprecated }), fc.constantFrom(...refs))
+      : undefined;
+}
+
+/**
+ * Trace objects of one registered type. The `type` key is always present. With `datasets`, some
+ * traces name one of them and reference its columns.
  */
 export function traceArbitrary(
   registry: Registry,
   type: string,
-  opts: SchemaArbitraryOptions = {},
+  opts: TraceArbitraryOptions = {},
 ): fc.Arbitrary<Record<string, unknown>> {
   const schema = registry.getTraceSchema(type);
   if (!schema) throw new Error(`traceArbitrary: unknown trace type '${type}'`);
@@ -730,7 +753,22 @@ export function traceArbitrary(
     if (path === 'dataset' && mode === 'valid') return null;
     return undefined;
   });
-  const body = schemaArbitrary(schema, { ...opts, override });
+  const plain = schemaArbitrary(schema, { ...opts, override });
+  const names = Object.keys(opts.datasets ?? {});
+  let body = plain;
+  if (names.length > 0) {
+    const withRefs = names.map((name) => {
+      const refs = Object.keys(opts.datasets?.[name] ?? {}).map((c) => `@${c}`);
+      const refOverride = chain(
+        chain(opts.override, (path) => (path === 'type' || path === 'dataset' ? null : undefined)),
+        withColumnRefs(refs, mode, opts.includeDeprecated),
+      );
+      return schemaArbitrary(schema, { ...opts, override: refOverride }).map((t) =>
+        typeof t === 'object' && t !== null && !Array.isArray(t) ? { ...t, dataset: name } : t,
+      );
+    });
+    body = fc.oneof(plain, ...withRefs);
+  }
   if (mode === 'valid') {
     return body.map((t) => ({ type, ...(t as Record<string, unknown>) }));
   }
@@ -748,7 +786,7 @@ export function traceArbitrary(
  */
 export function dataArbitrary(
   registry: Registry,
-  opts: SchemaArbitraryOptions = {},
+  opts: TraceArbitraryOptions = {},
 ): fc.Arbitrary<unknown> {
   const types = registry.traceTypes();
   const maxLength = opts.maxArrayLength ?? 3;
@@ -770,10 +808,8 @@ export function dataArbitrary(
 
 /**
  * Template objects `{ layout?, data? }` built from the registry's layout and trace schemas (a
- * template's layout never nests another `template`). Template traces never hold `'@column'`
- * strings: templates are not dataset-resolved, so such a string is copied verbatim into the full
- * output and read as a column reference when that output is fed back in (KNOWN ISSUE, see
- * `plainString`).
+ * template's layout never nests another `template`). Templates are not dataset-resolved: their
+ * `'@…'` strings are text where valid and dropped by coercion elsewhere.
  */
 export function templateArbitrary(
   registry: Registry,
@@ -781,7 +817,6 @@ export function templateArbitrary(
 ): fc.Arbitrary<Record<string, unknown>> {
   const inner: SchemaArbitraryOptions = {
     ...opts,
-    columnRefs: false,
     maxDepth: Math.max(1, (opts.maxDepth ?? 4) - 1),
     maxArrayLength: Math.min(2, opts.maxArrayLength ?? 3),
   };
@@ -846,18 +881,36 @@ export function configArbitrary(opts: FigureArbitraryOptions = {}): fc.Arbitrary
 
 /** A generated figure. Fields are `unknown` because invalid mode may produce any shape. */
 export interface GeneratedFigure {
+  datasets: unknown;
   data: unknown;
   layout: unknown;
   config: unknown;
 }
 
-/** Whole figures `{ data, layout, config }` for a registry. */
+/**
+ * Whole figures `{ datasets, data, layout, config }` for a registry. `datasets` is
+ * {@link FIGURE_DATASETS}, which some traces reference; in invalid mode it is sometimes missing
+ * or malformed, leaving those references unresolvable.
+ */
 export function figureArbitrary(
   registry: Registry,
   opts: FigureArbitraryOptions = {},
 ): fc.Arbitrary<GeneratedFigure> {
+  // Invalid mode: targeted bad shapes rather than `wild`, since columns (like data arrays) are
+  // compared by reference and a copied non-array column would legitimately count as changed.
+  const datasets: fc.Arbitrary<unknown> =
+    opts.mode === 'invalid'
+      ? fc.oneof(
+          { arbitrary: fc.constant(FIGURE_DATASETS), weight: 3 },
+          fc.constantFrom<unknown>(undefined, null, 42, 'ds', [FIGURE_DATASETS['ds']], {
+            ds: [1, 2],
+          }),
+          fc.constant({ ds: { n: 5, s: null } }),
+        )
+      : fc.constant(FIGURE_DATASETS);
   return fc.record({
-    data: dataArbitrary(registry, opts),
+    datasets,
+    data: dataArbitrary(registry, { ...opts, datasets: FIGURE_DATASETS }),
     layout: layoutArbitrary(registry, opts),
     config: configArbitrary(opts),
   });
