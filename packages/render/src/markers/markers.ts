@@ -56,7 +56,15 @@ import type {
   PickMaterialHandle,
   PickRenderState,
 } from '../picking/types.ts';
+import { syncViewportUniforms } from '../primitives/common.ts';
 import { MARKER_FRAGMENT, MARKER_VERTEX } from './markers.glsl.ts';
+import {
+  markerDefines,
+  mergeStyleSummary,
+  SPECIALIZATION_DEFINES,
+  summarizeStyle,
+  type StyleSummary,
+} from './specialize.ts';
 import { HIDDEN_POSITION, rtcAxisOrigin, rtcEncodePositions, rtcOffset } from '../precision.ts';
 import { createSymbolTexture, resolveSymbol, SYMBOL_TEXTURE_KEY } from './symbols.ts';
 
@@ -120,6 +128,12 @@ export interface MarkerSetOptions {
   depthWrite?: boolean;
   /** three.js render order (trace order / zorder, E2.14). */
   renderOrder?: number;
+  /**
+   * Compile shaders specialized to the set's symbol / rotation / stroke usage (see
+   * `specialize.ts`). Default true; false forces the generic program (for debugging and A/B
+   * measurements — the pixels are the same).
+   */
+  specialize?: boolean;
 }
 
 /** Plotly-like defaults (first colorway color, `#444` lines). */
@@ -275,6 +289,8 @@ export class MarkerSet implements Primitive<MarkerData>, PickablePrimitive {
   #colorscale: ColorscaleTextureHandle | null = null;
   #positionVersion = 0;
   #disposed = false;
+  #specialize: boolean;
+  #styleSummary: StyleSummary = { symbol: null, anyAngle: false, anyStroke: false, anyOpen: false };
 
   constructor(
     context: PrimitiveContext,
@@ -282,6 +298,7 @@ export class MarkerSet implements Primitive<MarkerData>, PickablePrimitive {
     options: MarkerSetOptions = {},
   ) {
     this.#context = context;
+    this.#specialize = options.specialize ?? true;
     const symbols = context.resources.acquire<DataTexture>(SYMBOL_TEXTURE_KEY, createSymbolTexture);
     this.#uniforms = {
       uScale: { value: new Vector3(1, 1, 1) },
@@ -304,10 +321,16 @@ export class MarkerSet implements Primitive<MarkerData>, PickablePrimitive {
       blending: NormalBlending,
       depthTest: options.depthTest ?? true,
       depthWrite: options.depthWrite ?? false,
+      // Fully transparent fragments must not write depth, so keep the discard when depth is written.
+      defines: options.depthWrite ? { MARKER_DISCARD: '' } : {},
     });
     this.#geometry = this.#createGeometry();
     this.object = new Mesh(this.#geometry, this.material);
     this.object.name = 'holochart:markers';
+    // Keep screen-space sizing right even if setViewport is never called (see syncViewportUniforms).
+    this.object.onBeforeRender = (renderer) => {
+      syncViewportUniforms(this.#uniforms, renderer);
+    };
     // The quad's bounds say nothing about where instances are.
     this.object.frustumCulled = false;
     if (options.renderOrder !== undefined) this.object.renderOrder = options.renderOrder;
@@ -403,10 +426,11 @@ export class MarkerSet implements Primitive<MarkerData>, PickablePrimitive {
         // Mirror the visible pass: color-mode define (which attributes exist) and depth state /
         // transparent bucket (so occlusion and draw order match).
         const defines = material.defines as Record<string, string>;
-        const colorscale = 'USE_COLORSCALE' in (source.defines as Record<string, string>);
-        if (colorscale !== 'USE_COLORSCALE' in defines) {
-          if (colorscale) defines.USE_COLORSCALE = '';
-          else delete defines.USE_COLORSCALE;
+        const sourceDefines = source.defines as Record<string, string>;
+        for (const name of ['USE_COLORSCALE', ...SPECIALIZATION_DEFINES]) {
+          if (defines[name] === sourceDefines[name]) continue;
+          if (name in sourceDefines) defines[name] = sourceDefines[name]!;
+          else delete defines[name];
           material.needsUpdate = true;
         }
         material.depthTest = source.depthTest;
@@ -710,9 +734,30 @@ export class MarkerSet implements Primitive<MarkerData>, PickablePrimitive {
           out[k + 2] = op >= 0 ? Math.min(op, 1) : op === op ? 0 : 1;
           out[k + 3] = Number.isFinite(angle) ? angle : 0;
         }
+        this.#noteStyleWrite(start, end);
         return;
       }
     }
+  }
+
+  /**
+   * Fold a freshly written style range into the specialization summary and update the shader
+   * defines (a define change recompiles, or reuses a cached program for that combination).
+   */
+  #noteStyleWrite(start: number, end: number): void {
+    const range = summarizeStyle(this.#arrays.style as Float32Array, start, end);
+    this.#styleSummary =
+      start === 0 && end >= this.#count ? range : mergeStyleSummary(this.#styleSummary, range);
+    const wanted = this.#specialize ? markerDefines(this.#styleSummary) : {};
+    const defines = this.material.defines as Record<string, string>;
+    let changed = false;
+    for (const name of SPECIALIZATION_DEFINES) {
+      if (defines[name] === wanted[name]) continue;
+      if (name in wanted) defines[name] = wanted[name]!;
+      else delete defines[name];
+      changed = true;
+    }
+    if (changed) this.material.needsUpdate = true;
   }
 }
 

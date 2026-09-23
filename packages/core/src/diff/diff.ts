@@ -24,6 +24,7 @@
  * cannot show a change. The update API should hand `react` new objects (the usual immutability
  * contract of React/Vue) or bump `datarevision` for in-place data edits.
  */
+import { isColumnRef } from '../data/datasets.ts';
 import type { FigureInput } from '../defaults/types.ts';
 import { planUpdate, type Change, type PlanOptions, type Stage } from '../edit/plan.ts';
 import { stringifyPath, type PathSegment } from '../path/path.ts';
@@ -215,8 +216,8 @@ interface Ctx {
   readonly emit: (path: string) => void;
 }
 
-function columnChanged(v: unknown, ctx: Ctx): boolean {
-  if (ctx.columns === undefined || typeof v !== 'string' || !v.startsWith('@')) return false;
+function columnChanged(v: unknown, spec: AttrSpec, ctx: Ctx): boolean {
+  if (ctx.columns === undefined || !isColumnRef(v, spec)) return false;
   return ctx.columns === 'all' || ctx.columns.has(v.slice(1));
 }
 
@@ -289,7 +290,7 @@ function diffAttr(a: unknown, b: unknown, spec: AttrSpec, ctx: Ctx): void {
       if (a !== b || ctx.dataRev) emitHere(ctx);
       return;
     }
-    if (columnChanged(b, ctx) || !deepEqual(a, b)) emitHere(ctx);
+    if (columnChanged(b, spec, ctx) || !deepEqual(a, b)) emitHere(ctx);
     return;
   }
   if (!deepEqual(a, b)) emitHere(ctx);
@@ -300,7 +301,9 @@ function diffUnknown(a: unknown, b: unknown, ctx: Ctx): void {
     if (a !== b || ctx.dataRev) emitHere(ctx);
     return;
   }
-  if (columnChanged(b, ctx) || !deepEqual(a, b)) emitHere(ctx);
+  // Attributes unknown to the schema are never resolved (see `resolveDataRefs`), so a column
+  // change cannot reach them.
+  if (!deepEqual(a, b)) emitHere(ctx);
 }
 
 /**

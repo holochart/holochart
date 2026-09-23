@@ -52,6 +52,7 @@ import {
   applyViewportUniforms,
   computeOrigin,
   createPrimitiveMaterial,
+  syncViewportUniforms,
   createTransformUniforms,
   createUnitQuadTemplate,
   createViewportUniforms,
@@ -421,6 +422,10 @@ export class ArcPrimitive implements Primitive<ArcData> {
     });
     this.buffers = this.allocate(16);
     this.object = new Mesh(this.buffers.geometry, this.material);
+    // Keep screen-space sizing right even if setViewport is never called (see syncViewportUniforms).
+    this.object.onBeforeRender = (renderer) => {
+      syncViewportUniforms(this.viewportUniforms, renderer);
+    };
     // Centers are RTC-encoded and quads expanded in the shader: three's bounds would be wrong.
     this.object.frustumCulled = false;
     this.update(data);

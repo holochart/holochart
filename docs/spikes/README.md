@@ -3,15 +3,15 @@
 Evidence for the M0 architecture decisions, measured against the real M0 implementations. See plan
 story E0.7 and the ADRs in [`docs/adr/`](../adr/README.md).
 
-| Spike                              | Question                                            | Status                         | Verdict                                                                                                                                                      |
-| ---------------------------------- | --------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [A: markers](a-markers.md)         | Can instanced SDF markers hit the G5 targets?       | Measured                       | ✅ 1M pan 57–63 fps at 3 px, 100k first render 24 ms, 1M restyle 6 ms. Fill cost is 3.5× a trivial shader, so larger markers are slower (27–32 fps at 8 px). |
-| [B: lines](b-lines.md)             | Our `LinePrimitive` vs three's `Line2`              | Quality done; perf at 10% only | ⚠️ Better quality than `Line2`, but a **critical GPU-cost bug**: seconds per frame on dense noisy series. Must be fixed before M1 line charts.               |
-| [C: text](c-text.md)               | 2,000 labels: WebGL SDF vs DOM overlay (ADR-005)    | Not measured                   | Deferred to M7 benchmarking                                                                                                                                  |
-| [D: viewports](d-viewports.md)     | 9 scissored viewports vs 9 canvases (ADR-004)       | Not measured                   | Deferred to M7 benchmarking (after the spike B fix)                                                                                                          |
-| [E: determinism](e-determinism.md) | Are CI screenshots reproducible? (ADR-018, risk R4) | Measured                       | ✅ SwiftShader is bit-stable run to run and across macOS/Linux; keep it as the only blocking gate                                                            |
+| Spike                              | Question                                            | Status       | Verdict                                                                                                                                                                                     |
+| ---------------------------------- | --------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [A: markers](a-markers.md)         | Can instanced SDF markers hit the G5 targets?       | Measured     | ✅ 100k first render 23 ms, 1M restyle 7 ms. After the shader optimization, 1M markers pan at 119–160 fps at 3 px and 70–77 fps at 8 px (1.4–1.7× a trivial point shader; was 3.5×).        |
+| [B: lines](b-lines.md)             | Our `LinePrimitive` vs three's `Line2`              | Measured     | ✅ after fixing a critical setup trap (1×1 default resolution made every quad cover the canvas). 1M segments: 58 fps solid, 22 fps dashed (~5–10× `Line2`'s GPU time); better join quality. |
+| [C: text](c-text.md)               | 2,000 labels: WebGL SDF vs DOM overlay (ADR-005)    | Not measured | Deferred to M7 benchmarking                                                                                                                                                                 |
+| [D: viewports](d-viewports.md)     | 9 scissored viewports vs 9 canvases (ADR-004)       | Not measured | Deferred to M7 benchmarking (after the spike B fix)                                                                                                                                         |
+| [E: determinism](e-determinism.md) | Are CI screenshots reproducible? (ADR-018, risk R4) | Measured     | ✅ SwiftShader is bit-stable run to run and across macOS/Linux; keep it as the only blocking gate                                                                                           |
 
-Remaining measurements move to the M7 benchmarking pass (plan E16.1), by decision on 2026-09-23.
+Spikes C and D move to the M7 benchmarking pass (plan E16.1), by decision on 2026-09-23.
 
 ## Running spikes safely
 
