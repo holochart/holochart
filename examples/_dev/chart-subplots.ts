@@ -1,5 +1,6 @@
 // Imported from source until examples/package.json depends on `@mk7s/holochart`.
 import { createChart } from '@mk7s/holochart';
+import { useExampleFonts } from '../_lib/fonts.ts';
 import { rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -32,6 +33,8 @@ export function run(el: HTMLElement): ExampleHandle {
     }
   }
 
+  // Vendored Inter: deterministic tick labels and legend text (no CDN font).
+  useExampleFonts();
   const chart = createChart(el, {
     data: [
       { mode: 'markers', x, y, marker: { size: 7 } },

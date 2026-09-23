@@ -9,8 +9,8 @@ Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's
 
 | Entry                                   | What it measures                                           | Budget |
 | --------------------------------------- | ---------------------------------------------------------- | ------ |
-| `partial: core + scatter`               | `createChart` + `register` from runtime, `scatter` trace   | 90 kB  |
-| `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 150 kB |
+| `partial: core + scatter`               | `createChart` + `register` from runtime, `scatter` trace   | 165 kB |
+| `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 200 kB |
 | `@mk7s/holochart (full, ESM)`           | everything the full bundle exports                         | 450 kB |
 | `@mk7s/holochart IIFE (includes three)` | `dist/holochart.iife.min.js` as shipped, **with** three.js | 650 kB |
 | each `@mk7s/holochart-*` package        | `export *` of that package                                 | report |
@@ -41,24 +41,24 @@ In CI, the job writes the table to the job summary, uploads `size.json` as the `
 artifact, compares with the latest successful `main` run, and posts or updates one PR comment
 (same-repo PRs only; fork PRs get a read-only token, so they get the job summary only).
 
-## Current sizes (2026-09-23, M1 wave 1, work in progress)
+## Current sizes (2026-09-23, M1 wave 2)
 
 | Entry                     | Size      | Budget |
 | ------------------------- | --------- | ------ |
-| `@mk7s/holochart-core`    | 27.71 kB  | —      |
+| `@mk7s/holochart-core`    | 45.74 kB  | —      |
 | `@mk7s/holochart-render`  | 93.14 kB  | —      |
-| `@mk7s/holochart-runtime` | 36.25 kB  | —      |
-| partial: core + scatter ¹ | 35.60 kB  | 90 kB  |
-| partial: basic            | 36.25 kB  | 150 kB |
-| full, ESM                 | 120.70 kB | 450 kB |
-| IIFE (includes three)     | 250.02 kB | 650 kB |
+| `@mk7s/holochart-runtime` | 64.89 kB  | —      |
+| partial: core + scatter   | 148.54 kB | 165 kB |
+| partial: basic            | 181.09 kB | 200 kB |
+| full, ESM                 | 203.79 kB | 450 kB |
+| IIFE (includes three)     | 333.34 kB | 650 kB |
 
-¹ `scatter` doesn't exist yet, so this is `createChart` + `register` plus all of traces-basic
-(currently empty). components, traces-basic, and themes are still empty.
-
-`render` as a whole (93 kB) is above the 90 kB core + scatter budget. Today the runtime
-tree-shakes most of it away; keep it that way as traces land (text, picking, and 3D primitives
-should only be pulled in by the traces and components that use them). Track with E16.
+The partial budgets were 90 kB and 150 kB until M1 wave 2, set before the SDF text engine's
+weight was known. A breakdown of core + scatter (456 kB minified) shows: troika-three-text and
+its dependencies ~120 kB (26%), core 90 kB, render 83 kB, traces-basic 74 kB, runtime 60 kB.
+Schema descriptions are only 5–7% of core and traces-basic. They were raised to measured +10%
+by decision on 2026-09-23. Plan story **E21.5 (bundle diet)** lazy-loads the text engine on first
+use, strips descriptions from production builds, and then tightens the budgets again.
 
 ## Partial bundles
 

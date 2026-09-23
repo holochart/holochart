@@ -26,6 +26,7 @@ import type {
   Children,
   ComponentModule as CoreComponentModule,
   FullAxis,
+  FullConfig,
   FullLayout,
   FullTrace,
   Scale,
@@ -40,6 +41,7 @@ import type {
   Viewport,
   ViewportRect,
 } from '@mk7s/holochart-render';
+import type { Chart } from './chart.ts';
 
 // ---- Axes and subplots ------------------------------------------------------------------------
 
@@ -113,6 +115,8 @@ export interface TraceUpdatePlan {
   readonly style: boolean;
   /** `ctx.transform` or the viewport changed (zoom, pan, resize): set the transform (uniforms only). */
   readonly transform: boolean;
+  /** `ctx.selectedPoints` changed (E6.3): restyle selected / unselected points. */
+  readonly selection?: boolean;
 }
 
 /** Everything a trace renderer may use. A fresh context is passed to every call. */
@@ -142,6 +146,11 @@ export interface TracePlotContext<Calc = unknown> {
   remove<T>(primitive: Primitive<T>): void;
   /** Schedule a frame (ADR-007), e.g. after async resources finish loading. */
   invalidate(): void;
+  /**
+   * Active selection for this trace (E6.3): indices into its data arrays, or `null` when nothing is
+   * selected (draw everything normally). Traces apply `selected` / `unselected` styles from it.
+   */
+  readonly selectedPoints?: readonly number[] | null;
 }
 
 /** A trace's live GPU objects, created by {@link TraceRenderer.create}. */
@@ -165,8 +174,8 @@ export interface TraceRenderer<Calc = unknown> {
  * A trace module: core's schema/defaults contract plus the render parts (plan §4.4, E22.1). All
  * render parts are optional, so a core-only module still validates and defaults.
  *
- * Later additions (wave 2+): `hoverPoints`, `selectPoints`, `legendIcon`, `colorbar`,
- * `crossTraceCalc`.
+ * Interaction parts (M1 wave 2): `crossTraceCalc` (stacking/grouping), `hoverPoints`,
+ * `selectPoints`, `legendIcon`. Later: `colorbar`.
  */
 export interface TraceModule<
   Calc = unknown,
@@ -176,7 +185,130 @@ export interface TraceModule<
   calc?(trace: FullTrace, ctx: CalcContext): Calc;
   /** Autorange contribution, in linear coordinates with px padding. */
   extremes?(calc: Calc, trace: FullTrace, ctx: CalcContext): TraceExtremes;
+  /**
+   * Cross-trace calc (bar stacking/grouping, stacked areas): called once per subplot and stack
+   * group with every visible trace of the group on it, in trace order, after `calc` and before
+   * `extremes`. Mutates the calcs in place (e.g. writes stacked bases and group offsets), so it must
+   * be idempotent: it reruns on already-processed calcs when another member changes.
+   *
+   * The group is the trace type, unless the module's `categories` list a shared stack group
+   * (currently `'bar-like'`, see the runtime's `STACK_GROUPS`): then all traces whose modules list
+   * it stack together — bar, histogram, funnel, waterfall — and the group's first module (in trace
+   * order) that has `crossTraceCalc` runs it for all of them.
+   */
+  crossTraceCalc?(entries: readonly CrossTraceEntry<Calc>[], ctx: CrossTraceContext): void;
   readonly plot?: TraceRenderer<Calc>;
+  /** Points near the pointer for hover (E6.1). Empty when nothing is within `query.distance`. */
+  hoverPoints?(calc: Calc, trace: FullTrace, query: HoverQuery, ctx: HoverContext): HoverPoint[];
+  /** Indices of the points inside a box or lasso selection (E6.3). */
+  selectPoints?(calc: Calc, trace: FullTrace, query: SelectionQuery, ctx: HoverContext): number[];
+  /**
+   * What the legend draws for this trace (E5.2). `ctx` (M1 wave 2, optional for callers) gives
+   * `fullLayout`, e.g. to resolve colors linked to a `coloraxis`.
+   */
+  legendIcon?(trace: FullTrace, ctx?: LegendIconContext): LegendGlyph;
+}
+
+// ---- Interaction parts of the trace contract (M1 wave 2) --------------------------------------
+
+/** One trace's calc as seen by {@link TraceModule.crossTraceCalc}. */
+export interface CrossTraceEntry<Calc = unknown> {
+  readonly trace: FullTrace;
+  /** Index of the trace in `data`. */
+  readonly index: number;
+  readonly calc: Calc;
+}
+
+/**
+ * Context for {@link TraceModule.crossTraceCalc}. The subplot's rect and axis lengths are current;
+ * ranges and transforms are still those of the previous layout pass (autorange needs `extremes`,
+ * which run after cross-trace calc), so work in linear units, not px.
+ */
+export interface CrossTraceContext {
+  readonly fullLayout: FullLayout;
+  readonly subplot: SubplotInfo;
+  readonly xaxis: AxisInfo;
+  readonly yaxis: AxisInfo;
+}
+
+/** Axes and transform of the trace being queried, for converting between linear and px. */
+export interface HoverContext {
+  readonly fullLayout: FullLayout;
+  readonly xaxis: AxisInfo | undefined;
+  readonly yaxis: AxisInfo | undefined;
+  /** Linear → viewport px (bottom-left origin), as used for drawing. */
+  readonly transform: Readonly<DataTransform>;
+}
+
+/**
+ * A hover query in one subplot. `x`/`y` modes ask for the points at the pointer's x (or y) — the
+ * runtime builds unified labels (`x unified`, `y unified`) from those results.
+ */
+export interface HoverQuery {
+  /** Pointer in viewport px (bottom-left origin, same space as the transform's output). */
+  readonly px: number;
+  readonly py: number;
+  /** Pointer in the trace's linear coordinates. */
+  readonly xl: number;
+  readonly yl: number;
+  readonly mode: 'closest' | 'x' | 'y';
+  /** Max distance in px (`layout.hoverdistance`); `Infinity` for no limit. */
+  readonly distance: number;
+}
+
+/** A point a trace reports under the pointer. */
+export interface HoverPoint {
+  /** Index into the trace's data arrays (first index for aggregated points). */
+  readonly pointIndex: number;
+  /** All data indices behind an aggregated point (histogram bins, stacked segments). */
+  readonly pointIndices?: readonly number[];
+  /** Distance used to rank candidates: px from the pointer (`closest`) or along the axis (`x`/`y`). */
+  readonly distance: number;
+  /** Label anchor in viewport px (bottom-left origin). */
+  readonly px: number;
+  readonly py: number;
+  /** Values for labels and `hovertemplate`, in data space. */
+  readonly x?: unknown;
+  readonly y?: unknown;
+  readonly text?: string;
+  /** Color the label uses for its border/background (usually the point's color). */
+  readonly color?: string;
+  /** Anything else `hovertemplate` may reference (e.g. `marker.size`, `customdata`). */
+  readonly fields?: Readonly<Record<string, unknown>>;
+}
+
+/** A box or lasso selection in one subplot, in the trace's linear coordinates. */
+export interface SelectionQuery {
+  readonly kind: 'rect' | 'lasso';
+  /** Bounding box (both kinds). */
+  readonly x: readonly [number, number];
+  readonly y: readonly [number, number];
+  /** Lasso polygon vertices. */
+  readonly polygon?: readonly (readonly [number, number])[];
+}
+
+/** Context for {@link TraceModule.legendIcon}. */
+export interface LegendIconContext {
+  readonly fullLayout: FullLayout;
+}
+
+/** What the legend draws for one trace (E5.2). Colors are CSS color strings. */
+export interface LegendGlyph {
+  readonly kind: 'marker' | 'line' | 'lines+markers' | 'bar' | 'fill';
+  readonly marker?: {
+    readonly symbol?: string | number;
+    readonly size?: number;
+    readonly color?: string;
+    readonly lineColor?: string;
+    readonly lineWidth?: number;
+    readonly opacity?: number;
+  };
+  readonly line?: { readonly color?: string; readonly width?: number; readonly dash?: string };
+  readonly fill?: {
+    readonly color?: string;
+    readonly lineColor?: string;
+    readonly lineWidth?: number;
+  };
 }
 
 // ---- Component contract -----------------------------------------------------------------------
@@ -228,6 +360,41 @@ export interface ComponentDrawContext {
   add<T>(primitive: Primitive<T>, viewport?: Viewport): Primitive<T>;
   remove<T>(primitive: Primitive<T>): void;
   invalidate(): void;
+  /**
+   * The chart (M1 wave 2): for components that act on it — the legend restyles `visible` and
+   * emits `legendclick` (`chart.emit`), the modebar calls `chart.setDragmode`, `chart.zoom`,
+   * `chart.resetAxes`, … and places its DOM in `chart.element`. Always set by the runtime;
+   * optional only so contexts built by hand in tests stay valid.
+   */
+  readonly chart?: Chart;
+  /** The defaulted config (modebar options, `staticPlot`, …). Always set by the runtime. */
+  readonly fullConfig?: FullConfig;
+}
+
+/**
+ * A pointer event offered to component views before the chart's own hover / zoom / selection
+ * handling (see {@link ComponentView.handlePointer}). The object is reused between events: read
+ * it during the call, don't keep it.
+ */
+export interface ComponentPointerEvent {
+  /**
+   * `down` / `move` / `up` (pointer events), `click` (down and up without moving), `dblclick`
+   * (second click within `config.doubleClickDelay`), `wheel`, `leave` (pointer left the chart).
+   */
+  type: 'down' | 'move' | 'up' | 'click' | 'dblclick' | 'wheel' | 'leave';
+  /** Position in container CSS px (top-left origin), like `plotArea` and `SubplotInfo.rect`. */
+  x: number;
+  y: number;
+  /** `PointerEvent.button` (0 primary) for `down` / `up` / `click`. */
+  button: number;
+  shiftKey: boolean;
+  altKey: boolean;
+  ctrlKey: boolean;
+  metaKey: boolean;
+  /** The DOM event (absent for `click` / `dblclick`, which the runtime synthesizes). */
+  native: Event | undefined;
+  /** Set by a component that handles a `move` to choose the cursor (e.g. `'pointer'`). */
+  cursor: string | undefined;
 }
 
 /** What changed since a component view's last update. */
@@ -241,6 +408,15 @@ export interface ComponentUpdatePlan {
 export interface ComponentView {
   update(ctx: ComponentDrawContext, plan: ComponentUpdatePlan): void;
   dispose?(): void;
+  /**
+   * Pointer hook (M1 wave 2): the runtime offers every pointer event to component views first —
+   * topmost (last drawn) first — and only runs its own hover / zoom / pan / selection when none
+   * returns `true`. Return `true` for events over your own hit regions (e.g. legend items): a
+   * handled `down` also routes the rest of that gesture (`move`, `up`, `click`) to this view only,
+   * and a handled `move` hides hover labels. DOM components (modebar) get their own DOM events and
+   * don't need this.
+   */
+  handlePointer?(event: ComponentPointerEvent): boolean | void;
 }
 
 export interface ComponentRenderer {

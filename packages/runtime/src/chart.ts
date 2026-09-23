@@ -11,8 +11,8 @@
  *
  * Every update call edits the figure *input* synchronously, merges the stages its edit types
  * declare (core `planUpdate`) into one pending plan, and returns a promise. The pending plan runs
- * once in a microtask, so several calls in the same tick cost one pipeline run and one frame; every
- * promise resolves after that frame is drawn. Which stages run:
+ * once in a microtask, so several calls in the same tick cost one pipeline run and one frame. Which
+ * stages run:
  *
  * - supply-defaults always (cheap, keeps `full*` consistent);
  * - calc only for traces whose calc was invalidated (or all traces on an axis whose type or
@@ -21,6 +21,14 @@
  *   was declared or the container resized;
  * - trace views get a {@link TraceUpdatePlan}: a `marker.color` restyle is `style` only, an axis
  *   range relayout is `transform` only (uniforms, no uploads).
+ *
+ * ## Update promises
+ *
+ * `ready` and every update promise resolve once the result is fully drawn: the frame is rendered,
+ * async text of trace and component primitives (anything with a `ready` promise, e.g. SDF
+ * `TextPrimitive`s) has finished typesetting and been re-rendered, and passes that components
+ * scheduled meanwhile (automargin after measuring labels) have run as well (up to 8 follow-ups).
+ * Without pending text this is the same frame the update drew.
  */
 import {
   applyUirevision,
@@ -29,7 +37,9 @@ import {
   createUiState,
   deepMerge,
   diffFigures,
+  getIn,
   isPlainObject,
+  recordGuiEdit,
   supplyDefaults,
   toRGBA,
   type AxisExtremes,
@@ -43,8 +53,10 @@ import {
   type UiState,
 } from '@mk7s/holochart-core';
 import {
+  browserFrameScheduler,
   createRenderRoot,
   IDENTITY_TRANSFORM,
+  type FrameScheduler,
   type DataTransform,
   type Primitive,
   type RenderRoot,
@@ -54,8 +66,8 @@ import {
 } from '@mk7s/holochart-render';
 import type { Object3D, Scene, WebGLRenderer } from 'three';
 import {
+  axisCategoryLists,
   axisTypeOf,
-  collectCategories,
   dataTransform,
   isCategorical,
   resolveAxisRange,
@@ -67,6 +79,7 @@ import type {
   CalcContext,
   ComponentDrawContext,
   ComponentModule,
+  ComponentPointerEvent,
   ComponentView,
   MarginPush,
   SubplotInfo,
@@ -76,7 +89,26 @@ import type {
   TraceUpdatePlan,
   TraceView,
 } from './contracts.ts';
-import { ChartEmitter, type ChartEventKey, type ChartListener } from './events.ts';
+import {
+  ChartEmitter,
+  type ChartEventKey,
+  type ChartEventName,
+  type ChartEvents,
+  type ChartListener,
+  type ChartPoint,
+} from './events.ts';
+import type { LinearRange } from './fx/geometry.ts';
+import type { HoverEntry } from './fx/hover.ts';
+import { Interaction } from './fx/interaction.ts';
+import { HoverLayer } from './fx/labels.ts';
+import {
+  ensureFx,
+  resolveFxSettings,
+  traceAttr,
+  type Dragmode,
+  type FxSettings,
+  type Hovermode,
+} from './fx/settings.ts';
 import {
   axisName,
   domainSpan,
@@ -157,6 +189,8 @@ interface Plan {
   layout: Set<Stage>;
   /** Declared stages per trace (current indices). */
   traces: Map<number, Set<Stage>>;
+  /** Traces whose selection (`selectedpoints`) changed (E6.3). */
+  selection: Set<number>;
   /** Events to emit after the frame. */
   after: (() => void)[];
 }
@@ -164,6 +198,8 @@ interface Plan {
 interface Waiter {
   resolve(chart: Chart): void;
   reject(error: unknown): void;
+  /** Pipeline runs this waiter has already followed (see `#settle`). */
+  passes?: number;
 }
 
 interface TraceSlot {
@@ -174,6 +210,11 @@ interface TraceSlot {
   view: TraceView | undefined;
   viewport: Viewport | undefined;
   primitives: Set<Primitive<unknown>>;
+  /**
+   * Interactive selection (E6.3): indices, `null` (cleared), or `undefined` to follow the trace's
+   * `selectedpoints` attribute.
+   */
+  selection: readonly number[] | null | undefined;
 }
 
 interface ComponentSlot {
@@ -183,6 +224,29 @@ interface ComponentSlot {
 }
 
 const EMPTY_STAGES: ReadonlySet<Stage> = new Set();
+/** Layout passes at most per pipeline run (automargin, E4.2). */
+const AUTOMARGIN_PASSES = 3;
+/** Pipeline runs a `ready` / update promise follows while components keep requesting passes. */
+const MAX_SETTLE_PASSES = 8;
+const EMPTY_ENTRIES: readonly HoverEntry[] = [];
+/**
+ * Trace categories that share cross-trace calc across trace types (see
+ * `TraceModule.crossTraceCalc`): every trace whose module lists one of them stacks / groups with
+ * the others on its subplot.
+ */
+export const STACK_GROUPS: ReadonlySet<string> = new Set(['bar-like']);
+/** A zoom or pan preview: new transforms only (plan E6.2). */
+const TRANSFORM_ONLY: TraceUpdatePlan = { calc: false, plot: false, style: false, transform: true };
+const TICKS_ONLY: ReadonlySet<Stage> = new Set<Stage>(['ticks']);
+
+/** The axis state `config.doubleClick: 'reset'` returns to (captured at the first draw). */
+interface InitialAxis {
+  autorange: unknown;
+  /** The input range (range units), for fixed-range axes. */
+  range: unknown;
+  /** The linear range shown after the first draw. */
+  inUse: readonly [number, number];
+}
 const DEFAULT_SIZE: Size = { width: 700, height: 450 };
 
 class AxisSlot implements AxisInfo {
@@ -249,6 +313,7 @@ function emptyPlan(): Plan {
     structural: false,
     layout: new Set(),
     traces: new Map(),
+    selection: new Set(),
     after: [],
   };
 }
@@ -293,12 +358,20 @@ export function getChart(el: HTMLElement): Chart | undefined {
 
 /**
  * A chart bound to a DOM element. Create with {@link createChart} (or `newPlot`). All update
- * methods return a promise that resolves with the chart after the resulting frame is drawn.
+ * methods return a promise that resolves with the chart once the result is fully drawn.
+ *
+ * Interaction (hover, click, zoom / pan, selection; plan E6) is attached unless
+ * `config.staticPlot`; see `fx/interaction.ts` for the dispatch order and `ComponentView`'s
+ * `handlePointer` for how components take pointer events first.
  */
 export class Chart {
   /** The element the chart renders into (it owns one canvas inside it). */
   readonly element: HTMLElement;
-  /** Resolves after the first frame (rejects on a strict-mode validation error). */
+  /**
+   * Resolves once the first figure is fully drawn — including async text (tick labels, titles,
+   * legend) and any follow-up pass components asked for — so it is safe to screenshot or export
+   * (see "Update promises" above). Rejects on a strict-mode validation error.
+   */
   readonly ready: Promise<Chart>;
 
   readonly #registry: ChartRegistry;
@@ -320,6 +393,13 @@ export class Chart {
   #components = new Map<string, ComponentSlot>();
   #plan: Plan | null = null;
   #waiters: Waiter[] = [];
+  #layer: HoverLayer | undefined;
+  #fx: Interaction | undefined;
+  #hoverEntries: Map<string, HoverEntry[]> | null = null;
+  #componentOrder: ComponentSlot[] = [];
+  /** `#subplots` as an array, for per-frame pointer work (no iterator allocations). */
+  #subplotList: SubplotSlot[] = [];
+  #initialAxes = new Map<string, InitialAxis>();
   #scheduled = false;
   #destroyed = false;
 
@@ -327,6 +407,8 @@ export class Chart {
   constructor(el: HTMLElement, figure: FigureInput = {}, options: ChartOptions = {}) {
     this.element = el;
     this.#registry = options.registry ?? defaultRegistry;
+    // Interaction layout attributes (hoverdistance, clickmode, hoverlabel, …): see fx/settings.ts.
+    ensureFx(this.#registry);
     this.#options = options;
     this.#figure = normalizeFigure(figure);
     CHARTS.get(el)?.destroy();
@@ -429,6 +511,83 @@ export class Chart {
     this.#events.off(type, listener);
   }
 
+  /**
+   * Emit an event to this chart's listeners (components use it for `legendclick`, …). Returns
+   * `false` when a listener returned `false`, i.e. the default action should be skipped.
+   */
+  emit<K extends ChartEventName>(type: K, payload: ChartEvents[K]): boolean {
+    return this.#events.emit(type, payload);
+  }
+
+  // ---- interaction (E6) -------------------------------------------------------------------------
+
+  /** The interaction settings in effect (`hovermode`, `dragmode`, `clickmode`, …). */
+  get interaction(): FxSettings {
+    return resolveFxSettings(this.#full?.fullLayout, this.#full?.fullConfig, this.#figure.layout);
+  }
+
+  /**
+   * Show hover labels and emit `hover` programmatically (Plotly `Fx.hover`): points by trace and
+   * index, or a position in data units (`{ xval, yval, subplot? }`) resolved with `hovermode`.
+   */
+  hover(
+    target:
+      | readonly { readonly curveNumber: number; readonly pointNumber: number }[]
+      | { readonly xval?: unknown; readonly yval?: unknown; readonly subplot?: string },
+  ): void {
+    this.#fx?.hover(target);
+  }
+
+  /** Hide hover labels (emits `unhover` when something was hovered). */
+  unhover(): void {
+    this.#fx?.unhover();
+  }
+
+  /** Set `layout.dragmode` as a user interaction (modebar buttons; kept across `uirevision`). */
+  setDragmode(mode: Dragmode): Promise<Chart> {
+    return this.relayout({ dragmode: mode }, { gui: true });
+  }
+
+  /** Set `layout.hovermode` as a user interaction (modebar hover buttons). */
+  setHovermode(mode: Hovermode): Promise<Chart> {
+    return this.relayout({ hovermode: mode }, { gui: true });
+  }
+
+  /**
+   * Zoom every (non-fixed) axis of a subplot — all subplots by default — around its center:
+   * `factor < 1` zooms in (modebar zoom in: 0.5, zoom out: 2).
+   */
+  zoom(factor: number, options: { subplot?: string } = {}): Promise<Chart> {
+    const ranges = new Map<string, LinearRange>();
+    for (const sp of this.#subplots.values()) {
+      if (options.subplot !== undefined && sp.id !== options.subplot) continue;
+      for (const axis of [sp.xaxis, sp.yaxis]) {
+        if (ranges.has(axis.id) || this.#isFixed(axis)) continue;
+        const [r0, r1] = axis.scale.range;
+        const c = (r0 + r1) / 2;
+        ranges.set(axis.id, [c + (r0 - c) * factor, c + (r1 - c) * factor]);
+      }
+    }
+    return this.#commitRanges(ranges);
+  }
+
+  /** Autorange every axis (modebar "autoscale"). */
+  autoscale(): Promise<Chart> {
+    return this.#resetView('autosize');
+  }
+
+  /** Return every axis to its initial range (modebar "reset axes"). */
+  resetAxes(): Promise<Chart> {
+    return this.#resetView('reset');
+  }
+
+  /** Clear every selection (emits `deselect` when there was one). */
+  clearSelection(): Promise<Chart> {
+    const had = this.#clearSelection();
+    if (had) this.#events.emit('deselect', undefined);
+    return this.#schedule(() => undefined);
+  }
+
   // ---- update API (E7.1) ----------------------------------------------------------------------
 
   /**
@@ -436,13 +595,26 @@ export class Chart {
    * per listed trace, so wrap data arrays: `restyle({ x: [[1, 2, 3]] }, 0)`. `null` resets an
    * attribute to its default; `undefined` is ignored.
    */
-  restyle(update: AttributeUpdate, traces?: TraceIndices): Promise<Chart> {
-    return this.#schedule((plan) => this.#restyleInto(plan, update, traces));
+  restyle(
+    update: AttributeUpdate,
+    traces?: TraceIndices,
+    options: { gui?: boolean } = {},
+  ): Promise<Chart> {
+    return this.#schedule((plan) => {
+      if (options.gui) this.#recordTraceGui(update, traces);
+      this.#restyleInto(plan, update, traces);
+    });
   }
 
-  /** Change layout attributes by attribute string (Plotly `relayout`), e.g. `'xaxis.range[0]'`. */
-  relayout(update: AttributeUpdate): Promise<Chart> {
-    return this.#schedule((plan) => this.#relayoutInto(plan, update));
+  /**
+   * Change layout attributes by attribute string (Plotly `relayout`), e.g. `'xaxis.range[0]'`.
+   * `gui: true` marks it as a user interaction (zoom, modebar), which `uirevision` preserves.
+   */
+  relayout(update: AttributeUpdate, options: { gui?: boolean } = {}): Promise<Chart> {
+    return this.#schedule((plan) => {
+      if (options.gui) this.#recordLayoutGui(update);
+      this.#relayoutInto(plan, update);
+    });
   }
 
   /** `restyle` and `relayout` in one update (Plotly's `update`). */
@@ -490,6 +662,8 @@ export class Chart {
    */
   react(figure: FigureInput): Promise<Chart> {
     if (this.#destroyed) return Promise.reject(destroyedError());
+    // Double-click "reset" returns to the ranges of the latest figure the app gave.
+    this.#initialAxes.clear();
     const current = this.#figure;
     const next = normalizeFigure(figure);
     const effective = normalizeFigure(applyUirevision(current, next, this.#ui));
@@ -516,6 +690,8 @@ export class Chart {
       for (const change of diff.changes) {
         if (change.target === 'layout') layoutPaths.push(change.path);
         else if (change.traceIndex !== undefined) {
+          if (change.path.startsWith('selectedpoints'))
+            this.#followInputSelection(plan, change.traceIndex);
           const entry = byTrace.get(change.traceIndex) ?? { type: change.type, paths: [] };
           entry.paths.push(change.path);
           byTrace.set(change.traceIndex, entry);
@@ -636,6 +812,7 @@ export class Chart {
     if (paths.length === 0) return;
     const trace = applyEdits(this.#figure.data[index], edits);
     this.#figure.data[index] = trace;
+    if (paths.some((p) => p.startsWith('selectedpoints'))) this.#followInputSelection(plan, index);
     const stages = planTraceEdit(
       paths,
       inputTraceType(trace),
@@ -655,13 +832,39 @@ export class Chart {
     }
   }
 
-  #relayoutInto(plan: Plan, update: AttributeUpdate): void {
+  #relayoutInto(plan: Plan, update: AttributeUpdate, payload?: AttributeUpdate): void {
     const edits = withRangeImplications(update, this.#figure.layout, this.#full?.fullLayout);
     const paths = Object.keys(edits).filter((p) => edits[p] !== undefined);
     if (paths.length === 0) return;
     this.#figure.layout = applyEdits(this.#figure.layout, edits);
     for (const s of planLayoutEdit(paths, this.#registry.core)) plan.layout.add(s);
-    plan.after.push(() => this.#events.emit('relayout', edits));
+    plan.after.push(() => this.#events.emit('relayout', payload ?? edits));
+  }
+
+  #recordLayoutGui(update: AttributeUpdate): void {
+    const edits = withRangeImplications(update, this.#figure.layout, this.#full?.fullLayout);
+    for (const [path, value] of Object.entries(edits)) {
+      if (value === undefined) continue;
+      recordGuiEdit(this.#ui, { kind: 'layout' }, path, getIn(this.#figure.layout, path), value);
+    }
+  }
+
+  #recordTraceGui(update: AttributeUpdate, traces: TraceIndices | undefined): void {
+    const indices = this.#indices(traces, 'restyle');
+    for (const [i, edits] of distributeRestyle(update, indices)) {
+      const input = this.#figure.data[i];
+      const uid =
+        isPlainObject(input) && typeof input['uid'] === 'string' ? input['uid'] : undefined;
+      for (const [path, value] of Object.entries(edits)) {
+        recordGuiEdit(
+          this.#ui,
+          { kind: 'trace', index: i, ...(uid ? { uid } : {}) },
+          path,
+          getIn(input, path),
+          value,
+        );
+      }
+    }
   }
 
   /**
@@ -733,8 +936,52 @@ export class Chart {
       for (const emit of plan.after) emit();
       this.#events.emit('afterplot', undefined);
     } finally {
-      for (const w of waiters) w.resolve(this);
+      this.#settle(waiters);
     }
+  }
+
+  /**
+   * Resolve update promises once the chart is fully drawn: async text (SDF glyphs, ADR-005) of
+   * every trace and component primitive is typeset and its frame rendered, and follow-up passes
+   * components scheduled meanwhile (automargin after measuring text) have run too — so `ready`
+   * and every update promise are the one "fully drawn" signal for tests and export. Without
+   * pending text this resolves synchronously, as before.
+   */
+  #settle(waiters: Waiter[], seen?: Set<Promise<unknown>>): void {
+    if (waiters.length === 0) return;
+    // Text `ready` promises stay the same (resolved) until the next typesetting: wait only for
+    // ones not waited for yet, so this ends once nothing new started typesetting.
+    const text = this.#destroyed ? [] : this.#pendingText().filter((p) => !seen?.has(p));
+    if (text.length > 0) {
+      const next = new Set(seen);
+      for (const p of text) next.add(p);
+      const again = (): void => this.#settle(waiters, next);
+      Promise.all(text).then(again, again);
+      return;
+    }
+    if (!this.#destroyed) this.#root?.flush();
+    // A follow-up run is queued (a component asked for another pass): resolve after it.
+    const follow = this.#plan !== null && !this.#destroyed;
+    for (const w of waiters) {
+      const passes = w.passes ?? 0;
+      if (follow && passes < MAX_SETTLE_PASSES) {
+        w.passes = passes + 1;
+        this.#waiters.push(w);
+      } else w.resolve(this);
+    }
+  }
+
+  /** `ready` promises of primitives still typesetting (text), across traces and components. */
+  #pendingText(): Promise<unknown>[] {
+    const out: Promise<unknown>[] = [];
+    const collect = (p: Primitive<unknown>): void => {
+      const ready = (p as { readonly ready?: unknown }).ready;
+      if (ready instanceof Promise) out.push(ready);
+    };
+    for (const slot of this.#traces) if (slot) for (const p of slot.primitives) collect(p);
+    for (const slot of this.#components.values())
+      for (const p of slot.primitives.keys()) collect(p);
+    return out;
   }
 
   // ---- mount ------------------------------------------------------------------------------------
@@ -776,14 +1023,25 @@ export class Chart {
       this.#observer = new ResizeObserver(this.#onResize);
       this.#observer.observe(this.element);
     }
+    if (config.staticPlot !== true) {
+      this.#layer = new HoverLayer(this.element);
+      this.#fx = new Interaction(this.#interactionHost(root, this.#layer));
+    }
   }
 
   #unmount(): void {
+    this.#fx?.destroy();
+    this.#fx = undefined;
+    this.#layer?.destroy();
+    this.#layer = undefined;
+    this.#hoverEntries = null;
     for (const slot of this.#traces) if (slot) this.#disposeView(slot);
     this.#traces = [];
     for (const slot of this.#components.values()) this.#disposeComponent(slot);
     this.#components.clear();
+    this.#componentOrder = [];
     this.#subplots.clear();
+    this.#subplotList = [];
     this.#axes.clear();
     this.#observer?.disconnect();
     this.#observer = null;
@@ -855,6 +1113,7 @@ export class Chart {
         view: undefined,
         viewport: undefined,
         primitives: new Set(),
+        selection: undefined,
       };
     });
     for (const slot of this.#traces.splice(fullData.length)) if (slot) this.#disposeView(slot);
@@ -870,7 +1129,10 @@ export class Chart {
 
     const rescaled = layoutRan ? this.#syncAxes(fullLayout, fullData) : new Set<string>();
 
-    // Calc and extremes.
+    // Margins, axis spans and subplot viewports first: `crossTraceCalc` gets its subplot.
+    if (layoutRan) this.#layoutSubplots(fullLayout, fullData, size);
+
+    // Calc.
     const plans: TraceUpdatePlan[] = fullData.map((trace, i) => {
       const slot = this.#traces[i] as TraceSlot;
       const onRescaled =
@@ -885,31 +1147,50 @@ export class Chart {
         slot.extremes = undefined;
         return tp;
       }
-      const ctx = this.#calcContext(trace, i);
       if (tp.calc) {
-        slot.calc = slot.module?.calc ? slot.module.calc(trace, ctx) : undefined;
+        slot.calc = slot.module?.calc
+          ? slot.module.calc(trace, this.#calcContext(trace, i))
+          : undefined;
         slot.hasCalc = true;
-      }
-      if (trace.visible !== true) slot.extremes = undefined;
-      else if (tp.plot && slot.module?.extremes) {
-        slot.extremes = slot.module.extremes(slot.calc, trace, ctx);
       }
       return tp;
     });
 
-    if (layoutRan) this.#layout(fullLayout, fullData, size);
+    // Cross-trace calc (stacking, grouping) per subplot and trace type, then extremes.
+    this.#crossTraceCalc(fullLayout, fullData, plan, plans);
+    fullData.forEach((trace, i) => {
+      const slot = this.#traces[i] as TraceSlot;
+      const tp = plans[i] as TraceUpdatePlan;
+      if (trace.visible !== true) slot.extremes = undefined;
+      else if (tp.plot && slot.module?.extremes) {
+        slot.extremes = slot.module.extremes(slot.calc, trace, this.#calcContext(trace, i));
+      }
+    });
+
+    if (layoutRan) {
+      this.#autorange(fullData);
+      this.#automargin(fullLayout, fullData, size);
+    }
 
     // Backgrounds are cheap to set: do it on every run (`paper_bgcolor` is a style edit).
     root.setBackground(toRGBA(fullLayout.paper_bgcolor) ?? null);
     const plotBg = toRGBA(fullLayout.plot_bgcolor) ?? null;
     for (const sp of this.#subplots.values()) sp.viewport.background = plotBg;
 
+    for (const i of plan.selection) {
+      const tp = plans[i];
+      if (tp) plans[i] = { ...tp, selection: true };
+    }
     fullData.forEach((trace, i) => this.#plotTrace(i, trace, plans[i] as TraceUpdatePlan));
 
     const stages = new Set(plan.layout);
     for (const s of plan.traces.values()) for (const stage of s) stages.add(stage);
     this.#drawComponents(fullLayout, fullData, { stages, layout: layoutRan });
     root.invalidate();
+
+    if (layoutRan) this.#captureInitialAxes();
+    this.#hoverEntries = null;
+    this.#fx?.refresh();
   }
 
   #calcContext(trace: FullTrace, index: number): CalcContext {
@@ -930,19 +1211,17 @@ export class Chart {
       const full = fullLayout[axisName(id)] as FullAxis | undefined;
       if (!full) continue;
       const type = axisTypeOf(full);
-      let categories: string[] | undefined;
+      let lists: ReturnType<typeof axisCategoryLists> = {};
       if (isCategorical(type)) {
-        categories = [];
-        const seen = new Set<string>();
         const letter = id.charAt(0);
+        const columns: unknown[] = [];
         for (const trace of fullData) {
-          if (trace.visible !== false && trace[`${letter}axis`] === id) {
-            collectCategories(trace[letter], categories, seen);
-          }
+          if (trace.visible !== false && trace[`${letter}axis`] === id) columns.push(trace[letter]);
         }
+        lists = axisCategoryLists(full, type, columns);
       }
       const prev = this.#axes.get(id);
-      const state = syncScale(prev?.state, type, categories);
+      const state = syncScale(prev?.state, type, lists.categories, lists.multicategories);
       if (!prev || prev.state !== state) rescaled.add(id);
       const slot = prev ?? new AxisSlot(id, full, state);
       slot.full = full;
@@ -953,9 +1232,16 @@ export class Chart {
     return rescaled;
   }
 
-  /** Margins, plot area, axis spans and ranges, subplot viewports and transforms (E4.1, E4.3). */
-  #layout(fullLayout: FullLayout, fullData: readonly FullTrace[], size: Size): void {
-    const root = this.#requireRoot();
+  /**
+   * Margins, plot area, axis spans and subplot viewports (E4.1, E4.3). Ranges and transforms come
+   * after calc, in {@link #autorange}.
+   */
+  #layoutSubplots(fullLayout: FullLayout, fullData: readonly FullTrace[], size: Size): void {
+    this.#placeSubplots(fullLayout, this.#marginsFor(fullLayout, fullData, size), size);
+  }
+
+  /** Margins after every component's `pushMargin`, against the axes as they are now. */
+  #marginsFor(fullLayout: FullLayout, fullData: readonly FullTrace[], size: Size): Margins {
     const pushes: MarginPush[] = [];
     for (const c of this.#registry.components()) {
       const p = c.pushMargin?.({
@@ -968,7 +1254,34 @@ export class Chart {
       if (Array.isArray(p)) pushes.push(...(p as MarginPush[]));
       else if (p) pushes.push(p as MarginPush);
     }
-    this.#margins = resolveMargins(fullLayout.margin, pushes, size);
+    return resolveMargins(fullLayout.margin, pushes, size);
+  }
+
+  /**
+   * Automargin (E4.2): pushes depend on the axes (tick labels of the current range and length),
+   * which depend on the margins. After the first autorange, re-measure and re-place until the
+   * margins move less than half a pixel, at most {@link AUTOMARGIN_PASSES} passes in all.
+   */
+  #automargin(fullLayout: FullLayout, fullData: readonly FullTrace[], size: Size): void {
+    for (let pass = 1; pass < AUTOMARGIN_PASSES; pass++) {
+      const next = this.#marginsFor(fullLayout, fullData, size);
+      const m = this.#margins;
+      const moved = Math.max(
+        Math.abs(next.l - m.l),
+        Math.abs(next.r - m.r),
+        Math.abs(next.t - m.t),
+        Math.abs(next.b - m.b),
+      );
+      if (moved < 0.5) return;
+      this.#placeSubplots(fullLayout, next, size);
+      this.#autorange(fullData);
+    }
+  }
+
+  /** Plot area, axis spans and subplot viewports for given margins. */
+  #placeSubplots(fullLayout: FullLayout, margins: Margins, size: Size): void {
+    const root = this.#requireRoot();
+    this.#margins = margins;
     const area = plotArea(size, this.#margins);
     this.#plotArea = area;
 
@@ -977,17 +1290,6 @@ export class Chart {
       axis.start = span.start;
       axis.end = span.end;
       axis.scale.setLength(Math.abs(span.end - span.start));
-      const extremes: AxisExtremes[] = [];
-      const key = `${axis.letter}axis`;
-      fullData.forEach((trace, i) => {
-        if (trace.visible !== true || trace[key] !== axis.id) return;
-        const e = this.#traces[i]?.extremes?.[axis.letter];
-        if (e) extremes.push(e);
-      });
-      const [r0, r1] = resolveAxisRange(axis.full, axis.scale, extremes);
-      axis.scale.setRange(r0, r1);
-      // Like Plotly, the range in use is readable from fullLayout (linear coordinates).
-      axis.full.range = [r0, r1];
     }
 
     const next = new Map<string, SubplotSlot>();
@@ -1009,7 +1311,6 @@ export class Chart {
         slot.xaxis = xa;
         slot.yaxis = ya;
         slot.rect = rect;
-        slot.transform = dataTransform(xa.scale, ya.scale);
       } else {
         const viewport = root.addViewport({
           kind: '2d',
@@ -1031,6 +1332,96 @@ export class Chart {
       root.removeViewport(slot.viewport);
     }
     this.#subplots = next;
+    this.#subplotList = [...next.values()];
+  }
+
+  /** Axis ranges from trace extremes (E3.2), then every subplot's transform. */
+  #autorange(fullData: readonly FullTrace[]): void {
+    for (const axis of this.#axes.values()) {
+      const extremes: AxisExtremes[] = [];
+      const key = `${axis.letter}axis`;
+      fullData.forEach((trace, i) => {
+        if (trace.visible !== true || trace[key] !== axis.id) return;
+        const e = this.#traces[i]?.extremes?.[axis.letter];
+        if (e) extremes.push(e);
+      });
+      const [r0, r1] = resolveAxisRange(axis.full, axis.scale, extremes);
+      axis.scale.setRange(r0, r1);
+      // Like Plotly, the range in use is readable from fullLayout (linear coordinates).
+      axis.full.range = [r0, r1];
+    }
+    for (const sp of this.#subplots.values()) {
+      sp.transform = dataTransform(sp.xaxis.scale, sp.yaxis.scale);
+    }
+  }
+
+  /**
+   * Run `crossTraceCalc` once per subplot and stack group (plan §4.4): with every visible trace of
+   * the group on the subplot, in trace order, after calc and before extremes. A trace's group is
+   * the first of its module's `categories` listed in {@link STACK_GROUPS} (so bar, histogram,
+   * funnel and waterfall stack together as `bar-like`), else its trace type; the group's first
+   * module with a `crossTraceCalc` runs it. It reruns when any trace of the group (hidden ones
+   * included: hiding a bar restacks the others) was recalculated or declared a `crossTraceCalc`
+   * stage; every member then re-uploads (its calc was mutated in place).
+   */
+  #crossTraceCalc(
+    fullLayout: FullLayout,
+    fullData: readonly FullTrace[],
+    plan: Plan,
+    plans: TraceUpdatePlan[],
+  ): void {
+    const groups = new Map<
+      string,
+      { module: TraceModule | undefined; subplot: string; members: number[]; dirty: boolean }
+    >();
+    fullData.forEach((trace, i) => {
+      const module = this.#traces[i]?.module;
+      if (!module) return;
+      const stack = module.categories.find((c) => STACK_GROUPS.has(c));
+      if (!stack && !module.crossTraceCalc) return;
+      const x = trace['xaxis'];
+      const y = trace['yaxis'];
+      if (typeof x !== 'string' || typeof y !== 'string') return;
+      const key = `${stack ?? `type:${trace.type}`}\u0000${x}${y}`;
+      let group = groups.get(key);
+      if (!group) {
+        group = {
+          module: undefined,
+          subplot: x + y,
+          members: [],
+          dirty: plan.full || plan.structural,
+        };
+        groups.set(key, group);
+      }
+      group.module ??= module.crossTraceCalc ? module : undefined;
+      group.members.push(i);
+      const stages = plan.traces.get(i);
+      if ((plans[i] as TraceUpdatePlan).calc || stages?.has('crossTraceCalc')) group.dirty = true;
+    });
+    if (plan.layout.has('crossTraceCalc')) for (const g of groups.values()) g.dirty = true;
+    for (const group of groups.values()) {
+      if (!group.dirty || !group.module?.crossTraceCalc) continue;
+      const subplot = this.#subplots.get(group.subplot);
+      if (!subplot) continue;
+      const entries = group.members
+        .filter((i) => fullData[i]?.visible === true && this.#traces[i]?.hasCalc === true)
+        .map((i) => ({
+          trace: fullData[i] as FullTrace,
+          index: i,
+          calc: (this.#traces[i] as TraceSlot).calc,
+        }));
+      if (entries.length === 0) continue;
+      group.module.crossTraceCalc(entries, {
+        fullLayout,
+        subplot,
+        xaxis: subplot.xaxis,
+        yaxis: subplot.yaxis,
+      });
+      for (const e of entries) {
+        const tp = plans[e.index] as TraceUpdatePlan;
+        plans[e.index] = { ...tp, calc: true, plot: true, style: true };
+      }
+    }
   }
 
   #plotTrace(index: number, trace: FullTrace, tp: TraceUpdatePlan): void {
@@ -1054,7 +1445,7 @@ export class Chart {
     if (!slot.view) {
       slot.viewport = viewport;
       slot.view = renderer.create(ctx);
-    } else if (tp.calc || tp.plot || tp.style || tp.transform) {
+    } else if (tp.calc || tp.plot || tp.style || tp.transform || tp.selection === true) {
       slot.view.update(ctx, tp);
     }
   }
@@ -1088,6 +1479,7 @@ export class Chart {
         viewport.remove(primitive, { dispose: true });
       },
       invalidate: () => root.invalidate(),
+      selectedPoints: this.#selectionOf(index),
     };
   }
 
@@ -1124,6 +1516,8 @@ export class Chart {
       if (created) slot.view = module.draw?.create(ctx);
       else slot.view?.update(ctx, plan);
     }
+    // Pointer dispatch order: topmost (last drawn) first.
+    this.#componentOrder = [...this.#components.values()].reverse();
   }
 
   #componentContext(
@@ -1155,7 +1549,262 @@ export class Chart {
         vp?.remove(primitive, { dispose: true });
       },
       invalidate: () => root.invalidate(),
+      chart: this,
+      ...(this.#full ? { fullConfig: this.#full.fullConfig } : {}),
     };
+  }
+
+  // ---- interaction plumbing (E6) ------------------------------------------------------------------
+
+  #interactionHost(
+    root: RenderRoot,
+    layer: HoverLayer,
+  ): ConstructorParameters<typeof Interaction>[0] {
+    const scheduler: FrameScheduler = this.#options.renderRoot?.scheduler ?? browserFrameScheduler;
+    return {
+      target: root.canvas,
+      layer,
+      scheduler,
+      events: this.#events,
+      settings: () => this.interaction,
+      size: () => this.#size,
+      subplots: () => this.#subplotList,
+      entries: (sp) => this.#entries(sp.id),
+      fullLayout: () => this.#full?.fullLayout,
+      traceCount: () => this.#full?.fullData.length ?? 0,
+      isFixed: (axis) => this.#isFixed(axis),
+      limits: (axis) => this.#limits(axis),
+      dispatch: (event, only) => this.#dispatchPointer(event, only),
+      preview: (ranges) => this.#previewRanges(ranges),
+      commit: (ranges) => {
+        this.#commitRanges(ranges).catch(() => undefined);
+      },
+      resetView: (action) => {
+        this.#resetView(action).catch(() => undefined);
+      },
+      selection: (index) => this.#selectionOf(index),
+      select: (selection) => this.#select(selection),
+      clearSelection: () => this.#clearSelection(),
+      renderHover: (points: readonly ChartPoint[]) => {
+        const fn = isPlainObject(this.#figure.config)
+          ? this.#figure.config['renderHover']
+          : undefined;
+        return typeof fn === 'function'
+          ? (fn as (p: readonly ChartPoint[]) => HTMLElement | null | undefined)(points)
+          : undefined;
+      },
+    };
+  }
+
+  /** Hoverable / selectable traces per subplot, rebuilt lazily after each pipeline run. */
+  #entries(subplotId: string): readonly HoverEntry[] {
+    if (!this.#hoverEntries) {
+      const map = new Map<string, HoverEntry[]>();
+      const full = this.#full;
+      full?.fullData.forEach((trace, index) => {
+        const slot = this.#traces[index];
+        const module = slot?.module;
+        if (!slot?.hasCalc || !module || trace.visible !== true) return;
+        if (!module.hoverPoints && !module.selectPoints) return;
+        const subplot = this.#subplots.get(`${String(trace['xaxis'])}${String(trace['yaxis'])}`);
+        if (!subplot) return;
+        const input = this.#figure.data[index];
+        const list = map.get(subplot.id) ?? [];
+        list.push({
+          index,
+          module,
+          trace,
+          input,
+          calc: slot.calc,
+          subplot,
+          ctx: {
+            fullLayout: full.fullLayout,
+            xaxis: subplot.xaxis,
+            yaxis: subplot.yaxis,
+            transform: subplot.transform,
+          },
+          skip: traceAttr(trace, input, 'hoverinfo') === 'skip',
+        });
+        map.set(subplot.id, list);
+      });
+      this.#hoverEntries = map;
+    }
+    return this.#hoverEntries.get(subplotId) ?? EMPTY_ENTRIES;
+  }
+
+  #dispatchPointer(event: ComponentPointerEvent, only: unknown): unknown {
+    for (const slot of this.#componentOrder) {
+      const view = slot.view;
+      if (!view?.handlePointer || (only !== undefined && view !== only)) continue;
+      if (view.handlePointer(event) === true) return view;
+    }
+    return undefined;
+  }
+
+  /** `fixedrange`: no zoom or pan on this axis (drags, wheel, pinch, `chart.zoom`, reset). */
+  #isFixed(axis: AxisInfo): boolean {
+    return axis.full.fixedrange === true;
+  }
+
+  /** `minallowed` / `maxallowed` in linear coordinates. */
+  #limits(axis: AxisInfo): readonly [number | undefined, number | undefined] {
+    const toL = (v: unknown): number | undefined => {
+      if (v === undefined || v === null) return undefined;
+      const l = axis.scale.r2l(v);
+      return Number.isFinite(l) ? l : undefined;
+    };
+    return [toL(axis.full.minallowed), toL(axis.full.maxallowed)];
+  }
+
+  /**
+   * Show new axis ranges now, without a pipeline run (drag / wheel previews, plan E6.2): scales and
+   * transforms change, traces get transform-only updates (uniforms), components redraw ticks. The
+   * input layout is untouched until {@link #commitRanges}.
+   */
+  #previewRanges(ranges: ReadonlyMap<string, LinearRange>): void {
+    const full = this.#full;
+    const root = this.#root;
+    if (!full || !root) return;
+    for (const [id, [r0, r1]] of ranges) {
+      const axis = this.#axes.get(id);
+      if (!axis) continue;
+      axis.scale.setRange(r0, r1);
+      axis.full.range = [r0, r1];
+    }
+    for (const sp of this.#subplots.values()) {
+      if (!ranges.has(sp.xaxis.id) && !ranges.has(sp.yaxis.id)) continue;
+      sp.transform = dataTransform(sp.xaxis.scale, sp.yaxis.scale);
+      full.fullData.forEach((trace, i) => {
+        const slot = this.#traces[i];
+        if (!slot?.view || slot.viewport !== sp.viewport) return;
+        slot.view.update(this.#plotContext(i, trace, slot, sp, sp.viewport), TRANSFORM_ONLY);
+      });
+    }
+    for (const slot of this.#components.values()) {
+      slot.view?.update(this.#componentContext(full.fullLayout, full.fullData, slot), {
+        stages: TICKS_ONLY,
+        layout: true,
+      });
+    }
+    this.#hoverEntries = null;
+    root.invalidate();
+  }
+
+  /** Commit ranges as a GUI relayout; the `relayout` event carries Plotly's `range[i]` keys. */
+  #commitRanges(ranges: ReadonlyMap<string, LinearRange>): Promise<Chart> {
+    const update: Record<string, unknown> = {};
+    const payload: Record<string, unknown> = {};
+    for (const [id, [r0, r1]] of ranges) {
+      const axis = this.#axes.get(id);
+      if (!axis) continue;
+      const a = axis.scale.l2r(r0);
+      const b = axis.scale.l2r(r1);
+      update[`${axis.name}.range`] = [a, b];
+      payload[`${axis.name}.range[0]`] = a;
+      payload[`${axis.name}.range[1]`] = b;
+    }
+    if (Object.keys(update).length === 0) return this.#schedule(() => undefined);
+    return this.#schedule((plan) => {
+      this.#recordLayoutGui(update);
+      this.#relayoutInto(plan, update, payload);
+    });
+  }
+
+  /** Remember each axis' first drawn state for double-click reset. */
+  #captureInitialAxes(): void {
+    for (const axis of this.#axes.values()) {
+      if (this.#initialAxes.has(axis.name)) continue;
+      this.#initialAxes.set(axis.name, {
+        autorange: axis.full.autorange,
+        range: getIn(this.#figure.layout, `${axis.name}.range`),
+        inUse: [axis.scale.range[0], axis.scale.range[1]],
+      });
+    }
+  }
+
+  /** `config.doubleClick` actions (also the modebar's autoscale / reset axes). */
+  #resetView(action: FxSettings['doubleClick']): Promise<Chart> {
+    if (action === false) return this.#schedule(() => undefined);
+    let mode: 'reset' | 'autosize' = action === 'autosize' ? 'autosize' : 'reset';
+    if (action === 'reset+autosize') {
+      // Already at the initial view: autosize instead (Plotly semantics).
+      let atInitial = true;
+      for (const axis of this.#axes.values()) {
+        const init = this.#initialAxes.get(axis.name);
+        const r = axis.scale.range;
+        if (!init) continue;
+        const tol = Math.abs(init.inUse[1] - init.inUse[0]) * 1e-6;
+        if (Math.abs(r[0] - init.inUse[0]) > tol || Math.abs(r[1] - init.inUse[1]) > tol) {
+          atInitial = false;
+          break;
+        }
+      }
+      mode = atInitial ? 'autosize' : 'reset';
+    }
+    const update: Record<string, unknown> = {};
+    for (const axis of this.#axes.values()) {
+      if (this.#isFixed(axis)) continue;
+      const init = this.#initialAxes.get(axis.name);
+      if (mode === 'reset' && init && init.autorange === false && Array.isArray(init.range)) {
+        update[`${axis.name}.range`] = [...(init.range as unknown[])];
+        update[`${axis.name}.autorange`] = false;
+      } else {
+        update[`${axis.name}.range`] = null;
+        update[`${axis.name}.autorange`] =
+          mode === 'reset' && init && init.autorange !== false ? init.autorange : true;
+      }
+    }
+    return this.relayout(update, { gui: true });
+  }
+
+  // ---- selection (E6.3) ----------------------------------------------------------------------------
+
+  /** A trace's selection: the interactive one, else its `selectedpoints` attribute. */
+  #selectionOf(index: number): readonly number[] | null {
+    const slot = this.#traces[index];
+    if (slot && slot.selection !== undefined) return slot.selection;
+    const trace = this.#full?.fullData[index];
+    const v = trace ? traceAttr(trace, this.#figure.data[index], 'selectedpoints') : undefined;
+    if (Array.isArray(v) || (ArrayBuffer.isView(v) && !(v instanceof DataView))) {
+      return Array.from(v as ArrayLike<number>, Number);
+    }
+    return null;
+  }
+
+  /** The input `selectedpoints` changed (restyle / react): it wins over the interactive selection. */
+  #followInputSelection(plan: Plan, index: number): void {
+    const slot = this.#traces[index];
+    if (slot) slot.selection = undefined;
+    plan.selection.add(index);
+  }
+
+  #select(selection: ReadonlyMap<number, readonly number[]>): void {
+    this.#schedule((plan) => {
+      for (const [index, list] of selection) {
+        const slot = this.#traces[index];
+        if (!slot) continue;
+        slot.selection = list;
+        plan.selection.add(index);
+      }
+    }).catch(() => undefined);
+  }
+
+  /** Clear every selection; returns whether anything was selected. */
+  #clearSelection(): boolean {
+    let had = false;
+    const cleared: number[] = [];
+    this.#traces.forEach((slot, i) => {
+      if (!slot || this.#selectionOf(i) === null) return;
+      had = true;
+      slot.selection = null;
+      cleared.push(i);
+    });
+    if (had) {
+      this.#schedule((plan) => {
+        for (const i of cleared) plan.selection.add(i);
+      }).catch(() => undefined);
+    }
+    return had;
   }
 
   #disposeComponent(slot: ComponentSlot): void {

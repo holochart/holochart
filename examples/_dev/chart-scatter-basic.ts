@@ -1,4 +1,5 @@
 import { createChart } from '@mk7s/holochart';
+import { useExampleFonts } from '../_lib/fonts.ts';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -33,6 +34,8 @@ export function run(el: HTMLElement): ExampleHandle {
   const cSizes = Array.from({ length: 40 }, () => 8 + random() * 14);
   const cColors = Array.from({ length: 40 }, (_, i) => (i % 3 === 0 ? '#d62728' : '#9467bd'));
 
+  // Vendored Inter: deterministic tick labels and legend text (no CDN font).
+  useExampleFonts();
   const chart = createChart(el, {
     data: [
       { type: 'scatter', mode: 'markers', name: 'A', ...a },

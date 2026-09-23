@@ -7,6 +7,7 @@ import {
   PlaneGeometry,
   Vector3,
 } from 'three';
+import { createLatestQueue } from '@mk7s/holochart';
 import {
   createMarkers,
   createPicker,
@@ -23,6 +24,10 @@ import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
  * asynchronously; the hit marker gets a ring, a hit on the surface tints it and rings the picked
  * vertex. Markers below the surface are occluded for picking exactly as they are on screen.
  * Drag to orbit. The visual test captures the initial frame (no hover).
+ *
+ * Picks go through the runtime's latest-wins queue (E2.17): one pick in flight, the newest pointer
+ * position waiting, and every finished pick shown, so the readout keeps up while the pointer moves
+ * instead of freezing until it stops.
  */
 export const meta: ExampleMeta = {
   title: 'GPU picking (3D)',
@@ -153,6 +158,7 @@ export function run(el: HTMLElement): ExampleHandle {
   picker.add(viewport, mesh, { traceIndex: 1, element: 'vertex' });
 
   const readout = document.createElement('div');
+  readout.className = 'pick-readout';
   readout.style.cssText =
     'position:absolute;top:8px;left:8px;padding:4px 8px;border-radius:4px;display:none;' +
     'background:rgba(255,255,255,.92);font:12px/1.4 ui-monospace,monospace;color:#223;' +
@@ -183,27 +189,23 @@ export function run(el: HTMLElement): ExampleHandle {
     root.invalidate();
   };
 
-  // One pick in flight at a time; the latest pointer position wins.
-  let disposed = false;
-  let inFlight = false;
-  let queued: { x: number; y: number } | null = null;
-  const pickAt = (px: number, py: number): void => {
-    if (inFlight) {
-      queued = { x: px, y: py };
-      return;
-    }
-    inFlight = true;
-    void picker.pick(px, py, { radius: 6, mode: 'closest' }).then((hits) => {
-      inFlight = false;
-      if (disposed) return;
-      if (queued) {
-        const next = queued;
-        queued = null;
-        pickAt(next.x, next.y);
-        return;
-      }
+  // One pick in flight; the newest position waits; every finished pick is shown (E2.17). The old
+  // queue dropped a finished pick whenever a newer one was waiting, so a moving pointer starved
+  // the readout.
+  // `data-pick-pending` on the container tells tests (and devtools) when the readout is final.
+  const picks = createLatestQueue(
+    (p: { x: number; y: number }) => picker.pick(p.x, p.y, { radius: 6, mode: 'closest' }),
+    (hits: PickResult[]) => {
       show(hits[0]);
-    });
+      // The waiting pick (if any) starts right after this callback.
+      queueMicrotask(() => {
+        if (!picks.busy) el.dataset['pickPending'] = 'false';
+      });
+    },
+  );
+  const pickAt = (px: number, py: number): void => {
+    el.dataset['pickPending'] = 'true';
+    picks.push({ x: px, y: py });
   };
 
   const canvas = root.canvas;
@@ -232,7 +234,9 @@ export function run(el: HTMLElement): ExampleHandle {
     if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
   };
   const onLeave = (): void => {
-    queued = null;
+    // A pick still in flight must not bring the readout back after the pointer left.
+    picks.cancel();
+    el.dataset['pickPending'] = 'false';
     if (!drag) show(undefined);
   };
   canvas.addEventListener('pointerdown', onDown);
@@ -246,7 +250,7 @@ export function run(el: HTMLElement): ExampleHandle {
     renderer: root.renderer,
     ready: Promise.resolve(),
     dispose() {
-      disposed = true;
+      picks.dispose();
       canvas.removeEventListener('pointerdown', onDown);
       canvas.removeEventListener('pointermove', onMove);
       canvas.removeEventListener('pointerup', onUp);

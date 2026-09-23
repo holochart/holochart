@@ -349,3 +349,10 @@ describe('supplyDefaults: axis defaults (E3)', () => {
     );
   });
 });
+
+describe('cleanTick0 on date axes (property-test regression)', () => {
+  it('treats out-of-range dates as invalid and falls back to the default', () => {
+    expect(cleanTick0(1e308, 'date', 86400000)).toBe(cleanTick0(Number.NaN, 'date', 86400000));
+    expect(cleanTick0(-9e15, 'date', 86400000)).toBe(cleanTick0('nope', 'date', 86400000));
+  });
+});

@@ -385,6 +385,12 @@
           "description": "Linear axes only. `tozero` extends the autorange to include 0; `nonnegative` keeps it ≥ 0.",
           "valType": "enumerated"
         },
+        "fixedrange": {
+          "dflt": false,
+          "editType": "none",
+          "description": "Disables zoom and pan on this axis (drag, scroll, and modebar zoom leave its range alone).",
+          "valType": "boolean"
+        },
         "range": {
           "items": [
             {
@@ -1042,6 +1048,12 @@
           "editType": "layout+ticks+plot",
           "description": "Linear axes only. `tozero` extends the autorange to include 0; `nonnegative` keeps it ≥ 0.",
           "valType": "enumerated"
+        },
+        "fixedrange": {
+          "dflt": false,
+          "editType": "none",
+          "description": "Disables zoom and pan on this axis (drag, scroll, and modebar zoom leave its range alone).",
+          "valType": "boolean"
         },
         "range": {
           "items": [
@@ -1807,6 +1819,16 @@
         "dflt": false,
         "description": "Run the calc stage in a Web Worker (ADR-011). `auto` switches on above a data-size threshold.",
         "valType": "enumerated"
+      },
+      "hoverRenderer": {
+        "values": ["dom"],
+        "dflt": "dom",
+        "description": "How hover labels render. Only `dom` (positioned HTML over the canvas) exists in M1; a WebGL label renderer is planned (E5.7).",
+        "valType": "enumerated"
+      },
+      "renderHover": {
+        "description": "Custom hover label: `(points) => HTMLElement | null`. Return `null`/`undefined` to use the built-in label. Not serializable (ADR-012).",
+        "valType": "function"
       },
       "textRenderer": {
         "values": ["webgl", "dom"],

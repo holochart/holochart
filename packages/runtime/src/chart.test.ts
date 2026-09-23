@@ -1,10 +1,17 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { attr } from '@mk7s/holochart-core';
-import { createMarkers } from '@mk7s/holochart-render';
+import { createMarkers, type Primitive } from '@mk7s/holochart-render';
+import { Object3D } from 'three';
 import { createChart, getChart, type Chart } from './chart.ts';
 import type { ComponentModule, TraceModule } from './contracts.ts';
-import { FakeResizeObserver, setup, type TestSetup } from './__testing__/fakes.ts';
+import {
+  createDotsModule,
+  createLog,
+  FakeResizeObserver,
+  setup,
+  type TestSetup,
+} from './__testing__/fakes.ts';
 
 const XY = { type: 'dots', x: [0, 10], y: [0, 100] };
 
@@ -422,5 +429,178 @@ describe('components', () => {
     await c.restyle({ color: 'red' });
     await c.relayout({ 'xaxis.range': [1, 2] });
     expect(draws).toEqual(['create 150 xy', 'update 150 false', 'update 150 true']);
+  });
+});
+
+describe('crossTraceCalc', () => {
+  it('runs once per subplot and type with the visible traces, after calc', async () => {
+    const s = setup({ width: 640, height: 400, cross: true });
+    const c = chart(
+      {
+        data: [
+          XY,
+          { ...XY, visible: 'legendonly' },
+          { ...XY, xaxis: 'x2', yaxis: 'y2' },
+          { ...XY, y: [5, 6] },
+        ],
+        layout: { xaxis2: { domain: [0.6, 1] }, yaxis2: { anchor: 'x2' } },
+      },
+      s,
+    );
+    await c.ready;
+    expect(s.log.cross).toEqual([[0, 3], [2]]);
+    s.log.cross.length = 0;
+    // A style edit leaves stacking alone.
+    await c.restyle({ color: 'red' }, 0);
+    expect(s.log.cross).toEqual([]);
+    // Showing a hidden member restacks its group, and every member re-uploads.
+    await c.restyle({ visible: true }, 1);
+    expect(s.log.cross).toEqual([[0, 1, 3]]);
+    const last = new Map(s.log.updates.map((u) => [u.index, u.plan.calc]));
+    expect(last.get(0)).toBe(true);
+    expect(last.get(3)).toBe(true);
+  });
+});
+
+describe('categories', () => {
+  it('orders category axes with categoryorder / categoryarray (core axisCategories)', async () => {
+    const c = chart({
+      data: [{ type: 'dots', x: ['b', 'c', 'a'], y: [1, 2, 3] }],
+      layout: { xaxis: { categoryorder: 'category descending' } },
+    });
+    await c.ready;
+    expect(c.axes.get('x')?.scale.categories).toEqual(['c', 'b', 'a']);
+    await c.relayout({ 'xaxis.categoryorder': 'array', 'xaxis.categoryarray': ['a', 'z'] });
+    expect(c.axes.get('x')?.scale.categories).toEqual(['a', 'z', 'b', 'c']);
+  });
+
+  it('builds multicategory axes from two-row data', async () => {
+    const c = chart({
+      data: [
+        {
+          type: 'dots',
+          x: [
+            ['g1', 'g1', 'g2'],
+            ['a', 'b', 'a'],
+          ],
+          y: [1, 2, 3],
+        },
+      ],
+    });
+    await c.ready;
+    expect(c.axes.get('x')?.type).toBe('multicategory');
+    expect(c.axes.get('x')?.scale.multicategories).toEqual([
+      ['g1', 'a'],
+      ['g1', 'b'],
+      ['g2', 'a'],
+    ]);
+  });
+});
+
+describe('stack groups', () => {
+  it("groups crossTraceCalc across trace types sharing a stack group ('bar-like')", async () => {
+    const log = createLog();
+    const base = createDotsModule(log, { cross: true });
+    const bars: TraceModule = { ...base, type: 'bars', categories: ['cartesian', 'bar-like'] };
+    const hist: TraceModule = {
+      ...base,
+      type: 'hist',
+      categories: ['cartesian', 'bar-like'],
+      crossTraceCalc: undefined,
+    };
+    const s = setup({ width: 640, height: 400 });
+    s.registry.register(bars as TraceModule, hist as TraceModule);
+    const c = chart(
+      {
+        data: [
+          { ...XY, type: 'hist' },
+          { ...XY, type: 'dots' },
+          { ...XY, type: 'bars' },
+        ],
+      },
+      s,
+    );
+    await c.ready;
+    // hist has no crossTraceCalc of its own: the group's bars module runs it for both.
+    expect(log.cross).toEqual([[0, 2]]);
+  });
+});
+
+describe('ready', () => {
+  function textComponent(done: Promise<void>, onUpdate?: (chart: Chart) => void): ComponentModule {
+    return {
+      name: 'text-test',
+      draw: {
+        create(ctx) {
+          ctx.add({
+            object: new Object3D(),
+            ready: done,
+            update: () => undefined,
+            setTransform: () => undefined,
+            setViewport: () => undefined,
+            dispose: () => undefined,
+          } as Primitive<unknown>);
+          return { update: (c) => onUpdate?.(c.chart as Chart) };
+        },
+      },
+    };
+  }
+
+  it('waits for text primitives to finish typesetting', async () => {
+    let finish!: () => void;
+    const text = new Promise<void>((r) => (finish = r));
+    const s = setup({ width: 640, height: 400, components: [textComponent(text)] });
+    const c = chart({ data: [XY] }, s);
+    let resolved = false;
+    void c.ready.then(() => (resolved = true));
+    await new Promise((r) => setTimeout(r, 0));
+    expect(resolved).toBe(false);
+    finish();
+    await c.ready;
+    expect(resolved).toBe(true);
+  });
+
+  it('follows a pass a component schedules while drawing (automargin after measuring)', async () => {
+    let asked = false;
+    const s = setup({
+      width: 640,
+      height: 400,
+      components: [
+        textComponent(Promise.resolve(), (c) => {
+          if (asked) return;
+          asked = true;
+          void c.relayout({ 'margin.l': 90 });
+        }),
+      ],
+    });
+    const c = chart({ data: [XY] }, s);
+    await c.ready;
+    await c.restyle({ color: 'red' });
+    expect(c.subplots.get('xy')?.rect.x).toBe(90);
+  });
+});
+
+describe('automargin', () => {
+  it('re-measures pushes after autorange until margins settle (at most 3 passes)', async () => {
+    const seen: number[] = [];
+    const axes: ComponentModule = {
+      name: 'axes',
+      // Wider tick labels for a wider range: the push depends on the autoranged axis.
+      pushMargin: ({ axes }) => {
+        const r = axes.get('y')?.scale.range ?? [0, 1];
+        const push = 20 + Math.round(Math.abs(r[1] - r[0]));
+        seen.push(push);
+        return { l: push };
+      },
+    };
+    const s = setup({ width: 640, height: 400, components: [axes] });
+    const c = chart(
+      { data: [{ ...XY, y: [0, 60] }], layout: { yaxis: { range: [0, 60] }, margin: { l: 10 } } },
+      s,
+    );
+    await c.ready;
+    // First pass on the default range, second on the autoranged one, third confirms it settled.
+    expect(seen).toEqual([21, 80, 80]);
+    expect(c.subplots.get('xy')?.rect.x).toBe(80);
   });
 });

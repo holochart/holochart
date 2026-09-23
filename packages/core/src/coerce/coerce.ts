@@ -62,6 +62,9 @@ function coerceNumeric(spec: AttrSpec, v: unknown, integer: boolean): CoerceResu
 
 function normalizeAngle(n: number): number {
   // [-180, 180): keeps equal angles equal so diffing and transitions see one representation.
+  // In-range values pass through untouched: re-running the arithmetic on them can move the last
+  // bit (160.89972236040586 → 160.8997223604058), which would make defaults non-idempotent.
+  if (n >= -180 && n < 180) return Object.is(n, -0) ? 0 : n;
   const r = ((((n + 180) % 360) + 360) % 360) - 180;
   return Object.is(r, -0) ? 0 : r;
 }

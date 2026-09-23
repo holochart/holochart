@@ -6,8 +6,10 @@
  */
 import {
   autorange,
+  axisCategories,
   createScale,
   type AxisExtremes,
+  type CategoryOrder,
   type AxisType,
   type ExtremePoint,
   type FullAxis,
@@ -33,36 +35,40 @@ export function isCategorical(type: AxisType): boolean {
   return type === 'category' || type === 'multicategory';
 }
 
-function categoryKey(v: unknown): string | undefined {
-  if (v === null || v === undefined || v === '') return undefined;
-  if (Array.isArray(v)) return v.map(String).join('/');
-  return String(v);
-}
-
 /**
- * Append the categories of `values` to `out`, in order of first appearance (Plotly's default
- * `categoryorder: 'trace'`). `seen` makes repeated calls across traces linear overall.
+ * The category lists of one axis from the data of its traces, through core's `axisCategories` (plan
+ * E3.6): first-appearance order, then `categoryorder` / `categoryarray`; multicategory axes get
+ * `[group, item]` pairs from two-row columns. Non-categorical types give `{}`.
+ *
+ * Aggregate orders (`total ascending`, …) need per-category values from each trace type; until
+ * traces report them they keep trace order.
  */
-export function collectCategories(
-  values: unknown,
-  out: string[],
-  seen: Set<string> = new Set(out),
-): string[] {
-  if (values === null || typeof values !== 'object' || !('length' in values)) return out;
-  const arr = values as ArrayLike<unknown>;
-  for (let i = 0; i < arr.length; i++) {
-    const key = categoryKey(arr[i]);
-    if (key === undefined || seen.has(key)) continue;
-    seen.add(key);
-    out.push(key);
-  }
-  return out;
+export function axisCategoryLists(
+  full: Partial<Pick<FullAxis, 'categoryorder' | 'categoryarray'>>,
+  type: AxisType,
+  columns: Iterable<unknown>,
+): { categories?: readonly string[]; multicategories?: readonly (readonly [string, string])[] } {
+  if (!isCategorical(type)) return {};
+  return axisCategories(
+    {
+      type,
+      categoryorder: full.categoryorder as CategoryOrder | undefined,
+      categoryarray: full.categoryarray as ArrayLike<unknown> | undefined,
+    },
+    columns,
+  );
 }
 
-function sameList(a: readonly string[] | undefined, b: readonly string[] | undefined): boolean {
+function sameList(a: readonly unknown[] | undefined, b: readonly unknown[] | undefined): boolean {
   if (a === b) return true;
   if (!a || !b || a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  for (let i = 0; i < a.length; i++) {
+    const x = a[i];
+    const y = b[i];
+    if (x === y) continue;
+    // Multicategory pairs.
+    if (!Array.isArray(x) || !Array.isArray(y) || x[0] !== y[0] || x[1] !== y[1]) return false;
+  }
   return true;
 }
 
@@ -70,6 +76,7 @@ function sameList(a: readonly string[] | undefined, b: readonly string[] | undef
 export interface ScaleState {
   readonly type: AxisType;
   readonly categories: readonly string[] | undefined;
+  readonly multicategories?: readonly (readonly [string, string])[] | undefined;
   readonly scale: Scale;
 }
 
@@ -82,14 +89,23 @@ export function syncScale(
   prev: ScaleState | undefined,
   type: AxisType,
   categories: readonly string[] | undefined,
+  multicategories?: readonly (readonly [string, string])[],
 ): ScaleState {
-  if (prev && prev.type === type && sameList(prev.categories, categories)) return prev;
+  if (
+    prev &&
+    prev.type === type &&
+    sameList(prev.categories, categories) &&
+    sameList(prev.multicategories, multicategories)
+  ) {
+    return prev;
+  }
   const scale = createScale({
     type,
     ...(prev ? { range: prev.scale.range, length: prev.scale.length } : {}),
     ...(categories ? { categories } : {}),
+    ...(multicategories ? { multicategories } : {}),
   });
-  return { type, categories, scale };
+  return { type, categories, multicategories, scale };
 }
 
 /**

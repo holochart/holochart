@@ -3,11 +3,12 @@
  * component registered into the shared registry (ADR-019). For smaller bundles, import
  * `@mk7s/holochart-runtime` and register only the modules you use (E21.1).
  */
+import { builtinComponents } from '@mk7s/holochart-components';
 import * as runtime from '@mk7s/holochart-runtime';
-import { scatter } from '@mk7s/holochart-traces-basic';
+import { basicTraces } from '@mk7s/holochart-traces-basic';
 
 /** Every built-in module, registered through the same public `register` API plugins use (E22.1). */
-export const builtins: readonly runtime.Registrable[] = [scatter];
+export const builtins: readonly runtime.Registrable[] = [...basicTraces, ...builtinComponents];
 
 runtime.register(...builtins);
 
@@ -31,7 +32,8 @@ export const purge = runtime.purge;
 export const register = runtime.register;
 export const registry = runtime.registry;
 
-export { scatter };
+export * from '@mk7s/holochart-traces-basic';
+export * from '@mk7s/holochart-components';
 
 /**
  * Low-level GPU primitives and the render root, for plugin authors and custom traces (plan E22).

@@ -103,6 +103,10 @@ describe('withRangeImplications', () => {
       'xaxis.range': [-1, 4],
       'xaxis.autorange': false,
     });
+    // Both ends in one update (a zoom) fill one array.
+    expect(
+      withRangeImplications({ 'xaxis.range[0]': 2, 'xaxis.range[1]': 3 }, {}, fullLayout),
+    ).toEqual({ 'xaxis.range': [2, 3], 'xaxis.autorange': false });
     // An input range already exists: edit it in place.
     expect(
       withRangeImplications({ 'xaxis.range[0]': 2 }, { xaxis: { range: [0, 5] } }, fullLayout),

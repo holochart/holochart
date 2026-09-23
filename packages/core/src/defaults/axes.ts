@@ -189,7 +189,10 @@ export function cleanTick0(
   if (type === 'date') {
     const ms = dateToMs(tick0);
     const week = typeof dtick === 'number' && dtick % ONEWEEK === 0;
-    return formatDate(Number.isNaN(ms) ? dateTick0(week ? 1 : 0) : ms) as string;
+    // Values `formatDate` can't express (NaN, or outside its year range) count as invalid: a missing
+    // tick0 would let a template value win on the next pass and break idempotence.
+    const formatted = Number.isFinite(ms) ? formatDate(ms) : undefined;
+    return (formatted ?? formatDate(dateTick0(week ? 1 : 0))) as string;
   }
   if (dtick === 'D1' || dtick === 'D2') return undefined;
   const n = cleanNumber(tick0);
