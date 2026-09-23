@@ -200,7 +200,8 @@ export function createScale(options: ScaleOptions): Scale {
       let bad = 0;
       for (let i = 0; i < n; i++) {
         const v = values[i];
-        const x = typeof v === 'number' ? v : cleanNumber(v);
+        // Same rules as `d2l` (via cleanNumber): ±Infinity is not a plottable value.
+        const x = typeof v === 'number' ? (Number.isFinite(v) ? v : NaN) : cleanNumber(v);
         if (x > 0) o[i] = Math.log10(x);
         else {
           o[i] = NaN;

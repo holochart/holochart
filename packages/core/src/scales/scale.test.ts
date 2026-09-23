@@ -324,3 +324,12 @@ describe('round trips (property)', () => {
     );
   });
 });
+
+describe('log d2lArray (property-test regression)', () => {
+  it('maps Infinity to NaN like d2l', () => {
+    const s = createScale({ type: 'log' });
+    expect(s.d2l(Infinity)).toBeNaN();
+    expect(s.d2lArray([Infinity, 10])[0]).toBeNaN();
+    expect(s.d2lArray([Infinity, 10])[1]).toBe(1);
+  });
+});
