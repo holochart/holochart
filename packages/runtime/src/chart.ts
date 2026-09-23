@@ -55,6 +55,7 @@ import {
 import {
   browserFrameScheduler,
   createRenderRoot,
+  subscribeFontChanges,
   IDENTITY_TRANSFORM,
   type FrameScheduler,
   type DataTransform,
@@ -402,6 +403,7 @@ export class Chart {
   #initialAxes = new Map<string, InitialAxis>();
   #scheduled = false;
   #destroyed = false;
+  #unsubscribeFonts: (() => void) | undefined;
 
   /** Prefer {@link createChart}. A chart already in `el` is destroyed first. */
   constructor(el: HTMLElement, figure: FigureInput = {}, options: ChartOptions = {}) {
@@ -420,6 +422,17 @@ export class Chart {
       plan.full = true;
       plan.validate = true;
     });
+    // Text is measured synchronously (tick labels, legend, automargin) with whatever font the
+    // browser has; a web font that finishes loading later changes those metrics. Re-run layout
+    // then, or margins and label placement stay computed with the fallback font.
+    this.#unsubscribeFonts = subscribeFontChanges(() => this.#fontsChanged());
+  }
+
+  #fontsChanged(): void {
+    if (this.#destroyed) return;
+    this.#schedule((plan) => {
+      plan.layout.add('layout');
+    }).catch(() => undefined);
   }
 
   // ---- state ----------------------------------------------------------------------------------
@@ -777,6 +790,8 @@ export class Chart {
   destroy(): void {
     if (this.#destroyed) return;
     this.#destroyed = true;
+    this.#unsubscribeFonts?.();
+    this.#unsubscribeFonts = undefined;
     this.#unmount();
     this.#events.emit('destroy', undefined);
     this.#events.clear();
@@ -949,6 +964,23 @@ export class Chart {
    */
   #settle(waiters: Waiter[], seen?: Set<Promise<unknown>>): void {
     if (waiters.length === 0) return;
+    // Web fonts still loading: text measured so far may use a fallback font. Wait for them, then
+    // for the re-layout that follows (see `#fontsChanged`), so `ready` means "final fonts".
+    const fonts = typeof document !== 'undefined' ? document.fonts : undefined;
+    if (!this.#destroyed && fonts?.status === 'loading') {
+      const resume = (): void => {
+        if (this.#destroyed) {
+          for (const w of waiters) w.resolve(this);
+          return;
+        }
+        this.#schedule((plan) => {
+          plan.layout.add('layout');
+        }).catch(() => undefined);
+        this.#waiters.push(...waiters);
+      };
+      fonts.ready.then(resume, resume);
+      return;
+    }
     // Text `ready` promises stay the same (resolved) until the next typesetting: wait only for
     // ones not waited for yet, so this ends once nothing new started typesetting.
     const text = this.#destroyed ? [] : this.#pendingText().filter((p) => !seen?.has(p));

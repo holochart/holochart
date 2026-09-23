@@ -55,6 +55,7 @@ export function run(el: HTMLElement): ExampleHandle {
       },
     ],
     layout: {
+      font: { family: 'Inter' },
       margin: { l: 48, r: 24, t: 24, b: 40 },
       paper_bgcolor: '#ffffff',
       plot_bgcolor: '#e5ecf6',

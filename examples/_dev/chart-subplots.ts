@@ -48,6 +48,7 @@ export function run(el: HTMLElement): ExampleHandle {
       },
     ],
     layout: {
+      font: { family: 'Inter' },
       margin: { l: 40, r: 20, t: 20, b: 30 },
       plot_bgcolor: '#e5ecf6',
       yaxis: { domain: [0.55, 1] },

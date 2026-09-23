@@ -26,8 +26,17 @@ import { markerStyle } from './style.ts';
 vi.mock('../../../render/node_modules/troika-three-text', async () => {
   const { Object3D } = await import('three');
   type Node = InstanceType<typeof Object3D>;
+  // `Object3D.dispose()` exists only in newer @types/three, so a declared method would need
+  // `override` there and must not have it on the minimum supported version (CI's `three (min)`).
+  // Attaching it at construction typechecks against both.
+  const noopDispose = (o: object): void => {
+    Object.assign(o, { dispose: (): void => {} });
+  };
   class Text extends Object3D {
-    override dispose(): void {}
+    constructor() {
+      super();
+      noopDispose(this);
+    }
   }
   class BatchedText extends Object3D {
     material: unknown = null;
@@ -37,10 +46,13 @@ vi.mock('../../../render/node_modules/troika-three-text', async () => {
     removeText(text: Node): void {
       this.remove(text);
     }
+    constructor() {
+      super();
+      noopDispose(this);
+    }
     sync(callback?: () => void): void {
       callback?.();
     }
-    override dispose(): void {}
   }
   return { Text, BatchedText, configureTextBuilder: () => {}, preloadFont: () => {} };
 });

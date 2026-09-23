@@ -631,6 +631,12 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] Fix the single in-flight/queued pick logic (latest request must always resolve), and move it into the runtime's hover pipeline (E6.1) rather than each example
 - [x] Interaction test (E20.4) that sweeps the pointer and checks every readout matches a fresh pick
 
+#### E2.18 — Text metrics must match the rendered font   `P1` `S`   deps: E2.9
+> As a developer using the default fonts, I want text measured with the font that is actually drawn, so that margins, legends, and labels are never clipped or misplaced.
+- [x] Re-run layout when web fonts finish loading, and make `chart.ready` wait for in-flight fonts — done 2026-09-23 (PR #8): legends measured with a fallback font were clipped ("2025 targe…") and baselines differed between macOS and Linux CI
+- [ ] When a trace or layout font family isn't registered, troika draws with the default font (Inter in the examples) but the metrics oracle measures the CSS family (`"Open Sans", verdana, arial, sans-serif`), i.e. whatever system font matches. Make the oracle measure with the font troika will use (e.g. register the default font under an internal CSS family and fall back to it)
+- [ ] Ship a default font with the library (or document that one must be registered) so out-of-the-box charts measure and render identically on every platform
+
 #### E2.16 — Shared renderer / context pooling   `P2` `M`   deps: E2.3
 > As a developer building a dashboard with 50 charts, I want charts to share a WebGL context, so that I don't hit the browser context limit.
 - [ ] `config.sharedRenderer: true` renders all charts through one offscreen context and blits to each canvas (or uses one full-page canvas with viewports)
