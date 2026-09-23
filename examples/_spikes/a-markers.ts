@@ -432,14 +432,19 @@ async function main(page: SpikePage, disposers: (() => void)[]): Promise<void> {
       `timer query ${page.record.env.timerQuery ? 'yes' : 'no'}`,
   );
   const vp = root.addViewport({ rect: { x: 0, y: 0, ...root.size } });
-  const markers = createMarkers(root.context, {
-    x: data.x,
-    y: data.y,
-    colorValues: data.value,
-    colorscale: COLORSCALE,
-    size: 3,
-    opacity: 0.6,
-  });
+  // A/B switch: `&generic=1` forces the unspecialized marker shader (same pixels, slower).
+  const markers = createMarkers(
+    root.context,
+    {
+      x: data.x,
+      y: data.y,
+      colorValues: data.value,
+      colorscale: COLORSCALE,
+      size: 3,
+      opacity: 0.6,
+    },
+    { specialize: q.get('generic') !== '1' },
+  );
   vp.add(markers);
   markers.setTransform(panTransform(root, 0));
   root.renderNow();

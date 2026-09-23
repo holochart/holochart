@@ -7,6 +7,11 @@
  * code is shared, colors are reduced to presence (any visible fill/line counts as opaque), pixels
  * whose centre is outside the drawn shape are discarded, and the fragment writes the encoded pick
  * id `uPickBase + gl_InstanceID`. Without the define nothing below changes for the visible pass.
+ *
+ * Specialization defines (see `specialize.ts`): `MARKER_SYMBOL` + `SYM_*` bake one symbol's layout
+ * (no symbol-table fetches, constant shape branches), `NO_ROTATION` skips the rotation, `NO_STROKE`
+ * skips all stroke math. `MARKER_DISCARD` keeps the fully-transparent `discard` (needed only when
+ * the material writes depth). All combinations render the same pixels as the generic program.
  */
 import { PICK_ENCODE_GLSL } from '../picking/pick.glsl.ts';
 import { MARKER_SYMBOLS, SYMBOL_COUNT, SYMBOL_TEXTURE_WIDTH } from './symbols.ts';
@@ -38,12 +43,17 @@ in vec4 aFill;     // fill color (normalized u8)
 uniform vec3 uScale;
 uniform vec3 uOffset;
 uniform vec2 uResolution;
+uniform float uPixelRatio;
+#ifndef MARKER_SYMBOL
 uniform sampler2D uSymbols;
+#endif
 
 out vec2 vLocal;
+#ifndef MARKER_SYMBOL
 flat out ivec4 vPoly;   // polyStart, polyCount, segStart, segCount
-flat out vec4 vShape;   // radius px, half stroke px, dot radius px, unused
 flat out ivec4 vMode;   // areaKind, variant, noDot, noFill
+#endif
+flat out vec4 vShape;   // radius px, half stroke px, dot radius px, unused
 flat out vec4 vFill;
 flat out vec4 vLine;
 #ifdef PICKING
@@ -67,20 +77,30 @@ void main() {
     }
   }
 #endif
+#ifdef MARKER_SYMBOL
+  const int variant = SYM_VARIANT;
+  const float extent = SYM_EXTENT;
+#else
   int code = int(aStyle.y + 0.5);
   int base = code - (code / 100) * 100;
   int variant = code / 100;
   if (base < 0 || base >= SYMBOL_COUNT || variant > 3) { base = 0; variant = 0; }
   vec4 info = texelFetch(uSymbols, ivec2(base, 0), 0);
   vec4 meta = texelFetch(uSymbols, ivec2(base, 1), 0);
+  float extent = meta.y;
+#endif
 
   float size = aSize;
   bool hidden = abs(aPos.x) > 1.0e37 || abs(aPos.y) > 1.0e37 || abs(aPos.z) > 1.0e37
     || !(size > 0.0) || !(aStyle.z > 0.0);
 
+#ifdef NO_STROKE
+  const float lw = 0.0; // every item: lineWidth 0 and a closed variant
+#else
   bool open = variant == 1 || variant == 3;
   float lw = max(aStyle.x, 0.0);
   if (open) lw = max(lw, 1.0);
+#endif
   float r = 0.5 * size;
 
   vec4 fill;
@@ -97,8 +117,13 @@ void main() {
   fill = aFill;
 #endif
 
-  // Quad half-extent: geometry + half the stroke + 1 px for anti-aliasing.
-  float halfExtent = r * meta.y + 0.5 * lw + 1.0;
+  // Quad half-extent: just past where coverage reaches zero. One device pixel is aa CSS px; fills
+  // fade out 0.5 aa beyond their edge, strokes are drawn at least 0.5 aa wide (strokeCov) and fade
+  // over another 0.5 aa. Extent is the Chebyshev radius of the geometry, so the square quad holds
+  // everything within that Euclidean distance. 0.01 px guards rasterization at the boundary.
+  float aa = 1.0 / uPixelRatio;
+  float strokeReach = lw > 0.0 ? max(0.5 * lw, 0.5 * aa) : 0.0;
+  float halfExtent = r * extent + strokeReach + 0.5 * aa + 0.01;
 
   if (hidden) {
     gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
@@ -109,18 +134,24 @@ void main() {
   vec4 clip = projectionMatrix * modelViewMatrix * vec4(world, 1.0);
 
   vec2 local = position.xy * halfExtent;
+#ifdef NO_ROTATION
+  vec2 offsetPx = local;
+#else
   float a = radians(aStyle.w);
   float c = cos(a);
   float s = sin(a);
   // Clockwise on screen (y up), matching Plotly's marker.angle.
   vec2 offsetPx = vec2(c * local.x + s * local.y, -s * local.x + c * local.y);
+#endif
   clip.xy += offsetPx * 2.0 / uResolution * clip.w;
   gl_Position = clip;
 
   vLocal = local;
+#ifndef MARKER_SYMBOL
   vPoly = ivec4(info);
-  vShape = vec4(r, 0.5 * lw, max(1.0, 0.1 * size), 0.0);
   vMode = ivec4(int(meta.x + 0.5), variant, int(meta.z + 0.5), int(meta.w + 0.5));
+#endif
+  vShape = vec4(r, 0.5 * lw, max(1.0, 0.1 * size), 0.0);
   vFill = fill;
   vLine = aLine;
   float opacity = clamp(aStyle.z, 0.0, 1.0);
@@ -143,11 +174,14 @@ precision highp sampler2D;
 #define TEX_WIDTH ${SYMBOL_TEXTURE_WIDTH}
 
 uniform sampler2D uSymbols;
+uniform float uPixelRatio;
 
 in vec2 vLocal;
+#ifndef MARKER_SYMBOL
 flat in ivec4 vPoly;
-flat in vec4 vShape;
 flat in ivec4 vMode;
+#endif
+flat in vec4 vShape;
 flat in vec4 vFill;
 flat in vec4 vLine;
 #ifdef PICKING
@@ -209,19 +243,41 @@ vec4 over(vec4 top, vec4 bottom) {
 }
 
 void main() {
+#ifdef MARKER_SYMBOL
+  const int areaKind = SYM_AREA;
+  const int variant = SYM_VARIANT;
+  const int noDot = SYM_NO_DOT;
+  const int noFill = SYM_NO_FILL;
+  const ivec4 poly = ivec4(SYM_POLY_START, SYM_POLY_COUNT, SYM_SEG_START, SYM_SEG_COUNT);
+#else
+  int areaKind = vMode.x;
+  int variant = vMode.y;
+  int noDot = vMode.z;
+  int noFill = vMode.w;
+  ivec4 poly = vPoly;
+#endif
   float r = vShape.x;
+#ifdef NO_STROKE
+  const float hw = 0.0;
+#else
   float hw = vShape.y;
-  // One device pixel measured in CSS px (rotation invariant), so AA is correct at every DPR.
-  float aa = max(length(vec2(dFdx(vLocal.x), dFdy(vLocal.x))), 1.0e-4);
+#endif
+  // One device pixel in CSS px. The quad is screen-aligned and screen-sized (also in 3D), so this
+  // equals the derivative-based width exactly and needs no dFdx/dFdy.
+  float aa = 1.0 / uPixelRatio;
 
   vec2 p = vLocal / r;
   float dArea = 1.0e20;
-  if (vMode.x == 1) dArea = (length(p) - 1.0) * r;
-  else if (vMode.x == 2) dArea = sdPolygon(p, vPoly.x, vPoly.y) * r;
-  float dLines = vPoly.w > 0 ? sdSegments(p, vPoly.z, vPoly.w) * r : 1.0e20;
-  bool hasArea = vMode.x != 0;
-  bool open = vMode.y == 1 || vMode.y == 3;
-  bool dot = vMode.y >= 2 && vMode.z == 0;
+  if (areaKind == 1) dArea = (length(p) - 1.0) * r;
+  else if (areaKind == 2) dArea = sdPolygon(p, poly.x, poly.y) * r;
+#ifdef NO_STROKE
+  const float dLines = 1.0e20; // only ever used as a stroke distance
+#else
+  float dLines = poly.w > 0 ? sdSegments(p, poly.z, poly.w) * r : 1.0e20;
+#endif
+  bool hasArea = areaKind != 0;
+  bool open = variant == 1 || variant == 3;
+  bool dot = variant >= 2 && noDot == 0;
 
   vec4 fillP = vec4(vFill.rgb * vFill.a, vFill.a);
   vec4 lineP = vec4(vLine.rgb * vLine.a, vLine.a);
@@ -233,7 +289,7 @@ void main() {
     color = fillP * m;
   } else {
     float m = strokeCov(dLines, hw, aa);
-    if (hasArea && vMode.w == 0) {
+    if (hasArea && noFill == 0) {
       color = fillP * cov(dArea + hw, aa);
       m = max(m, strokeCov(abs(dArea), hw, aa));
     }
@@ -242,7 +298,7 @@ void main() {
 
   if (dot) {
     float dm = cov(length(vLocal) - vShape.z, aa);
-    color = over((vMode.y == 2 ? lineP : fillP) * dm, color);
+    color = over((variant == 2 ? lineP : fillP) * dm, color);
   }
 
 #ifdef PICKING
@@ -250,7 +306,16 @@ void main() {
   if (color.a < 0.5) discard;
   fragColor = holochartEncodePickId(vPickId);
 #else
-  if (color.a < 0.002) discard;
+  if (color.a < 0.002) {
+#ifdef MARKER_DISCARD
+    discard;
+#else
+    // Transparent black blends to exactly the destination (color and alpha), like a discard, but
+    // keeps the fragment shader discard-free, which tile-based GPUs render faster.
+    fragColor = vec4(0.0);
+    return;
+#endif
+  }
   fragColor = vec4(color.rgb / color.a, color.a);
 #endif
 }

@@ -93,3 +93,55 @@ describe('MarkerSet pick variant (E2.13)', () => {
     expect(m.positionVersion).toBeGreaterThan(v);
   });
 });
+
+describe('MarkerSet shader specialization', () => {
+  const defines = (m: ReturnType<typeof createMarkers>) =>
+    m.material.defines as Record<string, string>;
+
+  it('specializes a single-symbol set and falls back to generic when symbols mix', () => {
+    const m = createMarkers(context(), { x: [0, 1], y: [0, 1], symbol: 'diamond' });
+    expect(defines(m).MARKER_SYMBOL).toBe('2');
+    expect(defines(m)).toHaveProperty('NO_ROTATION');
+    expect(defines(m)).toHaveProperty('NO_STROKE');
+    const version = m.material.version;
+    m.update({ symbol: ['diamond', 'square'] });
+    expect(defines(m)).not.toHaveProperty('MARKER_SYMBOL');
+    expect(m.material.version).toBeGreaterThan(version); // recompiles
+    m.update({ symbol: 'square', angle: 30, lineWidth: 1 });
+    expect(defines(m).MARKER_SYMBOL).toBe('1');
+    expect(defines(m)).not.toHaveProperty('NO_ROTATION');
+    expect(defines(m)).not.toHaveProperty('NO_STROKE');
+  });
+
+  it('keeps specializing across agreeing patches and stops at a disagreeing one', () => {
+    const m = createMarkers(context(), { x: [0, 1, 2], y: [0, 1, 2], symbol: 'circle' });
+    m.patch(3, 2, { x: [3, 4], y: [3, 4], symbol: ['circle', 'circle'] });
+    expect(defines(m).MARKER_SYMBOL).toBe('0');
+    m.patch(0, 1, { symbol: ['x'] });
+    expect(defines(m)).not.toHaveProperty('MARKER_SYMBOL');
+  });
+
+  it('can be turned off, and keeps the transparent discard when writing depth', () => {
+    const generic = createMarkers(context(), { x: [0], y: [0] }, { specialize: false });
+    for (const name of ['MARKER_SYMBOL', 'NO_ROTATION', 'NO_STROKE']) {
+      expect(defines(generic)).not.toHaveProperty(name);
+    }
+    expect(defines(generic)).not.toHaveProperty('MARKER_DISCARD');
+    const depth = createMarkers(context(), { x: [0], y: [0] }, { depthWrite: true });
+    expect(defines(depth)).toHaveProperty('MARKER_DISCARD');
+  });
+
+  it('mirrors specialization defines onto the pick material', () => {
+    const m = createMarkers(context(), { x: [0, 1], y: [0, 1], symbol: 'star' });
+    const handle = m.createPickMaterial();
+    const pick = handle.material.defines as Record<string, string>;
+    handle.prepare({ base: 0, windowWidth: 4, windowHeight: 4, pixelRatio: 1 });
+    expect(pick.MARKER_SYMBOL).toBe(defines(m).MARKER_SYMBOL);
+    expect(pick.SYM_POLY_COUNT).toBe(defines(m).SYM_POLY_COUNT);
+    m.update({ symbol: ['star', 'circle'] });
+    handle.prepare({ base: 0, windowWidth: 4, windowHeight: 4, pixelRatio: 1 });
+    expect(pick).not.toHaveProperty('MARKER_SYMBOL');
+    expect(pick).toHaveProperty('PICKING');
+    handle.dispose();
+  });
+});
