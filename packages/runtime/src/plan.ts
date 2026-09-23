@@ -132,7 +132,11 @@ export function withRangeImplications(
     if (m[2] !== undefined && !(`${axis}.range` in update)) {
       const current = getIn(layoutIn, `${axis}.range`);
       if (!Array.isArray(current) || current.length !== 2) {
-        const inUse = (fullLayout?.[axis] as { range?: unknown } | undefined)?.range;
+        // `range[0]` and `range[1]` in one update (a zoom) fill the same array.
+        const pending = out[`${axis}.range`];
+        const inUse = Array.isArray(pending)
+          ? pending
+          : (fullLayout?.[axis] as { range?: unknown } | undefined)?.range;
         if (Array.isArray(inUse) && inUse.length === 2) {
           const filled = [...(inUse as unknown[])];
           filled[Number(m[2])] = value;

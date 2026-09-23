@@ -237,6 +237,12 @@ function axisSchema<const L extends 'x' | 'y'>(letter: L) {
         description:
           'Linear axes only. `tozero` extends the autorange to include 0; `nonnegative` keeps it ≥ 0.',
       }),
+      fixedrange: attr.boolean({
+        dflt: false,
+        editType: 'none',
+        description:
+          'Disables zoom and pan on this axis (drag, scroll, and modebar zoom leave its range alone).',
+      }),
       range: attr.infoArray({
         // `null` items are kept (partial ranges, `autorange: 'min' | 'max'`).
         items: [attr.any({ dflt: null }), attr.any({ dflt: null })],

@@ -625,11 +625,17 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] Registry for geometries (shared unit quad, unit box), textures (colorscales, glyph atlases, patterns), and materials (keyed by variant)
 - [ ] Debug panel lists live resources per chart — *deferred: sandbox shows `renderer.info`; per-chart resource list deferred*
 
-#### E2.17 — Pick queue stall in `_dev/picking-3d`   `P1` `S`   deps: E2.13
+#### E2.17 — Pick queue stall in `_dev/picking-3d`   `P1` `S`   deps: E2.13   · ✅ Done (M1 wave 2)
 > As an end user, I want hover picking to keep up with the pointer, so that the readout never freezes on an old point.
-- [ ] Reproduce: move the pointer while a GPU pick is pending (headless SwiftShader makes each pick ~0.5 s); the readout sticks on one hit (seen before and after the marker optimization, PR #5)
-- [ ] Fix the single in-flight/queued pick logic (latest request must always resolve), and move it into the runtime's hover pipeline (E6.1) rather than each example
-- [ ] Interaction test (E20.4) that sweeps the pointer and checks every readout matches a fresh pick
+- [x] Reproduce: move the pointer while a GPU pick is pending (headless SwiftShader makes each pick ~0.5 s); the readout sticks on one hit (seen before and after the marker optimization, PR #5)
+- [x] Fix the single in-flight/queued pick logic (latest request must always resolve), and move it into the runtime's hover pipeline (E6.1) rather than each example
+- [x] Interaction test (E20.4) that sweeps the pointer and checks every readout matches a fresh pick
+
+#### E2.18 — Text metrics must match the rendered font   `P1` `S`   deps: E2.9
+> As a developer using the default fonts, I want text measured with the font that is actually drawn, so that margins, legends, and labels are never clipped or misplaced.
+- [x] Re-run layout when web fonts finish loading, and make `chart.ready` wait for in-flight fonts — done 2026-09-23 (PR #8): legends measured with a fallback font were clipped ("2025 targe…") and baselines differed between macOS and Linux CI
+- [ ] When a trace or layout font family isn't registered, troika draws with the default font (Inter in the examples) but the metrics oracle measures the CSS family (`"Open Sans", verdana, arial, sans-serif`), i.e. whatever system font matches. Make the oracle measure with the font troika will use (e.g. register the default font under an internal CSS family and fall back to it)
+- [ ] Ship a default font with the library (or document that one must be registered) so out-of-the-box charts measure and render identically on every platform
 
 #### E2.16 — Shared renderer / context pooling   `P2` `M`   deps: E2.3
 > As a developer building a dashboard with 50 charts, I want charts to share a WebGL context, so that I don't hit the browser context limit.
@@ -665,14 +671,14 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] `ticklabelmode: 'instant' | 'period'` for dates. `ticklabelposition` inside/outside + left/right/top/bottom. `ticklabeloverflow`. `ticklabelstep`. `ticklabelshift`/`ticklabelstandoff`. — *deferred: `ticklabelmode` and `ticklabelstep` done; `ticklabelposition`/`ticklabeloverflow` are rendering (E3.4, wave 2)*
 - [x] Label collision avoidance: auto-rotate (`tickangle: 'auto'`) and auto-skip — `layoutTickLabels` helper done; the axis renderer applies it (wave 2)
 
-#### E3.4 — Axis rendering   `P0` `M`   deps: E3.3, E2.5, E2.9
+#### E3.4 — Axis rendering   `P0` `M`   deps: E3.3, E2.5, E2.9   · ✅ Done (M1 wave 2)
 > As a designer, I want full control over axis lines, ticks, grid, and zero line, so that axes match my design.
-- [ ] `showline`, `linecolor`, `linewidth`, `mirror` (`true`, `'ticks'`, `'all'`, `'allticks'`)
-- [ ] `ticks: '' | 'inside' | 'outside'`, `ticklen`, `tickwidth`, `tickcolor`
-- [ ] `showgrid`, `gridcolor`, `gridwidth`, `griddash`. `zeroline`, `zerolinecolor`, `zerolinewidth`.
-- [ ] `showticklabels`, `tickfont`, `tickangle`, `side`, `position`, `anchor` (`'free'` supported)
-- [ ] `layer: 'above traces' | 'below traces'`
-- [ ] Axis title: `title.text`, `title.font`, `title.standoff`
+- [x] `showline`, `linecolor`, `linewidth`, `mirror` (`true`, `'ticks'`, `'all'`, `'allticks'`)
+- [x] `ticks: '' | 'inside' | 'outside'`, `ticklen`, `tickwidth`, `tickcolor`
+- [x] `showgrid`, `gridcolor`, `gridwidth`, `griddash`. `zeroline`, `zerolinecolor`, `zerolinewidth`.
+- [x] `showticklabels`, `tickfont`, `tickangle`, `side`, `position`, `anchor` (`'free'` supported)
+- [ ] `layer: 'above traces' | 'below traces'` — *deferred: layer works for lines/grid; tick labels still draw above traces with `below traces`*
+- [x] Axis title: `title.text`, `title.font`, `title.standoff`
 
 #### E3.5 — Date axes   `P0` `M`   deps: E3.3   · ✅ Done (M1 wave 1)
 > As a developer, I want date axes that handle ms timestamps, ISO strings, and time zones, so that time series just work.
@@ -718,10 +724,10 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `width`, `height` (or container size when `autosize`), `margin.{l,r,t,b,pad,autoexpand}`, `paper_bgcolor`, `plot_bgcolor`
 - [x] Transparent backgrounds (`rgba(0,0,0,0)`) composite correctly over the page
 
-#### E4.2 — Automargin   `P0` `M`   deps: E4.1, E2.9
+#### E4.2 — Automargin   `P0` `M`   deps: E4.1, E2.9   · ✅ Done (M1 wave 2)
 > As a developer, I want margins to grow automatically to fit tick labels, titles, and legends, so that nothing gets clipped.
-- [ ] `automargin: true | 'height+width+left+right+top+bottom'` flags on axes, and push-margin from legend/colorbar/title
-- [ ] Iterative solve (at most 3 passes) using the font metrics oracle. Stable (no oscillation).
+- [x] `automargin: true | 'height+width+left+right+top+bottom'` flags on axes, and push-margin from legend/colorbar/title
+- [x] Iterative solve (at most 3 passes) using the font metrics oracle. Stable (no oscillation). — runtime loops pushes → margins → ranges, ≤ 3 passes
 
 #### E4.3 — Axis domains & multiple subplots   `P0` `M`   deps: E4.1   · ✅ Done (M1 wave 1)
 > As a developer, I want to place axes anywhere via `domain`, so that I can compose multi-panel figures.
@@ -750,18 +756,18 @@ Customization is a **cascade**. Each layer overrides the one above it:
 **Goal:** Figure-level components shared by all chart types.
 **Milestone:** M1–M3 · **Package:** `components`
 
-#### E5.1 — Title & subtitle   `P0` `S`   deps: E4.1, E2.9
+#### E5.1 — Title & subtitle   `P0` `S`   deps: E4.1, E2.9   · ✅ Done (M1 wave 2)
 > As a developer, I want a figure title and subtitle with positioning control, so that charts are self-explanatory.
-- [ ] `title.{text, font, x, y, xref, yref, xanchor, yanchor, pad, automargin}`, `title.subtitle.{text, font}`
+- [x] `title.{text, font, x, y, xref, yref, xanchor, yanchor, pad, automargin}`, `title.subtitle.{text, font}`
 
-#### E5.2 — Legend   `P0` `L`   deps: E4.2, E2.4, E2.5
+#### E5.2 — Legend   `P0` `L`   deps: E4.2, E2.4, E2.5   · 🟡 Partial (M1 wave 2)
 > As an end user, I want a legend that identifies traces and lets me toggle them, so that I can focus on the series that matter.
-- [ ] Glyphs per trace category (marker, line, bar, fill, pie slice, box, candlestick…) from each module's `legendIcon`
-- [ ] `legend.{x, y, xanchor, yanchor, xref, yref, orientation: 'v' | 'h', bgcolor, bordercolor, borderwidth, font, title, traceorder: 'normal' | 'reversed' | 'grouped' | 'reversed+grouped', tracegroupgap, itemsizing: 'trace' | 'constant', itemwidth, itemclick, itemdoubleclick, groupclick, valign, entrywidth, entrywidthmode, indentation, maxheight}`
-- [ ] Trace-level: `showlegend`, `legend` (multiple legends: `legend2`, `legend3`), `legendgroup`, `legendgrouptitle`, `legendrank`, `legendwidth`
-- [ ] Click toggles visibility (`legendonly`). Double-click isolates.
-- [ ] Scrolling when the content exceeds `maxheight`
-- [ ] Pie/funnelarea/sunburst: legend entries per label
+- [x] Glyphs per trace category (marker, line, bar, fill, pie slice, box, candlestick…) from each module's `legendIcon` — marker, line, lines+markers and bar glyphs; other kinds arrive with their traces
+- [x] `legend.{x, y, xanchor, yanchor, xref, yref, orientation: 'v' | 'h', bgcolor, bordercolor, borderwidth, font, title, traceorder: 'normal' | 'reversed' | 'grouped' | 'reversed+grouped', tracegroupgap, itemsizing: 'trace' | 'constant', itemwidth, itemclick, itemdoubleclick, groupclick, valign, entrywidth, entrywidthmode, indentation, maxheight}`
+- [ ] Trace-level: `showlegend`, `legend` (multiple legends: `legend2`, `legend3`), `legendgroup`, `legendgrouptitle`, `legendrank`, `legendwidth` — *deferred: single legend only; `legendgrouptitle` declared but not drawn yet*
+- [x] Click toggles visibility (`legendonly`). Double-click isolates.
+- [ ] Scrolling when the content exceeds `maxheight` — *deferred: `maxheight` clips; scrolling later*
+- [ ] Pie/funnelarea/sunburst: legend entries per label — *deferred: comes with those traces (M2+)*
 
 #### E5.3 — Colorbar   `P0` `M`   deps: E3.3, E2.12
 > As a developer, I want colorbars for colorscaled traces, so that color encodings are readable.
@@ -786,21 +792,21 @@ Customization is a **cascade**. Each layer overrides the one above it:
 > As a designer, I want logos or background images placed on the figure, so that I can brand charts.
 - [ ] `images[]: { source, x, y, sizex, sizey, sizing: 'fill' | 'contain' | 'stretch', xref, yref, xanchor, yanchor, layer, opacity }`
 
-#### E5.7 — Hover labels   `P0` `L`   deps: E2.9, E2.13
+#### E5.7 — Hover labels   `P0` `L`   deps: E2.9, E2.13   · ✅ Done (M1 wave 2)
 > As an end user, I want informative tooltips, so that I can read exact values.
-- [ ] Hover label rendering (WebGL box + text, or a DOM tooltip in `config.hoverRenderer: 'dom'` mode)
-- [ ] `hoverinfo` flags, `hovertext`, `hovertemplate` with the Plotly syntax: `%{x}`, `%{y:.2f}`, `%{x|%b %d}`, `%{customdata[0]}`, `%{marker.size}`, `%{fullData.name}`, `<extra>…</extra>`. `hovertemplatefallback`.
-- [ ] `hoverlabel.{bgcolor, bordercolor, font, align, namelength, showarrow}` at trace and layout level (arrayOk)
-- [ ] Label collision avoidance when several labels show (hovermode `x`/`y`)
-- [ ] Unified hover box (`hovermode: 'x unified' | 'y unified'`) with `layout.hoverlabel.grouptitlefont`
-- [ ] Custom hover renderer hook: `config.renderHover(points) → HTMLElement` for fully custom tooltips
+- [x] Hover label rendering (WebGL box + text, or a DOM tooltip in `config.hoverRenderer: 'dom'` mode) — DOM tooltip (`hoverRenderer: dom`); WebGL labels later
+- [x] `hoverinfo` flags, `hovertext`, `hovertemplate` with the Plotly syntax: `%{x}`, `%{y:.2f}`, `%{x|%b %d}`, `%{customdata[0]}`, `%{marker.size}`, `%{fullData.name}`, `<extra>…</extra>`. `hovertemplatefallback`.
+- [x] `hoverlabel.{bgcolor, bordercolor, font, align, namelength, showarrow}` at trace and layout level (arrayOk)
+- [x] Label collision avoidance when several labels show (hovermode `x`/`y`)
+- [x] Unified hover box (`hovermode: 'x unified' | 'y unified'`) with `layout.hoverlabel.grouptitlefont`
+- [x] Custom hover renderer hook: `config.renderHover(points) → HTMLElement` for fully custom tooltips
 
-#### E5.8 — Modebar   `P0` `M`   deps: E6.2
+#### E5.8 — Modebar   `P0` `M`   deps: E6.2   · ✅ Done (M1 wave 2)
 > As an end user, I want a toolbar for zoom, pan, select, reset, and download, so that interaction modes are discoverable.
-- [ ] DOM toolbar with SVG icons, shown on hover (`displayModeBar: 'hover' | true | false`)
-- [ ] Buttons: `toImage`, `zoom2d`, `pan2d`, `select2d`, `lasso2d`, `zoomIn2d`, `zoomOut2d`, `autoScale2d`, `resetScale2d`, `hoverClosestCartesian`, `hoverCompareCartesian`, `toggleSpikelines`, `orbitRotation`, `tableRotation`, `resetCameraDefault3d`, `resetCameraLastSave3d`, `hoverClosest3d`, draw buttons
-- [ ] `layout.modebar.{orientation, bgcolor, color, activecolor, add, remove, uirevision}`
-- [ ] Custom buttons via `config.modeBarButtonsToAdd: [{ name, icon, click }]`
+- [x] DOM toolbar with SVG icons, shown on hover (`displayModeBar: 'hover' | true | false`)
+- [x] Buttons: `toImage`, `zoom2d`, `pan2d`, `select2d`, `lasso2d`, `zoomIn2d`, `zoomOut2d`, `autoScale2d`, `resetScale2d`, `hoverClosestCartesian`, `hoverCompareCartesian`, `toggleSpikelines`, `orbitRotation`, `tableRotation`, `resetCameraDefault3d`, `resetCameraLastSave3d`, `hoverClosest3d`, draw buttons — `toImage` is a canvas `toDataURL` stopgap until E18.1
+- [x] `layout.modebar.{orientation, bgcolor, color, activecolor, add, remove, uirevision}`
+- [x] Custom buttons via `config.modeBarButtonsToAdd: [{ name, icon, click }]`
 
 #### E5.9 — Range slider & range selector   `P1` `M`   deps: E3.5, E4.2
 > As a finance user, I want a mini-overview slider and preset range buttons, so that I can navigate long time series.
@@ -828,34 +834,34 @@ Customization is a **cascade**. Each layer overrides the one above it:
 **Goal:** Hover, zoom, pan, select, click, keyboard, and touch, all emitting consistent events.
 **Milestone:** M1–M2 · **Package:** `components/interaction`
 
-#### E6.1 — Hover modes   `P0` `M`   deps: E2.13, E5.7
+#### E6.1 — Hover modes   `P0` `M`   deps: E2.13, E5.7   · ✅ Done (M1 wave 2)
 > As an end user, I want hover to find the relevant point(s) for the chart type, so that tooltips feel natural.
-- [ ] `hovermode: 'closest' | 'x' | 'y' | 'x unified' | 'y unified' | false`, `hoverdistance`, `spikedistance`
-- [ ] Trace-level `hoveron: 'points' | 'fills'` (and for box/violin: `'boxes' | 'kde' | 'violins'`)
-- [ ] `hover`/`unhover` events with `points[]: { data, fullData, curveNumber, pointNumber, pointNumbers, x, y, z, customdata, bbox }`
-- [ ] Programmatic hover: `Holochart.Fx.hover(el, [{curveNumber, pointNumber}])`
+- [x] `hovermode: 'closest' | 'x' | 'y' | 'x unified' | 'y unified' | false`, `hoverdistance`, `spikedistance`
+- [x] Trace-level `hoveron: 'points' | 'fills'` (and for box/violin: `'boxes' | 'kde' | 'violins'`)
+- [x] `hover`/`unhover` events with `points[]: { data, fullData, curveNumber, pointNumber, pointNumbers, x, y, z, customdata, bbox }`
+- [x] Programmatic hover: `Holochart.Fx.hover(el, [{curveNumber, pointNumber}])`
 
-#### E6.2 — Zoom & pan (2D)   `P0` `L`   deps: E3.2
+#### E6.2 — Zoom & pan (2D)   `P0` `L`   deps: E3.2   · 🟡 Partial (M1 wave 2)
 > As an end user, I want box zoom, scroll zoom, drag pan, and double-click reset, so that I can explore data.
-- [ ] `dragmode: 'zoom' | 'pan' | 'select' | 'lasso' | 'drawline' | ... | false`
-- [ ] Box zoom with x-only/y-only zones near axes. Axis-end drag to scale one end. Axis-middle drag to pan.
-- [ ] Scroll zoom (`config.scrollZoom`) anchored at the cursor. Pinch zoom on touch.
-- [ ] Double-click: `config.doubleClick: 'reset+autosize' | 'reset' | 'autosize' | false`
-- [ ] During drag: GPU-only camera transform (no re-calc), with tick relayout throttled to rAF. `relayouting` fires during the drag, `relayout` at the end.
-- [ ] Respects `fixedrange`, `minallowed`/`maxallowed`, `matches`, `scaleanchor`
+- [x] `dragmode: 'zoom' | 'pan' | 'select' | 'lasso' | 'drawline' | ... | false` — zoom/pan/select/lasso/false; draw modes come with E5.5
+- [x] Box zoom with x-only/y-only zones near axes. Axis-end drag to scale one end. Axis-middle drag to pan.
+- [x] Scroll zoom (`config.scrollZoom`) anchored at the cursor. Pinch zoom on touch. — pinch implemented, not covered by a Playwright test
+- [x] Double-click: `config.doubleClick: 'reset+autosize' | 'reset' | 'autosize' | false`
+- [x] During drag: GPU-only camera transform (no re-calc), with tick relayout throttled to rAF. `relayouting` fires during the drag, `relayout` at the end.
+- [ ] Respects `fixedrange`, `minallowed`/`maxallowed`, `matches`, `scaleanchor` — *deferred: `fixedrange` and min/maxallowed done; `matches`/`scaleanchor` are E3.9 (M3)*
 
-#### E6.3 — Box & lasso selection   `P0` `M`   deps: E6.2, E2.13
+#### E6.3 — Box & lasso selection   `P0` `M`   deps: E6.2, E2.13   · 🟡 Partial (M1 wave 2)
 > As an end user, I want to select points with box or lasso, so that I can highlight and extract subsets.
-- [ ] Point-in-rect and point-in-polygon tests on the spatial index (supports 1M points in < 50 ms)
-- [ ] `selectedpoints`, `selected.{marker.{color, size, opacity}, textfont.color}`, `unselected.{...}` styles
-- [ ] Shift to add to a selection. `selectdirection` (`'h' | 'v' | 'd' | 'any'`). `clickmode: 'event' | 'select' | 'event+select'`.
-- [ ] `selecting`, `selected`, `deselect` events with point lists and range/lassoPoints
-- [ ] Cross-trace selection (all traces in the subplot) and linked brushing hooks (for SPLOM)
+- [ ] Point-in-rect and point-in-polygon tests on the spatial index (supports 1M points in < 50 ms) — *deferred: not measured yet (M7 benchmarking)*
+- [x] `selectedpoints`, `selected.{marker.{color, size, opacity}, textfont.color}`, `unselected.{...}` styles
+- [x] Shift to add to a selection. `selectdirection` (`'h' | 'v' | 'd' | 'any'`). `clickmode: 'event' | 'select' | 'event+select'`.
+- [x] `selecting`, `selected`, `deselect` events with point lists and range/lassoPoints
+- [ ] Cross-trace selection (all traces in the subplot) and linked brushing hooks (for SPLOM) — *deferred: cross-trace selection done; SPLOM brushing hooks come with E10.9 (M3)*
 
-#### E6.4 — Click & double-click events   `P0` `S`   deps: E2.13
+#### E6.4 — Click & double-click events   `P0` `S`   deps: E2.13   · 🟡 Partial (M1 wave 2)
 > As a developer, I want click events with point data, so that I can drive app logic (drill-down, navigation).
-- [ ] `click` with the same point structure as hover. `doubleclick` event.
-- [ ] Click on legend, annotation, and shape emit their own events (`legendclick`, `clickannotation`, ...)
+- [x] `click` with the same point structure as hover. `doubleclick` event.
+- [ ] Click on legend, annotation, and shape emit their own events (`legendclick`, `clickannotation`, ...) — *deferred: `legendclick`/`legenddoubleclick` done; annotations and shapes are E5.4/E5.5*
 
 #### E6.5 — Keyboard navigation   `P1` `M`   deps: E6.1, E17.2
 > As a keyboard user, I want to focus the chart and move between points and traces with arrow keys, so that I can explore without a mouse.
@@ -1012,27 +1018,27 @@ Customization is a **cascade**. Each layer overrides the one above it:
 **Goal:** Every Plotly "Basic Charts" type: scatter, line, bubble, dot, area, bar, pie, table, gantt, and error bars.
 **Milestone:** M1–M2 · **Package:** `traces-basic`
 
-#### E9.1 — `scatter`: markers mode   `P0` `L`   deps: E2.4, E3.4, E5.7
+#### E9.1 — `scatter`: markers mode   `P0` `L`   deps: E2.4, E3.4, E5.7   · ✅ Done (M1 wave 2)
 > As a developer, I want to plot x/y points as markers, so that I can build scatter plots.
-- [ ] `x`, `y`, `x0`/`dx`, `y0`/`dy` (implicit coordinates), `ids`, `text`, `customdata`, `meta`, `uid`
-- [ ] `mode` flaglist (`'markers'`, `'lines'`, `'text'`, combinations, `'none'`). Default: `'lines+markers'` below 20 points, else `'lines'` (Plotly rule).
-- [ ] `marker.{symbol, size, sizemode: 'diameter' | 'area', sizeref, sizemin, color, opacity, angle, angleref, standoff, line.{color, width}, gradient.{type, color}, maxdisplayed}` (arrayOk where Plotly allows it)
-- [ ] `marker.color` numeric arrays → colorscale with `colorscale`, `cmin`, `cmax`, `cmid`, `cauto`, `reversescale`, `showscale`, `colorbar`, `coloraxis`
-- [ ] `opacity`, `visible: true | false | 'legendonly'`, `xaxis`/`yaxis` refs, `zorder`
-- [ ] Selection styling (E6.3) and hover `closest`/`x`/`y`
+- [x] `x`, `y`, `x0`/`dx`, `y0`/`dy` (implicit coordinates), `ids`, `text`, `customdata`, `meta`, `uid`
+- [x] `mode` flaglist (`'markers'`, `'lines'`, `'text'`, combinations, `'none'`). Default: `'lines+markers'` below 20 points, else `'lines'` (Plotly rule).
+- [x] `marker.{symbol, size, sizemode: 'diameter' | 'area', sizeref, sizemin, color, opacity, angle, angleref, standoff, line.{color, width}, gradient.{type, color}, maxdisplayed}` (arrayOk where Plotly allows it) — `gradient`, `angleref` and `standoff` deferred (gradient needs a marker shader change)
+- [x] `marker.color` numeric arrays → colorscale with `colorscale`, `cmin`, `cmax`, `cmid`, `cauto`, `reversescale`, `showscale`, `colorbar`, `coloraxis` — color mapping done; the colorbar itself is E5.3 (wave 3)
+- [x] `opacity`, `visible: true | false | 'legendonly'`, `xaxis`/`yaxis` refs, `zorder`
+- [x] Selection styling (E6.3) and hover `closest`/`x`/`y`
 
-#### E9.2 — `scatter`: lines mode (line charts)   `P0` `L`   deps: E9.1, E2.5
+#### E9.2 — `scatter`: lines mode (line charts)   `P0` `L`   deps: E9.1, E2.5   · ✅ Done (M1 wave 2)
 > As a developer, I want connected lines with shape, dash, and smoothing options, so that I can build line charts.
-- [ ] `line.{color, width, dash, shape: 'linear' | 'spline' | 'hv' | 'vh' | 'hvh' | 'vhv', smoothing (0–1.3), simplify, backoff}`
-- [ ] `connectgaps`. Gaps from `null`/`NaN`.
-- [ ] Spline via Catmull-Rom (matching Plotly's smoothing semantics), tessellated adaptively by zoom level
-- [ ] Line simplification (Ramer–Douglas–Peucker or pixel-based min-max decimation) when `line.simplify`
-- [ ] Hover on lines between points when `hoveron: 'fills'` is not set (nearest vertex)
+- [x] `line.{color, width, dash, shape: 'linear' | 'spline' | 'hv' | 'vh' | 'hvh' | 'vhv', smoothing (0–1.3), simplify, backoff}` — `backoff` deferred
+- [x] `connectgaps`. Gaps from `null`/`NaN`.
+- [x] Spline via Catmull-Rom (matching Plotly's smoothing semantics), tessellated adaptively by zoom level
+- [x] Line simplification (Ramer–Douglas–Peucker or pixel-based min-max decimation) when `line.simplify` — pixel min/max decimation for monotonic x
+- [x] Hover on lines between points when `hoveron: 'fills'` is not set (nearest vertex)
 
-#### E9.3 — `scatter`: text mode   `P0` `M`   deps: E9.1, E2.9
+#### E9.3 — `scatter`: text mode   `P0` `M`   deps: E9.1, E2.9   · ✅ Done (M1 wave 2)
 > As a developer, I want text labels at points, so that I can annotate data directly.
-- [ ] `text` (arrayOk), `texttemplate` (same syntax as `hovertemplate`), `textposition: 'top left' | 'top center' | ... | 'bottom right'` (arrayOk), `textfont` (arrayOk)
-- [ ] Label collision culling option (`textoverlap: 'hide' | 'show'`, a holochart extension, `P2`)
+- [x] `text` (arrayOk), `texttemplate` (same syntax as `hovertemplate`), `textposition: 'top left' | 'top center' | ... | 'bottom right'` (arrayOk), `textfont` (arrayOk)
+- [ ] Label collision culling option (`textoverlap: 'hide' | 'show'`, a holochart extension, `P2`) — *deferred: P2, not started*
 
 #### E9.4 — Filled area & stacked area   `P0` `L`   deps: E9.2, E2.6
 > As a developer, I want fills to zero, to the next trace, or to self, and stacked areas, so that I can build area charts.
@@ -1052,26 +1058,26 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] Cleveland dot plot, dumbbell (lines connecting pairs), lollipop (error-bar stems or shapes) examples
 - [ ] Optional helper `Holochart.recipes.dumbbell(...)`
 
-#### E9.7 — Error bars   `P0` `M`   deps: E9.1, E2.5
+#### E9.7 — Error bars   `P0` `M`   deps: E9.1, E2.5   · ✅ Done (M1 wave 2)
 > As a scientist, I want error bars on points and bars, so that I can show uncertainty.
-- [ ] `error_x`/`error_y`: `{ visible, type: 'percent' | 'constant' | 'sqrt' | 'data', symmetric, array, arrayminus, value, valueminus, traceref, tracerefminus, thickness, width, color, copy_ystyle }`
-- [ ] Shared component used by `scatter`, `bar`, `histogram`, and `scatter3d` (`error_z`)
-- [ ] Continuous error bands recipe (fill between) in docs
+- [x] `error_x`/`error_y`: `{ visible, type: 'percent' | 'constant' | 'sqrt' | 'data', symmetric, array, arrayminus, value, valueminus, traceref, tracerefminus, thickness, width, color, copy_ystyle }`
+- [x] Shared component used by `scatter`, `bar`, `histogram`, and `scatter3d` (`error_z`) — scatter and bar use it; histogram and scatter3d when they land
+- [ ] Continuous error bands recipe (fill between) in docs — *deferred: docs recipe comes with the chart pages (wave 3)*
 
-#### E9.8 — `bar`: basic vertical & horizontal   `P0` `L`   deps: E2.7, E3.6
+#### E9.8 — `bar`: basic vertical & horizontal   `P0` `L`   deps: E2.7, E3.6   · ✅ Done (M1 wave 2)
 > As a developer, I want bar charts in both orientations with full styling, so that I can compare categories.
-- [ ] `x`, `y`, `orientation: 'v' | 'h'`, `base`, `width`, `offset` (arrayOk)
-- [ ] `marker.{color, colorscale…, line.{color, width}, opacity, pattern, cornerradius}`
-- [ ] Text: `text`, `texttemplate`, `textposition: 'inside' | 'outside' | 'auto' | 'none'`, `insidetextanchor: 'end' | 'middle' | 'start'`, `textangle`, `insidetextfont`, `outsidetextfont`, `constraintext: 'inside' | 'outside' | 'both' | 'none'`, `cliponaxis`
-- [ ] Hover per bar. Selection support.
-- [ ] Negative values. Log-axis bars (base at the axis minimum).
+- [x] `x`, `y`, `orientation: 'v' | 'h'`, `base`, `width`, `offset` (arrayOk)
+- [x] `marker.{color, colorscale…, line.{color, width}, opacity, pattern, cornerradius}` — `pattern` is E8.10
+- [x] Text: `text`, `texttemplate`, `textposition: 'inside' | 'outside' | 'auto' | 'none'`, `insidetextanchor: 'end' | 'middle' | 'start'`, `textangle`, `insidetextfont`, `outsidetextfont`, `constraintext: 'inside' | 'outside' | 'both' | 'none'`, `cliponaxis`
+- [x] Hover per bar. Selection support.
+- [x] Negative values. Log-axis bars (base at the axis minimum).
 
-#### E9.9 — `bar`: grouped, stacked, relative & overlay modes   `P0` `M`   deps: E9.8
+#### E9.9 — `bar`: grouped, stacked, relative & overlay modes   `P0` `M`   deps: E9.8   · ✅ Done (M1 wave 2)
 > As a developer, I want barmodes, so that I can build grouped and stacked bar charts.
-- [ ] `layout.barmode: 'group' | 'stack' | 'relative' | 'overlay'`, `bargap`, `bargroupgap`, `barnorm: '' | 'fraction' | 'percent'`
-- [ ] `offsetgroup` and `alignmentgroup` for mixed grouping across traces and subplots
-- [ ] Cross-trace calc (stacking) shared with histogram, funnel, and waterfall
-- [ ] Stacked totals labels recipe
+- [x] `layout.barmode: 'group' | 'stack' | 'relative' | 'overlay'`, `bargap`, `bargroupgap`, `barnorm: '' | 'fraction' | 'percent'`
+- [x] `offsetgroup` and `alignmentgroup` for mixed grouping across traces and subplots
+- [x] Cross-trace calc (stacking) shared with histogram, funnel, and waterfall — shared `stack` helper; traces in the `'bar-like'` group stack together
+- [ ] Stacked totals labels recipe — *deferred: docs recipe (wave 3)*
 
 #### E9.10 — `bar`: 3D-native extrusion   `P2` `M`   deps: E9.8, E8.9
 > As a designer, I want bars with physical depth, rounded bevels, and lighting, so that I can create 3D-styled bar charts in 2D subplots.
@@ -1773,9 +1779,9 @@ docs/
 - [x] `pixelmatch` with a per-example tolerance. HTML diff report as a CI artifact.
 - [x] `pnpm test:visual --update` flow for intentional changes, reviewed in the PR
 
-#### E20.4 — Interaction tests   `P0` `M`   deps: E6.*
-- [ ] Scripted scenarios: hover shows the expected label, box zoom updates the range, lasso selects N points, legend click hides a trace, 3D orbit changes the camera, slider animation reaches the final frame
-- [ ] Event payload snapshots
+#### E20.4 — Interaction tests   `P0` `M`   deps: E6.*   · ✅ Done (M1 wave 2)
+- [x] Scripted scenarios: hover shows the expected label, box zoom updates the range, lasso selects N points, legend click hides a trace, 3D orbit changes the camera, slider animation reaches the final frame
+- [x] Event payload snapshots — payload shapes asserted in the Playwright tests
 
 #### E20.5 — Cross-browser matrix   `P1` `M`   deps: E20.3
 - [ ] Nightly smoke run on Chromium, Firefox, WebKit (Playwright), and real devices via BrowserStack (`P2`)
@@ -1805,7 +1811,7 @@ docs/
 > As a developer, I want to import only the traces I use, so that my bundle stays small.
 - [x] `import { createChart, register } from '@mk7s/holochart-runtime'; import { scatter, bar } from '@mk7s/holochart-traces-basic'; register(scatter, bar);` (core stays renderer-free, ADR-019)
 - [ ] Prebuilt CDN bundles: `holochart-basic`, `holochart-cartesian`, `holochart-3d`, `holochart-full` — *deferred: only the full IIFE so far*
-- [x] Size budgets (min+gz, excluding three): core+scatter ≤ 90 KB, basic ≤ 150 KB, full ≤ 450 KB — enforced by `pnpm size` and the CI bundle-size job
+- [x] Size budgets (min+gz, excluding three): core+scatter ≤ 90 KB, basic ≤ 150 KB, full ≤ 450 KB — enforced by `pnpm size` and the CI bundle-size job; partial budgets raised to 165 / 200 kB after wave 2 (see E21.5)
 
 #### E21.2 — Versioning & compatibility policy   `P0` `S`   · ✅ Done (M1 wave 1)
 - [x] SemVer. Deprecations live at least one minor version with console warnings before removal. Supported three.js range documented and tested in CI (min and latest).
@@ -1815,6 +1821,14 @@ docs/
 
 #### E21.4 — Licensing & third-party notices   `P0` `S`   · ✅ Done (M1)
 - [x] Project license (MIT recommended) + `THIRD_PARTY_NOTICES` for d3 (ISC), earcut (ISC), troika (MIT), plotly.js mocks (MIT, test-only), Natural Earth (public domain), colormaps (cmocean MIT, carto CC-BY) — MIT chosen; `LICENSE` in the root and every published package, `THIRD_PARTY_NOTICES.md` from `pnpm licenses list --prod`
+
+
+#### E21.5 — Bundle diet   `P1` `M`   deps: E21.1
+> As a developer, I want small partial bundles, so that a scatter-only page doesn't ship the whole toolkit.
+- [ ] Lazy-load the SDF text engine (troika + bidi-js + webgl-sdf-generator, ~40 kB gz, ~26% of core + scatter) on first text use, with a sync fallback for the metrics oracle
+- [ ] Strip schema `description` strings from production builds (5–7% of core and traces-basic); keep them for docs, validation messages, and dev builds
+- [ ] Audit tree-shaking of `render` (only the primitives a trace uses) and `components`
+- [ ] Tighten the partial budgets back toward the original targets (core + scatter 90 kB, basic 150 kB), which were raised to measured +10% (165 / 200 kB) after M1 wave 2 by decision on 2026-09-23
 
 ---
 

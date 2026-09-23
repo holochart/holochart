@@ -398,6 +398,12 @@ export interface LayoutXaxis {
    */
   rangemode?: 'normal' | 'tozero' | 'nonnegative';
   /**
+   * Disables zoom and pan on this axis (drag, scroll, and modebar zoom leave its range alone).
+   *
+   * @defaultValue `false`
+   */
+  fixedrange?: boolean;
+  /**
    * Visible range `[start, end]` in data units (numbers, dates or category names; exponents on log axes, as in Plotly). Setting it turns `autorange` off; `null` for one end autoranges that end only.
    */
   range?: readonly [unknown, unknown];
@@ -1026,6 +1032,12 @@ export interface LayoutYaxis {
    * @defaultValue `"normal"`
    */
   rangemode?: 'normal' | 'tozero' | 'nonnegative';
+  /**
+   * Disables zoom and pan on this axis (drag, scroll, and modebar zoom leave its range alone).
+   *
+   * @defaultValue `false`
+   */
+  fixedrange?: boolean;
   /**
    * Visible range `[start, end]` in data units (numbers, dates or category names; exponents on log axes, as in Plotly). Setting it turns `autorange` off; `null` for one end autoranges that end only.
    */

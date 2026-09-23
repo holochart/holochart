@@ -35,6 +35,105 @@ export const commonTraceAttributes = {
     editType: 'legend',
     description: 'Traces in the same legend group toggle together.',
   }),
+  hovertext: attr.string({
+    arrayOk: true,
+    dflt: '',
+    editType: 'style',
+    description: 'Hover text per point; defaults to `text`.',
+  }),
+  hoverinfo: attr.flaglist({
+    flags: ['x', 'y', 'z', 'text', 'name'],
+    extras: ['all', 'none', 'skip'],
+    arrayOk: true,
+    editType: 'none',
+    description:
+      "Which fields hover labels show; `'skip'` also turns hover events off for this trace. Default `'all'`.",
+  }),
+  hovertemplate: attr.string({
+    arrayOk: true,
+    editType: 'none',
+    description:
+      "Template for hover labels, e.g. `'%{x}: %{y:.2f}<extra></extra>'` (d3-format / d3-time-format after `:` / `|`). Overrides `hoverinfo`.",
+  }),
+  hoverlabel: attr.object(
+    {
+      bgcolor: attr.color({
+        arrayOk: true,
+        editType: 'none',
+        description: 'Label background. Default: the point color.',
+      }),
+      bordercolor: attr.color({
+        arrayOk: true,
+        editType: 'none',
+        description: 'Label border. Default: contrasting with the background.',
+      }),
+      font: attr.object(
+        {
+          family: attr.string({ arrayOk: true, editType: 'none', description: 'Font family.' }),
+          size: attr.number({
+            min: 1,
+            arrayOk: true,
+            editType: 'none',
+            description: 'Font size in px.',
+          }),
+          color: attr.color({ arrayOk: true, editType: 'none', description: 'Font color.' }),
+        },
+        { editType: 'none', description: 'Label font.' },
+      ),
+      align: attr.enumerated({
+        values: ['left', 'right', 'auto'],
+        arrayOk: true,
+        editType: 'none',
+        description: 'Text alignment inside labels.',
+      }),
+      namelength: attr.integer({
+        min: -1,
+        arrayOk: true,
+        editType: 'none',
+        description: 'Characters of the trace name shown (`-1`: all, `0`: none).',
+      }),
+    },
+    {
+      editType: 'none',
+      description:
+        'Hover label style for this trace. Unset fields fall back to `layout.hoverlabel` (so there are no trace-level defaults).',
+    },
+  ),
+  selectedpoints: attr.any({
+    editType: 'style',
+    description:
+      'Indices of the selected points (set by box/lasso selection, or programmatically). `null` clears the selection.',
+  }),
+  legendrank: attr.number({
+    dflt: 1000,
+    editType: 'legend',
+    description:
+      'Sort key for legend entries: lower ranks come first (top, or left). Ties keep trace order; traces default to 1000.',
+  }),
+  legendwidth: attr.number({
+    min: 0,
+    editType: 'legend',
+    description:
+      "Width in px of this trace's legend entry (horizontal legends). Default: sized to its text.",
+  }),
+  legendgrouptitle: attr.object(
+    {
+      text: attr.string({
+        dflt: '',
+        editType: 'legend',
+        description: 'Title shown above this legend group.',
+      }),
+      font: attr.object(
+        {
+          family: attr.string({ editType: 'legend', description: 'Font family.' }),
+          size: attr.number({ min: 1, editType: 'legend', description: 'Font size in px.' }),
+          color: attr.color({ editType: 'legend', description: 'Font color.' }),
+        },
+        { editType: 'legend', description: 'Group title font. Defaults to the legend title font.' },
+      ),
+    },
+    { editType: 'legend', description: 'Title of the legend group this trace belongs to.' },
+  ),
   opacity: attr.number({
     min: 0,
     max: 1,

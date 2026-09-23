@@ -111,6 +111,16 @@ export const configSchema = attr.object(
       description:
         'Run the calc stage in a Web Worker (ADR-011). `auto` switches on above a data-size threshold.',
     }),
+    hoverRenderer: attr.enumerated({
+      values: ['dom'],
+      dflt: 'dom',
+      description:
+        'How hover labels render. Only `dom` (positioned HTML over the canvas) exists in M1; a WebGL label renderer is planned (E5.7).',
+    }),
+    renderHover: attr.fn({
+      description:
+        'Custom hover label: `(points) => HTMLElement | null`. Return `null`/`undefined` to use the built-in label. Not serializable (ADR-012).',
+    }),
     textRenderer: attr.enumerated({
       values: ['webgl', 'dom'],
       dflt: 'webgl',

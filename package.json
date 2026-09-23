@@ -21,6 +21,7 @@
     "test:visual:update": "UPDATE_BASELINES=1 playwright test",
     "test:bundle": "turbo run build --filter=@mk7s/holochart && playwright test -c tests/bundle/playwright.config.ts",
     "test:visual:report": "node tests/visual/report.ts",
+    "test:interaction": "playwright test -c tests/interaction/playwright.config.ts",
     "build:packages": "turbo run build --filter=./packages/*",
     "size": "pnpm build:packages && node tests/bundle/size/bundle.ts && size-limit",
     "size:report": "node tests/bundle/size/report.ts",

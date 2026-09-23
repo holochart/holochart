@@ -62,7 +62,9 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     // import { scatter } from '@mk7s/holochart-traces-basic'; register(scatter);`
     id: 'partial-core-scatter',
     name: 'partial: core + scatter',
-    limit: '90 kB',
+    // Raised from 90 kB after M1 wave 2 (measured 148.5 kB: ~40 kB is the SDF text engine). E21.5
+    // (bundle diet) lazy-loads text and strips schema descriptions, then tightens this again.
+    limit: '165 kB',
     imports: [
       { pkg: 'runtime', names: ['createChart', 'register'] },
       { pkg: 'traces-basic', names: ['scatter'] },
@@ -72,7 +74,8 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     // The future `holochart-basic` CDN variant: runtime, components, and the basic traces.
     id: 'partial-basic',
     name: 'partial: basic (runtime + components + traces-basic + themes)',
-    limit: '150 kB',
+    // Raised from 150 kB after M1 wave 2 (measured 181 kB); see E21.5.
+    limit: '200 kB',
     imports: [
       { pkg: 'runtime' },
       { pkg: 'components' },

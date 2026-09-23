@@ -109,6 +109,12 @@ for (const id of exampleIds) {
     }
     test.skip(result.skipped, `"${id}" is tagged no-visual-test`);
 
+    // Park the pointer outside the example so hover-only UI (the modebar, hover labels) stays
+    // hidden. Headless Chromium's initial pointer position differs by platform: on Linux CI it
+    // starts over the page, so the modebar showed up in CI screenshots but not in macOS baselines.
+    const viewport = page.viewportSize();
+    if (viewport) await page.mouse.move(viewport.width - 1, viewport.height - 1);
+
     const screenshot = await page.locator(`#${TEST_CONTAINER_ID}`).screenshot({
       animations: 'disabled',
       caret: 'hide',

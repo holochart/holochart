@@ -109,6 +109,22 @@ export function moveTraces(
   return call(() => chartIn(el, 'moveTraces').moveTraces(current, newIndices));
 }
 
+/**
+ * Show hover labels and emit `hover` programmatically (Plotly `Fx.hover`): points by trace and
+ * index, or a position in data units. See {@link Chart.hover}.
+ */
+export function hover(el: HTMLElement, target: Parameters<Chart['hover']>[0]): void {
+  chartIn(el, 'hover').hover(target);
+}
+
+/** Hide hover labels in `el` (Plotly `Fx.unhover`). */
+export function unhover(el: HTMLElement): void {
+  getChart(el)?.unhover();
+}
+
+/** Plotly's `Fx` namespace: `Fx.hover(el, [{ curveNumber, pointNumber }])`, `Fx.unhover(el)`. */
+export const Fx = { hover, unhover } as const;
+
 /** Destroy the chart in `el` (if any) and free everything it holds. */
 export function purge(el: HTMLElement): void {
   getChart(el)?.destroy();

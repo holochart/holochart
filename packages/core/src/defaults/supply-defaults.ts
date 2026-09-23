@@ -124,9 +124,22 @@ function supplyTrace(
 
   const visible = ctx.coerce<FullTrace['visible']>('visible');
   ctx.coerce('name', `trace ${index}`);
-  for (const key of ['uid', 'showlegend', 'legendgroup', 'opacity', 'meta', 'customdata', 'ids']) {
+  for (const key of [
+    'uid',
+    'showlegend',
+    'legendgroup',
+    'legendrank',
+    'legendwidth',
+    'opacity',
+    'meta',
+    'customdata',
+    'ids',
+  ]) {
     ctx.coerce(key);
   }
+  ctx.coerceContainer('legendgrouptitle');
+  for (const key of ['hovertext', 'hoverinfo', 'hovertemplate', 'selectedpoints']) ctx.coerce(key);
+  ctx.coerceContainer('hoverlabel');
   ctx.coerce('uirevision');
   if (mod.categories.includes('cartesian')) {
     ctx.coerce('xaxis');

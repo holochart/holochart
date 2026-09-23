@@ -1,0 +1,480 @@
+/**
+ * The legend component (plan E5.2): one item per trace with a glyph from its module's
+ * `legendIcon` (a colored marker when a module has none), vertical or horizontal, positioned by
+ * `x`/`y`/anchors/refs with a background and border, a title, grouping and ranking, margin
+ * pushes, and click (toggle) / double-click (isolate) through the public `restyle` API.
+ *
+ * ## Primitives (constant draw calls whatever the item count)
+ *
+ * One rect batch (background and bar/fill glyphs), one line batch per dash pattern (line glyphs),
+ * one marker set (marker glyphs) and one text batch (names and title), all in the overlay.
+ *
+ * ## Pointer input
+ *
+ * The runtime offers pointer events to component views first (`ComponentView.handlePointer`); the
+ * legend claims those over its box, so dragging or double-clicking the legend never zooms.
+ */
+import { isArrayLike, type FullLayout, type FullTrace } from '@mk7s/holochart-core';
+import { createMarkers, type MarkerSet, type RGBA } from '@mk7s/holochart-render';
+import type {
+  Chart,
+  ComponentDrawContext,
+  ComponentLayoutContext,
+  ComponentModule,
+  ComponentPointerEvent,
+  ComponentUpdatePlan,
+  ComponentView,
+  LegendGlyph,
+} from '@mk7s/holochart-runtime';
+import type { DashItem, LabelItem, RectItem } from '../axes/geometry.ts';
+import { DashBatch, RectBatch, TextBatch } from '../shared/batches.ts';
+import { findChart, fireAndForget, overlayTransform } from '../shared/host.ts';
+import { oracleMeasure, rgba, textFont, type MeasureLine } from '../shared/text.ts';
+import {
+  hasLegendEntry,
+  layoutLegend,
+  legendEntries,
+  legendMarginPush,
+  legendOrigin,
+  legendShown,
+  type LegendBoxes,
+  type LegendEntry,
+} from './layout.ts';
+import { legendAttributes, supplyLegendDefaults, type FullLegend } from './schema.ts';
+import { ClickDispatcher, legendToggle, type ToggleTrace } from './toggle.ts';
+
+/** Marker size used for every item with `itemsizing: 'constant'`, px (Plotly). */
+const CONSTANT_MARKER_SIZE = 12;
+/** Largest marker drawn in the legend with `itemsizing: 'trace'`, px (Plotly). */
+const MAX_MARKER_SIZE = 16;
+/** Widest line drawn in the legend, px. */
+const MAX_LINE_WIDTH = 5;
+/** Opacity multiplier of `legendonly` items (Plotly). */
+const HIDDEN_ALPHA = 0.5;
+/** Draw order in the overlay: above axes and titles. */
+const ORDER = { box: 10, lines: 11, markers: 12, text: 13 } as const;
+
+function firstString(v: unknown): string | undefined {
+  if (typeof v === 'string') return v;
+  if (isArrayLike(v) && v.length > 0 && typeof v[0] === 'string') return v[0];
+  return undefined;
+}
+
+function firstNumber(v: unknown): number | undefined {
+  if (typeof v === 'number') return v;
+  if (isArrayLike(v) && v.length > 0 && typeof v[0] === 'number') return v[0];
+  return undefined;
+}
+
+/**
+ * The glyph of a trace: its module's `legendIcon`, else a marker (and a line for `lines` modes)
+ * in the trace's color.
+ */
+export function legendGlyphOf(
+  trace: FullTrace,
+  fullLayout: Pick<FullLayout, 'colorway'>,
+): LegendGlyph {
+  const module = trace._module as { legendIcon?: (t: FullTrace) => LegendGlyph } | undefined;
+  if (typeof module?.legendIcon === 'function') {
+    try {
+      return module.legendIcon(trace);
+    } catch {
+      // A failing icon must not break the legend: fall back below.
+    }
+  }
+  const marker = trace['marker'] as Record<string, unknown> | undefined;
+  const line = trace['line'] as Record<string, unknown> | undefined;
+  const colorway = fullLayout.colorway;
+  const color =
+    firstString(marker?.['color']) ??
+    firstString(line?.['color']) ??
+    (colorway[trace._index % colorway.length] as string);
+  const mode = typeof trace['mode'] === 'string' ? trace['mode'] : 'markers';
+  const markerGlyph = {
+    color,
+    symbol: firstString(marker?.['symbol']) ?? firstNumber(marker?.['symbol']) ?? 'circle',
+    size: firstNumber(marker?.['size']) ?? 6,
+    opacity: firstNumber(marker?.['opacity']) ?? 1,
+  };
+  const lineGlyph = {
+    color: firstString(line?.['color']) ?? color,
+    width: firstNumber(line?.['width']) ?? 2,
+    dash: typeof line?.['dash'] === 'string' ? line['dash'] : 'solid',
+  };
+  if (mode.includes('lines') && mode.includes('markers')) {
+    return { kind: 'lines+markers', marker: markerGlyph, line: lineGlyph };
+  }
+  if (mode.includes('lines')) return { kind: 'line', line: lineGlyph };
+  return { kind: 'marker', marker: markerGlyph };
+}
+
+function faded(c: RGBA, hidden: boolean): RGBA {
+  return hidden ? [c[0], c[1], c[2], c[3] * HIDDEN_ALPHA] : c;
+}
+
+/** Everything the legend draws, in container px (pure given `measure`). */
+export interface LegendScene {
+  /** Legend box in container px (hit region), or `undefined` when nothing is drawn. */
+  box: { left: number; top: number; width: number; height: number } | undefined;
+  /** Item hit regions, container px. */
+  hits: { index: number; left: number; top: number; width: number; height: number }[];
+  /** Background (first, with its border) and bar/fill glyphs. */
+  rects: RectItem[];
+  rectBorders: { color: RGBA; width: number }[];
+  lines: DashItem[];
+  markers: {
+    x: number;
+    y: number;
+    size: number;
+    color: RGBA;
+    symbol: string | number;
+    lineColor: RGBA;
+    lineWidth: number;
+    opacity: number;
+  }[];
+  labels: LabelItem[];
+}
+
+/** Legend geometry for the current layout. */
+export function buildLegendScene(
+  fullLayout: FullLayout,
+  fullData: readonly FullTrace[],
+  size: { width: number; height: number },
+  plotArea: { x: number; y: number; width: number; height: number },
+  measure: MeasureLine,
+): LegendScene {
+  const empty: LegendScene = {
+    box: undefined,
+    hits: [],
+    rects: [],
+    rectBorders: [],
+    lines: [],
+    markers: [],
+    labels: [],
+  };
+  if (!legendShown(fullLayout)) return empty;
+  const legend = fullLayout['legend'] as FullLegend;
+  const entries = legendEntries(fullData, legend.traceorder, (t) => legendGlyphOf(t, fullLayout));
+  const maxWidth = legend.xref === 'paper' ? plotArea.width : size.width;
+  const boxes: LegendBoxes = layoutLegend(legend, entries, {
+    measure,
+    maxWidth,
+    plotWidth: plotArea.width,
+    figureHeight: size.height,
+  });
+  if (boxes.width <= 0 || boxes.height <= 0) return empty;
+  const { left, top } = legendOrigin(legend, size, plotArea, boxes);
+  const scene: LegendScene = {
+    ...empty,
+    box: { left, top, width: boxes.width, height: boxes.height },
+  };
+  scene.rects.push({
+    x0: left,
+    y0: top,
+    x1: left + boxes.width,
+    y1: top + boxes.height,
+    color: rgba(legend.bgcolor),
+  });
+  scene.rectBorders.push({ color: rgba(legend.bordercolor), width: legend.borderwidth });
+
+  const font = textFont(legend.font);
+  const textColor = rgba(legend.font.color);
+  const constant = legend.itemsizing === 'constant';
+  for (const item of boxes.items) {
+    const e: LegendEntry = item.entry;
+    const hidden = e.visible === 'legendonly';
+    const gx = left + item.glyphX;
+    const gy = top + item.glyphY;
+    const half = legend.itemwidth / 2;
+    const g = e.glyph;
+    if ((g.kind === 'line' || g.kind === 'lines+markers') && g.line) {
+      const width = Math.min(g.line.width ?? 2, MAX_LINE_WIDTH);
+      if (width > 0) {
+        scene.lines.push({
+          x0: gx - half,
+          x1: gx + half,
+          y0: gy,
+          y1: gy,
+          color: faded(rgba(g.line.color, [0, 0, 0, 1]), hidden),
+          width,
+          dash: g.line.dash ?? 'solid',
+        });
+      }
+    }
+    if ((g.kind === 'bar' || g.kind === 'fill') && g.fill) {
+      const w = g.kind === 'bar' ? 6 : half - 3;
+      const h = g.kind === 'bar' ? 6 : 5;
+      scene.rects.push({
+        x0: gx - w,
+        x1: gx + w,
+        y0: gy - h,
+        y1: gy + h,
+        color: faded(rgba(g.fill.color, [0.5, 0.5, 0.5, 1]), hidden),
+      });
+      scene.rectBorders.push({
+        color: faded(rgba(g.fill.lineColor), hidden),
+        width: Math.min(g.fill.lineWidth ?? 0, 2),
+      });
+    }
+    if ((g.kind === 'marker' || g.kind === 'lines+markers') && g.marker) {
+      const m = g.marker;
+      scene.markers.push({
+        x: gx,
+        y: gy,
+        size: constant ? CONSTANT_MARKER_SIZE : Math.min(m.size ?? 6, MAX_MARKER_SIZE),
+        color: rgba(m.color, [0, 0, 0, 1]),
+        symbol: m.symbol ?? 'circle',
+        lineColor: rgba(m.lineColor),
+        lineWidth: Math.min(m.lineWidth ?? 0, MAX_LINE_WIDTH),
+        opacity: (m.opacity ?? 1) * (hidden ? HIDDEN_ALPHA : 1),
+      });
+    }
+    if (e.name !== '') {
+      scene.labels.push({
+        text: e.name,
+        x: left + item.textX,
+        y: top + item.textY,
+        anchorX: 'left',
+        anchorY: 'middle',
+        angle: 0,
+        font,
+        color: faded(textColor, hidden),
+      });
+    }
+    scene.hits.push({
+      index: e.index,
+      left: left + item.x,
+      top: top + item.y,
+      width: item.width,
+      height: item.height,
+    });
+  }
+  if (boxes.title) {
+    scene.labels.push({
+      text: boxes.title.text,
+      x: left + boxes.title.x,
+      y: top + boxes.title.y,
+      anchorX: 'left',
+      anchorY: 'top',
+      angle: 0,
+      font: boxes.title.font,
+      color: rgba(legend.title.font.color),
+    });
+  }
+  return scene;
+}
+
+function toggleTraces(fullData: readonly FullTrace[]): ToggleTrace[] {
+  return fullData.map((t) => ({
+    index: t._index,
+    visible: t.visible,
+    legendgroup: typeof t['legendgroup'] === 'string' ? t['legendgroup'] : '',
+    inLegend: hasLegendEntry(t),
+  }));
+}
+
+/** Emit `legendclick` / `legenddoubleclick`; `false` when a listener cancelled the default. */
+function emitLegendEvent(
+  chart: Chart,
+  type: 'legendclick' | 'legenddoubleclick',
+  index: number,
+  fullData: readonly FullTrace[],
+): boolean {
+  const trace = fullData.find((t) => t._index === index);
+  return chart.emit(type, {
+    curveNumber: index,
+    data: chart.data,
+    ...(trace ? { fullData: trace } : {}),
+  });
+}
+
+class LegendView implements ComponentView {
+  readonly #ctx: ComponentDrawContext;
+  readonly #rects: RectBatch;
+  readonly #text: TextBatch;
+  readonly #lines = new Map<string, DashBatch>();
+  #markers: MarkerSet | undefined;
+  #markerKey = '';
+  #scene: LegendScene | undefined;
+  #fullData: readonly FullTrace[] = [];
+  #legend: FullLegend | undefined;
+  readonly #clicks = new ClickDispatcher<number>(
+    (i) => this.#act(i, 'single'),
+    (i) => this.#act(i, 'double'),
+  );
+
+  constructor(ctx: ComponentDrawContext) {
+    this.#ctx = ctx;
+    this.#rects = new RectBatch(ctx, ctx.primitives, ctx.overlay, ORDER.box);
+    this.#text = new TextBatch(ctx, ctx.primitives, ctx.overlay, ORDER.text);
+    this.#draw(ctx);
+  }
+
+  update(ctx: ComponentDrawContext, plan: ComponentUpdatePlan): void {
+    const s = plan.stages;
+    if (!plan.layout && !s.has('legend') && !s.has('style') && !s.has('plot') && !s.has('calc')) {
+      return;
+    }
+    this.#draw(ctx);
+  }
+
+  #draw(ctx: ComponentDrawContext): void {
+    const scene = buildLegendScene(ctx.fullLayout, ctx.fullData, ctx, ctx.plotArea, oracleMeasure);
+    this.#scene = scene;
+    this.#fullData = ctx.fullData;
+    this.#legend = ctx.fullLayout['legend'] as FullLegend | undefined;
+    const t = overlayTransform(ctx.height);
+
+    this.#rects.setTransform(t);
+    this.#rects.set(scene.rects, scene.rectBorders);
+    this.#text.setTransform(t);
+    this.#text.set(scene.labels);
+
+    const byDash = new Map<string, DashItem[]>();
+    for (const l of scene.lines) {
+      const list = byDash.get(l.dash);
+      if (list) list.push(l);
+      else byDash.set(l.dash, [l]);
+    }
+    for (const [dash, batch] of this.#lines) {
+      if (byDash.has(dash)) continue;
+      batch.dispose();
+      this.#lines.delete(dash);
+    }
+    for (const [dash, items] of byDash) {
+      let batch = this.#lines.get(dash);
+      if (!batch) {
+        batch = new DashBatch(ctx, ctx.primitives, ctx.overlay, ORDER.lines);
+        this.#lines.set(dash, batch);
+      }
+      batch.setTransform(t);
+      batch.set(items, ctx.overlay.size.pixelRatio);
+    }
+
+    const m = scene.markers;
+    const markerKey = JSON.stringify(m);
+    if (m.length === 0) {
+      if (this.#markers) ctx.remove(this.#markers);
+      this.#markers = undefined;
+    } else if (markerKey !== this.#markerKey || !this.#markers) {
+      const data = {
+        x: Float64Array.from(m, (d) => d.x),
+        y: Float64Array.from(m, (d) => d.y),
+        size: Float32Array.from(m, (d) => d.size),
+        color: Float32Array.from(m.flatMap((d) => [...d.color])),
+        lineColor: Float32Array.from(m.flatMap((d) => [...d.lineColor])),
+        lineWidth: Float32Array.from(m, (d) => d.lineWidth),
+        opacity: Float32Array.from(m, (d) => d.opacity),
+        symbol: m.map((d) => d.symbol),
+      };
+      if (!this.#markers) {
+        this.#markers = createMarkers(ctx.primitives, data, { renderOrder: ORDER.markers });
+        ctx.add(this.#markers);
+      } else {
+        this.#markers.update(data);
+      }
+    }
+    this.#markerKey = markerKey;
+    this.#markers?.setTransform(t);
+  }
+
+  /** Is the container point inside the legend box? (For the runtime's pointer routing.) */
+  hitTest(x: number, y: number): boolean {
+    const b = this.#scene?.box;
+    return (
+      b !== undefined && x >= b.left && x <= b.left + b.width && y >= b.top && y <= b.top + b.height
+    );
+  }
+
+  /** The trace index of the item under a container point, if any. */
+  itemAt(x: number, y: number): number | undefined {
+    for (const h of this.#scene?.hits ?? []) {
+      if (x >= h.left && x <= h.left + h.width && y >= h.top && y <= h.top + h.height) {
+        return h.index;
+      }
+    }
+    return undefined;
+  }
+
+  handlePointer(event: ComponentPointerEvent): boolean {
+    if (event.type === 'leave' || !this.hitTest(event.x, event.y)) return false;
+    const index = this.itemAt(event.x, event.y);
+    switch (event.type) {
+      case 'move':
+        if (index !== undefined) event.cursor = 'pointer';
+        break;
+      case 'click':
+        if (index !== undefined && event.button === 0) {
+          const legend = this.#legend;
+          const chart = findChart(this.#ctx);
+          const delay =
+            legend?.itemdoubleclick === false
+              ? 0
+              : Number(chart?.fullConfig?.doubleClickDelay ?? 300);
+          this.#clicks.click(index, delay);
+        }
+        break;
+      case 'dblclick':
+        if (index !== undefined) this.#clicks.doubleClick(index);
+        break;
+      default:
+        break;
+    }
+    return true;
+  }
+
+  #act(index: number, kind: 'single' | 'double'): void {
+    const legend = this.#legend;
+    const chart = findChart(this.#ctx);
+    if (!legend || !chart || chart.destroyed) return;
+    const mode = kind === 'single' ? legend.itemclick : legend.itemdoubleclick;
+    if (
+      !emitLegendEvent(
+        chart,
+        kind === 'single' ? 'legendclick' : 'legenddoubleclick',
+        index,
+        this.#fullData,
+      )
+    ) {
+      return;
+    }
+    if (mode === false) return;
+    const changes = legendToggle(toggleTraces(this.#fullData), index, mode, legend.groupclick);
+    if (changes.size === 0) return;
+    const indices = [...changes.keys()];
+    fireAndForget(chart.restyle({ visible: indices.map((i) => changes.get(i)) }, indices));
+  }
+
+  dispose(): void {
+    this.#clicks.cancel();
+  }
+}
+
+/** The legend component (`layout.legend`, `showlegend`; E5.2). */
+export const legendComponent: ComponentModule = {
+  name: 'legend',
+  order: 20,
+  layoutSchema: { legend: legendAttributes },
+  supplyLayoutDefaults(_layoutIn, layoutOut, ctx) {
+    supplyLegendDefaults(layoutOut, ctx);
+  },
+  pushMargin(ctx: ComponentLayoutContext) {
+    if (!legendShown(ctx.fullLayout)) return undefined;
+    const legend = ctx.fullLayout['legend'] as FullLegend;
+    const m = ctx.fullLayout.margin;
+    const plotWidth = Math.max(1, ctx.width - m.l - m.r);
+    const entries = legendEntries(ctx.fullData, legend.traceorder, (t) =>
+      legendGlyphOf(t, ctx.fullLayout),
+    );
+    const boxes = layoutLegend(legend, entries, {
+      measure: oracleMeasure,
+      maxWidth: legend.xref === 'paper' ? plotWidth : ctx.width,
+      plotWidth,
+      figureHeight: ctx.height,
+    });
+    return legendMarginPush(legend, ctx, m, boxes);
+  },
+  draw: {
+    create: (ctx) => new LegendView(ctx),
+  },
+};

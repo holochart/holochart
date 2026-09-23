@@ -1,8 +1,8 @@
 import { createScale, type FullAxis } from '@mk7s/holochart-core';
 import { describe, expect, it } from 'vitest';
 import {
+  axisCategoryLists,
   axisTypeOf,
-  collectCategories,
   dataTransform,
   linearExtremes,
   resolveAxisRange,
@@ -79,15 +79,41 @@ describe('linearExtremes', () => {
 
 describe('categories', () => {
   it('collects categories in order of first appearance across traces', () => {
-    const out: string[] = [];
-    const seen = new Set<string>();
-    collectCategories(['b', 'a', 'b', null, ''], out, seen);
-    collectCategories(['c', 'a'], out, seen);
-    expect(out).toEqual(['b', 'a', 'c']);
+    const lists = axisCategoryLists({}, 'category', [
+      ['b', 'a', 'b', null, ''],
+      ['c', 'a'],
+    ]);
+    expect(lists.categories).toEqual(['b', 'a', 'c']);
   });
 
-  it('ignores non-arrays', () => {
-    expect(collectCategories(undefined, [])).toEqual([]);
+  it('applies categoryorder and categoryarray (core axisCategories)', () => {
+    const cols = [['b', 'c', 'a']];
+    expect(
+      axisCategoryLists({ categoryorder: 'category ascending' }, 'category', cols).categories,
+    ).toEqual(['a', 'b', 'c']);
+    expect(
+      axisCategoryLists({ categoryorder: 'array', categoryarray: ['c', 'z'] }, 'category', cols)
+        .categories,
+    ).toEqual(['c', 'z', 'b', 'a']);
+  });
+
+  it('gives multicategory pairs from two-row columns', () => {
+    const lists = axisCategoryLists({}, 'multicategory', [
+      [
+        ['g1', 'g1', 'g2'],
+        ['a', 'b', 'a'],
+      ],
+    ]);
+    expect(lists.multicategories).toEqual([
+      ['g1', 'a'],
+      ['g1', 'b'],
+      ['g2', 'a'],
+    ]);
+  });
+
+  it('ignores non-arrays and non-categorical axes', () => {
+    expect(axisCategoryLists({}, 'category', [undefined]).categories).toEqual([]);
+    expect(axisCategoryLists({}, 'linear', [['a']])).toEqual({});
   });
 });
 
@@ -98,6 +124,12 @@ describe('syncScale', () => {
     const b = syncScale(a, 'category', ['a', 'b', 'c']);
     expect(b).not.toBe(a);
     expect(syncScale(b, 'linear', undefined).scale.type).toBe('linear');
+  });
+
+  it('rebuilds a multicategory scale only when the pairs change', () => {
+    const a = syncScale(undefined, 'multicategory', undefined, [['g', 'a']]);
+    expect(syncScale(a, 'multicategory', undefined, [['g', 'a']])).toBe(a);
+    expect(syncScale(a, 'multicategory', undefined, [['g', 'b']])).not.toBe(a);
   });
 
   it('carries range and length over to a new scale', () => {
