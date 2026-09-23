@@ -34,7 +34,6 @@ flat out vec4 vEndB;
 flat out vec3 vDash;       // phase at A, dash px per screen px, alpha scale for hairlines
 flat out vec4 vColorA;
 flat out vec4 vColorB;
-out vec2 vPos;             // fragment position in screen px
 
 const float END_MITER = 0.0;
 const float END_BUTT = 1.0;
@@ -133,7 +132,6 @@ void main() {
   vDash = vec3(aDist.x, len > 1e-6 ? aDist.y / len : 1.0, alphaScale);
   vColorA = aColorA;
   vColorB = aColorB;
-  vPos = screen;
 }
 `;
 
@@ -155,7 +153,6 @@ flat in vec4 vEndB;
 flat in vec3 vDash;
 flat in vec4 vColorA;
 flat in vec4 vColorB;
-in vec2 vPos;
 
 out highp vec4 fragColor;
 
@@ -163,6 +160,7 @@ const float END_BUTT = 1.0;
 const float END_SQUARE = 2.0;
 const float END_ROUND = 3.0;
 const float END_BEVEL = 4.0;
+const float OWN_EPS = 1.0 / 512.0; // px; see the ownership partition in main()
 
 float endDistance(vec4 info, vec2 rel, float beyond, float hw) {
   if (info.w == END_BUTT || info.w == END_ROUND) return beyond;
@@ -190,6 +188,10 @@ float hcDashDistance(float along) {
 }
 
 void main() {
+  // Fragment position in screen px, from gl_FragCoord rather than an interpolated varying: both
+  // segments at a join then see bit-identical positions, so the ownership test below can never
+  // drop a pixel on both sides (the notches at miter tips seen in spike B).
+  vec2 vPos = (gl_FragCoord.xy - uViewport.xy) / uViewport.zw * uResolution;
   vec2 a = vAB.xy;
   vec2 b = vAB.zw;
   vec2 dir = vFrame.xy;
@@ -198,9 +200,13 @@ void main() {
   vec2 rel = vPos - a;
   vec2 relB = vPos - b;
 
-  // Exact ownership partition at joins (shared edge: no anti-aliasing here).
-  if (vTangents.xy != vec2(0.0) && dot(rel, vTangents.xy) < 0.0) discard;
-  if (vTangents.zw != vec2(0.0) && dot(relB, vTangents.zw) >= 0.0) discard;
+  // Exact ownership partition at joins (shared edge: no anti-aliasing here). The boundary is offset
+  // by OWN_EPS so it never sits exactly on pixel centers: at a symmetric join the partition is
+  // axis-aligned through the vertex, the test is 0 at every pixel of that column, and the two
+  // segments' independently rounded tangents could then both discard it (the white notches at miter
+  // tips in spike B). Rounding error (~1e-6 px) is far below OWN_EPS, so both sides always agree.
+  if (vTangents.xy != vec2(0.0) && dot(rel, vTangents.xy) < OWN_EPS) discard;
+  if (vTangents.zw != vec2(0.0) && dot(relB, vTangents.zw) >= OWN_EPS) discard;
 
   float t = dot(rel, dir);
   float perp = dot(rel, vec2(-dir.y, dir.x));

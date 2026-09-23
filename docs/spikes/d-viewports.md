@@ -30,9 +30,6 @@ node docs/spikes/scripts/run-spike.mjs --spike d-viewports --params 'scale=0.1&o
 node docs/spikes/scripts/run-spike.mjs --spike d-viewports --params 'only=limit&max=24' --out /tmp/spikes
 ```
 
-Each panel draws a line, so wait for the [spike B](b-lines.md) line-cost fix first; otherwise the
-line cost dominates and the viewport comparison means little.
-
 ## What we know so far
 
 The `viewports-grid` visual example renders 9 viewports (8 × 2D markers and one 3D panel) in one
