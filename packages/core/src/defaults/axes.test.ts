@@ -356,3 +356,10 @@ describe('cleanTick0 on date axes (property-test regression)', () => {
     expect(cleanTick0(-9e15, 'date', 86400000)).toBe(cleanTick0('nope', 'date', 86400000));
   });
 });
+
+describe('autoType on malformed data (property-test regression)', () => {
+  it('does not throw on objects without a prototype', () => {
+    expect(() => autoType([Object.create(null), 1, 2])).not.toThrow();
+    expect(autoType([Object.create(null), 1, 2])).toBe('linear');
+  });
+});

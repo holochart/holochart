@@ -52,6 +52,19 @@ function isEmptyValue(v: unknown): boolean {
   return v === null || v === undefined || v === '';
 }
 
+/**
+ * String form used to deduplicate samples. `String()` throws for objects without a prototype (no
+ * `toString`), which malformed input can contain; key those by their type tag instead so type
+ * detection never throws.
+ */
+function sampleKey(v: unknown): string {
+  const noToString =
+    typeof v === 'object' &&
+    v !== null &&
+    typeof (v as { toString?: unknown }).toString !== 'function';
+  return noToString ? Object.prototype.toString.call(v) : String(v);
+}
+
 /** Distinct sampled values (by string form), skipping blanks. */
 function sampleDistinct(a: ArrayLike<unknown>): unknown[] {
   const inc = Math.max(1, (a.length - 1) / SAMPLE);
@@ -60,7 +73,7 @@ function sampleDistinct(a: ArrayLike<unknown>): unknown[] {
   for (let f = 0; f < a.length; f += inc) {
     const v = a[Math.round(f)];
     if (isEmptyValue(v)) continue;
-    const key = String(v);
+    const key = sampleKey(v);
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(v);
