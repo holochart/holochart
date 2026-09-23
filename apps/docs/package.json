@@ -1,0 +1,33 @@
+{
+  "name": "@mk7s/holochart-docs",
+  "private": true,
+  "type": "module",
+  "description": "Documentation site for mk7s.dev/holochart (plan E19).",
+  "scripts": {
+    "gen": "pnpm run gen:reference && pnpm run gen:api",
+    "gen:reference": "node --conditions=source ../../tools/schema-gen/src/docs/cli.ts",
+    "gen:api": "node --conditions=source scripts/gen-api.ts",
+    "predev": "pnpm run gen",
+    "dev": "vitepress dev",
+    "prebuild": "pnpm run gen",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "lint:pages": "node scripts/lint-pages.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@mk7s/holochart": "workspace:*",
+    "@mk7s/holochart-core": "workspace:*",
+    "@mk7s/holochart-render": "workspace:*",
+    "@mk7s/holochart-runtime": "workspace:*",
+    "@mk7s/holochart-examples": "workspace:*",
+    "three": "catalog:"
+  },
+  "devDependencies": {
+    "@types/three": "catalog:",
+    "typescript": "catalog:",
+    "vitepress": "catalog:",
+    "typedoc": "catalog:",
+    "typedoc-plugin-markdown": "catalog:"
+  }
+}

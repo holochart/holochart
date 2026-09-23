@@ -2,6 +2,7 @@
   "name": "@mk7s/holochart-core",
   "version": "0.0.0",
   "description": "Figure model, attribute schema system, validation, defaults, and update planning.",
+  "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "repository": {
@@ -27,11 +28,27 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "d3-color": "catalog:"
+    "d3-color": "catalog:",
+    "d3-format": "catalog:",
+    "d3-time": "catalog:",
+    "d3-time-format": "catalog:",
+    "d3-array": "catalog:"
   },
   "devDependencies": {
     "@types/d3-color": "catalog:",
     "tsdown": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "@types/d3-format": "catalog:",
+    "@types/d3-time": "catalog:",
+    "@types/d3-time-format": "catalog:",
+    "@types/d3-array": "catalog:"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
   }
 }

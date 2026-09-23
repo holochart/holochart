@@ -19,7 +19,16 @@
     "typecheck:tooling": "tsc -p tsconfig.json && tsc -p tests/tsconfig.json",
     "test:visual": "playwright test",
     "test:visual:update": "UPDATE_BASELINES=1 playwright test",
-    "test:bundle": "turbo run build --filter=@mk7s/holochart && playwright test -c tests/bundle/playwright.config.ts"
+    "test:bundle": "turbo run build --filter=@mk7s/holochart && playwright test -c tests/bundle/playwright.config.ts",
+    "test:visual:report": "node tests/visual/report.ts",
+    "build:packages": "turbo run build --filter=./packages/*",
+    "size": "pnpm build:packages && node tests/bundle/size/bundle.ts && size-limit",
+    "size:report": "node tests/bundle/size/report.ts",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release:pack": "pnpm build:packages && changeset pack --out-dir release-artifacts",
+    "release:publish": "changeset publish --from-pack-dir release-artifacts",
+    "docs:publish": "node scripts/publish-docs-mk7s.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -39,6 +48,9 @@
     "typescript": "catalog:",
     "typescript-eslint": "^8.5.1",
     "vite": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "@changesets/cli": "^3.0.3",
+    "size-limit": "^14.0.0",
+    "@size-limit/file": "^14.0.0"
   }
 }

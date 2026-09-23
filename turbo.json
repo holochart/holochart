@@ -11,6 +11,10 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "@mk7s/holochart-docs#build": {
+      "dependsOn": ["^build"],
+      "outputs": [".vitepress/dist/**"]
     }
   }
 }

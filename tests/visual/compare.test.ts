@@ -40,5 +40,24 @@ describe('comparePng', () => {
     expect(result.pass).toBe(false);
     expect(result.message).toMatch(/size mismatch/);
     expect(result.diffPng).toBeUndefined();
+    expect(result.exactPixels).toBe(100);
+    expect(result.maxDelta).toBe(255);
+  });
+
+  it('reports exact differences that pixelmatch tolerates', () => {
+    const png = PNG.sync.read(white);
+    png.data.set([253, 255, 255, 255], 0); // Δ2 on one channel: below the YIQ threshold
+    png.data.set([255, 255, 250, 255], 4 * 99); // Δ5
+    const result = comparePng(PNG.sync.write(png), white);
+    expect(result.diffPixels).toBe(0);
+    expect(result.exactPixels).toBe(2);
+    expect(result.maxDelta).toBe(5);
+    expect(result.message).toMatch(/exact: 2 px, max Δ 5/);
+  });
+
+  it('reports zero exact difference for identical images', () => {
+    const result = comparePng(white, white);
+    expect(result.exactPixels).toBe(0);
+    expect(result.maxDelta).toBe(0);
   });
 });

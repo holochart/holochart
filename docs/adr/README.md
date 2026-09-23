@@ -27,3 +27,4 @@ them and the old one is marked **Superseded by ADR-XXX**.
 | 016 | [Keep pnpm `minimumReleaseAge` on](016-pnpm-minimum-release-age.md)                                     | Accepted      |
 | 017 | [Publish under the `@mk7s` npm scope](017-mk7s-npm-scope.md)                                            | Accepted      |
 | 018 | [Visual regression harness](018-visual-regression-harness.md)                                           | Accepted      |
+| 019 | [A runtime package owns charts, the pipeline and the plugin contracts](019-runtime-package.md)          | Accepted      |

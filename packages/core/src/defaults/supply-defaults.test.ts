@@ -238,7 +238,9 @@ describe('supplyDefaults: subplot discovery', () => {
     expect(fullLayout.yaxis?.type).toBe('date');
     expect(autoType(new Float64Array(2))).toBe('linear');
     expect(autoType([1, 2, 'x'])).toBe('linear');
-    expect(autoType([1, 'x', 'y'])).toBe('category');
+    // Plotly: more than twice as many distinct strings as numbers.
+    expect(autoType([1, 'x', 'y'])).toBe('linear');
+    expect(autoType([1, 'x', 'y', 'z'])).toBe('category');
     expect(autoType([new Date(0), null])).toBe('date');
     expect(autoType(undefined)).toBe('linear');
   });

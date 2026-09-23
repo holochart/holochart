@@ -128,10 +128,14 @@ Axes (linear, log, date, category, multicategory), subplots and grids, legends, 
 ```
 holochart/
 ├── packages/
-│   ├── core/            # Figure model, schema system, validation, defaults, calc pipeline,
-│   │                    # scales, layout engine, event bus, registry, update planner
+│   ├── core/            # Pure, renderer-free: figure model, schema system, validation, defaults,
+│   │                    # templates, scales/autorange/ticks, update planner, figure diffing
 │   ├── render/          # three.js layer: renderer, viewports, cameras, primitives
 │   │                    # (markers, lines, fills, text, meshes), picking, render loop, export
+│   ├── runtime/         # createChart / newPlot: pipeline orchestration (defaults → calc → layout →
+│   │                    # plot), layout engine, update API, events, registry, interaction dispatch,
+│   │                    # and the trace-render / component contracts traces-* and components
+│   │                    # implement (ADR-019)
 │   ├── components/      # Axes, legend, colorbar, title, annotations, shapes, images,
 │   │                    # hover labels, modebar, range slider/selector, updatemenus, sliders
 │   ├── traces-basic/    # scatter, bar, pie, table
@@ -390,52 +394,59 @@ Customization is a **cascade**. Each layer overrides the one above it:
 **Goal:** A working monorepo with builds, tests, CI, and conventions, so every later epic starts from solid ground.
 **Milestone:** M0 · **Owner area:** repo-wide
 
-#### E0.1 — Monorepo scaffold   `P0` `M`
+#### E0.1 — Monorepo scaffold   `P0` `M`   · ✅ Done (M0)
 > As a contributor, I want a pnpm + Turborepo workspace with the package layout from §4.1, so that packages build and test independently.
-- [ ] `pnpm-workspace.yaml`, `turbo.json`, root `tsconfig.base.json` (strict, `moduleResolution: bundler`)
-- [ ] Empty packages created: `core`, `render`, `components`, `traces-basic`, `themes`, `holochart`
-- [ ] `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm typecheck` work from the root
-- [ ] `three` declared as a peer dependency with a tested version range
+- [x] `pnpm-workspace.yaml`, `turbo.json`, root `tsconfig.base.json` (strict, `moduleResolution: bundler`)
+- [x] Empty packages created: `core`, `render`, `components`, `traces-basic`, `themes`, `holochart`
+- [x] `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm typecheck` work from the root
+- [x] `three` declared as a peer dependency with a tested version range
 
-#### E0.2 — Build pipeline   `P0` `M`   deps: E0.1
+#### E0.2 — Build pipeline   `P0` `M`   deps: E0.1   · ✅ Done (M0)
 > As a contributor, I want every package to emit ESM + type declarations, and the full bundle to also emit an IIFE/UMD build, so that the library works with bundlers and from a CDN.
-- [ ] ESM output with `exports` maps and `sideEffects: false` where applicable
-- [ ] One bundled `.d.ts` per package entry (tsdown; see ADR-015)
-- [ ] `@mk7s/holochart` full bundle: ESM + minified IIFE (`window.Holochart`) with sourcemaps
-- [ ] GLSL authored as TypeScript template-string modules (`*.glsl.ts`, tagged `/* glsl */`), so no loader is needed in tsdown, Vite, Vitest, or Node (see ADRs)
+- [x] ESM output with `exports` maps and `sideEffects: false` where applicable
+- [x] One bundled `.d.ts` per package entry (tsdown; see ADR-015)
+- [x] `@mk7s/holochart` full bundle: ESM + minified IIFE (`window.Holochart`) with sourcemaps
+- [x] GLSL authored as TypeScript template-string modules (`*.glsl.ts`, tagged `/* glsl */`), so no loader is needed in tsdown, Vite, Vitest, or Node (see ADRs)
 
-#### E0.3 — Dev sandbox   `P0` `S`   deps: E0.2
+#### E0.3 — Dev sandbox   `P0` `S`   deps: E0.2   · 🟡 Partial (M0)
 > As a contributor, I want a Vite dev app that hot-reloads any example from `examples/`, so that I can iterate on rendering quickly.
-- [ ] `pnpm dev` opens an example picker with URL routing (`/?example=scatter/basic`)
-- [ ] Stats overlay: FPS, draw calls, triangles, geometries, textures (from `renderer.info`)
-- [ ] Toggles for DPR, theme, and a wireframe debug mode
+- [x] `pnpm dev` opens an example picker with URL routing (`/?example=scatter/basic`)
+- [x] Stats overlay: FPS, draw calls, triangles, geometries, textures (from `renderer.info`)
+- [ ] Toggles for DPR, theme, and a wireframe debug mode — *deferred: DPR and background done; theme and wireframe toggles need scene access (M1 runtime)*
 
-#### E0.4 — CI pipeline   `P0` `M`   deps: E0.1
+#### E0.4 — CI pipeline   `P0` `M`   deps: E0.1   · 🟡 Partial (M0)
 > As a contributor, I want CI to run lint, typecheck, unit tests, visual tests, bundle-size checks, and docs build on every PR, so that regressions are caught early.
-- [ ] GitHub Actions workflow with Turborepo remote caching
-- [ ] Separate job for Playwright visual tests on a pinned Chromium + SwiftShader image
-- [ ] Artifacts: visual diff report, bundle-size report, benchmark report
-- [ ] Required status checks documented in `CONTRIBUTING.md`
+- [x] GitHub Actions workflow with Turborepo remote caching
+- [x] Separate job for Playwright visual tests on a pinned Chromium + SwiftShader image
+- [ ] Artifacts: visual diff report, bundle-size report, benchmark report — *deferred: visual diff done; bundle-size (E21.1) and benchmark (E16.1) jobs are stubs*
+- [x] Required status checks documented in `CONTRIBUTING.md`
 
-#### E0.5 — Code conventions & contributor docs   `P0` `S`
+#### E0.5 — Code conventions & contributor docs   `P0` `S`   · ✅ Done (M0)
 > As a contributor, I want documented conventions, so that code looks consistent.
-- [ ] `CONTRIBUTING.md`: branching, commits (Conventional Commits), changesets, review checklist
-- [ ] ESLint + Prettier configs, plus a rule banning `new Mesh` inside per-point loops (custom lint rule)
-- [ ] `ARCHITECTURE.md` summarizing §4 with links to ADRs
+- [x] `CONTRIBUTING.md`: branching, commits (Conventional Commits), changesets, review checklist
+- [x] ESLint + Prettier configs, plus a rule banning `new Mesh` inside per-point loops (custom lint rule)
+- [x] `ARCHITECTURE.md` summarizing §4 with links to ADRs
 
-#### E0.6 — ADR process & initial ADRs   `P0` `S`
+#### E0.6 — ADR process & initial ADRs   `P0` `S`   · ✅ Done (M0)
 > As a contributor, I want the decisions in §6 recorded as ADRs, so that the reasoning is preserved.
-- [ ] `docs/adr/` with a template and ADR-001 through ADR-012
-- [ ] Each ADR has a status, context, decision, consequences, and alternatives
+- [x] `docs/adr/` with a template and ADR-001 through ADR-012
+- [x] Each ADR has a status, context, decision, consequences, and alternatives
 
-#### E0.7 — Technical spikes   `P0` `L`
+#### E0.7 — Technical spikes   `P0` `L`   · 🟡 Partial (M0)
 > As a contributor, I want throwaway spikes for the riskiest technical areas, so that ADRs rest on evidence.
-- [ ] Spike A: 1M instanced SDF markers, measuring pan FPS
-- [ ] Spike B: screen-space thick lines with joins, caps, and dashes, compared with `Line2`
-- [ ] Spike C: troika text: 2,000 tick labels, update cost, and memory
-- [ ] Spike D: scissored multi-viewport rendering with 9 subplots in one context
-- [ ] Spike E: deterministic screenshots in CI (SwiftShader vs ANGLE)
-- [ ] Findings written up. ADRs updated to Accepted or Rejected.
+- [x] Spike A: 1M instanced SDF markers, measuring pan FPS
+- [x] Spike B: screen-space thick lines with joins, caps, and dashes, compared with `Line2`
+- [ ] Spike C: troika text: 2,000 tick labels, update cost, and memory — *deferred: moved to the M7 benchmarking pass*
+- [ ] Spike D: scissored multi-viewport rendering with 9 subplots in one context — *deferred: moved to the M7 benchmarking pass*
+- [x] Spike E: deterministic screenshots in CI (SwiftShader vs ANGLE)
+- [ ] Findings written up. ADRs updated to Accepted or Rejected. — *deferred: ADR-004/005 stay Proposed until spikes C/D*
+
+
+#### E0.8 — Stacked-PR merge guard   `P1` `S`   · ✅ Done (M1 wave 1)
+> As a maintainer, I want stacked PRs to land on `main` reliably, so that merged work is never stranded on an intermediate branch.
+- [x] Turn on "Automatically delete head branches" in the repo settings, so GitHub retargets stacked PRs when their base merges (needs a repo admin) — enabled 2026-09-23
+- [x] CONTRIBUTING: merge stacked PRs bottom-up and wait for each retarget; prefer PRs against `main`
+- [x] Context: #3, #4 and #5 merged into their base branches after #2 had merged, so their commits missed `main` until PR #6
 
 ---
 
@@ -444,68 +455,68 @@ Customization is a **cascade**. Each layer overrides the one above it:
 **Goal:** Build the schema DSL, validation, defaults, template merge, and update planner. Every trace and component relies on this epic.
 **Milestone:** M0–M1 · **Package:** `core`
 
-#### E1.1 — Attribute schema DSL   `P0` `L`   deps: E0.1
+#### E1.1 — Attribute schema DSL   `P0` `L`   deps: E0.1   · ✅ Done (M0)
 > As a contributor, I want a typed DSL for declaring attributes, so that one declaration drives types, validation, defaults, and docs.
-- [ ] Value types: `number`, `integer`, `string`, `boolean`, `enumerated`, `flaglist` (e.g. `'lines+markers'`), `color`, `colorlist`, `colorscale`, `angle`, `subplotid`, `data_array`, `info_array`, `any`, `function` (non-serializable)
-- [ ] Per-attribute metadata: `dflt`, `min`, `max`, `values`, `arrayOk` (per-point arrays), `editType`, `description` (markdown), `examples`, `since`, `deprecated`, `plotlyPath`, `animatable`
-- [ ] Nested objects (`marker.line.color`) and `items` for arrays of objects (annotations, shapes)
-- [ ] `role`/`category` tags for docs grouping (`style`, `data`, `info`, `layout`)
-- [ ] Schema of the whole library exportable as `plot-schema.json`
+- [x] Value types: `number`, `integer`, `string`, `boolean`, `enumerated`, `flaglist` (e.g. `'lines+markers'`), `color`, `colorlist`, `colorscale`, `angle`, `subplotid`, `data_array`, `info_array`, `any`, `function` (non-serializable)
+- [x] Per-attribute metadata: `dflt`, `min`, `max`, `values`, `arrayOk` (per-point arrays), `editType`, `description` (markdown), `examples`, `since`, `deprecated`, `plotlyPath`, `animatable`
+- [x] Nested objects (`marker.line.color`) and `items` for arrays of objects (annotations, shapes)
+- [x] `role`/`category` tags for docs grouping (`style`, `data`, `info`, `layout`)
+- [x] Schema of the whole library exportable as `plot-schema.json`
 
-#### E1.2 — TypeScript type generation   `P0` `M`   deps: E1.1
+#### E1.2 — TypeScript type generation   `P0` `M`   deps: E1.1   · ✅ Done (M0)
 > As a developer, I want accurate TS types for every trace and layout attribute, so that my editor autocompletes and catches mistakes.
-- [ ] `tools/schema-gen` emits `TraceScatter`, `LayoutAxis`, etc., with JSDoc from descriptions
-- [ ] Discriminated union `Data = TraceScatter | TraceBar | ...` on `type`
-- [ ] `arrayOk` attributes typed as `T | T[] | TypedArray`
-- [ ] Generated types are checked in and diffed in CI (fails if they're stale)
+- [x] `tools/schema-gen` emits `TraceScatter`, `LayoutAxis`, etc., with JSDoc from descriptions
+- [x] Discriminated union `Data = TraceScatter | TraceBar | ...` on `type`
+- [x] `arrayOk` attributes typed as `T | T[] | TypedArray`
+- [x] Generated types are checked in and diffed in CI (fails if they're stale)
 
-#### E1.3 — Coercion & validation   `P0` `M`   deps: E1.1
+#### E1.3 — Coercion & validation   `P0` `M`   deps: E1.1   · ✅ Done (M0)
 > As a developer, I want invalid attributes reported clearly, so that I can fix my figure quickly.
-- [ ] `Holochart.validate(data, layout)` returns `{ path, message, value, expected }[]`
-- [ ] Coercion rules: numeric strings → numbers, colors normalized, out-of-range values clamped or falling back to `dflt` with a warning
-- [ ] `config.strict: true` throws on the first error. Default mode warns once per path.
-- [ ] Unknown attributes warn with a "did you mean" suggestion (Levenshtein)
+- [x] `Holochart.validate(data, layout)` returns `{ path, message, value, expected }[]`
+- [x] Coercion rules: numeric strings → numbers, colors normalized, out-of-range values clamped or falling back to `dflt` with a warning
+- [x] `config.strict: true` throws on the first error. Default mode warns once per path.
+- [x] Unknown attributes warn with a "did you mean" suggestion (Levenshtein)
 
-#### E1.4 — Supply defaults & fullData/fullLayout   `P0` `L`   deps: E1.3
+#### E1.4 — Supply defaults & fullData/fullLayout   `P0` `L`   deps: E1.3   · ✅ Done (M0)
 > As a contributor, I want a defaults stage that turns user input into a complete `fullData`/`fullLayout`, so that later stages never check for `undefined`.
-- [ ] Per-trace `supplyDefaults` with conditional defaults (e.g. `marker.*` exists only if `mode` includes `markers`)
-- [ ] Colorway cycling for trace colors. `_index`/`_fullInput` back-references kept.
-- [ ] Subplot discovery: traces referencing `xaxis: 'x2'` create axis defaults
-- [ ] `fullLayout._subplots` registry
-- [ ] Idempotent: running defaults twice gives the same result (property test)
+- [x] Per-trace `supplyDefaults` with conditional defaults (e.g. `marker.*` exists only if `mode` includes `markers`)
+- [ ] Colorway cycling for trace colors. `_index`/`_fullInput` back-references kept. — *deferred: `_index`/`_input` kept; `_fullInput` deferred (would break JSON serialization without transforms)*
+- [x] Subplot discovery: traces referencing `xaxis: 'x2'` create axis defaults
+- [x] `fullLayout._subplots` registry
+- [x] Idempotent: running defaults twice gives the same result (property test)
 
-#### E1.5 — Template merging   `P0` `M`   deps: E1.4
+#### E1.5 — Template merging   `P0` `M`   deps: E1.4   · ✅ Done (M0)
 > As a designer, I want templates that set layout and per-trace-type defaults, so that I can brand every chart consistently.
-- [ ] `layout.template = { layout: {...}, data: { scatter: [{...}, {...}], bar: [...] } }`. Trace templates cycle per type, as in Plotly.
-- [ ] Named templates referenced by string (`'dark'`) or composed with `'dark+presentation'`
-- [ ] `templateitemname` for array items (annotations, shapes) that come from the template
-- [ ] Merge precedence tests matching §8
+- [x] `layout.template = { layout: {...}, data: { scatter: [{...}, {...}], bar: [...] } }`. Trace templates cycle per type, as in Plotly.
+- [x] Named templates referenced by string (`'dark'`) or composed with `'dark+presentation'`
+- [x] `templateitemname` for array items (annotations, shapes) that come from the template
+- [x] Merge precedence tests matching §8
 
-#### E1.6 — Data ingestion formats   `P0` `M`   deps: E1.3
+#### E1.6 — Data ingestion formats   `P0` `M`   deps: E1.3   · ✅ Done (M0)
 > As a developer, I want to pass plain arrays, typed arrays, or columnar data, so that I don't need to reshape my data.
-- [ ] `Array`, `Float32Array`, `Float64Array`, `Int*Array`, and `Date[]` accepted for data arrays
-- [ ] ISO date strings detected and parsed (with `xcalendar` hooks reserved)
-- [ ] Optional `dataset` + column-reference strings: `{ dataset: 'sales', x: '@date', y: '@revenue' }`. A `'@…'` string is a reference only where it could not otherwise be a valid value: on `data_array` attributes, and on `arrayOk` attributes that reject it as a scalar (`marker.color: '@region'`). String attributes keep Plotly semantics (`text: '@handle'` is text), so there is no escape syntax and the full output is valid, idempotent input
-- [ ] Zero-copy path for typed arrays (no conversion when the dtype already fits)
-- [ ] Apache Arrow table adapter (`P2`, separate story E1.10)
+- [x] `Array`, `Float32Array`, `Float64Array`, `Int*Array`, and `Date[]` accepted for data arrays
+- [x] ISO date strings detected and parsed (with `xcalendar` hooks reserved)
+- [x] Optional `dataset` + column-reference strings: `{ dataset: 'sales', x: '@date', y: '@revenue' }`. A `'@…'` string is a reference only where it could not otherwise be a valid value: on `data_array` attributes, and on `arrayOk` attributes that reject it as a scalar (`marker.color: '@region'`). String attributes keep Plotly semantics (`text: '@handle'` is text), so there is no escape syntax and the full output is valid, idempotent input
+- [x] Zero-copy path for typed arrays (no conversion when the dtype already fits)
+- [x] Apache Arrow table adapter (`P2`, separate story E1.10)
 
-#### E1.7 — Edit types & update planner   `P0` `L`   deps: E1.4
+#### E1.7 — Edit types & update planner   `P0` `L`   deps: E1.4   · ✅ Done (M0)
 > As a contributor, I want every attribute to declare what it invalidates, so that updates re-run only the necessary stages.
-- [ ] Edit-type flags: `calc`, `calcIfAutorange`, `crossTraceCalc`, `layout`, `ticks`, `plot`, `style`, `colorbars`, `legend`, `modebar`, `camera`, `none`
-- [ ] `planUpdate(diff) → Set<Stage>` merges flags across all changed paths
-- [ ] Unit tests: changing `marker.color` → `style` only; changing `x` → `calc`; changing `xaxis.range` → `ticks` + `plot`
-- [ ] Debug mode logs the chosen plan per update
+- [x] Edit-type flags: `calc`, `calcIfAutorange`, `crossTraceCalc`, `layout`, `ticks`, `plot`, `style`, `colorbars`, `legend`, `modebar`, `camera`, `none`
+- [x] `planUpdate(diff) → Set<Stage>` merges flags across all changed paths
+- [x] Unit tests: changing `marker.color` → `style` only; changing `x` → `calc`; changing `xaxis.range` → `ticks` + `plot`
+- [x] Debug mode logs the chosen plan per update
 
-#### E1.8 — Figure diffing (`react`)   `P0` `M`   deps: E1.7
+#### E1.8 — Figure diffing (`react`)   `P0` `M`   deps: E1.7   · ✅ Done (M0)
 > As a developer using React/Vue, I want to pass a whole new figure and have only the changes applied, so that declarative frameworks stay fast.
-- [ ] Structural diff of old vs new input. Arrays compared by reference unless `datarevision` changes.
-- [ ] `uirevision` semantics: user zoom/legend state is preserved while `uirevision` is unchanged
-- [ ] Trace identity via `uid`, so reordered traces are moved rather than rebuilt
+- [x] Structural diff of old vs new input. Arrays compared by reference unless `datarevision` changes.
+- [x] `uirevision` semantics: user zoom/legend state is preserved while `uirevision` is unchanged
+- [x] Trace identity via `uid`, so reordered traces are moved rather than rebuilt
 
-#### E1.9 — Config object   `P0` `S`   deps: E1.1
+#### E1.9 — Config object   `P0` `S`   deps: E1.1   · ✅ Done (M0)
 > As a developer, I want a `config` object for non-visual behavior, so that interaction and rendering can be tuned per chart.
-- [ ] `responsive`, `staticPlot`, `displayModeBar`, `modeBarButtonsToRemove/ToAdd`, `scrollZoom`, `doubleClick`, `editable`, `edits`, `locale`, `toImageButtonOptions`, `pixelRatio`, `antialias`, `powerPreference`, `worker`, `textRenderer`, `strict`
-- [ ] Config has its own schema, so it gets generated docs too
+- [x] `responsive`, `staticPlot`, `displayModeBar`, `modeBarButtonsToRemove/ToAdd`, `scrollZoom`, `doubleClick`, `editable`, `edits`, `locale`, `toImageButtonOptions`, `pixelRatio`, `antialias`, `powerPreference`, `worker`, `textRenderer`, `strict`
+- [x] Config has its own schema, so it gets generated docs too
 
 #### E1.10 — Apache Arrow & DataFrame adapters   `P2` `M`   deps: E1.6
 > As an analyst, I want to pass Arrow tables (or Danfo/Polars-JS frames), so that big datasets load without being copied.
@@ -519,67 +530,67 @@ Customization is a **cascade**. Each layer overrides the one above it:
 **Goal:** A GPU primitives layer that every trace uses: renderer, viewports, cameras, markers, lines, fills, text, meshes, picking, and resource lifecycle.
 **Milestone:** M0–M1 · **Package:** `render`
 
-#### E2.1 — Renderer bootstrap & lifecycle   `P0` `M`   deps: E0.2
+#### E2.1 — Renderer bootstrap & lifecycle   `P0` `M`   deps: E0.2   · ✅ Done (M0)
 > As a developer, I want `createChart(el)` to set up a canvas, WebGL2 context, and resize handling, so that charts just work in any container.
-- [ ] Canvas sized to the container with DPR awareness (`config.pixelRatio`, default `min(devicePixelRatio, 2)`)
-- [ ] `ResizeObserver`-driven resize when `responsive: true`
-- [ ] `destroy()` disposes every geometry, material, texture, and render target, and removes listeners. The leak test (E20.6) passes.
-- [ ] WebGL context loss/restore: rebuild GPU resources from `calcdata` without user intervention
+- [x] Canvas sized to the container with DPR awareness (`config.pixelRatio`, default `min(devicePixelRatio, 2)`)
+- [x] `ResizeObserver`-driven resize when `responsive: true`
+- [x] `destroy()` disposes every geometry, material, texture, and render target, and removes listeners. The leak test (E20.6) passes.
+- [x] WebGL context loss/restore: rebuild GPU resources from `calcdata` without user intervention
 
-#### E2.2 — On-demand render loop   `P0` `S`   deps: E2.1
+#### E2.2 — On-demand render loop   `P0` `S`   deps: E2.1   · ✅ Done (M0)
 > As an end user, I want charts that use no CPU when idle, so that pages with many charts stay responsive.
-- [ ] `invalidate()` schedules a single rAF render. Several invalidations in one frame are coalesced.
-- [ ] Continuous mode is entered only during transitions, camera damping, or user drag
-- [ ] `beforerender`/`afterrender` events are emitted
+- [x] `invalidate()` schedules a single rAF render. Several invalidations in one frame are coalesced.
+- [x] Continuous mode is entered only during transitions, camera damping, or user drag
+- [x] `beforerender`/`afterrender` events are emitted
 
-#### E2.3 — Viewports & cameras   `P0` `M`   deps: E2.1
+#### E2.3 — Viewports & cameras   `P0` `M`   deps: E2.1   · ✅ Done (M0)
 > As a contributor, I want each subplot rendered in a scissored viewport with its own camera, so that one context serves any subplot grid.
-- [ ] `Viewport { rect(px), camera, scene, clip }`. Scissor test is on per viewport.
-- [ ] 2D: `OrthographicCamera` in pixel space (ADR-008). 3D: `PerspectiveCamera` or orthographic per `scene.camera.projection`.
-- [ ] Overlay viewport for figure-level components (title, legend, annotations in paper coordinates)
-- [ ] Clip rectangles for data inside axes (`cliponaxis` support), done via a scissor or stencil
+- [x] `Viewport { rect(px), camera, scene, clip }`. Scissor test is on per viewport.
+- [x] 2D: `OrthographicCamera` in pixel space (ADR-008). 3D: `PerspectiveCamera` or orthographic per `scene.camera.projection`.
+- [x] Overlay viewport for figure-level components (title, legend, annotations in paper coordinates)
+- [x] Clip rectangles for data inside axes (`cliponaxis` support), done via a scissor or stencil
 
-#### E2.4 — Instanced marker primitive   `P0` `L`   deps: E2.3, E0.7
+#### E2.4 — Instanced marker primitive   `P0` `L`   deps: E2.3, E0.7   · ✅ Done (M0)
 > As a contributor, I want a single-draw-call marker primitive supporting all Plotly symbols, so that scatter-type traces scale to millions of points.
-- [ ] Instanced quads with per-instance attributes: position (RTC-encoded), size, fill color, line color, line width, symbol id, opacity, rotation (`marker.angle`)
-- [ ] SDF fragment shader for all Plotly symbols: `circle`, `square`, `diamond`, `cross`, `x`, `triangle-{up,down,left,right,ne,nw,se,sw}`, `pentagon`, `hexagon`, `hexagon2`, `octagon`, `star`, `hexagram`, `star-triangle-{up,down}`, `star-square`, `star-diamond`, `diamond-{tall,wide}`, `hourglass`, `bowtie`, `circle-{cross,x}`, `square-{cross,x}`, `diamond-{cross,x}`, `cross-thin`, `x-thin`, `asterisk`, `hash`, `y-{up,down,left,right}`, `line-{ew,ns,ne,nw}`, `arrow-{up,down,left,right}`, `arrow-bar-*`, `arrow`, `arrow-wide`. Each has `-open`, `-dot`, and `-open-dot` variants.
-- [ ] Anti-aliased edges via `fwidth`. Correct at every DPR.
-- [ ] Symbols also accepted by numeric code (Plotly compatibility)
-- [ ] Partial buffer updates (`updateRanges`) for style-only changes
-- [ ] Benchmark: 1M markers ≥ 50 fps pan on the reference machine
+- [x] Instanced quads with per-instance attributes: position (RTC-encoded), size, fill color, line color, line width, symbol id, opacity, rotation (`marker.angle`)
+- [x] SDF fragment shader for all Plotly symbols: `circle`, `square`, `diamond`, `cross`, `x`, `triangle-{up,down,left,right,ne,nw,se,sw}`, `pentagon`, `hexagon`, `hexagon2`, `octagon`, `star`, `hexagram`, `star-triangle-{up,down}`, `star-square`, `star-diamond`, `diamond-{tall,wide}`, `hourglass`, `bowtie`, `circle-{cross,x}`, `square-{cross,x}`, `diamond-{cross,x}`, `cross-thin`, `x-thin`, `asterisk`, `hash`, `y-{up,down,left,right}`, `line-{ew,ns,ne,nw}`, `arrow-{up,down,left,right}`, `arrow-bar-*`, `arrow`, `arrow-wide`. Each has `-open`, `-dot`, and `-open-dot` variants.
+- [x] Anti-aliased edges via `fwidth`. Correct at every DPR.
+- [x] Symbols also accepted by numeric code (Plotly compatibility)
+- [x] Partial buffer updates (`updateRanges`) for style-only changes
+- [x] Benchmark: 1M markers ≥ 50 fps pan on the reference machine
 
-#### E2.5 — Screen-space line primitive   `P0` `L`   deps: E2.3, E0.7
+#### E2.5 — Screen-space line primitive   `P0` `L`   deps: E2.3, E0.7   · ✅ Done (M0)
 > As a contributor, I want thick, anti-aliased polylines with joins, caps, and dashes, so that line charts look crisp at any width.
-- [ ] Instanced segment rendering with miter/round/bevel joins and butt/round/square caps
-- [ ] Dash patterns: `solid`, `dot`, `dash`, `longdash`, `dashdot`, `longdashdot`, and custom `'5px,10px,2px'` / percentage lists. Dash phase continues across segments.
-- [ ] Per-vertex color (for colorscale lines) and per-segment width
-- [ ] Gaps (NaN/null) break the line unless `connectgaps`
-- [ ] Works in 2D pixel space and in 3D (world-space positions, screen-space width)
+- [x] Instanced segment rendering with miter/round/bevel joins and butt/round/square caps
+- [x] Dash patterns: `solid`, `dot`, `dash`, `longdash`, `dashdot`, `longdashdot`, and custom `'5px,10px,2px'` / percentage lists. Dash phase continues across segments.
+- [x] Per-vertex color (for colorscale lines) and per-segment width
+- [x] Gaps (NaN/null) break the line unless `connectgaps`
+- [x] Works in 2D pixel space and in 3D (world-space positions, screen-space width)
 
-#### E2.6 — Fill & polygon primitive   `P0` `M`   deps: E2.3
+#### E2.6 — Fill & polygon primitive   `P0` `M`   deps: E2.3   · 🟡 Partial (M0)
 > As a contributor, I want triangulated polygon fills with holes, so that area charts, shapes, and fills render correctly.
-- [ ] `earcut` triangulation. Supports self-intersecting "toself" fills via the even-odd rule.
-- [ ] Solid color, gradient (`fillgradient`), and pattern fills (via E8.10)
-- [ ] Batched: many polygons per draw call (for choropleth and treemap scale)
+- [x] `earcut` triangulation. Supports self-intersecting "toself" fills via the even-odd rule.
+- [ ] Solid color, gradient (`fillgradient`), and pattern fills (via E8.10) — *deferred: solid done; gradient/pattern deferred (`paint` field reserved; E8.10)*
+- [x] Batched: many polygons per draw call (for choropleth and treemap scale)
 
-#### E2.7 — Instanced rectangle / box primitive   `P0` `M`   deps: E2.3
+#### E2.7 — Instanced rectangle / box primitive   `P0` `M`   deps: E2.3   · 🟡 Partial (M0)
 > As a contributor, I want an instanced rectangle primitive with optional rounded corners, borders, and extrusion depth, so that bars, heatmap cells, candlesticks, and treemap tiles share one fast path.
-- [ ] Per-instance: rect (x0, y0, x1, y1), fill, border color/width, corner radius, depth
-- [ ] `depth > 0` switches to an extruded box geometry with lit materials (see E8.9)
-- [ ] Pixel snapping option to avoid blurry 1 px borders
+- [x] Per-instance: rect (x0, y0, x1, y1), fill, border color/width, corner radius, depth
+- [ ] `depth > 0` switches to an extruded box geometry with lit materials (see E8.9) — *deferred: `depth` reserved; extrusion is E8.9*
+- [x] Pixel snapping option to avoid blurry 1 px borders
 
-#### E2.8 — Arc / wedge primitive   `P0` `M`   deps: E2.3
+#### E2.8 — Arc / wedge primitive   `P0` `M`   deps: E2.3   · ✅ Done (M0)
 > As a contributor, I want an arc/annular-sector primitive, so that pie, donut, sunburst, gauges, and barpolar share rendering.
-- [ ] SDF-based or tessellated wedges with inner/outer radius, start/end angle, corner radius, pad angle
-- [ ] Border stroke. Optional extrusion depth and bevel.
+- [x] SDF-based or tessellated wedges with inner/outer radius, start/end angle, corner radius, pad angle
+- [x] Border stroke. Optional extrusion depth and bevel.
 
-#### E2.9 — Text primitive (SDF)   `P0` `L`   deps: E2.3, E0.7
+#### E2.9 — Text primitive (SDF)   `P0` `L`   deps: E2.3, E0.7   · ✅ Done (M0)
 > As a contributor, I want high-quality text for ticks, labels, titles, and annotations, so that text is crisp, themable, and works in 3D.
-- [ ] troika-three-text wrapper with pooling and batched sync (only changed labels re-layout)
-- [ ] Font family, size, color, weight, style, variant, and shadow/outline (`textfont.shadow`, `textfont.lineposition`) supported
-- [ ] Anchor, rotation (`tickangle`, `textangle`), and max width with wrapping or ellipsis
-- [ ] **Font metrics oracle:** synchronous text measurement for the layout stage (cached per font/size)
-- [ ] Billboard mode for 3D (always faces the camera) and fixed-orientation mode
+- [x] troika-three-text wrapper with pooling and batched sync (only changed labels re-layout)
+- [ ] Font family, size, color, weight, style, variant, and shadow/outline (`textfont.shadow`, `textfont.lineposition`) supported — *deferred: variant and lineposition deferred*
+- [x] Anchor, rotation (`tickangle`, `textangle`), and max width with wrapping or ellipsis
+- [x] **Font metrics oracle:** synchronous text measurement for the layout stage (cached per font/size)
+- [x] Billboard mode for 3D (always faces the camera) and fixed-orientation mode
 
 #### E2.10 — Rich text (Plotly pseudo-HTML)   `P1` `M`   deps: E2.9
 > As a developer, I want `<b>`, `<i>`, `<br>`, `<sup>`, `<sub>`, `<span style="...">`, and `<a href>` in titles, labels, and hover text, so that my existing Plotly strings render correctly.
@@ -593,26 +604,32 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] Plotly lighting model mapped: `ambient`, `diffuse`, `specular`, `roughness`, `fresnel`, `lightposition`, `facenormalsepsilon`, `vertexnormalsepsilon`
 - [ ] Flat vs smooth shading, double-sided, opacity with correct depth sorting (see E2.14)
 
-#### E2.12 — Colorscale textures   `P0` `S`   deps: E2.3
+#### E2.12 — Colorscale textures   `P0` `S`   deps: E2.3   · ✅ Done (M0)
 > As a contributor, I want colorscales uploaded as 1D textures, so that shaders map values to colors on the GPU.
-- [ ] 256-texel RGBA LUT per unique colorscale, cached and reference-counted
-- [ ] `cmin`/`cmax`/`cmid`/`reversescale` handled via uniforms (no texture rebuild)
+- [x] 256-texel RGBA LUT per unique colorscale, cached and reference-counted
+- [x] `cmin`/`cmax`/`cmid`/`reversescale` handled via uniforms (no texture rebuild)
 
-#### E2.13 — Picking infrastructure   `P0` `M`   deps: E2.4, E2.11
+#### E2.13 — Picking infrastructure   `P0` `M`   deps: E2.4, E2.11   · ✅ Done (M0)
 > As a contributor, I want 2D spatial indexes and 3D GPU ID picking, so that hover and click find the right point fast.
-- [ ] `flatbush` index per trace, built lazily and invalidated on calc
-- [ ] GPU picking render target: renders ID-encoded colors in a 1×1 or small region around the cursor. Read back asynchronously with PBO/fence where available.
-- [ ] Unified `pick(x, y) → { traceIndex, pointIndex, distance }[]` API
+- [x] `flatbush` index per trace, built lazily and invalidated on calc
+- [x] GPU picking render target: renders ID-encoded colors in a 1×1 or small region around the cursor. Read back asynchronously with PBO/fence where available.
+- [x] Unified `pick(x, y) → { traceIndex, pointIndex, distance }[]` API
 
 #### E2.14 — Transparency & draw ordering   `P1` `M`   deps: E2.4, E2.11
 > As an end user, I want overlapping translucent traces to composite correctly, so that charts look right.
 - [ ] Trace order = render order for 2D (`renderOrder` from trace index, with `zorder` attribute support)
 - [ ] 3D: sort transparent objects. Optional weighted-blended OIT for dense translucent meshes (`P2`).
 
-#### E2.15 — Resource manager   `P0` `S`   deps: E2.1
+#### E2.15 — Resource manager   `P0` `S`   deps: E2.1   · ✅ Done (M0)
 > As a contributor, I want reference-counted shared GPU resources, so that nothing leaks and duplicates are avoided.
-- [ ] Registry for geometries (shared unit quad, unit box), textures (colorscales, glyph atlases, patterns), and materials (keyed by variant)
-- [ ] Debug panel lists live resources per chart
+- [x] Registry for geometries (shared unit quad, unit box), textures (colorscales, glyph atlases, patterns), and materials (keyed by variant)
+- [ ] Debug panel lists live resources per chart — *deferred: sandbox shows `renderer.info`; per-chart resource list deferred*
+
+#### E2.17 — Pick queue stall in `_dev/picking-3d`   `P1` `S`   deps: E2.13
+> As an end user, I want hover picking to keep up with the pointer, so that the readout never freezes on an old point.
+- [ ] Reproduce: move the pointer while a GPU pick is pending (headless SwiftShader makes each pick ~0.5 s); the readout sticks on one hit (seen before and after the marker optimization, PR #5)
+- [ ] Fix the single in-flight/queued pick logic (latest request must always resolve), and move it into the runtime's hover pipeline (E6.1) rather than each example
+- [ ] Interaction test (E20.4) that sweeps the pointer and checks every readout matches a fresh pick
 
 #### E2.16 — Shared renderer / context pooling   `P2` `M`   deps: E2.3
 > As a developer building a dashboard with 50 charts, I want charts to share a WebGL context, so that I don't hit the browser context limit.
@@ -626,27 +643,27 @@ Customization is a **cascade**. Each layer overrides the one above it:
 **Goal:** Full-featured Cartesian axes that match Plotly's axis model.
 **Milestone:** M1 · **Packages:** `core/scales`, `components/axes`
 
-#### E3.1 — Scale abstraction   `P0` `M`   deps: E1.4
+#### E3.1 — Scale abstraction   `P0` `M`   deps: E1.4   · ✅ Done (M1 wave 1)
 > As a contributor, I want a scale interface (`d2l`, `l2p`, `p2d`, ticks), so that every axis type plugs into one layout engine.
-- [ ] Types: `linear`, `log`, `date`, `category`, `multicategory`
-- [ ] Automatic type detection from data (`autotypenumbers: 'convert types' | 'strict'`)
-- [ ] Round-trip property tests: `p2d(d2p(v)) ≈ v`
+- [x] Types: `linear`, `log`, `date`, `category`, `multicategory`
+- [x] Automatic type detection from data (`autotypenumbers: 'convert types' | 'strict'`)
+- [x] Round-trip property tests: `p2d(d2p(v)) ≈ v`
 
-#### E3.2 — Autorange   `P0` `M`   deps: E3.1
+#### E3.2 — Autorange   `P0` `M`   deps: E3.1   · ✅ Done (M1 wave 1)
 > As a developer, I want axes to fit my data automatically with sensible padding, so that I don't have to compute ranges.
-- [ ] Each trace reports extremes, with pixel padding for marker size/line width (as Plotly's `findExtremes` does)
-- [ ] `autorange: true | false | 'reversed' | 'min' | 'max' | 'min reversed' | 'max reversed'`, plus `autorangeoptions` (`minallowed`, `maxallowed`, `clipmin`, `clipmax`, `include`)
-- [ ] `rangemode: 'normal' | 'tozero' | 'nonnegative'`
-- [ ] `minallowed`/`maxallowed` hard limits for zoom and pan
+- [x] Each trace reports extremes, with pixel padding for marker size/line width (as Plotly's `findExtremes` does)
+- [x] `autorange: true | false | 'reversed' | 'min' | 'max' | 'min reversed' | 'max reversed'`, plus `autorangeoptions` (`minallowed`, `maxallowed`, `clipmin`, `clipmax`, `include`)
+- [x] `rangemode: 'normal' | 'tozero' | 'nonnegative'`
+- [ ] `minallowed`/`maxallowed` hard limits for zoom and pan — *deferred: applied in autorange; zoom/pan enforcement comes with E6.2 (wave 2)*
 
-#### E3.3 — Tick generation   `P0` `L`   deps: E3.1
+#### E3.3 — Tick generation   `P0` `L`   deps: E3.1   · 🟡 Partial (M1 wave 1)
 > As a developer, I want readable, well-spaced ticks with full control, so that axes communicate clearly.
-- [ ] `tickmode: 'auto' | 'linear' | 'array' | 'sync'`, `nticks`, `tick0`, `dtick` (including log `D1`/`D2`/`L<f>` and date `M<n>` forms), `tickvals`/`ticktext`
-- [ ] `tickformat` (d3-format / d3-time-format), `tickformatstops` (zoom-dependent formats), `tickprefix`/`ticksuffix` with `showtickprefix`/`showticksuffix`, `exponentformat` (`none`, `e`, `E`, `power`, `SI`, `B`), `separatethousands`, `minexponent`
-- [ ] `hoverformat`
-- [ ] Minor ticks: `minor.{tickmode, dtick, nticks, ticklen, tickcolor, showgrid, gridcolor, griddash}`
-- [ ] `ticklabelmode: 'instant' | 'period'` for dates. `ticklabelposition` inside/outside + left/right/top/bottom. `ticklabeloverflow`. `ticklabelstep`. `ticklabelshift`/`ticklabelstandoff`.
-- [ ] Label collision avoidance: auto-rotate (`tickangle: 'auto'`) and auto-skip
+- [ ] `tickmode: 'auto' | 'linear' | 'array' | 'sync'`, `nticks`, `tick0`, `dtick` (including log `D1`/`D2`/`L<f>` and date `M<n>` forms), `tickvals`/`ticktext` — *deferred: `sync` behaves as `auto` for now*
+- [x] `tickformat` (d3-format / d3-time-format), `tickformatstops` (zoom-dependent formats), `tickprefix`/`ticksuffix` with `showtickprefix`/`showticksuffix`, `exponentformat` (`none`, `e`, `E`, `power`, `SI`, `B`), `separatethousands`, `minexponent`
+- [x] `hoverformat`
+- [x] Minor ticks: `minor.{tickmode, dtick, nticks, ticklen, tickcolor, showgrid, gridcolor, griddash}` — computed; drawn by the axis renderer (wave 2)
+- [ ] `ticklabelmode: 'instant' | 'period'` for dates. `ticklabelposition` inside/outside + left/right/top/bottom. `ticklabeloverflow`. `ticklabelstep`. `ticklabelshift`/`ticklabelstandoff`. — *deferred: `ticklabelmode` and `ticklabelstep` done; `ticklabelposition`/`ticklabeloverflow` are rendering (E3.4, wave 2)*
+- [x] Label collision avoidance: auto-rotate (`tickangle: 'auto'`) and auto-skip — `layoutTickLabels` helper done; the axis renderer applies it (wave 2)
 
 #### E3.4 — Axis rendering   `P0` `M`   deps: E3.3, E2.5, E2.9
 > As a designer, I want full control over axis lines, ticks, grid, and zero line, so that axes match my design.
@@ -657,21 +674,21 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] `layer: 'above traces' | 'below traces'`
 - [ ] Axis title: `title.text`, `title.font`, `title.standoff`
 
-#### E3.5 — Date axes   `P0` `M`   deps: E3.3
+#### E3.5 — Date axes   `P0` `M`   deps: E3.3   · ✅ Done (M1 wave 1)
 > As a developer, I want date axes that handle ms timestamps, ISO strings, and time zones, so that time series just work.
-- [ ] Internal representation: ms since epoch (UTC). Display timezone configurable (`layout.timezone`, `P2`).
-- [ ] Automatic multi-level tick labels (e.g. "Jan 2026" under day ticks)
-- [ ] `xperiod`, `xperiod0`, `xperiodalignment: 'start' | 'middle' | 'end'` for period data
+- [ ] Internal representation: ms since epoch (UTC). Display timezone configurable (`layout.timezone`, `P2`). — *deferred: UTC internally; configurable display timezone (P2) not started*
+- [x] Automatic multi-level tick labels (e.g. "Jan 2026" under day ticks)
+- [x] `xperiod`, `xperiod0`, `xperiodalignment: 'start' | 'middle' | 'end'` for period data
 
-#### E3.6 — Category & multicategory axes   `P0` `M`   deps: E3.1
+#### E3.6 — Category & multicategory axes   `P0` `M`   deps: E3.1   · ✅ Done (M1 wave 1)
 > As a developer, I want categorical axes with ordering control and hierarchical categories, so that grouped categorical data displays properly.
-- [ ] `categoryorder: 'trace' | 'category ascending/descending' | 'array' | 'total ascending/descending' | 'min/max/sum/mean/median ascending/descending'`, `categoryarray`
-- [ ] Multicategory: 2-level `[[group], [item]]` data with divider lines (`dividercolor`, `dividerwidth`, `showdividers`)
+- [x] `categoryorder: 'trace' | 'category ascending/descending' | 'array' | 'total ascending/descending' | 'min/max/sum/mean/median ascending/descending'`, `categoryarray` — multicategory axes support `trace` and `category` orders only
+- [x] Multicategory: 2-level `[[group], [item]]` data with divider lines (`dividercolor`, `dividerwidth`, `showdividers`) — divider data from `multicategoryLevels`; drawn by the axis renderer (wave 2)
 
-#### E3.7 — Log axes   `P0` `S`   deps: E3.3
+#### E3.7 — Log axes   `P0` `S`   deps: E3.3   · ✅ Done (M1 wave 1)
 > As a scientist, I want log axes with proper minor ticks and labels, so that I can plot data spanning orders of magnitude.
-- [ ] Non-positive values are excluded with a single warning
-- [ ] Log-specific `dtick` forms and "2, 5" intermediate labels
+- [x] Non-positive values are excluded with a single warning
+- [x] Log-specific `dtick` forms and "2, 5" intermediate labels
 
 #### E3.8 — Range breaks   `P1` `M`   deps: E3.5
 > As a finance developer, I want to hide weekends, off-hours, or arbitrary gaps on date axes, so that trading charts don't show empty space.
@@ -696,20 +713,20 @@ Customization is a **cascade**. Each layer overrides the one above it:
 **Goal:** Compute the positions of every subplot and component, including automatic margins and grid helpers.
 **Milestone:** M1–M2 · **Package:** `core/layout`
 
-#### E4.1 — Figure layout & margins   `P0` `M`   deps: E3.4
+#### E4.1 — Figure layout & margins   `P0` `M`   deps: E3.4   · ✅ Done (M1 wave 1)
 > As a developer, I want width, height, margins, and background colors, so that the figure fits my page.
-- [ ] `width`, `height` (or container size when `autosize`), `margin.{l,r,t,b,pad,autoexpand}`, `paper_bgcolor`, `plot_bgcolor`
-- [ ] Transparent backgrounds (`rgba(0,0,0,0)`) composite correctly over the page
+- [x] `width`, `height` (or container size when `autosize`), `margin.{l,r,t,b,pad,autoexpand}`, `paper_bgcolor`, `plot_bgcolor`
+- [x] Transparent backgrounds (`rgba(0,0,0,0)`) composite correctly over the page
 
 #### E4.2 — Automargin   `P0` `M`   deps: E4.1, E2.9
 > As a developer, I want margins to grow automatically to fit tick labels, titles, and legends, so that nothing gets clipped.
 - [ ] `automargin: true | 'height+width+left+right+top+bottom'` flags on axes, and push-margin from legend/colorbar/title
 - [ ] Iterative solve (at most 3 passes) using the font metrics oracle. Stable (no oscillation).
 
-#### E4.3 — Axis domains & multiple subplots   `P0` `M`   deps: E4.1
+#### E4.3 — Axis domains & multiple subplots   `P0` `M`   deps: E4.1   · ✅ Done (M1 wave 1)
 > As a developer, I want to place axes anywhere via `domain`, so that I can compose multi-panel figures.
-- [ ] `xaxis.domain`, `yaxis.domain`, and `anchor` pairing create subplots such as `xy` and `x2y2`
-- [ ] Each subplot gets a viewport (E2.3) and a clip rect
+- [x] `xaxis.domain`, `yaxis.domain`, and `anchor` pairing create subplots such as `xy` and `x2y2`
+- [x] Each subplot gets a viewport (E2.3) and a clip rect
 
 #### E4.4 — Grid layout helper   `P0` `M`   deps: E4.3
 > As a developer, I want `layout.grid` and a `makeSubplots()` helper, so that I don't compute domains by hand.
@@ -863,12 +880,12 @@ Customization is a **cascade**. Each layer overrides the one above it:
 **Goal:** Efficient updates, smooth transitions between states, and Plotly-style frame animations.
 **Milestone:** M1–M3 · **Packages:** `core/update`, `render/animation`
 
-#### E7.1 — Update API   `P0` `M`   deps: E1.7, E1.8
+#### E7.1 — Update API   `P0` `M`   deps: E1.7, E1.8   · ✅ Done (M1 wave 1)
 > As a developer, I want `restyle`, `relayout`, `update`, `react`, `addTraces`, `deleteTraces`, and `moveTraces`, so that I can change charts efficiently.
-- [ ] Attribute-string paths (`'marker.color'`, `'xaxis.range[0]'`, `'annotations[2].text'`)
-- [ ] Array-of-values restyle for multiple traces (`{ 'marker.color': ['red', 'blue'] }, [0, 1]`)
-- [ ] `null` resets to the default. `undefined` is ignored.
-- [ ] Every call returns a Promise that resolves after render
+- [x] Attribute-string paths (`'marker.color'`, `'xaxis.range[0]'`, `'annotations[2].text'`)
+- [x] Array-of-values restyle for multiple traces (`{ 'marker.color': ['red', 'blue'] }, [0, 1]`)
+- [x] `null` resets to the default. `undefined` is ignored.
+- [x] Every call returns a Promise that resolves after render
 
 #### E7.2 — Streaming data (`extendTraces` / `prependTraces`)   `P0` `M`   deps: E7.1, E2.4, E2.5
 > As a developer building real-time dashboards, I want to append points with a rolling window, so that live data renders at 60 fps.
@@ -1471,15 +1488,15 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] Min-max (M4) decimation per pixel column for lines on linear x. Recomputed on zoom (cached pyramid).
 - [ ] Point-density aggregation fallback for scatter above a threshold (`marker.aggregate: 'auto' | false`), `P2`
 
-#### E16.3 — Partial GPU buffer updates   `P0` `M`   deps: E2.4, E2.5, E2.7
+#### E16.3 — Partial GPU buffer updates   `P0` `M`   deps: E2.4, E2.5, E2.7   · ✅ Done (M0)
 > As a contributor, I want style-only updates to upload only the changed attribute buffers, so that restyle is instant.
-- [ ] Attribute buffers separated by edit type (position vs color vs size)
-- [ ] `restyle('marker.color')` on 1M points < 16 ms
+- [x] Attribute buffers separated by edit type (position vs color vs size)
+- [x] `restyle('marker.color')` on 1M points < 16 ms
 
-#### E16.4 — Precision (relative-to-center encoding)   `P0` `S`   deps: E2.4
+#### E16.4 — Precision (relative-to-center encoding)   `P0` `S`   deps: E2.4   · ✅ Done (M0)
 > As a developer plotting timestamps or large offsets, I want no jitter or snapping, so that zoomed-in views are accurate.
-- [ ] Per-trace float64 origin subtracted on the CPU. Camera offset applied in the shader. High/low float split for extreme zoom (`P2`).
-- [ ] Test: ms timestamps in 2026 zoomed to a 1-second window render exactly
+- [ ] Per-trace float64 origin subtracted on the CPU. Camera offset applied in the shader. High/low float split for extreme zoom (`P2`). — *deferred: hi/lo split still open (P2)*
+- [x] Test: ms timestamps in 2026 zoomed to a 1-second window render exactly
 
 #### E16.5 — Web Worker calc   `P2` `L`   deps: E1.4, ADR-011
 > As a developer with heavy datasets, I want calc (binning, KDE, contours, marching cubes, hierarchy) off the main thread, so that the UI stays responsive.
@@ -1494,6 +1511,18 @@ Customization is a **cascade**. Each layer overrides the one above it:
 #### E16.7 — Offscreen & headless rendering   `P3` `M`   deps: E2.1
 > As a developer, I want OffscreenCanvas rendering in a worker, so that the main thread is free.
 - [ ] `config.offscreen: true` path (no DOM text; interaction proxied via messages)
+
+#### E16.9 — Line primitive memory & dash cost   `P2` `M`   deps: E2.5
+> As a developer plotting dense lines, I want line geometry and dashes to cost closer to `Line2`, so that 1M-segment charts stay smooth.
+- [ ] Count first, then allocate: `buildLineLayout` sizes for 2n vertices rounded to a power of two (2.6× over-allocation on 100k series; 110 MB for 10 × 100k)
+- [ ] Pack per-vertex colors as normalized u8 and skip them when one color is used
+- [ ] Cheaper dashes: look up the dash interval for the fragment's segment instead of looping over the pattern
+- [ ] Target (spike B, safe runner): ≤ 2× `Line2` GPU time solid, ≤ 3× dashed at 1M segments (today 5× / 10×)
+
+#### E16.10 — Marker small-symbol fast path   `P3` `S`   deps: E2.4
+> As a developer, I want tiny circle markers to cost about the same as GL points, so that 1M-point scatters stay fast at any size.
+- [ ] Evaluate a `gl_POINTS` / sprite path for small circles (1 vertex instead of 4) and a packed `aStyle`
+- [ ] Remaining gap after PR #5: 1.4–1.7× a trivial point shader (spike A)
 
 #### E16.8 — WebGPU renderer (opt-in)   `P3` `L`   deps: ADR-009
 > As an early adopter, I want to use three's `WebGPURenderer`, so that I can benefit from compute shaders.
@@ -1653,33 +1682,33 @@ docs/
 └── Changelog · Migration Guides · Roadmap
 ```
 
-#### E19.1 — Docs site scaffold   `P0` `M`   deps: E0.2
+#### E19.1 — Docs site scaffold   `P0` `M`   deps: E0.2   · 🟡 Partial (M1 wave 1)
 > As a user, I want a fast, searchable docs site, so that I can find answers.
-- [ ] VitePress with custom theme, dark mode, local search (MiniSearch) with Algolia DocSearch optional
-- [ ] Hosted at **https://mk7s.dev/holochart** (VitePress `base: '/holochart/'`). All asset, example, and playground URLs are base-relative.
-- [ ] Deployed on every merge to `main` (preview deploys per PR)
-- [ ] Versioned docs served under `mk7s.dev/holochart/v1/`, `…/v2/`, and so on, with `mk7s.dev/holochart/` always pointing to the latest release
-- [ ] Playground at `mk7s.dev/holochart/playground/`. Gallery at `mk7s.dev/holochart/gallery/`.
-- [ ] Versioned docs (dropdown per minor version) once 1.0 ships
+- [x] VitePress with custom theme, dark mode, local search (MiniSearch) with Algolia DocSearch optional
+- [x] Hosted at **https://mk7s.dev/holochart** (VitePress `base: '/holochart/'`). All asset, example, and playground URLs are base-relative. — live 2026-09-23 via the mk7s site (docs/release/docs-hosting.md)
+- [ ] Deployed on every merge to `main` (preview deploys per PR) — *deferred: published manually with `pnpm docs:publish --deploy` into the mk7s Pages project; CI deploy not wired*
+- [ ] Versioned docs served under `mk7s.dev/holochart/v1/`, `…/v2/`, and so on, with `mk7s.dev/holochart/` always pointing to the latest release — *deferred: post-1.0*
+- [ ] Playground at `mk7s.dev/holochart/playground/`. Gallery at `mk7s.dev/holochart/gallery/`. — *deferred: placeholder pages; playground is E19.6, gallery E19.5 (M2)*
+- [ ] Versioned docs (dropdown per minor version) once 1.0 ships — *deferred: post-1.0*
 
-#### E19.2 — Example format & live embeds   `P0` `M`   deps: E19.1
+#### E19.2 — Example format & live embeds   `P0` `M`   deps: E19.1   · 🟡 Partial (M1 wave 1)
 > As a contributor, I want one canonical example format, so that each example feeds docs, gallery, playground, and tests.
-- [ ] `examples/<category>/<trace>/<slug>.ts` exporting `figure` (or `run(el)`), with a frontmatter comment: `title`, `description`, `tags`, `difficulty`, `featured`, `since`, `testTolerance`, `seed`
-- [ ] `<Example id="scatter/basic" />` Vue component renders a live chart + tabbed source (TS / JS / JSON) + "Open in Playground" + "Copy"
-- [ ] Deterministic data via a seeded RNG helper (`Holochart.examples.rng(seed)`) and bundled sample datasets (iris, gapminder, stocks, tips, wind, elevation, flights, …)
+- [x] `examples/<category>/<trace>/<slug>.ts` exporting `figure` (or `run(el)`), with a frontmatter comment: `title`, `description`, `tags`, `difficulty`, `featured`, `since`, `testTolerance`, `seed` — examples live in `examples/<category>/<slug>.ts` with a `meta` export
+- [x] `<Example id="scatter/basic" />` Vue component renders a live chart + tabbed source (TS / JS / JSON) + "Open in Playground" + "Copy" — TS source tab + Copy + Open in sandbox; JS/JSON tabs and the playground link come with E19.6
+- [ ] Deterministic data via a seeded RNG helper (`Holochart.examples.rng(seed)`) and bundled sample datasets (iris, gapminder, stocks, tips, wind, elevation, flights, …) — *deferred: seeded RNG done; bundled sample datasets not yet*
 
-#### E19.3 — Schema-driven attribute reference generator   `P0` `L`   deps: E1.1, E19.1
+#### E19.3 — Schema-driven attribute reference generator   `P0` `L`   deps: E1.1, E19.1   · 🟡 Partial (M1 wave 1)
 > As a developer, I want a complete, searchable reference for every attribute, so that I never have to read source code.
-- [ ] `tools/schema-gen docs` emits one page per trace type + layout + config
-- [ ] Each attribute entry shows: full path, type, default, allowed values/range, `arrayOk`, `editType`, `animatable`, description (markdown), Plotly equivalent, `since` version, deprecation notice, and links to examples that use it
-- [ ] Collapsible nested tree with deep-linkable anchors (`/reference/scatter#marker.line.width`)
-- [ ] "Used in examples" backlinks computed by statically scanning `examples/`
-- [ ] Machine-readable `plot-schema.json` and JSON Schema published with each release (editor autocomplete for JSON figures)
+- [x] `tools/schema-gen docs` emits one page per trace type + layout + config
+- [x] Each attribute entry shows: full path, type, default, allowed values/range, `arrayOk`, `editType`, `animatable`, description (markdown), Plotly equivalent, `since` version, deprecation notice, and links to examples that use it
+- [x] Collapsible nested tree with deep-linkable anchors (`/reference/scatter#marker.line.width`)
+- [ ] "Used in examples" backlinks computed by statically scanning `examples/` — *deferred: per-trace links only; per-attribute backlinks later*
+- [ ] Machine-readable `plot-schema.json` and JSON Schema published with each release (editor autocomplete for JSON figures) — *deferred: `plot-schema.json` served; JSON Schema not yet*
 
-#### E19.4 — Per-chart-type doc page template   `P0` `S`   deps: E19.2
+#### E19.4 — Per-chart-type doc page template   `P0` `S`   deps: E19.2   · 🟡 Partial (M1 wave 1)
 > As a contributor, I want a standard template for chart pages, so that docs are consistent.
-- [ ] Sections: **Overview** (what and when to use) → **Minimal example** → **Data format** → **Variations** (≥ 4 examples) → **Styling** → **Interactivity** → **3D-native options** (where applicable) → **Performance notes** → **Accessibility notes** → **Attribute reference link** → **Related charts** → **Plotly migration notes**
-- [ ] Page lint in CI: required sections present, ≥ 5 examples, every example renders without console errors
+- [x] Sections: **Overview** (what and when to use) → **Minimal example** → **Data format** → **Variations** (≥ 4 examples) → **Styling** → **Interactivity** → **3D-native options** (where applicable) → **Performance notes** → **Accessibility notes** → **Attribute reference link** → **Related charts** → **Plotly migration notes**
+- [ ] Page lint in CI: required sections present, ≥ 5 examples, every example renders without console errors — *deferred: sections and ≥ 5 examples enforced for `complete` pages; the render-without-console-errors check is not written*
 
 #### E19.5 — Gallery generation   `P0` `M`   deps: E19.2, E20.3
 > As a user, I want a visual gallery of every example, so that I can browse by looks.
@@ -1694,10 +1723,10 @@ docs/
 - [ ] Share via URL (compressed figure in the hash; no server needed). Export to CodeSandbox/StackBlitz.
 - [ ] Schema-aware JSON autocomplete and inline validation errors (E1.3)
 
-#### E19.7 — API reference (TypeDoc)   `P0` `S`   deps: E1.2
+#### E19.7 — API reference (TypeDoc)   `P0` `S`   deps: E1.2   · 🟡 Partial (M1 wave 1)
 > As a developer, I want generated API docs for functions, classes, and events, so that the imperative API is documented.
-- [ ] `typedoc` + `typedoc-plugin-markdown` output rendered in VitePress
-- [ ] Every public export has a TSDoc comment with an `@example`. Lint rule enforces it.
+- [x] `typedoc` + `typedoc-plugin-markdown` output rendered in VitePress
+- [ ] Every public export has a TSDoc comment with an `@example`. Lint rule enforces it. — *deferred: lint rule not written*
 
 #### E19.8 — Generated reference galleries   `P1` `S`   deps: E2.4, E8.2
 > As a designer, I want visual lists of symbols, colorscales, palettes, dash styles, and patterns, so that I can pick options visually.
@@ -1729,20 +1758,20 @@ docs/
 **Goal:** Confidence at every layer, from pure calc to pixels.
 **Milestone:** M0 onward
 
-#### E20.1 — Unit test foundation   `P0` `S`   deps: E0.1
-- [ ] Vitest with coverage thresholds: `core` ≥ 90%, trace calc ≥ 85%
-- [ ] Test utilities: figure builders, seeded data, approximate equality for float arrays
+#### E20.1 — Unit test foundation   `P0` `S`   deps: E0.1   · ✅ Done (M0)
+- [ ] Vitest with coverage thresholds: `core` ≥ 90%, trace calc ≥ 85% — *deferred: core ≥ 90% enforced; trace-calc ≥ 85% added with trace packages (M1)*
+- [x] Test utilities: figure builders, seeded data, approximate equality for float arrays
 
-#### E20.2 — Schema property tests   `P0` `M`   deps: E1.1–E1.4
+#### E20.2 — Schema property tests   `P0` `M`   deps: E1.1–E1.4   · ✅ Done (M0)
 > As a maintainer, I want fuzzed figures generated from the schema, so that no valid input crashes the pipeline.
-- [ ] `fast-check` arbitraries derived from the schema (per trace type)
-- [ ] Invariants: defaults are idempotent, calc never throws on valid input, `toJSON(fromJSON(x)) ≡ x`
+- [x] `fast-check` arbitraries derived from the schema (per trace type)
+- [x] Invariants: defaults are idempotent, calc never throws on valid input, `toJSON(fromJSON(x)) ≡ x`
 
-#### E20.3 — Visual regression suite   `P0` `L`   deps: E0.7 (spike E), E19.2
+#### E20.3 — Visual regression suite   `P0` `L`   deps: E0.7 (spike E), E19.2   · ✅ Done (M0)
 > As a maintainer, I want pixel comparisons of every example, so that rendering changes are caught.
-- [ ] Playwright + pinned Chromium + SwiftShader for deterministic output. Fonts bundled (no system fonts).
-- [ ] `pixelmatch` with a per-example tolerance. HTML diff report as a CI artifact.
-- [ ] `pnpm test:visual --update` flow for intentional changes, reviewed in the PR
+- [x] Playwright + pinned Chromium + SwiftShader for deterministic output. Fonts bundled (no system fonts).
+- [x] `pixelmatch` with a per-example tolerance. HTML diff report as a CI artifact.
+- [x] `pnpm test:visual --update` flow for intentional changes, reviewed in the PR
 
 #### E20.4 — Interaction tests   `P0` `M`   deps: E6.*
 - [ ] Scripted scenarios: hover shows the expected label, box zoom updates the range, lasso selects N points, legend click hides a trace, 3D orbit changes the camera, slider animation reaches the final frame
@@ -1757,6 +1786,12 @@ docs/
 #### E20.7 — Plotly mock corpus runner   `P1` `M`   deps: E18.4
 - [ ] `tools/mock-runner` renders every plotly.js mock through the importer. Tracks: renders without error, unsupported-attribute count, and (for selected mocks) a perceptual similarity score against Plotly's baseline images.
 
+#### E20.9 — Bit-exact baseline refresh and exact-diff reporting   `P1` `S`   deps: E20.3   · 🟡 Partial (M1 wave 1)
+> As a maintainer, I want baselines that match the current renderer bit for bit, so that real regressions aren't hidden inside tolerance.
+- [ ] Regenerate line baselines in the pinned CI container: PR #4's `gl_FragCoord` / join-offset changes moved 13–18k pixels (max Δ242) in `lines-*` and `viewports-grid`, within pixelmatch tolerance — *deferred: not yet*
+- [x] Add an exact-diff count (pixels, max Δ) to the visual report next to the pixelmatch count (the spike E script already computes it)
+- [ ] Document that quad-geometry changes shift SwiftShader's fixed-point interpolation (PR #5 finding), so tiny exact diffs are expected there — *deferred: documented in docs/spikes/a-markers.md; CONTRIBUTING note pending*
+
 #### E20.8 — Accessibility audits   `P1` `S`   deps: E17.*
 - [ ] `axe-core` on docs pages and examples. Keyboard-only scenario tests.
 
@@ -1766,20 +1801,20 @@ docs/
 
 **Milestone:** M1 (first alpha) onward
 
-#### E21.1 — Partial bundles & registration   `P0` `M`   deps: E22.2
+#### E21.1 — Partial bundles & registration   `P0` `M`   deps: E22.2   · 🟡 Partial (M1 wave 1)
 > As a developer, I want to import only the traces I use, so that my bundle stays small.
-- [ ] `import { createChart, register } from '@mk7s/holochart-core'; import { scatter, bar } from '@mk7s/holochart-traces-basic'; register(scatter, bar);`
-- [ ] Prebuilt CDN bundles: `holochart-basic`, `holochart-cartesian`, `holochart-3d`, `holochart-full`
-- [ ] Size budgets (min+gz, excluding three): core+scatter ≤ 90 KB, basic ≤ 150 KB, full ≤ 450 KB
+- [x] `import { createChart, register } from '@mk7s/holochart-runtime'; import { scatter, bar } from '@mk7s/holochart-traces-basic'; register(scatter, bar);` (core stays renderer-free, ADR-019)
+- [ ] Prebuilt CDN bundles: `holochart-basic`, `holochart-cartesian`, `holochart-3d`, `holochart-full` — *deferred: only the full IIFE so far*
+- [x] Size budgets (min+gz, excluding three): core+scatter ≤ 90 KB, basic ≤ 150 KB, full ≤ 450 KB — enforced by `pnpm size` and the CI bundle-size job
 
-#### E21.2 — Versioning & compatibility policy   `P0` `S`
-- [ ] SemVer. Deprecations live at least one minor version with console warnings before removal. Supported three.js range documented and tested in CI (min and latest).
+#### E21.2 — Versioning & compatibility policy   `P0` `S`   · ✅ Done (M1 wave 1)
+- [x] SemVer. Deprecations live at least one minor version with console warnings before removal. Supported three.js range documented and tested in CI (min and latest).
 
-#### E21.3 — Release automation   `P0` `S`   deps: E0.4
-- [ ] Changesets → version PR → publish to npm with provenance → GitHub release → docs version bump → CDN (jsDelivr/unpkg) available
+#### E21.3 — Release automation   `P0` `S`   deps: E0.4   · ✅ Done (M1 wave 1)
+- [x] Changesets → version PR → publish to npm with provenance → GitHub release → docs version bump → CDN (jsDelivr/unpkg) available — publish is gated on an `npm` environment + `NPM_TOKEN` and has not run yet
 
-#### E21.4 — Licensing & third-party notices   `P0` `S`
-- [ ] Project license (MIT recommended) + `THIRD_PARTY_NOTICES` for d3 (ISC), earcut (ISC), troika (MIT), plotly.js mocks (MIT, test-only), Natural Earth (public domain), colormaps (cmocean MIT, carto CC-BY)
+#### E21.4 — Licensing & third-party notices   `P0` `S`   · ✅ Done (M1)
+- [x] Project license (MIT recommended) + `THIRD_PARTY_NOTICES` for d3 (ISC), earcut (ISC), troika (MIT), plotly.js mocks (MIT, test-only), Natural Earth (public domain), colormaps (cmocean MIT, carto CC-BY) — MIT chosen; `LICENSE` in the root and every published package, `THIRD_PARTY_NOTICES.md` from `pnpm licenses list --prod`
 
 ---
 
@@ -1788,14 +1823,14 @@ docs/
 **Goal:** Everything built-in is built with the same public plugin API third parties use.
 **Milestone:** M1 (internal contract) → M7 (public, documented, stable)
 
-#### E22.1 — Trace module contract   `P0` `L`   deps: E1.1, E2.*
+#### E22.1 — Trace module contract   `P0` `L`   deps: E1.1, E2.*   · 🟡 Partial (M1 wave 1)
 > As a plugin author, I want a documented, typed contract for trace modules, so that I can add new chart types.
-- [ ] Interface from §4.4, finalized with `TraceRenderer { create(ctx), update(ctx, plan), dispose() }` and a `ctx` giving access to primitives (markers, lines, fills, rects, arcs, text, meshes), scales, viewport, theme, and the resource manager
-- [ ] Built-in traces use **only** this public contract (enforced by an import-boundary lint rule)
+- [x] Interface from §4.4, finalized with `TraceRenderer { create(ctx), update(ctx, plan), dispose() }` and a `ctx` giving access to primitives (markers, lines, fills, rects, arcs, text, meshes), scales, viewport, theme, and the resource manager — `hoverPoints`, `legendIcon`, `crossTraceCalc` come with wave 2
+- [ ] Built-in traces use **only** this public contract (enforced by an import-boundary lint rule) — *deferred: contract used exclusively; the import-boundary lint rule is not written yet*
 
-#### E22.2 — Registry   `P0` `S`   deps: E22.1
-- [ ] `register(...modules)` for traces, components, locales, themes, symbols, colorscales, fonts, and axis/scale types
-- [ ] Duplicate registration warns. Registry introspection (`Holochart.registry.list()`).
+#### E22.2 — Registry   `P0` `S`   deps: E22.1   · 🟡 Partial (M1 wave 1)
+- [ ] `register(...modules)` for traces, components, locales, themes, symbols, colorscales, fonts, and axis/scale types — *deferred: traces, components and templates done; locales, themes, symbols, colorscales, fonts, scale types later*
+- [x] Duplicate registration warns. Registry introspection (`Holochart.registry.list()`).
 
 #### E22.3 — Component plugin contract   `P1` `M`   deps: E5.*
 > As a plugin author, I want to add layout-level components (e.g. a custom watermark or brush), so that I can extend figures.
@@ -1882,6 +1917,26 @@ gantt
 - Exit criteria: 1M markers pan at 57–63 fps (3 px) ✅; visual pipeline green in CI (Linux) ✅; ADRs 001–003, 006–010, 013–018 accepted ✅ (011/012 cover later milestones; 004/005 wait on spikes C/D).
 - Spikes ([docs/spikes](docs/spikes/README.md)): A, B, and E measured. **Deferred to the M7 benchmarking pass (by decision):** C (text, ADR-005), D (viewports, ADR-004). ADR-004 and ADR-005 stay Proposed until then.
 - Fixed after close-out: spike B's critical line GPU cost (a 1×1 default resolution made every quad cover the canvas when `setViewport` was missed; all primitives now sync from the renderer) and the join cracks. Carried forward: line GPU cost is ~5–10× `Line2` and geometry is over-allocated (E16); marker fill cost was cut from 3.5× to 1.4–1.7× a trivial shader by shader specialization (spike A); '@'-prefixed literal strings are re-read as dataset refs (E1.6).
+
+### 11.2 M1 execution plan
+
+M1 runs in three waves of parallel workstreams (≤ 4 at a time), each owning separate files. Shared
+contracts are written first so workstreams don't block each other.
+
+| Wave | Workstream | Stories |
+| --- | --- | --- |
+| 1 | Scales & ticks (`core/scales`) | E3.1, E3.2, E3.3, E3.5, E3.6, E3.7 |
+| 1 | Runtime skeleton & contracts (`runtime`, ADR-019): first end-to-end plot | E22.1, E22.2, E7.1, E4.1, E4.3, minimal E9.1 |
+| 1 | Docs site (`apps/docs`) | E19.1, E19.2, E19.3, E19.4, E19.7 |
+| 1 | Packaging & release | E21.1, E21.2, E21.3, E0.8 (docs part) |
+| 2 | Axes, automargin, title | E3.4, E4.2, E5.1 |
+| 2 | Scatter & error bars | E9.1–E9.3, E9.7 |
+| 2 | Bars | E9.8, E9.9 |
+| 2 | Hover, click, zoom/pan, modebar, selection, legend | E5.7, E6.1–E6.4, E5.8, E5.2, E2.17 |
+| 3 | Colorbar, annotations, streaming, JSON, chart docs pages, exit review | E5.3, E5.4, E7.2, E18.3, E19 pages |
+
+Safety rule for all waves: GPU checks run only in headless Chromium (SwiftShader, or the isolated
+spike runner for Metal), never in an embedded app browser, one heavy run at a time.
 
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 
@@ -2064,9 +2119,10 @@ flowchart TD
 3. **Default look.** Adopt Plotly's default template for familiarity, or ship a distinct Holochart visual identity? *Proposal: a distinct default, with `plotly` as a one-line template switch.*
 4. **Text renderer default.** SDF-in-WebGL vs DOM overlay. Spike C decides.
 5. **WebGPU timing.** Opt-in in 1.x, or wait for three's WebGPU to become the default?
-6. **License.** MIT vs Apache-2.0 (patent grant)?
-7. **Hosted services.** Should the chart-image server (E18.6) be offered as hosted infrastructure, or remain self-host only?
-8. **Governance.** Open-source from day one, or private until M1?
+6. **License.** ✅ Decided: MIT (2026-09-23). `LICENSE` and `THIRD_PARTY_NOTICES.md` added.
+7. **Docs hosting.** ✅ Decided: Cloudflare Pages (mk7s.dev), docs proxied at `mk7s.dev/holochart/`.
+8. **Hosted services.** Should the chart-image server (E18.6) be offered as hosted infrastructure, or remain self-host only?
+9. **Governance.** Open-source from day one, or private until M1?
 
 ---
 

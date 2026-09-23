@@ -2,6 +2,7 @@
   "name": "@mk7s/holochart-traces-basic",
   "version": "0.0.0",
   "description": "Basic trace types: scatter, bar, pie, table.",
+  "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "repository": {
@@ -28,7 +29,8 @@
   },
   "dependencies": {
     "@mk7s/holochart-core": "workspace:*",
-    "@mk7s/holochart-render": "workspace:*"
+    "@mk7s/holochart-render": "workspace:*",
+    "@mk7s/holochart-runtime": "workspace:*"
   },
   "peerDependencies": {
     "three": ">=0.180.0"
@@ -38,5 +40,13 @@
     "@types/three": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
   }
 }

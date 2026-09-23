@@ -98,6 +98,11 @@ jobs:
       - uses: ./.github/actions/setup
       - name: Visual regression tests (Chromium + SwiftShader)
         run: pnpm test:visual
+      # Job summary: pixelmatch count (what the test gates on) next to the exact diff (pixels whose
+      # RGBA differs at all, and the max channel delta), so drift inside tolerance is visible (E20.9).
+      - name: Visual diff summary (pixelmatch vs exact)
+        if: ${{ !cancelled() }}
+        run: pnpm test:visual:report
       - name: Upload visual diff report
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
@@ -128,18 +133,105 @@ jobs:
       - name: Build and smoke-test the IIFE bundle
         run: pnpm test:bundle
 
-  # TODO(E0.4, E16): bundle-size report. Enable once `size-limit` and per-entry budgets are added
-  # (plan §5 "Size tracking"). Expected steps: `pnpm build`, `pnpm size`, upload the report and
-  # comment the delta on the PR.
-  size:
-    name: bundle size (TODO)
-    if: ${{ false }}
+  # Three.js compatibility (ADR-003, docs/release/versioning.md): typecheck and unit tests against
+  # the lowest supported three (the peer range's lower bound) and the newest release old enough for
+  # pnpm's minimumReleaseAge (ADR-016). The catalog version is covered by the jobs above. The
+  # catalog is overridden in the runner only; the repo's lockfile is not touched.
+  three:
+    name: three (${{ matrix.leg }})
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # `latest` is a canary for upcoming three releases: it reports but never fails the workflow.
+    continue-on-error: ${{ matrix.leg == 'latest' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - leg: min
+            three: '0.180.0'
+          - leg: latest
+            three: '>=0.186.0'
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: pnpm build
-      - run: echo "TODO — run size-limit and upload its report" && exit 1
+      - name: Override three and @types/three in the pnpm catalog
+        env:
+          THREE: ${{ matrix.three }}
+        run: |
+          sed -i -E "s/^(  three:).*/\1 '${THREE}'/; s/^(  '@types\/three':).*/\1 '${THREE}'/" pnpm-workspace.yaml
+          grep -E "^  (three|'@types/three'):" pnpm-workspace.yaml
+          pnpm install --no-frozen-lockfile
+          node -e "const fs=require('fs');for(const p of ['three','@types/three'])console.log(p,JSON.parse(fs.readFileSync('packages/render/node_modules/'+p+'/package.json','utf8')).version)"
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  # Bundle-size budgets (plan E21.1, docs/release/bundle-size.md). `pnpm size` builds the packages,
+  # bundles each entry (min + gzip, three external; the IIFE as-is) and fails over budget. The
+  # report compares with the latest successful `main` run, goes to the job summary, and is posted
+  # as a PR comment (same-repo PRs only: fork PRs get a read-only token).
+  size:
+    name: bundle size
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read # download main's size report
+      pull-requests: write # PR comment
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Download the size report of the latest main run (baseline)
+        if: ${{ github.event_name == 'pull_request' }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run_id=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ci.yml --branch main \
+            --event push --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+          if [ -z "$run_id" ]; then echo "No successful main run yet; no baseline."; exit 0; fi
+          gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name size-report --dir size-base
+      - name: Check size budgets
+        run: pnpm size
+      - name: Size report
+        if: ${{ !cancelled() }}
+        run: |
+          base=()
+          if [ -f size-base/size.json ]; then base=(--base size-base/size.json); fi
+          pnpm size:report --json size-report/size.json --markdown size-report/size.md "${base[@]}"
+      - name: Upload size report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: size-report
+          path: size-report/
+          retention-days: 30
+          if-no-files-found: ignore
+      - name: Comment on the PR
+        if: >-
+          ${{ !cancelled() && github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository }}
+        continue-on-error: true
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('node:fs');
+            const file = 'size-report/size.md';
+            if (!fs.existsSync(file)) return;
+            const body = fs.readFileSync(file, 'utf8');
+            const marker = '<!-- holochart-size-report -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner, repo, issue_number, per_page: 100,
+            });
+            const mine = comments.find(
+              (c) => c.user?.type === 'Bot' && c.body?.includes(marker),
+            );
+            if (mine) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: mine.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
 
   # TODO(E0.4, E16): benchmark report. Enable once apps/bench (tinybench + in-browser harness)
   # exists. Expected steps: run the harness headless under Playwright, upload results as an
@@ -153,13 +245,15 @@ jobs:
       - uses: ./.github/actions/setup
       - run: echo "TODO — run apps/bench and upload its report" && exit 1
 
-  # TODO(E0.4, E19.1): docs build. Enable once apps/docs (VitePress) exists: `pnpm --filter
-  # @mk7s/holochart-docs build`.
+  # Docs site (plan E19.1, apps/docs, VitePress). Deployed from main by docs.yml.
   docs:
-    name: docs build (TODO)
-    if: ${{ false }}
+    name: docs build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: echo "TODO — build the docs site" && exit 1
+      - run: pnpm build:packages
+      - run: pnpm --filter @mk7s/holochart-docs lint:pages
+      - run: pnpm --filter @mk7s/holochart-docs typecheck
+      - run: pnpm --filter @mk7s/holochart-docs build

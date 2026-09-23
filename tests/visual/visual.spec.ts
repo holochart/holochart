@@ -2,8 +2,9 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node
 import path from 'node:path';
 import { expect, test, type Page, type TestInfo } from '@playwright/test';
 import { TEST_CONTAINER_ID, type ExampleTestResult } from '../../apps/sandbox/src/test-protocol.ts';
-import { comparePng, DEFAULT_TOLERANCE } from './compare.ts';
+import { comparePng, DEFAULT_TOLERANCE, type CompareResult } from './compare.ts';
 import { listExampleIds } from './examples.ts';
+import { DIFF_REPORT_DIR, reportFileFor, type DiffRecord } from './report-data.ts';
 
 /**
  * Visual regression suite (plan E20.3, ADR-018).
@@ -30,9 +31,34 @@ function isUpdateMode(testInfo: TestInfo): boolean {
   return process.env.UPDATE_BASELINES === '1' || mode === 'all' || mode === 'changed';
 }
 
-function writeFile(file: string, data: Buffer): void {
+function writeFile(file: string, data: Buffer | string): void {
   mkdirSync(path.dirname(file), { recursive: true });
   writeFileSync(file, data);
+}
+
+/**
+ * Records the pixelmatch count and the exact diff (plan E20.9) as an annotation and as a JSON
+ * record that `tests/visual/report.ts` turns into the CI job summary.
+ */
+function recordDiff(testInfo: TestInfo, id: string, tolerance: number, c: CompareResult): void {
+  const percent = (c.ratio * 100).toFixed(4);
+  testInfo.annotations.push({
+    type: 'diff',
+    description:
+      `pixelmatch ${c.diffPixels} px (${percent}%, tolerance ${(tolerance * 100).toFixed(4)}%); ` +
+      `exact ${c.exactPixels} px, max Δ ${c.maxDelta}`,
+  });
+  const record: DiffRecord = {
+    id,
+    pass: c.pass,
+    tolerance,
+    totalPixels: c.totalPixels,
+    diffPixels: c.diffPixels,
+    ratio: c.ratio,
+    exactPixels: c.exactPixels,
+    maxDelta: c.maxDelta,
+  };
+  writeFile(reportFileFor(path.join(ROOT, DIFF_REPORT_DIR), id), JSON.stringify(record));
 }
 
 /** Opens the example in test mode and waits for it to render; retries once if Vite reloads. */
@@ -98,6 +124,7 @@ for (const id of exampleIds) {
     const tolerance = result.meta.testTolerance ?? DEFAULT_TOLERANCE;
     const baseline = existsSync(baselinePath) ? readFileSync(baselinePath) : undefined;
     const comparison = baseline ? comparePng(screenshot, baseline, tolerance) : undefined;
+    if (comparison) recordDiff(testInfo, id, tolerance, comparison);
 
     if (isUpdateMode(testInfo)) {
       // Only rewrite when something changed, so unrelated baselines don't churn.

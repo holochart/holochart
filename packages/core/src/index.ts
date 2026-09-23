@@ -168,3 +168,6 @@ export { diffFigures, matchTraces, planDiff } from './diff/diff.ts';
 export type { FigureDiff, TraceMatch, TraceMatching } from './diff/diff.ts';
 export { applyUirevision, createUiState, recordGuiEdit } from './diff/uirevision.ts';
 export type { GuiEdit, GuiTarget, UiState } from './diff/uirevision.ts';
+
+// Scales, autorange, ticks, formatting, categories, periods (E3) — contract in scales/types.ts
+export * from './scales/index.ts';

@@ -1,11 +1,15 @@
 # Contributing to Holochart
 
-Thanks for helping build Holochart. The project is pre-alpha (milestone M0, Foundation), so
+Thanks for helping build Holochart. The project is pre-alpha (milestone M1, First Plot), so
 tooling and conventions are still settling. When this document and the code disagree, the code
 wins; please fix the document in the same PR.
 
 Background reading: [README.md](README.md), [ARCHITECTURE.md](ARCHITECTURE.md),
-[plan.md](plan.md), and the ADRs in [docs/adr/](docs/adr/).
+[plan.md](plan.md), the ADRs in [docs/adr/](docs/adr/), and the release docs in
+[docs/release/](docs/release/README.md).
+
+Holochart is licensed under the [MIT License](LICENSE). By contributing, you agree that your
+contributions are licensed under the same terms.
 
 ## Prerequisites and setup
 
@@ -32,7 +36,8 @@ Run everything from the repository root.
 | Command                    | What it does                                                   |
 | -------------------------- | -------------------------------------------------------------- |
 | `pnpm dev`                 | Start the dev sandbox (`apps/sandbox`) with the example picker |
-| `pnpm build`               | Build all packages via Turborepo (ESM + `.d.ts`)               |
+| `pnpm build`               | Build all workspaces via Turborepo (ESM + `.d.ts`, apps)       |
+| `pnpm build:packages`      | Build only the published packages under `packages/`            |
 | `pnpm typecheck`           | Type-check every workspace package                             |
 | `pnpm typecheck:tooling`   | Type-check root configs and tests                              |
 | `pnpm test`                | Run unit tests once (Vitest)                                   |
@@ -41,6 +46,10 @@ Run everything from the repository root.
 | `pnpm test:visual`         | Run Playwright visual regression over every example            |
 | `pnpm test:visual -g <id>` | Run visual tests for matching example ids only                 |
 | `pnpm test:visual:update`  | Rewrite visual baselines (same as `pnpm test:visual -u`)       |
+| `pnpm test:visual:report`  | Summarize the last visual run: pixelmatch vs exact diffs       |
+| `pnpm test:bundle`         | Build `@mk7s/holochart` and smoke-test its IIFE in Chromium    |
+| `pnpm size`                | Build packages and check bundle-size budgets (size-limit)      |
+| `pnpm changeset`           | Add a changeset for a user-facing change                       |
 | `pnpm lint`                | Run ESLint                                                     |
 | `pnpm format`              | Format the repo with Prettier                                  |
 | `pnpm format:check`        | Check formatting without writing                               |
@@ -51,17 +60,22 @@ Run everything from the repository root.
 packages/        Published libraries (@mk7s/holochart and @mk7s/holochart-*)
   core/          Figure model, schema system, validation, defaults, update planner
   render/        three.js layer: renderer, viewports, GPU primitives, picking
+  runtime/       createChart, register, pipeline orchestration (ADR-019)
   components/    Axes, legend, colorbar, annotations, shapes, hover labels, modebar
   traces-basic/  scatter, bar, pie, table
   themes/        Templates, palettes, colorscales
   holochart/     Full bundle
 apps/sandbox/    Vite dev sandbox (pnpm dev)
+apps/docs/       Docs site (VitePress), served at mk7s.dev/holochart/
 examples/        Canonical examples: sandbox, docs, gallery, and visual tests
   _lib/          Example contract (types.ts), seeded RNG (rng.ts), helpers
   _dev/          Primitive-level dev examples
 tests/visual/    Playwright visual regression harness and baselines
+tests/bundle/    IIFE smoke test and bundle-size entries (size-limit)
 tools/           Internal tooling (schema-gen, ...)
+deploy/          Docs proxy for mk7s.dev (Cloudflare)
 docs/adr/        Architecture Decision Records
+docs/release/    Versioning policy, bundle size, release process, docs hosting
 plan.md          The project plan
 ```
 
@@ -115,6 +129,13 @@ example's `testTolerance`. On failure, look at:
 - `tests/visual/__actual__/`: what was rendered
 - `tests/visual/__diff__/`: pixel diffs
 - `playwright-report/`: the Playwright HTML report (`pnpm exec playwright show-report`)
+
+Tests gate on the pixelmatch count only. Each compared example also records the **exact diff**:
+pixels whose RGBA differs at all and the largest channel delta (plan E20.9). You'll find it in
+the `diff` annotation in the HTML report, in `pnpm test:visual:report`, and in the CI job
+summary. A non-zero exact diff inside tolerance means the baseline is no longer bit-exact. Small
+exact diffs are expected after changes to quad geometry: they shift SwiftShader's fixed-point
+interpolation (PR #5 finding).
 
 When a rendering change is intentional, update baselines with `pnpm test:visual:update` (or
 `pnpm test:visual -u -g <id>` for one example) and commit the new PNGs. Baseline changes are
@@ -175,12 +196,20 @@ plus the local rule above) and Prettier 3 (single quotes, 100-column width, trai
     `fix(core): coerce date strings`
   - Breaking changes: `feat(core)!: ...` or a `BREAKING CHANGE:` footer
 
-### Changesets (coming soon)
+### Changesets
 
-Changesets is not installed yet. Once it is, every user-facing change to a published package will
-need a changeset: run `pnpm changeset`, pick the affected packages and bump type, write a short
-user-facing summary, and commit the generated file with your PR. Internal-only changes (tests, CI,
-tooling, sandbox) will not need one.
+Every user-facing change to a published `@mk7s/holochart*` package needs a changeset: run
+`pnpm changeset`, pick the affected packages and the bump type, write a short summary for users,
+and commit the generated `.changeset/*.md` file with your PR. Internal-only changes (tests, CI,
+tooling, sandbox, docs site) don't need one.
+
+- Bump types follow [docs/release/versioning.md](docs/release/versioning.md). Before 1.0, a
+  breaking change is a `minor`; say "BREAKING:" at the start of the summary and add a migration
+  note. Deprecations are `minor` too.
+- All published packages share one version (a `fixed` group), so picking the package you changed
+  is enough; the others follow.
+- Releases happen through a "Version Packages" PR that a maintainer merges; see
+  [docs/release/releasing.md](docs/release/releasing.md).
 
 ## Pull requests
 
@@ -189,20 +218,50 @@ tooling, sandbox) will not need one.
 3. Make sure all required status checks pass.
 4. Get an approving review, then squash-merge.
 
+### Stacked PRs
+
+Prefer PRs against `main`. Stack a PR on another PR's branch only when it truly depends on
+unmerged work, and say so at the top of the description ("Stacked on #12").
+
+The repository has "Automatically delete head branches" turned on: when a PR merges, its branch is
+deleted and GitHub retargets any PR based on it to the merged PR's base. To land a stack safely:
+
+1. **Merge bottom-up.** Merge the PR closest to `main` first. Never merge a PR whose base is still
+   another PR's branch: its commits land on that branch, not on `main` (that is how #3, #4 and #5
+   missed `main` until #6).
+2. **Wait for the retarget.** After each merge, check that the next PR's base now reads `main`
+   (and rebase it if GitHub reports conflicts) before merging it. Re-run CI if needed.
+3. Repeat up the stack. If a base branch was deleted before its dependents were retargeted (for
+   example, it was deleted by hand), change the dependent PR's base to `main` yourself.
+
+Squash-merging means each PR in a stack lands as its own commit, so rebase the rest of the stack on
+`main` after each merge if its diff still shows the lower PR's commits.
+
 ### Required status checks
 
 Defined in `.github/workflows/ci.yml`:
 
-| Check       | What it runs                                                                  |
-| ----------- | ----------------------------------------------------------------------------- |
-| `lint`      | ESLint and `prettier --check`                                                 |
-| `typecheck` | `tsc` across the workspace                                                    |
-| `unit`      | Vitest with coverage artifact, on Node 22 and Node 26                         |
-| `build`     | Package builds, on Node 22 and Node 26                                        |
-| `visual`    | Playwright visual tests in the pinned container; diff report uploaded on fail |
+| Check               | What it runs                                                                  |
+| ------------------- | ----------------------------------------------------------------------------- |
+| `lint`              | ESLint and `prettier --check`                                                 |
+| `typecheck`         | `tsc` across the workspace                                                    |
+| `unit`              | Vitest with coverage artifact, on Node 22 and Node 26                         |
+| `build`             | Package builds, on Node 22 and Node 26                                        |
+| `visual`            | Playwright visual tests in the pinned container; diff report uploaded on fail |
+| `bundle smoke test` | Builds the IIFE and loads it in headless Chromium                             |
+| `bundle size`       | `pnpm size` budgets; report in the job summary and a PR comment               |
+| `docs build`        | Builds the docs site (`apps/docs`)                                            |
 
-Planned but not active yet: bundle-size checks (`size-limit`), benchmarks (`apps/bench`), docs
-build (`apps/docs`), and Turborepo remote caching (`TURBO_TOKEN`/`TURBO_TEAM` secrets).
+Also run, not required yet: `three (min)` (typecheck + unit tests against the lowest supported
+three.js) and `three (latest)` (canary against the newest three.js; never fails the workflow).
+Make `bundle size`, `docs build` and `three (min)` required once they have been green on `main`.
+
+Planned but not active yet: benchmarks (`apps/bench`) and Turborepo remote caching
+(`TURBO_TOKEN`/`TURBO_TEAM` secrets).
+
+Other workflows: `release.yml` (version PR and npm publish, see
+[docs/release/releasing.md](docs/release/releasing.md)) and `docs.yml` (deploys the docs site, see
+[docs/release/docs-hosting.md](docs/release/docs-hosting.md)).
 
 ### Review checklist
 
@@ -219,4 +278,4 @@ Authors should self-review against this list; reviewers check it too.
 - [ ] Docs updated; architectural changes come with a new or updated ADR in `docs/adr/`.
 - [ ] Bundle size considered (new dependencies justified, tree-shakeable, `three` stays a peer).
 - [ ] Accessibility considered (DOM mirror, keyboard, contrast) where the change is user-facing.
-- [ ] Changeset added for user-facing changes to published packages (once Changesets lands).
+- [ ] Changeset added for user-facing changes to published packages.

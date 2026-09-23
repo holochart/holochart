@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "docs",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@mk7s/holochart-docs", "dev"],
+      "port": 5174
+    },
+    {
+      "name": "sandbox",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@mk7s/holochart-sandbox", "dev"],
+      "port": 5173
+    }
+  ]
+}

@@ -37,7 +37,7 @@ See CONTRIBUTING.md for details.
 - [ ] New or changed attributes are declared in the schema (source of truth)
 - [ ] Docs updated; ADR added or updated for architectural changes
 - [ ] Bundle size and accessibility considered
-- [ ] Changeset added for user-facing changes to published packages (once Changesets is set up)
+- [ ] Changeset added for user-facing changes to published packages (`pnpm changeset`)
 
 ## Screenshots
 

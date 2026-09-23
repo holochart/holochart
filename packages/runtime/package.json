@@ -1,0 +1,51 @@
+{
+  "name": "@mk7s/holochart-runtime",
+  "version": "0.0.0",
+  "description": "Chart runtime: createChart, pipeline orchestration, update API, events, and the trace-render / component contracts (ADR-019).",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holochart/holochart.git",
+    "directory": "packages/runtime"
+  },
+  "homepage": "https://mk7s.dev/holochart",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@mk7s/holochart-core": "workspace:*",
+    "@mk7s/holochart-render": "workspace:*"
+  },
+  "peerDependencies": {
+    "three": ">=0.180.0"
+  },
+  "devDependencies": {
+    "three": "catalog:",
+    "@types/three": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
+  }
+}

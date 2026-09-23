@@ -1,0 +1,200 @@
+/*
+ * Holochart docs theme: brand accents on top of the VitePress default theme, plus styles for the
+ * <Example> embed, status banners and the generated attribute reference.
+ */
+
+:root {
+  --hc-violet-1: #5b4ae6;
+  --hc-violet-2: #6d5dfc;
+  --hc-violet-3: #8b7fff;
+  --hc-violet-soft: rgba(109, 93, 252, 0.14);
+  --hc-cyan: #11b5c8;
+
+  --vp-c-brand-1: var(--hc-violet-1);
+  --vp-c-brand-2: var(--hc-violet-2);
+  --vp-c-brand-3: var(--hc-violet-3);
+  --vp-c-brand-soft: var(--hc-violet-soft);
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, var(--hc-violet-2) 20%, var(--hc-cyan));
+
+  --vp-button-brand-bg: var(--hc-violet-1);
+  --vp-button-brand-hover-bg: var(--hc-violet-2);
+  --vp-button-brand-active-bg: var(--hc-violet-3);
+
+  --hc-example-stage-bg: #ffffff;
+}
+
+.dark {
+  --vp-c-brand-1: #a79cff;
+  --vp-c-brand-2: #8b7fff;
+  --vp-c-brand-3: #6d5dfc;
+  --vp-c-brand-soft: rgba(139, 127, 255, 0.16);
+  --vp-button-brand-bg: #5b4ae6;
+  --vp-button-brand-hover-bg: #6d5dfc;
+
+  --hc-example-stage-bg: #1b1b1f;
+}
+
+/* ---------------------------------------------------------------------------------------- */
+/* <Example> embed                                                                           */
+/* ---------------------------------------------------------------------------------------- */
+
+.hc-example {
+  margin: 20px 0;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--vp-c-bg-soft);
+}
+
+.hc-example-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+.hc-example-tabs,
+.hc-example-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.hc-example-tab,
+.hc-example-action {
+  padding: 2px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 26px;
+  color: var(--vp-c-text-2);
+  text-decoration: none;
+  transition:
+    color 0.2s,
+    background-color 0.2s;
+}
+
+.vp-doc a.hc-example-action {
+  color: var(--vp-c-text-2);
+  text-decoration: none;
+}
+
+.hc-example-tab:hover,
+.hc-example-action:hover,
+.vp-doc a.hc-example-action:hover {
+  color: var(--vp-c-text-1);
+  background: var(--vp-c-default-soft);
+}
+
+.hc-example-tab[aria-selected='true'] {
+  color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+}
+
+.hc-example-preview {
+  position: relative;
+}
+
+.hc-example-stage {
+  width: 100%;
+  background: var(--hc-example-stage-bg);
+  overflow: hidden;
+}
+
+.hc-example-stage canvas {
+  display: block;
+}
+
+.hc-example-status {
+  margin: 0;
+  padding: 16px;
+  font-size: 14px;
+  color: var(--vp-c-text-2);
+}
+
+.hc-example-preview .hc-example-status {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.hc-example-status[data-status='error'] {
+  color: var(--vp-c-danger-1);
+}
+
+.hc-example-source div[class*='language-'] {
+  margin: 0 !important;
+  border-radius: 0 !important;
+  max-height: 480px;
+  overflow: auto;
+}
+
+.hc-example-caption {
+  padding: 8px 12px;
+  border-top: 1px solid var(--vp-c-divider);
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--vp-c-text-2);
+}
+
+/* ---------------------------------------------------------------------------------------- */
+/* Status banners (frontmatter `status: stub | draft`)                                        */
+/* ---------------------------------------------------------------------------------------- */
+
+.hc-status {
+  margin-bottom: 24px;
+}
+
+/* ---------------------------------------------------------------------------------------- */
+/* Generated attribute reference                                                             */
+/* ---------------------------------------------------------------------------------------- */
+
+.hc-attr-type,
+.hc-attr-deprecated {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+  vertical-align: middle;
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-default-soft);
+}
+
+.hc-attr-deprecated {
+  color: var(--vp-c-warning-1);
+  background: var(--vp-c-warning-soft);
+}
+
+.hc-attr-tree {
+  margin: 16px 0 24px;
+  padding: 8px 16px;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.hc-attr-tree summary {
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.vp-doc .hc-attr-tree ul {
+  margin: 4px 0;
+  padding-left: 18px;
+  list-style: none;
+}
+
+.vp-doc .hc-attr-tree li + li {
+  margin-top: 0;
+}

@@ -319,33 +319,97 @@
         "description": "A x axis. `xaxis2`, `xaxis3`, … declare further x axes, referenced from traces as `'x2'`, `'x3'`, ….",
         "role": "object",
         "subplot": "x",
+        "visible": {
+          "dflt": true,
+          "editType": "layout+ticks+plot",
+          "description": "Draw the axis (line, ticks, labels, grid and title). A hidden axis still maps data to pixels.",
+          "valType": "boolean"
+        },
+        "color": {
+          "dflt": "#444",
+          "editType": "ticks",
+          "description": "Base color of the axis: the default for `linecolor`, `tickcolor`, `zerolinecolor`, `dividercolor` and (when changed) the tick-label and title font colors.",
+          "valType": "color"
+        },
         "type": {
           "values": ["-", "linear", "log", "date", "category", "multicategory"],
           "dflt": "-",
           "editType": "calc",
-          "description": "Axis type. `'-'` detects the type from the data of the first trace on this axis.",
+          "description": "Axis type. `'-'` detects the type from the data of the first trace on this axis (Plotly's rules: mostly dates → `date`; more than twice as many distinct strings as numbers → `category`; two-level `[[groups], [items]]` arrays → `multicategory`; otherwise `linear`).",
+          "valType": "enumerated"
+        },
+        "autotypenumbers": {
+          "values": ["convert types", "strict"],
+          "dflt": "convert types",
+          "editType": "calc",
+          "description": "How type detection treats numeric strings: `convert types` counts `'12'` as a number; `strict` counts only real numbers, so numeric strings make a `category` axis.",
           "valType": "enumerated"
         },
         "autorange": {
-          "values": [true, false, "reversed"],
+          "values": [true, false, "reversed", "min reversed", "max reversed", "min", "max"],
           "dflt": true,
           "editType": "layout+ticks+plot",
-          "description": "Whether the range is computed from the data. Defaults to `false` when a valid `range` is given.",
+          "description": "Whether the range is computed from the data. `reversed` autoranges with the axis flipped. `min`/`max` autorange only that end and take the other from `range` (`min reversed`/`max reversed` also flip the axis). Defaults to `false` when a full `range` is given, and to `min`/`max` when one end of `range` is `null`.",
+          "valType": "enumerated"
+        },
+        "autorangeoptions": {
+          "editType": "layout+ticks+plot",
+          "description": "Constraints applied to the computed autorange.",
+          "role": "object",
+          "minallowed": {
+            "description": "The autoranged minimum is exactly this value (data units).",
+            "valType": "any"
+          },
+          "maxallowed": {
+            "description": "The autoranged maximum is exactly this value (data units).",
+            "valType": "any"
+          },
+          "clipmin": {
+            "description": "The autoranged minimum is at least this value (data units).",
+            "valType": "any"
+          },
+          "clipmax": {
+            "description": "The autoranged maximum is at most this value (data units).",
+            "valType": "any"
+          },
+          "include": {
+            "arrayOk": true,
+            "description": "Value(s) the autorange must include (data units).",
+            "valType": "any"
+          }
+        },
+        "rangemode": {
+          "values": ["normal", "tozero", "nonnegative"],
+          "dflt": "normal",
+          "editType": "layout+ticks+plot",
+          "description": "Linear axes only. `tozero` extends the autorange to include 0; `nonnegative` keeps it ≥ 0.",
           "valType": "enumerated"
         },
         "range": {
           "items": [
             {
+              "dflt": null,
               "valType": "any"
             },
             {
+              "dflt": null,
               "valType": "any"
             }
           ],
           "editType": "ticks+plot",
           "animatable": true,
-          "description": "Visible range `[start, end]` in data units (numbers, dates or category names). Setting it turns `autorange` off.",
+          "description": "Visible range `[start, end]` in data units (numbers, dates or category names; exponents on log axes, as in Plotly). Setting it turns `autorange` off; `null` for one end autoranges that end only.",
           "valType": "info_array"
+        },
+        "minallowed": {
+          "editType": "plot",
+          "description": "Lowest value zoom and pan may reach, in range units (like `range`: exponents on log axes). Also caps the autorange.",
+          "valType": "any"
+        },
+        "maxallowed": {
+          "editType": "plot",
+          "description": "Highest value zoom and pan may reach, in range units (like `range`: exponents on log axes). Also caps the autorange.",
+          "valType": "any"
         },
         "domain": {
           "items": [
@@ -373,6 +437,539 @@
           "editType": "layout",
           "description": "The y axis this axis is drawn against, or `free`. Defaults to the y axis of the first subplot using this axis.",
           "valType": "subplotid"
+        },
+        "side": {
+          "values": ["bottom", "top"],
+          "dflt": "bottom",
+          "editType": "layout+ticks+plot",
+          "description": "Which side of the plot area the axis is drawn on.",
+          "valType": "enumerated"
+        },
+        "position": {
+          "min": 0,
+          "max": 1,
+          "dflt": 0,
+          "editType": "layout+ticks+plot",
+          "description": "Position of the axis in paper coordinates (0–1 across the y direction). Only used when `anchor` is `free`.",
+          "valType": "number"
+        },
+        "layer": {
+          "values": ["above traces", "below traces"],
+          "dflt": "above traces",
+          "editType": "plot",
+          "description": "Draw the axis line, ticks and labels above or below the traces. Grid lines are always below.",
+          "valType": "enumerated"
+        },
+        "automargin": {
+          "flags": ["height", "width", "left", "right", "top", "bottom"],
+          "extras": [true, false],
+          "dflt": false,
+          "editType": "layout+ticks+plot",
+          "description": "Grow the figure margins so tick labels and the title fit (E4.2). `true` allows every direction; flags restrict it.",
+          "valType": "flaglist"
+        },
+        "tickmode": {
+          "values": ["auto", "linear", "array", "sync"],
+          "editType": "ticks",
+          "description": "`auto` picks up to `nticks` round ticks; `linear` places ticks from `tick0` every `dtick`; `array` uses `tickvals`/`ticktext`; `sync` aligns with the overlaid axis (reserved; behaves as `auto`). Defaults to `array` when `tickvals` is set, `linear` when `dtick` is set, else `auto`.",
+          "valType": "enumerated"
+        },
+        "nticks": {
+          "min": 0,
+          "dflt": 0,
+          "editType": "ticks",
+          "description": "Maximum number of ticks for `tickmode: auto` (the actual number may be lower so steps stay round). 0 picks it from the axis length.",
+          "valType": "integer"
+        },
+        "tick0": {
+          "editType": "ticks",
+          "description": "Position of one tick for `tickmode: linear` (data units; a date on date axes, an exponent on log axes unless `dtick` is `L<f>`). Defaults to 0, or 2000-01-01 on date axes.",
+          "valType": "any"
+        },
+        "dtick": {
+          "editType": "ticks",
+          "description": "Tick step. Linear axes: a positive number. Log axes: an integer `n` (a tick every `n` decades), `L<f>` (linear steps of `f` in data units, e.g. `L0.5`), `D1` (every digit) or `D2` (1, 2 and 5). Date axes: milliseconds, or `M<n>` for `n` months (`M12` for years).",
+          "valType": "any"
+        },
+        "tickvals": {
+          "editType": "ticks",
+          "description": "Tick positions for `tickmode: array` (data units).",
+          "valType": "data_array"
+        },
+        "ticktext": {
+          "editType": "ticks",
+          "description": "Tick labels for `tickvals`. Missing entries are formatted as usual.",
+          "valType": "data_array"
+        },
+        "showticklabels": {
+          "dflt": true,
+          "editType": "layout+ticks",
+          "description": "Show tick labels.",
+          "valType": "boolean"
+        },
+        "tickfont": {
+          "description": "Tick-label font. Defaults to `layout.font`.",
+          "editType": "layout+ticks",
+          "role": "object",
+          "family": {
+            "noBlank": true,
+            "strict": true,
+            "description": "CSS font-family list. The renderer uses the first family it can load and falls back through the list.",
+            "valType": "string"
+          },
+          "size": {
+            "min": 1,
+            "description": "Font size in CSS pixels.",
+            "valType": "number"
+          },
+          "color": {
+            "description": "Text color.",
+            "valType": "color"
+          },
+          "weight": {
+            "min": 1,
+            "max": 1000,
+            "extras": ["normal", "bold"],
+            "description": "Font weight: a CSS numeric weight (1–1000), `normal` or `bold`.",
+            "valType": "integer"
+          },
+          "style": {
+            "values": ["normal", "italic"],
+            "description": "Font style.",
+            "valType": "enumerated"
+          }
+        },
+        "tickangle": {
+          "extras": ["auto"],
+          "dflt": "auto",
+          "editType": "layout+ticks",
+          "description": "Tick-label rotation in degrees. `auto` rotates x-axis labels by the first `autotickangles` entry that avoids overlap.",
+          "valType": "angle"
+        },
+        "autotickangles": {
+          "items": {
+            "valType": "angle"
+          },
+          "dflt": [0, 30, 90],
+          "editType": "layout+ticks",
+          "description": "Candidate angles, in order of preference, for `tickangle: auto`.",
+          "valType": "info_array"
+        },
+        "tickformat": {
+          "dflt": "",
+          "editType": "layout+ticks",
+          "description": "Tick-label format: a [d3-format](https://github.com/d3/d3-format) specifier for numbers (`.2f`, `~s`, `$,`) or a [d3-time-format](https://github.com/d3/d3-time-format) specifier for dates (`%b %Y`), plus `%{n}f` for `n` digits of fractional seconds and `%h` for the half year. Empty picks a format automatically.",
+          "valType": "string"
+        },
+        "tickformatstops": {
+          "editType": "layout+ticks",
+          "description": "Zoom-dependent tick formats: the first enabled stop whose `dtickrange` contains the current tick step replaces `tickformat`.",
+          "itemName": "tickformatstop",
+          "role": "items",
+          "items": {
+            "role": "object",
+            "enabled": {
+              "dflt": true,
+              "description": "Whether this stop is used.",
+              "valType": "boolean"
+            },
+            "visible": {
+              "dflt": true,
+              "description": "Set to `false` (by the template machinery) when `templateitemname` names no template stop; hidden stops are ignored like disabled ones.",
+              "valType": "boolean"
+            },
+            "dtickrange": {
+              "items": [
+                {
+                  "dflt": null,
+                  "valType": "any"
+                },
+                {
+                  "dflt": null,
+                  "valType": "any"
+                }
+              ],
+              "description": "Range `[min, max]` of the tick step (`dtick`) this format applies to; `null` for an open end. Date steps are in ms or `M<n>`.",
+              "valType": "info_array"
+            },
+            "value": {
+              "dflt": "",
+              "description": "The `tickformat` to use while the tick step is inside `dtickrange`.",
+              "valType": "string"
+            },
+            "name": {
+              "editType": "none",
+              "description": "Name of this tickformatstop, used to reference it from a template via `templateitemname`.",
+              "valType": "string"
+            },
+            "templateitemname": {
+              "editType": "plot",
+              "description": "Name of a template tickformatstop to inherit from. If no template item matches, this tickformatstop is hidden (`visible: false`).",
+              "valType": "string"
+            }
+          }
+        },
+        "hoverformat": {
+          "dflt": "",
+          "editType": "none",
+          "description": "Format of this axis’ values in hover labels (same syntax as `tickformat`). Empty uses the tick format with extra precision.",
+          "valType": "string"
+        },
+        "tickprefix": {
+          "dflt": "",
+          "editType": "layout+ticks",
+          "description": "Text before each tick label.",
+          "valType": "string"
+        },
+        "showtickprefix": {
+          "values": ["all", "first", "last", "none"],
+          "dflt": "all",
+          "editType": "layout+ticks",
+          "description": "Which tick labels get `tickprefix`.",
+          "valType": "enumerated"
+        },
+        "ticksuffix": {
+          "dflt": "",
+          "editType": "layout+ticks",
+          "description": "Text after each tick label.",
+          "valType": "string"
+        },
+        "showticksuffix": {
+          "values": ["all", "first", "last", "none"],
+          "dflt": "all",
+          "editType": "layout+ticks",
+          "description": "Which tick labels get `ticksuffix`.",
+          "valType": "enumerated"
+        },
+        "exponentformat": {
+          "values": ["none", "e", "E", "power", "SI", "B"],
+          "dflt": "B",
+          "editType": "layout+ticks",
+          "description": "How large and small numbers are written: `none` (1000000), `e` (1e+6), `E` (1E+6), `power` (1×10⁶), `SI` (1M), `B` (like SI but 1B for 10⁹).",
+          "valType": "enumerated"
+        },
+        "showexponent": {
+          "values": ["all", "first", "last", "none"],
+          "dflt": "all",
+          "editType": "layout+ticks",
+          "description": "Which tick labels show the exponent.",
+          "valType": "enumerated"
+        },
+        "minexponent": {
+          "min": 0,
+          "dflt": 3,
+          "editType": "layout+ticks",
+          "description": "Smallest decimal exponent written in exponent form (`SI`/`B` and exponent formats); smaller magnitudes are written out in full.",
+          "valType": "number"
+        },
+        "separatethousands": {
+          "dflt": false,
+          "editType": "layout+ticks",
+          "description": "Always separate thousands (1,000). By default only numbers with 5 or more integer digits are separated.",
+          "valType": "boolean"
+        },
+        "ticklabelmode": {
+          "values": ["instant", "period"],
+          "dflt": "instant",
+          "editType": "ticks",
+          "description": "Date axes: `instant` labels the tick instant; `period` centers each label in the period that starts at its tick (e.g. month names between month ticks).",
+          "valType": "enumerated"
+        },
+        "ticklabelposition": {
+          "values": [
+            "outside",
+            "inside",
+            "outside top",
+            "inside top",
+            "outside left",
+            "inside left",
+            "outside right",
+            "inside right",
+            "outside bottom",
+            "inside bottom"
+          ],
+          "dflt": "outside",
+          "editType": "layout+ticks+plot",
+          "description": "Tick labels outside or inside the plot area, optionally shifted to one side of the tick (`top`/`bottom` for y axes, `left`/`right` for x axes).",
+          "valType": "enumerated"
+        },
+        "ticklabeloverflow": {
+          "values": ["allow", "hide past div", "hide past domain"],
+          "editType": "ticks",
+          "description": "What to do with labels that overflow: keep them, or hide those past the figure or the axis domain. Defaults to `hide past div` for outside labels and `hide past domain` for inside labels.",
+          "valType": "enumerated"
+        },
+        "ticklabelstep": {
+          "min": 1,
+          "dflt": 1,
+          "editType": "ticks",
+          "description": "Label every n-th tick only (`tickmode` `auto` and `linear`).",
+          "valType": "integer"
+        },
+        "ticklabelshift": {
+          "dflt": 0,
+          "editType": "layout+ticks",
+          "description": "Shift of tick labels along the axis, in px.",
+          "valType": "integer"
+        },
+        "ticklabelstandoff": {
+          "dflt": 0,
+          "editType": "layout+ticks",
+          "description": "Extra distance between tick labels and ticks, in px.",
+          "valType": "integer"
+        },
+        "categoryorder": {
+          "values": [
+            "trace",
+            "category ascending",
+            "category descending",
+            "array",
+            "total ascending",
+            "total descending",
+            "min ascending",
+            "min descending",
+            "max ascending",
+            "max descending",
+            "sum ascending",
+            "sum descending",
+            "mean ascending",
+            "mean descending",
+            "median ascending",
+            "median descending"
+          ],
+          "editType": "calc",
+          "description": "Order of categories: as they first appear in the traces (`trace`), alphabetical/numerical (`category ascending|descending`), `categoryarray` first (`array`), or by an aggregate of the trace values per category (`total`, `min`, `max`, `sum`, `mean`, `median`). Defaults to `array` when `categoryarray` is set, else `trace`.",
+          "valType": "enumerated"
+        },
+        "categoryarray": {
+          "editType": "calc",
+          "description": "Category order for `categoryorder: array`. Categories not listed follow in trace order.",
+          "valType": "data_array"
+        },
+        "showdividers": {
+          "dflt": true,
+          "editType": "ticks",
+          "description": "Multicategory axes: draw divider lines between groups.",
+          "valType": "boolean"
+        },
+        "dividercolor": {
+          "editType": "ticks",
+          "description": "Multicategory divider color. Defaults to `color`.",
+          "valType": "color"
+        },
+        "dividerwidth": {
+          "min": 0,
+          "dflt": 1,
+          "editType": "ticks",
+          "description": "Multicategory divider width in px.",
+          "valType": "number"
+        },
+        "showline": {
+          "dflt": false,
+          "editType": "layout+ticks+plot",
+          "description": "Draw the axis line.",
+          "valType": "boolean"
+        },
+        "linecolor": {
+          "editType": "ticks",
+          "description": "Axis line color. Defaults to `color`.",
+          "valType": "color"
+        },
+        "linewidth": {
+          "min": 0,
+          "dflt": 1,
+          "editType": "ticks",
+          "description": "Axis line width in px.",
+          "valType": "number"
+        },
+        "mirror": {
+          "values": [true, "ticks", false, "all", "allticks"],
+          "dflt": false,
+          "editType": "layout+ticks+plot",
+          "description": "Repeat the axis line on the opposite side of the plot area: `true` (line), `ticks` (line and ticks); `all`/`allticks` do the same on every subplot sharing this axis.",
+          "valType": "enumerated"
+        },
+        "ticks": {
+          "values": ["outside", "inside", ""],
+          "dflt": "",
+          "editType": "layout+ticks+plot",
+          "description": "Draw tick marks outside or inside the plot area, or not at all (`''`).",
+          "valType": "enumerated"
+        },
+        "ticklen": {
+          "min": 0,
+          "dflt": 5,
+          "editType": "layout+ticks",
+          "description": "Tick length in px.",
+          "valType": "number"
+        },
+        "tickwidth": {
+          "min": 0,
+          "dflt": 1,
+          "editType": "ticks",
+          "description": "Tick width in px.",
+          "valType": "number"
+        },
+        "tickcolor": {
+          "editType": "ticks",
+          "description": "Tick color. Defaults to `color`.",
+          "valType": "color"
+        },
+        "showgrid": {
+          "dflt": true,
+          "editType": "ticks",
+          "description": "Draw grid lines at each tick.",
+          "valType": "boolean"
+        },
+        "gridcolor": {
+          "dflt": "#eee",
+          "editType": "ticks",
+          "description": "Grid line color.",
+          "valType": "color"
+        },
+        "gridwidth": {
+          "min": 0,
+          "dflt": 1,
+          "editType": "ticks",
+          "description": "Grid line width in px.",
+          "valType": "number"
+        },
+        "griddash": {
+          "dflt": "solid",
+          "editType": "ticks",
+          "description": "Dash style: `solid`, `dot`, `dash`, `longdash`, `dashdot`, `longdashdot`, or a CSS-like list of dash lengths in px (`5px,10px,2px,2px`).",
+          "valType": "string"
+        },
+        "zeroline": {
+          "dflt": true,
+          "editType": "ticks",
+          "description": "Draw a line at 0 (linear axes whose range contains 0).",
+          "valType": "boolean"
+        },
+        "zerolinecolor": {
+          "editType": "ticks",
+          "description": "Zero line color. Defaults to `color`.",
+          "valType": "color"
+        },
+        "zerolinewidth": {
+          "min": 0,
+          "dflt": 1,
+          "editType": "ticks",
+          "description": "Zero line width in px.",
+          "valType": "number"
+        },
+        "minor": {
+          "editType": "ticks",
+          "description": "Minor ticks and grid lines between the major ticks.",
+          "role": "object",
+          "tickmode": {
+            "values": ["auto", "linear", "array"],
+            "description": "As the major `tickmode`. Defaults to `array` when `minor.tickvals` is set, `linear` when `minor.dtick` is set, else `auto`.",
+            "valType": "enumerated"
+          },
+          "nticks": {
+            "min": 0,
+            "dflt": 5,
+            "description": "Maximum number of minor ticks per major interval for `tickmode: auto` (0 picks it from the axis length).",
+            "valType": "integer"
+          },
+          "tick0": {
+            "description": "As the major `tick0`. Defaults to the major `tick0`.",
+            "valType": "any"
+          },
+          "dtick": {
+            "description": "Minor tick step. Tick step. Linear axes: a positive number. Log axes: an integer `n` (a tick every `n` decades), `L<f>` (linear steps of `f` in data units, e.g. `L0.5`), `D1` (every digit) or `D2` (1, 2 and 5). Date axes: milliseconds, or `M<n>` for `n` months (`M12` for years).",
+            "valType": "any"
+          },
+          "tickvals": {
+            "description": "Minor tick positions for `tickmode: array`.",
+            "valType": "data_array"
+          },
+          "ticks": {
+            "values": ["outside", "inside", ""],
+            "dflt": "",
+            "description": "Draw minor tick marks outside or inside the plot area, or not at all.",
+            "valType": "enumerated"
+          },
+          "ticklen": {
+            "min": 0,
+            "description": "Minor tick length in px. Defaults to 60% of `ticklen`.",
+            "valType": "number"
+          },
+          "tickwidth": {
+            "min": 0,
+            "description": "Minor tick width in px. Defaults to `tickwidth`.",
+            "valType": "number"
+          },
+          "tickcolor": {
+            "description": "Minor tick color. Defaults to `tickcolor`.",
+            "valType": "color"
+          },
+          "showgrid": {
+            "dflt": false,
+            "description": "Draw minor grid lines.",
+            "valType": "boolean"
+          },
+          "gridcolor": {
+            "description": "Minor grid color. Defaults to `gridcolor` blended halfway to the plot background.",
+            "valType": "color"
+          },
+          "gridwidth": {
+            "min": 0,
+            "description": "Minor grid width in px. Defaults to `gridwidth`.",
+            "valType": "number"
+          },
+          "griddash": {
+            "description": "Minor grid dash style. Defaults to `griddash`. Dash style: `solid`, `dot`, `dash`, `longdash`, `dashdot`, `longdashdot`, or a CSS-like list of dash lengths in px (`5px,10px,2px,2px`).",
+            "valType": "string"
+          }
+        },
+        "title": {
+          "editType": "layout+ticks+plot",
+          "description": "Axis title.",
+          "role": "object",
+          "text": {
+            "dflt": "",
+            "description": "Axis title text (supports rich-text tags, E2.10).",
+            "valType": "string"
+          },
+          "font": {
+            "description": "Axis title font. Defaults to `layout.font` with 1.2× size.",
+            "editType": "layout+ticks+plot",
+            "role": "object",
+            "family": {
+              "noBlank": true,
+              "strict": true,
+              "description": "CSS font-family list. The renderer uses the first family it can load and falls back through the list.",
+              "valType": "string"
+            },
+            "size": {
+              "min": 1,
+              "description": "Font size in CSS pixels.",
+              "valType": "number"
+            },
+            "color": {
+              "description": "Text color.",
+              "valType": "color"
+            },
+            "weight": {
+              "min": 1,
+              "max": 1000,
+              "extras": ["normal", "bold"],
+              "description": "Font weight: a CSS numeric weight (1–1000), `normal` or `bold`.",
+              "valType": "integer"
+            },
+            "style": {
+              "values": ["normal", "italic"],
+              "description": "Font style.",
+              "valType": "enumerated"
+            }
+          },
+          "standoff": {
+            "min": 0,
+            "description": "Distance in px between the tick labels and the title. By default it follows the tick labels automatically.",
+            "valType": "number"
+          }
         }
       },
       "yaxis": {
@@ -380,33 +977,97 @@
         "description": "A y axis. `yaxis2`, `yaxis3`, … declare further y axes, referenced from traces as `'y2'`, `'y3'`, ….",
         "role": "object",
         "subplot": "y",
+        "visible": {
+          "dflt": true,
+          "editType": "layout+ticks+plot",
+          "description": "Draw the axis (line, ticks, labels, grid and title). A hidden axis still maps data to pixels.",
+          "valType": "boolean"
+        },
+        "color": {
+          "dflt": "#444",
+          "editType": "ticks",
+          "description": "Base color of the axis: the default for `linecolor`, `tickcolor`, `zerolinecolor`, `dividercolor` and (when changed) the tick-label and title font colors.",
+          "valType": "color"
+        },
         "type": {
           "values": ["-", "linear", "log", "date", "category", "multicategory"],
           "dflt": "-",
           "editType": "calc",
-          "description": "Axis type. `'-'` detects the type from the data of the first trace on this axis.",
+          "description": "Axis type. `'-'` detects the type from the data of the first trace on this axis (Plotly's rules: mostly dates → `date`; more than twice as many distinct strings as numbers → `category`; two-level `[[groups], [items]]` arrays → `multicategory`; otherwise `linear`).",
+          "valType": "enumerated"
+        },
+        "autotypenumbers": {
+          "values": ["convert types", "strict"],
+          "dflt": "convert types",
+          "editType": "calc",
+          "description": "How type detection treats numeric strings: `convert types` counts `'12'` as a number; `strict` counts only real numbers, so numeric strings make a `category` axis.",
           "valType": "enumerated"
         },
         "autorange": {
-          "values": [true, false, "reversed"],
+          "values": [true, false, "reversed", "min reversed", "max reversed", "min", "max"],
           "dflt": true,
           "editType": "layout+ticks+plot",
-          "description": "Whether the range is computed from the data. Defaults to `false` when a valid `range` is given.",
+          "description": "Whether the range is computed from the data. `reversed` autoranges with the axis flipped. `min`/`max` autorange only that end and take the other from `range` (`min reversed`/`max reversed` also flip the axis). Defaults to `false` when a full `range` is given, and to `min`/`max` when one end of `range` is `null`.",
+          "valType": "enumerated"
+        },
+        "autorangeoptions": {
+          "editType": "layout+ticks+plot",
+          "description": "Constraints applied to the computed autorange.",
+          "role": "object",
+          "minallowed": {
+            "description": "The autoranged minimum is exactly this value (data units).",
+            "valType": "any"
+          },
+          "maxallowed": {
+            "description": "The autoranged maximum is exactly this value (data units).",
+            "valType": "any"
+          },
+          "clipmin": {
+            "description": "The autoranged minimum is at least this value (data units).",
+            "valType": "any"
+          },
+          "clipmax": {
+            "description": "The autoranged maximum is at most this value (data units).",
+            "valType": "any"
+          },
+          "include": {
+            "arrayOk": true,
+            "description": "Value(s) the autorange must include (data units).",
+            "valType": "any"
+          }
+        },
+        "rangemode": {
+          "values": ["normal", "tozero", "nonnegative"],
+          "dflt": "normal",
+          "editType": "layout+ticks+plot",
+          "description": "Linear axes only. `tozero` extends the autorange to include 0; `nonnegative` keeps it ≥ 0.",
           "valType": "enumerated"
         },
         "range": {
           "items": [
             {
+              "dflt": null,
               "valType": "any"
             },
             {
+              "dflt": null,
               "valType": "any"
             }
           ],
           "editType": "ticks+plot",
           "animatable": true,
-          "description": "Visible range `[start, end]` in data units (numbers, dates or category names). Setting it turns `autorange` off.",
+          "description": "Visible range `[start, end]` in data units (numbers, dates or category names; exponents on log axes, as in Plotly). Setting it turns `autorange` off; `null` for one end autoranges that end only.",
           "valType": "info_array"
+        },
+        "minallowed": {
+          "editType": "plot",
+          "description": "Lowest value zoom and pan may reach, in range units (like `range`: exponents on log axes). Also caps the autorange.",
+          "valType": "any"
+        },
+        "maxallowed": {
+          "editType": "plot",
+          "description": "Highest value zoom and pan may reach, in range units (like `range`: exponents on log axes). Also caps the autorange.",
+          "valType": "any"
         },
         "domain": {
           "items": [
@@ -434,6 +1095,539 @@
           "editType": "layout",
           "description": "The x axis this axis is drawn against, or `free`. Defaults to the x axis of the first subplot using this axis.",
           "valType": "subplotid"
+        },
+        "side": {
+          "values": ["left", "right"],
+          "dflt": "left",
+          "editType": "layout+ticks+plot",
+          "description": "Which side of the plot area the axis is drawn on.",
+          "valType": "enumerated"
+        },
+        "position": {
+          "min": 0,
+          "max": 1,
+          "dflt": 0,
+          "editType": "layout+ticks+plot",
+          "description": "Position of the axis in paper coordinates (0–1 across the x direction). Only used when `anchor` is `free`.",
+          "valType": "number"
+        },
+        "layer": {
+          "values": ["above traces", "below traces"],
+          "dflt": "above traces",
+          "editType": "plot",
+          "description": "Draw the axis line, ticks and labels above or below the traces. Grid lines are always below.",
+          "valType": "enumerated"
+        },
+        "automargin": {
+          "flags": ["height", "width", "left", "right", "top", "bottom"],
+          "extras": [true, false],
+          "dflt": false,
+          "editType": "layout+ticks+plot",
+          "description": "Grow the figure margins so tick labels and the title fit (E4.2). `true` allows every direction; flags restrict it.",
+          "valType": "flaglist"
+        },
+        "tickmode": {
+          "values": ["auto", "linear", "array", "sync"],
+          "editType": "ticks",
+          "description": "`auto` picks up to `nticks` round ticks; `linear` places ticks from `tick0` every `dtick`; `array` uses `tickvals`/`ticktext`; `sync` aligns with the overlaid axis (reserved; behaves as `auto`). Defaults to `array` when `tickvals` is set, `linear` when `dtick` is set, else `auto`.",
+          "valType": "enumerated"
+        },
+        "nticks": {
+          "min": 0,
+          "dflt": 0,
+          "editType": "ticks",
+          "description": "Maximum number of ticks for `tickmode: auto` (the actual number may be lower so steps stay round). 0 picks it from the axis length.",
+          "valType": "integer"
+        },
+        "tick0": {
+          "editType": "ticks",
+          "description": "Position of one tick for `tickmode: linear` (data units; a date on date axes, an exponent on log axes unless `dtick` is `L<f>`). Defaults to 0, or 2000-01-01 on date axes.",
+          "valType": "any"
+        },
+        "dtick": {
+          "editType": "ticks",
+          "description": "Tick step. Linear axes: a positive number. Log axes: an integer `n` (a tick every `n` decades), `L<f>` (linear steps of `f` in data units, e.g. `L0.5`), `D1` (every digit) or `D2` (1, 2 and 5). Date axes: milliseconds, or `M<n>` for `n` months (`M12` for years).",
+          "valType": "any"
+        },
+        "tickvals": {
+          "editType": "ticks",
+          "description": "Tick positions for `tickmode: array` (data units).",
+          "valType": "data_array"
+        },
+        "ticktext": {
+          "editType": "ticks",
+          "description": "Tick labels for `tickvals`. Missing entries are formatted as usual.",
+          "valType": "data_array"
+        },
+        "showticklabels": {
+          "dflt": true,
+          "editType": "layout+ticks",
+          "description": "Show tick labels.",
+          "valType": "boolean"
+        },
+        "tickfont": {
+          "description": "Tick-label font. Defaults to `layout.font`.",
+          "editType": "layout+ticks",
+          "role": "object",
+          "family": {
+            "noBlank": true,
+            "strict": true,
+            "description": "CSS font-family list. The renderer uses the first family it can load and falls back through the list.",
+            "valType": "string"
+          },
+          "size": {
+            "min": 1,
+            "description": "Font size in CSS pixels.",
+            "valType": "number"
+          },
+          "color": {
+            "description": "Text color.",
+            "valType": "color"
+          },
+          "weight": {
+            "min": 1,
+            "max": 1000,
+            "extras": ["normal", "bold"],
+            "description": "Font weight: a CSS numeric weight (1–1000), `normal` or `bold`.",
+            "valType": "integer"
+          },
+          "style": {
+            "values": ["normal", "italic"],
+            "description": "Font style.",
+            "valType": "enumerated"
+          }
+        },
+        "tickangle": {
+          "extras": ["auto"],
+          "dflt": "auto",
+          "editType": "layout+ticks",
+          "description": "Tick-label rotation in degrees. `auto` rotates x-axis labels by the first `autotickangles` entry that avoids overlap.",
+          "valType": "angle"
+        },
+        "autotickangles": {
+          "items": {
+            "valType": "angle"
+          },
+          "dflt": [0, 30, 90],
+          "editType": "layout+ticks",
+          "description": "Candidate angles, in order of preference, for `tickangle: auto`.",
+          "valType": "info_array"
+        },
+        "tickformat": {
+          "dflt": "",
+          "editType": "layout+ticks",
+          "description": "Tick-label format: a [d3-format](https://github.com/d3/d3-format) specifier for numbers (`.2f`, `~s`, `$,`) or a [d3-time-format](https://github.com/d3/d3-time-format) specifier for dates (`%b %Y`), plus `%{n}f` for `n` digits of fractional seconds and `%h` for the half year. Empty picks a format automatically.",
+          "valType": "string"
+        },
+        "tickformatstops": {
+          "editType": "layout+ticks",
+          "description": "Zoom-dependent tick formats: the first enabled stop whose `dtickrange` contains the current tick step replaces `tickformat`.",
+          "itemName": "tickformatstop",
+          "role": "items",
+          "items": {
+            "role": "object",
+            "enabled": {
+              "dflt": true,
+              "description": "Whether this stop is used.",
+              "valType": "boolean"
+            },
+            "visible": {
+              "dflt": true,
+              "description": "Set to `false` (by the template machinery) when `templateitemname` names no template stop; hidden stops are ignored like disabled ones.",
+              "valType": "boolean"
+            },
+            "dtickrange": {
+              "items": [
+                {
+                  "dflt": null,
+                  "valType": "any"
+                },
+                {
+                  "dflt": null,
+                  "valType": "any"
+                }
+              ],
+              "description": "Range `[min, max]` of the tick step (`dtick`) this format applies to; `null` for an open end. Date steps are in ms or `M<n>`.",
+              "valType": "info_array"
+            },
+            "value": {
+              "dflt": "",
+              "description": "The `tickformat` to use while the tick step is inside `dtickrange`.",
+              "valType": "string"
+            },
+            "name": {
+              "editType": "none",
+              "description": "Name of this tickformatstop, used to reference it from a template via `templateitemname`.",
+              "valType": "string"
+            },
+            "templateitemname": {
+              "editType": "plot",
+              "description": "Name of a template tickformatstop to inherit from. If no template item matches, this tickformatstop is hidden (`visible: false`).",
+              "valType": "string"
+            }
+          }
+        },
+        "hoverformat": {
+          "dflt": "",
+          "editType": "none",
+          "description": "Format of this axis’ values in hover labels (same syntax as `tickformat`). Empty uses the tick format with extra precision.",
+          "valType": "string"
+        },
+        "tickprefix": {
+          "dflt": "",
+          "editType": "layout+ticks",
+          "description": "Text before each tick label.",
+          "valType": "string"
+        },
+        "showtickprefix": {
+          "values": ["all", "first", "last", "none"],
+          "dflt": "all",
+          "editType": "layout+ticks",
+          "description": "Which tick labels get `tickprefix`.",
+          "valType": "enumerated"
+        },
+        "ticksuffix": {
+          "dflt": "",
+          "editType": "layout+ticks",
+          "description": "Text after each tick label.",
+          "valType": "string"
+        },
+        "showticksuffix": {
+          "values": ["all", "first", "last", "none"],
+          "dflt": "all",
+          "editType": "layout+ticks",
+          "description": "Which tick labels get `ticksuffix`.",
+          "valType": "enumerated"
+        },
+        "exponentformat": {
+          "values": ["none", "e", "E", "power", "SI", "B"],
+          "dflt": "B",
+          "editType": "layout+ticks",
+          "description": "How large and small numbers are written: `none` (1000000), `e` (1e+6), `E` (1E+6), `power` (1×10⁶), `SI` (1M), `B` (like SI but 1B for 10⁹).",
+          "valType": "enumerated"
+        },
+        "showexponent": {
+          "values": ["all", "first", "last", "none"],
+          "dflt": "all",
+          "editType": "layout+ticks",
+          "description": "Which tick labels show the exponent.",
+          "valType": "enumerated"
+        },
+        "minexponent": {
+          "min": 0,
+          "dflt": 3,
+          "editType": "layout+ticks",
+          "description": "Smallest decimal exponent written in exponent form (`SI`/`B` and exponent formats); smaller magnitudes are written out in full.",
+          "valType": "number"
+        },
+        "separatethousands": {
+          "dflt": false,
+          "editType": "layout+ticks",
+          "description": "Always separate thousands (1,000). By default only numbers with 5 or more integer digits are separated.",
+          "valType": "boolean"
+        },
+        "ticklabelmode": {
+          "values": ["instant", "period"],
+          "dflt": "instant",
+          "editType": "ticks",
+          "description": "Date axes: `instant` labels the tick instant; `period` centers each label in the period that starts at its tick (e.g. month names between month ticks).",
+          "valType": "enumerated"
+        },
+        "ticklabelposition": {
+          "values": [
+            "outside",
+            "inside",
+            "outside top",
+            "inside top",
+            "outside left",
+            "inside left",
+            "outside right",
+            "inside right",
+            "outside bottom",
+            "inside bottom"
+          ],
+          "dflt": "outside",
+          "editType": "layout+ticks+plot",
+          "description": "Tick labels outside or inside the plot area, optionally shifted to one side of the tick (`top`/`bottom` for y axes, `left`/`right` for x axes).",
+          "valType": "enumerated"
+        },
+        "ticklabeloverflow": {
+          "values": ["allow", "hide past div", "hide past domain"],
+          "editType": "ticks",
+          "description": "What to do with labels that overflow: keep them, or hide those past the figure or the axis domain. Defaults to `hide past div` for outside labels and `hide past domain` for inside labels.",
+          "valType": "enumerated"
+        },
+        "ticklabelstep": {
+          "min": 1,
+          "dflt": 1,
+          "editType": "ticks",
+          "description": "Label every n-th tick only (`tickmode` `auto` and `linear`).",
+          "valType": "integer"
+        },
+        "ticklabelshift": {
+          "dflt": 0,
+          "editType": "layout+ticks",
+          "description": "Shift of tick labels along the axis, in px.",
+          "valType": "integer"
+        },
+        "ticklabelstandoff": {
+          "dflt": 0,
+          "editType": "layout+ticks",
+          "description": "Extra distance between tick labels and ticks, in px.",
+          "valType": "integer"
+        },
+        "categoryorder": {
+          "values": [
+            "trace",
+            "category ascending",
+            "category descending",
+            "array",
+            "total ascending",
+            "total descending",
+            "min ascending",
+            "min descending",
+            "max ascending",
+            "max descending",
+            "sum ascending",
+            "sum descending",
+            "mean ascending",
+            "mean descending",
+            "median ascending",
+            "median descending"
+          ],
+          "editType": "calc",
+          "description": "Order of categories: as they first appear in the traces (`trace`), alphabetical/numerical (`category ascending|descending`), `categoryarray` first (`array`), or by an aggregate of the trace values per category (`total`, `min`, `max`, `sum`, `mean`, `median`). Defaults to `array` when `categoryarray` is set, else `trace`.",
+          "valType": "enumerated"
+        },
+        "categoryarray": {
+          "editType": "calc",
+          "description": "Category order for `categoryorder: array`. Categories not listed follow in trace order.",
+          "valType": "data_array"
+        },
+        "showdividers": {
+          "dflt": true,
+          "editType": "ticks",
+          "description": "Multicategory axes: draw divider lines between groups.",
+          "valType": "boolean"
+        },
+        "dividercolor": {
+          "editType": "ticks",
+          "description": "Multicategory divider color. Defaults to `color`.",
+          "valType": "color"
+        },
+        "dividerwidth": {
+          "min": 0,
+          "dflt": 1,
+          "editType": "ticks",
+          "description": "Multicategory divider width in px.",
+          "valType": "number"
+        },
+        "showline": {
+          "dflt": false,
+          "editType": "layout+ticks+plot",
+          "description": "Draw the axis line.",
+          "valType": "boolean"
+        },
+        "linecolor": {
+          "editType": "ticks",
+          "description": "Axis line color. Defaults to `color`.",
+          "valType": "color"
+        },
+        "linewidth": {
+          "min": 0,
+          "dflt": 1,
+          "editType": "ticks",
+          "description": "Axis line width in px.",
+          "valType": "number"
+        },
+        "mirror": {
+          "values": [true, "ticks", false, "all", "allticks"],
+          "dflt": false,
+          "editType": "layout+ticks+plot",
+          "description": "Repeat the axis line on the opposite side of the plot area: `true` (line), `ticks` (line and ticks); `all`/`allticks` do the same on every subplot sharing this axis.",
+          "valType": "enumerated"
+        },
+        "ticks": {
+          "values": ["outside", "inside", ""],
+          "dflt": "",
+          "editType": "layout+ticks+plot",
+          "description": "Draw tick marks outside or inside the plot area, or not at all (`''`).",
+          "valType": "enumerated"
+        },
+        "ticklen": {
+          "min": 0,
+          "dflt": 5,
+          "editType": "layout+ticks",
+          "description": "Tick length in px.",
+          "valType": "number"
+        },
+        "tickwidth": {
+          "min": 0,
+          "dflt": 1,
+          "editType": "ticks",
+          "description": "Tick width in px.",
+          "valType": "number"
+        },
+        "tickcolor": {
+          "editType": "ticks",
+          "description": "Tick color. Defaults to `color`.",
+          "valType": "color"
+        },
+        "showgrid": {
+          "dflt": true,
+          "editType": "ticks",
+          "description": "Draw grid lines at each tick.",
+          "valType": "boolean"
+        },
+        "gridcolor": {
+          "dflt": "#eee",
+          "editType": "ticks",
+          "description": "Grid line color.",
+          "valType": "color"
+        },
+        "gridwidth": {
+          "min": 0,
+          "dflt": 1,
+          "editType": "ticks",
+          "description": "Grid line width in px.",
+          "valType": "number"
+        },
+        "griddash": {
+          "dflt": "solid",
+          "editType": "ticks",
+          "description": "Dash style: `solid`, `dot`, `dash`, `longdash`, `dashdot`, `longdashdot`, or a CSS-like list of dash lengths in px (`5px,10px,2px,2px`).",
+          "valType": "string"
+        },
+        "zeroline": {
+          "dflt": true,
+          "editType": "ticks",
+          "description": "Draw a line at 0 (linear axes whose range contains 0).",
+          "valType": "boolean"
+        },
+        "zerolinecolor": {
+          "editType": "ticks",
+          "description": "Zero line color. Defaults to `color`.",
+          "valType": "color"
+        },
+        "zerolinewidth": {
+          "min": 0,
+          "dflt": 1,
+          "editType": "ticks",
+          "description": "Zero line width in px.",
+          "valType": "number"
+        },
+        "minor": {
+          "editType": "ticks",
+          "description": "Minor ticks and grid lines between the major ticks.",
+          "role": "object",
+          "tickmode": {
+            "values": ["auto", "linear", "array"],
+            "description": "As the major `tickmode`. Defaults to `array` when `minor.tickvals` is set, `linear` when `minor.dtick` is set, else `auto`.",
+            "valType": "enumerated"
+          },
+          "nticks": {
+            "min": 0,
+            "dflt": 5,
+            "description": "Maximum number of minor ticks per major interval for `tickmode: auto` (0 picks it from the axis length).",
+            "valType": "integer"
+          },
+          "tick0": {
+            "description": "As the major `tick0`. Defaults to the major `tick0`.",
+            "valType": "any"
+          },
+          "dtick": {
+            "description": "Minor tick step. Tick step. Linear axes: a positive number. Log axes: an integer `n` (a tick every `n` decades), `L<f>` (linear steps of `f` in data units, e.g. `L0.5`), `D1` (every digit) or `D2` (1, 2 and 5). Date axes: milliseconds, or `M<n>` for `n` months (`M12` for years).",
+            "valType": "any"
+          },
+          "tickvals": {
+            "description": "Minor tick positions for `tickmode: array`.",
+            "valType": "data_array"
+          },
+          "ticks": {
+            "values": ["outside", "inside", ""],
+            "dflt": "",
+            "description": "Draw minor tick marks outside or inside the plot area, or not at all.",
+            "valType": "enumerated"
+          },
+          "ticklen": {
+            "min": 0,
+            "description": "Minor tick length in px. Defaults to 60% of `ticklen`.",
+            "valType": "number"
+          },
+          "tickwidth": {
+            "min": 0,
+            "description": "Minor tick width in px. Defaults to `tickwidth`.",
+            "valType": "number"
+          },
+          "tickcolor": {
+            "description": "Minor tick color. Defaults to `tickcolor`.",
+            "valType": "color"
+          },
+          "showgrid": {
+            "dflt": false,
+            "description": "Draw minor grid lines.",
+            "valType": "boolean"
+          },
+          "gridcolor": {
+            "description": "Minor grid color. Defaults to `gridcolor` blended halfway to the plot background.",
+            "valType": "color"
+          },
+          "gridwidth": {
+            "min": 0,
+            "description": "Minor grid width in px. Defaults to `gridwidth`.",
+            "valType": "number"
+          },
+          "griddash": {
+            "description": "Minor grid dash style. Defaults to `griddash`. Dash style: `solid`, `dot`, `dash`, `longdash`, `dashdot`, `longdashdot`, or a CSS-like list of dash lengths in px (`5px,10px,2px,2px`).",
+            "valType": "string"
+          }
+        },
+        "title": {
+          "editType": "layout+ticks+plot",
+          "description": "Axis title.",
+          "role": "object",
+          "text": {
+            "dflt": "",
+            "description": "Axis title text (supports rich-text tags, E2.10).",
+            "valType": "string"
+          },
+          "font": {
+            "description": "Axis title font. Defaults to `layout.font` with 1.2× size.",
+            "editType": "layout+ticks+plot",
+            "role": "object",
+            "family": {
+              "noBlank": true,
+              "strict": true,
+              "description": "CSS font-family list. The renderer uses the first family it can load and falls back through the list.",
+              "valType": "string"
+            },
+            "size": {
+              "min": 1,
+              "description": "Font size in CSS pixels.",
+              "valType": "number"
+            },
+            "color": {
+              "description": "Text color.",
+              "valType": "color"
+            },
+            "weight": {
+              "min": 1,
+              "max": 1000,
+              "extras": ["normal", "bold"],
+              "description": "Font weight: a CSS numeric weight (1–1000), `normal` or `bold`.",
+              "valType": "integer"
+            },
+            "style": {
+              "values": ["normal", "italic"],
+              "description": "Font style.",
+              "valType": "enumerated"
+            }
+          },
+          "standoff": {
+            "min": 0,
+            "description": "Distance in px between the tick labels and the title. By default it follows the tick labels automatically.",
+            "valType": "number"
+          }
         }
       }
     }

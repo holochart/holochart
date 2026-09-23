@@ -1,0 +1,23 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@4.0.1/schema.json",
+  "baseBranch": "main",
+  "access": "public",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [
+    [
+      "@mk7s/holochart",
+      "@mk7s/holochart-core",
+      "@mk7s/holochart-render",
+      "@mk7s/holochart-runtime",
+      "@mk7s/holochart-components",
+      "@mk7s/holochart-traces-basic",
+      "@mk7s/holochart-themes"
+    ]
+  ],
+  "linked": [],
+  "ignore": [],
+  "privatePackages": { "version": false, "tag": false },
+  "updateInternalDependencies": "patch",
+  "bumpVersionsWithWorkspaceProtocolOnly": true
+}
