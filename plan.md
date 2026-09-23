@@ -1881,7 +1881,7 @@ gantt
 - Done: E0.1–E0.6, E1.1–E1.9 (plus E1.6/E1.8 stretch), E2.1–E2.9, E2.12, E2.13 (CPU and GPU picking), E2.15, E16.4, E20.1–E20.3.
 - Exit criteria: 1M markers pan at 57–63 fps (3 px) ✅; visual pipeline green in CI (Linux) ✅; ADRs 001–003, 006–010, 013–018 accepted ✅ (011/012 cover later milestones; 004/005 wait on spikes C/D).
 - Spikes ([docs/spikes](docs/spikes/README.md)): A, B, and E measured. **Deferred to the M7 benchmarking pass (by decision):** C (text, ADR-005), D (viewports, ADR-004). ADR-004 and ADR-005 stay Proposed until then.
-- Fixed after close-out: spike B's critical line GPU cost (a 1×1 default resolution made every quad cover the canvas when `setViewport` was missed; all primitives now sync from the renderer) and the join cracks. Carried forward: line GPU cost is ~5–10× `Line2` and geometry is over-allocated (E16); marker fill cost is 3.5× a trivial shader (spike A), for E16; '@'-prefixed literal strings are re-read as dataset refs (E1.6).
+- Fixed after close-out: spike B's critical line GPU cost (a 1×1 default resolution made every quad cover the canvas when `setViewport` was missed; all primitives now sync from the renderer) and the join cracks. Carried forward: line GPU cost is ~5–10× `Line2` and geometry is over-allocated (E16); marker fill cost was cut from 3.5× to 1.4–1.7× a trivial shader by shader specialization (spike A); '@'-prefixed literal strings are re-read as dataset refs (E1.6).
 
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 

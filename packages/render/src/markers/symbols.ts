@@ -355,6 +355,53 @@ export const AREA_NONE = 0;
 export const AREA_CIRCLE = 1;
 export const AREA_POLYGON = 2;
 
+/** Where a symbol's geometry lives in the symbol texture, plus its shape flags (texture rows 0–1). */
+export interface SymbolLayoutEntry {
+  polyStart: number;
+  polyCount: number;
+  segStart: number;
+  segCount: number;
+  /** `AREA_NONE`, `AREA_CIRCLE`, or `AREA_POLYGON`. */
+  areaKind: number;
+  extent: number;
+  noDot: boolean;
+  noFill: boolean;
+}
+
+/**
+ * Lay out every symbol's polygon vertices and segments in one region (vec4 texels) and record where
+ * each symbol's data starts. Shared by the texture builder and shader specialization, so a
+ * specialized shader indexes the same texels as the generic one.
+ */
+export function symbolLayout(symbols: readonly SymbolDef[] = MARKER_SYMBOLS): {
+  entries: SymbolLayoutEntry[];
+  region: number[];
+} {
+  const region: number[] = [];
+  const entries: SymbolLayoutEntry[] = [];
+  for (const def of symbols) {
+    let polyStart = 0;
+    let polyCount = 0;
+    if (Array.isArray(def.area)) {
+      polyStart = region.length / 4;
+      polyCount = def.area.length;
+      for (const [x, y] of def.area) region.push(x, y, 0, 0);
+    }
+    const segStart = region.length / 4;
+    for (const s of def.segments) region.push(s[0], s[1], s[2], s[3]);
+    entries.push({
+      polyStart,
+      polyCount,
+      segStart,
+      segCount: def.segments.length,
+      areaKind: def.area === 'circle' ? AREA_CIRCLE : def.area ? AREA_POLYGON : AREA_NONE,
+      extent: def.extent,
+      noDot: def.noDot,
+      noFill: def.noFill,
+    });
+  }
+  return { entries, region };
+}
 /**
  * Packed symbol table (RGBA32F, width {@link SYMBOL_TEXTURE_WIDTH}):
  * - row 0, texel `s`: `(polyStart, polyCount, segStart, segCount)` for base symbol `s`
@@ -372,36 +419,13 @@ export interface SymbolTable {
 export function buildSymbolTable(symbols: readonly SymbolDef[] = MARKER_SYMBOLS): SymbolTable {
   const W = SYMBOL_TEXTURE_WIDTH;
   if (symbols.length > W) throw new RangeError('Too many symbols for the symbol texture');
-  const region: number[] = [];
-  const info: number[][] = [];
-  for (const def of symbols) {
-    let polyStart = 0;
-    let polyCount = 0;
-    if (Array.isArray(def.area)) {
-      polyStart = region.length / 4;
-      polyCount = def.area.length;
-      for (const [x, y] of def.area) region.push(x, y, 0, 0);
-    }
-    const segStart = region.length / 4;
-    for (const s of def.segments) region.push(s[0], s[1], s[2], s[3]);
-    const areaKind = def.area === 'circle' ? AREA_CIRCLE : def.area ? AREA_POLYGON : AREA_NONE;
-    info.push([
-      polyStart,
-      polyCount,
-      segStart,
-      def.segments.length,
-      areaKind,
-      def.extent,
-      +def.noDot,
-      +def.noFill,
-    ]);
-  }
+  const { entries, region } = symbolLayout(symbols);
   const regionRows = Math.max(1, Math.ceil(region.length / 4 / W));
   const height = 2 + regionRows;
   const data = new Float32Array(W * height * 4);
-  info.forEach((v, s) => {
-    data.set(v.slice(0, 4), s * 4);
-    data.set(v.slice(4, 8), (W + s) * 4);
+  entries.forEach((e, s) => {
+    data.set([e.polyStart, e.polyCount, e.segStart, e.segCount], s * 4);
+    data.set([e.areaKind, e.extent, +e.noDot, +e.noFill], (W + s) * 4);
   });
   data.set(region, 2 * W * 4);
   return { data, width: W, height };
