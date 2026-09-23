@@ -12,10 +12,12 @@
 // Options: --port (5197), --spike (required: a-markers | b-lines | c-text | d-viewports),
 //          --params (extra query string), --dpr (1), --timeout (seconds, 240),
 //          --rss-cap-mb (browser process tree RSS limit, 6144), --out (required),
-//          --gl (metal | swiftshader; default metal).
+//          --gl (metal | swiftshader; default metal),
+//          --capture (PNG path: saves `window.__spikeCapture()` when the spike provides it).
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { Buffer } from 'node:buffer';
 import process from 'node:process';
 import { parseArgs } from 'node:util';
 import { chromium } from '@playwright/test';
@@ -30,6 +32,7 @@ const { values: args } = parseArgs({
     'rss-cap-mb': { type: 'string', default: '6144' },
     out: { type: 'string' },
     gl: { type: 'string', default: 'metal' },
+    capture: { type: 'string' },
   },
 });
 if (!args.spike || !args.out) {
@@ -107,6 +110,13 @@ try {
   record = await page.evaluate((id) => window.__spikeResults[id], args.spike);
   record.readout = await page.textContent('#spike-readout');
   record.console = logs.slice(-50);
+  if (args.capture) {
+    const dataUrl = await page.evaluate(() => window.__spikeCapture?.() ?? null);
+    if (dataUrl) {
+      writeFileSync(args.capture, Buffer.from(dataUrl.split(',')[1], 'base64'));
+      record.capture = args.capture;
+    }
+  }
   await browser.close();
 } catch (error) {
   record ??= { status: 'error' };

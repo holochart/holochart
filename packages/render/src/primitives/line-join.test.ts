@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
 import {
+  computeEnd,
   computeSegmentFrame,
   END_BEVEL,
   END_MITER,
@@ -140,5 +141,90 @@ describe('line joins (CPU mirror of the shader)', () => {
     expect(at('square', [-4.9, 4.9])).toBe(1);
     expect(at('round', [-4.9, 0])).toBe(1);
     expect(at('round', [-4, 4])).toBe(0);
+  });
+});
+
+describe('segment quad extents stay bounded (spike B regression)', () => {
+  const unit = fc
+    .double({ min: 0, max: 2 * Math.PI, noNaN: true })
+    .map((a): P => [Math.cos(a), Math.sin(a)]);
+  const joins: LineJoin[] = ['miter', 'round', 'bevel'];
+
+  it('never extends past the miter limit, and only miters extend past half the width', () => {
+    fc.assert(
+      fc.property(
+        unit,
+        unit,
+        fc.double({ min: 0.05, max: 50, noNaN: true }),
+        fc.double({ min: 1, max: 20, noNaN: true }),
+        fc.constantFrom(...joins),
+        (dIn, dOut, hw, limit, join) => {
+          const end = computeEnd(dIn, dOut, true, hw, join, 'butt', limit);
+          const bound = hw * Math.max(1, Math.sqrt(limit * limit - 1));
+          expect(end.extent).toBeLessThanOrEqual(bound * (1 + 1e-9));
+          if (end.mode !== END_MITER) expect(end.extent).toBe(hw);
+        },
+      ),
+    );
+  });
+
+  it('keeps quads small on a sub-pixel random walk (near-reversals at every vertex)', () => {
+    // Spike B's shape in screen px: 0.15 px x-steps, ±1 px noisy y-steps.
+    let seed = 7;
+    const random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+    const pts: P[] = [];
+    let y = 0;
+    for (let i = 0; i < 5000; i++) pts.push([i * 0.15, (y += random() * 2 - 1)]);
+    const hw = 0.75;
+    const aa = 1;
+    let maxArea = 0;
+    for (let i = 1; i + 2 < pts.length; i++) {
+      const [a, b] = [pts[i]!, pts[i + 1]!];
+      const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const dir: P = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
+      const norm = (p: P, q: P): P => {
+        const l = Math.hypot(q[0] - p[0], q[1] - p[1]);
+        return [(q[0] - p[0]) / l, (q[1] - p[1]) / l];
+      };
+      const endA = computeEnd(norm(pts[i - 1]!, a), dir, true, hw, 'miter', 'butt', 4);
+      const endB = computeEnd(dir, norm(b, pts[i + 2]!), true, hw, 'miter', 'butt', 4);
+      // Same quad the vertex shader emits: along [-(extA + aa), len + extB + aa] × ±(hw + aa).
+      const area = (len + endA.extent + endB.extent + 2 * aa) * 2 * (hw + aa);
+      maxArea = Math.max(maxArea, area);
+    }
+    // A handful of px² per segment; the pathological case covered the whole 1024×640 canvas.
+    expect(maxArea).toBeLessThan(40);
+  });
+});
+
+describe('join ownership at pixel-aligned symmetric joins (spike B notch regression)', () => {
+  it('assigns every pixel of the partition column to exactly one segment despite rounding', () => {
+    // Symmetric peak with its vertex exactly on a pixel center: the partition is the vertical line
+    // x = 10.5, which passes through the center of every pixel in that column.
+    const [s1, s2] = frames(
+      [
+        [0.5, 0.5],
+        [10.5, 20.5],
+        [20.5, 0.5],
+      ],
+      6,
+      'miter',
+      'butt',
+    );
+    // Emulate the two instances rounding their shared tangent differently (opposite ±1e-7 tilts).
+    const tilt = (f: NonNullable<typeof s1>, which: 'startEnd' | 'endEnd', dy: number) => ({
+      ...f,
+      [which]: { ...f[which], tangent: [f[which].tangent[0], f[which].tangent[1] + dy] },
+    });
+    for (const dy of [1e-7, -1e-7]) {
+      const a = tilt(s1!, 'endEnd', dy);
+      const b = tilt(s2!, 'startEnd', -dy);
+      for (let y = 0.5; y < 22; y += 1) {
+        const owners = [segmentDistance(a, [10.5, y]), segmentDistance(b, [10.5, y])].filter(
+          (d) => d !== undefined,
+        );
+        expect(owners).toHaveLength(1);
+      }
+    }
   });
 });

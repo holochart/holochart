@@ -13,7 +13,9 @@ import {
   ShaderMaterial,
   Vector2,
   Vector3,
+  Vector4,
   type IUniform,
+  type WebGLRenderer,
 } from 'three';
 import type {
   ColorInput,
@@ -59,15 +61,70 @@ export interface ViewportUniforms {
   uResolution: IUniform<Vector2>;
   /** Device pixels per CSS pixel. */
   uPixelRatio: IUniform<number>;
+  /**
+   * The GL viewport being drawn into, in device pixels (xy origin, zw size). Fragment shaders use it
+   * to turn `gl_FragCoord` into screen px (see {@link syncViewportUniforms}).
+   */
+  uViewport: IUniform<Vector4>;
 }
 
 export function createViewportUniforms(): ViewportUniforms {
-  return { uResolution: { value: new Vector2(1, 1) }, uPixelRatio: { value: 1 } };
+  return {
+    uResolution: { value: new Vector2(1, 1) },
+    uPixelRatio: { value: 1 },
+    uViewport: { value: new Vector4(0, 0, 1, 1) },
+  };
 }
 
 export function applyViewportUniforms(uniforms: ViewportUniforms, size: ViewportSize): void {
   uniforms.uResolution.value.set(Math.max(1, size.width), Math.max(1, size.height));
   uniforms.uPixelRatio.value = size.pixelRatio > 0 ? size.pixelRatio : 1;
+}
+
+/** The subset of `WebGLRenderer` that {@link syncViewportUniforms} reads (fakeable in tests). */
+export type ViewportSource = Pick<
+  WebGLRenderer,
+  'getCurrentViewport' | 'getPixelRatio' | 'getRenderTarget'
+>;
+
+const currentViewport = new Vector4();
+
+/**
+ * Make viewport uniforms match what the renderer is actually drawing into. Primitives call this from
+ * `onBeforeRender`, so it runs for every draw with the GL viewport already set.
+ *
+ * - `uViewport` (device px) is always synced: `gl_FragCoord` is relative to it.
+ * - On the canvas, `uResolution` / `uPixelRatio` are derived from it too. Without this, a primitive
+ *   added to a scene without {@link Primitive.setViewport} kept the 1×1 default resolution, so every
+ *   screen-space quad covered the whole canvas (spike B: seconds of GPU time per frame).
+ * - Render targets (picking, export) keep the logical size given via `setViewport`, since their
+ *   pixel ratio is not the renderer's.
+ *
+ * Returns `true` when the CSS resolution or pixel ratio changed.
+ */
+export function syncViewportUniforms(
+  uniforms: Pick<ViewportUniforms, 'uResolution' | 'uPixelRatio'> & {
+    uViewport?: IUniform<Vector4>;
+  },
+  renderer: ViewportSource,
+): boolean {
+  renderer.getCurrentViewport(currentViewport);
+  uniforms.uViewport?.value.copy(currentViewport);
+  if (renderer.getRenderTarget() !== null) return false;
+  const pixelRatio = renderer.getPixelRatio() > 0 ? renderer.getPixelRatio() : 1;
+  const width = Math.max(1, currentViewport.z / pixelRatio);
+  const height = Math.max(1, currentViewport.w / pixelRatio);
+  const resolution = uniforms.uResolution.value;
+  if (
+    resolution.x === width &&
+    resolution.y === height &&
+    uniforms.uPixelRatio.value === pixelRatio
+  ) {
+    return false;
+  }
+  resolution.set(width, height);
+  uniforms.uPixelRatio.value = pixelRatio;
+  return true;
 }
 
 /**

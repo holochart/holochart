@@ -48,6 +48,8 @@ import {
   applyTransformUniforms,
   applyViewportUniforms,
   createPrimitiveMaterial,
+  syncViewportUniforms,
+  type ViewportSource,
   createTransformUniforms,
   createViewportUniforms,
   type Vec3,
@@ -192,7 +194,7 @@ export class LinePrimitive implements Primitive<LineData> {
     this.object = new Mesh(this.buffers.geometry, this.material);
     // Positions are RTC-encoded and expanded in the shader: three's bounds would be wrong.
     this.object.frustumCulled = false;
-    this.object.onBeforeRender = (_renderer, _scene, camera) => this.beforeRender(camera);
+    this.object.onBeforeRender = (renderer, _scene, camera) => this.beforeRender(renderer, camera);
     this.update(data);
   }
 
@@ -299,8 +301,20 @@ export class LinePrimitive implements Primitive<LineData> {
     markRange(buffers.distBuffer, layout.vertexCount);
   }
 
-  /** Detect camera changes (3D) that alter screen-space lengths and refresh the dash phase. */
-  private beforeRender(camera: Camera): void {
+  /**
+   * Sync the viewport uniforms with the GL viewport, then detect camera changes (3D) that alter
+   * screen-space lengths and refresh the dash phase.
+   */
+  private beforeRender(renderer: ViewportSource, camera: Camera): void {
+    if (syncViewportUniforms(this.viewportUniforms, renderer)) {
+      const resolution = this.viewportUniforms.uResolution.value;
+      this.viewport = {
+        width: resolution.x,
+        height: resolution.y,
+        pixelRatio: this.viewportUniforms.uPixelRatio.value,
+      };
+      if (dashDependsOnViewport(this.data.dash)) this.updateDash();
+    }
     if (this.dashPattern.length === 0) return;
     const m = this.tmpMatrix
       .multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)

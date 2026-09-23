@@ -56,6 +56,7 @@ import type {
   PickMaterialHandle,
   PickRenderState,
 } from '../picking/types.ts';
+import { syncViewportUniforms } from '../primitives/common.ts';
 import { MARKER_FRAGMENT, MARKER_VERTEX } from './markers.glsl.ts';
 import { HIDDEN_POSITION, rtcAxisOrigin, rtcEncodePositions, rtcOffset } from '../precision.ts';
 import { createSymbolTexture, resolveSymbol, SYMBOL_TEXTURE_KEY } from './symbols.ts';
@@ -308,6 +309,10 @@ export class MarkerSet implements Primitive<MarkerData>, PickablePrimitive {
     this.#geometry = this.#createGeometry();
     this.object = new Mesh(this.#geometry, this.material);
     this.object.name = 'holochart:markers';
+    // Keep screen-space sizing right even if setViewport is never called (see syncViewportUniforms).
+    this.object.onBeforeRender = (renderer) => {
+      syncViewportUniforms(this.#uniforms, renderer);
+    };
     // The quad's bounds say nothing about where instances are.
     this.object.frustumCulled = false;
     if (options.renderOrder !== undefined) this.object.renderOrder = options.renderOrder;
