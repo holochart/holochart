@@ -1,0 +1,12 @@
+# Build output and caches
+.vitepress/dist/
+.vitepress/cache/
+.vitepress/.temp/
+
+# Generated before dev/build (pnpm run gen); never commit.
+# Attribute reference pages + sidebar manifest (tools/schema-gen, plan E19.3)
+reference/attributes/
+# Machine-readable schema served at <base>plot-schema.json
+public/plot-schema.json
+# TypeDoc API reference (scripts/gen-api.ts, plan E19.7)
+reference/api/

@@ -5,6 +5,7 @@
   "description": "Generates TS types, JSON schema, and attribute reference docs from the attribute schema (plan E1.2, E19.3).",
   "scripts": {
     "gen": "node --conditions=source src/cli.ts",
+    "docs": "node --conditions=source src/docs/cli.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {

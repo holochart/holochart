@@ -256,3 +256,13 @@ describe('colors for the renderer', () => {
     expect(canonicalColor(12)).toBeNull();
   });
 });
+
+describe('angle normalization (property-test regression)', () => {
+  it('is idempotent: a normalized angle normalizes to itself bit for bit', () => {
+    const spec = attr.angle();
+    const once = coerceValue(spec, -199.10027763959414);
+    expect(once.ok).toBe(true);
+    const twice = coerceValue(spec, once.ok ? once.value : undefined);
+    expect(twice.ok && twice.value).toBe(once.ok && once.value);
+  });
+});

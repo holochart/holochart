@@ -1,0 +1,14 @@
+# Option A (docs/release/docs-hosting.md): Worker that serves https://mk7s.dev/holochart/* from the
+# `holochart-docs` Pages project. Deploy manually with `npx wrangler deploy` from this directory,
+# using an account that can edit Workers on the mk7s.dev zone. Nothing in CI deploys this Worker.
+name = "holochart-docs-proxy"
+main = "worker.js"
+compatibility_date = "2026-09-01"
+workers_dev = false
+
+routes = [
+  { pattern = "mk7s.dev/holochart*", zone_name = "mk7s.dev" },
+]
+
+[vars]
+DOCS_ORIGIN = "https://holochart-docs.pages.dev"

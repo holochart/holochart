@@ -77,5 +77,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full command reference and workfl
 
 ## License
 
-To be decided (MIT vs Apache-2.0 is an open question in
-[plan.md section 16](plan.md#16-open-questions)). Until a license is added, no license is granted.
+[MIT](LICENSE). Third-party components and their licenses are listed in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

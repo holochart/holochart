@@ -3,3 +3,10 @@ coverage
 pnpm-lock.yaml
 plan.md
 tests/visual/__baselines__
+# Generated docs (apps/docs/.gitignore)
+apps/docs/.vitepress/dist
+apps/docs/.vitepress/cache
+apps/docs/.vitepress/.temp
+apps/docs/reference/attributes
+apps/docs/reference/api
+apps/docs/public/plot-schema.json

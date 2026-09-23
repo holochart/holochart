@@ -2,6 +2,7 @@
   "name": "@mk7s/holochart-render",
   "version": "0.0.0",
   "description": "three.js rendering engine: renderer, viewports, GPU primitives, picking.",
+  "license": "MIT",
   "type": "module",
   "sideEffects": false,
   "repository": {
@@ -39,5 +40,13 @@
     "@types/three": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
   }
 }
