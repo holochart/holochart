@@ -61,7 +61,7 @@ export const commonTraceAttributes = {
     strict: true,
     editType: 'calc',
     description:
-      "Name of a figure-level dataset (`figure.datasets`). Data attributes may then reference its columns as `'@column'`.",
+      "Name of a figure-level dataset (`figure.datasets`). Data arrays, and per-point attributes whose values cannot start with `@` (such as colors and sizes), may then reference its columns as `'@column'`; on string attributes such as `text`, `'@…'` stays literal text.",
   }),
   uirevision: attr.any({
     editType: 'none',

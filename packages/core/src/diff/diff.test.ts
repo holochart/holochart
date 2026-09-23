@@ -383,6 +383,16 @@ describe('diffFigures: datasets', () => {
     expect(d.changes).toEqual([{ target: 'trace', type: 'scatter', path: 'y', traceIndex: 0 }]);
   });
 
+  it('does not report literal @-text or unknown attributes as reading a column', () => {
+    const date = [1, 2];
+    const trace = { dataset: 'sales', x: '@date', text: '@date', extra: '@date' };
+    const prev: FigureInput = { datasets: { sales: { date } }, data: [trace] };
+    const next: FigureInput = { datasets: { sales: { date: [1, 2] } }, data: [trace] };
+    expect(diff(prev, next).changes).toEqual([
+      { target: 'trace', type: 'scatter', path: 'x', traceIndex: 0 },
+    ]);
+  });
+
   it('marks every dataset changed when datarevision changes', () => {
     const ds = { sales: { a: [1] } };
     const prev: FigureInput = {
