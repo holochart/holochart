@@ -4,21 +4,27 @@
  * color container (`marker`, `marker.line`, later bar markers), their defaults, and the resolved
  * mapping handed to the render layer. Follows plotly.js `components/colorscale`.
  *
- * Shared by every trace with colorscaled colors (scatter now, bar next). Colorbars are drawn by a
- * component in M1 wave 3; `showscale` is only declared and defaulted here.
+ * Shared by every trace with colorscaled colors (scatter, bar). Containers with `showscale` also
+ * declare the `colorbar` container (plan E5.3, {@link colorbarAttributes}); the colorbar component
+ * draws it from the {@link markerColorbar} spec each trace module's `colorbar` hook returns.
  */
 import {
   attr,
+  fontSchema,
   isArrayLike,
+  layoutSchema,
   type AttrSpec,
   type ColorScale,
   toRGBA,
   type Children,
   type FullLayout,
+  type FullTrace,
   type LayoutDefaultsContext,
+  type ObjectNode,
   type RGBA,
 } from '@mk7s/holochart-core';
 import { sampleColorscale, type Colorscale } from '@mk7s/holochart-render';
+import type { ColorbarSpec } from '@mk7s/holochart-runtime';
 
 /** A colorscale as stops of CSS colors (the defaulted form of a `colorscale` attribute). */
 export type CssColorscale = readonly (readonly [number, string])[];
@@ -279,6 +285,217 @@ function isValidScale(value: unknown): boolean {
   return Array.isArray(value) && value.length >= 2 && value.every((s) => Array.isArray(s));
 }
 
+// ---- Colorbars (E5.3) ---------------------------------------------------------------------------
+
+/** The axis tick attributes a colorbar shares with cartesian axes (same names and semantics). */
+const AXIS = layoutSchema.children.xaxis.children;
+/** Colorbar edits redraw the colorbar and re-run layout (the colorbar pushes the margins). */
+const COLORBAR_EDIT = ['colorbars', 'layout'] as const;
+
+function tickAttr<S extends object>(spec: S, dflt?: unknown): S {
+  return { ...spec, editType: COLORBAR_EDIT, ...(dflt !== undefined ? { dflt } : {}) };
+}
+
+/**
+ * The `colorbar` container of a colorscaled container with `showscale` (`marker.colorbar`,
+ * `layout.coloraxisN.colorbar`), following Plotly's colorbar attributes: size and placement,
+ * outline, border and background, the axis tick API (the colorbar is a linear axis over
+ * `[cmin, cmax]`) and a title.
+ */
+export const colorbarAttributes = attr.object(
+  {
+    orientation: attr.enumerated({
+      values: ['h', 'v'],
+      dflt: 'v',
+      description: 'Vertical bar (`v`, beside the plot) or horizontal bar (`h`, above or below).',
+    }),
+    thicknessmode: attr.enumerated({
+      values: ['fraction', 'pixels'],
+      dflt: 'pixels',
+      description: 'Unit of `thickness`: px, or a fraction of the plot width (`v`) / height (`h`).',
+    }),
+    thickness: attr.number({ min: 0, dflt: 30, description: 'Thickness of the color bar.' }),
+    lenmode: attr.enumerated({
+      values: ['fraction', 'pixels'],
+      dflt: 'fraction',
+      description: 'Unit of `len`: px, or a fraction of the plot height (`v`) / width (`h`).',
+    }),
+    len: attr.number({
+      min: 0,
+      dflt: 1,
+      description: 'Length of the colorbar along its axis, padding included (`ypad` / `xpad`).',
+    }),
+    x: attr.number({
+      description:
+        'Horizontal position (`xref` fraction). Defaults to 1.02 (`v`, paper), 1 (`v`, container) or 0.5 (`h`).',
+    }),
+    xref: attr.enumerated({
+      values: ['container', 'paper'],
+      dflt: 'paper',
+      description: 'Reference of `x`: the plot area (`paper`) or the whole figure.',
+    }),
+    xanchor: attr.enumerated({
+      values: ['left', 'center', 'right'],
+      description:
+        'Which side of the colorbar sits at `x`. Defaults to `left` (`v`, paper), `right` (`v`, container) or `center` (`h`).',
+    }),
+    xpad: attr.number({ min: 0, dflt: 10, description: 'Horizontal padding, px.' }),
+    y: attr.number({
+      description:
+        'Vertical position (`yref` fraction). Defaults to 0.5 (`v`), 1.02 (`h`, paper) or 1 (`h`, container).',
+    }),
+    yref: attr.enumerated({
+      values: ['container', 'paper'],
+      dflt: 'paper',
+      description: 'Reference of `y`: the plot area (`paper`) or the whole figure.',
+    }),
+    yanchor: attr.enumerated({
+      values: ['top', 'middle', 'bottom'],
+      description:
+        'Which side of the colorbar sits at `y`. Defaults to `middle` (`v`), `bottom` (`h`, paper) or `top` (`h`, container).',
+    }),
+    ypad: attr.number({ min: 0, dflt: 10, description: 'Vertical padding, px.' }),
+    outlinecolor: attr.color({ dflt: '#444', description: 'Color of the outline around the bar.' }),
+    outlinewidth: attr.number({ min: 0, dflt: 1, description: 'Outline width, px.' }),
+    bordercolor: attr.color({ dflt: '#444', description: 'Border color of the colorbar box.' }),
+    borderwidth: attr.number({ min: 0, dflt: 0, description: 'Border width of the box, px.' }),
+    bgcolor: attr.color({ dflt: 'rgba(0,0,0,0)', description: 'Background of the box.' }),
+    tickmode: tickAttr(AXIS.tickmode),
+    nticks: tickAttr(AXIS.nticks),
+    tick0: tickAttr(AXIS.tick0),
+    dtick: tickAttr(AXIS.dtick),
+    tickvals: tickAttr(AXIS.tickvals),
+    ticktext: tickAttr(AXIS.ticktext),
+    ticks: tickAttr(AXIS.ticks),
+    ticklen: tickAttr(AXIS.ticklen),
+    tickwidth: tickAttr(AXIS.tickwidth),
+    tickcolor: tickAttr(AXIS.tickcolor, '#444'),
+    ticklabelposition: attr.enumerated({
+      values: [
+        'outside',
+        'inside',
+        'outside top',
+        'inside top',
+        'outside bottom',
+        'inside bottom',
+        'outside left',
+        'inside left',
+        'outside right',
+        'inside right',
+      ],
+      dflt: 'outside',
+      description:
+        'Tick labels outside the bar (away from it) or inside (over it); `top`/`bottom` (`v`) or `left`/`right` (`h`) move them beside their tick.',
+    }),
+    ticklabeloverflow: attr.enumerated({
+      values: ['allow', 'hide past div', 'hide past domain'],
+      description:
+        'Hide labels past the figure or past the bar. Defaults to `hide past domain` for inside labels, else `hide past div`.',
+    }),
+    ticklabelstep: tickAttr(AXIS.ticklabelstep),
+    showticklabels: tickAttr(AXIS.showticklabels),
+    tickfont: fontSchema('Tick-label font. Defaults to `layout.font`.'),
+    tickangle: tickAttr(AXIS.tickangle),
+    tickformat: tickAttr(AXIS.tickformat),
+    tickprefix: tickAttr(AXIS.tickprefix),
+    showtickprefix: tickAttr(AXIS.showtickprefix),
+    ticksuffix: tickAttr(AXIS.ticksuffix),
+    showticksuffix: tickAttr(AXIS.showticksuffix),
+    separatethousands: tickAttr(AXIS.separatethousands),
+    exponentformat: tickAttr(AXIS.exponentformat),
+    minexponent: tickAttr(AXIS.minexponent),
+    showexponent: tickAttr(AXIS.showexponent),
+    title: attr.object(
+      {
+        text: attr.string({ dflt: '', description: 'Colorbar title.' }),
+        font: fontSchema(
+          'Title font. Defaults to `layout.font` with the tick-label family and 1.2 × its size.',
+        ),
+        side: attr.enumerated({
+          values: ['right', 'top', 'bottom'],
+          description:
+            'Where the title goes relative to the bar. Defaults to `top` (`v`) or `right` (`h`).',
+        }),
+      },
+      { editType: COLORBAR_EDIT, description: 'Colorbar title.' },
+    ),
+  },
+  { editType: COLORBAR_EDIT, description: 'The colorbar of this colorscale (plan E5.3).' },
+);
+
+/** Coerce every leaf of `node` at `prefix` (object nodes recurse), with per-path defaults. */
+function coerceLeaves(
+  node: ObjectNode,
+  coerce: Coerce,
+  prefix: string,
+  overrides: Readonly<Record<string, unknown>>,
+  rel = '',
+): void {
+  for (const [key, child] of Object.entries(node.children)) {
+    const path = rel === '' ? key : `${rel}.${key}`;
+    if (child.kind === 'object') coerceLeaves(child, coerce, prefix, overrides, path);
+    else if (child.kind === 'attr') coerce(`${prefix}${path}`, overrides[path]);
+  }
+}
+
+/**
+ * Plotly's `colorbar/defaults.js` for the container at `prefix` (`'marker.'`, `'coloraxis.'`):
+ * position, anchors, title side and label overflow depend on `orientation` and the refs. Fonts
+ * stay unset where the user gave none; the colorbar component inherits them when drawing.
+ */
+export function supplyColorbarDefaults(coerce: Coerce, prefix: string): void {
+  const p = `${prefix}colorbar.`;
+  const vertical = coerce<string>(`${p}orientation`) !== 'h';
+  const paperX = coerce<string>(`${p}xref`) === 'paper';
+  const paperY = coerce<string>(`${p}yref`) === 'paper';
+  const position = coerce<string>(`${p}ticklabelposition`);
+  coerceLeaves(colorbarAttributes, coerce, p, {
+    x: vertical ? (paperX ? 1.02 : 1) : 0.5,
+    xanchor: vertical ? (paperX ? 'left' : 'right') : 'center',
+    y: vertical ? 0.5 : paperY ? 1.02 : 1,
+    yanchor: vertical ? 'middle' : paperY ? 'bottom' : 'top',
+    ticklabeloverflow: position.includes('inside') ? 'hide past domain' : 'hide past div',
+    'title.side': vertical ? 'top' : 'right',
+  });
+}
+
+/** CSS stops of a render colorscale, reversed for `reversescale`. */
+function cssStops(scale: Colorscale, reverse: boolean): [number, string][] {
+  const stops = scale.map(([p, c]): [number, string] => [p, rgbaToCss(c)]);
+  return reverse ? stops.map(([p, c]): [number, string] => [1 - p, c]).reverse() : stops;
+}
+
+/**
+ * The colorbar of a trace's colorscaled container (the trace module `colorbar` hook, E5.3): the
+ * container's own bar when it has `showscale: true` and numeric colors, or, when it references a
+ * color axis, that axis' bar (`layout.coloraxisN.showscale`, shared by every trace on the axis).
+ * `null` when no bar is shown or the trace is not visible.
+ */
+export function markerColorbar(
+  trace: FullTrace,
+  fullLayout: FullLayout,
+  path = 'marker',
+): ColorbarSpec | null {
+  if (trace.visible !== true) return null;
+  const container = containerAt(trace, path);
+  if (container === null || typeof container !== 'object') return null;
+  const c = container as Record<string, unknown>;
+  const axisId = typeof c['coloraxis'] === 'string' ? c['coloraxis'] : undefined;
+  const owner = axisId ? axisContainer(fullLayout, axisId) : c;
+  if (!owner || owner['showscale'] !== true) return null;
+  const cb = owner['colorbar'];
+  if (cb === null || typeof cb !== 'object') return null;
+  const mapping = resolveColorMapping(c, fullLayout);
+  if (!mapping) return null;
+  return {
+    colorscale: cssStops(mapping.colorscale, mapping.reversescale),
+    cmin: mapping.cmin,
+    cmax: mapping.cmax,
+    ...(axisId ? { coloraxis: axisId } : {}),
+    attributes: cb as Record<string, unknown>,
+  };
+}
+
 /** Options of {@link colorscaleAttributes}. */
 export interface ColorscaleAttributeOptions {
   /** What the numeric colors are called in descriptions, e.g. `'marker.color'`. */
@@ -303,7 +520,12 @@ type BaseColorscaleChildren = {
 
 /** Children declared by {@link colorscaleAttributes} for options `O`. */
 export type ColorscaleChildren<O extends ColorscaleAttributeOptions> = BaseColorscaleChildren &
-  (O['showscale'] extends true ? { readonly showscale: AttrSpec<boolean, boolean> } : unknown) &
+  (O['showscale'] extends true
+    ? {
+        readonly showscale: AttrSpec<boolean, boolean>;
+        readonly colorbar: typeof colorbarAttributes;
+      }
+    : unknown) &
   (O['coloraxis'] extends true
     ? { readonly coloraxis: AttrSpec<string, string | undefined> }
     : unknown);
@@ -361,7 +583,7 @@ export function colorscaleAttributes<const O extends ColorscaleAttributeOptions>
   });
   return {
     ...children,
-    ...(opts.showscale ? { showscale } : {}),
+    ...(opts.showscale ? { showscale, colorbar: colorbarAttributes } : {}),
     ...(opts.coloraxis ? { coloraxis } : {}),
   } as unknown as ColorscaleChildren<O>;
 }
@@ -422,7 +644,9 @@ export function supplyColorscaleDefaults(
   coerce(`${prefix}autocolorscale`, !isValidScale(sclIn));
   coerce(`${prefix}colorscale`);
   coerce(`${prefix}reversescale`);
-  if (opts.showscale) coerce(`${prefix}showscale`);
+  if (opts.showscale && coerce<boolean>(`${prefix}showscale`) === true) {
+    supplyColorbarDefaults(coerce, prefix);
+  }
 }
 
 // ---- Resolution --------------------------------------------------------------------------------

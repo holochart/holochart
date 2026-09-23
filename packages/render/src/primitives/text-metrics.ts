@@ -15,10 +15,12 @@
  *
  * ## Limits (document for layout consumers)
  *
- * - The canvas measures with the *CSS* font, troika renders from a font *file*. They agree only when
- *   the same file is loaded as a CSS `FontFace` (`registerFont` does this by default). Until it has
- *   loaded, the browser measures with a fallback font; the default oracle clears its cache when
- *   fonts change, but values already consumed by layout are not recomputed automatically.
+ * - The canvas measures with a *CSS* font, troika renders from a font *file*. The canvas measurer
+ *   therefore measures with the face troika will draw ({@link measurementFace}, plan E2.18): the
+ *   registered family (`registerFont` adds it as a CSS `FontFace`), else the default font
+ *   (`configureText({ defaultFontURL })` registers it as a CSS face), else troika's CDN fallback
+ *   font. Until that face has loaded, the browser measures with the requested family list; the
+ *   default oracle clears its cache when fonts change, and charts re-run layout then.
  * - Kerning and ligatures are included by canvas but not by the fallback table. Wrapping sums
  *   per-word widths, which ignores kerning across break opportunities (normally spaces).
  * - No bidi reordering, no complex-script shaping in the fallback, and ellipsis truncation works on
@@ -29,6 +31,7 @@
  */
 import {
   cssFontString,
+  measurementFace,
   normalizeFontWeight,
   normalizeFontStyle,
   subscribeFontChanges,
@@ -107,6 +110,19 @@ export interface FontMetricsOracleOptions {
   measurer?: TextMeasurer;
   /** Maximum cached width entries (LRU). Default 20 000. */
   cacheSize?: number;
+  /**
+   * Maps a requested face to the face the measurer measures with. Default: for the canvas measurer,
+   * the face troika will actually draw ({@link measurementFace}: the registered family, the default
+   * font, or troika's fallback font); identity for other measurers, so the deterministic fallback
+   * (node, tests) is unchanged. `null` forces identity.
+   */
+  resolveFace?: ((face: TextFace) => TextFace) | null;
+}
+
+/** The measured face for a request: what troika draws ({@link measurementFace}). */
+export function renderedTextFace(face: TextFace): TextFace {
+  const m = measurementFace(face);
+  return { family: m.family, weight: m.weight, style: m.style };
 }
 
 /** Size at which the canvas measurer measures (then divides): avoids small-size rounding. */
@@ -254,10 +270,25 @@ const WRAP_TOKEN = /[^\s\-\u2010\u2012-\u2014]*(?:[-\u2010\u2012-\u2014]+|\s+)?/
 export function createFontMetricsOracle(options: FontMetricsOracleOptions = {}): FontMetricsOracle {
   const measurer = options.measurer ?? createCanvasTextMeasurer() ?? createFallbackTextMeasurer();
   const cacheSize = Math.max(1, options.cacheSize ?? 20000);
+  const resolveFace =
+    options.resolveFace === undefined
+      ? measurer.kind === 'canvas'
+        ? renderedTextFace
+        : null
+      : options.resolveFace;
   const widths = new Map<string, number>();
   const verticals = new Map<string, FontVerticalMetrics>();
 
-  /** Width at 1 px of a single line, LRU-cached. */
+  /**
+   * The face to measure with, plus its cache key. Keys use the resolved face, so a registration
+   * that changes what is drawn never serves a stale entry even without {@link clear}.
+   */
+  const resolve = (font: TextFace): [TextFace, string] => {
+    const face = resolveFace ? resolveFace(font) : font;
+    return [face, textFaceKey(face)];
+  };
+
+  /** Width at 1 px of a single line, LRU-cached. `face` is already resolved. */
   const unitWidth = (text: string, face: TextFace, faceKey: string): number => {
     if (text.length === 0) return 0;
     const key = `${faceKey}\u0000${text}`;
@@ -274,18 +305,20 @@ export function createFontMetricsOracle(options: FontMetricsOracleOptions = {}):
     return w;
   };
 
-  const lineWidth = (line: string, font: TextFont, faceKey: string): number =>
-    unitWidth(line.trimEnd(), font, faceKey) * font.size;
+  const lineWidth = (line: string, font: TextFont, face: TextFace, faceKey: string): number =>
+    unitWidth(line.trimEnd(), face, faceKey) * font.size;
 
   const measureWidth = (text: string, font: TextFont): number => {
-    const faceKey = textFaceKey(font);
+    const [face, faceKey] = resolve(font);
     let max = 0;
-    for (const line of text.split('\n')) max = Math.max(max, lineWidth(line, font, faceKey));
+    for (const line of text.split('\n')) {
+      max = Math.max(max, lineWidth(line, font, face, faceKey));
+    }
     return max;
   };
 
-  const vertical = (face: TextFace): FontVerticalMetrics => {
-    const key = textFaceKey(face);
+  const vertical = (font: TextFace): FontVerticalMetrics => {
+    const [face, key] = resolve(font);
     let v = verticals.get(key);
     if (!v) {
       v = measurer.vertical(face);
@@ -297,12 +330,13 @@ export function createFontMetricsOracle(options: FontMetricsOracleOptions = {}):
   const ellipsizeLine = (
     line: string,
     font: TextFont,
+    face: TextFace,
     faceKey: string,
     maxWidth: number,
     ellipsis: string,
   ): string => {
-    if (lineWidth(line, font, faceKey) <= maxWidth) return line;
-    const ellipsisWidth = unitWidth(ellipsis, font, faceKey) * font.size;
+    if (lineWidth(line, font, face, faceKey) <= maxWidth) return line;
+    const ellipsisWidth = unitWidth(ellipsis, face, faceKey) * font.size;
     if (ellipsisWidth > maxWidth) return '';
     const parts = graphemes(line);
     // Largest prefix that fits with the ellipsis (width is monotonic up to kerning effects).
@@ -311,7 +345,7 @@ export function createFontMetricsOracle(options: FontMetricsOracleOptions = {}):
     while (lo < hi) {
       const mid = (lo + hi + 1) >> 1;
       const prefix = parts.slice(0, mid).join('').trimEnd();
-      if (lineWidth(prefix, font, faceKey) + ellipsisWidth <= maxWidth) lo = mid;
+      if (lineWidth(prefix, font, face, faceKey) + ellipsisWidth <= maxWidth) lo = mid;
       else hi = mid - 1;
     }
     return parts.slice(0, lo).join('').trimEnd() + ellipsis;
@@ -334,7 +368,7 @@ export function createFontMetricsOracle(options: FontMetricsOracleOptions = {}):
       };
     },
     wrapText(text, font, maxWidth) {
-      const faceKey = textFaceKey(font);
+      const [face, faceKey] = resolve(font);
       const out: string[] = [];
       for (const hardLine of text.split('\n')) {
         const tokens = hardLine.match(WRAP_TOKEN)?.filter((t) => t.length > 0) ?? [];
@@ -342,9 +376,9 @@ export function createFontMetricsOracle(options: FontMetricsOracleOptions = {}):
         let width = 0;
         for (const token of tokens) {
           const core = token.trimEnd();
-          const coreWidth = unitWidth(core, font, faceKey) * font.size;
+          const coreWidth = unitWidth(core, face, faceKey) * font.size;
           const tokenWidth =
-            core === token ? coreWidth : unitWidth(token, font, faceKey) * font.size;
+            core === token ? coreWidth : unitWidth(token, face, faceKey) * font.size;
           // Trailing whitespace may hang past maxWidth, as in troika and CSS.
           if (line.length > 0 && width + coreWidth > maxWidth) {
             out.push(line.trimEnd());
@@ -360,10 +394,10 @@ export function createFontMetricsOracle(options: FontMetricsOracleOptions = {}):
       return out;
     },
     ellipsize(text, font, maxWidth, ellipsis = TEXT_ELLIPSIS) {
-      const faceKey = textFaceKey(font);
+      const [face, faceKey] = resolve(font);
       return text
         .split('\n')
-        .map((line) => ellipsizeLine(line, font, faceKey, maxWidth, ellipsis))
+        .map((line) => ellipsizeLine(line, font, face, faceKey, maxWidth, ellipsis))
         .join('\n');
     },
     clear() {

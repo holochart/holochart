@@ -15,6 +15,7 @@ import {
   type TraceUpdatePlan,
 } from '@mk7s/holochart-runtime';
 import { describe, expect, it, vi } from 'vitest';
+import { traceRenderOrder } from '../shared/render-order.ts';
 import { bar, type BarCalc } from './index.ts';
 import { barGeometry } from './plot.ts';
 import { barStyle, contrastColor, cornerRadiusPx } from './style.ts';
@@ -393,7 +394,7 @@ describe('bar view', () => {
     bar.plot!.create(ctx);
     // Rects, then the error-bar stems and caps.
     expect(added).toHaveLength(3);
-    expect(added[1]!.object.renderOrder).toBe(2.25);
+    expect(added[1]!.object.renderOrder).toBe(traceRenderOrder(ctx.trace, 2) + 0.25);
   });
 
   it('draws all bars with one rect primitive, in trace order', () => {
@@ -402,7 +403,7 @@ describe('bar view', () => {
     expect(added).toHaveLength(1);
     const rects = added[0] as RectPrimitive;
     expect(rects.instanceCount).toBe(2);
-    expect(rects.object.renderOrder).toBe(2);
+    expect(rects.object.renderOrder).toBe(traceRenderOrder(ctx.trace, 2));
   });
 
   it('restyles without new geometry and zooms with uniforms only', () => {

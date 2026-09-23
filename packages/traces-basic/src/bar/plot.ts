@@ -25,6 +25,7 @@ import type {
   TraceView,
 } from '@mk7s/holochart-runtime';
 import { ErrorBarLayer, errorBarStyle } from '../shared/error-bars/index.ts';
+import { traceRenderOrder } from '../shared/render-order.ts';
 import type { BarCalc } from './calc.ts';
 import { mayShowText } from './defaults.ts';
 import { barStyle, cornerRadiusPx, selectionSet, type BarStyle } from './style.ts';
@@ -35,7 +36,7 @@ const SNAP_MIN_WIDTH_PX = 2;
 
 const WHITE: RGBA = [1, 1, 1, 1];
 
-/** Draw order within the trace (added to its index): bars, error bars, then labels on top. */
+/** Draw order within the trace (added to its render order): bars, error bars, then labels on top. */
 const LAYER = { errorBars: 0.25, text: 0.5 } as const;
 
 /** Rect corners of every bar, in linear coordinates. */
@@ -205,7 +206,7 @@ class BarView implements TraceView<BarCalc> {
       } else {
         layer.update(data);
       }
-      layer.renderOrder = ctx.index + LAYER.errorBars;
+      layer.renderOrder = traceRenderOrder(ctx.trace, ctx.index) + LAYER.errorBars;
       layer.setTransform(ctx.transform);
     }
   }
@@ -244,7 +245,7 @@ class BarView implements TraceView<BarCalc> {
     } else {
       this.#rects.update(data);
     }
-    this.#rects.object.renderOrder = ctx.index;
+    this.#rects.object.renderOrder = traceRenderOrder(ctx.trace, ctx.index);
     this.#rects.setTransform(ctx.transform);
     this.#syncErrorBars(ctx);
     this.#syncText(ctx);
@@ -275,8 +276,8 @@ class BarView implements TraceView<BarCalc> {
     } else {
       this.#text.update({ labels });
     }
-    // Labels draw over this trace's bars, below the next trace.
-    this.#text.object.renderOrder = ctx.index + LAYER.text;
+    // Labels draw over this trace's bars, below the next bar trace.
+    this.#text.object.renderOrder = traceRenderOrder(ctx.trace, ctx.index) + LAYER.text;
     this.#text.setTransform(ctx.transform);
   }
 }

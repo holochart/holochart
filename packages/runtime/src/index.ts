@@ -11,6 +11,7 @@
 export type {
   AxisInfo,
   CalcContext,
+  ColorbarSpec,
   ComponentDrawContext,
   ComponentLayoutContext,
   ComponentModule,
@@ -30,6 +31,7 @@ export type {
   SelectionQuery,
   SubplotInfo,
   TemplateModule,
+  TraceAppend,
   TraceExtremes,
   TraceModule,
   TracePlotContext,
@@ -48,10 +50,12 @@ export type { ChartOptions, ChartThree, FigurePatch } from './chart.ts';
 export {
   addTraces,
   deleteTraces,
+  extendTraces,
   Fx,
   hover,
   moveTraces,
   newPlot,
+  prependTraces,
   purge,
   react,
   relayout,
@@ -66,10 +70,15 @@ export type {
   ChartEvents,
   ChartListener,
   ChartPoint,
+  AnnotationEventData,
   LegendEventData,
   PointerEventData,
   SelectionEventData,
 } from './events.ts';
+
+// JSON (E18.3)
+export { chartToJSON, figureFromJSON, fromJSON } from './json.ts';
+export type { ChartFigureSource, ChartToJSONOptions } from './json.ts';
 
 // Interaction (E5.7, E6.1–E6.4, E2.17)
 export { formatTemplate, splitExtra } from './fx/template.ts';
@@ -83,4 +92,4 @@ export type { DoubleClickAction, Dragmode, FxSettings, Hovermode } from './fx/se
 // Helpers for trace and component authors
 export { dataTransform, linearExtremes } from './axes.ts';
 export { MIN_PLOT_SIZE } from './layout.ts';
-export type { AttributeUpdate } from './plan.ts';
+export type { AttributeUpdate, MaxPoints, StreamUpdate } from './plan.ts';

@@ -9,6 +9,8 @@ import {
   planTraceEdit,
   tracePlan,
   withRangeImplications,
+  maxPointsFor,
+  spliceArray,
 } from './plan.ts';
 import { createDotsModule, createLog } from './__testing__/fakes.ts';
 import { createChartRegistry } from './registry.ts';
@@ -169,5 +171,56 @@ describe('planning', () => {
   it('knows which stages need the layout step', () => {
     expect(needsLayout(new Set(['style', 'legend']))).toBe(false);
     expect(needsLayout(new Set(['ticks']))).toBe(true);
+  });
+});
+
+describe('spliceArray (extendTraces / prependTraces, E7.2)', () => {
+  it('joins plain arrays into new ones, keeping maxPoints from the end just written', () => {
+    const target = [1, 2, 3];
+    expect(spliceArray(target, [4, 5], -1, 'end')).toEqual({ value: [1, 2, 3, 4, 5], removed: 0 });
+    expect(spliceArray(target, [4, 5], 3, 'end')).toEqual({ value: [3, 4, 5], removed: 2 });
+    expect(spliceArray(target, [4, 5], 3, 'start')).toEqual({ value: [4, 5, 1], removed: 2 });
+    expect(spliceArray(target, Float64Array.from([4]), 0, 'end')).toEqual({
+      value: [],
+      removed: 4,
+    });
+    expect(target).toEqual([1, 2, 3]);
+  });
+
+  it('grows typed arrays in place, never writing into earlier views', () => {
+    const user = Float64Array.from([0, 1, 2]);
+    const a = spliceArray(user, [3], 4, 'end').value as Float64Array;
+    expect(Array.from(a)).toEqual([0, 1, 2, 3]);
+    expect(a.buffer).not.toBe(user.buffer); // the caller's buffer is never written
+    const b = spliceArray(a, [4, 5], 4, 'end').value as Float64Array;
+    expect(b.buffer).toBe(a.buffer);
+    expect(Array.from(b)).toEqual([2, 3, 4, 5]);
+    expect(Array.from(a)).toEqual([0, 1, 2, 3]);
+    // Extending an older view again must not overwrite what `b` shows.
+    const c = spliceArray(a, [9], -1, 'end').value as Float64Array;
+    expect(c.buffer).not.toBe(a.buffer);
+    expect(Array.from(b)).toEqual([2, 3, 4, 5]);
+    expect(Array.from(c)).toEqual([0, 1, 2, 3, 9]);
+  });
+
+  it('keeps the target type and converts other inserts', () => {
+    const r = spliceArray(Int32Array.from([1]), [2.7, 3], -1, 'end').value;
+    expect(r).toBeInstanceOf(Int32Array);
+    expect(Array.from(r as Int32Array)).toEqual([1, 2, 3]);
+  });
+
+  it('prepends typed arrays in place', () => {
+    const a = spliceArray(Float32Array.from([2, 3]), [1], 3, 'start').value as Float32Array;
+    const b = spliceArray(a, [0], 3, 'start').value as Float32Array;
+    expect(b.buffer).toBe(a.buffer);
+    expect(Array.from(b)).toEqual([0, 1, 2]);
+    expect(Array.from(a)).toEqual([1, 2, 3]);
+  });
+
+  it('reads maxPoints per key and in the options form', () => {
+    expect(maxPointsFor(5.7, 'y', 0)).toBe(5);
+    expect(maxPointsFor({ y: [1, 2] }, 'y', 1)).toBe(2);
+    expect(maxPointsFor({ maxPoints: 9 }, 'x', 3)).toBe(9);
+    expect(maxPointsFor(undefined, 'x', 0)).toBe(-1);
   });
 });

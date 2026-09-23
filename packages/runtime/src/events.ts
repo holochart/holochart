@@ -5,7 +5,7 @@
 import type { FullTrace } from '@mk7s/holochart-core';
 import type { FrameInfo } from '@mk7s/holochart-render';
 import type { AxisInfo } from './contracts.ts';
-import type { AttributeUpdate } from './plan.ts';
+import type { AttributeUpdate, MaxPoints, StreamUpdate } from './plan.ts';
 
 /**
  * One data point in a `hover`, `click` or selection event (plan E6.1), shaped like Plotly's event
@@ -73,6 +73,17 @@ export interface LegendEventData {
   readonly [field: string]: unknown;
 }
 
+/** Payload of `clickannotation` (emitted by the annotations component, E5.4). */
+export interface AnnotationEventData {
+  /** Index in `layout.annotations`. */
+  readonly index: number;
+  /** The annotation as given. */
+  readonly annotation: unknown;
+  /** The annotation after defaults. */
+  readonly fullAnnotation: object;
+  readonly event?: Event;
+}
+
 /** Event payloads by name (plan §7.5). */
 export interface ChartEvents {
   /** The pipeline finished and the frame is drawn (after every update call). */
@@ -82,6 +93,16 @@ export interface ChartEvents {
   afterrender: FrameInfo;
   /** After a restyle: the edits and the trace indices they applied to. */
   restyle: { readonly update: AttributeUpdate; readonly traces: readonly number[] };
+  /**
+   * After `extendTraces` / `prependTraces` has been drawn (Plotly emits `plotly_redraw` then; it
+   * has no dedicated extend event). The payload repeats the call's arguments.
+   */
+  redraw: {
+    readonly kind: 'extend' | 'prepend';
+    readonly update: StreamUpdate;
+    readonly traces: readonly number[];
+    readonly maxPoints: MaxPoints | undefined;
+  };
   /** After a relayout: the applied layout edits (including implied `autorange: false`). */
   relayout: AttributeUpdate;
   /** The figure size changed (container resize with `config.responsive`, or a relayout). */
@@ -105,6 +126,8 @@ export interface ChartEvents {
   selected: SelectionEventData;
   /** The selection was cleared (double-click or a click on empty space in select mode). */
   deselect: undefined;
+  /** A click on an annotation with `captureevents` (E5.4). */
+  clickannotation: AnnotationEventData;
   /** Legend item clicked; a listener returning `false` cancels the default toggle. */
   legendclick: LegendEventData;
   legenddoubleclick: LegendEventData;

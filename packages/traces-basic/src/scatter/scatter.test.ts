@@ -434,7 +434,7 @@ describe('scatter view', () => {
     expect(added).toHaveLength(1);
     const markers = added[0] as MarkerSet;
     expect(markers.count).toBe(2);
-    expect(Math.floor(markers.object.renderOrder)).toBe(3);
+    expect(Math.floor(markers.object.renderOrder)).toBe(traceRenderOrder(trace!, 3));
   });
 
   it('draws error bars, line, markers and text as one primitive each, layered in that order', () => {
@@ -464,7 +464,7 @@ describe('scatter view', () => {
     expect(orders[2]).toBeLessThan(orders[3]!);
     expect(orders[3]).toBeLessThan(orders[4]!);
     expect(Math.floor(orders[3]!)).toBe(traceRenderOrder(trace!, 3));
-    expect(traceRenderOrder(trace!, 3)).toBe(20003);
+    expect(traceRenderOrder(trace!, 3)).toBe(2_120_003);
   });
 
   it('updates only what the plan says', () => {

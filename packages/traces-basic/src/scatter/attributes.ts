@@ -339,7 +339,7 @@ export const scatterAttributes = attr.object(
       dflt: 0,
       editType: 'plot',
       description:
-        'Stacking order among the traces of a subplot: higher is drawn on top; ties keep trace order.',
+        'Stacking order among the traces of a subplot: higher is drawn on top. At equal `zorder`, scatter traces draw above bars (Plotly’s layer order), then in trace order.',
     }),
   },
   { description: 'Scatter: markers, lines and text labels at x/y positions.' },

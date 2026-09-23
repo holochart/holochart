@@ -4,7 +4,7 @@
  */
 import { isPlainObject, type FigureInput } from '@mk7s/holochart-core';
 import { createChart, getChart, type Chart, type ChartOptions } from './chart.ts';
-import type { AttributeUpdate } from './plan.ts';
+import type { AttributeUpdate, MaxPoints, StreamUpdate } from './plan.ts';
 
 type TraceIndices = number | readonly number[];
 
@@ -107,6 +107,26 @@ export function moveTraces(
   newIndices?: TraceIndices,
 ): Promise<Chart> {
   return call(() => chartIn(el, 'moveTraces').moveTraces(current, newIndices));
+}
+
+/** Plotly `extendTraces`: append points, optionally keeping a rolling window of `maxPoints`. */
+export function extendTraces(
+  el: HTMLElement,
+  update: StreamUpdate,
+  indices: TraceIndices,
+  maxPoints?: MaxPoints,
+): Promise<Chart> {
+  return call(() => chartIn(el, 'extendTraces').extendTraces(update, indices, maxPoints));
+}
+
+/** Plotly `prependTraces`: insert points at the start (see {@link extendTraces}). */
+export function prependTraces(
+  el: HTMLElement,
+  update: StreamUpdate,
+  indices: TraceIndices,
+  maxPoints?: MaxPoints,
+): Promise<Chart> {
+  return call(() => chartIn(el, 'prependTraces').prependTraces(update, indices, maxPoints));
 }
 
 /**

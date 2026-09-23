@@ -20,7 +20,10 @@
  * - layout (margins, domains, autorange, transforms) when any `calc`/`layout`/`ticks`/`plot` stage
  *   was declared or the container resized;
  * - trace views get a {@link TraceUpdatePlan}: a `marker.color` restyle is `style` only, an axis
- *   range relayout is `transform` only (uniforms, no uploads).
+ *   range relayout is `transform` only (uniforms, no uploads);
+ * - `extendTraces` / `prependTraces` (E7.2) skip validation and, for modules with `calcAppend`,
+ *   convert only the new points; `extremesAppend` updates the autorange incrementally, and the
+ *   views get the change as `TraceUpdatePlan.append` so they upload only the new points.
  *
  * ## Update promises
  *
@@ -31,6 +34,7 @@
  * Without pending text this is the same frame the update drew.
  */
 import {
+  type EncodedFigure,
   applyUirevision,
   coerceContainer,
   configSchema,
@@ -85,6 +89,7 @@ import type {
   MarginPush,
   SubplotInfo,
   TraceExtremes,
+  TraceAppend,
   TraceModule,
   TracePlotContext,
   TraceUpdatePlan,
@@ -122,16 +127,22 @@ import {
 } from './layout.ts';
 import {
   applyEdits,
+  assertStreamArgs,
   distributeRestyle,
   flattenPatch,
   inputTraceType,
   needsLayout,
   planLayoutEdit,
   planTraceEdit,
+  maxPointsFor,
+  spliceArray,
   tracePlan,
   withRangeImplications,
   type AttributeUpdate,
+  type MaxPoints,
+  type StreamUpdate,
 } from './plan.ts';
+import { chartToJSON, type ChartToJSONOptions } from './json.ts';
 import { registry as defaultRegistry, type ChartRegistry } from './registry.ts';
 
 /** Options for {@link createChart} that are not part of the figure. */
@@ -192,8 +203,26 @@ interface Plan {
   traces: Map<number, Set<Stage>>;
   /** Traces whose selection (`selectedpoints`) changed (E6.3). */
   selection: Set<number>;
+  /** Streaming edits per trace (current indices), see {@link PendingAppend}. */
+  appends: Map<number, PendingAppend>;
   /** Events to emit after the frame. */
   after: (() => void)[];
+}
+
+/**
+ * `extendTraces` / `prependTraces` calls batched on one trace (E7.2). The data arrays are already
+ * edited; this says how, so the pipeline can take the streaming path. Anything it cannot describe
+ * (mixed extend and prepend, keys trimmed differently, a structural change in the same batch)
+ * makes it `valid: false`: the trace is then recalculated in full.
+ */
+interface PendingAppend {
+  at: 'end' | 'start';
+  /** Items trimmed from the front (extend) or inserted at the front (prepend), summed over calls. */
+  front: number;
+  keys: Set<string>;
+  /** `_length` of the trace before the batch. */
+  previous: number | undefined;
+  valid: boolean;
 }
 
 interface Waiter {
@@ -315,6 +344,7 @@ function emptyPlan(): Plan {
     layout: new Set(),
     traces: new Map(),
     selection: new Set(),
+    appends: new Map(),
     after: [],
   };
 }
@@ -347,6 +377,34 @@ function moveOrder(length: number, from: readonly number[], to: readonly number[
   const placed = from.map((f, k) => ({ f, t: to[k] as number })).sort((a, b) => a.t - b.t);
   for (const { f, t } of placed) order.splice(t, 0, f);
   return order;
+}
+
+/**
+ * The point-level change of a batched streaming edit, from the trace's point count before and
+ * after (`_length`), or `undefined` when the counts don't fit a pure append / prepend.
+ */
+function traceAppend(pending: PendingAppend, trace: FullTrace): TraceAppend | undefined {
+  const length = trace['_length'];
+  const previous = pending.previous;
+  if (typeof length !== 'number' || previous === undefined) return undefined;
+  if (pending.at === 'end') {
+    const trimmed = Math.min(previous, pending.front);
+    const count = length - (previous - trimmed);
+    if (count < 0 || previous - trimmed > length) return undefined;
+    return {
+      at: 'end',
+      start: length - count,
+      count,
+      trimmed,
+      previous,
+      length,
+      keys: [...pending.keys],
+    };
+  }
+  const count = pending.front;
+  const trimmed = previous + count - length;
+  if (trimmed < 0 || trimmed > previous || count > length) return undefined;
+  return { at: 'start', start: 0, count, trimmed, previous, length, keys: [...pending.keys] };
 }
 
 const CHARTS = new WeakMap<HTMLElement, Chart>();
@@ -448,6 +506,27 @@ export class Chart {
 
   get config(): unknown {
     return this.#figure.config;
+  }
+
+  /** Animation frames as given (after updates). Treat as read-only. */
+  get frames(): unknown {
+    return this.#figure.frames;
+  }
+
+  /** Named datasets as given (after updates). Treat as read-only. */
+  get datasets(): FigureInput['datasets'] {
+    return this.#figure.datasets;
+  }
+
+  /**
+   * The current figure (`data`, `layout`, `config`, `frames`, `datasets`) as JSON-safe data
+   * (E18.3): typed arrays become Plotly's `{ dtype, bdata, shape }`, per-point style functions are
+   * evaluated, other functions dropped with a warning. `JSON.stringify(chart)` calls this too.
+   */
+  toJSON(options?: ChartToJSONOptions | string): EncodedFigure {
+    // JSON.stringify passes the property key as the argument.
+    const opts = typeof options === 'object' ? options : {};
+    return chartToJSON(this, { registry: this.#registry, ...opts });
   }
 
   /** Traces after defaults (as of the last pipeline run). */
@@ -779,6 +858,96 @@ export class Chart {
     });
   }
 
+  /**
+   * Append points to traces (Plotly `extendTraces`, plan E7.2): `update` gives, per attribute
+   * string, one array of new values per listed trace — `extendTraces({ x: [[4, 5]], y: [[1, 2]] },
+   * [0])`. `maxPoints` keeps only the last points (a rolling window): a number for everything, an
+   * object with one number per trace per key (`{ y: [1000] }`), or `{ maxPoints: 1000 }`.
+   *
+   * Arrays are not mutated: plain arrays are replaced by new ones, typed arrays by views into a
+   * buffer that grows in place (see `spliceArray`). Streaming-aware traces (scatter) convert and
+   * upload only the new points and update the autorange incrementally. Resolves after render; a
+   * `redraw` event follows (Plotly's `plotly_redraw`).
+   *
+   * @throws (rejects) With Plotly's messages for malformed arguments, or when a key names a
+   * missing or non-array attribute; nothing is changed then.
+   */
+  extendTraces(update: StreamUpdate, indices: TraceIndices, maxPoints?: MaxPoints): Promise<Chart> {
+    return this.#spliceTraces('end', update, indices, maxPoints);
+  }
+
+  /** Insert points at the start of traces (Plotly `prependTraces`); see {@link extendTraces}. */
+  prependTraces(
+    update: StreamUpdate,
+    indices: TraceIndices,
+    maxPoints?: MaxPoints,
+  ): Promise<Chart> {
+    return this.#spliceTraces('start', update, indices, maxPoints);
+  }
+
+  #spliceTraces(
+    at: 'end' | 'start',
+    update: StreamUpdate,
+    indices: TraceIndices,
+    maxPoints: MaxPoints | undefined,
+  ): Promise<Chart> {
+    return this.#schedule((plan) => {
+      const list = assertStreamArgs(update, indices, maxPoints, this.#figure.data.length);
+      // Compute every new array first: an error leaves the figure untouched.
+      const edits = list.map(() => ({}) as Record<string, unknown>);
+      const fronts = list.map(() => new Set<number>());
+      for (const [key, inserts] of Object.entries(update)) {
+        list.forEach((index, k) => {
+          const target = getIn(this.#figure.data[index], key);
+          if (!Array.isArray(target) && !ArrayBuffer.isView(target)) {
+            throw new Error(`cannot extend missing or non-array attribute: ${key}`);
+          }
+          const insert = inserts[k] as ArrayLike<unknown>;
+          const result = spliceArray(
+            target as ArrayLike<unknown>,
+            insert,
+            maxPointsFor(maxPoints, key, k),
+            at,
+          );
+          (edits[k] as Record<string, unknown>)[key] = result.value;
+          // How far retained items move: trimmed from the front, or inserted before them.
+          (fronts[k] as Set<number>).add(at === 'end' ? result.removed : insert.length);
+        });
+      }
+      list.forEach((index, k) => {
+        const trace = edits[k] as Record<string, unknown>;
+        if (Object.keys(trace).length === 0) return;
+        this.#figure.data[index] = applyEdits(this.#figure.data[index], trace);
+        const front = fronts[k] as Set<number>;
+        const keys = Object.keys(trace);
+        const record = plan.appends.get(index);
+        if (!record) {
+          const full = plan.structural || plan.full ? undefined : this.#full?.fullData[index];
+          const previous = full?.['_length'];
+          plan.appends.set(index, {
+            at,
+            front: front.size === 1 ? [...front][0]! : 0,
+            keys: new Set(keys),
+            previous: typeof previous === 'number' ? previous : undefined,
+            valid: front.size === 1 && typeof previous === 'number',
+          });
+        } else {
+          record.valid &&= record.at === at && front.size === 1;
+          record.front += front.size === 1 ? [...front][0]! : 0;
+          for (const key of keys) record.keys.add(key);
+        }
+      });
+      plan.after.push(() =>
+        this.#events.emit('redraw', {
+          kind: at === 'end' ? 'extend' : 'prepend',
+          update,
+          traces: list,
+          maxPoints,
+        }),
+      );
+    });
+  }
+
   /** Re-measure the container and re-layout (automatic with `config.responsive`). */
   resize(): Promise<Chart> {
     return this.#schedule((plan) => {
@@ -899,11 +1068,16 @@ export class Chart {
       if (slot && !kept.has(i)) this.#disposeView(slot);
     });
     const stages = new Map<number, Set<Stage>>();
+    const appends = new Map<number, PendingAppend>();
     order.forEach((from, to) => {
       const s = from === undefined ? undefined : plan.traces.get(from);
       if (s) stages.set(to, s);
+      const a = from === undefined ? undefined : plan.appends.get(from);
+      // Still a data change (full recalc), no longer a streaming one.
+      if (a) appends.set(to, { ...a, valid: false });
     });
     plan.traces = stages;
+    plan.appends = appends;
     order.forEach((from, to) => {
       if (from !== to) addStages(plan, to, ['plot', 'style']);
     });
@@ -1157,6 +1331,7 @@ export class Chart {
       resized ||
       needsLayout(plan.layout) ||
       fresh.some(Boolean) ||
+      plan.appends.size > 0 ||
       [...plan.traces.values()].some(needsLayout);
 
     const rescaled = layoutRan ? this.#syncAxes(fullLayout, fullData) : new Set<string>();
@@ -1164,13 +1339,16 @@ export class Chart {
     // Margins, axis spans and subplot viewports first: `crossTraceCalc` gets its subplot.
     if (layoutRan) this.#layoutSubplots(fullLayout, fullData, size);
 
-    // Calc.
+    // Calc (streaming edits convert only their new points when the module can, E7.2).
+    const previousCalcs: unknown[] = [];
     const plans: TraceUpdatePlan[] = fullData.map((trace, i) => {
       const slot = this.#traces[i] as TraceSlot;
       const onRescaled =
         rescaled.has(trace['xaxis'] as string) || rescaled.has(trace['yaxis'] as string);
-      const tp = tracePlan(plan.traces.get(i) ?? EMPTY_STAGES, plan.layout, {
-        forceCalc: (fresh[i] as boolean) || onRescaled,
+      const stages = plan.traces.get(i) ?? EMPTY_STAGES;
+      const pending = plan.appends.get(i);
+      const tp = tracePlan(stages, plan.layout, {
+        forceCalc: (fresh[i] as boolean) || onRescaled || pending !== undefined,
         layoutRan,
       });
       if (trace.visible === false) {
@@ -1180,9 +1358,26 @@ export class Chart {
         return tp;
       }
       if (tp.calc) {
-        slot.calc = slot.module?.calc
-          ? slot.module.calc(trace, this.#calcContext(trace, i))
-          : undefined;
+        const ctx = this.#calcContext(trace, i);
+        const streamable =
+          pending?.valid === true &&
+          slot.hasCalc &&
+          !fresh[i] &&
+          !onRescaled &&
+          !stages.has('calc') &&
+          !plan.layout.has('calc');
+        const append = streamable ? traceAppend(pending, trace) : undefined;
+        const next =
+          append && slot.module?.calcAppend
+            ? slot.module.calcAppend(slot.calc, trace, ctx, append)
+            : undefined;
+        if (next !== undefined) {
+          previousCalcs[i] = slot.calc;
+          slot.calc = next;
+          slot.hasCalc = true;
+          return { ...tp, append: append as TraceAppend };
+        }
+        slot.calc = slot.module?.calc ? slot.module.calc(trace, ctx) : undefined;
         slot.hasCalc = true;
       }
       return tp;
@@ -1195,7 +1390,20 @@ export class Chart {
       const tp = plans[i] as TraceUpdatePlan;
       if (trace.visible !== true) slot.extremes = undefined;
       else if (tp.plot && slot.module?.extremes) {
-        slot.extremes = slot.module.extremes(slot.calc, trace, this.#calcContext(trace, i));
+        const ctx = this.#calcContext(trace, i);
+        const previous = slot.extremes;
+        const merged =
+          tp.append && previous && slot.module.extremesAppend
+            ? slot.module.extremesAppend(
+                previous,
+                slot.calc,
+                previousCalcs[i],
+                trace,
+                ctx,
+                tp.append,
+              )
+            : undefined;
+        slot.extremes = merged ?? slot.module.extremes(slot.calc, trace, ctx);
       }
     });
 
@@ -1282,6 +1490,7 @@ export class Chart {
         width: size.width,
         height: size.height,
         axes: this.#axes,
+        traceModule: (type: string) => this.#registry.getTrace(type),
       });
       if (Array.isArray(p)) pushes.push(...(p as MarginPush[]));
       else if (p) pushes.push(p as MarginPush);
@@ -1450,7 +1659,8 @@ export class Chart {
         yaxis: subplot.yaxis,
       });
       for (const e of entries) {
-        const tp = plans[e.index] as TraceUpdatePlan;
+        // Cross-trace calc rewrote the calc in place: no longer a streaming-only change.
+        const { append: _, ...tp } = plans[e.index] as TraceUpdatePlan;
         plans[e.index] = { ...tp, calc: true, plot: true, style: true };
       }
     }
@@ -1583,6 +1793,7 @@ export class Chart {
       invalidate: () => root.invalidate(),
       chart: this,
       ...(this.#full ? { fullConfig: this.#full.fullConfig } : {}),
+      traceModule: (type: string) => this.#registry.getTrace(type),
     };
   }
 

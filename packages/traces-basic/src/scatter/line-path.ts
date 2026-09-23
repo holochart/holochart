@@ -61,7 +61,7 @@ const DECIMATE_POINTS_PER_PX = 4;
  * Growable float64 vertex stream. Geometric growth keeps appends amortised O(1) when the exact
  * output size is not known up front (spline tessellation).
  */
-class VertexStream {
+export class VertexStream {
   x: Float64Array;
   y: Float64Array;
   length = 0;
@@ -70,6 +70,11 @@ class VertexStream {
     const c = Math.max(4, capacity);
     this.x = new Float64Array(c);
     this.y = new Float64Array(c);
+  }
+
+  /** Empty the stream, keeping its capacity (streaming scratch). */
+  reset(): void {
+    this.length = 0;
   }
 
   push(px: number, py: number): void {
@@ -97,7 +102,7 @@ class VertexStream {
 }
 
 /** Only the magnitude of the transform matters for shape; degenerate scales fall back to 1. */
-function sanitizeScale(s: number): number {
+export function sanitizeScale(s: number): number {
   const a = Math.abs(s);
   return a > 0 && Number.isFinite(a) ? a : 1;
 }
@@ -253,6 +258,41 @@ function stepRun(
 }
 
 /**
+ * plotly.js `makeTangent` at point `i` between `prev` and `next` (px space): writes the incoming
+ * `[x, y]` and outgoing `[x, y]` Bézier control points to `out[o … o + 3]`.
+ */
+export function splineTangent(
+  xs: ArrayLike<number>,
+  ys: ArrayLike<number>,
+  prev: number,
+  i: number,
+  next: number,
+  smoothing: number,
+  sx: number,
+  sy: number,
+  out: Float64Array,
+  o: number,
+): void {
+  const tx = (xs[i] as number) * sx;
+  const ty = (ys[i] as number) * sy;
+  const d1x = (xs[prev] as number) * sx - tx;
+  const d1y = (ys[prev] as number) * sy - ty;
+  const d2x = (xs[next] as number) * sx - tx;
+  const d2y = (ys[next] as number) * sy - ty;
+  const d1a = Math.pow(d1x * d1x + d1y * d1y, CATMULL_ROM_EXP / 2);
+  const d2a = Math.pow(d2x * d2x + d2y * d2y, CATMULL_ROM_EXP / 2);
+  const numx = (d2a * d2a * d1x - d1a * d1a * d2x) * smoothing;
+  const numy = (d2a * d2a * d1y - d1a * d1a * d2y) * smoothing;
+  const denom1 = 3 * d2a * (d1a + d2a);
+  const denom2 = 3 * d1a * (d1a + d2a);
+  // A zero denominator means a coincident neighbour; Plotly then puts the control on the point.
+  out[o] = tx + (denom1 ? numx / denom1 : 0);
+  out[o + 1] = ty + (denom1 ? numy / denom1 : 0);
+  out[o + 2] = tx - (denom2 ? numx / denom2 : 0);
+  out[o + 3] = ty - (denom2 ? numy / denom2 : 0);
+}
+
+/**
  * plotly.js `Drawing.smoothopen` + `makeTangent` (centripetal Catmull-Rom), evaluated in px space
  * so the curve matches what Plotly draws on screen, then tessellated and mapped back to linear
  * coordinates. Requires `b - a >= 3` and `smoothing > 0`.
@@ -272,23 +312,7 @@ function splineRun(
 ): void {
   const len = b - a;
   for (let i = 1; i < len - 1; i++) {
-    const tx = (xs[a + i] as number) * sx;
-    const ty = (ys[a + i] as number) * sy;
-    const d1x = (xs[a + i - 1] as number) * sx - tx;
-    const d1y = (ys[a + i - 1] as number) * sy - ty;
-    const d2x = (xs[a + i + 1] as number) * sx - tx;
-    const d2y = (ys[a + i + 1] as number) * sy - ty;
-    const d1a = Math.pow(d1x * d1x + d1y * d1y, CATMULL_ROM_EXP / 2);
-    const d2a = Math.pow(d2x * d2x + d2y * d2y, CATMULL_ROM_EXP / 2);
-    const numx = (d2a * d2a * d1x - d1a * d1a * d2x) * smoothing;
-    const numy = (d2a * d2a * d1y - d1a * d1a * d2y) * smoothing;
-    const denom1 = 3 * d2a * (d1a + d2a);
-    const denom2 = 3 * d1a * (d1a + d2a);
-    // A zero denominator means a coincident neighbour; Plotly then puts the control on the point.
-    tan[4 * i] = tx + (denom1 ? numx / denom1 : 0);
-    tan[4 * i + 1] = ty + (denom1 ? numy / denom1 : 0);
-    tan[4 * i + 2] = tx - (denom2 ? numx / denom2 : 0);
-    tan[4 * i + 3] = ty - (denom2 ? numy / denom2 : 0);
+    splineTangent(xs, ys, a + i - 1, a + i, a + i + 1, smoothing, sx, sy, tan, 4 * i);
   }
 
   out.push(xs[a] as number, ys[a] as number);
@@ -335,9 +359,9 @@ function subdivisions(lengthPx: number): number {
  * Emit the interior samples and the end point of the quadratic Bézier `p(i0) → p(i1)` with
  * control `(cx, cy)` in px. The end point is the original data value so data points are exact.
  */
-function quadratic(
-  xs: Float64Array,
-  ys: Float64Array,
+export function quadratic(
+  xs: ArrayLike<number>,
+  ys: ArrayLike<number>,
   i0: number,
   i1: number,
   cx: number,
@@ -363,9 +387,9 @@ function quadratic(
 }
 
 /** Cubic counterpart of {@link quadratic} with controls `(c1x, c1y)`, `(c2x, c2y)` in px. */
-function cubic(
-  xs: Float64Array,
-  ys: Float64Array,
+export function cubic(
+  xs: ArrayLike<number>,
+  ys: ArrayLike<number>,
   i0: number,
   i1: number,
   c1x: number,
@@ -400,6 +424,16 @@ function cubic(
   out.push(xs[i1] as number, ys[i1] as number);
 }
 
+/** The px column of linear coordinate `x` at `sx` px per unit (decimation bucket). */
+export function bucketOf(x: number, sx: number): number {
+  return Math.floor(x * sx);
+}
+
+/** Whether a monotonic run of `len` points from `xFirst` to `xLast` is dense enough to decimate. */
+export function denseEnough(len: number, xFirst: number, xLast: number, sx: number): boolean {
+  return len > DECIMATE_POINTS_PER_PX * (Math.abs(xLast - xFirst) * sx + 1);
+}
+
 /**
  * Min/max ("M4") decimation of the run `[s, e)` into `outX/outY` (from index 0): per px column
  * keep, in original order, the first, min-y, max-y and last points. Visually lossless for a
@@ -420,7 +454,7 @@ function decimateRun(
   const len = e - s;
   const xFirst = xs[s] as number;
   const xLast = xs[e - 1] as number;
-  if (!(len > DECIMATE_POINTS_PER_PX * (Math.abs(xLast - xFirst) * sx + 1))) return -1;
+  if (!denseEnough(len, xFirst, xLast, sx)) return -1;
 
   // Columns are only contiguous in index order when x is monotonic.
   const dir = xLast >= xFirst ? 1 : -1;
@@ -444,15 +478,16 @@ function decimateRun(
     if (last !== q) emit(last);
   };
 
-  // Buckets are relative to the run's first x so panning (a pure offset change) never reshuffles
-  // them; only zoom changes the bucketing.
-  let bucket = 0;
+  // Buckets are px columns of the linear coordinate itself (not relative to the run's first x):
+  // panning (an offset change) never reshuffles them, and neither does streaming points in or
+  // out at either end (E7.2), so an edit re-emits only the buckets at the ends.
+  let bucket = bucketOf(xFirst, sx);
   let first = s;
   let last = s;
   let lo = s;
   let hi = s;
   for (let i = s + 1; i < e; i++) {
-    const bi = Math.floor(((xs[i] as number) - xFirst) * sx);
+    const bi = bucketOf(xs[i] as number, sx);
     if (bi !== bucket) {
       flush(first, lo, hi, last);
       bucket = bi;
@@ -498,13 +533,16 @@ function scaleFactor(a: number, b: number): number {
  *
  * An aspect change alters the spline's shape in linear space, so any real change counts; a
  * uniform zoom leaves the curve itself unchanged and only its sampling density drifts, which is
- * tolerable up to 2×.
+ * tolerable up to 2×. With `spline: false` (a decimated straight line) only the x resolution
+ * matters: y zooms (a streaming autorange) never rebuild it.
  */
 export function needsRebuild(
   prev: { scaleX: number; scaleY: number },
   next: { scaleX: number; scaleY: number },
+  options: { spline?: boolean } = {},
 ): boolean {
   const fx = scaleFactor(prev.scaleX, next.scaleX);
+  if (options.spline === false) return fx >= 2;
   const fy = scaleFactor(prev.scaleY, next.scaleY);
   if (fx >= 2 || fy >= 2) return true;
   // Relative aspect change = (nx/ny)/(px/py) − 1, computed without dividing by a small scale.

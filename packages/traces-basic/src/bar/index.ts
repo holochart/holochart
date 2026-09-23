@@ -8,6 +8,7 @@ import type { TraceModule } from '@mk7s/holochart-runtime';
 import { coloraxisLayoutSchema, supplyColoraxisDefaults } from '../shared/colorscale.ts';
 import { barAttributes, barLayoutAttributes } from './attributes.ts';
 import { barExtremes, calcBar, crossTraceCalcBar, type BarCalc } from './calc.ts';
+import { barColorbar } from './colorbar.ts';
 import { supplyBarDefaults, supplyBarLayoutDefaults } from './defaults.ts';
 import { barHoverPoints, barSelectPoints } from './hover.ts';
 import { barRenderer } from './plot.ts';
@@ -41,6 +42,7 @@ export const bar: TraceModule<BarCalc, typeof barAttributes.children> = {
   hoverPoints: barHoverPoints,
   selectPoints: barSelectPoints,
   legendIcon: barLegendIcon,
+  colorbar: barColorbar,
 };
 
 export { barAttributes, barLayoutAttributes } from './attributes.ts';

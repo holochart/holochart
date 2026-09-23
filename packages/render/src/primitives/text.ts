@@ -55,6 +55,8 @@ import { IDENTITY_TRANSFORM } from '../types.ts';
 import { computeOrigin, effectiveTransform, type Vec3 } from './common.ts';
 import {
   resolveFontURL,
+  setDefaultFontURL,
+  setUnicodeFontsURL,
   normalizeFontStyle,
   normalizeFontWeight,
   type TextFontStyle,
@@ -115,7 +117,8 @@ export interface TextConfig {
   /**
    * Font file (TTF/OTF/WOFF, not WOFF2) used when a family is not registered. Unset → troika's
    * CDN-hosted fallback, which is not suitable for offline/deterministic tests: vendor a font file
-   * (e.g. Inter, OFL-licensed) and point this at it.
+   * (e.g. Inter, OFL-licensed) and point this at it. Also registered as a CSS font face so layout
+   * measures unregistered families with this font (see `measurementFace`).
    */
   defaultFontURL?: string;
   /** Location of troika's unicode fallback-font data (default: CDN). */
@@ -137,6 +140,9 @@ export function configureText(config: TextConfig): void {
   if (config.useWorker !== undefined) out.useWorker = config.useWorker;
   if (config.sdfGlyphSize !== undefined) out.sdfGlyphSize = config.sdfGlyphSize;
   configureTextBuilder(out);
+  // Tell the metrics oracle which files troika draws unregistered families with (E2.18).
+  if (config.defaultFontURL !== undefined) setDefaultFontURL(config.defaultFontURL);
+  if (config.unicodeFontsURL !== undefined) setUnicodeFontsURL(config.unicodeFontsURL);
 }
 
 /**

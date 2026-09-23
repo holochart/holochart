@@ -117,6 +117,35 @@ export interface TraceUpdatePlan {
   readonly transform: boolean;
   /** `ctx.selectedPoints` changed (E6.3): restyle selected / unselected points. */
   readonly selection?: boolean;
+  /**
+   * Streaming (E7.2): the trace only gained points at one end (and maybe lost some at the other)
+   * through `extendTraces` / `prependTraces`, and `ctx.calc` came from the module's
+   * `calcAppend`. `calc` (and so `plot` and `style`) is still set, so a view that ignores this
+   * field redraws everything, as before; a view that knows it can upload only the new points.
+   */
+  readonly append?: TraceAppend;
+}
+
+/**
+ * A streaming change of one trace (E7.2): `count` points were added at one end by
+ * `extendTraces` (`at: 'end'`) or `prependTraces` (`at: 'start'`), and `trimmed` points were
+ * removed from the other end by `maxPoints`. Retained points keep their values; their index moves
+ * by `count` for prepends and by `-trimmed` for extends. Several calls batched into one update
+ * are merged.
+ */
+export interface TraceAppend {
+  readonly at: 'end' | 'start';
+  /** Index of the first added point in the new data: `length - count` (end) or 0 (start). */
+  readonly start: number;
+  /** Points added. */
+  readonly count: number;
+  /** Points removed from the opposite end. */
+  readonly trimmed: number;
+  /** Point counts (`trace._length`) before and after: `length = previous - trimmed + count`. */
+  readonly previous: number;
+  readonly length: number;
+  /** Attribute strings that received points (`'x'`, `'y'`, `'marker.color'`, …). */
+  readonly keys: readonly string[];
 }
 
 /** Everything a trace renderer may use. A fresh context is passed to every call. */
@@ -175,7 +204,7 @@ export interface TraceRenderer<Calc = unknown> {
  * render parts are optional, so a core-only module still validates and defaults.
  *
  * Interaction parts (M1 wave 2): `crossTraceCalc` (stacking/grouping), `hoverPoints`,
- * `selectPoints`, `legendIcon`. Later: `colorbar`.
+ * `selectPoints`, `legendIcon`; M1 wave 3: `colorbar`.
  */
 export interface TraceModule<
   Calc = unknown,
@@ -185,6 +214,33 @@ export interface TraceModule<
   calc?(trace: FullTrace, ctx: CalcContext): Calc;
   /** Autorange contribution, in linear coordinates with px padding. */
   extremes?(calc: Calc, trace: FullTrace, ctx: CalcContext): TraceExtremes;
+  /**
+   * Streaming calc (E7.2): the trace's calc after `extendTraces` / `prependTraces`, from its
+   * previous calc, converting only the added points (the retained points' data is unchanged, see
+   * {@link TraceAppend}). Must equal what `calc` returns for the new data. Return `undefined` to
+   * fall back to `calc` (e.g. attributes whose values depend on every point). The previous calc
+   * must stay readable until `extremesAppend` ran (it reads the removed points).
+   */
+  calcAppend?(
+    previous: Calc,
+    trace: FullTrace,
+    ctx: CalcContext,
+    append: TraceAppend,
+  ): Calc | undefined;
+  /**
+   * Streaming autorange (E7.2): the trace's extremes after `calcAppend`, from its previous
+   * extremes, the added points and the removed ones (in `previousCalc`) — typically merged in
+   * O(added + removed), recomputed only when a removed point was an extreme. Return `undefined`
+   * to fall back to `extremes`.
+   */
+  extremesAppend?(
+    previous: TraceExtremes,
+    calc: Calc,
+    previousCalc: Calc,
+    trace: FullTrace,
+    ctx: CalcContext,
+    append: TraceAppend,
+  ): TraceExtremes | undefined;
   /**
    * Cross-trace calc (bar stacking/grouping, stacked areas): called once per subplot and stack
    * group with every visible trace of the group on it, in trace order, after `calc` and before
@@ -207,6 +263,12 @@ export interface TraceModule<
    * `fullLayout`, e.g. to resolve colors linked to a `coloraxis`.
    */
   legendIcon?(trace: FullTrace, ctx?: LegendIconContext): LegendGlyph;
+  /**
+   * The colorbar this trace wants (E5.3), or `null`. Traces sharing a `coloraxis` return the same
+   * `coloraxis` id; the colorbar component draws one bar per coloraxis (from `layout.coloraxisN`)
+   * and one per trace otherwise (from the trace's own `…colorbar` container).
+   */
+  colorbar?(trace: FullTrace, ctx: LegendIconContext): ColorbarSpec | null;
 }
 
 // ---- Interaction parts of the trace contract (M1 wave 2) --------------------------------------
@@ -292,6 +354,22 @@ export interface LegendIconContext {
   readonly fullLayout: FullLayout;
 }
 
+/** A colorbar request from one trace (E5.3). */
+export interface ColorbarSpec {
+  /** Colorscale stops `[position 0–1, CSS color]`, already reversed if `reversescale`. */
+  readonly colorscale: readonly (readonly [number, string])[];
+  /** Data range the scale spans (after `cauto` / `cmid`). */
+  readonly cmin: number;
+  readonly cmax: number;
+  /** Shared `coloraxis` id (`'coloraxis'`, `'coloraxis2'`, …) when the trace uses one. */
+  readonly coloraxis?: string;
+  /**
+   * The defaulted colorbar attributes (`marker.colorbar` of the trace, or `layout.coloraxisN.colorbar`):
+   * `thickness`, `len`, `x`, `y`, anchors, title, tick attributes, … as declared by the schema.
+   */
+  readonly attributes: Readonly<Record<string, unknown>>;
+}
+
 /** What the legend draws for one trace (E5.2). Colors are CSS color strings. */
 export interface LegendGlyph {
   readonly kind: 'marker' | 'line' | 'lines+markers' | 'bar' | 'fill';
@@ -333,6 +411,8 @@ export interface ComponentLayoutContext {
    * defaults on first draw); the iterative automargin solve (E4.2) refines this.
    */
   readonly axes: ReadonlyMap<string, AxisInfo>;
+  /** The registered module of a trace type (e.g. to ask traces for their colorbars). */
+  traceModule?(type: string): TraceModule | undefined;
 }
 
 /** Context for component drawing: the solved layout and the overlay viewport. */
@@ -369,6 +449,11 @@ export interface ComponentDrawContext {
   readonly chart?: Chart;
   /** The defaulted config (modebar options, `staticPlot`, …). Always set by the runtime. */
   readonly fullConfig?: FullConfig;
+  /**
+   * The registered module for a trace type (M1 wave 3), so components can ask traces for their
+   * `colorbar` / `legendIcon`. Always set by the runtime; optional for hand-built test contexts.
+   */
+  traceModule?(type: string): TraceModule | undefined;
 }
 
 /**

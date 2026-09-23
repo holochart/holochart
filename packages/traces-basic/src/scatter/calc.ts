@@ -38,6 +38,11 @@ export interface ScatterCalc {
   readonly ppad: number | Float64Array | undefined;
   readonly errorX: ErrorBarCalc | undefined;
   readonly errorY: ErrorBarCalc | undefined;
+  /**
+   * Streaming storage (E7.2): the arrays above are views into buffers with room at both ends,
+   * shared with the calc of the next `extendTraces` / `prependTraces`. Absent for a plain calc.
+   */
+  readonly stream?: unknown;
 }
 
 /** Linear coordinates for `letter`, from the data array or from `letter0 + i·dletter`. */
@@ -54,17 +59,43 @@ function coordinates(
     return toFloat64Array(data);
   }
   const out = new Float64Array(length);
-  const start = trace[`${letter}0`];
+  writeCoordinates(trace, letter, scale, out, 0, length);
+  return out;
+}
+
+/**
+ * Linear coordinates of points `[start, end)` into `out[0 … end − start)`: the streaming calc's
+ * (E7.2) counterpart of {@link coordinates}, with the same arithmetic. Two-level (multicategory)
+ * data is not supported here.
+ */
+export function writeCoordinates(
+  trace: FullTrace,
+  letter: 'x' | 'y',
+  scale: Scale | undefined,
+  out: Float64Array,
+  start: number,
+  end: number,
+): void {
+  const values = trace[letter];
+  if (isArrayLike(values)) {
+    const v = values as ArrayLike<unknown>;
+    const part = ArrayBuffer.isView(v)
+      ? (v as unknown as Float64Array).subarray(start, end)
+      : Array.prototype.slice.call(v, start, end);
+    if (scale) scale.d2lArray(part, out);
+    else out.set(toFloat64Array(part));
+    return;
+  }
+  const s = trace[`${letter}0`];
   const step = Number(trace[`d${letter}`] ?? 1);
   // Log axes step in data space (x0 + i·dx, then log10); every other type is linear in l already.
   if (scale?.type === 'log') {
-    const d0 = Number(start);
-    for (let i = 0; i < length; i++) out[i] = scale.d2l(d0 + i * step);
-    return out;
+    const d0 = Number(s);
+    for (let i = start; i < end; i++) out[i - start] = scale.d2l(d0 + i * step);
+    return;
   }
-  const l0 = scale ? scale.d2l(start) : Number(start);
-  for (let i = 0; i < length; i++) out[i] = l0 + i * step;
-  return out;
+  const l0 = scale ? scale.d2l(s) : Number(s);
+  for (let i = start; i < end; i++) out[i - start] = l0 + i * step;
 }
 
 /** Plotly's `alignPeriod` for `xperiod` / `yperiod` on date and linear axes. */
@@ -107,18 +138,32 @@ export function markerDiameters(trace: FullTrace, length: number): number | Floa
   if (!hasMarkers(trace['mode'])) return 0;
   const marker = (trace['marker'] ?? {}) as FullMarker;
   if (!isArrayLike(marker.size)) return Math.max(0, num(marker.size, 6));
+  const out = new Float32Array(length);
+  writeMarkerDiameters(trace, out, 0, length);
+  return out;
+}
+
+/**
+ * Per-point diameters of points `[start, end)` into `out[0 … end − start)` (`marker.size` must be
+ * an array). Shared by the full and the streaming calc (E7.2), so both give identical values.
+ */
+export function writeMarkerDiameters(
+  trace: FullTrace,
+  out: Float32Array,
+  start: number,
+  end: number,
+): void {
+  const marker = (trace['marker'] ?? {}) as FullMarker;
   const sizes = marker.size as ArrayLike<unknown>;
   const sizeref = num(marker.sizeref, 1) || 1;
   const sizemin = num(marker.sizemin, 0);
   const area = marker.sizemode === 'area';
-  const out = new Float32Array(length);
-  for (let i = 0; i < length; i++) {
+  for (let i = start; i < end; i++) {
     const v = i < sizes.length ? sizes[i] : undefined;
     const base =
       typeof v === 'number' ? (area ? Math.sqrt(v / 2 / sizeref) : v / 2 / sizeref) : NaN;
-    out[i] = base > 0 ? 2 * Math.max(base, sizemin) : 0;
+    out[i - start] = base > 0 ? 2 * Math.max(base, sizemin) : 0;
   }
-  return out;
 }
 
 /**
@@ -129,19 +174,33 @@ export function markerDiameters(trace: FullTrace, length: number): number | Floa
 export function markerPadding(trace: FullTrace, length: number): number | Float64Array | undefined {
   if (!hasMarkers(trace['mode'])) return undefined;
   const marker = (trace['marker'] ?? {}) as FullMarker;
-  const sizeref = 1.6 * (num(marker.sizeref, 1) || 1);
-  const trans =
-    marker.sizemode === 'area'
-      ? (v: number): number => Math.max(Math.sqrt((v || 0) / sizeref), 3)
-      : (v: number): number => Math.max((v || 0) / sizeref, 3);
-  if (!isArrayLike(marker.size)) return trans(num(marker.size, 6));
-  const sizes = marker.size as ArrayLike<unknown>;
+  if (!isArrayLike(marker.size)) return paddingOf(marker)(num(marker.size, 6));
   const out = new Float64Array(length);
-  for (let i = 0; i < length; i++) {
-    const v = i < sizes.length ? sizes[i] : undefined;
-    out[i] = trans(typeof v === 'number' && Number.isFinite(v) ? v : 0);
-  }
+  writeMarkerPadding(trace, out, 0, length);
   return out;
+}
+
+function paddingOf(marker: FullMarker): (v: number) => number {
+  const sizeref = 1.6 * (num(marker.sizeref, 1) || 1);
+  return marker.sizemode === 'area'
+    ? (v) => Math.max(Math.sqrt((v || 0) / sizeref), 3)
+    : (v) => Math.max((v || 0) / sizeref, 3);
+}
+
+/** Per-point paddings of points `[start, end)` into `out[0 … end − start)` (array `marker.size`). */
+export function writeMarkerPadding(
+  trace: FullTrace,
+  out: Float64Array,
+  start: number,
+  end: number,
+): void {
+  const marker = (trace['marker'] ?? {}) as FullMarker;
+  const trans = paddingOf(marker);
+  const sizes = marker.size as ArrayLike<unknown>;
+  for (let i = start; i < end; i++) {
+    const v = i < sizes.length ? sizes[i] : undefined;
+    out[i - start] = trans(typeof v === 'number' && Number.isFinite(v) ? v : 0);
+  }
 }
 
 /** Scatter calc: linearize coordinates on the trace's axes, resolve marker sizes and error bars. */
@@ -164,7 +223,7 @@ export function calcScatter(trace: FullTrace, ctx: CalcContext): ScatterCalc {
  * `findExtremes` on values that are already linear: a linear stand-in for the axis scale that
  * keeps its direction (reversed axes swap `ppadplus`/`ppadminus`).
  */
-function linearExtremes(
+export function linearExtremes(
   axis: AxisInfo,
   values: ArrayLike<number>,
   opts: FindExtremesOptions,
@@ -195,6 +254,26 @@ export function scatterExtremes(
   trace: FullTrace,
   ctx: CalcContext,
 ): TraceExtremes {
+  const opts = linearExtremeOptions(calc, trace);
+  const out: { x?: AxisExtremes; y?: AxisExtremes } = {};
+  if (ctx.xaxis) {
+    out.x = withErrorBars(linearExtremes(ctx.xaxis, calc.x, opts.x), ctx.xaxis, calc.errorX);
+  }
+  if (ctx.yaxis) {
+    out.y = withErrorBars(linearExtremes(ctx.yaxis, calc.y, opts.y), ctx.yaxis, calc.errorY);
+  }
+  return out;
+}
+
+/**
+ * The `findExtremes` options of each axis (shared with the streaming autorange, E7.2): marker
+ * padding plus the 5% extra padding, except a tight x axis for traces with neither markers nor
+ * text (nor y error bars).
+ */
+export function linearExtremeOptions(
+  calc: ScatterCalc,
+  trace: FullTrace,
+): { x: FindExtremesOptions; y: FindExtremesOptions } {
   const ppad = calc.ppad;
   const xOpts: FindExtremesOptions = { padded: true, ...(ppad !== undefined ? { ppad } : {}) };
   const yOpts: FindExtremesOptions = { ...xOpts };
@@ -203,14 +282,7 @@ export function scatterExtremes(
     xOpts.padded = false;
     xOpts.ppad = 0;
   }
-  const out: { x?: AxisExtremes; y?: AxisExtremes } = {};
-  if (ctx.xaxis) {
-    out.x = withErrorBars(linearExtremes(ctx.xaxis, calc.x, xOpts), ctx.xaxis, calc.errorX);
-  }
-  if (ctx.yaxis) {
-    out.y = withErrorBars(linearExtremes(ctx.yaxis, calc.y, yOpts), ctx.yaxis, calc.errorY);
-  }
-  return out;
+  return { x: xOpts, y: yOpts };
 }
 
 export { isBubble };

@@ -160,6 +160,30 @@ export type { DataArrayKind, ToFloat32Options, ToNumericOptions } from './data/a
 export { isColumnRef, resolveDataRefs } from './data/datasets.ts';
 export type { ResolvedTrace } from './data/datasets.ts';
 
+// JSON serialization (E18.3)
+export { decodeFigure, encodeFigure } from './serialize/serialize.ts';
+export type {
+  EncodedFigure,
+  EncodeFigureOptions,
+  JSONValue,
+  SerializeWarning,
+  SerializeWarningCode,
+} from './serialize/serialize.ts';
+export {
+  decodeTypedArray,
+  dtypeOf,
+  encodeTypedArray,
+  encodeTypedMatrix,
+  isTypedArraySpec,
+} from './serialize/typed-array.ts';
+export type {
+  DecodedArray,
+  Dtype,
+  EncodedTypedArray,
+  TypedArrayConstructor,
+  TypedArraySpec,
+} from './serialize/typed-array.ts';
+
 // Utilities
 export { deepMerge, isPlainObject, stripInternal } from './util/objects.ts';
 

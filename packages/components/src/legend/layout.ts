@@ -15,6 +15,7 @@ import {
   type MeasureLine,
   type TextBox,
 } from '../shared/text.ts';
+import { anchorFraction, anchoredMarginPush, type AnchoredBox } from '../shared/placement.ts';
 import type { FullLegend } from './schema.ts';
 
 /** Padding inside the legend box and between glyph and text, px (Plotly `itemGap`). */
@@ -258,15 +259,6 @@ export function layoutLegend(
   return { width, height, items, title };
 }
 
-/** Fraction of the box on the far side of the anchor point, per anchor. */
-function anchorFraction(anchor: string): number {
-  return anchor === 'right' || anchor === 'bottom'
-    ? 1
-    : anchor === 'center' || anchor === 'middle'
-      ? 0.5
-      : 0;
-}
-
 /** Resolve `auto` anchors (Plotly: by thirds of the reference). */
 export function legendAnchors(legend: FullLegend): { x: string; y: string } {
   const x =
@@ -319,27 +311,20 @@ export function legendMarginPush(
   margin: { l: number; r: number; t: number; b: number },
   box: { width: number; height: number },
 ): MarginPush | undefined {
-  if (box.width <= 0 || box.height <= 0) return undefined;
   const a = legendAnchors(legend);
-  const push: { l?: number; r?: number; t?: number; b?: number } = {};
-  if (legend.xref === 'paper') {
-    const fx = anchorFraction(a.x);
-    const x = legend.x;
-    const right = x > 0 ? ((x - 1) * (size.width - margin.l) + (1 - fx) * box.width) / x : Infinity;
-    if (right > 0 && Number.isFinite(right)) push.r = Math.ceil(right);
-    const left = x < 1 ? (fx * box.width - x * (size.width - margin.r)) / (1 - x) : Infinity;
-    if (left > 0 && Number.isFinite(left)) push.l = Math.ceil(left);
-  }
-  if (legend.yref === 'paper') {
-    const fy = anchorFraction(a.y);
-    const y = legend.y;
-    const bottom =
-      y < 1 ? ((1 - fy) * box.height - y * (size.height - margin.t)) / (1 - y) : Infinity;
-    if (bottom > 0 && Number.isFinite(bottom)) push.b = Math.ceil(bottom);
-    const top = y > 0 ? (fy * box.height - (1 - y) * (size.height - margin.b)) / y : Infinity;
-    if (top > 0 && Number.isFinite(top)) push.t = Math.ceil(top);
-  }
-  return Object.keys(push).length > 0 ? push : undefined;
+  return anchoredMarginPush(
+    {
+      x: legend.x,
+      y: legend.y,
+      xref: legend.xref,
+      yref: legend.yref,
+      xanchor: a.x as AnchoredBox['xanchor'],
+      yanchor: a.y as AnchoredBox['yanchor'],
+    },
+    size,
+    margin,
+    box,
+  );
 }
 
 /** Whether the legend is drawn at all. */

@@ -21,6 +21,16 @@
  * dash coordinate by `storedLength / currentLength`: the phase stays continuous at every vertex
  * and only dash *lengths* drift briefly, then snap back exactly. Solid lines skip all of this.
  * In 3D the phase uses projected screen lengths too, so dashes stay px-sized at any depth.
+ *
+ * ## Streaming (E7.2) and memory (E16.9)
+ *
+ * Buffers are sized from an exact vertex count. {@link LinePrimitive.splice} takes new input
+ * together with the range of it that is unchanged from the previous input (a rolling window, an
+ * append): only the vertices around the unchanged range are rebuilt and uploaded, and the live
+ * range slides inside the buffers (the instanced attributes are re-bound at the new offset)
+ * instead of moving data. When the buffers run out of room at the end the edit grows toward, the
+ * stream is rebuilt once with slack, so a steady stream re-uploads everything only every few
+ * hundred frames.
  */
 import {
   BufferGeometry,
@@ -57,14 +67,21 @@ import {
 import {
   buildLineLayout,
   computeDashDistances,
+  countLineStream,
   createThrottle,
   fillLineColors,
   fillLineWidths,
+  lineCursor,
+  LineStep,
   PIXEL_SCREEN_MATRIX,
+  writeLinePoint,
+  writeLineSentinel,
   type LineGeometryInput,
   type LineLayout,
+  type LineStreamArrays,
   type ThrottleClock,
 } from './line-buffers.ts';
+import type { NumericArray } from './common.ts';
 import {
   dashDependsOnViewport,
   dashPeriod,
@@ -126,8 +143,28 @@ const DEFAULTS: Omit<LineData, 'x' | 'y'> = {
 
 const GEOMETRY_KEYS = ['x', 'y', 'z', 'starts', 'connectGaps'] as const;
 
+/**
+ * Which part of new input equals the previous input (see {@link LinePrimitive.splice}): input
+ * vertices `[at, at + (to - from))` of the new `x`/`y` are vertices `[from, to)` of the previous.
+ */
+export interface LineRetain {
+  readonly from: number;
+  readonly to: number;
+  readonly at: number;
+}
+
+/**
+ * Source serial base of streaming rebuilds: far from 0 so prepends (which number new vertices
+ * below the retained ones) never reach the sentinel value -1.
+ */
+const STREAM_BASE = 1 << 30;
+/** Retained inputs examined for the head junction before giving up (duplicates, gaps). */
+const JUNCTION_LIMIT = 64;
+
 interface StreamBuffers {
   capacity: number;
+  /** Head offset the geometry's attributes are bound at. */
+  boundHead: number;
   release(): void;
   geometry: InstancedBufferGeometry;
   source: Int32Array;
@@ -158,6 +195,8 @@ export class LinePrimitive implements Primitive<LineData> {
   private transform: DataTransform = IDENTITY_TRANSFORM;
   private viewport: ViewportSize = { width: 1, height: 1, pixelRatio: 1 };
   private dashPattern: number[] = [];
+  /** Scratch for the head of a splice (built front to back, then placed before the retained part). */
+  private scratch: LineStreamArrays = { source: new Int32Array(16), points: new Float32Array(64) };
   private readonly screenMatrix = Float64Array.from(PIXEL_SCREEN_MATRIX);
   private readonly throttle: ReturnType<typeof createThrottle>;
   private readonly tmpMatrix = new Matrix4();
@@ -203,6 +242,27 @@ export class LinePrimitive implements Primitive<LineData> {
     return this.layout?.instanceCount ?? 0;
   }
 
+  /**
+   * The live vertex stream (debugging, tests): first vertex, vertex count, source serial base (see
+   * `LineLayout`), the RTC origin and the allocated capacity.
+   */
+  get stream(): Readonly<{
+    head: number;
+    vertexCount: number;
+    sourceBase: number;
+    origin: Readonly<Vec3>;
+    capacity: number;
+  }> {
+    const l = this.layout;
+    return {
+      head: l?.head ?? 0,
+      vertexCount: l?.vertexCount ?? 0,
+      sourceBase: l?.sourceBase ?? 0,
+      origin: l?.origin ?? [0, 0, 0],
+      capacity: this.buffers?.capacity ?? 0,
+    };
+  }
+
   update(patch: Partial<LineData>): void {
     const data = this.data as unknown as Record<string, unknown>;
     for (const [key, value] of Object.entries(patch)) {
@@ -210,26 +270,19 @@ export class LinePrimitive implements Primitive<LineData> {
     }
     const geometryChanged =
       this.layout === undefined || GEOMETRY_KEYS.some((k) => patch[k] !== undefined);
-    const b = this.buffers!;
 
-    if (geometryChanged) {
-      const layout = buildLineLayout(this.data, { source: b.source, points: b.points });
-      const buffers = layout.points === b.points ? b : this.reallocate(layout);
-      this.layout = layout;
-      buffers.geometry.instanceCount = layout.instanceCount;
-      markRange(buffers.pointsBuffer, layout.vertexCount);
-      applyTransformUniforms(this.transformUniforms, this.transform, layout.origin);
-    }
+    if (geometryChanged) this.rebuild(0, 0, 0);
     const buffers = this.buffers!;
     const layout = this.layout!;
+    const view = streamView(layout);
 
-    if (geometryChanged || patch.color !== undefined) {
-      fillLineColors(layout, this.data.color, buffers.colors);
-      markRange(buffers.colorBuffer, layout.vertexCount);
+    if (!geometryChanged && patch.color !== undefined) {
+      fillLineColors(view, this.data.color, buffers.colors.subarray(layout.head * 4));
+      markRange(buffers.colorBuffer, layout.head, layout.vertexCount);
     }
-    if (geometryChanged || patch.width !== undefined) {
-      fillLineWidths(layout, this.data.width, buffers.widths);
-      markRange(buffers.widthBuffer, layout.vertexCount);
+    if (!geometryChanged && patch.width !== undefined) {
+      fillLineWidths(view, this.data.width, buffers.widths.subarray(layout.head));
+      markRange(buffers.widthBuffer, layout.head, layout.vertexCount);
     }
     if (geometryChanged || patch.dash !== undefined || patch.width !== undefined) {
       this.updateDash();
@@ -241,6 +294,185 @@ export class LinePrimitive implements Primitive<LineData> {
     u.uMiterLimit!.value = Math.max(1, this.data.miterLimit);
     u.uOpacity!.value = this.data.opacity;
     this.ctx.invalidate();
+  }
+
+  /**
+   * Streaming geometry update (E7.2): equivalent to `update({ x, y })`, given that input vertices
+   * `[retain.at, retain.at + retain.to - retain.from)` of `x`/`y` equal vertices
+   * `[retain.from, retain.to)` of the previous input (the caller guarantees it). Only the vertex
+   * stream before and after that range is rebuilt and uploaded; the retained vertices stay where
+   * they are in the buffers and the live range slides.
+   *
+   * Falls back to a full update for 3D (`z`), multiple polylines (`starts`), per-point colors or
+   * widths, or when the buffers have no room at the growing end (then the stream is rebuilt with
+   * slack for the next edits). Dashed lines recompute their phase (O(n) CPU, one small upload).
+   */
+  splice(x: NumericArray, y: NumericArray, retain: LineRetain): void {
+    if (!this.trySplice(x, y, retain)) {
+      this.data.x = x;
+      this.data.y = y;
+      // Room for the next edits at the end the stream grows toward.
+      this.rebuild(retain.at > retain.from ? -1 : 1, STREAM_BASE, 1);
+      this.updateDash();
+    }
+    this.ctx.invalidate();
+  }
+
+  private trySplice(x: NumericArray, y: NumericArray, retain: LineRetain): boolean {
+    const layout = this.layout;
+    const b = this.buffers;
+    const data = this.data;
+    if (!layout || !b || data.z || data.starts) return false;
+    if (typeof data.width !== 'number' || data.color instanceof Float32Array) return false;
+    const oldN = Math.min(data.x.length, data.y.length);
+    const newN = Math.min(x.length, y.length);
+    const { from, to, at } = retain;
+    if (!(from >= 0 && to > from && to <= oldN && at >= 0 && at + (to - from) <= newN)) {
+      return false;
+    }
+    const base = layout.sourceBase;
+    const newBase = base + from - at;
+    if (newBase < 0) return false;
+    const source = b.source;
+    const end0 = layout.head + layout.vertexCount;
+    const connect = data.connectGaps === true;
+    const origin = layout.origin;
+
+    // Head: rebuild [sentinel, new vertices before the retained range, …] until the builder
+    // emits a retained vertex that the old stream also has — from there on both builders are in
+    // the same state, so the old stream stays valid.
+    let v = layout.head;
+    const cursor = lineCursor();
+    // Each input writes at most one vertex.
+    const scratch = this.ensureScratch(at + JUNCTION_LIMIT + 4);
+    writeLineSentinel(cursor, scratch);
+    for (let j = 0; j < at; j++) {
+      writeLinePoint(cursor, scratch, j + newBase, x[j]!, y[j]!, 0, connect, origin);
+    }
+    let converged = -1;
+    for (let i = from; i < to && i < from + JUNCTION_LIMIT; i++) {
+      const serial = i + base;
+      while (v < end0 && source[v]! < serial) v++;
+      const j = at + i - from;
+      const step = writeLinePoint(cursor, scratch, j + newBase, x[j]!, y[j]!, 0, connect, origin);
+      if (step === LineStep.Vertex && v < end0 && source[v] === serial) {
+        cursor.at--; // the old stream already holds this vertex at `v`
+        converged = i;
+        break;
+      }
+    }
+    if (converged < 0) return false;
+    const headCount = cursor.at;
+    const head = v - headCount;
+    if (head < 0) return false;
+
+    // Tail: resume after the last retained vertex the old stream drew.
+    let u = end0 - 1;
+    while (u > v && !(source[u]! >= 0 && source[u]! < to + base)) u--;
+    const rOld = source[u]! - base;
+    const rNew = at + rOld - from;
+    const tail = lineCursor(u + 1);
+    tail.started = true;
+    tail.lastValid = true;
+    tail.lx = x[rNew]!;
+    tail.ly = y[rNew]!;
+    // Count first: the tail must fit before the end of the buffers.
+    const probe = { ...tail };
+    for (let j = rNew + 1; j < newN; j++) {
+      writeLinePoint(probe, undefined, 0, x[j]!, y[j]!, 0, connect, origin);
+    }
+    writeLineSentinel(probe, undefined);
+    if (probe.at > b.capacity) return false;
+
+    const out = { source: b.source, points: b.points };
+    for (let j = rNew + 1; j < newN; j++) {
+      writeLinePoint(tail, out, j + newBase, x[j]!, y[j]!, 0, connect, origin);
+    }
+    writeLineSentinel(tail, out);
+    const end = tail.at;
+    b.source.set(scratch.source.subarray(0, headCount), head);
+    b.points.set(scratch.points.subarray(0, headCount * 4), head * 4);
+
+    data.x = x;
+    data.y = y;
+    layout.head = head;
+    layout.vertexCount = end - head;
+    layout.instanceCount = Math.max(0, layout.vertexCount - 3);
+    layout.sourceBase = newBase;
+
+    // Uniform color and width: fill only the rewritten vertices.
+    const headView = { vertexCount: headCount, source: source.subarray(head), sourceBase: newBase };
+    const tailView = {
+      vertexCount: end - u - 1,
+      source: source.subarray(u + 1),
+      sourceBase: newBase,
+    };
+    fillLineColors(headView, data.color, b.colors.subarray(head * 4));
+    fillLineColors(tailView, data.color, b.colors.subarray((u + 1) * 4));
+    fillLineWidths(headView, data.width, b.widths.subarray(head));
+    fillLineWidths(tailView, data.width, b.widths.subarray(u + 1));
+    for (const buffer of [b.pointsBuffer, b.colorBuffer, b.widthBuffer]) {
+      buffer.clearUpdateRanges();
+      addRange(buffer, head, headCount);
+      addRange(buffer, u + 1, end - u - 1);
+      buffer.needsUpdate = true;
+    }
+    this.bind(b, head);
+    b.geometry.instanceCount = layout.instanceCount;
+    if (this.dashPattern.length > 0) {
+      this.throttle.cancel();
+      this.recomputeDashDistances();
+    }
+    return true;
+  }
+
+  /**
+   * Rebuild the whole stream from `this.data`. `slack` 0 sizes buffers exactly (E16.9), reusing
+   * them when they are no more than twice the need; otherwise room for about as many vertices
+   * again is left at the end (`bias` 1, appends) or the start (`bias` -1, prepends).
+   */
+  private rebuild(bias: -1 | 0 | 1, sourceBase: number, slack: 0 | 1): void {
+    const count = countLineStream(this.data);
+    const b = this.buffers!;
+    const room = slack ? count + 64 : 0;
+    const capacity = count + room;
+    const reuse = b.capacity >= capacity && b.capacity <= 2 * capacity + 64;
+    const offset = bias < 0 ? (reuse ? b.capacity : capacity) - count : 0;
+    const layout = buildLineLayout(
+      this.data,
+      reuse ? { source: b.source, points: b.points } : undefined,
+      { count, offset, sourceBase, capacity },
+    );
+    const buffers = reuse ? b : this.reallocate(layout);
+    this.layout = layout;
+    const view = streamView(layout);
+    fillLineColors(view, this.data.color, buffers.colors.subarray(layout.head * 4));
+    fillLineWidths(view, this.data.width, buffers.widths.subarray(layout.head));
+    for (const buffer of [buffers.pointsBuffer, buffers.colorBuffer, buffers.widthBuffer]) {
+      markRange(buffer, layout.head, layout.vertexCount);
+    }
+    this.bind(buffers, layout.head);
+    buffers.geometry.instanceCount = layout.instanceCount;
+    applyTransformUniforms(this.transformUniforms, this.transform, layout.origin);
+  }
+
+  private ensureScratch(vertices: number): LineStreamArrays {
+    if (this.scratch.source.length < vertices) {
+      const n = Math.max(vertices, 2 * this.scratch.source.length);
+      this.scratch = { source: new Int32Array(n), points: new Float32Array(4 * n) };
+    }
+    return this.scratch;
+  }
+
+  /**
+   * Point the instanced attributes at stream vertex `head`. three.js caches vertex-array state
+   * per attribute object, so a new offset needs new attribute objects (the buffers are shared:
+   * nothing is re-uploaded).
+   */
+  private bind(b: StreamBuffers, head: number): void {
+    if (b.boundHead === head) return;
+    b.boundHead = head;
+    setStreamAttributes(b, head);
   }
 
   setTransform(transform: DataTransform): void {
@@ -291,14 +523,14 @@ export class LinePrimitive implements Primitive<LineData> {
     const scale: Vec3 = [t.scaleX, t.scaleY, t.scaleZ ?? 1];
     const offset: Vec3 = [t.offsetX, t.offsetY, t.offsetZ ?? 0];
     computeDashDistances(
-      layout,
+      streamView(layout),
       this.data,
       { scale, offset },
       this.screenMatrix,
       dashPeriod(this.dashPattern),
-      buffers.dist,
+      buffers.dist.subarray(layout.head * 2),
     );
-    markRange(buffers.distBuffer, layout.vertexCount);
+    markRange(buffers.distBuffer, layout.head, layout.vertexCount);
   }
 
   /**
@@ -370,18 +602,10 @@ export class LinePrimitive implements Primitive<LineData> {
     const colorBuffer = new InstancedInterleavedBuffer(colors, 4, 1);
     const widthBuffer = new InstancedInterleavedBuffer(widths, 1, 1);
     const distBuffer = new InstancedInterleavedBuffer(dist, 2, 1).setUsage(DynamicDrawUsage);
-    // Offsets past the stride make instance k read stream vertex k + offset / stride.
-    geometry.setAttribute('aPrev', new InterleavedBufferAttribute(pointsBuffer, 4, 0));
-    geometry.setAttribute('aA', new InterleavedBufferAttribute(pointsBuffer, 4, 4));
-    geometry.setAttribute('aB', new InterleavedBufferAttribute(pointsBuffer, 4, 8));
-    geometry.setAttribute('aNext', new InterleavedBufferAttribute(pointsBuffer, 4, 12));
-    geometry.setAttribute('aColorA', new InterleavedBufferAttribute(colorBuffer, 4, 4));
-    geometry.setAttribute('aColorB', new InterleavedBufferAttribute(colorBuffer, 4, 8));
-    geometry.setAttribute('aWidth', new InterleavedBufferAttribute(widthBuffer, 1, 1));
-    geometry.setAttribute('aDist', new InterleavedBufferAttribute(distBuffer, 2, 2));
     geometry.instanceCount = 0;
-    return {
+    const buffers: StreamBuffers = {
       capacity,
+      boundHead: 0,
       release: handle.release,
       geometry,
       source,
@@ -394,12 +618,46 @@ export class LinePrimitive implements Primitive<LineData> {
       widthBuffer,
       distBuffer,
     };
+    setStreamAttributes(buffers, 0);
+    return buffers;
   }
 }
 
-/** Upload only the used prefix of a stream buffer. */
-function markRange(buffer: InstancedInterleavedBuffer, vertexCount: number): void {
+/** The live part of a layout, for the fill functions (which index from 0). */
+function streamView(layout: LineLayout) {
+  return {
+    vertexCount: layout.vertexCount,
+    source: layout.source.subarray(layout.head),
+    sourceBase: layout.sourceBase,
+  };
+}
+
+/** Upload only `[start, start + count)` (stream vertices) of a stream buffer. */
+function markRange(buffer: InstancedInterleavedBuffer, start: number, count: number): void {
   buffer.clearUpdateRanges();
-  buffer.addUpdateRange(0, Math.min(buffer.array.length, vertexCount * buffer.stride));
+  addRange(buffer, start, count);
   buffer.needsUpdate = true;
+}
+
+function addRange(buffer: InstancedInterleavedBuffer, start: number, count: number): void {
+  const s = start * buffer.stride;
+  const n = Math.min(buffer.array.length - s, count * buffer.stride);
+  if (n > 0) buffer.addUpdateRange(s, n);
+}
+
+/**
+ * (Re)create the instanced attributes reading the stream from vertex `head`: instance `k` reads
+ * `(prev, A, B, next)` = stream vertices `head + k … head + k + 3` (offsets past the stride).
+ */
+function setStreamAttributes(b: StreamBuffers, head: number): void {
+  const g = b.geometry;
+  const p = head * 4;
+  g.setAttribute('aPrev', new InterleavedBufferAttribute(b.pointsBuffer, 4, p));
+  g.setAttribute('aA', new InterleavedBufferAttribute(b.pointsBuffer, 4, p + 4));
+  g.setAttribute('aB', new InterleavedBufferAttribute(b.pointsBuffer, 4, p + 8));
+  g.setAttribute('aNext', new InterleavedBufferAttribute(b.pointsBuffer, 4, p + 12));
+  g.setAttribute('aColorA', new InterleavedBufferAttribute(b.colorBuffer, 4, p + 4));
+  g.setAttribute('aColorB', new InterleavedBufferAttribute(b.colorBuffer, 4, p + 8));
+  g.setAttribute('aWidth', new InterleavedBufferAttribute(b.widthBuffer, 1, head + 1));
+  g.setAttribute('aDist', new InterleavedBufferAttribute(b.distBuffer, 2, 2 * head + 2));
 }

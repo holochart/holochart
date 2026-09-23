@@ -54,8 +54,9 @@ state, so the same figure can be shown with different config in different places
 
 ### Frames
 
-`frames` is a list of named figure snapshots for animation. `chart.animate('frame-2')`
-transitions the chart to a frame. See [Transitions & animation](/fundamentals/transitions-animation).
+`frames` is a list of named figure snapshots for animation. `chart.animate('frame-2')` will
+transition the chart to a frame; frame animation is planned for M3, so `frames` is not used yet.
+See [Transitions & animation](/fundamentals/transitions-animation).
 
 ## The schema is the source of truth
 
@@ -104,7 +105,9 @@ const branded = {
 };
 ```
 
-Named templates can be combined, as in `'dark+presentation'`. Values you set on a trace or in
+Named templates can be combined, as in `'dark+presentation'`. The built-in named templates
+(`'dark'`, `'presentation'`, and others) arrive with the themes in M2; object templates work today.
+Values you set on a trace or in
 layout always win over the template. Templates are the first layer of the
 [customization cascade](/customization/).
 
@@ -164,8 +167,8 @@ chart.three.scene; // the THREE.Scene
 chart.three.renderer; // the WebGLRenderer
 chart.getTraceObjects(0); // the objects trace 0 created
 
-chart.on('beforerender', ({ scene, camera }) => {
-  // adjust the scene before each frame
+chart.on('beforerender', ({ frame, delta }) => {
+  // runs before each rendered frame; change chart.three.scene here
 });
 ```
 
