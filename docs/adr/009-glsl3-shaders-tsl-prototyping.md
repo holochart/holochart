@@ -1,8 +1,16 @@
 # ADR-009: GLSL3 shaders for v1, TSL for prototyping
 
-- **Status:** Proposed. Revisit when TSL + WebGL2 fallback reaches maturity.
+- **Status:** Accepted (2026-09-23).
 - **Date:** 2026-09-23
 - **Related stories:** E0.7 (spikes A, B), E2.4–E2.11, E8.8, E16.8; plan §5, §16 Q5, risk R8
+
+## Evidence
+
+- Every M0 primitive (markers, lines, fills, rects, arcs, picking) is GLSL3 on `ShaderMaterial`
+  and runs on WebGL2 under both ANGLE/Metal and SwiftShader
+  ([spike A](../spikes/a-markers.md), [spike E](../spikes/e-determinism.md)).
+- GLSL3 gave the features we rely on (`gl_InstanceID`, `gl_VertexID`, `fwidth`, integer ids for
+  picking). TSL remains the path for a later WebGPU renderer (E16.8).
 
 ## Context
 

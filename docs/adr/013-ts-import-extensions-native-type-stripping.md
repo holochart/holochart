@@ -34,7 +34,7 @@ extensions in relative imports and rejects syntax that needs code generation.
 
 ### Positive
 
-- No runtime loader dependency; one TS dialect works in Node, tsc, tsup, Vite, and Vitest.
+- No runtime loader dependency; one TS dialect works in Node, tsc, tsdown, Vite, and Vitest.
 - Dev, tests, and typecheck see live sources across packages without prebuilding.
 - Emitted JS has correct `.js` specifiers without a post-processing step.
 

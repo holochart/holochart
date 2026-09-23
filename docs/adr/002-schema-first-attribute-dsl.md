@@ -1,8 +1,13 @@
 # ADR-002: Schema-first attribute DSL
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-09-23).
 - **Date:** 2026-09-23
 - **Related stories:** E1.1, E1.2, E1.3, E1.7, E1.9, E19.3, E20.2, E22.1; plan §3 principles 1 and 4
+
+## Evidence
+
+- The `attr.*` DSL drives inferred TS types, validation, defaults, edit-type planning, generated
+  layout/config types, `plot-schema.json`, and schema-derived property tests (E1.1–E1.9, E20.2).
 
 ## Context
 

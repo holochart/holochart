@@ -192,7 +192,9 @@ export function supplyDefaults(
     typeCounts.set(type, n + 1);
     return n;
   };
-  const fullData = dataIn.map((raw, i) =>
+  // `Array.from` visits holes of a sparse `data` array (as `undefined` → a default trace);
+  // `map` would keep them as holes, which later stages cannot read.
+  const fullData = Array.from(dataIn, (raw: unknown, i) =>
     supplyTrace(
       isPlainObject(raw) ? raw : {},
       i,

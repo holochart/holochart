@@ -18,7 +18,8 @@
     "format:check": "prettier --check .",
     "typecheck:tooling": "tsc -p tsconfig.json && tsc -p tests/tsconfig.json",
     "test:visual": "playwright test",
-    "test:visual:update": "UPDATE_BASELINES=1 playwright test"
+    "test:visual:update": "UPDATE_BASELINES=1 playwright test",
+    "test:bundle": "turbo run build --filter=@mk7s/holochart && playwright test -c tests/bundle/playwright.config.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -1,8 +1,13 @@
 # ADR-001: Figure spec follows Plotly semantics
 
-- **Status:** Proposed. Plotly familiarity and importer feasibility decide it. A grammar-style API is provided on top via E23.
+- **Status:** Accepted (2026-09-23).
 - **Date:** 2026-09-23
 - **Related stories:** E1.1, E1.4, E1.5, E18.3, E18.4, E20.7, E23.\*; plan §2, §7, §16 Q2
+
+## Evidence
+
+- M0 core implements the `{ data, layout, config, frames }` model with Plotly attribute names,
+  per-type template cycling, and `uirevision`/`datarevision` semantics (E1.1–E1.8).
 
 ## Context
 

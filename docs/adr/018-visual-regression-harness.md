@@ -1,8 +1,14 @@
 # ADR-018: Visual regression harness
 
-- **Status:** Accepted
+- **Status:** Accepted (2026-09-23; confirmed by spike E).
 - **Date:** 2026-09-23
 - **Related stories:** E20.3, E0.3, E19.2, E0.7 (spike E), E19.5; plan §3 principle 8, risk R4
+
+## Evidence
+
+- [Spike E](../spikes/e-determinism.md): SwiftShader renders are bit-identical run to run and
+  match the macOS-generated baselines in CI's Linux container. Hardware Metal renders pass the
+  current tolerances but differ at edges, so they must not be a blocking gate.
 
 ## Context
 

@@ -1,8 +1,17 @@
 # ADR-010: CPU spatial indexes for 2D hover, GPU ID picking for 3D
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-09-23).
 - **Date:** 2026-09-23
 - **Related stories:** E0.7 (spike A), E2.13, E6.1, E6.\* (selection), E14.\* (3D charts)
+
+## Evidence
+
+- CPU hover on 1M points ([spike A](../spikes/a-markers.md)): flatbush build 148 ms,
+  nearest-point queries 2–3 µs, radius / x-band queries (~2,000 hits) about 0.35 ms. Fast enough
+  that 2D hover never needs the GPU. Build lazily or in a worker for very large traces (E16.5).
+- GPU ID picking for 3D (E2.13) is implemented: a small render target around the cursor, async
+  readback, per-instance marker ids, depth-correct occlusion. Verified in headless Chromium with
+  SwiftShader at DPR 1, 1.5 and 2. Real-GPU pick latency is part of the M7 benchmarking pass.
 
 ## Context
 

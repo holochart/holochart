@@ -25,15 +25,20 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['packages/*/src/**/*.ts'],
-      exclude: ['**/*.test.ts', '**/index.ts', '**/*.glsl.ts', '**/*.d.ts'],
+      exclude: [
+        '**/*.test.ts',
+        '**/index.ts',
+        '**/*.glsl.ts',
+        '**/*.d.ts',
+        '**/__fixtures__/**',
+        '**/__testing__/**',
+      ],
       reporter: ['text', 'html', 'lcov', 'json-summary'],
       reportsDirectory: 'coverage',
-      // Plan E20.1 targets: core ≥ 90%, trace calc ≥ 85%. Disabled until the packages are
-      // populated (M0); enable by uncommenting. Paths are globs relative to the repo root.
-      // thresholds: {
-      //   'packages/core/src/**/*.ts': { lines: 90, functions: 90, branches: 90, statements: 90 },
-      //   'packages/traces-*/src/**/calc*.ts': { lines: 85, functions: 85, branches: 85, statements: 85 },
-      // },
+      // Plan E20.1 targets. Trace calc thresholds (≥ 85%) get added as trace packages land (M1).
+      thresholds: {
+        'packages/core/src/**/*.ts': { lines: 90, functions: 90, branches: 90, statements: 90 },
+      },
     },
   },
 });

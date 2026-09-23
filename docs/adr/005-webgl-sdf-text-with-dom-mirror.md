@@ -1,8 +1,15 @@
 # ADR-005: WebGL SDF text with a DOM mirror
 
-- **Status:** Proposed. WebGL text exports cleanly and works in 3D.
+- **Status:** Proposed (spike C not yet measured; deferred to the M7 benchmarking pass).
 - **Date:** 2026-09-23
 - **Related stories:** E0.7 (spike C), E2.9, E2.10, E8.3, E17.1, E18.1; plan §16 Q4, risk R2
+
+## Evidence
+
+- `TextPrimitive` (troika `BatchedText`) renders labels in one draw call with a synchronous
+  metrics oracle, and is stable run to run under SwiftShader ([spike E](../spikes/e-determinism.md)).
+- The 2,000-label comparison with a DOM overlay is not measured yet
+  ([spike C](../spikes/c-text.md)). Decide Accepted/Rejected from that data.
 
 ## Context
 

@@ -1,8 +1,15 @@
 # ADR-004: One WebGL context per figure, scissored subplot viewports
 
-- **Status:** Proposed. Browsers cap contexts at about 16.
+- **Status:** Proposed (spike D not yet measured; deferred to the M7 benchmarking pass).
 - **Date:** 2026-09-23
 - **Related stories:** E0.7 (spike D), E2.1, E2.3, E2.16, E4.\*; plan §3 principle 5, risk R5
+
+## Evidence
+
+- The `viewports-grid` example renders 9 scissored viewports (8 × 2D, one 3D) in one context,
+  correctly and deterministically ([spike E](../spikes/e-determinism.md)).
+- The cost comparison with separate canvases and the context-limit probe are not measured yet
+  ([spike D](../spikes/d-viewports.md)). Decide Accepted/Rejected from that data.
 
 ## Context
 

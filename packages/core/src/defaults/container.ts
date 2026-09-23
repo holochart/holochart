@@ -5,7 +5,7 @@
  * Precedence for every attribute (plan §8, layers 1–4):
  * valid user value > valid template value > caller override (`overrides`) > schema `dflt`.
  */
-import { canonicalDefault, coerceValue } from '../coerce/coerce.ts';
+import { canonicalDefault, coerceValue, resolveAttr } from '../coerce/coerce.ts';
 import { getIn, setIn } from '../path/path.ts';
 import { getNodeAtPath } from '../schema/walk.ts';
 import type { AttrSpec, ItemsNode, ObjectNode } from '../schema/types.ts';
@@ -133,9 +133,15 @@ export function coerceItems(
   const out: Record<string, unknown>[] = [];
 
   const userItems = Array.isArray(input) ? (input as unknown[]) : [];
+  const refSpec = node.item.children['templateitemname'];
   userItems.forEach((raw, i) => {
     const item = asObject(raw) ?? {};
-    const ref = item['templateitemname'];
+    // Read the reference as the attribute coerces it (`0` → `'0'`): the full output holds the
+    // coerced value, so fed back in it must link to the same template item (idempotence).
+    const ref =
+      refSpec?.kind === 'attr'
+        ? resolveAttr(refSpec, item['templateitemname'])
+        : item['templateitemname'];
     let tmpl = itemDefaults;
     if (typeof ref === 'string' && ref !== '') {
       const match = named.get(ref);

@@ -2,8 +2,17 @@
  * Instanced SDF marker shaders (GLSL3 via `ShaderMaterial`; three.js provides `position`,
  * `projectionMatrix`, and `modelViewMatrix`). Symbol geometry comes from the shared symbol table
  * texture (see `symbols.ts` for the layout).
+ *
+ * With `#define PICKING` the same shaders become the GPU-picking variant (E2.13): the SDF shape
+ * code is shared, colors are reduced to presence (any visible fill/line counts as opaque), pixels
+ * whose centre is outside the drawn shape are discarded, and the fragment writes the encoded pick
+ * id `uPickBase + gl_InstanceID`. Without the define nothing below changes for the visible pass.
  */
-import { SYMBOL_COUNT, SYMBOL_TEXTURE_WIDTH } from './symbols.ts';
+import { PICK_ENCODE_GLSL } from '../picking/pick.glsl.ts';
+import { MARKER_SYMBOLS, SYMBOL_COUNT, SYMBOL_TEXTURE_WIDTH } from './symbols.ts';
+
+/** Largest symbol extent (radius units), for the pick pass' conservative window reject. */
+const MAX_SYMBOL_EXTENT = MARKER_SYMBOLS.reduce((m, s) => Math.max(m, s.extent), 1);
 
 export const MARKER_VERTEX = /* glsl */ `
 precision highp float;
@@ -37,8 +46,27 @@ flat out vec4 vShape;   // radius px, half stroke px, dot radius px, unused
 flat out ivec4 vMode;   // areaKind, variant, noDot, noFill
 flat out vec4 vFill;
 flat out vec4 vLine;
+#ifdef PICKING
+#define MAX_SYMBOL_EXTENT ${MAX_SYMBOL_EXTENT.toFixed(6)}
+uniform uint uPickBase;
+flat out uint vPickId;
+#endif
 
 void main() {
+#ifdef PICKING
+  // Pick pass only: the window is a tiny part of the view, so reject instances whose (rotated)
+  // quad cannot reach it before any texture fetch. Conservative: stroke >= 1 px, sqrt(2) for
+  // rotation. Behind-camera instances (w <= 0) are clipped away in the visible pass too.
+  {
+    vec4 c0 = projectionMatrix * modelViewMatrix * vec4(aPos * uScale + uOffset, 1.0);
+    float reach = 1.4143 * (0.5 * aSize * MAX_SYMBOL_EXTENT + 0.5 * max(aStyle.x, 1.0) + 1.0);
+    vec2 margin = reach * 2.0 / uResolution * c0.w;
+    if (c0.w <= 0.0 || abs(c0.x) > c0.w + margin.x || abs(c0.y) > c0.w + margin.y) {
+      gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+      return;
+    }
+  }
+#endif
   int code = int(aStyle.y + 0.5);
   int base = code - (code / 100) * 100;
   int variant = code / 100;
@@ -98,6 +126,12 @@ void main() {
   float opacity = clamp(aStyle.z, 0.0, 1.0);
   vFill.a *= opacity;
   vLine.a *= opacity;
+#ifdef PICKING
+  // Silhouette, not appearance: a translucent marker is as pickable as an opaque one.
+  vFill.a = vFill.a > 0.0 ? 1.0 : 0.0;
+  vLine.a = vLine.a > 0.0 ? 1.0 : 0.0;
+  vPickId = uPickBase + uint(gl_InstanceID);
+#endif
 }
 `;
 
@@ -116,6 +150,10 @@ flat in vec4 vShape;
 flat in ivec4 vMode;
 flat in vec4 vFill;
 flat in vec4 vLine;
+#ifdef PICKING
+flat in uint vPickId;
+${PICK_ENCODE_GLSL}
+#endif
 
 out vec4 fragColor;
 
@@ -207,7 +245,13 @@ void main() {
     color = over((vMode.y == 2 ? lineP : fillP) * dm, color);
   }
 
+#ifdef PICKING
+  // Coverage >= 0.5 <=> the pixel centre is inside the drawn shape.
+  if (color.a < 0.5) discard;
+  fragColor = holochartEncodePickId(vPickId);
+#else
   if (color.a < 0.002) discard;
   fragColor = vec4(color.rgb / color.a, color.a);
+#endif
 }
 `;

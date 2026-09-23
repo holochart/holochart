@@ -165,7 +165,7 @@ See [plan.md section 5](plan.md#5-technology-stack).
 | Shaders         | GLSL3 via `ShaderMaterial` in `*.glsl.ts` modules; TSL for prototyping ([ADR-009](docs/adr/009-glsl3-shaders-tsl-prototyping.md), [ADR-014](docs/adr/014-glsl-as-typescript-template-modules.md)) |
 | Text            | troika-three-text (SDF) ([ADR-005](docs/adr/005-webgl-sdf-text-with-dom-mirror.md))                                                                                                               |
 | Math and data   | d3 micro-libraries ([ADR-006](docs/adr/006-d3-micro-libraries.md)), `earcut`, `flatbush`                                                                                                          |
-| Build           | pnpm 11 workspaces + catalog, Turborepo, tsup for JS and `tsc` for declarations ([ADR-015](docs/adr/015-tsup-js-tsc-declarations.md)), Vite 8 for apps                                            |
+| Build           | pnpm 11 workspaces + catalog, Turborepo, tsdown for JS, bundled `.d.ts`, and the IIFE CDN build ([ADR-015](docs/adr/015-tsup-js-tsc-declarations.md)), Vite 8 for apps                            |
 | Dependencies    | pnpm `minimumReleaseAge` policy for new dependency versions ([ADR-016](docs/adr/016-pnpm-minimum-release-age.md))                                                                                 |
 | Unit tests      | Vitest 5 + `fast-check`                                                                                                                                                                           |
 | Visual tests    | Playwright 1.63, Chromium + SwiftShader, `pixelmatch` ([ADR-018](docs/adr/018-visual-regression-harness.md))                                                                                      |
@@ -191,7 +191,7 @@ The canonical index is [docs/adr/README.md](docs/adr/README.md). Start new ADRs 
 - [ADR-012: Functional accessors are non-serializable](docs/adr/012-functional-accessors-non-serializable.md)
 - [ADR-013: `.ts` import extensions and native type stripping](docs/adr/013-ts-import-extensions-native-type-stripping.md)
 - [ADR-014: GLSL as TypeScript template modules](docs/adr/014-glsl-as-typescript-template-modules.md)
-- [ADR-015: tsup for JS, tsc for declarations](docs/adr/015-tsup-js-tsc-declarations.md)
+- [ADR-015: tsdown for JS, bundled declarations, and the IIFE build](docs/adr/015-tsup-js-tsc-declarations.md)
 - [ADR-016: pnpm minimum release age](docs/adr/016-pnpm-minimum-release-age.md)
 - [ADR-017: The `@mk7s` npm scope](docs/adr/017-mk7s-npm-scope.md)
 - [ADR-018: Visual regression harness](docs/adr/018-visual-regression-harness.md)

@@ -10,7 +10,7 @@
 
 The render package ships many GLSL3 shaders ([ADR-009](009-glsl3-shaders-tsl-prototyping.md)). The
 original plan imported `.glsl` files as strings through a Vite plugin. But the same sources are
-consumed by several tools: tsup (package builds), Vite (sandbox, docs), Vitest (unit tests), tsc
+consumed by several tools: tsdown (package builds; tsup at the time of this decision), Vite (sandbox, docs), Vitest (unit tests), tsc
 (typecheck and declarations), and Node's native type stripping for scripts
 ([ADR-013](013-ts-import-extensions-native-type-stripping.md)). A `.glsl` import needs a loader or
 plugin in each of them, plus ambient `declare module '*.glsl'` types.
@@ -34,7 +34,7 @@ plugin is used anywhere.
 
 ### Positive
 
-- Works identically in tsup, Vite, Vitest, tsc, and Node type stripping; nothing to configure.
+- Works identically in tsdown, Vite, Vitest, tsc, and Node type stripping; nothing to configure.
 - No custom loaders and no ambient module declarations.
 - Chunk composition and constants (e.g. symbol ids shared with TS) use plain interpolation, and
   imports are tracked by the normal module graph (HMR, tree-shaking).
