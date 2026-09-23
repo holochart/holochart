@@ -1,0 +1,37 @@
+{
+  "name": "@mk7s/holochart-core",
+  "version": "0.0.0",
+  "description": "Figure model, attribute schema system, validation, defaults, and update planning.",
+  "type": "module",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holochart/holochart.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://mk7s.dev/holochart",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.json --emitDeclarationOnly",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "d3-color": "catalog:"
+  },
+  "devDependencies": {
+    "@types/d3-color": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
+  }
+}

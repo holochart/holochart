@@ -1,0 +1,42 @@
+{
+  "name": "@mk7s/holochart-traces-basic",
+  "version": "0.0.0",
+  "description": "Basic trace types: scatter, bar, pie, table.",
+  "type": "module",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holochart/holochart.git",
+    "directory": "packages/traces-basic"
+  },
+  "homepage": "https://mk7s.dev/holochart",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.json --emitDeclarationOnly",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@mk7s/holochart-core": "workspace:*",
+    "@mk7s/holochart-render": "workspace:*"
+  },
+  "peerDependencies": {
+    "three": ">=0.180.0"
+  },
+  "devDependencies": {
+    "three": "catalog:",
+    "@types/three": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
+  }
+}

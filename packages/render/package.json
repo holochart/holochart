@@ -1,0 +1,43 @@
+{
+  "name": "@mk7s/holochart-render",
+  "version": "0.0.0",
+  "description": "three.js rendering engine: renderer, viewports, GPU primitives, picking.",
+  "type": "module",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holochart/holochart.git",
+    "directory": "packages/render"
+  },
+  "homepage": "https://mk7s.dev/holochart",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.json --emitDeclarationOnly",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "troika-three-text": "catalog:",
+    "earcut": "catalog:",
+    "flatbush": "catalog:"
+  },
+  "peerDependencies": {
+    "three": ">=0.180.0"
+  },
+  "devDependencies": {
+    "three": "catalog:",
+    "@types/three": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
+  }
+}

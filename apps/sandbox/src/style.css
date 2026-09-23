@@ -1,0 +1,129 @@
+:root {
+  --bg: #ffffff;
+  --fg: #1f2328;
+  --muted: #656d76;
+  --chrome: #f6f8fa;
+  --border: #d0d7de;
+  --error: #cf222e;
+  color-scheme: light;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  font-size: 13px;
+}
+
+:root[data-bg='dark'] {
+  --bg: #0d1117;
+  --fg: #e6edf3;
+  --muted: #8d96a0;
+  --chrome: #161b22;
+  --border: #30363d;
+  --error: #ff7b72;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--chrome);
+  border-bottom: 1px solid var(--border);
+}
+
+.toolbar select,
+.toolbar button {
+  font: inherit;
+  color: inherit;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.toolbar .title {
+  margin-left: 8px;
+  font-weight: 600;
+}
+
+.description {
+  margin: 0;
+  padding: 4px 10px;
+  color: var(--muted);
+}
+
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  padding: 10px;
+}
+
+.example {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.example.fixed {
+  outline: 1px dashed var(--border);
+}
+
+.hint {
+  color: var(--muted);
+}
+
+.error {
+  color: var(--error);
+  white-space: pre-wrap;
+  font-size: 12px;
+}
+
+.stats {
+  position: fixed;
+  right: 10px;
+  bottom: 10px;
+  margin: 0;
+  padding: 6px 8px;
+  font:
+    11px/1.35 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+  color: #e6edf3;
+  background: rgb(13 17 23 / 80%);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* Test mode: no chrome; the example container sits at the page origin. */
+.test-mode,
+.test-mode body {
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.test-mode #app {
+  display: block;
+}

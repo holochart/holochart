@@ -1,0 +1,147 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'm[0-9]*/**']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  # Turborepo remote caching: active once TURBO_TOKEN (secret) and TURBO_TEAM (variable) are set.
+  # Without them turbo falls back to its local cache.
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+  TURBO_TELEMETRY_DISABLED: '1'
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm lint
+      - run: pnpm format:check
+
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm typecheck
+      - name: Typecheck root configs and tests
+        run: pnpm typecheck:tooling
+
+  unit:
+    name: unit (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22', '26']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ matrix.node }}
+      - run: pnpm test:coverage
+      - name: Upload coverage report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-node-${{ matrix.node }}
+          path: coverage/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  build:
+    name: build (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22', '26']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ matrix.node }}
+      - run: pnpm build
+
+  visual:
+    name: visual
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Pinned image: the Chromium build and system libraries match @playwright/test 1.63.0, so
+    # SwiftShader output is reproducible. Regenerate baselines in this same image (CONTRIBUTING.md).
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --ipc=host
+    env:
+      CI: 'true'
+      HOME: /root
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Visual regression tests (Chromium + SwiftShader)
+        run: pnpm test:visual
+      - name: Upload visual diff report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diff-report
+          path: |
+            playwright-report/
+            tests/visual/__actual__/
+            tests/visual/__diff__/
+            test-results/visual/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # TODO(E0.4, E16): bundle-size report. Enable once `size-limit` and per-entry budgets are added
+  # (plan §5 "Size tracking"). Expected steps: `pnpm build`, `pnpm size`, upload the report and
+  # comment the delta on the PR.
+  size:
+    name: bundle size (TODO)
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+      - run: echo "TODO — run size-limit and upload its report" && exit 1
+
+  # TODO(E0.4, E16): benchmark report. Enable once apps/bench (tinybench + in-browser harness)
+  # exists. Expected steps: run the harness headless under Playwright, upload results as an
+  # artifact, and compare against the performance budgets.
+  bench:
+    name: benchmarks (TODO)
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: echo "TODO — run apps/bench and upload its report" && exit 1
+
+  # TODO(E0.4, E19.1): docs build. Enable once apps/docs (VitePress) exists: `pnpm --filter
+  # @mk7s/holochart-docs build`.
+  docs:
+    name: docs build (TODO)
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: echo "TODO — build the docs site" && exit 1

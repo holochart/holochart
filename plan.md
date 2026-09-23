@@ -400,9 +400,9 @@ Customization is a **cascade**. Each layer overrides the one above it:
 #### E0.2 — Build pipeline   `P0` `M`   deps: E0.1
 > As a contributor, I want every package to emit ESM + type declarations, and the full bundle to also emit an IIFE/UMD build, so that the library works with bundlers and from a CDN.
 - [ ] ESM output with `exports` maps and `sideEffects: false` where applicable
-- [ ] `.d.ts` bundling per package
+- [ ] `.d.ts` emitted by `tsc --emitDeclarationOnly` (tsup's dts step relies on `baseUrl`, deprecated in TS 6); bundling into one `.d.ts` per package is a follow-up
 - [ ] `@mk7s/holochart` full bundle: ESM + minified IIFE (`window.Holochart`) with sourcemaps
-- [ ] Shader files (`.glsl`) imported as strings via a Vite plugin
+- [ ] GLSL authored as TypeScript template-string modules (`*.glsl.ts`, tagged `/* glsl */`), so no loader is needed in tsup, Vite, Vitest, or Node (see ADRs)
 
 #### E0.3 — Dev sandbox   `P0` `S`   deps: E0.2
 > As a contributor, I want a Vite dev app that hot-reloads any example from `examples/`, so that I can iterate on rendering quickly.
