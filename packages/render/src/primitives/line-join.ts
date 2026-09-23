@@ -33,6 +33,13 @@ export const END_SQUARE = 2;
 export const END_ROUND = 3;
 export const END_BEVEL = 4;
 
+/**
+ * Offset (px) of the join ownership boundary; mirrors `OWN_EPS` in `line.glsl.ts`. Keeps the boundary
+ * off pixel centers so rounding differences between the two segments' tangents can't make both
+ * discard the same pixel (see the shader comment).
+ */
+export const OWN_EPS = 1 / 512;
+
 /** Shader uniform codes. */
 export const JOIN_CODE: Record<LineJoin, number> = { miter: 0, round: 1, bevel: 2 };
 export const CAP_CODE: Record<LineCap, number> = { butt: 0, round: 1, square: 2 };
@@ -154,10 +161,10 @@ export function segmentDistance(frame: SegmentFrame, p: V2): number | undefined 
   const rel = sub(p, a);
   const relB = sub(p, b);
   if (startEnd.tangent[0] !== 0 || startEnd.tangent[1] !== 0) {
-    if (rel[0] * startEnd.tangent[0] + rel[1] * startEnd.tangent[1] < 0) return undefined;
+    if (rel[0] * startEnd.tangent[0] + rel[1] * startEnd.tangent[1] < OWN_EPS) return undefined;
   }
   if (endEnd.tangent[0] !== 0 || endEnd.tangent[1] !== 0) {
-    if (relB[0] * endEnd.tangent[0] + relB[1] * endEnd.tangent[1] >= 0) return undefined;
+    if (relB[0] * endEnd.tangent[0] + relB[1] * endEnd.tangent[1] >= OWN_EPS) return undefined;
   }
   const t = rel[0] * dir[0] + rel[1] * dir[1];
   const perp = -rel[0] * dir[1] + rel[1] * dir[0];

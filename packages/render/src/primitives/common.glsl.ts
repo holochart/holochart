@@ -33,6 +33,7 @@ vec4 hcDataToClip(vec3 local) {
 export const SCREEN_GLSL = /* glsl */ `
 uniform vec2 uResolution;
 uniform float uPixelRatio;
+uniform vec4 uViewport; // GL viewport in device px (xy origin, zw size)
 
 vec2 hcClipToScreen(vec4 clip) {
   return (clip.xy / clip.w * 0.5 + 0.5) * uResolution;

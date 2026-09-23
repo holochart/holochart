@@ -9,11 +9,17 @@
  * ```
  *
  * {@link resolveDataRefs} swaps each `'@column'` for the column itself, by reference, before
- * validation and coercion see the trace. Only attributes that take per-point arrays
- * (`data_array`, or `arrayOk`) are resolved; elsewhere `'@…'` is ordinary text. On those
- * attributes a literal string starting with `@` is written `'@@…'`.
+ * validation and coercion see the trace.
+ *
+ * A string is a reference only where it could not mean anything else (see {@link isColumnRef}):
+ * on an attribute that takes per-point arrays, and only when the string is not a valid value of
+ * that attribute. So `x: '@date'` (a `data_array`) and `marker.color: '@region'` (not a color) are
+ * references, while `text: '@handle'` and `name: '@handle'` are the literal strings they are in
+ * Plotly. No escape syntax is needed, and no valid value ever changes meaning — which is what makes
+ * the full output of supply-defaults (literal `'@…'` strings included, whether from the input or
+ * a template) valid input that supplies to itself again.
  */
-import { isArrayLike } from '../coerce/coerce.ts';
+import { coerceValue, isArrayLike } from '../coerce/coerce.ts';
 import type { FigureInput } from '../defaults/types.ts';
 import { isAttr, isItemsNode, isObjectNode, resolveChild } from '../schema/walk.ts';
 import type { AttrSpec, ObjectNode } from '../schema/types.ts';
@@ -29,13 +35,22 @@ export interface ResolvedTrace {
   readonly issues: Issue[];
 }
 
-/** True if `v` is a column reference (`'@name'`), not an escaped literal (`'@@name'`). */
-export function isColumnRef(v: unknown): v is `@${string}` {
-  return typeof v === 'string' && v.charCodeAt(0) === 64 && v.charCodeAt(1) !== 64;
-}
-
-function takesArrays(spec: AttrSpec): boolean {
-  return spec.valType === 'data_array' || spec.arrayOk === true;
+/**
+ * True if `v`, set on the attribute `spec`, is a column reference: a string starting with `@` on a
+ * `data_array` attribute, or on an `arrayOk` attribute that does not accept that string as a value
+ * (`marker.color: '@region'` is a reference; `text: '@handle'` is text).
+ *
+ * @example
+ * ```ts
+ * isColumnRef('@date', attr.dataArray()); // true
+ * isColumnRef('@region', attr.color({ arrayOk: true })); // true
+ * isColumnRef('@handle', attr.string({ arrayOk: true })); // false: a valid string
+ * ```
+ */
+export function isColumnRef(v: unknown, spec: AttrSpec): v is `@${string}` {
+  if (typeof v !== 'string' || v.charCodeAt(0) !== 64) return false;
+  if (spec.valType === 'data_array') return true;
+  return spec.arrayOk === true && !coerceValue(spec, v).ok;
 }
 
 function childPath(base: string, key: string | number): string {
@@ -63,20 +78,17 @@ interface Ctx {
 }
 
 /**
- * The replacement for a string on an array-taking attribute: the column, the unescaped literal,
- * or `undefined` to drop the attribute (so it falls back to its default). Returns `v` itself when
- * nothing changes.
+ * The replacement for a column reference: the column, or `undefined` to drop the attribute (so it
+ * falls back to its default).
  */
-function resolveString(v: string, path: string, ctx: Ctx): unknown {
-  if (v.charCodeAt(0) !== 64) return v;
-  if (v.charCodeAt(1) === 64) return v.slice(1);
+function resolveRef(v: `@${string}`, path: string, ctx: Ctx): unknown {
   const name = v.slice(1);
   const { columns, datasetName } = ctx;
   if (columns === undefined || datasetName === undefined) {
     if (ctx.missing === 'none') {
       ctx.issues.push({
         path,
-        message: `column reference '${v}' needs a \`dataset\` on the trace (write '@${v}' for a literal string)`,
+        message: `column reference '${v}' needs a \`dataset\` on the trace`,
         value: v,
         expected: 'a data array, or a column reference together with `dataset`',
         code: 'invalid-value',
@@ -134,8 +146,8 @@ function resolveObject(
     const v = obj[key];
     let next: unknown = v;
     if (isAttr(child)) {
-      if (typeof v !== 'string' || !takesArrays(child)) continue;
-      const r = resolveString(v, childPath(path, key), ctx);
+      if (!isColumnRef(v, child)) continue;
+      const r = resolveRef(v, childPath(path, key), ctx);
       next = r === undefined ? DROP : r;
     } else if (isObjectNode(child)) {
       if (!isPlainObject(v)) continue;
@@ -173,10 +185,10 @@ function resolveItems(
 /**
  * Replace `'@column'` references in a trace with columns of the dataset it names.
  *
- * Resolution applies to attributes that accept per-point arrays (`data_array` or `arrayOk`),
- * including nested containers (`marker.color: '@region'`) and item arrays. Columns are inserted
- * by reference (zero-copy). `'@@text'` on those attributes is unescaped to the literal `'@text'`.
- * `'@…'` strings elsewhere, and on attributes unknown to the schema, are left untouched.
+ * Resolution applies to the strings {@link isColumnRef} accepts, including in nested containers
+ * (`marker.color: '@region'`) and item arrays. Columns are inserted by reference (zero-copy).
+ * Every other string — `'@…'` text on string attributes, and anything on attributes unknown to
+ * the schema — is left untouched, so resolving an already-resolved trace changes nothing.
  *
  * The input is never mutated. When nothing needs resolving, the same trace object is returned, so
  * callers can compare by reference; otherwise only the containers on the way to a change are

@@ -1,8 +1,11 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { fixtureRegistry } from '../__fixtures__/modules.ts';
+import { attrSpecArbitrary } from '../__testing__/schema-arbitrary.ts';
+import { coerceValue } from '../coerce/coerce.ts';
 import { attr } from '../schema/attr.ts';
-import type { ObjectNode } from '../schema/types.ts';
+import type { AttrSpec, ObjectNode } from '../schema/types.ts';
+import { getNodeAtPath } from '../schema/walk.ts';
 import { isColumnRef, resolveDataRefs } from './datasets.ts';
 
 const registry = fixtureRegistry();
@@ -14,12 +17,36 @@ const region = ['north', 'south'];
 const datasets = { sales: { date, revenue, region, total: 30 } };
 
 describe('isColumnRef', () => {
-  it('recognizes references but not escapes', () => {
-    expect(isColumnRef('@x')).toBe(true);
-    expect(isColumnRef('@')).toBe(true);
-    expect(isColumnRef('@@x')).toBe(false);
-    expect(isColumnRef('x')).toBe(false);
-    expect(isColumnRef(1)).toBe(false);
+  const spec = (path: string) => getNodeAtPath(scatter, path) as AttrSpec;
+
+  it('is true for any @-string on a data_array attribute', () => {
+    for (const v of ['@x', '@', '@@x', '@ spaced']) expect(isColumnRef(v, spec('x'))).toBe(true);
+  });
+
+  it('is true on arrayOk attributes only where the string is not a valid value', () => {
+    expect(isColumnRef('@region', spec('marker.color'))).toBe(true);
+    expect(isColumnRef('@pop', spec('marker.size'))).toBe(true);
+    expect(isColumnRef('@shape', spec('marker.symbol'))).toBe(true);
+    // Strings are text there, as in Plotly.
+    expect(isColumnRef('@handle', spec('text'))).toBe(false);
+    expect(isColumnRef('@@handle', spec('text'))).toBe(false);
+  });
+
+  it('is false for non-array attributes, plain strings and non-strings', () => {
+    expect(isColumnRef('@date', spec('name'))).toBe(false);
+    expect(isColumnRef('@date', spec('line.color'))).toBe(false);
+    expect(isColumnRef('x', spec('x'))).toBe(false);
+    expect(isColumnRef(1, spec('x'))).toBe(false);
+    expect(isColumnRef(['@x'], spec('x'))).toBe(false);
+  });
+
+  it('never calls a valid value of the attribute a reference', () => {
+    fc.assert(
+      fc.property(attrSpecArbitrary, fc.string({ maxLength: 6 }), (s, rest) => {
+        const v = `@${rest}`;
+        if (isColumnRef(v, s)) expect(coerceValue(s, v).ok).toBe(false);
+      }),
+    );
   });
 });
 
@@ -64,12 +91,28 @@ describe('resolveDataRefs', () => {
     expect(r.issues).toEqual([]);
   });
 
-  it("unescapes '@@' to a literal string on array-taking attributes", () => {
-    const trace = { text: '@@home' };
-    const r = resolveDataRefs(trace, scatter, undefined, 'data[0]');
-    expect(r.trace).toEqual({ text: '@home' });
-    expect(r.issues).toEqual([]);
-    expect(trace.text).toBe('@@home');
+  it("keeps '@' strings that are valid values as literals, with or without a dataset", () => {
+    for (const trace of [
+      { text: '@@home', name: '@home' },
+      { dataset: 'sales', text: '@date', marker: { color: 'red' } },
+    ]) {
+      const r = resolveDataRefs(trace, scatter, datasets, 'data[0]');
+      expect(r.trace).toBe(trace);
+      expect(r.issues).toEqual([]);
+    }
+  });
+
+  it('is a no-op on an already-resolved trace (fixed point)', () => {
+    const once = resolveDataRefs(
+      { dataset: 'sales', x: '@date', text: '@date', marker: { color: '@region' } },
+      scatter,
+      datasets,
+      'data[0]',
+    ).trace;
+    expect(once).toEqual({ dataset: 'sales', x: date, text: '@date', marker: { color: region } });
+    const twice = resolveDataRefs(once, scatter, datasets, 'data[0]');
+    expect(twice.trace).toBe(once);
+    expect(twice.issues).toEqual([]);
   });
 
   it('reports references without a dataset and drops them', () => {
@@ -208,8 +251,10 @@ describe('resolveDataRefs', () => {
         const before = structuredClone(trace);
         const r = resolveDataRefs(trace, scatter, ds as never, 'data[0]');
         expect(trace).toEqual(before);
+        // Resolution is a fixed point: resolving the result again changes nothing.
+        expect(resolveDataRefs(r.trace, scatter, ds as never, 'data[0]').trace).toBe(r.trace);
         if (r.trace === trace) return;
-        // Every changed top-level value is a resolved column, an unescaped literal or a copy.
+        // Every changed top-level value is a resolved column or a copied container.
         for (const [k, v] of Object.entries(r.trace)) {
           if (v !== trace[k]) {
             expect(typeof trace[k] === 'string' || typeof trace[k] === 'object').toBe(true);
