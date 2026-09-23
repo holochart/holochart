@@ -24,6 +24,7 @@ import {
   InstancedBufferAttribute,
   InstancedBufferGeometry,
   Mesh,
+  NoBlending,
   NormalBlending,
   ShaderMaterial,
   Vector2,
@@ -49,6 +50,12 @@ import {
   type ScalarInput,
   type ViewportSize,
 } from '../types.ts';
+import type {
+  PickablePrimitive,
+  PickElementKind,
+  PickMaterialHandle,
+  PickRenderState,
+} from '../picking/types.ts';
 import { MARKER_FRAGMENT, MARKER_VERTEX } from './markers.glsl.ts';
 import { HIDDEN_POSITION, rtcAxisOrigin, rtcEncodePositions, rtcOffset } from '../precision.ts';
 import { createSymbolTexture, resolveSymbol, SYMBOL_TEXTURE_KEY } from './symbols.ts';
@@ -248,9 +255,11 @@ function symbolAt(input: SymbolInput, j: number): number {
   return typeof v === 'number' && Number.isInteger(v) && v >= 0 && v < 400 ? v : resolveSymbol(v);
 }
 
-export class MarkerSet implements Primitive<MarkerData> {
+export class MarkerSet implements Primitive<MarkerData>, PickablePrimitive {
   readonly object: Mesh<InstancedBufferGeometry, ShaderMaterial>;
   readonly material: ShaderMaterial;
+  /** Pick ids count data points (one per instance). */
+  readonly pickKind: PickElementKind = 'point';
 
   readonly #context: PrimitiveContext;
   readonly #uniforms: MarkerUniforms;
@@ -264,6 +273,7 @@ export class MarkerSet implements Primitive<MarkerData> {
   #valueOrigin = 0;
   #transform: DataTransform = { ...IDENTITY_TRANSFORM };
   #colorscale: ColorscaleTextureHandle | null = null;
+  #positionVersion = 0;
   #disposed = false;
 
   constructor(
@@ -328,6 +338,88 @@ export class MarkerSet implements Primitive<MarkerData> {
     return this.#geometry;
   }
 
+  /** Number of pick ids (= drawn instances) for GPU picking. */
+  get pickCount(): number {
+    return this.#count;
+  }
+
+  /**
+   * Incremented whenever drawn positions or the count change (update, patch, reallocation), so
+   * CPU spatial indexes over {@link positionArray} know when to rebuild. Transform changes do not
+   * bump it: they are applied at query time through {@link worldScale} / {@link worldOffset}.
+   */
+  get positionVersion(): number {
+    return this.#positionVersion;
+  }
+
+  /**
+   * The RTC-encoded float32 positions actually drawn (x, y, z per item, valid for `[0, count)`;
+   * gaps hold `HIDDEN_POSITION`), or null before anything was allocated. Read-only: owned by the
+   * marker set, replaced on reallocation.
+   */
+  get positionArray(): Float32Array | null {
+    return (this.#arrays.position as Float32Array | undefined) ?? null;
+  }
+
+  /** Per-axis scale from {@link positionArray} to world space: `world = pos * scale + offset`. */
+  get worldScale(): Readonly<Vector3> {
+    return this.#uniforms.uScale.value;
+  }
+
+  /** Per-axis offset from {@link positionArray} to world space (float64 RTC offset). */
+  get worldOffset(): Readonly<Vector3> {
+    return this.#uniforms.uOffset.value;
+  }
+
+  /**
+   * Create the GPU-picking variant of this marker set's material (E2.13): the same shaders with
+   * `PICKING` defined, sharing every uniform except the resolution (the pick window's) and the pick
+   * id base. The visible material is untouched. The caller owns and disposes the handle.
+   */
+  createPickMaterial(): PickMaterialHandle {
+    const uniforms: MarkerUniforms & { uPickBase: IUniform<number> } = {
+      ...this.#uniforms,
+      uResolution: { value: new Vector2(1, 1) },
+      uPickBase: { value: 0 },
+    };
+    const source = this.material;
+    const material = new ShaderMaterial({
+      name: 'holochart:markers:pick',
+      glslVersion: GLSL3,
+      vertexShader: MARKER_VERTEX,
+      fragmentShader: MARKER_FRAGMENT,
+      uniforms,
+      defines: { PICKING: '' },
+      blending: NoBlending,
+    });
+    return {
+      material,
+      prepare(state: Readonly<PickRenderState>): void {
+        uniforms.uPickBase.value = state.base;
+        uniforms.uResolution.value.set(
+          Math.max(1e-6, state.windowWidth),
+          Math.max(1e-6, state.windowHeight),
+        );
+        // Mirror the visible pass: color-mode define (which attributes exist) and depth state /
+        // transparent bucket (so occlusion and draw order match).
+        const defines = material.defines as Record<string, string>;
+        const colorscale = 'USE_COLORSCALE' in (source.defines as Record<string, string>);
+        if (colorscale !== 'USE_COLORSCALE' in defines) {
+          if (colorscale) defines.USE_COLORSCALE = '';
+          else delete defines.USE_COLORSCALE;
+          material.needsUpdate = true;
+        }
+        material.depthTest = source.depthTest;
+        material.depthWrite = source.depthWrite;
+        material.transparent = source.transparent;
+        material.side = source.side;
+      },
+      dispose(): void {
+        material.dispose();
+      },
+    };
+  }
+
   update(data: Partial<MarkerData>): void {
     this.#assertAlive();
     const inputs = this.#inputs as unknown as Record<string, unknown>;
@@ -378,6 +470,7 @@ export class MarkerSet implements Primitive<MarkerData> {
       if (!rebuild) this.#markRange(group, 0, count);
     }
 
+    if (positionsChanged || rebuild || count !== prevCount) this.#positionVersion++;
     this.#geometry.instanceCount = count;
     this.#updateColorUniforms(data);
     this.#context.invalidate();
@@ -422,6 +515,7 @@ export class MarkerSet implements Primitive<MarkerData> {
         if (!rebuild) this.#markRange(group, from, end);
       }
     }
+    if (given.position || rebuild || this.#count !== prevCount) this.#positionVersion++;
     this.#geometry.instanceCount = this.#count;
     this.#context.invalidate();
   }

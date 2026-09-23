@@ -119,8 +119,10 @@ export function matchTraces(
   prevData: readonly unknown[],
   nextData: readonly unknown[],
 ): TraceMatching {
-  const prev = prevData.map(asRecord);
-  const next = nextData.map(asRecord);
+  // `Array.from` (not `map`) so holes in a sparse `data` array become `{}` traces, as they do in
+  // supply-defaults, instead of holes that `forEach` below would skip.
+  const prev = Array.from(prevData, asRecord);
+  const next = Array.from(nextData, asRecord);
   const prevByUid = new Map<string, number>();
   const prevPositional: number[] = [];
   prev.forEach((t, i) => {

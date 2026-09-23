@@ -23,7 +23,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup && tsc -p tsconfig.json --emitDeclarationOnly",
+    "build": "tsdown",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
@@ -36,7 +36,7 @@
   "devDependencies": {
     "three": "catalog:",
     "@types/three": "catalog:",
-    "tsup": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:"
   }
 }

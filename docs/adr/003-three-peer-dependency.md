@@ -1,8 +1,13 @@
 # ADR-003: `three` is a peer dependency
 
-- **Status:** Proposed. Avoids duplicate three instances in user apps.
+- **Status:** Accepted (2026-09-23).
 - **Date:** 2026-09-23
 - **Related stories:** E0.1, E0.2, E2.\*, E8.8, E16.8, E21.2; plan §5, risk R8
+
+## Evidence
+
+- Every package declares `three >=0.180.0` as a peer and builds with it external; the IIFE CDN
+  bundle is the documented exception (ADR-015). The bundle smoke test loads it in Chromium.
 
 ## Context
 
@@ -16,8 +21,10 @@ three, which wastes bytes and breaks `instanceof` checks and shared objects (mat
 
 All Holochart packages that import three declare it as a **peer dependency** with the range
 `>=0.180.0`. The monorepo develops and tests against `three ^0.186` (pnpm catalog, installed as a
-dev dependency). Package builds mark `three` as external (tsup `external: ['three']`). How the IIFE
-full bundle (E0.2) obtains three is decided and documented with that build. The lower bound is raised
+dev dependency). Package builds mark `three` as external. The IIFE CDN
+bundle (E0.2) is the one exception: it bundles its own copy of three, because three ships no global
+build and classic scripts cannot use import maps (see [ADR-015](015-tsup-js-tsc-declarations.md) and
+`packages/holochart/README.md`). The lower bound is raised
 deliberately when we depend on newer APIs, and the tested range is stated in docs and checked in CI.
 
 ## Consequences

@@ -1,8 +1,9 @@
 name: CI
 
 on:
+  # PR branches are covered by the pull_request trigger; pushing them too ran every job twice.
   push:
-    branches: [main, 'm[0-9]*/**']
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -109,6 +110,23 @@ jobs:
             test-results/visual/
           retention-days: 14
           if-no-files-found: ignore
+
+  bundle:
+    name: bundle smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Loads the IIFE CDN build in headless Chromium (SwiftShader) and checks window.Holochart.
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --ipc=host
+    env:
+      CI: 'true'
+      HOME: /root
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Build and smoke-test the IIFE bundle
+        run: pnpm test:bundle
 
   # TODO(E0.4, E16): bundle-size report. Enable once `size-limit` and per-entry budgets are added
   # (plan §5 "Size tracking"). Expected steps: `pnpm build`, `pnpm size`, upload the report and

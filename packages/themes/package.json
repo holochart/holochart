@@ -23,14 +23,14 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup && tsc -p tsconfig.json --emitDeclarationOnly",
+    "build": "tsdown",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "@mk7s/holochart-core": "workspace:*"
   },
   "devDependencies": {
-    "tsup": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:"
   }
 }

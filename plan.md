@@ -228,7 +228,7 @@ interface TraceModule<Attrs, Calc> {
 | Math & data utilities | d3 micro-libraries: `d3-scale`, `d3-array`, `d3-format`, `d3-time`, `d3-time-format`, `d3-interpolate`, `d3-color`, `d3-scale-chromatic`, `d3-shape` (curves), `d3-hierarchy`, `d3-sankey`, `d3-contour`, `d3-delaunay`, `d3-geo` | Battle-tested, tree-shakeable, same format strings as Plotly |
 | Triangulation | `earcut` | Fast polygon fill triangulation |
 | Spatial index | `flatbush` / `kdbush` | Fast nearest-point hover on millions of points |
-| Build | **Vite** (library mode) + `tsup` for packages, **pnpm** workspaces, **Turborepo** | Fast builds, caching |
+| Build | **tsdown** for packages (ESM, bundled `.d.ts`, IIFE), **Vite** for apps, **pnpm** workspaces, **Turborepo** | Fast builds, caching (see ADR-015) |
 | Unit tests | **Vitest** + `fast-check` (property-based) | Fast; fuzz-tests the schema |
 | Visual & interaction tests | **Playwright** (Chromium with ANGLE/SwiftShader for deterministic output) + `pixelmatch` | Deterministic GPU screenshots in CI |
 | Benchmarks | `tinybench` + in-browser harness in `apps/bench` | Performance budgets in CI |
@@ -400,9 +400,9 @@ Customization is a **cascade**. Each layer overrides the one above it:
 #### E0.2 — Build pipeline   `P0` `M`   deps: E0.1
 > As a contributor, I want every package to emit ESM + type declarations, and the full bundle to also emit an IIFE/UMD build, so that the library works with bundlers and from a CDN.
 - [ ] ESM output with `exports` maps and `sideEffects: false` where applicable
-- [ ] `.d.ts` emitted by `tsc --emitDeclarationOnly` (tsup's dts step relies on `baseUrl`, deprecated in TS 6); bundling into one `.d.ts` per package is a follow-up
+- [ ] One bundled `.d.ts` per package entry (tsdown; see ADR-015)
 - [ ] `@mk7s/holochart` full bundle: ESM + minified IIFE (`window.Holochart`) with sourcemaps
-- [ ] GLSL authored as TypeScript template-string modules (`*.glsl.ts`, tagged `/* glsl */`), so no loader is needed in tsup, Vite, Vitest, or Node (see ADRs)
+- [ ] GLSL authored as TypeScript template-string modules (`*.glsl.ts`, tagged `/* glsl */`), so no loader is needed in tsdown, Vite, Vitest, or Node (see ADRs)
 
 #### E0.3 — Dev sandbox   `P0` `S`   deps: E0.2
 > As a contributor, I want a Vite dev app that hot-reloads any example from `examples/`, so that I can iterate on rendering quickly.
@@ -1848,13 +1848,13 @@ Durations assume a core team of **3–4 engineers**. Adjust in proportion to tea
 | Milestone | Version | Theme | Key epics/stories | Exit criteria | Est. duration |
 |---|---|---|---|---|---|
 | **M0 — Foundation** | 0.0.x (private) | Repo, spikes, core model, primitives | E0.*, E1.1–E1.9, E2.1–E2.9, E2.12, E2.13, E2.15, E20.1–E20.3 | Spikes done, ADRs accepted, 1M markers at 50 fps in sandbox, visual test pipeline green | 6–8 weeks |
-| **M1 — First Plot** | 0.1.0-alpha | Scatter/line/bar with axes, legend, hover, zoom | E3.1–E3.7, E4.1–E4.3, E5.1–E5.4, E5.7, E5.8, E6.1–E6.4, E7.1, E7.2, E9.1–E9.3, E9.7–E9.9, E18.3, E19.1–E19.4, E19.7, E21.*, E22.1–E22.2 | Public alpha, docs site live with scatter/line/bar pages, attribute reference generated | 8–10 weeks |
+| **M1 — First Plot** | 0.1.0-alpha | Scatter/line/bar with axes, legend, hover, zoom | **First: fix the E2.5 line GPU-cost bug (spike B).** E3.1–E3.7, E4.1–E4.3, E5.1–E5.4, E5.7, E5.8, E6.1–E6.4, E7.1, E7.2, E9.1–E9.3, E9.7–E9.9, E18.3, E19.1–E19.4, E19.7, E21.*, E22.1–E22.2 | Public alpha, docs site live with scatter/line/bar pages, attribute reference generated | 8–10 weeks |
 | **M2 — Basic Charts Complete** | 0.2.0 | Every Plotly "basic" chart type + theming | E9.4–E9.6, E9.11, E9.13, E9.14, E2.10, E4.4–E4.6, E5.5, E5.6, E8.1–E8.3, E17.1, E18.1, E19.5, E19.10 | Parity matrix "Basic" rows 100%, 8 themes, gallery live, docs coverage gate on | 6–8 weeks |
 | **M3 — Statistical** | 0.3.0 | Distributions and multivariate charts | E10.*, E3.8–E3.10, E5.9–E5.12, E6.5–E6.6, E7.3–E7.4, E23.1–E23.4 | Parity matrix "Statistical" 100% (P1), Express alpha, animation + sliders | 8–10 weeks |
 | **M4 — Scientific & Financial** | 0.4.0 | Heatmaps, contours, polar, finance | E11.1–E11.5, E11.11, E12.*, E8.5, E8.6, E8.10, E8.11, E16.2–E16.4 | Parity P1 rows for Scientific & Financial, time-series perf target met | 8–10 weeks |
 | **M5 — Hierarchical & Flow** | 0.5.0 | Sunburst, treemap, icicle, sankey | E13.*, E23.5–E23.6, E17.2–E17.6 | Drill-down transitions, sankey interaction, Express full catalogue | 6–8 weeks |
 | **M6 — 3D** | 0.6.0 | Scene subplot and all 3D traces | E14.*, E2.11, E2.14, E7.5, E8.7, E8.9, E9.10, E9.12 | All Plotly 3D traces + bar3d, ray-marched volume, 2.5D extrusion | 10–12 weeks |
-| **M7 — Hardening → 1.0** | 1.0.0 | Performance, a11y, export, wrappers, plugin API freeze | E16.1, E16.5–E16.6, E18.2, E18.4–E18.6, E19.6, E19.8–E19.12, E20.4–E20.8, E22.3–E22.6, E8.4, E8.8, E8.12–E8.14, E11.6–E11.9, E1.10, E2.16, E6.7, E18.8 | All §14 DoD met, plugin API stable, importer ≥ 80% mocks, perf budgets green | 8–10 weeks |
+| **M7 — Hardening → 1.0** | 1.0.0 | Performance, a11y, export, wrappers, plugin API freeze | E16.1, E16.5–E16.6, E18.2, E18.4–E18.6, E19.6, E19.8–E19.12, E20.4–E20.8, E22.3–E22.6, E8.4, E8.8, E8.12–E8.14, E11.6–E11.9, E1.10, E2.16, E6.7, E18.8 | All §14 DoD met, plugin API stable, importer ≥ 80% mocks, perf budgets green, deferred E0.7 spikes B (full scale), C, D measured and ADR-004/005 decided | 8–10 weeks |
 | **M8 — Beyond 1.0** | 1.x | Maps, WebGPU, notebooks, carpet | E15.*, E16.7–E16.8, E18.7, E11.10, E14.10 | Roadmap-driven | ongoing |
 
 ```mermaid
@@ -1873,6 +1873,15 @@ gantt
     section Release
     M7 Hardening to 1.0     :m7, after m5, 10w
 ```
+
+### 11.1 Status
+
+**M0 — Foundation: closed on 2026-09-23** ([PR #1](https://github.com/holochart/holochart/pull/1) and the M0 completion PR).
+
+- Done: E0.1–E0.6, E1.1–E1.9 (plus E1.6/E1.8 stretch), E2.1–E2.9, E2.12, E2.13 (CPU and GPU picking), E2.15, E16.4, E20.1–E20.3.
+- Exit criteria: 1M markers pan at 57–63 fps (3 px) ✅; visual pipeline green in CI (Linux) ✅; ADRs 001–003, 006–010, 013–018 accepted ✅ (011/012 cover later milestones; 004/005 wait on spikes C/D).
+- Spikes ([docs/spikes](docs/spikes/README.md)): A and E measured; B quality done. **Deferred to the M7 benchmarking pass (by decision):** B at full scale, C (text, ADR-005), D (viewports, ADR-004). ADR-004 and ADR-005 stay Proposed until then.
+- Carried forward: the E2.5 line primitive has a critical GPU-cost bug on dense noisy series (spike B), to fix first in M1; marker fill cost is 3.5× a trivial shader (spike A), for E16; '@'-prefixed literal strings are re-read as dataset refs (E1.6).
 
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 
