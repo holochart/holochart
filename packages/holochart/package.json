@@ -1,0 +1,45 @@
+{
+  "name": "@mk7s/holochart",
+  "version": "0.0.0",
+  "description": "Holochart: declarative, GPU-rendered charts built on three.js (full bundle).",
+  "type": "module",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holochart/holochart.git",
+    "directory": "packages/holochart"
+  },
+  "homepage": "https://mk7s.dev/holochart",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.json --emitDeclarationOnly",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@mk7s/holochart-core": "workspace:*",
+    "@mk7s/holochart-render": "workspace:*",
+    "@mk7s/holochart-components": "workspace:*",
+    "@mk7s/holochart-traces-basic": "workspace:*",
+    "@mk7s/holochart-themes": "workspace:*"
+  },
+  "peerDependencies": {
+    "three": ">=0.180.0"
+  },
+  "devDependencies": {
+    "three": "catalog:",
+    "@types/three": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
+  }
+}

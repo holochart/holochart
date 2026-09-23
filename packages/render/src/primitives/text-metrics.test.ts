@@ -1,0 +1,209 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { clearFontRegistry, registerFont, type TextFont } from './text-fonts.ts';
+import {
+  TEXT_DEFAULT_LINE_HEIGHT,
+  TEXT_ELLIPSIS,
+  createCanvasTextMeasurer,
+  createFallbackTextMeasurer,
+  createFontMetricsOracle,
+  ellipsize,
+  fallbackCharWidth,
+  getDefaultFontMetricsOracle,
+  measureText,
+  setDefaultFontMetricsOracle,
+  textFaceKey,
+  wrapText,
+  type TextMeasurer,
+} from './text-metrics.ts';
+
+const font: TextFont = { family: 'sans-serif', size: 10 };
+const oracle = createFontMetricsOracle({ measurer: createFallbackTextMeasurer() });
+
+/** A measurer where every character is 1 em wide, counting calls. */
+function monospaceMeasurer(): TextMeasurer & { calls: number } {
+  const m = {
+    kind: 'mono',
+    calls: 0,
+    width(text: string) {
+      m.calls++;
+      return Array.from(text).length;
+    },
+    vertical() {
+      return { ascent: 0.8, descent: 0.2 };
+    },
+  };
+  return m;
+}
+
+afterEach(() => {
+  setDefaultFontMetricsOracle(null);
+  clearFontRegistry();
+});
+
+describe('fallback measurer', () => {
+  it('uses Helvetica-like widths', () => {
+    expect(fallbackCharWidth('0'.codePointAt(0)!)).toBeCloseTo(0.556);
+    expect(fallbackCharWidth('W'.codePointAt(0)!)).toBeCloseTo(0.944);
+    expect(fallbackCharWidth('i'.codePointAt(0)!)).toBeCloseTo(0.222);
+    expect(fallbackCharWidth(0x4e2d)).toBe(1); // 中
+    expect(fallbackCharWidth(0x0301)).toBe(0); // combining acute
+  });
+
+  it('is deterministic and makes bold slightly wider', () => {
+    const m = createFallbackTextMeasurer();
+    expect(m.width('Hello', { family: 'x' })).toBeCloseTo(0.722 + 0.556 + 0.222 * 2 + 0.556);
+    expect(m.width('Hello', { family: 'x', weight: 'bold' })).toBeGreaterThan(
+      m.width('Hello', { family: 'x' }),
+    );
+  });
+
+  it('has no canvas in node', () => {
+    expect(createCanvasTextMeasurer()).toBeNull();
+  });
+});
+
+describe('FontMetricsOracle.measureText', () => {
+  it('scales linearly with font size', () => {
+    const w10 = oracle.measureWidth('Axis title', font);
+    const w20 = oracle.measureWidth('Axis title', { ...font, size: 20 });
+    expect(w20).toBeCloseTo(2 * w10, 10);
+  });
+
+  it('excludes trailing whitespace and takes the widest line', () => {
+    expect(oracle.measureWidth('abc   ', font)).toBeCloseTo(oracle.measureWidth('abc', font));
+    expect(oracle.measureWidth('a\nabcd\nab', font)).toBeCloseTo(oracle.measureWidth('abcd', font));
+  });
+
+  it('reports vertical metrics and block height', () => {
+    const m = oracle.measureText('one\ntwo', { ...font, size: 20 });
+    expect(m.lineCount).toBe(2);
+    expect(m.lineHeight).toBeCloseTo(20 * TEXT_DEFAULT_LINE_HEIGHT);
+    expect(m.height).toBeCloseTo(2 * 20 * TEXT_DEFAULT_LINE_HEIGHT);
+    expect(m.ascent).toBeCloseTo(0.905 * 20);
+    expect(m.descent).toBeCloseTo(0.212 * 20);
+    expect(oracle.measureText('x', font, 1.5).lineHeight).toBeCloseTo(15);
+  });
+});
+
+describe('FontMetricsOracle cache', () => {
+  it('measures each (face, text) once across sizes', () => {
+    const m = monospaceMeasurer();
+    const o = createFontMetricsOracle({ measurer: m });
+    o.measureWidth('hello', font);
+    o.measureWidth('hello', { ...font, size: 33 });
+    expect(m.calls).toBe(1);
+    o.measureWidth('hello', { ...font, weight: 'bold' });
+    expect(m.calls).toBe(2);
+  });
+
+  it('evicts least-recently-used entries', () => {
+    const m = monospaceMeasurer();
+    const o = createFontMetricsOracle({ measurer: m, cacheSize: 2 });
+    o.measureWidth('a', font);
+    o.measureWidth('b', font);
+    o.measureWidth('a', font); // refresh 'a'
+    o.measureWidth('c', font); // evicts 'b'
+    expect(m.calls).toBe(3);
+    o.measureWidth('a', font);
+    expect(m.calls).toBe(3);
+    o.measureWidth('b', font);
+    expect(m.calls).toBe(4);
+  });
+
+  it('clear() drops cached widths', () => {
+    const m = monospaceMeasurer();
+    const o = createFontMetricsOracle({ measurer: m });
+    o.measureWidth('a', font);
+    o.clear();
+    o.measureWidth('a', font);
+    expect(m.calls).toBe(2);
+  });
+
+  it('keys faces by style, weight, and family', () => {
+    expect(textFaceKey({ family: 'Inter', weight: 'bold' })).toBe('normal|700|Inter');
+  });
+});
+
+describe('wrapText', () => {
+  const mono = createFontMetricsOracle({ measurer: monospaceMeasurer() });
+  const f1: TextFont = { family: 'mono', size: 1 };
+
+  it('wraps greedily at spaces', () => {
+    expect(mono.wrapText('the quick brown fox', f1, 10)).toEqual(['the quick', 'brown fox']);
+  });
+
+  it('lets a long word overflow on its own line', () => {
+    expect(mono.wrapText('a supercalifragilistic b', f1, 5)).toEqual([
+      'a',
+      'supercalifragilistic',
+      'b',
+    ]);
+  });
+
+  it('breaks after hyphens and honors newlines', () => {
+    expect(mono.wrapText('long-term\nx', f1, 6)).toEqual(['long-', 'term', 'x']);
+  });
+
+  it('does not wrap with an infinite width', () => {
+    expect(mono.wrapText('a b c', f1, Infinity)).toEqual(['a b c']);
+  });
+
+  it('works with the default oracle', () => {
+    expect(wrapText('alpha beta', { family: 'x', size: 10 }, 30)).toEqual(['alpha', 'beta']);
+  });
+});
+
+describe('ellipsize', () => {
+  const mono = createFontMetricsOracle({ measurer: monospaceMeasurer() });
+  const f1: TextFont = { family: 'mono', size: 1 };
+
+  it('leaves fitting text unchanged', () => {
+    expect(mono.ellipsize('short', f1, 5)).toBe('short');
+  });
+
+  it('truncates to the longest fitting prefix plus an ellipsis', () => {
+    expect(mono.ellipsize('abcdefgh', f1, 5)).toBe(`abcd${TEXT_ELLIPSIS}`);
+    expect(mono.ellipsize('ab cdefgh', f1, 4)).toBe(`ab${TEXT_ELLIPSIS}`); // trailing space trimmed
+  });
+
+  it('returns an empty string when not even the ellipsis fits', () => {
+    expect(mono.ellipsize('abc', f1, 0.5)).toBe('');
+  });
+
+  it('handles each line separately and supports a custom ellipsis', () => {
+    expect(mono.ellipsize('abcdef\nab', f1, 4, '..')).toBe('ab..\nab');
+  });
+
+  it('keeps the result within maxWidth with real (fallback) metrics', () => {
+    const f: TextFont = { family: 'x', size: 12 };
+    const out = ellipsize('A fairly long category label', f, 80);
+    expect(out.endsWith(TEXT_ELLIPSIS)).toBe(true);
+    expect(measureText(out, f).width).toBeLessThanOrEqual(80);
+  });
+
+  it('does not split grapheme clusters', () => {
+    // Code-point truncation would keep 'e' + combining mark + 'e' here.
+    const out = mono.ellipsize('e\u0301e\u0301e\u0301e\u0301', f1, 4);
+    expect(out).toBe(`e\u0301${TEXT_ELLIPSIS}`);
+  });
+});
+
+describe('default oracle', () => {
+  it('falls back to the deterministic measurer in node', () => {
+    expect(getDefaultFontMetricsOracle().measurer.kind).toBe('fallback');
+  });
+
+  it('clears its cache when fonts change', () => {
+    const o = getDefaultFontMetricsOracle();
+    const clear = vi.spyOn(o, 'clear');
+    registerFont({ family: 'Inter', url: 'inter.woff' });
+    expect(clear).toHaveBeenCalled();
+  });
+
+  it('can be replaced', () => {
+    const custom = createFontMetricsOracle({ measurer: monospaceMeasurer() });
+    setDefaultFontMetricsOracle(custom);
+    expect(getDefaultFontMetricsOracle()).toBe(custom);
+    expect(measureText('abc', { family: 'x', size: 2 }).width).toBe(6);
+  });
+});

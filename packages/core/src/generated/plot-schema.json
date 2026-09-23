@@ -1,0 +1,668 @@
+{
+  "traces": {},
+  "layout": {
+    "attributes": {
+      "editType": "calc",
+      "description": "Figure layout.",
+      "role": "object",
+      "width": {
+        "min": 10,
+        "dflt": 700,
+        "editType": "layout",
+        "description": "Figure width in CSS pixels. Ignored when `autosize` fills the container.",
+        "valType": "number"
+      },
+      "height": {
+        "min": 10,
+        "dflt": 450,
+        "editType": "layout",
+        "description": "Figure height in CSS pixels. Ignored when `autosize` fills the container.",
+        "valType": "number"
+      },
+      "autosize": {
+        "dflt": false,
+        "editType": "layout",
+        "description": "Size the figure to its container on first render (and on resize with `config.responsive`).",
+        "valType": "boolean"
+      },
+      "margin": {
+        "editType": "layout",
+        "description": "Space around the plot area.",
+        "role": "object",
+        "l": {
+          "min": 0,
+          "dflt": 80,
+          "description": "Left margin in CSS pixels.",
+          "valType": "number"
+        },
+        "r": {
+          "min": 0,
+          "dflt": 80,
+          "description": "Right margin in CSS pixels.",
+          "valType": "number"
+        },
+        "t": {
+          "min": 0,
+          "dflt": 100,
+          "description": "Top margin in CSS pixels.",
+          "valType": "number"
+        },
+        "b": {
+          "min": 0,
+          "dflt": 80,
+          "description": "Bottom margin in CSS pixels.",
+          "valType": "number"
+        },
+        "pad": {
+          "min": 0,
+          "dflt": 0,
+          "description": "Padding between the plot area and the axis lines, in CSS pixels.",
+          "valType": "number"
+        },
+        "autoexpand": {
+          "dflt": true,
+          "description": "Let components (legend, colorbars, automargin axes) grow the margins.",
+          "valType": "boolean"
+        }
+      },
+      "paper_bgcolor": {
+        "dflt": "#fff",
+        "editType": "style",
+        "description": "Background color of the whole figure.",
+        "valType": "color"
+      },
+      "plot_bgcolor": {
+        "dflt": "#fff",
+        "editType": "style",
+        "description": "Background color of the plot area between the axes.",
+        "valType": "color"
+      },
+      "font": {
+        "editType": "layout+plot",
+        "description": "Global font. Every text element inherits unset font fields from here.",
+        "role": "object",
+        "family": {
+          "noBlank": true,
+          "strict": true,
+          "dflt": "\"Open Sans\", verdana, arial, sans-serif",
+          "description": "CSS font-family list used by every text element unless overridden.",
+          "valType": "string"
+        },
+        "size": {
+          "min": 1,
+          "dflt": 12,
+          "description": "Base font size in CSS pixels.",
+          "valType": "number"
+        },
+        "color": {
+          "dflt": "#444",
+          "editType": "style",
+          "description": "Base text color.",
+          "valType": "color"
+        },
+        "weight": {
+          "min": 1,
+          "max": 1000,
+          "extras": ["normal", "bold"],
+          "dflt": "normal",
+          "description": "Base font weight.",
+          "valType": "integer"
+        },
+        "style": {
+          "values": ["normal", "italic"],
+          "dflt": "normal",
+          "description": "Base font style.",
+          "valType": "enumerated"
+        }
+      },
+      "colorway": {
+        "dflt": [
+          "#1f77b4",
+          "#ff7f0e",
+          "#2ca02c",
+          "#d62728",
+          "#9467bd",
+          "#8c564b",
+          "#e377c2",
+          "#7f7f7f",
+          "#bcbd22",
+          "#17becf"
+        ],
+        "editType": "style+legend",
+        "description": "Default trace colors, cycled by trace index.",
+        "valType": "colorlist"
+      },
+      "template": {
+        "editType": "calc",
+        "description": "Template: a registered name (`'dark'`), a `+`-composition (`'dark+presentation'`) or an object `{ layout, data }`. `null` disables the default template.",
+        "valType": "any"
+      },
+      "title": {
+        "editType": "layout+plot",
+        "description": "Figure title.",
+        "role": "object",
+        "text": {
+          "dflt": "",
+          "description": "Title text (supports rich-text tags, E2.10).",
+          "valType": "string"
+        },
+        "font": {
+          "description": "Title font. Defaults to `layout.font` with 1.4× size.",
+          "editType": "layout+plot",
+          "role": "object",
+          "family": {
+            "noBlank": true,
+            "strict": true,
+            "description": "CSS font-family list. The renderer uses the first family it can load and falls back through the list.",
+            "valType": "string"
+          },
+          "size": {
+            "min": 1,
+            "description": "Font size in CSS pixels.",
+            "valType": "number"
+          },
+          "color": {
+            "description": "Text color.",
+            "editType": "style",
+            "valType": "color"
+          },
+          "weight": {
+            "min": 1,
+            "max": 1000,
+            "extras": ["normal", "bold"],
+            "description": "Font weight: a CSS numeric weight (1–1000), `normal` or `bold`.",
+            "valType": "integer"
+          },
+          "style": {
+            "values": ["normal", "italic"],
+            "description": "Font style.",
+            "valType": "enumerated"
+          }
+        },
+        "x": {
+          "min": 0,
+          "max": 1,
+          "dflt": 0.5,
+          "description": "Horizontal position in `xref` coordinates.",
+          "valType": "number"
+        },
+        "y": {
+          "min": 0,
+          "max": 1,
+          "extras": ["auto"],
+          "dflt": "auto",
+          "description": "Vertical position in `yref` coordinates. `auto` places it in the top margin.",
+          "valType": "number"
+        },
+        "xref": {
+          "values": ["container", "paper"],
+          "dflt": "container",
+          "description": "`container` spans the whole figure; `paper` spans the plot area.",
+          "valType": "enumerated"
+        },
+        "yref": {
+          "values": ["container", "paper"],
+          "dflt": "container",
+          "description": "`container` spans the whole figure; `paper` spans the plot area.",
+          "valType": "enumerated"
+        },
+        "xanchor": {
+          "values": ["auto", "left", "center", "right"],
+          "dflt": "auto",
+          "description": "Horizontal alignment of the title box relative to `x`.",
+          "valType": "enumerated"
+        },
+        "yanchor": {
+          "values": ["auto", "top", "middle", "bottom"],
+          "dflt": "auto",
+          "description": "Vertical alignment of the title box relative to `y`.",
+          "valType": "enumerated"
+        }
+      },
+      "showlegend": {
+        "editType": "legend+layout",
+        "description": "Show the legend. Defaults to `true` when more than one trace has a legend entry.",
+        "valType": "boolean"
+      },
+      "hovermode": {
+        "values": ["x", "y", "closest", false, "x unified", "y unified"],
+        "dflt": "closest",
+        "editType": "modebar",
+        "description": "How hover picks points: nearest point, all points at the same x/y, or unified labels.",
+        "valType": "enumerated"
+      },
+      "dragmode": {
+        "values": ["zoom", "pan", "select", "lasso", "orbit", "turntable", false],
+        "dflt": "zoom",
+        "editType": "modebar",
+        "description": "What dragging on the plot area does.",
+        "valType": "enumerated"
+      },
+      "transition": {
+        "editType": "none",
+        "description": "Default transition for animated updates (E7.3).",
+        "role": "object",
+        "duration": {
+          "min": 0,
+          "dflt": 500,
+          "description": "Transition duration in milliseconds.",
+          "valType": "number"
+        },
+        "easing": {
+          "values": [
+            "linear",
+            "quad",
+            "cubic",
+            "sin",
+            "exp",
+            "circle",
+            "elastic",
+            "back",
+            "bounce",
+            "linear-in",
+            "quad-in",
+            "cubic-in",
+            "sin-in",
+            "exp-in",
+            "circle-in",
+            "elastic-in",
+            "back-in",
+            "bounce-in",
+            "linear-out",
+            "quad-out",
+            "cubic-out",
+            "sin-out",
+            "exp-out",
+            "circle-out",
+            "elastic-out",
+            "back-out",
+            "bounce-out",
+            "linear-in-out",
+            "quad-in-out",
+            "cubic-in-out",
+            "sin-in-out",
+            "exp-in-out",
+            "circle-in-out",
+            "elastic-in-out",
+            "back-in-out",
+            "bounce-in-out"
+          ],
+          "dflt": "cubic-in-out",
+          "description": "Easing function.",
+          "valType": "enumerated"
+        },
+        "ordering": {
+          "values": ["layout first", "traces first"],
+          "dflt": "layout first",
+          "description": "Whether layout or trace changes animate first.",
+          "valType": "enumerated"
+        }
+      },
+      "uirevision": {
+        "editType": "none",
+        "description": "While unchanged across updates, user interaction state (zoom, legend toggles, selections) is preserved.",
+        "valType": "any"
+      },
+      "datarevision": {
+        "editType": "calc",
+        "description": "Change this to force data arrays to be re-read when they are mutated in place.",
+        "valType": "any"
+      },
+      "meta": {
+        "arrayOk": true,
+        "editType": "plot",
+        "description": "Arbitrary user data, available in text templates as `%{meta}`.",
+        "valType": "any"
+      },
+      "xaxis": {
+        "editType": "calc",
+        "description": "A x axis. `xaxis2`, `xaxis3`, … declare further x axes, referenced from traces as `'x2'`, `'x3'`, ….",
+        "role": "object",
+        "subplot": "x",
+        "type": {
+          "values": ["-", "linear", "log", "date", "category", "multicategory"],
+          "dflt": "-",
+          "editType": "calc",
+          "description": "Axis type. `'-'` detects the type from the data of the first trace on this axis.",
+          "valType": "enumerated"
+        },
+        "autorange": {
+          "values": [true, false, "reversed"],
+          "dflt": true,
+          "editType": "layout+ticks+plot",
+          "description": "Whether the range is computed from the data. Defaults to `false` when a valid `range` is given.",
+          "valType": "enumerated"
+        },
+        "range": {
+          "items": [
+            {
+              "valType": "any"
+            },
+            {
+              "valType": "any"
+            }
+          ],
+          "editType": "ticks+plot",
+          "animatable": true,
+          "description": "Visible range `[start, end]` in data units (numbers, dates or category names). Setting it turns `autorange` off.",
+          "valType": "info_array"
+        },
+        "domain": {
+          "items": [
+            {
+              "min": 0,
+              "max": 1,
+              "dflt": 0,
+              "valType": "number"
+            },
+            {
+              "min": 0,
+              "max": 1,
+              "dflt": 1,
+              "valType": "number"
+            }
+          ],
+          "dflt": [0, 1],
+          "editType": "layout",
+          "description": "Fraction of the plot area `[start, end]` this axis spans.",
+          "valType": "info_array"
+        },
+        "anchor": {
+          "dflt": "y",
+          "extras": ["free"],
+          "editType": "layout",
+          "description": "The y axis this axis is drawn against, or `free`. Defaults to the y axis of the first subplot using this axis.",
+          "valType": "subplotid"
+        }
+      },
+      "yaxis": {
+        "editType": "calc",
+        "description": "A y axis. `yaxis2`, `yaxis3`, … declare further y axes, referenced from traces as `'y2'`, `'y3'`, ….",
+        "role": "object",
+        "subplot": "y",
+        "type": {
+          "values": ["-", "linear", "log", "date", "category", "multicategory"],
+          "dflt": "-",
+          "editType": "calc",
+          "description": "Axis type. `'-'` detects the type from the data of the first trace on this axis.",
+          "valType": "enumerated"
+        },
+        "autorange": {
+          "values": [true, false, "reversed"],
+          "dflt": true,
+          "editType": "layout+ticks+plot",
+          "description": "Whether the range is computed from the data. Defaults to `false` when a valid `range` is given.",
+          "valType": "enumerated"
+        },
+        "range": {
+          "items": [
+            {
+              "valType": "any"
+            },
+            {
+              "valType": "any"
+            }
+          ],
+          "editType": "ticks+plot",
+          "animatable": true,
+          "description": "Visible range `[start, end]` in data units (numbers, dates or category names). Setting it turns `autorange` off.",
+          "valType": "info_array"
+        },
+        "domain": {
+          "items": [
+            {
+              "min": 0,
+              "max": 1,
+              "dflt": 0,
+              "valType": "number"
+            },
+            {
+              "min": 0,
+              "max": 1,
+              "dflt": 1,
+              "valType": "number"
+            }
+          ],
+          "dflt": [0, 1],
+          "editType": "layout",
+          "description": "Fraction of the plot area `[start, end]` this axis spans.",
+          "valType": "info_array"
+        },
+        "anchor": {
+          "dflt": "x",
+          "extras": ["free"],
+          "editType": "layout",
+          "description": "The x axis this axis is drawn against, or `free`. Defaults to the x axis of the first subplot using this axis.",
+          "valType": "subplotid"
+        }
+      }
+    }
+  },
+  "config": {
+    "attributes": {
+      "editType": "plot",
+      "description": "Chart configuration (non-visual behavior).",
+      "role": "object",
+      "responsive": {
+        "dflt": false,
+        "description": "Resize the chart when its container or the window resizes.",
+        "valType": "boolean"
+      },
+      "staticPlot": {
+        "dflt": false,
+        "description": "Render once with no interactivity (no hover, zoom or modebar).",
+        "valType": "boolean"
+      },
+      "displayModeBar": {
+        "values": ["hover", true, false],
+        "dflt": "hover",
+        "description": "Show the modebar always (`true`), never (`false`) or on hover.",
+        "valType": "enumerated"
+      },
+      "modeBarButtonsToRemove": {
+        "items": {
+          "valType": "string"
+        },
+        "freeLength": true,
+        "dflt": [],
+        "description": "Names of default modebar buttons to remove.",
+        "valType": "info_array"
+      },
+      "modeBarButtonsToAdd": {
+        "dflt": [],
+        "description": "Extra modebar buttons: names of built-in buttons or custom button objects.",
+        "valType": "any"
+      },
+      "scrollZoom": {
+        "flags": ["cartesian", "scene", "geo", "map"],
+        "extras": [true, false],
+        "dflt": "scene+geo+map",
+        "description": "Which subplot kinds zoom on mouse wheel. `true`/`false` enable/disable all of them.",
+        "valType": "flaglist"
+      },
+      "doubleClick": {
+        "values": [false, "reset", "autosize", "reset+autosize"],
+        "dflt": "reset+autosize",
+        "description": "What double-clicking the plot area does.",
+        "valType": "enumerated"
+      },
+      "doubleClickDelay": {
+        "min": 0,
+        "dflt": 300,
+        "description": "Maximum delay between two clicks of a double-click, in milliseconds.",
+        "valType": "number"
+      },
+      "editable": {
+        "dflt": false,
+        "description": "Make titles, legend, annotations and shapes editable in place (E6.7).",
+        "valType": "boolean"
+      },
+      "edits": {
+        "description": "Fine-grained editability, overriding `editable` per element.",
+        "role": "object",
+        "annotationPosition": {
+          "dflt": false,
+          "description": "Drag annotations.",
+          "valType": "boolean"
+        },
+        "annotationTail": {
+          "dflt": false,
+          "description": "Drag annotation arrow tails.",
+          "valType": "boolean"
+        },
+        "annotationText": {
+          "dflt": false,
+          "description": "Edit annotation text.",
+          "valType": "boolean"
+        },
+        "axisTitleText": {
+          "dflt": false,
+          "description": "Edit axis titles.",
+          "valType": "boolean"
+        },
+        "colorbarPosition": {
+          "dflt": false,
+          "description": "Drag colorbars.",
+          "valType": "boolean"
+        },
+        "colorbarTitleText": {
+          "dflt": false,
+          "description": "Edit colorbar titles.",
+          "valType": "boolean"
+        },
+        "legendPosition": {
+          "dflt": false,
+          "description": "Drag the legend.",
+          "valType": "boolean"
+        },
+        "legendText": {
+          "dflt": false,
+          "description": "Edit trace names in the legend.",
+          "valType": "boolean"
+        },
+        "shapePosition": {
+          "dflt": false,
+          "description": "Drag and resize shapes.",
+          "valType": "boolean"
+        },
+        "titleText": {
+          "dflt": false,
+          "description": "Edit the figure title.",
+          "valType": "boolean"
+        }
+      },
+      "locale": {
+        "dflt": "en-US",
+        "noBlank": true,
+        "description": "BCP 47 locale for number/date formatting and UI strings.",
+        "valType": "string"
+      },
+      "toImageButtonOptions": {
+        "description": "Options for the modebar \"download image\" button.",
+        "role": "object",
+        "format": {
+          "values": ["png", "jpeg", "webp"],
+          "dflt": "png",
+          "description": "Image format.",
+          "valType": "enumerated"
+        },
+        "filename": {
+          "dflt": "newplot",
+          "noBlank": true,
+          "description": "File name.",
+          "valType": "string"
+        },
+        "width": {
+          "min": 1,
+          "description": "Width in CSS pixels (defaults to the chart).",
+          "valType": "number"
+        },
+        "height": {
+          "min": 1,
+          "description": "Height in CSS pixels (defaults to the chart).",
+          "valType": "number"
+        },
+        "scale": {
+          "min": 0,
+          "dflt": 1,
+          "description": "Resolution multiplier.",
+          "valType": "number"
+        }
+      },
+      "pixelRatio": {
+        "min": 0.25,
+        "max": 8,
+        "extras": ["auto"],
+        "dflt": "auto",
+        "description": "Renderer pixel ratio. `auto` uses `window.devicePixelRatio`.",
+        "valType": "number"
+      },
+      "antialias": {
+        "dflt": true,
+        "description": "Request an antialiased WebGL context (fixed at context creation).",
+        "valType": "boolean"
+      },
+      "powerPreference": {
+        "values": ["default", "high-performance", "low-power"],
+        "dflt": "default",
+        "description": "WebGL context power preference hint.",
+        "valType": "enumerated"
+      },
+      "worker": {
+        "values": [true, false, "auto"],
+        "dflt": false,
+        "description": "Run the calc stage in a Web Worker (ADR-011). `auto` switches on above a data-size threshold.",
+        "valType": "enumerated"
+      },
+      "textRenderer": {
+        "values": ["webgl", "dom"],
+        "dflt": "webgl",
+        "description": "Render text as WebGL SDF glyphs or as a DOM overlay (ADR-005).",
+        "valType": "enumerated"
+      },
+      "strict": {
+        "dflt": false,
+        "description": "Throw on the first validation error instead of warning (once per attribute path).",
+        "valType": "boolean"
+      },
+      "debug": {
+        "dflt": false,
+        "description": "Log update plans and pipeline timings to the console.",
+        "valType": "boolean"
+      }
+    }
+  },
+  "defs": {
+    "valTypes": [
+      "number",
+      "integer",
+      "string",
+      "boolean",
+      "enumerated",
+      "flaglist",
+      "color",
+      "colorlist",
+      "colorscale",
+      "angle",
+      "subplotid",
+      "data_array",
+      "info_array",
+      "any",
+      "function"
+    ],
+    "editTypes": [
+      "calc",
+      "calcIfAutorange",
+      "crossTraceCalc",
+      "layout",
+      "ticks",
+      "plot",
+      "style",
+      "colorbars",
+      "legend",
+      "modebar",
+      "camera",
+      "none"
+    ]
+  }
+}

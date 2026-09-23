@@ -1,0 +1,21 @@
+{
+  "name": "@mk7s/holochart-examples",
+  "private": true,
+  "type": "module",
+  "description": "Canonical examples: docs embeds, gallery thumbnails, and visual regression tests (plan E19.2).",
+  "exports": {
+    "./*": "./*"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@mk7s/holochart-core": "workspace:*",
+    "@mk7s/holochart-render": "workspace:*",
+    "three": "catalog:"
+  },
+  "devDependencies": {
+    "@types/three": "catalog:",
+    "typescript": "catalog:"
+  }
+}
