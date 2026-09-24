@@ -1,0 +1,315 @@
+{
+  "source": "https://openrouter.ai/rankings",
+  "retrieved": "2026-09-23",
+  "note": "Copied from mk7s/exporouter (Top Models weekly chart, summed across all models; top 3 models per week).",
+  "weeks": [
+    {
+      "week": "2026-02-02",
+      "tokensT": 9.804,
+      "top": [
+        ["moonshotai/kimi-k2.5", 1.159],
+        ["google/gemini-3-flash-preview", 0.764],
+        ["anthropic/claude-4.5-sonnet", 0.705]
+      ]
+    },
+    {
+      "week": "2026-02-09",
+      "tokensT": 13.015,
+      "top": [
+        ["minimax/minimax-m2.5", 1.438],
+        ["moonshotai/kimi-k2.5", 1.296],
+        ["google/gemini-3-flash-preview", 0.776]
+      ]
+    },
+    {
+      "week": "2026-02-16",
+      "tokensT": 13.948,
+      "top": [
+        ["minimax/minimax-m2.5", 2.57],
+        ["moonshotai/kimi-k2.5", 1.036],
+        ["google/gemini-3-flash-preview", 0.859]
+      ]
+    },
+    {
+      "week": "2026-02-23",
+      "tokensT": 13.616,
+      "top": [
+        ["minimax/minimax-m2.5", 1.625],
+        ["google/gemini-3-flash-preview", 1.027],
+        ["deepseek/deepseek-v3.2", 0.8]
+      ]
+    },
+    {
+      "week": "2026-03-02",
+      "tokensT": 14.789,
+      "top": [
+        ["minimax/minimax-m2.5", 1.864],
+        ["google/gemini-3-flash-preview", 1.043],
+        ["deepseek/deepseek-v3.2", 0.831]
+      ]
+    },
+    {
+      "week": "2026-03-09",
+      "tokensT": 16.874,
+      "top": [
+        ["minimax/minimax-m2.5", 1.747],
+        ["stepfun/step-3.5-flash:free", 1.34],
+        ["deepseek/deepseek-v3.2", 1.036]
+      ]
+    },
+    {
+      "week": "2026-03-16",
+      "tokensT": 20.297,
+      "top": [
+        ["xiaomi/mimo-v2-pro", 1.491],
+        ["stepfun/step-3.5-flash:free", 1.479],
+        ["minimax/minimax-m2.5", 1.298]
+      ]
+    },
+    {
+      "week": "2026-03-23",
+      "tokensT": 22.64,
+      "top": [
+        ["xiaomi/mimo-v2-pro", 3.947],
+        ["stepfun/step-3.5-flash:free", 1.485],
+        ["minimax/minimax-m2.7", 1.284]
+      ]
+    },
+    {
+      "week": "2026-03-30",
+      "tokensT": 27.006,
+      "top": [
+        ["qwen/qwen3.6-plus-04-02:free", 4.601],
+        ["xiaomi/mimo-v2-pro", 3.076],
+        ["qwen/qwen3.6-plus-preview:free", 1.64]
+      ]
+    },
+    {
+      "week": "2026-04-06",
+      "tokensT": 20.991,
+      "top": [
+        ["qwen/qwen3.6-plus-04-02:free", 1.663],
+        ["deepseek/deepseek-v3.2", 1.267],
+        ["anthropic/claude-4.6-opus", 1.193]
+      ]
+    },
+    {
+      "week": "2026-04-13",
+      "tokensT": 20.469,
+      "top": [
+        ["anthropic/claude-4.6-sonnet", 1.381],
+        ["deepseek/deepseek-v3.2", 1.28],
+        ["anthropic/claude-4.6-opus", 1.219]
+      ]
+    },
+    {
+      "week": "2026-04-20",
+      "tokensT": 21.883,
+      "top": [
+        ["moonshotai/kimi-k2.6", 1.581],
+        ["anthropic/claude-4.6-sonnet", 1.356],
+        ["deepseek/deepseek-v3.2", 1.275]
+      ]
+    },
+    {
+      "week": "2026-04-27",
+      "tokensT": 23.798,
+      "top": [
+        ["tencent/hy3-preview:free", 3.031],
+        ["moonshotai/kimi-k2.6", 1.812],
+        ["anthropic/claude-4.6-sonnet", 1.344]
+      ]
+    },
+    {
+      "week": "2026-05-04",
+      "tokensT": 25.732,
+      "top": [
+        ["tencent/hy3-preview:free", 2.677],
+        ["moonshotai/kimi-k2.6", 1.614],
+        ["anthropic/claude-4.6-sonnet", 1.452]
+      ]
+    },
+    {
+      "week": "2026-05-11",
+      "tokensT": 26.906,
+      "top": [
+        ["tencent/hy3-preview", 2.656],
+        ["deepseek/deepseek-v4-flash", 2.062],
+        ["anthropic/claude-4.6-sonnet", 1.546]
+      ]
+    },
+    {
+      "week": "2026-05-18",
+      "tokensT": 28.92,
+      "top": [
+        ["deepseek/deepseek-v4-flash", 3.426],
+        ["tencent/hy3-preview", 3.071],
+        ["anthropic/claude-4.7-opus", 1.938]
+      ]
+    },
+    {
+      "week": "2026-05-25",
+      "tokensT": 31.808,
+      "top": [
+        ["deepseek/deepseek-v4-flash", 3.108],
+        ["tencent/hy3-preview", 3.027],
+        ["anthropic/claude-4.7-opus", 2.324]
+      ]
+    },
+    {
+      "week": "2026-06-01",
+      "tokensT": 36.126,
+      "top": [
+        ["deepseek/deepseek-v4-flash", 3.684],
+        ["tencent/hy3-preview", 2.942],
+        ["minimax/minimax-m3", 2.499]
+      ]
+    },
+    {
+      "week": "2026-06-08",
+      "tokensT": 44.606,
+      "top": [
+        ["deepseek/deepseek-v4-flash", 4.413],
+        ["minimax/minimax-m3", 4.323],
+        ["tencent/hy3-preview", 4.136]
+      ]
+    },
+    {
+      "week": "2026-06-15",
+      "tokensT": 46.648,
+      "top": [
+        ["deepseek/deepseek-v4-flash", 4.934],
+        ["xiaomi/mimo-v2.5", 3.941],
+        ["minimax/minimax-m3", 3.771]
+      ]
+    },
+    {
+      "week": "2026-06-22",
+      "tokensT": 46.72,
+      "top": [
+        ["deepseek/deepseek-v4-flash", 4.658],
+        ["xiaomi/mimo-v2.5", 4.482],
+        ["minimax/minimax-m3", 3.744]
+      ]
+    },
+    {
+      "week": "2026-06-29",
+      "tokensT": 46.72,
+      "top": [
+        ["deepseek/deepseek-v4-flash", 5.34],
+        ["xiaomi/mimo-v2.5", 4.381],
+        ["minimax/minimax-m3", 4.112]
+      ]
+    },
+    {
+      "week": "2026-07-06",
+      "tokensT": 52.62,
+      "top": [
+        ["tencent/hy3:free", 6.134],
+        ["xiaomi/mimo-v2.5", 5.947],
+        ["deepseek/deepseek-v4-flash", 5.223]
+      ]
+    },
+    {
+      "week": "2026-07-13",
+      "tokensT": 62.774,
+      "top": [
+        ["tencent/hy3:free", 11.517],
+        ["xiaomi/mimo-v2.5", 9.32],
+        ["deepseek/deepseek-v4-flash", 5.385]
+      ]
+    },
+    {
+      "week": "2026-07-20",
+      "tokensT": 58.041,
+      "top": [
+        ["xiaomi/mimo-v2.5", 10.463],
+        ["deepseek/deepseek-v4-flash", 6.371],
+        ["tencent/hy3", 3.945]
+      ]
+    },
+    {
+      "week": "2026-07-27",
+      "tokensT": 56.789,
+      "top": [
+        ["deepseek/deepseek-v4-flash", 7.22],
+        ["xiaomi/mimo-v2.5", 6.305],
+        ["tencent/hy3", 4.825]
+      ]
+    },
+    {
+      "week": "2026-08-03",
+      "tokensT": 69.047,
+      "top": [
+        ["deepseek/deepseek-v4-flash-0731", 8.826],
+        ["tencent/hy3", 8.05],
+        ["deepseek/deepseek-v4-flash-0423", 5.88]
+      ]
+    },
+    {
+      "week": "2026-08-10",
+      "tokensT": 75.341,
+      "top": [
+        ["deepseek/deepseek-v4-flash-0731", 11.18],
+        ["tencent/hy3", 9.953],
+        ["openai/gpt-5.6-luna", 5.311]
+      ]
+    },
+    {
+      "week": "2026-08-17",
+      "tokensT": 93.378,
+      "top": [
+        ["deepseek/deepseek-v4-flash-0731", 11.576],
+        ["stealth/ox-alpha", 11.568],
+        ["xiaomi/mimo-v2.5", 9.939]
+      ]
+    },
+    {
+      "week": "2026-08-24",
+      "tokensT": 112.997,
+      "top": [
+        ["stealth/ox-alpha", 15.681],
+        ["deepseek/deepseek-v4-flash-0731", 12.306],
+        ["xiaomi/mimo-v2.5", 9.137]
+      ]
+    },
+    {
+      "week": "2026-08-31",
+      "tokensT": 115.463,
+      "top": [
+        ["tencent/hy4-preview", 14.673],
+        ["openai/gpt-5.6-luna", 12.938],
+        ["z-ai/glm-5.3-flash", 12.394]
+      ]
+    },
+    {
+      "week": "2026-09-07",
+      "tokensT": 126.763,
+      "top": [
+        ["openai/gpt-5.6-luna", 18.18],
+        ["tencent/hy4-preview", 16.816],
+        ["z-ai/glm-5.3-flash", 11.89]
+      ]
+    },
+    {
+      "week": "2026-09-14",
+      "tokensT": 128.895,
+      "top": [
+        ["deepseek/deepseek-v4.1-flash", 15.769],
+        ["z-ai/glm-5.3-flash", 14.071],
+        ["tencent/hy4-preview", 12.517]
+      ]
+    },
+    {
+      "week": "2026-09-21",
+      "tokensT": 50.525,
+      "top": [
+        ["z-ai/glm-5.3-flash", 8.622],
+        ["deepseek/deepseek-v4.1-flash", 6.384],
+        ["tencent/hy4-preview", 5.118]
+      ],
+      "partial": true,
+      "forecastT": 139.845
+    }
+  ]
+}

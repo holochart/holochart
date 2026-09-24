@@ -2001,6 +2001,14 @@ update redraws every scatter trace on the subplot and streaming appends lose the
 values (E5.5); the plotly.py theme values were written from memory and need checking against
 plotly.py (E8.1).
 
+Gaps found building the OpenRouter demo (`apps/docs/demos/openrouter.md`, worked around in the
+examples): a legend group click doesn't toggle same-group traces with `showlegend: false`; switching
+an axis to log doesn't convert annotation/range coordinates (Plotly's `convertCoords`); automatic
+log ticks label only powers of ten and drop `ticksuffix`; `makeSubplots` subplot titles hard-code
+16 px; on touch devices the modebar stays visible over the top-left legend; title vs multi-row
+legend overlap (ADR-021); `<b>` in annotations styles only the whole string (E2.10); the example
+registry treats every `.ts` file as an example (shared demo code lives in `.mts` files).
+
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 
 ---

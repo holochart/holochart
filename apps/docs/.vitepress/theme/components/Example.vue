@@ -9,6 +9,8 @@
  * - Disposes the example on unmount (page navigation).
  * - Tabs for the live preview and the TypeScript source (highlighted at build time), a copy
  *   button, and a link that opens the example in the dev sandbox.
+ * - `bare`: only the live chart, without the tab bar and caption, for showcase pages (demos)
+ *   that frame the chart with their own headings and text.
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue';
 
@@ -21,6 +23,8 @@ const props = defineProps<{
   id: string;
   /** Preview height in CSS pixels (default: the example's `meta.size.height`, else 400). */
   height?: number;
+  /** Show only the live chart: no Preview/Source tabs, no caption. */
+  bare?: boolean;
 }>();
 
 const DEFAULT_HEIGHT = 400;
@@ -155,8 +159,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <figure ref="root" class="hc-example" :data-example-id="id">
-    <div class="hc-example-bar">
+  <figure ref="root" class="hc-example" :class="{ 'hc-example--bare': bare }" :data-example-id="id">
+    <div v-if="!bare" class="hc-example-bar">
       <div class="hc-example-tabs" role="tablist" :aria-label="`Example ${id}`">
         <button
           type="button"
@@ -193,7 +197,11 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <div v-show="tab === 'preview'" class="hc-example-preview" role="tabpanel">
+    <div
+      v-show="tab === 'preview'"
+      class="hc-example-preview"
+      :role="bare ? undefined : 'tabpanel'"
+    >
       <div
         ref="stage"
         class="hc-example-stage"
@@ -207,14 +215,14 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <div v-show="tab === 'source'" class="hc-example-source" role="tabpanel">
+    <div v-if="!bare" v-show="tab === 'source'" class="hc-example-source" role="tabpanel">
       <!-- Highlighted at build time by the example-sources Vite plugin from the repo's own file. -->
       <div v-if="source" v-html="source.html" />
       <p v-else-if="sourceError" class="hc-example-status" data-status="error">{{ sourceError }}</p>
       <p v-else class="hc-example-status">Loading source…</p>
     </div>
 
-    <figcaption class="hc-example-caption">
+    <figcaption v-if="!bare" class="hc-example-caption">
       <template v-if="meta">
         <strong>{{ meta.title }}.</strong> {{ meta.description }}
       </template>

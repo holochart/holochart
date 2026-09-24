@@ -922,3 +922,191 @@ html.dark {
 .vp-doc .hc-attr-tree li + li {
   margin-top: 0;
 }
+
+/* ---------------------------------------------------------------------------------------- */
+/* Demo pages (frontmatter `pageClass: hc-demo`, `aside: false`)                              */
+/* ---------------------------------------------------------------------------------------- */
+
+/* Wider than a guide page, so the charts get room; prose keeps a readable measure. */
+.hc-demo .VPDoc .content-container {
+  max-width: 1040px;
+}
+
+.hc-demo .vp-doc > div > p,
+.hc-demo .vp-doc > div > ul {
+  max-width: 76ch;
+}
+
+.hc-demo .vp-doc .hc-eyebrow {
+  margin: 0 0 8px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--hc-tick);
+}
+
+.hc-demo .vp-doc .hc-verdict {
+  margin: 12px 0 24px;
+  font-size: 17px;
+  line-height: 27px;
+  color: var(--hc-text);
+}
+
+.hc-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin: 24px 0;
+  border: 1px solid var(--hc-grid);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--hc-grid);
+}
+
+.hc-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--hc-surface-1);
+}
+
+.hc-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 32px;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--hc-title);
+}
+
+.hc-stat-label {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--hc-text);
+}
+
+.hc-stat-aside {
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--hc-tick);
+}
+
+@media (max-width: 760px) {
+  .hc-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hc-stat-value {
+    font-size: 24px;
+    line-height: 28px;
+  }
+}
+
+/* A bare embed is just the chart, framed by a hairline like a code block. */
+.hc-example--bare {
+  margin: 16px 0;
+  background: var(--hc-bg);
+}
+
+/* Phones: charts run edge to edge, like code blocks do. */
+@media (max-width: 639px) {
+  .hc-demo .hc-example--bare {
+    margin: 16px -24px;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+}
+
+.hc-demo .vp-doc .hc-demo-caption,
+.hc-demo .vp-doc .hc-demo-source {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--hc-text);
+}
+
+/* Number tables: numeric columns right-aligned in tabular figures. */
+.hc-table-wrap {
+  margin: 16px 0;
+}
+
+.hc-table-scroll {
+  max-height: 480px;
+  overflow: auto;
+}
+
+.vp-doc .hc-num-table {
+  display: table;
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.vp-doc .hc-num-table th.n,
+.vp-doc .hc-num-table td.n {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.vp-doc .hc-num-table td {
+  font-size: 13px;
+}
+
+.vp-doc .hc-num-table td:first-child {
+  white-space: nowrap;
+}
+
+.vp-doc .hc-num-table tr.best td {
+  font-weight: 700;
+  color: var(--hc-title);
+}
+
+.hc-table-scroll .hc-num-table thead th {
+  position: sticky;
+  top: 0;
+}
+
+.vp-doc .hc-table-note {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--hc-tick);
+}
+
+.vp-doc .hc-details {
+  margin: 16px 0;
+  padding: 0 16px;
+  border: 1px solid var(--hc-grid);
+  border-radius: 4px;
+  background: var(--hc-surface-1);
+}
+
+.vp-doc .hc-details > summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--hc-title);
+}
+
+.vp-doc .hc-sources {
+  padding-left: 18px;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--hc-text);
+}
+
+.vp-doc .hc-sources li + li {
+  margin-top: 2px;
+}
+
+.hc-sources-unit {
+  color: var(--hc-tick);
+}
+
+/* A chart that doesn't need the full width (a donut). */
+.hc-demo-narrow {
+  max-width: 640px;
+}
