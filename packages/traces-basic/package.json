@@ -1,6 +1,6 @@
 {
   "name": "@mk7s/holochart-traces-basic",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Basic trace types: scatter, bar, pie, table.",
   "license": "MIT",
   "type": "module",

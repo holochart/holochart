@@ -1,6 +1,6 @@
 {
   "name": "@mk7s/holochart",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Holochart: declarative, GPU-rendered charts built on three.js (full bundle).",
   "license": "MIT",
   "type": "module",

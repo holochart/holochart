@@ -1,6 +1,6 @@
 {
   "name": "@mk7s/holochart-components",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Figure components: axes, legend, colorbar, annotations, shapes, hover labels, modebar.",
   "license": "MIT",
   "type": "module",

@@ -1,6 +1,6 @@
 {
   "name": "@mk7s/holochart-runtime",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Chart runtime: createChart, pipeline orchestration, update API, events, and the trace-render / component contracts (ADR-019).",
   "license": "MIT",
   "type": "module",

@@ -1,6 +1,6 @@
 {
   "name": "@mk7s/holochart-themes",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Built-in templates, palettes, and colorscales.",
   "license": "MIT",
   "type": "module",

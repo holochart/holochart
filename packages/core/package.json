@@ -1,6 +1,6 @@
 {
   "name": "@mk7s/holochart-core",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Figure model, attribute schema system, validation, defaults, and update planning.",
   "license": "MIT",
   "type": "module",
