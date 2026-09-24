@@ -142,6 +142,30 @@ describe('validate', () => {
   });
 });
 
+describe('templates with an own `__proto__` key', () => {
+  // Regression (CI seed 2064512310): copying template layout keys by assignment replaced the copy's
+  // prototype with the `__proto__` value, and the issues then held a fake Map that broke equality.
+  it('skips the key like other `_`-prefixed keys, without changing any prototype', () => {
+    const layout: Record<string, unknown> = {};
+    Object.defineProperty(layout, '__proto__', {
+      value: new Map(),
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    });
+    const run = () => validate([], { template: { layout } }, registry);
+    const issues = run();
+    expect(issues.filter((i) => i.path.includes('__proto__'))).toEqual([]);
+    for (const issue of issues) {
+      const v = (issue as { value?: unknown }).value;
+      if (v !== null && typeof v === 'object' && !(v instanceof Map)) {
+        expect(Object.getPrototypeOf(v)).not.toBeInstanceOf(Map);
+      }
+    }
+    expect(run()).toEqual(issues);
+  });
+});
+
 describe('suggestions', () => {
   it('computes edit distance with transpositions', () => {
     expect(editDistance('kitten', 'sitting')).toBe(3);

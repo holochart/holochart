@@ -183,7 +183,15 @@ function checkTemplate(template: unknown, registry: Registry, issues: Issue[]): 
     for (const [key, value] of Object.entries(layout)) {
       const item = key.endsWith('defaults') ? itemDefaultsNode(schema, key) : undefined;
       if (item) checkNode(item, value, `${path}.layout.${key}`, issues);
-      else rest[key] = value;
+      // Defined, not assigned: `rest['__proto__'] = v` would replace rest's prototype instead of
+      // copying an own `__proto__` key (which is then reported as unknown, like anywhere else).
+      else
+        Object.defineProperty(rest, key, {
+          value,
+          enumerable: true,
+          writable: true,
+          configurable: true,
+        });
     }
     checkNode(schema, rest, `${path}.layout`, issues);
   } else if (layout !== undefined) {
