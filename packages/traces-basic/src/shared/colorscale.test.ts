@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { registerColorscale, type FullLayout } from '@mk7s/holochart-core';
 import {
+  coloraxisLayoutSchema,
   colorDomain,
   hasColorscale,
   mapColor,
@@ -111,5 +113,87 @@ describe('resolveColorMapping', () => {
     const m = resolveColorMapping({ color: [0, 1], coloraxis: 'coloraxis' }, fullLayout)!;
     expect(m).toMatchObject({ cmin: -5, cmax: 5 });
     expect(m.colorscale).toBe(resolveColorscale('Viridis'));
+  });
+});
+
+describe('E8.2: registry names, reversed names, layout colorscales and interpolation', () => {
+  const layout = (extra: Record<string, unknown>) => extra as unknown as FullLayout;
+
+  it('resolves `_r` names and registered scales (the cache follows the registry)', () => {
+    const jet = resolveColorscale('Jet')!;
+    const jetR = resolveColorscale('jet_r')!;
+    expect(jetR[0]![1]).toEqual(jet[jet.length - 1]![1]);
+    expect(jetR[jetR.length - 1]![1]).toEqual(jet[0]![1]);
+    expect(resolveColorscale('Wave')).toBeUndefined();
+    const undo = registerColorscale('Wave', ['#000000', '#ffffff']);
+    try {
+      expect(resolveColorscale('wave')).toEqual([
+        [0, [0, 0, 0, 1]],
+        [1, [1, 1, 1, 1]],
+      ]);
+      expect(hasColorscale({ colorscale: 'Wave_r' })).toBe(true);
+    } finally {
+      undo();
+    }
+    expect(resolveColorscale('Wave')).toBeUndefined();
+  });
+
+  it('autocolorscale picks from layout.colorscale (templates), else Reds/Blues/RdBu', () => {
+    const container = { color: [1, 2, 3], cauto: true, autocolorscale: true };
+    const plasma = resolveColorMapping(
+      container,
+      layout({ colorscale: { sequential: 'Plasma', diverging: 'RdBu' } }),
+    )!;
+    expect(plasma.colorscale).toBe(resolveColorscale('Plasma'));
+    expect(resolveColorMapping(container, layout({}))!.colorscale).toBe(resolveColorscale('Reds'));
+    const diverging = resolveColorMapping(
+      { ...container, color: [-1, 2] },
+      layout({
+        colorscale: {
+          diverging: [
+            [0, 'rgb(0, 0, 0)'],
+            [1, 'rgb(255, 255, 255)'],
+          ],
+        },
+      }),
+    )!;
+    expect(diverging.colorscale[1]![1]).toEqual([1, 1, 1, 1]);
+  });
+
+  it('bakes layout.colorscaleInterpolation into the mapping (known midpoints)', () => {
+    const container = {
+      color: [0, 1],
+      cauto: true,
+      autocolorscale: false,
+      colorscale: [
+        [0, 'rgb(0, 0, 0)'],
+        [1, 'rgb(255, 255, 255)'],
+      ],
+    };
+    const mid = (space: string): number => {
+      const m = resolveColorMapping(container, layout({ colorscaleInterpolation: space }))!;
+      expect(m.interpolation).toBe(space);
+      return mapColor(0.5, m)[0];
+    };
+    expect(mid('rgb')).toBeCloseTo(0.5, 6);
+    expect(mid('oklab')).toBeCloseTo(0.3885, 2);
+    expect(mid('lab')).toBeCloseTo(0.4663, 2);
+    expect(mid('hcl')).toBeCloseTo(0.4663, 2);
+    // Unknown values fall back to Plotly's sRGB.
+    expect(
+      resolveColorMapping(container, layout({ colorscaleInterpolation: 'hsv' }))!.interpolation,
+    ).toBe('rgb');
+    // The densified scale is cached per resolved scale and space.
+    const a = resolveColorMapping(container, layout({ colorscaleInterpolation: 'lab' }))!;
+    const b = resolveColorMapping(container, layout({ colorscaleInterpolation: 'lab' }))!;
+    expect(a.colorscale).toBe(b.colorscale);
+  });
+
+  it('declares layout.colorscale and colorscaleInterpolation with Plotly defaults', () => {
+    const cs = coloraxisLayoutSchema.colorscale.children;
+    expect(cs.sequential.dflt).toBe('Reds');
+    expect(cs.sequentialminus.dflt).toBe('Blues');
+    expect(cs.diverging.dflt).toBe('RdBu');
+    expect(coloraxisLayoutSchema.colorscaleInterpolation.dflt).toBe('rgb');
   });
 });

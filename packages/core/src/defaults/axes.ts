@@ -18,7 +18,7 @@
  * fixed point (supply-defaults idempotence).
  */
 import { canonicalColor, toRGBA } from '../coerce/color.ts';
-import { isArrayLike } from '../coerce/coerce.ts';
+import { coerceValue, isArrayLike } from '../coerce/coerce.ts';
 import { formatDate, isDateString, isValidDate } from '../data/dates.ts';
 import { getIn } from '../path/path.ts';
 import { dateTick0, ONEDAY, ONEWEEK } from '../scales/date-math.ts';
@@ -273,6 +273,10 @@ function dependentDefaults(resolve: Resolver, fullLayout: FullLayout): Record<st
     out[`${prefix}.color`] = fontColor;
     out[`${prefix}.weight`] = font.weight;
     out[`${prefix}.style`] = font.style;
+    out[`${prefix}.variant`] = font.variant;
+    out[`${prefix}.textcase`] = font.textcase;
+    out[`${prefix}.lineposition`] = font.lineposition;
+    out[`${prefix}.shadow`] = font.shadow;
   }
   return out;
 }
@@ -298,8 +302,65 @@ function cleanLinearTicks(ax: FullAxis): void {
 }
 
 /**
+ * Per-axis default overrides from the subplots found, keyed by axis id (`'x2'`): the grid's
+ * `domain` / `anchor` / `side` / `position` defaults (`defaults/grid.ts`).
+ */
+export type AxisOverrides = (
+  subplots: Subplots,
+) => ReadonlyMap<string, Readonly<Record<string, unknown>>>;
+
+/**
+ * `overlaying` (plan E3.9, Plotly's `position_defaults`): an axis may overlay an existing axis of
+ * the same letter that does not overlay another axis itself, and then shares its `domain`
+ * (Plotly copies it at draw time; copying it here keeps the full layout self-describing).
+ * Anything else leaves the attribute unset, except an explicit `'free'`.
+ *
+ * Only the user's value counts, not the template's: an axis-family template value would make
+ * every axis overlay the same one. Validity is decided from those user values alone, so the full
+ * output fed back in gives the same result (idempotence).
+ */
+function supplyOverlaying(
+  layoutIn: Readonly<Record<string, unknown>>,
+  fullLayout: FullLayout,
+  ids: readonly string[],
+  family: 'xaxis' | 'yaxis',
+  letter: 'x' | 'y',
+  spec: AttrSpec | undefined,
+): void {
+  const requested = new Map<string, unknown>();
+  for (const id of ids) {
+    const axIn = layoutIn[keyForSubplotId(id, family, letter)];
+    const raw = isPlainObject(axIn) ? axIn['overlaying'] : undefined;
+    if (spec && raw !== undefined && raw !== null) {
+      const r = coerceValue(spec, raw);
+      if (r.ok) requested.set(id, r.value);
+    }
+  }
+  const overlays = (id: string): boolean => {
+    const target = requested.get(id);
+    return typeof target === 'string' && target !== id && ids.includes(target);
+  };
+  for (const id of ids) {
+    const ax = fullLayout[keyForSubplotId(id, family, letter)] as FullAxis;
+    const target = requested.get(id) as string | undefined;
+    if (overlays(id) && !overlays(target as string)) {
+      const base = fullLayout[keyForSubplotId(target as string, family, letter)] as FullAxis;
+      ax.overlaying = target as FullAxis['overlaying'];
+      ax.domain = [...base.domain] as FullAxis['domain'];
+    } else if (target === 'free') {
+      ax.overlaying = 'free';
+    } else {
+      delete (ax as { overlaying?: unknown }).overlaying;
+    }
+  }
+}
+
+/**
  * Discover cartesian subplots and coerce one axis per id into `fullLayout`.
  * Returns the `_subplots` registry.
+ *
+ * @param axisOverrides - Extra per-axis defaults computed from the subplots found (the
+ * `layout.grid` cell placement); they replace the built-in defaults, and user values still win.
  */
 export function supplyCartesianAxes(
   layoutIn: Readonly<Record<string, unknown>>,
@@ -307,6 +368,7 @@ export function supplyCartesianAxes(
   fullData: readonly FullTrace[],
   templateLayout: Record<string, unknown> | undefined,
   layoutSchema: ObjectNode,
+  axisOverrides?: AxisOverrides,
 ): Subplots {
   const subplots: Subplots = { cartesian: [], xaxis: [], yaxis: [] };
   const counterpart = { x: new Map<string, string>(), y: new Map<string, string>() };
@@ -347,6 +409,7 @@ export function supplyCartesianAxes(
   }
   subplots.xaxis.sort(byId);
   subplots.yaxis.sort(byId);
+  const extra = axisOverrides?.(subplots);
 
   for (const letter of ['x', 'y'] as const) {
     const family = `${letter}axis`;
@@ -374,7 +437,10 @@ export function supplyCartesianAxes(
           template: tmpl,
           overrides: {
             anchor: counterpart[letter].get(id) ?? other,
+            // Unset unless the user sets it (see supplyOverlaying).
+            overlaying: null,
             ...dependentDefaults(resolve, fullLayout),
+            ...extra?.get(id),
           },
         },
       ) as FullAxis;
@@ -391,6 +457,15 @@ export function supplyCartesianAxes(
       ax._name = key;
       fullLayout[key] = ax;
     }
+    const overlaying = getNodeAtPath(node, 'overlaying');
+    supplyOverlaying(
+      layoutIn,
+      fullLayout,
+      subplots[family as 'xaxis' | 'yaxis'],
+      family as 'xaxis' | 'yaxis',
+      letter,
+      overlaying?.kind === 'attr' ? overlaying : undefined,
+    );
   }
   return subplots;
 }

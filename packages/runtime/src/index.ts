@@ -13,6 +13,7 @@ export type {
   CalcContext,
   ColorbarSpec,
   ComponentDrawContext,
+  ComponentExtremesContext,
   ComponentLayoutContext,
   ComponentModule,
   ComponentPointerEvent,
@@ -21,11 +22,15 @@ export type {
   ComponentView,
   CrossTraceContext,
   CrossTraceEntry,
+  DomainInfo,
+  DomainLayoutContext,
+  DomainTraceEntry,
   HoverContext,
   HoverPoint,
   HoverQuery,
   LegendGlyph,
   LegendIconContext,
+  LegendItem,
   MarginPush,
   Registrable,
   SelectionQuery,
@@ -91,5 +96,5 @@ export type { DoubleClickAction, Dragmode, FxSettings, Hovermode } from './fx/se
 
 // Helpers for trace and component authors
 export { dataTransform, linearExtremes } from './axes.ts';
-export { MIN_PLOT_SIZE } from './layout.ts';
+export { domainRect, fitAspect, inscribedCircle, MIN_PLOT_SIZE } from './layout.ts';
 export type { AttributeUpdate, MaxPoints, StreamUpdate } from './plan.ts';

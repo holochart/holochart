@@ -28,6 +28,8 @@ import { validate } from '../validate/validate.ts';
 import { isPlainObject } from '../util/objects.ts';
 import { supplyCartesianAxes } from './axes.ts';
 import { coerceAtPath, coerceContainer } from './container.ts';
+import { supplyDomainDefaults } from './domain.ts';
+import { gridAxisOverrides, supplyGridSizing } from './grid.ts';
 import type { FigureInput, FullConfig, FullLayout, FullTrace } from './types.ts';
 
 /** Options for {@link supplyDefaults}. */
@@ -51,7 +53,7 @@ export interface SupplyDefaultsResult {
 }
 
 const BASE_LAYOUT_KEYS = new Set(Object.keys(layoutSchema.children));
-const LATE_LAYOUT_KEYS = new Set(['font', 'showlegend', 'template']);
+const LATE_LAYOUT_KEYS = new Set(['font', 'showlegend', 'template', 'grid']);
 const EARLY_LAYOUT_KEYS = new Set([...BASE_LAYOUT_KEYS].filter((k) => !LATE_LAYOUT_KEYS.has(k)));
 
 function reportIssues(
@@ -145,6 +147,7 @@ function supplyTrace(
     ctx.coerce('xaxis');
     ctx.coerce('yaxis');
   }
+  if (mod.categories.includes('domain')) supplyDomainDefaults(out, ctx, fullLayout);
   if (visible !== false) mod.supplyDefaults(traceIn, out, ctx);
 
   out._index = index;
@@ -194,9 +197,15 @@ export function supplyDefaults(
       'title.font.color': font.color,
       'title.font.weight': font.weight,
       'title.font.style': font.style,
+      'title.font.variant': font.variant,
+      'title.font.textcase': font.textcase,
+      'title.font.lineposition': font.lineposition,
+      'title.font.shadow': font.shadow,
     },
   });
   fullLayout.template = template;
+  // Grid cells first: domain traces are placed in them (`domain.row` / `domain.column`).
+  supplyGridSizing(layoutIn, fullLayout, tLayout, schema);
 
   // Traces.
   const typeCounts = new Map<string, number>();
@@ -238,14 +247,19 @@ export function supplyDefaults(
     owner.supplyLayoutDefaults?.(layoutIn, fullLayout, layoutCtx);
   }
 
-  fullLayout._subplots = supplyCartesianAxes(layoutIn, fullLayout, fullData, tLayout, schema);
+  fullLayout._subplots = supplyCartesianAxes(layoutIn, fullLayout, fullData, tLayout, schema, (s) =>
+    gridAxisOverrides(fullLayout, s),
+  );
 
-  const legendEntries = fullData.filter(
-    (t) =>
-      t.visible !== false &&
-      t['showlegend'] !== false &&
-      t._module?.categories.includes('showLegend') === true,
-  ).length;
+  // Pie-like traces count twice (Plotly): one pie shows its per-label legend by default.
+  const legendEntries = fullData
+    .filter(
+      (t) =>
+        t.visible !== false &&
+        t['showlegend'] !== false &&
+        t._module?.categories.includes('showLegend') === true,
+    )
+    .reduce((n, t) => n + (t._module?.categories.includes('pie-like') === true ? 2 : 1), 0);
   coerceContainer(schema, layoutIn, fullLayout, {
     template: tLayout,
     only: new Set(['showlegend']),

@@ -50,6 +50,17 @@ async function mockTroika(troika: MockState) {
   };
   class Text extends Object3D {
     text = '';
+    /** The text of the last finished typesetting (`textRenderInfo.parameters.text` in troika). */
+    typeset = '';
+    sync(): void {
+      this.typeset = this.text;
+    }
+    /** troika-like layout: 10 units per character, one line, baseline at 0. */
+    get textRenderInfo() {
+      const carets = new Float32Array(this.text.length * 4);
+      for (let i = 0; i < this.text.length; i++) carets.set([i * 10, i * 10 + 10, -3, 11], i * 4);
+      return { caretPositions: carets, topBaseline: 0, parameters: { text: this.typeset } };
+    }
     constructor() {
       super();
       noopDispose(this);
@@ -70,7 +81,10 @@ async function mockTroika(troika: MockState) {
       this.members.delete(text);
     }
     sync(callback?: () => void): void {
-      troika.syncs.push(() => callback?.());
+      troika.syncs.push(() => {
+        for (const member of this.members) member.sync();
+        callback?.();
+      });
     }
   }
   troika.loaded++;
@@ -86,6 +100,12 @@ type TextModule = typeof import('./text.ts');
 interface MockBatch {
   members: Set<{ text: string }>;
   renderOrder: number;
+}
+
+interface DecorationMesh {
+  name: string;
+  renderOrder: number;
+  visible: boolean;
 }
 
 let mod: TextModule;
@@ -263,5 +283,72 @@ describe('TextPrimitive: lazy text engine (E21.5)', () => {
     expect(troika.loads).toBe(1);
     await expect(mod.preloadTextFont({ characters: '0123456789' })).resolves.toBeUndefined();
     expect(troika.loads).toBe(1);
+  });
+});
+
+describe('TextPrimitive: decoration lines (E8.3)', () => {
+  const decorationsOf = (primitive: { object: { children: unknown[] } }) =>
+    (primitive.object.children as DecorationMesh[]).find(
+      (c) => c.name === 'holochart:text-decorations',
+    );
+
+  it('creates the decoration mesh only once a label is decorated', async () => {
+    open();
+    const ctx = context();
+    const text = mod.createTextPrimitive(ctx, { labels: labels('plain') });
+    await vi.waitFor(() => expect(batchOf(text)).toBeDefined());
+    expect(decorationsOf(text)).toBeUndefined();
+    expect(text.decorationCount).toBe(0);
+
+    text.object.renderOrder = 4;
+    text.update({
+      labels: [
+        { text: 'under', x: 0, y: 0, font: { lineposition: 'under' } },
+        { text: 'both', x: 1, y: 0, font: { lineposition: 'over+through' } },
+        { text: 'plain', x: 2, y: 0 },
+      ],
+    });
+    // The decoration module loads on demand (it is not in the initial chunk).
+    await vi.waitFor(() => expect(decorationsOf(text)).toBeDefined());
+    const mesh = decorationsOf(text);
+    expect(mesh!.renderOrder).toBe(4);
+    // The new text is not typeset yet: its old carets must not be decorated.
+    expect(text.decorationCount).toBe(0);
+    expect(mesh!.visible).toBe(false);
+    // The batch stays the first child.
+    expect(batchOf(text)!.members.size).toBe(3);
+    text.object.renderOrder = 6;
+    expect(mesh!.renderOrder).toBe(6);
+
+    // Typesetting finished: decorations are rebuilt from the new layout.
+    finishSyncs();
+    await text.ready;
+    expect(text.decorationCount).toBe(3);
+    expect(mesh!.visible).toBe(true);
+
+    // Decorations toggle without re-typesetting; the mesh is kept, hidden.
+    const syncs = troika.syncs.length;
+    text.update({
+      labels: [
+        { text: 'under', x: 0, y: 0, font: { lineposition: 'none' } },
+        { text: 'both', x: 1, y: 0, font: { lineposition: 'over+through' } },
+        { text: 'plain', x: 2, y: 0 },
+      ],
+    });
+    expect(troika.syncs.length).toBe(syncs);
+    expect(text.decorationCount).toBe(2);
+    // A decoration in the shared style applies to every label without its own.
+    text.update({ style: { font: { lineposition: 'under' } } });
+    expect(text.decorationCount).toBe(3);
+    text.update({ labels: labels('a', 'b'), style: {} });
+    expect(text.decorationCount).toBe(0);
+    expect(mesh!.visible).toBe(false);
+
+    const quadRefs = () =>
+      ctx.resources.stats().find((s) => s.key === 'holochart:primitives:unit-quad')?.refs ?? 0;
+    expect(quadRefs()).toBe(1);
+    text.dispose();
+    expect(decorationsOf(text)).toBeUndefined();
+    expect(quadRefs()).toBe(0);
   });
 });

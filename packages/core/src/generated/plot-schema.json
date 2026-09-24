@@ -113,6 +113,37 @@
           "dflt": "normal",
           "description": "Base font style.",
           "valType": "enumerated"
+        },
+        "variant": {
+          "values": [
+            "normal",
+            "small-caps",
+            "all-small-caps",
+            "all-petite-caps",
+            "petite-caps",
+            "unicase"
+          ],
+          "dflt": "normal",
+          "description": "Capitals variant (CSS `font-variant-caps`). The SDF text renderer approximates small and petite caps with uppercase letters at a reduced size.",
+          "valType": "enumerated"
+        },
+        "textcase": {
+          "values": ["normal", "word caps", "upper", "lower"],
+          "dflt": "normal",
+          "description": "Letter case transform: `upper`, `lower`, `word caps` (first letter of each word), or `normal`.",
+          "valType": "enumerated"
+        },
+        "lineposition": {
+          "flags": ["under", "over", "through"],
+          "extras": ["none"],
+          "dflt": "none",
+          "description": "Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.",
+          "valType": "flaglist"
+        },
+        "shadow": {
+          "dflt": "none",
+          "description": "CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.",
+          "valType": "string"
         }
       },
       "colorway": {
@@ -177,6 +208,33 @@
             "values": ["normal", "italic"],
             "description": "Font style.",
             "valType": "enumerated"
+          },
+          "variant": {
+            "values": [
+              "normal",
+              "small-caps",
+              "all-small-caps",
+              "all-petite-caps",
+              "petite-caps",
+              "unicase"
+            ],
+            "description": "Capitals variant (CSS `font-variant-caps`). The SDF text renderer approximates small and petite caps with uppercase letters at a reduced size.",
+            "valType": "enumerated"
+          },
+          "textcase": {
+            "values": ["normal", "word caps", "upper", "lower"],
+            "description": "Letter case transform: `upper`, `lower`, `word caps` (first letter of each word), or `normal`.",
+            "valType": "enumerated"
+          },
+          "lineposition": {
+            "flags": ["under", "over", "through"],
+            "extras": ["none"],
+            "description": "Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.",
+            "valType": "flaglist"
+          },
+          "shadow": {
+            "description": "CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.",
+            "valType": "string"
           }
         },
         "x": {
@@ -313,6 +371,129 @@
         "editType": "plot",
         "description": "Arbitrary user data, available in text templates as `%{meta}`.",
         "valType": "any"
+      },
+      "grid": {
+        "editType": "calc",
+        "description": "A grid of subplots (Plotly `layout.grid`). Cartesian axes placed in the grid get their `domain`, `anchor`, `side` and `position` defaults from their cell; domain traces (pie, …) are placed with `domain.row` / `domain.column`. Values given on an axis or a trace always win.",
+        "role": "object",
+        "rows": {
+          "min": 1,
+          "max": 100,
+          "description": "Number of rows. Defaults to the length of `subplots` or `yaxes`. A grid needs more than one cell (`rows * columns > 1`); otherwise it is ignored.",
+          "valType": "integer"
+        },
+        "roworder": {
+          "values": ["top to bottom", "bottom to top"],
+          "dflt": "top to bottom",
+          "description": "Whether row 0 (of `subplots`, `yaxes` and trace `domain.row`) is the top row or the bottom row.",
+          "valType": "enumerated"
+        },
+        "columns": {
+          "min": 1,
+          "max": 100,
+          "description": "Number of columns. Defaults to the length of `subplots[0]` or `xaxes`.",
+          "valType": "integer"
+        },
+        "subplots": {
+          "items": {
+            "items": {
+              "dflt": "",
+              "valType": "string"
+            },
+            "dflt": [],
+            "valType": "info_array"
+          },
+          "description": "The cartesian subplot of each cell, as a 2D array `[row][column]` of ids like `'xy'` or `'x2y3'`, or `''` for an empty cell. All cells of a column must share one x axis and all cells of a row one y axis; a subplot that breaks this, or that no trace or axis creates, leaves its cell empty. Takes precedence over `xaxes`/`yaxes`. With `pattern: 'independent'` and no arrays, it defaults to `'xy'`, `'x2y2'`, … in row-major order.",
+          "valType": "info_array"
+        },
+        "xaxes": {
+          "items": {
+            "dflt": "",
+            "valType": "string"
+          },
+          "description": "The x axis of each column (`'x'`, `'x2'`, …, or `''` for none), used when there is no `subplots` array. Defaults to `'x'`, `'x2'`, … for `pattern: 'coupled'`.",
+          "valType": "info_array"
+        },
+        "yaxes": {
+          "items": {
+            "dflt": "",
+            "valType": "string"
+          },
+          "description": "The y axis of each row (`'y'`, `'y2'`, …, or `''` for none), used when there is no `subplots` array. Defaults to `'y'`, `'y2'`, … for `pattern: 'coupled'`.",
+          "valType": "info_array"
+        },
+        "pattern": {
+          "values": ["independent", "coupled"],
+          "dflt": "coupled",
+          "description": "Default cell contents when neither `subplots` nor `xaxes`/`yaxes` is given: `coupled` shares one x axis per column and one y axis per row (`xaxes: ['x', 'x2', …]`, `yaxes: ['y', 'y2', …]`); `independent` gives every cell its own pair (`'xy'`, `'x2y2'`, … in row-major order).",
+          "valType": "enumerated"
+        },
+        "xgap": {
+          "min": 0,
+          "max": 1,
+          "description": "Horizontal space between columns, as a fraction of a column width. Defaults to 0.2 for a grid of independent subplots (`subplots` or `pattern: independent`), 0.1 otherwise.",
+          "valType": "number"
+        },
+        "ygap": {
+          "min": 0,
+          "max": 1,
+          "description": "Vertical space between rows, as a fraction of a row height. Defaults to 0.3 for a grid of independent subplots (`subplots` or `pattern: independent`), 0.1 otherwise.",
+          "valType": "number"
+        },
+        "domain": {
+          "description": "The part of the plot area the grid fills.",
+          "role": "object",
+          "x": {
+            "items": [
+              {
+                "min": 0,
+                "max": 1,
+                "dflt": 0,
+                "valType": "number"
+              },
+              {
+                "min": 0,
+                "max": 1,
+                "dflt": 1,
+                "valType": "number"
+              }
+            ],
+            "dflt": [0, 1],
+            "description": "Horizontal extent `[start, end]` of the whole grid, as fractions of the plot area. An empty or reversed extent falls back to `[0, 1]`.",
+            "valType": "info_array"
+          },
+          "y": {
+            "items": [
+              {
+                "min": 0,
+                "max": 1,
+                "dflt": 0,
+                "valType": "number"
+              },
+              {
+                "min": 0,
+                "max": 1,
+                "dflt": 1,
+                "valType": "number"
+              }
+            ],
+            "dflt": [0, 1],
+            "description": "Vertical extent `[start, end]` of the whole grid, as fractions of the plot area (from the bottom). An empty or reversed extent falls back to `[0, 1]`.",
+            "valType": "info_array"
+          }
+        },
+        "xside": {
+          "values": ["bottom", "bottom plot", "top plot", "top"],
+          "dflt": "bottom plot",
+          "description": "Where the x axes are drawn by default: `bottom plot` / `top plot` against the bottom-most / top-most subplot of their column; `bottom` / `top` at the bottom / top edge of the grid (`anchor: 'free'`), even when that cell is empty.",
+          "valType": "enumerated"
+        },
+        "yside": {
+          "values": ["left", "left plot", "right plot", "right"],
+          "dflt": "left plot",
+          "description": "Where the y axes are drawn by default: `left plot` / `right plot` against the left-most / right-most subplot of their row; `left` / `right` at the left / right edge of the grid (`anchor: 'free'`), even when that cell is empty.",
+          "valType": "enumerated"
+        }
       },
       "xaxis": {
         "editType": "calc",
@@ -451,6 +632,13 @@
           "description": "Which side of the plot area the axis is drawn on.",
           "valType": "enumerated"
         },
+        "overlaying": {
+          "dflt": "x",
+          "extras": ["free"],
+          "editType": "layout+ticks+plot",
+          "description": "Draw this axis over another x axis (`'x'`, `'x2'`, …), sharing its `domain` (this axis' own `domain` is ignored), e.g. a secondary y axis with `side: 'right'`. Unset (or `free`) by default. The target must exist and must not overlay another axis itself; otherwise this is ignored. Templates cannot set it, since it names specific axes. Zoom and pan do not yet move overlaid axes together (plan E3.9).",
+          "valType": "subplotid"
+        },
         "position": {
           "min": 0,
           "max": 1,
@@ -543,6 +731,33 @@
             "values": ["normal", "italic"],
             "description": "Font style.",
             "valType": "enumerated"
+          },
+          "variant": {
+            "values": [
+              "normal",
+              "small-caps",
+              "all-small-caps",
+              "all-petite-caps",
+              "petite-caps",
+              "unicase"
+            ],
+            "description": "Capitals variant (CSS `font-variant-caps`). The SDF text renderer approximates small and petite caps with uppercase letters at a reduced size.",
+            "valType": "enumerated"
+          },
+          "textcase": {
+            "values": ["normal", "word caps", "upper", "lower"],
+            "description": "Letter case transform: `upper`, `lower`, `word caps` (first letter of each word), or `normal`.",
+            "valType": "enumerated"
+          },
+          "lineposition": {
+            "flags": ["under", "over", "through"],
+            "extras": ["none"],
+            "description": "Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.",
+            "valType": "flaglist"
+          },
+          "shadow": {
+            "description": "CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.",
+            "valType": "string"
           }
         },
         "tickangle": {
@@ -969,6 +1184,33 @@
               "values": ["normal", "italic"],
               "description": "Font style.",
               "valType": "enumerated"
+            },
+            "variant": {
+              "values": [
+                "normal",
+                "small-caps",
+                "all-small-caps",
+                "all-petite-caps",
+                "petite-caps",
+                "unicase"
+              ],
+              "description": "Capitals variant (CSS `font-variant-caps`). The SDF text renderer approximates small and petite caps with uppercase letters at a reduced size.",
+              "valType": "enumerated"
+            },
+            "textcase": {
+              "values": ["normal", "word caps", "upper", "lower"],
+              "description": "Letter case transform: `upper`, `lower`, `word caps` (first letter of each word), or `normal`.",
+              "valType": "enumerated"
+            },
+            "lineposition": {
+              "flags": ["under", "over", "through"],
+              "extras": ["none"],
+              "description": "Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.",
+              "valType": "flaglist"
+            },
+            "shadow": {
+              "description": "CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.",
+              "valType": "string"
             }
           },
           "standoff": {
@@ -1115,6 +1357,13 @@
           "description": "Which side of the plot area the axis is drawn on.",
           "valType": "enumerated"
         },
+        "overlaying": {
+          "dflt": "y",
+          "extras": ["free"],
+          "editType": "layout+ticks+plot",
+          "description": "Draw this axis over another y axis (`'y'`, `'y2'`, …), sharing its `domain` (this axis' own `domain` is ignored), e.g. a secondary y axis with `side: 'right'`. Unset (or `free`) by default. The target must exist and must not overlay another axis itself; otherwise this is ignored. Templates cannot set it, since it names specific axes. Zoom and pan do not yet move overlaid axes together (plan E3.9).",
+          "valType": "subplotid"
+        },
         "position": {
           "min": 0,
           "max": 1,
@@ -1207,6 +1456,33 @@
             "values": ["normal", "italic"],
             "description": "Font style.",
             "valType": "enumerated"
+          },
+          "variant": {
+            "values": [
+              "normal",
+              "small-caps",
+              "all-small-caps",
+              "all-petite-caps",
+              "petite-caps",
+              "unicase"
+            ],
+            "description": "Capitals variant (CSS `font-variant-caps`). The SDF text renderer approximates small and petite caps with uppercase letters at a reduced size.",
+            "valType": "enumerated"
+          },
+          "textcase": {
+            "values": ["normal", "word caps", "upper", "lower"],
+            "description": "Letter case transform: `upper`, `lower`, `word caps` (first letter of each word), or `normal`.",
+            "valType": "enumerated"
+          },
+          "lineposition": {
+            "flags": ["under", "over", "through"],
+            "extras": ["none"],
+            "description": "Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.",
+            "valType": "flaglist"
+          },
+          "shadow": {
+            "description": "CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.",
+            "valType": "string"
           }
         },
         "tickangle": {
@@ -1633,6 +1909,33 @@
               "values": ["normal", "italic"],
               "description": "Font style.",
               "valType": "enumerated"
+            },
+            "variant": {
+              "values": [
+                "normal",
+                "small-caps",
+                "all-small-caps",
+                "all-petite-caps",
+                "petite-caps",
+                "unicase"
+              ],
+              "description": "Capitals variant (CSS `font-variant-caps`). The SDF text renderer approximates small and petite caps with uppercase letters at a reduced size.",
+              "valType": "enumerated"
+            },
+            "textcase": {
+              "values": ["normal", "word caps", "upper", "lower"],
+              "description": "Letter case transform: `upper`, `lower`, `word caps` (first letter of each word), or `normal`.",
+              "valType": "enumerated"
+            },
+            "lineposition": {
+              "flags": ["under", "over", "through"],
+              "extras": ["none"],
+              "description": "Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.",
+              "valType": "flaglist"
+            },
+            "shadow": {
+              "description": "CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.",
+              "valType": "string"
             }
           },
           "standoff": {

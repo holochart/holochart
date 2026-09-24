@@ -26,6 +26,10 @@
  * - No bidi reordering, no complex-script shaping in the fallback, and ellipsis truncation works on
  *   grapheme clusters only where `Intl.Segmenter` exists (code points otherwise).
  * - `letterSpacing` is not modeled.
+ * - `textcase` and `variant` are applied before measuring ({@link resolveTextTransform}): the
+ *   transformed text is measured at the scaled size, exactly as the text primitive draws it. So
+ *   {@link FontMetricsOracle.wrapText} and {@link FontMetricsOracle.ellipsize} return transformed
+ *   text (the transform is idempotent, so handing it back to the primitive changes nothing).
  *
  * Pure module: never imports troika or touches WebGL.
  */
@@ -37,6 +41,7 @@ import {
   subscribeFontChanges,
   type TextFont,
 } from './text-fonts.ts';
+import { resolveTextTransform } from './text-style.ts';
 
 /** Default line height as a multiple of the font size (shared with the text primitive). */
 export const TEXT_DEFAULT_LINE_HEIGHT = 1.2;
@@ -84,7 +89,10 @@ export interface MeasuredText {
   lineCount: number;
 }
 
-/** Synchronous, cached text measurement for layout. */
+/**
+ * Synchronous, cached text measurement for layout. Every method honors the font's `textcase` and
+ * `variant` (see the module notes).
+ */
 export interface FontMetricsOracle {
   readonly measurer: TextMeasurer;
   /** Width in px of the widest line of `text` (trailing whitespace excluded). */
@@ -305,14 +313,25 @@ export function createFontMetricsOracle(options: FontMetricsOracleOptions = {}):
     return w;
   };
 
-  const lineWidth = (line: string, font: TextFont, face: TextFace, faceKey: string): number =>
-    unitWidth(line.trimEnd(), face, faceKey) * font.size;
+  const lineWidth = (line: string, size: number, face: TextFace, faceKey: string): number =>
+    unitWidth(line.trimEnd(), face, faceKey) * size;
+
+  /**
+   * The drawn text and size for a request (`textcase`, `variant`). Cache keys stay correct without
+   * mentioning either: widths are keyed by the transformed text, and the size scale is applied
+   * after the (size-independent) cache.
+   */
+  const drawn = (text: string, font: TextFont): [string, number] => {
+    const t = resolveTextTransform(font);
+    return t.identity ? [text, font.size] : [t.transform(text), font.size * t.sizeScale];
+  };
 
   const measureWidth = (text: string, font: TextFont): number => {
     const [face, faceKey] = resolve(font);
+    const [drawnText, size] = drawn(text, font);
     let max = 0;
-    for (const line of text.split('\n')) {
-      max = Math.max(max, lineWidth(line, font, face, faceKey));
+    for (const line of drawnText.split('\n')) {
+      max = Math.max(max, lineWidth(line, size, face, faceKey));
     }
     return max;
   };
@@ -329,14 +348,14 @@ export function createFontMetricsOracle(options: FontMetricsOracleOptions = {}):
 
   const ellipsizeLine = (
     line: string,
-    font: TextFont,
+    size: number,
     face: TextFace,
     faceKey: string,
     maxWidth: number,
     ellipsis: string,
   ): string => {
-    if (lineWidth(line, font, face, faceKey) <= maxWidth) return line;
-    const ellipsisWidth = unitWidth(ellipsis, face, faceKey) * font.size;
+    if (lineWidth(line, size, face, faceKey) <= maxWidth) return line;
+    const ellipsisWidth = unitWidth(ellipsis, face, faceKey) * size;
     if (ellipsisWidth > maxWidth) return '';
     const parts = graphemes(line);
     // Largest prefix that fits with the ellipsis (width is monotonic up to kerning effects).
@@ -345,7 +364,7 @@ export function createFontMetricsOracle(options: FontMetricsOracleOptions = {}):
     while (lo < hi) {
       const mid = (lo + hi + 1) >> 1;
       const prefix = parts.slice(0, mid).join('').trimEnd();
-      if (lineWidth(prefix, font, face, faceKey) + ellipsisWidth <= maxWidth) lo = mid;
+      if (lineWidth(prefix, size, face, faceKey) + ellipsisWidth <= maxWidth) lo = mid;
       else hi = mid - 1;
     }
     return parts.slice(0, lo).join('').trimEnd() + ellipsis;
@@ -356,12 +375,14 @@ export function createFontMetricsOracle(options: FontMetricsOracleOptions = {}):
     measureWidth,
     measureText(text, font, lineHeight = TEXT_DEFAULT_LINE_HEIGHT) {
       const v = vertical(font);
+      // The size scale of a variant applies to everything troika draws, line advance included.
+      const size = drawn('', font)[1];
       const lineCount = text.split('\n').length;
-      const advance = font.size * lineHeight;
+      const advance = size * lineHeight;
       return {
         width: measureWidth(text, font),
-        ascent: v.ascent * font.size,
-        descent: v.descent * font.size,
+        ascent: v.ascent * size,
+        descent: v.descent * size,
         lineHeight: advance,
         height: lineCount * advance,
         lineCount,
@@ -369,16 +390,16 @@ export function createFontMetricsOracle(options: FontMetricsOracleOptions = {}):
     },
     wrapText(text, font, maxWidth) {
       const [face, faceKey] = resolve(font);
+      const [drawnText, size] = drawn(text, font);
       const out: string[] = [];
-      for (const hardLine of text.split('\n')) {
+      for (const hardLine of drawnText.split('\n')) {
         const tokens = hardLine.match(WRAP_TOKEN)?.filter((t) => t.length > 0) ?? [];
         let line = '';
         let width = 0;
         for (const token of tokens) {
           const core = token.trimEnd();
-          const coreWidth = unitWidth(core, face, faceKey) * font.size;
-          const tokenWidth =
-            core === token ? coreWidth : unitWidth(token, face, faceKey) * font.size;
+          const coreWidth = unitWidth(core, face, faceKey) * size;
+          const tokenWidth = core === token ? coreWidth : unitWidth(token, face, faceKey) * size;
           // Trailing whitespace may hang past maxWidth, as in troika and CSS.
           if (line.length > 0 && width + coreWidth > maxWidth) {
             out.push(line.trimEnd());
@@ -395,9 +416,10 @@ export function createFontMetricsOracle(options: FontMetricsOracleOptions = {}):
     },
     ellipsize(text, font, maxWidth, ellipsis = TEXT_ELLIPSIS) {
       const [face, faceKey] = resolve(font);
-      return text
+      const [drawnText, size] = drawn(text, font);
+      return drawnText
         .split('\n')
-        .map((line) => ellipsizeLine(line, font, face, faceKey, maxWidth, ellipsis))
+        .map((line) => ellipsizeLine(line, size, face, faceKey, maxWidth, ellipsis))
         .join('\n');
     },
     clear() {

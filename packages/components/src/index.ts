@@ -8,8 +8,10 @@ import type { Registrable } from '@mk7s/holochart-runtime';
 import { annotationsComponent } from './annotations/annotations.ts';
 import { axesComponent } from './axes/axes.ts';
 import { colorbarComponent } from './colorbar/colorbar.ts';
+import { imagesComponent } from './images/images.ts';
 import { legendComponent } from './legend/legend.ts';
 import { modebarComponent } from './modebar/index.ts';
+import { shapesComponent } from './shapes/shapes.ts';
 import { titleComponent } from './title/title.ts';
 
 // Axes (E3.4) and automargin (E4.2)
@@ -103,6 +105,53 @@ export {
 } from './annotations/schema.ts';
 export type { FullAnnotation } from './annotations/schema.ts';
 
+// Shapes (E5.5)
+export {
+  accumulateShape,
+  closedPolyline,
+  dragOverride,
+  hitShape,
+  movePath,
+  shapesComponent,
+  shapesOf,
+  shapeStack,
+} from './shapes/shapes.ts';
+export {
+  cachedPath,
+  labelPosition,
+  quantizeScale,
+  shapeDim,
+  shapeGeometry,
+} from './shapes/geometry.ts';
+export type { Ring, ShapeAxis, ShapeDim, ShapeEnv, ShapeGeometry } from './shapes/geometry.ts';
+export { addHline, addHrect, addShape, addVline, addVrect } from './shapes/helpers.ts';
+export type { ShapeOptions } from './shapes/helpers.ts';
+// Renamed: core exports `parsePath` / `PathSegment` for attribute paths.
+export {
+  ellipsePoints,
+  flattenPath as flattenShapePath,
+  parsePath as parseShapePath,
+} from './shapes/path.ts';
+export type {
+  FlatRing,
+  FlattenOptions,
+  ParsedPath as ParsedShapePath,
+  PathSegment as ShapePathSegment,
+  PathValue as ShapePathValue,
+} from './shapes/path.ts';
+export { shapeItemAttributes, shapesAttributes, supplyShapeDefaults } from './shapes/schema.ts';
+export type { FullShape, ShapeLabelPosition } from './shapes/schema.ts';
+
+// Layout images (E5.6)
+export { imageSpan, imageStack, imagesComponent, imagesOf } from './images/images.ts';
+export type { ImageSpan } from './images/images.ts';
+export { imageItemAttributes, imagesAttributes, supplyImageDefaults } from './images/schema.ts';
+export type { FullLayoutImage } from './images/schema.ts';
+
+// Layers shared by shapes and images
+export { axisAffine, classTransform, clipRect, LayerHost } from './shared/layers.ts';
+export type { LayerKind, LayerPlacement, LayerRequest, LayerStack } from './shared/layers.ts';
+
 // Placement shared by boxed components
 export {
   anchorFraction,
@@ -125,6 +174,8 @@ export const builtinComponents: readonly Registrable[] = [
   titleComponent,
   colorbarComponent,
   legendComponent,
+  imagesComponent,
+  shapesComponent,
   annotationsComponent,
   modebarComponent,
 ];

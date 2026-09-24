@@ -8,7 +8,9 @@
  * registry.
  */
 import { attr } from '../schema/attr.ts';
-import type { EditType } from '../schema/types.ts';
+import { fontExtraAttributes, layoutFontExtraAttributes } from './font-attributes.ts';
+import { gridSchema } from './grid.ts';
+import type { AttrSpec, EditType } from '../schema/types.ts';
 
 /** Transition easing names (Plotly-compatible). */
 export const EASINGS = [
@@ -92,6 +94,7 @@ export function fontSchema(description: string) {
         values: ['normal', 'italic'],
         description: 'Font style.',
       }),
+      ...fontExtraAttributes(),
     },
     { description, editType: ['layout', 'plot'] },
   );
@@ -149,6 +152,23 @@ function sideAttr<L extends 'x' | 'y'>(letter: L) {
   return (letter === 'x' ? X_SIDE : Y_SIDE) as unknown as L extends 'x'
     ? typeof X_SIDE
     : typeof Y_SIDE;
+}
+
+/**
+ * `overlaying` (Plotly; plan E3.9): draw this axis over another axis of the same letter, e.g. a
+ * secondary y axis. The subplot id builder needs a base id (`dflt`), so the attribute is typed
+ * without a default: supply-defaults leaves it unset unless the user sets it (`defaults/axes.ts`).
+ */
+function overlayingAttr<L extends 'x' | 'y'>(letter: L) {
+  return attr.subplotId({
+    dflt: letter,
+    extras: ['free'],
+    editType: AXIS_EDIT,
+    description: `Draw this axis over another ${letter} axis (\`'${letter}'\`, \`'${letter}2'\`, …), sharing its \`domain\` (this axis' own \`domain\` is ignored), e.g. a secondary y axis with \`side: 'right'\`. Unset (or \`free\`) by default. The target must exist and must not overlay another axis itself; otherwise this is ignored. Templates cannot set it, since it names specific axes. Zoom and pan do not yet move overlaid axes together (plan E3.9).`,
+  }) as unknown as AttrSpec<
+    `${L}` | `${L}${number}` | 'free',
+    `${L}` | `${L}${number}` | 'free' | undefined
+  >;
 }
 
 /**
@@ -276,6 +296,7 @@ function axisSchema<const L extends 'x' | 'y'>(letter: L) {
         description: `The ${other} axis this axis is drawn against, or \`free\`. Defaults to the ${other} axis of the first subplot using this axis.`,
       }),
       side: sideAttr(letter),
+      overlaying: overlayingAttr(letter),
       position: attr.number({
         min: 0,
         max: 1,
@@ -745,6 +766,7 @@ export const layoutSchema = attr.object(
           dflt: 'normal',
           description: 'Base font style.',
         }),
+        ...layoutFontExtraAttributes(),
       },
       {
         editType: ['layout', 'plot'],
@@ -857,6 +879,7 @@ export const layoutSchema = attr.object(
       editType: 'plot',
       description: 'Arbitrary user data, available in text templates as `%{meta}`.',
     }),
+    grid: gridSchema,
     xaxis: xaxisSchema,
     yaxis: yaxisSchema,
   },

@@ -40,6 +40,10 @@ describe('supplyDefaults: layout', () => {
       color: 'rgb(255, 0, 0)',
       weight: 'normal',
       style: 'normal',
+      variant: 'normal',
+      textcase: 'normal',
+      lineposition: 'none',
+      shadow: 'none',
     });
     const own = run({ layout: { title: { font: { size: 30 } } } }).fullLayout;
     expect(own.title.font.size).toBe(30);

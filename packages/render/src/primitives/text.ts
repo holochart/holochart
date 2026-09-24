@@ -33,9 +33,17 @@
  *
  * ## Fonts
  *
- * Families resolve to font files through `registerFont` (text-fonts.ts). Unregistered families use
- * troika's default font: `configureText({ defaultFontURL })` or, if unset, troika's CDN fallback.
- * Visual tests need a vendored font (e.g. Inter, OFL) so rendering is offline and deterministic.
+ * Families resolve to font files through `registerFont` / `fonts.register` (text-fonts.ts).
+ * Unregistered families use troika's default font: `configureText({ defaultFontURL })` or, if
+ * unset, troika's CDN fallback. Visual tests need a vendored font (e.g. Inter, OFL) so rendering is
+ * offline and deterministic.
+ *
+ * Plotly's paint-level font attributes (E8.3): `textcase` and `variant` change the typeset text and
+ * size (text-style.ts; small caps are approximated), `shadow` becomes the outline pass unless the
+ * label has an explicit `outline`, and `lineposition` draws underlines/overlines/line-throughs as
+ * one extra instanced draw call for the whole primitive (text-decoration.ts), created only once a
+ * label is decorated. That module is loaded on demand like the engine (few charts underline text,
+ * and it would otherwise add to every page's initial chunk).
  *
  * ## Lazy engine (plan E21.5)
  *
@@ -86,6 +94,7 @@ import {
   type TextStyle,
 } from './text-layout.ts';
 import { getDefaultFontMetricsOracle, type FontMetricsOracle } from './text-metrics.ts';
+import type { TextDecorationLayer } from './text-decoration.ts';
 import {
   configureTextEngine,
   loadTextEngine,
@@ -227,6 +236,10 @@ export class TextPrimitive implements Primitive<TextData> {
   private engine: TextEngine | null = null;
   /** A text-engine load started by this primitive is in flight. */
   private attaching = false;
+  /** Decoration lines (`font.lineposition`), created when a label is first decorated. */
+  private decorations: TextDecorationLayer | null = null;
+  /** The decoration module is being loaded for this primitive. */
+  private loadingDecorations = false;
   private readonly baseMaterial: MeshBasicMaterial;
   private readonly metrics: FontMetricsOracle;
   private readonly resolveFont: FontURLResolver;
@@ -270,6 +283,7 @@ export class TextPrimitive implements Primitive<TextData> {
     });
     this.object = createTextRoot((order) => {
       if (this.batch) this.batch.renderOrder = order;
+      if (this.decorations) this.decorations.mesh.renderOrder = order;
     });
     this.object.name = 'holochart:text';
 
@@ -291,6 +305,11 @@ export class TextPrimitive implements Primitive<TextData> {
   /** Same as {@link ready}, as a method. */
   whenReady(): Promise<void> {
     return this.pending;
+  }
+
+  /** Number of decoration lines drawn (`font.lineposition`), for debugging and tests. */
+  get decorationCount(): number {
+    return this.decorations?.instanceCount ?? 0;
   }
 
   /** Number of pooled (idle) troika members, for debugging and tests. */
@@ -322,6 +341,9 @@ export class TextPrimitive implements Primitive<TextData> {
     batch.frustumCulled = !this.perFrame();
     this.applyStaticPlacement();
 
+    if (patch.labels !== undefined || patch.style !== undefined || next.sizing !== prev.sizing) {
+      this.updateDecorations(batch);
+    }
     if (needsSync) this.startSync(batch);
     this.context.invalidate();
   }
@@ -355,6 +377,8 @@ export class TextPrimitive implements Primitive<TextData> {
       this.object.remove(batch);
       batch.dispose();
     }
+    this.decorations?.dispose();
+    this.decorations = null;
     // Disposing the base material also disposes troika's derived (and outline) materials.
     this.baseMaterial.dispose();
   }
@@ -410,6 +434,7 @@ export class TextPrimitive implements Primitive<TextData> {
     this.updatePositions();
     batch.frustumCulled = !this.perFrame();
     this.applyStaticPlacement();
+    this.updateDecorations(batch);
     const done = needsSync ? this.startSync(batch) : Promise.resolve();
     this.context.invalidate();
     return done;
@@ -561,6 +586,86 @@ export class TextPrimitive implements Primitive<TextData> {
       }
       text.updateMatrix();
     }
+    this.placeDecorations();
+  }
+
+  /**
+   * Rebuild the decoration lines from the members' current typeset layout (`textRenderInfo`), then
+   * place them. Runs after label changes (decorations may toggle without re-typesetting) and after
+   * every typesetting. Members still typesetting keep their previous layout until then, like their
+   * glyphs. The layer is only created once some label is decorated.
+   */
+  private updateDecorations(batch: BatchedText): void {
+    const { members, resolved } = this;
+    let layer = this.decorations;
+    const mod = decorationModule;
+    if (!layer || !mod) {
+      if (!resolved.some((r) => r.decoration)) return;
+      if (!mod) {
+        this.loadDecorations(batch);
+        return;
+      }
+      layer = new mod.TextDecorationLayer(this.context.resources);
+      layer.mesh.renderOrder = this.object.renderOrder;
+      // Keep up with per-frame placement even if the decorations render before the batch.
+      layer.mesh.onBeforeRender = (renderer, _scene, camera) =>
+        this.beforeRender(batch, renderer, camera);
+      this.decorations = layer;
+      this.object.add(layer.mesh);
+    }
+    const minThickness = this.data.sizing === 'screen' ? 1 : 0;
+    const rects: number[] = [];
+    layer.begin();
+    for (let i = 0; i < members.length; i++) {
+      const r = resolved[i]!;
+      const info = members[i]!.text.textRenderInfo;
+      if (!r.decoration || !r.visible || !info || !typesetFor(info, r)) continue;
+      rects.length = 0;
+      const fontSize = r.layout.fontSize;
+      mod.computeDecorationRects(
+        info,
+        r.layout.text,
+        r.decoration,
+        {
+          fontSize,
+          lineAdvance: fontSize * r.layout.lineHeight,
+          minThickness,
+        },
+        rects,
+      );
+      layer.add(i, rects, r.color);
+    }
+    layer.end();
+    layer.mesh.visible = layer.instanceCount > 0 && members.length > 0;
+    this.placeDecorations();
+  }
+
+  /** Load the decoration module, then draw the decorations; `ready` waits for it. */
+  private loadDecorations(batch: BatchedText): void {
+    if (this.loadingDecorations) return;
+    this.loadingDecorations = true;
+    const loaded = loadDecorationModule().then(
+      () => {
+        this.loadingDecorations = false;
+        if (this.disposed) return;
+        this.updateDecorations(batch);
+        this.context.invalidate();
+      },
+      (error: unknown) => {
+        // Labels still draw; only their lines are missing. A later update retries.
+        this.loadingDecorations = false;
+        console.error('[holochart] could not load text decorations:', error);
+      },
+    );
+    this.pending = Promise.all([this.pending, loaded]).then(() => undefined);
+  }
+
+  /** Copy member matrices into the decoration layer (after every member placement). */
+  private placeDecorations(): void {
+    const layer = this.decorations;
+    if (!layer || layer.instanceCount === 0) return;
+    const members = this.members;
+    layer.place((owner) => members[owner]?.text.matrix.elements ?? null);
   }
 
   /** Per-frame billboard / screen-size placement (called for each material pass). */
@@ -602,7 +707,12 @@ export class TextPrimitive implements Primitive<TextData> {
   private startSync(batch: BatchedText): Promise<void> {
     const done = new Promise<void>((resolve) => batch.sync(resolve));
     void done.then(() => {
-      if (!this.disposed) this.context.invalidate();
+      if (this.disposed) return;
+      // Typesetting finished: decorations follow the new glyph layout.
+      if (this.decorations || this.resolved.some((r) => r.decoration)) {
+        this.updateDecorations(batch);
+      }
+      this.context.invalidate();
     });
     this.pending = Promise.all([this.pending, done]).then(() => undefined);
     return done;
@@ -629,6 +739,23 @@ function createTextRoot(onRenderOrder: (order: number) => void): Object3D {
   return root;
 }
 
+type DecorationModule = typeof import('./text-decoration.ts');
+
+let decorationModule: DecorationModule | null = null;
+let decorationLoading: Promise<DecorationModule> | null = null;
+
+/** Load text-decoration.ts once (shared by all primitives; a failed load is retried later). */
+function loadDecorationModule(): Promise<DecorationModule> {
+  decorationLoading ??= import('./text-decoration.ts').then(
+    (mod) => (decorationModule = mod),
+    (error: unknown) => {
+      decorationLoading = null;
+      throw error;
+    },
+  );
+  return decorationLoading;
+}
+
 let engineErrorReported = false;
 
 /** Report a failed text-engine load once (e.g. the lazy chunk could not be fetched). */
@@ -636,6 +763,22 @@ function reportEngineError(error: unknown): void {
   if (engineErrorReported) return;
   engineErrorReported = true;
   console.error('[holochart] could not load the SDF text engine (troika-three-text):', error);
+}
+
+/**
+ * Whether a member's typeset layout belongs to its current label: while a re-typeset is in flight,
+ * troika still holds the previous text's carets, which must not be decorated with the new text.
+ * troika records the typeset request in `textRenderInfo.parameters` (not in our minimal typings);
+ * when it is missing, the layout is trusted.
+ */
+function typesetFor(info: object, r: ResolvedTextLabel): boolean {
+  const params = (info as { parameters?: { text?: unknown; fontSize?: unknown } }).parameters;
+  if (!params) return true;
+  const size = r.layout.fontSize > 0 ? r.layout.fontSize : 1e-6;
+  return (
+    params.text === r.layout.text &&
+    (typeof params.fontSize !== 'number' || Math.abs(params.fontSize - size) <= size * 1e-6)
+  );
 }
 
 /** Copy resolved layout props onto a troika member (setters flag a re-typeset on change). */

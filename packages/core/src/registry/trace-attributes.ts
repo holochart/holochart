@@ -184,3 +184,51 @@ export const cartesianTraceAttributes = {
       "The y axis this trace is plotted against: `'y'` → `layout.yaxis`, `'y2'` → `layout.yaxis2`.",
   }),
 } as const;
+
+/**
+ * Attributes added to traces in the `domain` category (plan E4.5; Plotly's `plots/domain.js`):
+ * pie, and later sunburst, treemap, funnelarea, indicator, … are placed by a fraction of the plot
+ * area instead of axes. `row` / `column` pick a `layout.grid` cell, which then gives the default
+ * `x` / `y`; without a grid they are dropped.
+ */
+export const domainTraceAttributes = {
+  domain: attr.object(
+    {
+      x: attr.infoArray({
+        items: [
+          attr.number({ min: 0, max: 1, editType: 'plot' }),
+          attr.number({ min: 0, max: 1, editType: 'plot' }),
+        ],
+        dflt: [0, 1],
+        editType: 'plot',
+        description:
+          'Horizontal extent `[start, end]` of this trace as fractions of the plot area. Defaults to the `layout.grid` column when `column` is set, else `[0, 1]`.',
+      }),
+      y: attr.infoArray({
+        items: [
+          attr.number({ min: 0, max: 1, editType: 'plot' }),
+          attr.number({ min: 0, max: 1, editType: 'plot' }),
+        ],
+        dflt: [0, 1],
+        editType: 'plot',
+        description:
+          'Vertical extent `[start, end]` of this trace as fractions of the plot area (from the bottom). Defaults to the `layout.grid` row when `row` is set, else `[0, 1]`.',
+      }),
+      row: attr.integer({
+        min: 0,
+        dflt: 0,
+        editType: 'plot',
+        description:
+          'Row of the `layout.grid` cell this trace is placed in (0 = first row in `roworder`). Only used with a grid.',
+      }),
+      column: attr.integer({
+        min: 0,
+        dflt: 0,
+        editType: 'plot',
+        description:
+          'Column of the `layout.grid` cell this trace is placed in (0 = leftmost). Only used with a grid.',
+      }),
+    },
+    { editType: 'plot', description: 'Where this trace is drawn, as a part of the plot area.' },
+  ),
+} as const;

@@ -70,8 +70,10 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     name: 'partial: core + scatter',
     // Initial chunk only (the text engine is the lazy row below). 90 kB was set before the text
     // engine's weight was known; raised to 165 kB after M1 wave 2, then tightened to measured + ~10%
-    // after the E21.5 diet (M2 wave 0: lazy text engine, stripped descriptions; 107.9 kB).
-    limit: '120 kB',
+    // after the E21.5 diet (M2 wave 0: lazy text engine, stripped descriptions; 107.9 kB). Raised to
+    // measured + ~10% after M2 wave 1 by decision (area fills, fonts, grid: 129.2 kB); E21.6 splits
+    // the fill code out so scatter without fills doesn't load it.
+    limit: '142 kB',
     imports: [
       { pkg: 'runtime', names: ['createChart', 'register'] },
       { pkg: 'traces-basic', names: ['scatter'] },
@@ -91,8 +93,9 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     id: 'partial-basic',
     name: 'partial: basic (runtime + components + traces-basic + themes)',
     // Initial chunk only. Raised from 150 kB to 200 / 215 kB in M1 (waves 2 and 3), then tightened
-    // to measured + ~10% after the E21.5 diet (M2 wave 0: 154.1 kB).
-    limit: '170 kB',
+    // to measured + ~10% after the E21.5 diet (M2 wave 0: 154.1 kB), then raised to measured + ~10%
+    // after M2 wave 1 by decision (pie, shapes, images, themes and colors: 192.9 kB).
+    limit: '212 kB',
     imports: [
       { pkg: 'runtime' },
       { pkg: 'components' },

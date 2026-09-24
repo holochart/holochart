@@ -18,6 +18,22 @@ their own license files ship with them. The self-contained CDN build
 | [flatbush](https://github.com/mourner/flatbush), [flatqueue](https://github.com/mourner/flatqueue)                                                                                                                                                                                         | ISC     | render (spatial index)                   |
 | [d3-array](https://github.com/d3/d3-array), [d3-color](https://github.com/d3/d3-color), [d3-format](https://github.com/d3/d3-format), [d3-time](https://github.com/d3/d3-time), [d3-time-format](https://github.com/d3/d3-time-format), [internmap](https://github.com/mbostock/internmap) | ISC     | core (scales, formats, colors)           |
 
+## Bundled data and ported code
+
+Holochart implements the Plotly figure format, and parts of its behavior follow plotly.js closely
+(attribute defaults, pie layout, shapes, autorange, stacking, hover). The color data is taken
+from plotly.py's `plotly.colors`, which collects it from the sources below.
+
+| Work                                                                                                  | License      | Where                                                       |
+| ----------------------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------- |
+| [plotly.js](https://github.com/plotly/plotly.js), [plotly.py](https://github.com/plotly/plotly.py)    | MIT          | behavior and algorithms ported; color lists (`core/colors`) |
+| [ColorBrewer](https://colorbrewer2.org) by Cynthia Brewer, Mark Harrower and Penn State               | Apache-2.0   | `core/colors/data/colorbrewer.ts`, `qualitative.ts`         |
+| [CARTOColors](https://github.com/CartoDB/CartoColor) by CARTO                                         | CC BY 3.0    | `core/colors/data/carto.ts`, `qualitative.ts`               |
+| [cmocean](https://matplotlib.org/cmocean/) by Kristen Thyng et al.                                    | MIT          | `core/colors/data/cmocean.ts`                               |
+| matplotlib colormaps (Viridis, Cividis, Inferno, Magma, Plasma, Twilight)                             | CC0          | `core/colors/data/sequential.ts`, `cyclical.ts`             |
+| [Turbo](https://research.google/blog/turbo-an-improved-rainbow-colormap-for-visualization/) by Google | Apache-2.0   | `core/colors/data/sequential.ts`                            |
+| [seaborn](https://github.com/mwaskom/seaborn) IceFire                                                 | BSD-3-Clause | `core/colors/data/cyclical.ts`                              |
+
 ## Repository-only assets (not published to npm)
 
 | Asset                                                  | License                   | Where                                                                                   |

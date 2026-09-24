@@ -4,6 +4,9 @@
  * `x`/`y`/anchors/refs with a background and border, a title, grouping and ranking, margin
  * pushes, and click (toggle) / double-click (isolate) through the public `restyle` API.
  *
+ * Traces whose module has `legendItems` (pie, M2 wave 1) show one item per label instead; clicking
+ * one toggles its label in `layout.hiddenlabels` through `relayout` (Plotly's pie-like legends).
+ *
  * ## Primitives (constant draw calls whatever the item count)
  *
  * One rect batch (background and bar/fill glyphs), one line batch per dash pattern (line glyphs),
@@ -25,6 +28,8 @@ import type {
   ComponentUpdatePlan,
   ComponentView,
   LegendGlyph,
+  LegendItem,
+  TraceModule,
 } from '@mk7s/holochart-runtime';
 import type { DashItem, LabelItem, RectItem } from '../axes/geometry.ts';
 import { DashBatch, RectBatch, TextBatch } from '../shared/batches.ts';
@@ -41,7 +46,7 @@ import {
   type LegendEntry,
 } from './layout.ts';
 import { legendAttributes, supplyLegendDefaults, type FullLegend } from './schema.ts';
-import { ClickDispatcher, legendToggle, type ToggleTrace } from './toggle.ts';
+import { ClickDispatcher, hiddenLabelsToggle, legendToggle, type ToggleTrace } from './toggle.ts';
 
 /** Marker size used for every item with `itemsizing: 'constant'`, px (Plotly). */
 const CONSTANT_MARKER_SIZE = 12;
@@ -108,6 +113,30 @@ export function legendGlyphOf(
   return { kind: 'marker', marker: markerGlyph };
 }
 
+/** What a legend needs to ask traces for per-point items: their modules and calcs. */
+type ItemsSource = Pick<ComponentDrawContext, 'fullLayout' | 'traceModule' | 'calcdata'>;
+
+/**
+ * Per-point legend items of a trace (`TraceModule.legendItems`, pie labels), or `undefined` for
+ * a regular one-item trace — also before the trace's first calc.
+ */
+export function legendItemsFor(
+  source: ItemsSource,
+): (trace: FullTrace) => readonly LegendItem[] | undefined {
+  return (trace) => {
+    const module: TraceModule | undefined = source.traceModule?.(trace.type);
+    if (!module?.legendItems) return undefined;
+    const calc = source.calcdata?.(trace._index);
+    if (calc === undefined) return undefined;
+    try {
+      return module.legendItems(calc, trace, { fullLayout: source.fullLayout });
+    } catch {
+      // A failing module must not break the legend: fall back to one item per trace.
+      return undefined;
+    }
+  };
+}
+
 function faded(c: RGBA, hidden: boolean): RGBA {
   return hidden ? [c[0], c[1], c[2], c[3] * HIDDEN_ALPHA] : c;
 }
@@ -116,8 +145,15 @@ function faded(c: RGBA, hidden: boolean): RGBA {
 export interface LegendScene {
   /** Legend box in container px (hit region), or `undefined` when nothing is drawn. */
   box: { left: number; top: number; width: number; height: number } | undefined;
-  /** Item hit regions, container px. */
-  hits: { index: number; left: number; top: number; width: number; height: number }[];
+  /** Item hit regions, container px (`key`: per-point items, see `LegendEntry.key`). */
+  hits: {
+    index: number;
+    key?: string;
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  }[];
   /** Background (first, with its border) and bar/fill glyphs. */
   rects: RectItem[];
   rectBorders: { color: RGBA; width: number }[];
@@ -142,6 +178,7 @@ export function buildLegendScene(
   size: { width: number; height: number },
   plotArea: { x: number; y: number; width: number; height: number },
   measure: MeasureLine,
+  itemsOf?: (trace: FullTrace) => readonly LegendItem[] | undefined,
 ): LegendScene {
   const empty: LegendScene = {
     box: undefined,
@@ -154,7 +191,12 @@ export function buildLegendScene(
   };
   if (!legendShown(fullLayout)) return empty;
   const legend = fullLayout['legend'] as FullLegend;
-  const entries = legendEntries(fullData, legend.traceorder, (t) => legendGlyphOf(t, fullLayout));
+  const entries = legendEntries(
+    fullData,
+    legend.traceorder,
+    (t) => legendGlyphOf(t, fullLayout),
+    itemsOf,
+  );
   const maxWidth = legend.xref === 'paper' ? plotArea.width : size.width;
   const boxes: LegendBoxes = layoutLegend(legend, entries, {
     measure,
@@ -243,6 +285,7 @@ export function buildLegendScene(
     }
     scene.hits.push({
       index: e.index,
+      ...(e.key === undefined ? {} : { key: e.key }),
       left: left + item.x,
       top: top + item.y,
       width: item.width,
@@ -273,19 +316,35 @@ function toggleTraces(fullData: readonly FullTrace[]): ToggleTrace[] {
   }));
 }
 
-/** Emit `legendclick` / `legenddoubleclick`; `false` when a listener cancelled the default. */
+/**
+ * Emit `legendclick` / `legenddoubleclick`; `false` when a listener cancelled the default.
+ * Per-point items (pie) also carry their `label`, as in Plotly.
+ */
 function emitLegendEvent(
   chart: Chart,
   type: 'legendclick' | 'legenddoubleclick',
   index: number,
   fullData: readonly FullTrace[],
+  key: string | undefined,
 ): boolean {
   const trace = fullData.find((t) => t._index === index);
   return chart.emit(type, {
     curveNumber: index,
     data: chart.data,
     ...(trace ? { fullData: trace } : {}),
+    ...(key === undefined ? {} : { label: key }),
   });
+}
+
+/** Click-dispatch id of a legend hit: the trace, or one per-point item of it. */
+function hitId(hit: { index: number; key?: string }): string {
+  return hit.key === undefined ? `t${hit.index}` : `k${hit.index}\u0000${hit.key}`;
+}
+
+function parseHitId(id: string): { index: number; key: string | undefined } {
+  if (id.startsWith('t')) return { index: Number(id.slice(1)), key: undefined };
+  const sep = id.indexOf('\u0000');
+  return { index: Number(id.slice(1, sep)), key: id.slice(sep + 1) };
 }
 
 class LegendView implements ComponentView {
@@ -298,9 +357,10 @@ class LegendView implements ComponentView {
   #scene: LegendScene | undefined;
   #fullData: readonly FullTrace[] = [];
   #legend: FullLegend | undefined;
-  readonly #clicks = new ClickDispatcher<number>(
-    (i) => this.#act(i, 'single'),
-    (i) => this.#act(i, 'double'),
+  #fullLayout: FullLayout | undefined;
+  readonly #clicks = new ClickDispatcher<string>(
+    (id) => this.#act(id, 'single'),
+    (id) => this.#act(id, 'double'),
   );
 
   constructor(ctx: ComponentDrawContext) {
@@ -319,9 +379,17 @@ class LegendView implements ComponentView {
   }
 
   #draw(ctx: ComponentDrawContext): void {
-    const scene = buildLegendScene(ctx.fullLayout, ctx.fullData, ctx, ctx.plotArea, oracleMeasure);
+    const scene = buildLegendScene(
+      ctx.fullLayout,
+      ctx.fullData,
+      ctx,
+      ctx.plotArea,
+      oracleMeasure,
+      legendItemsFor(ctx),
+    );
     this.#scene = scene;
     this.#fullData = ctx.fullData;
+    this.#fullLayout = ctx.fullLayout;
     this.#legend = ctx.fullLayout['legend'] as FullLegend | undefined;
     const t = overlayTransform(ctx.height);
 
@@ -388,34 +456,37 @@ class LegendView implements ComponentView {
 
   /** The trace index of the item under a container point, if any. */
   itemAt(x: number, y: number): number | undefined {
+    return this.#hitAt(x, y)?.index;
+  }
+
+  #hitAt(x: number, y: number): LegendScene['hits'][number] | undefined {
     for (const h of this.#scene?.hits ?? []) {
-      if (x >= h.left && x <= h.left + h.width && y >= h.top && y <= h.top + h.height) {
-        return h.index;
-      }
+      if (x >= h.left && x <= h.left + h.width && y >= h.top && y <= h.top + h.height) return h;
     }
     return undefined;
   }
 
   handlePointer(event: ComponentPointerEvent): boolean {
     if (event.type === 'leave' || !this.hitTest(event.x, event.y)) return false;
-    const index = this.itemAt(event.x, event.y);
+    const hit = this.#hitAt(event.x, event.y);
+    const id = hit ? hitId(hit) : undefined;
     switch (event.type) {
       case 'move':
-        if (index !== undefined) event.cursor = 'pointer';
+        if (id !== undefined) event.cursor = 'pointer';
         break;
       case 'click':
-        if (index !== undefined && event.button === 0) {
+        if (id !== undefined && event.button === 0) {
           const legend = this.#legend;
           const chart = findChart(this.#ctx);
           const delay =
             legend?.itemdoubleclick === false
               ? 0
               : Number(chart?.fullConfig?.doubleClickDelay ?? 300);
-          this.#clicks.click(index, delay);
+          this.#clicks.click(id, delay);
         }
         break;
       case 'dblclick':
-        if (index !== undefined) this.#clicks.doubleClick(index);
+        if (id !== undefined) this.#clicks.doubleClick(id);
         break;
       default:
         break;
@@ -423,10 +494,11 @@ class LegendView implements ComponentView {
     return true;
   }
 
-  #act(index: number, kind: 'single' | 'double'): void {
+  #act(id: string, kind: 'single' | 'double'): void {
     const legend = this.#legend;
     const chart = findChart(this.#ctx);
     if (!legend || !chart || chart.destroyed) return;
+    const { index, key } = parseHitId(id);
     const mode = kind === 'single' ? legend.itemclick : legend.itemdoubleclick;
     if (
       !emitLegendEvent(
@@ -434,11 +506,21 @@ class LegendView implements ComponentView {
         kind === 'single' ? 'legendclick' : 'legenddoubleclick',
         index,
         this.#fullData,
+        key,
       )
     ) {
       return;
     }
     if (mode === false) return;
+    if (key !== undefined) {
+      // Per-point item (pie label): toggle it in `hiddenlabels`, a user edit kept by `uirevision`.
+      const current = this.#fullLayout?.['hiddenlabels'];
+      const hidden = Array.isArray(current) ? current.map(String) : [];
+      const keys = (this.#scene?.hits ?? []).flatMap((h) => (h.key === undefined ? [] : [h.key]));
+      const next = hiddenLabelsToggle(hidden, keys, key, mode);
+      if (next) fireAndForget(chart.relayout({ hiddenlabels: next }, { gui: true }));
+      return;
+    }
     const changes = legendToggle(toggleTraces(this.#fullData), index, mode, legend.groupclick);
     if (changes.size === 0) return;
     const indices = [...changes.keys()];
@@ -463,8 +545,11 @@ export const legendComponent: ComponentModule = {
     const legend = ctx.fullLayout['legend'] as FullLegend;
     const m = ctx.fullLayout.margin;
     const plotWidth = Math.max(1, ctx.width - m.l - m.r);
-    const entries = legendEntries(ctx.fullData, legend.traceorder, (t) =>
-      legendGlyphOf(t, ctx.fullLayout),
+    const entries = legendEntries(
+      ctx.fullData,
+      legend.traceorder,
+      (t) => legendGlyphOf(t, ctx.fullLayout),
+      legendItemsFor(ctx),
     );
     const boxes = layoutLegend(legend, entries, {
       measure: oracleMeasure,

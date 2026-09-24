@@ -16,7 +16,7 @@ import {
   type Scale,
 } from '@mk7s/holochart-core';
 import { headPoints } from '../shared/data.ts';
-import type { AxisInfo, CalcContext, TraceExtremes } from '@mk7s/holochart-runtime';
+import type { AxisInfo, CalcContext, TraceAppend, TraceExtremes } from '@mk7s/holochart-runtime';
 import {
   calcErrorBars,
   errorBarExtremeValues,
@@ -24,10 +24,42 @@ import {
 } from '../shared/error-bars/index.ts';
 import { hasMarkers, hasText, isBubble } from './defaults.ts';
 
+/**
+ * A stacked trace's cross-trace calc (E9.4), written by `crossTraceCalc`: the `x` / `y` of the
+ * calc then hold each point's stacked position.
+ */
+export interface ScatterStack {
+  /** The coordinates calc produced, before stacking (so a rerun restacks from scratch). */
+  readonly raw: { readonly x: Float64Array; readonly y: Float64Array };
+  /** The stacked series the line and fill follow: one vertex per slot of the group (linear). */
+  readonly path: { readonly x: Float64Array; readonly y: Float64Array };
+  /** Per point: its own size after `groupnorm` (calc space), what hover reports. */
+  readonly value: Float64Array;
+  /** The point behind each slot of `path`, or -1 for gaps (no marker, no autorange padding). */
+  readonly slotIndex: Int32Array;
+  /** The stacking direction: `'v'` stacks y values. */
+  readonly orientation: 'v' | 'h';
+  /** Whether `groupnorm` is set (hover then reports the normalized size). */
+  readonly normalized: boolean;
+}
+
+/** A trace's place among the scatter traces of its subplot (E9.4), set by `crossTraceCalc`. */
+export interface ScatterLink {
+  /** The trace a `tonext*` fill fills to: the previous one in the same `stackgroup` (or none). */
+  readonly previous?: {
+    readonly calc: ScatterCalc;
+    readonly trace: FullTrace;
+    readonly index: number;
+  };
+  /** First scatter trace of its stack group (or of the unstacked ones) on the subplot. */
+  readonly first: boolean;
+}
+
 /** Scatter calcdata: linear coordinates per point (`NaN` where a point cannot be placed). */
 export interface ScatterCalc {
-  readonly x: Float64Array;
-  readonly y: Float64Array;
+  /** Per-point linear coordinates; stacked positions once `crossTraceCalc` stacked the trace. */
+  x: Float64Array;
+  y: Float64Array;
   /** Point count (`min(x.length, y.length)`, or the length of the given coordinate). */
   readonly length: number;
   /**
@@ -37,13 +69,31 @@ export interface ScatterCalc {
   readonly markerSize: number | Float32Array;
   /** Autorange padding in px per point (Plotly's `calcMarkerSize`), when markers are drawn. */
   readonly ppad: number | Float64Array | undefined;
-  readonly errorX: ErrorBarCalc | undefined;
-  readonly errorY: ErrorBarCalc | undefined;
+  errorX: ErrorBarCalc | undefined;
+  errorY: ErrorBarCalc | undefined;
   /**
    * Streaming storage (E7.2): the arrays above are views into buffers with room at both ends,
    * shared with the calc of the next `extendTraces` / `prependTraces`. Absent for a plain calc.
    */
   readonly stream?: unknown;
+  /**
+   * Set by `calcAppend` (E7.2): this calc is `previous` plus `append`. Views and `extremes` use it
+   * to take the streaming path even when `crossTraceCalc` made the runtime drop `plan.append`.
+   * Cleared on `previous` when the next streamed calc is made, so at most two calcs stay alive.
+   */
+  appendOf?: { readonly previous: ScatterCalc; readonly append: TraceAppend } | undefined;
+  /** Stacking (E9.4), set by `crossTraceCalc` for traces in a `stackgroup`. */
+  stack?: ScatterStack | undefined;
+  /** Fill linking (E9.4), set by `crossTraceCalc`. */
+  link?: ScatterLink | undefined;
+}
+
+/**
+ * The series a trace's line and fill follow: the stacked series (with the positions only other
+ * traces of the group have) for stacked traces, the points otherwise.
+ */
+export function drawnSeries(calc: ScatterCalc): { x: Float64Array; y: Float64Array } {
+  return calc.stack?.path ?? calc;
 }
 
 /** Linear coordinates for `letter`, from the data array or from `letter0 + i·dletter`. */
@@ -160,11 +210,17 @@ export function writeMarkerDiameters(
   const sizemin = num(marker.sizemin, 0);
   const area = marker.sizemode === 'area';
   for (let i = start; i < end; i++) {
-    const v = i < sizes.length ? sizes[i] : undefined;
-    const base =
-      typeof v === 'number' ? (area ? Math.sqrt(v / 2 / sizeref) : v / 2 / sizeref) : NaN;
+    const v = sizeValue(i < sizes.length ? sizes[i] : undefined);
+    const base = area ? Math.sqrt(v / 2 / sizeref) : v / 2 / sizeref;
     out[i - start] = base > 0 ? 2 * Math.max(base, sizemin) : 0;
   }
+}
+
+/** A per-point `marker.size` as a number: numeric strings count, as in Plotly's calcdata. */
+function sizeValue(v: unknown): number {
+  if (typeof v === 'number') return v;
+  if (typeof v === 'string' && v.trim() !== '') return Number(v);
+  return NaN;
 }
 
 /**
@@ -199,8 +255,8 @@ export function writeMarkerPadding(
   const trans = paddingOf(marker);
   const sizes = marker.size as ArrayLike<unknown>;
   for (let i = start; i < end; i++) {
-    const v = i < sizes.length ? sizes[i] : undefined;
-    out[i - start] = trans(typeof v === 'number' && Number.isFinite(v) ? v : 0);
+    const v = sizeValue(i < sizes.length ? sizes[i] : undefined);
+    out[i - start] = trans(Number.isFinite(v) ? v : 0);
   }
 }
 
@@ -272,13 +328,15 @@ export function scatterExtremes(
   trace: FullTrace,
   ctx: CalcContext,
 ): TraceExtremes {
-  const opts = linearExtremeOptions(calc, trace);
+  const opts = linearExtremeOptions(calc, trace, ctx);
   const out: { x?: AxisExtremes; y?: AxisExtremes } = {};
+  // Stacked traces span their whole stacked series (Plotly), gaps without marker padding.
+  const series = drawnSeries(calc);
   if (ctx.xaxis) {
-    out.x = withErrorBars(linearExtremes(ctx.xaxis, calc.x, opts.x), ctx.xaxis, calc.errorX);
+    out.x = withErrorBars(linearExtremes(ctx.xaxis, series.x, opts.x), ctx.xaxis, calc.errorX);
   }
   if (ctx.yaxis) {
-    out.y = withErrorBars(linearExtremes(ctx.yaxis, calc.y, opts.y), ctx.yaxis, calc.errorY);
+    out.y = withErrorBars(linearExtremes(ctx.yaxis, series.y, opts.y), ctx.yaxis, calc.errorY);
   }
   return out;
 }
@@ -291,16 +349,56 @@ export function scatterExtremes(
 export function linearExtremeOptions(
   calc: ScatterCalc,
   trace: FullTrace,
+  ctx?: Pick<CalcContext, 'xaxis' | 'yaxis'>,
 ): { x: FindExtremesOptions; y: FindExtremesOptions } {
-  const ppad = calc.ppad;
+  const ppad = calc.stack ? stackPadding(calc) : calc.ppad;
   const xOpts: FindExtremesOptions = { padded: true, ...(ppad !== undefined ? { ppad } : {}) };
   const yOpts: FindExtremesOptions = { ...xOpts };
   const errorY = (trace['error_y'] as { visible?: unknown } | undefined)?.visible === true;
-  if (!errorY && !hasMarkers(trace['mode']) && !hasText(trace['mode'])) {
+  const fill = typeof trace['fill'] === 'string' ? trace['fill'] : 'none';
+  // Plotly's `calcAxisExpansion`: fills to zero (or to the axis, for the first trace of a
+  // `tonext*` chain) include zero, unless the path is closed (it then just fills its shape).
+  const { x, y } = drawnSeries(calc);
+  const n = x.length;
+  const openEnded = n < 2 || x[0] !== x[n - 1] || y[0] !== y[n - 1];
+  const first = calc.link?.first ?? true;
+  const orientation = calc.stack?.orientation;
+  // `tozero` only applies to linear axes (Plotly's `findExtremes`); our stand-in scale is linear.
+  const linear = (axis: AxisInfo | undefined): boolean => !axis || axis.type === 'linear';
+  if (openEnded && (fill === 'tozerox' || (fill === 'tonextx' && (first || orientation === 'h')))) {
+    if (linear(ctx?.xaxis)) xOpts.tozero = true;
+  } else if (
+    !errorY &&
+    (fill === 'tonexty' ||
+      fill === 'tozeroy' ||
+      (!hasMarkers(trace['mode']) && !hasText(trace['mode'])))
+  ) {
     xOpts.padded = false;
     xOpts.ppad = 0;
   }
+  if (openEnded && (fill === 'tozeroy' || (fill === 'tonexty' && (first || orientation === 'v')))) {
+    if (linear(ctx?.yaxis)) yOpts.tozero = true;
+  } else if (fill === 'tonextx' || fill === 'tozerox') {
+    yOpts.padded = false;
+  }
   return { x: xOpts, y: yOpts };
+}
+
+/**
+ * Per-slot marker padding of a stacked series (Plotly: the point's padding, 0 at gaps and at
+ * positions only other traces have).
+ */
+function stackPadding(calc: ScatterCalc): number | Float64Array | undefined {
+  const ppad = calc.ppad;
+  const stack = calc.stack;
+  if (ppad === undefined || !stack) return ppad;
+  const index = stack.slotIndex;
+  const out = new Float64Array(index.length);
+  for (let j = 0; j < index.length; j++) {
+    const i = index[j] as number;
+    out[j] = i < 0 ? 0 : typeof ppad === 'number' ? ppad : (ppad[i] ?? 0);
+  }
+  return out;
 }
 
 export { isBubble };

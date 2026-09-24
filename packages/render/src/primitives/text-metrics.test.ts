@@ -3,6 +3,8 @@ import {
   DEFAULT_FONT_CSS_FAMILY,
   TROIKA_FALLBACK_CSS_FAMILY,
   clearFontRegistry,
+  fonts,
+  measurementFace,
   registerFont,
   setDefaultFontURL,
   type TextFont,
@@ -327,5 +329,90 @@ describe('measuring with the rendered font (E2.18)', () => {
     expect(clear).toHaveBeenCalledTimes(1);
     setDefaultFontURL(null);
     expect(clear).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('textcase and variant (E8.3)', () => {
+  const base: TextFont = { family: 'x', size: 10 };
+
+  it('measures the transformed text: upper width equals the uppercased string', () => {
+    const o = createFontMetricsOracle({ measurer: createFallbackTextMeasurer() });
+    const upper = o.measureWidth('Hello world', { ...base, textcase: 'upper' });
+    expect(upper).toBeCloseTo(o.measureWidth('HELLO WORLD', base));
+    expect(upper).toBeGreaterThan(o.measureWidth('Hello world', base));
+    expect(o.measureWidth('élan vital', { ...base, textcase: 'word caps' })).toBeCloseTo(
+      o.measureWidth('Élan Vital', base),
+    );
+  });
+
+  it('scales small caps: uppercase at 0.8× (petite 0.72×, unicase 1×)', () => {
+    const o = createFontMetricsOracle({ measurer: createFallbackTextMeasurer() });
+    const upper = o.measureWidth('SMALL', base);
+    expect(o.measureWidth('small', { ...base, variant: 'small-caps' })).toBeCloseTo(upper * 0.8);
+    expect(o.measureWidth('small', { ...base, variant: 'petite-caps' })).toBeCloseTo(upper * 0.72);
+    expect(o.measureWidth('small', { ...base, variant: 'unicase' })).toBeCloseTo(upper);
+    const m = o.measureText('a\nb', { ...base, variant: 'all-small-caps' }, 1.5);
+    expect(m.lineHeight).toBeCloseTo(8 * 1.5);
+    expect(m.height).toBeCloseTo(2 * 8 * 1.5);
+    expect(m.ascent).toBeCloseTo(0.905 * 8);
+  });
+
+  it('wraps and ellipsizes the transformed text at the scaled size', () => {
+    const m = monospaceMeasurer();
+    const o = createFontMetricsOracle({ measurer: m });
+    // 1 em per character: 'AB CD' is 5 em = 40 px at 0.8 × 10 px.
+    expect(o.wrapText('ab cd', { ...base, variant: 'small-caps' }, 30)).toEqual(['AB', 'CD']);
+    expect(o.wrapText('ab cd', { ...base, variant: 'small-caps' }, 40)).toEqual(['AB CD']);
+    expect(o.ellipsize('abcdef', { ...base, textcase: 'upper' }, 40)).toBe(`ABC${TEXT_ELLIPSIS}`);
+    expect(o.ellipsize('abcdef', { ...base, variant: 'small-caps' }, 40)).toBe(
+      `ABCD${TEXT_ELLIPSIS}`,
+    );
+  });
+
+  it('caches by the transformed text, so equal drawn strings share an entry', () => {
+    const m = monospaceMeasurer();
+    const o = createFontMetricsOracle({ measurer: m });
+    o.measureWidth('abc', { ...base, textcase: 'upper' });
+    o.measureWidth('ABC', base);
+    o.measureWidth('Abc', { ...base, variant: 'small-caps', size: 20 });
+    expect(m.calls).toBe(1);
+    // A different transform of the same source string is measured separately.
+    o.measureWidth('abc', { ...base, textcase: 'lower' });
+    expect(m.calls).toBe(2);
+  });
+});
+
+describe('registered variants in the metrics oracle (E8.3 + E2.18)', () => {
+  it('measures a bold request with the registered bold face', () => {
+    fonts.register(
+      'Inter',
+      { regular: 'r.woff', bold: 'b.woff', italic: 'i.woff' },
+      { cssFontFace: false },
+    );
+    expect(measurementFace({ family: '"Brand", Inter', weight: 'bold' })).toMatchObject({
+      source: 'registered',
+      weight: 700,
+      style: 'normal',
+    });
+    expect(measurementFace({ family: 'Inter', style: 'italic', weight: 700 })).toMatchObject({
+      source: 'registered',
+      weight: 400,
+      style: 'italic',
+    });
+
+    // The fallback measurer, fed the rendered face: bold is measured bold (≈ 5% wider).
+    const faces: TextFace[] = [];
+    const fallback = createFallbackTextMeasurer();
+    const o = createFontMetricsOracle({
+      measurer: {
+        kind: 'fallback',
+        width: (text, face) => (faces.push(face), fallback.width(text, face)),
+        vertical: (face) => fallback.vertical(face),
+      },
+      resolveFace: renderedTextFace,
+    });
+    const bold = o.measureWidth('Hello', { family: 'Inter', size: 10, weight: 600 });
+    expect(faces[0]).toEqual({ family: '"Inter", "Inter"', weight: 700, style: 'normal' });
+    expect(bold).toBeCloseTo(o.measureWidth('Hello', { family: 'Inter', size: 10 }) * 1.05);
   });
 });

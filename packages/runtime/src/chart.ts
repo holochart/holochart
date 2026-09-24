@@ -90,6 +90,8 @@ import type {
   ComponentModule,
   ComponentPointerEvent,
   ComponentView,
+  DomainInfo,
+  DomainTraceEntry,
   MarginPush,
   SubplotInfo,
   TraceExtremes,
@@ -108,7 +110,7 @@ import {
   type ChartPoint,
 } from './events.ts';
 import type { LinearRange } from './fx/geometry.ts';
-import type { HoverEntry } from './fx/hover.ts';
+import type { DomainHover, HoverEntry } from './fx/hover.ts';
 import { Interaction } from './fx/interaction.ts';
 import { HoverLayer } from './fx/labels.ts';
 import {
@@ -121,6 +123,7 @@ import {
 } from './fx/settings.ts';
 import {
   axisName,
+  domainRect,
   domainSpan,
   plotArea,
   resolveFigureSize,
@@ -461,6 +464,7 @@ export class Chart {
   #layer: HoverLayer | undefined;
   #fx: Interaction | undefined;
   #hoverEntries: Map<string, HoverEntry[]> | null = null;
+  #domainHover: DomainHover | null = null;
   #componentOrder: ComponentSlot[] = [];
   /** `#subplots` as an array, for per-frame pointer work (no iterator allocations). */
   #subplotList: SubplotSlot[] = [];
@@ -1247,6 +1251,7 @@ export class Chart {
     this.#layer?.destroy();
     this.#layer = undefined;
     this.#hoverEntries = null;
+    this.#domainHover = null;
     for (const slot of this.#traces) if (slot) this.#disposeView(slot);
     this.#traces = [];
     for (const slot of this.#components.values()) this.#disposeComponent(slot);
@@ -1441,11 +1446,17 @@ export class Chart {
       this.#autorange(fullData);
       this.#automargin(fullLayout, fullData, size);
     }
+    // Domain traces (pie) resolve what spans traces and needs the final layout (E4.5).
+    this.#crossTraceLayout(fullLayout, fullData, plans, layoutRan, size);
 
     // Backgrounds are cheap to set: do it on every run (`paper_bgcolor` is a style edit).
     root.setBackground(toRGBA(fullLayout.paper_bgcolor) ?? null);
     const plotBg = toRGBA(fullLayout.plot_bgcolor) ?? null;
-    for (const sp of this.#subplots.values()) sp.viewport.background = plotBg;
+    for (const sp of this.#subplots.values()) {
+      // A subplot on an `overlaying` axis shares its area with the one it overlays: painting its
+      // background would hide that subplot's traces (Plotly draws no background there either).
+      sp.viewport.background = overlays(sp) ? null : plotBg;
+    }
 
     for (const i of plan.selection) {
       const tp = plans[i];
@@ -1460,7 +1471,14 @@ export class Chart {
 
     if (layoutRan) this.#captureInitialAxes();
     this.#hoverEntries = null;
+    this.#domainHover = null;
     this.#fx?.refresh();
+  }
+
+  /** A trace's calc for components, or `undefined` when it has none (hidden, not calculated yet). */
+  #calcdataOf(index: number): unknown {
+    const slot = this.#traces[index];
+    return slot?.hasCalc ? slot.calc : undefined;
   }
 
   #calcContext(trace: FullTrace, index: number): CalcContext {
@@ -1561,6 +1579,18 @@ export class Chart {
     this.#placeSubplots(fullLayout, this.#marginsFor(fullLayout, fullData, size), size);
   }
 
+  /** Every component's autorange contributions (e.g. data-referenced shapes). */
+  #componentExtremes(fullData: readonly FullTrace[]): Readonly<Record<string, AxisExtremes>>[] {
+    const fullLayout = this.#full?.fullLayout;
+    if (!fullLayout) return [];
+    const out: Readonly<Record<string, AxisExtremes>>[] = [];
+    for (const c of this.#registry.components()) {
+      const e = c.extremes?.({ fullLayout, fullData, axes: this.#axes });
+      if (e) out.push(e);
+    }
+    return out;
+  }
+
   /** Margins after every component's `pushMargin`, against the axes as they are now. */
   #marginsFor(fullLayout: FullLayout, fullData: readonly FullTrace[], size: Size): Margins {
     const pushes: MarginPush[] = [];
@@ -1572,6 +1602,7 @@ export class Chart {
         height: size.height,
         axes: this.#axes,
         traceModule: (type: string) => this.#registry.getTrace(type),
+        calcdata: (index: number) => this.#calcdataOf(index),
       });
       if (Array.isArray(p)) pushes.push(...(p as MarginPush[]));
       else if (p) pushes.push(p as MarginPush);
@@ -1657,8 +1688,9 @@ export class Chart {
     this.#subplotList = [...next.values()];
   }
 
-  /** Axis ranges from trace extremes (E3.2), then every subplot's transform. */
+  /** Axis ranges from trace and component extremes (E3.2), then every subplot's transform. */
   #autorange(fullData: readonly FullTrace[]): void {
+    const fromComponents = this.#componentExtremes(fullData);
     for (const axis of this.#axes.values()) {
       const extremes: AxisExtremes[] = [];
       const key = `${axis.letter}axis`;
@@ -1667,6 +1699,10 @@ export class Chart {
         const e = this.#traces[i]?.extremes?.[axis.letter];
         if (e) extremes.push(e);
       });
+      for (const byAxis of fromComponents) {
+        const e = byAxis[axis.id];
+        if (e) extremes.push(e);
+      }
       const [r0, r1] = resolveAxisRange(axis.full, axis.scale, extremes);
       axis.scale.setRange(r0, r1);
       // Like Plotly, the range in use is readable from fullLayout (linear coordinates).
@@ -1753,6 +1789,61 @@ export class Chart {
     }
   }
 
+  /**
+   * The domain of a trace in the `domain` category (E4.5) on the current plot area, or
+   * `undefined` for other traces. Supply-defaults already resolved `domain.row` / `column`.
+   */
+  #domainOf(trace: FullTrace): DomainInfo | undefined {
+    if (trace._module?.categories.includes('domain') !== true) return undefined;
+    const d = trace['domain'] as { x?: unknown; y?: unknown } | undefined;
+    const pair = (v: unknown): [number, number] =>
+      Array.isArray(v) && typeof v[0] === 'number' && typeof v[1] === 'number'
+        ? [v[0], v[1]]
+        : [0, 1];
+    const x = pair(d?.x);
+    const y = pair(d?.y);
+    return { x, y, rect: domainRect(this.#plotArea, x, y) };
+  }
+
+  /**
+   * Run `crossTraceLayout` once per domain trace type (M2 wave 1; see the contract): with every
+   * visible trace of the type that has a calc, after the final layout pass. It reruns when the
+   * layout ran or a member was recalculated / re-read, and every member then re-reads its calc.
+   */
+  #crossTraceLayout(
+    fullLayout: FullLayout,
+    fullData: readonly FullTrace[],
+    plans: TraceUpdatePlan[],
+    layoutRan: boolean,
+    size: Size,
+  ): void {
+    const groups = new Map<TraceModule, { entries: DomainTraceEntry[]; dirty: boolean }>();
+    fullData.forEach((trace, i) => {
+      const slot = this.#traces[i];
+      const module = slot?.module;
+      if (!module?.crossTraceLayout || trace.visible !== true || !slot?.hasCalc) return;
+      const domain = this.#domainOf(trace);
+      if (!domain) return;
+      let group = groups.get(module);
+      if (!group) groups.set(module, (group = { entries: [], dirty: layoutRan }));
+      group.entries.push({ trace, index: i, calc: slot.calc, domain });
+      if ((plans[i] as TraceUpdatePlan).plot) group.dirty = true;
+    });
+    for (const [module, group] of groups) {
+      if (!group.dirty) continue;
+      module.crossTraceLayout?.(group.entries, {
+        fullLayout,
+        width: size.width,
+        height: size.height,
+        plotArea: this.#plotArea,
+      });
+      for (const e of group.entries) {
+        const tp = plans[e.index] as TraceUpdatePlan;
+        plans[e.index] = { ...tp, plot: true, style: true };
+      }
+    }
+  }
+
   #plotTrace(index: number, trace: FullTrace, tp: TraceUpdatePlan): void {
     const slot = this.#traces[index] as TraceSlot;
     const renderer = slot.module?.plot;
@@ -1797,6 +1888,8 @@ export class Chart {
       yaxis: subplot?.yaxis,
       transform: subplot?.transform ?? IDENTITY_TRANSFORM,
       viewport,
+      ...(subplot ? {} : optional('domain', this.#domainOf(trace))),
+      plotArea: this.#plotArea,
       primitives: root.context,
       add: (primitive) => {
         viewport.add(primitive);
@@ -1881,6 +1974,7 @@ export class Chart {
       chart: this,
       ...(this.#full ? { fullConfig: this.#full.fullConfig } : {}),
       traceModule: (type: string) => this.#registry.getTrace(type),
+      calcdata: (index: number) => this.#calcdataOf(index),
     };
   }
 
@@ -1900,6 +1994,7 @@ export class Chart {
       size: () => this.#size,
       subplots: () => this.#subplotList,
       entries: (sp) => this.#entries(sp.id),
+      domainEntries: () => this.#domainEntries(),
       fullLayout: () => this.#full?.fullLayout,
       traceCount: () => this.#full?.fullData.length ?? 0,
       isFixed: (axis) => this.#isFixed(axis),
@@ -1947,6 +2042,7 @@ export class Chart {
           input,
           calc: slot.calc,
           subplot,
+          rect: subplot.rect,
           ctx: {
             fullLayout: full.fullLayout,
             xaxis: subplot.xaxis,
@@ -1960,6 +2056,42 @@ export class Chart {
       this.#hoverEntries = map;
     }
     return this.#hoverEntries.get(subplotId) ?? EMPTY_ENTRIES;
+  }
+
+  /** Hoverable domain traces (pie; E4.5), rebuilt lazily after each pipeline run. */
+  #domainEntries(): DomainHover {
+    if (!this.#domainHover) {
+      const entries: HoverEntry[] = [];
+      const full = this.#full;
+      const rect: ViewportRect = { x: 0, y: 0, width: this.#size.width, height: this.#size.height };
+      full?.fullData.forEach((trace, index) => {
+        const slot = this.#traces[index];
+        const module = slot?.module;
+        if (!slot?.hasCalc || !module?.hoverPoints || trace.visible !== true) return;
+        const domain = this.#domainOf(trace);
+        if (!domain) return;
+        const input = this.#figure.data[index];
+        entries.push({
+          index,
+          module,
+          trace,
+          input,
+          calc: slot.calc,
+          subplot: undefined,
+          rect,
+          ctx: {
+            fullLayout: full.fullLayout,
+            xaxis: undefined,
+            yaxis: undefined,
+            transform: IDENTITY_TRANSFORM,
+            domain,
+          },
+          skip: traceAttr(trace, input, 'hoverinfo') === 'skip',
+        });
+      });
+      this.#domainHover = { entries, height: this.#size.height };
+    }
+    return this.#domainHover;
   }
 
   #dispatchPointer(event: ComponentPointerEvent, only: unknown): unknown {
@@ -2147,6 +2279,20 @@ export class Chart {
       slot.primitives.clear();
     }
   }
+}
+
+/** `{ [key]: value }`, or `{}` when `value` is undefined (for `exactOptionalPropertyTypes`). */
+function optional<K extends string, V>(key: K, value: V | undefined): { [P in K]?: V } {
+  return value === undefined ? {} : ({ [key]: value } as { [P in K]?: V });
+}
+
+/** Does this subplot sit on an axis that `overlaying`s another one (a secondary axis)? */
+function overlays(sp: SubplotSlot): boolean {
+  const over = (axis: AxisSlot): boolean => {
+    const o = (axis.full as { overlaying?: unknown }).overlaying;
+    return typeof o === 'string' && o !== '' && o !== 'free' && o !== axis.id;
+  };
+  return over(sp.xaxis) || over(sp.yaxis);
 }
 
 function destroyedError(): Error {

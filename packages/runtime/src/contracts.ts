@@ -82,6 +82,40 @@ export interface SubplotInfo {
   readonly transform: Readonly<DataTransform>;
 }
 
+// ---- Domain placement (E4.5, M2 wave 1) ---------------------------------------------------------
+
+/**
+ * Where a trace in the `domain` category (pie, later sunburst, indicator, …) is placed: its
+ * `domain.x` / `domain.y` (or the `layout.grid` cell its `domain.row` / `domain.column` picked,
+ * resolved during supply-defaults) mapped onto the plot area. Domain traces have no axes: they draw
+ * into the overlay viewport, whose world units are container CSS px with a bottom-left origin, so a
+ * container point `(x, y)` is at world `(x, viewport.size.height - y)`. Use `fitAspect` /
+ * `inscribedCircle` (exported by the runtime) to keep circular traces round inside the rect.
+ */
+export interface DomainInfo {
+  /** `domain.x` in use: fractions of the plot area width, `[start, end]` with `start < end`. */
+  readonly x: readonly [number, number];
+  /** `domain.y` in use: fractions of the plot area height from the bottom, `start < end`. */
+  readonly y: readonly [number, number];
+  /** The domain in container CSS px (top-left origin), inside the margins. */
+  readonly rect: Readonly<ViewportRect>;
+}
+
+/** One domain trace as seen by {@link TraceModule.crossTraceLayout}. */
+export interface DomainTraceEntry<Calc = unknown> extends CrossTraceEntry<Calc> {
+  readonly domain: DomainInfo;
+}
+
+/** Context for {@link TraceModule.crossTraceLayout}: the solved figure layout. */
+export interface DomainLayoutContext {
+  readonly fullLayout: FullLayout;
+  /** Figure size in CSS px. */
+  readonly width: number;
+  readonly height: number;
+  /** The plot area inside the margins, container px (top-left origin). */
+  readonly plotArea: Readonly<ViewportRect>;
+}
+
 // ---- Trace contract ---------------------------------------------------------------------------
 
 /** Context for `calc` and `extremes`. */
@@ -165,6 +199,13 @@ export interface TracePlotContext<Calc = unknown> {
   readonly transform: Readonly<DataTransform>;
   /** Where the trace draws: its subplot's viewport, or the overlay for non-cartesian traces. */
   readonly viewport: Viewport;
+  /**
+   * The trace's domain (M2 wave 1, E4.5): set for traces in the `domain` category, which draw into
+   * the overlay (see {@link DomainInfo}); `undefined` for every other trace.
+   */
+  readonly domain?: DomainInfo;
+  /** The plot area inside the margins, container px (M2 wave 1). Always set by the runtime. */
+  readonly plotArea?: Readonly<ViewportRect>;
   /** Pass to primitive factories (`createMarkers(ctx.primitives, …)`). */
   readonly primitives: PrimitiveContext;
   /**
@@ -205,7 +246,9 @@ export interface TraceRenderer<Calc = unknown> {
  * render parts are optional, so a core-only module still validates and defaults.
  *
  * Interaction parts (M1 wave 2): `crossTraceCalc` (stacking/grouping), `hoverPoints`,
- * `selectPoints`, `legendIcon`; M1 wave 3: `colorbar`.
+ * `selectPoints`, `legendIcon`; M1 wave 3: `colorbar`; M2 wave 1: `crossTraceLayout` and
+ * `legendItems` (domain traces such as pie), and `hoverPoints` for domain traces (see
+ * {@link HoverQuery}).
  */
 export interface TraceModule<
   Calc = unknown,
@@ -255,6 +298,16 @@ export interface TraceModule<
    */
   crossTraceCalc?(entries: readonly CrossTraceEntry<Calc>[], ctx: CrossTraceContext): void;
   /**
+   * Cross-trace step for traces in the `domain` category (M2 wave 1, E4.5): called once per trace
+   * type with every visible trace of that type that has a calc, in trace order, with their solved
+   * domains — after calc and the final layout pass (margins known), before `plot`. Pie uses it for
+   * what spans traces and depends on the layout: the label → color map shared by all pies
+   * (Plotly's `_piecolormap`) and `scalegroup` radii. Mutates the calcs in place, so it must be
+   * idempotent; it reruns after every layout pass or recalc of a member, and the members' views
+   * then get `plot: true`.
+   */
+  crossTraceLayout?(entries: readonly DomainTraceEntry<Calc>[], ctx: DomainLayoutContext): void;
+  /**
    * Samples for the value-based `categoryorder`s (E3.6: `total descending`, `median ascending`, …;
    * Plotly's `sortAxisCategoriesByValue`): per point, the category index on `axis` (the linear
    * coordinate calc produced) and the value to aggregate — a bar's own size (after `barnorm`), a
@@ -271,7 +324,11 @@ export interface TraceModule<
     ctx: CalcContext,
   ): CategorySamples | undefined;
   readonly plot?: TraceRenderer<Calc>;
-  /** Points near the pointer for hover (E6.1). Empty when nothing is within `query.distance`. */
+  /**
+   * Points near the pointer for hover (E6.1). Empty when nothing is within `query.distance`.
+   * Domain traces (M2 wave 1) are asked on every hover, wherever the pointer is: they return the
+   * point under `query.cx` / `query.cy` (container px) with distance 0, or nothing.
+   */
   hoverPoints?(calc: Calc, trace: FullTrace, query: HoverQuery, ctx: HoverContext): HoverPoint[];
   /** Indices of the points inside a box or lasso selection (E6.3). */
   selectPoints?(calc: Calc, trace: FullTrace, query: SelectionQuery, ctx: HoverContext): number[];
@@ -286,6 +343,19 @@ export interface TraceModule<
    * and one per trace otherwise (from the trace's own `…colorbar` container).
    */
   colorbar?(trace: FullTrace, ctx: LegendIconContext): ColorbarSpec | null;
+  /**
+   * One legend item per point instead of one per trace (M2 wave 1, E9.11; Plotly's `pie-like`
+   * legends): pie returns one item per label, in calc order. Items with the same `key` across
+   * traces of one `legendgroup` show once (the first wins). A click toggles the item's key in
+   * `layout.hiddenlabels` and a double-click isolates it (Plotly's `handle_click` for pie-like
+   * traces); `hidden` items are drawn faded. Return `undefined` to fall back to one item per
+   * trace ({@link legendIcon}).
+   */
+  legendItems?(
+    calc: Calc,
+    trace: FullTrace,
+    ctx: LegendIconContext,
+  ): readonly LegendItem[] | undefined;
 }
 
 // ---- Interaction parts of the trace contract (M1 wave 2) --------------------------------------
@@ -317,11 +387,17 @@ export interface HoverContext {
   readonly yaxis: AxisInfo | undefined;
   /** Linear → viewport px (bottom-left origin), as used for drawing. */
   readonly transform: Readonly<DataTransform>;
+  /** The trace's domain (M2 wave 1): set for domain traces, like {@link TracePlotContext.domain}. */
+  readonly domain?: DomainInfo;
 }
 
 /**
  * A hover query in one subplot. `x`/`y` modes ask for the points at the pointer's x (or y) — the
  * runtime builds unified labels (`x unified`, `y unified`) from those results.
+ *
+ * Domain traces (M2 wave 1) have no subplot: for them the viewport is the overlay, so `px`/`py` are
+ * figure px from the bottom-left corner, `xl`/`yl` equal `px`/`py` (identity transform), and
+ * `mode` is always `closest` (Plotly shows one pie label whatever `hovermode` says).
  */
 export interface HoverQuery {
   /** Pointer in viewport px (bottom-left origin, same space as the transform's output). */
@@ -333,6 +409,12 @@ export interface HoverQuery {
   readonly mode: 'closest' | 'x' | 'y';
   /** Max distance in px (`layout.hoverdistance`); `Infinity` for no limit. */
   readonly distance: number;
+  /**
+   * Pointer in container CSS px, top-left origin (M2 wave 1): the same space as
+   * {@link DomainInfo.rect}. Always set by the runtime; optional for hand-built queries.
+   */
+  readonly cx?: number;
+  readonly cy?: number;
 }
 
 /** A point a trace reports under the pointer. */
@@ -354,6 +436,17 @@ export interface HoverPoint {
   readonly color?: string;
   /** Anything else `hovertemplate` may reference (e.g. `marker.size`, `customdata`). */
   readonly fields?: Readonly<Record<string, unknown>>;
+  /**
+   * Formatted values `hovertemplate` uses for a `%{name}` without a format (M2 wave 1, Plotly's
+   * `hovertemplateLabels`): pie gives `percent` → `'25%'` and `value` → `'1,234'`.
+   */
+  readonly labels?: Readonly<Record<string, string>>;
+  /**
+   * Label text the trace built itself from its `hoverinfo` flags (M2 wave 1), for traces whose
+   * hover fields aren't x/y (pie: label, text, value, percent lines, `<br>`-separated). Replaces
+   * the x/y text when there is no `hovertemplate`; the trace name still follows the `name` flag.
+   */
+  readonly hoverText?: string;
 }
 
 /** A box or lasso selection in one subplot, in the trace's linear coordinates. */
@@ -369,6 +462,17 @@ export interface SelectionQuery {
 /** Context for {@link TraceModule.legendIcon}. */
 export interface LegendIconContext {
   readonly fullLayout: FullLayout;
+}
+
+/** One per-point legend item (M2 wave 1, see {@link TraceModule.legendItems}). */
+export interface LegendItem {
+  /** Identity of the item: the value toggled in `layout.hiddenlabels` (pie: the label). */
+  readonly key: string;
+  /** Item text (Plotly pseudo-HTML allowed, like trace names). */
+  readonly name: string;
+  readonly glyph: LegendGlyph;
+  /** The item's points are hidden (drawn faded, like a `legendonly` trace). */
+  readonly hidden: boolean;
 }
 
 /** A colorbar request from one trace (E5.3). */
@@ -430,6 +534,18 @@ export interface ComponentLayoutContext {
   readonly axes: ReadonlyMap<string, AxisInfo>;
   /** The registered module of a trace type (e.g. to ask traces for their colorbars). */
   traceModule?(type: string): TraceModule | undefined;
+  /**
+   * Calcdata of trace `index` (M2 wave 1), e.g. for `legendItems`; `undefined` before its first
+   * calc (the first margin pass of a figure runs before calc; automargin passes run after it).
+   */
+  calcdata?(index: number): unknown;
+}
+
+/** Context for {@link ComponentModule.extremes}. */
+export interface ComponentExtremesContext {
+  readonly fullLayout: FullLayout;
+  readonly fullData: readonly FullTrace[];
+  readonly axes: ReadonlyMap<string, AxisInfo>;
 }
 
 /** Context for component drawing: the solved layout and the overlay viewport. */
@@ -471,6 +587,11 @@ export interface ComponentDrawContext {
    * `colorbar` / `legendIcon`. Always set by the runtime; optional for hand-built test contexts.
    */
   traceModule?(type: string): TraceModule | undefined;
+  /**
+   * Calcdata of trace `index` (M2 wave 1), e.g. for `legendItems`. Always set by the runtime;
+   * optional for hand-built test contexts.
+   */
+  calcdata?(index: number): unknown;
 }
 
 /**
@@ -535,6 +656,12 @@ export interface ComponentModule extends CoreComponentModule {
   /** Draw order among components (lower first; ties keep registration order). Default 0. */
   readonly order?: number;
   pushMargin?(ctx: ComponentLayoutContext): readonly MarginPush[] | MarginPush | undefined;
+  /**
+   * Autorange contributions, by axis id (`'x'`, `'y2'`), merged with the traces' extremes: e.g.
+   * data-referenced shapes (Plotly's `shapes/calc_autorange.js`). Called on every autorange pass;
+   * axes have their types and scales, ranges are not final yet.
+   */
+  extremes?(ctx: ComponentExtremesContext): Readonly<Record<string, AxisExtremes>> | undefined;
   readonly draw?: ComponentRenderer;
 }
 

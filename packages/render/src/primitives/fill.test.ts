@@ -9,6 +9,7 @@ import {
   fillProjectionAxes,
   triangulateFills,
   writeFillColors,
+  writeFillGradient,
   type FillGeometryInput,
   type FillTriangulation,
 } from './fill.ts';
@@ -391,5 +392,69 @@ describe('FillPrimitive (CPU side)', () => {
     prim.object.material.addEventListener('dispose', () => (materialDisposed = true));
     prim.dispose();
     expect(materialDisposed).toBe(true);
+  });
+});
+
+describe('writeFillGradient (fillgradient)', () => {
+  // A 2 × 4 box from (1, 0) to (3, 4): xyz per vertex.
+  const box = Float64Array.from([1, 0, 0, 3, 0, 0, 3, 4, 0, 1, 4, 0]);
+  const pairs = (a: Float32Array): number[][] =>
+    Array.from({ length: a.length / 2 }, (_, i) => [a[2 * i]!, a[2 * i + 1]!]);
+
+  it('linear gradients run from the lowest to the highest coordinate by default', () => {
+    expect(pairs(writeFillGradient(box, 4, { direction: 'horizontal' }))).toEqual([
+      [0, 0],
+      [1, 0],
+      [1, 0],
+      [0, 0],
+    ]);
+    expect(pairs(writeFillGradient(box, 4, { direction: 'vertical' })).map(([t]) => t)).toEqual([
+      0, 0, 1, 1,
+    ]);
+  });
+
+  it('honors start / stop (data coordinates, extrapolated beyond)', () => {
+    const t = writeFillGradient(box, 4, { direction: 'vertical', start: 2, stop: 4 });
+    expect(pairs(t).map(([v]) => v)).toEqual([-1, -1, 1, 1]);
+    // A zero span paints the start color.
+    const flat = writeFillGradient(box, 4, { direction: 'vertical', start: 2, stop: 2 });
+    expect(pairs(flat).map(([v]) => v)).toEqual([0, 0, 0, 0]);
+  });
+
+  it('radial gradients use bounding-box coordinates (the shader measures from the center)', () => {
+    expect(pairs(writeFillGradient(box, 4, { direction: 'radial' }))).toEqual([
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1],
+    ]);
+  });
+
+  it('a gradient paint acquires a shared LUT and releases it when switched back to solid', () => {
+    const resources = createResourceManager();
+    const ctx: PrimitiveContext = { resources, invalidate: () => {} };
+    const colorscale = [
+      [0, [1, 0, 0, 1]],
+      [1, [0, 0, 1, 1]],
+    ] as const;
+    const prim = new FillPrimitive(ctx, {
+      x: [0, 1, 1, 0],
+      y: [0, 0, 1, 1],
+      color: [1, 0, 0, 1],
+      paint: { kind: 'gradient', direction: 'radial', colorscale },
+    });
+    const uniforms = prim.object.material.uniforms;
+    expect(uniforms['uGradient']!.value).toBe(2);
+    expect(uniforms['uLut']!.value).not.toBeNull();
+    const position = prim.object.geometry.getAttribute('position') as BufferAttribute;
+    const pv = position.version;
+    prim.update({ paint: { kind: 'gradient', direction: 'horizontal', colorscale } });
+    expect(uniforms['uGradient']!.value).toBe(1);
+    // Paint changes never re-triangulate.
+    expect(position.version).toBe(pv);
+    prim.update({ paint: { kind: 'solid' } });
+    expect(uniforms['uGradient']!.value).toBe(0);
+    expect(uniforms['uLut']!.value).toBeNull();
+    prim.dispose();
   });
 });

@@ -4,7 +4,11 @@ import { attr } from '../schema/attr.ts';
 import type { Children, ObjectNode } from '../schema/types.ts';
 import type { Template } from '../templates/templates.ts';
 import { formatIssue, type Issue } from '../validate/issues.ts';
-import { cartesianTraceAttributes, commonTraceAttributes } from './trace-attributes.ts';
+import {
+  cartesianTraceAttributes,
+  commonTraceAttributes,
+  domainTraceAttributes,
+} from './trace-attributes.ts';
 import type { ComponentModule, Registry, TraceModule } from './types.ts';
 
 /**
@@ -56,6 +60,7 @@ export function createRegistry(): Registry {
       const children: Children = {
         ...commonTraceAttributes,
         ...(mod.categories.includes('cartesian') ? cartesianTraceAttributes : {}),
+        ...(mod.categories.includes('domain') ? domainTraceAttributes : {}),
         ...mod.schema.children,
       };
       const node: ObjectNode = {

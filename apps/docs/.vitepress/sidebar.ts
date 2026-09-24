@@ -62,6 +62,7 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
       items: pages('fundamentals/', [
         'traces',
         'layout-axes-subplots',
+        'shapes-images',
         'styling-themes',
         'hover-text-templates',
         'interaction-events',
@@ -112,7 +113,18 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
 
   const charts: Item[] = [
     { text: 'Overview', link: '/charts/' },
-    { text: 'Basic', items: pages('charts/basic/', ['scatter', 'line', 'bar', 'horizontal-bar']) },
+    {
+      text: 'Basic',
+      items: pages('charts/basic/', [
+        'scatter',
+        'line',
+        'area',
+        'bubble',
+        'bar',
+        'horizontal-bar',
+        'pie',
+      ]),
+    },
   ];
 
   const manifest = readJson<ReferenceManifest>(

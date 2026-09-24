@@ -17,7 +17,7 @@ import * as components from '../../packages/components/src/index.ts';
 import * as core from '../../packages/core/src/index.ts';
 import * as runtime from '../../packages/runtime/src/index.ts';
 import * as tracesBasic from '../../packages/traces-basic/src/index.ts';
-import { bar, scatter } from '../../packages/traces-basic/src/index.ts';
+import { basicTraces } from '../../packages/traces-basic/src/index.ts';
 import {
   StripDescriptionsError,
   WORKSPACE_ROOT,
@@ -175,8 +175,10 @@ function windowsOf(code: string): Set<string> {
  * plugin cannot tell them from data).
  */
 const KEPT = [
-  scatter.meta.description,
-  bar.meta.description,
+  ...basicTraces.flatMap((m) => {
+    const d = (m as { meta?: { description?: string } }).meta?.description;
+    return d ? [d] : [];
+  }),
   'color arrays of the traces that reference this axis',
 ];
 const KEPT_WINDOWS = new Set(

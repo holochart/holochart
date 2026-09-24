@@ -9,9 +9,9 @@ Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's
 
 | Entry                                   | What it measures                                           | Budget |
 | --------------------------------------- | ---------------------------------------------------------- | ------ |
-| `partial: core + scatter`               | `createChart` + `register` from runtime, `scatter` trace   | 120 kB |
+| `partial: core + scatter`               | `createChart` + `register` from runtime, `scatter` trace   | 142 kB |
 | `text engine (lazy chunk …)`            | the SDF text engine chunk, loaded on first text use        | 49 kB  |
-| `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 170 kB |
+| `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 212 kB |
 | `@mk7s/holochart (full, ESM)`           | everything the full bundle exports                         | 450 kB |
 | `@mk7s/holochart IIFE (includes three)` | `dist/holochart.iife.min.js` as shipped, **with** three.js | 650 kB |
 | each `@mk7s/holochart-*` package        | `export *` of that package                                 | report |
@@ -56,27 +56,36 @@ In CI, the job writes the table to the job summary, uploads `size.json` as the `
 artifact, compares with the latest successful `main` run, and posts or updates one PR comment
 (same-repo PRs only; fork PRs get a read-only token, so they get the job summary only).
 
-## Current sizes (2026-09-23, M2 wave 0, after the diet)
+## Current sizes (2026-09-23, M2 wave 1)
 
 Initial download per entry, with the lazily loaded text engine in its own column (a chart
 downloads it the first time it draws text; charts without text never do).
 
-| Entry                          | Initial   | Lazy     | Budget | M1 wave 3 |
+| Entry                          | Initial   | Lazy     | Budget | M2 wave 0 |
 | ------------------------------ | --------- | -------- | ------ | --------- |
-| `@mk7s/holochart-core`         | 42.92 kB  | —        | —      | 48.84 kB  |
-| `@mk7s/holochart-render`       | 53.02 kB  | 44.17 kB | —      | 95.41 kB  |
-| `@mk7s/holochart-runtime`      | 64.00 kB  | —        | —      | 69.97 kB  |
-| `@mk7s/holochart-components`   | 79.24 kB  | 44.17 kB | —      | —         |
-| `@mk7s/holochart-traces-basic` | 78.26 kB  | 44.17 kB | —      | —         |
-| partial: core + scatter        | 107.92 kB | 44.17 kB | 120 kB | 160.59 kB |
-| text engine (lazy)             | 44.17 kB  | —        | 49 kB  | —         |
-| partial: basic                 | 154.10 kB | 44.17 kB | 170 kB | 209.63 kB |
-| full, ESM                      | 170.06 kB | 44.17 kB | 450 kB | 225.53 kB |
-| IIFE (includes three)          | 345.35 kB | inlined  | 650 kB | 355.16 kB |
+| `@mk7s/holochart-core`         | 57.74 kB  | —        | —      | 42.92 kB  |
+| `@mk7s/holochart-render`       | 58.99 kB  | 45.73 kB | —      | 53.02 kB  |
+| `@mk7s/holochart-runtime`      | 68.70 kB  | —        | —      | 64.00 kB  |
+| `@mk7s/holochart-components`   | 98.54 kB  | 45.73 kB | —      | 79.24 kB  |
+| `@mk7s/holochart-traces-basic` | 106.86 kB | 45.73 kB | —      | 78.26 kB  |
+| `@mk7s/holochart-themes`       | 8.09 kB   | —        | —      | 0 kB      |
+| partial: core + scatter        | 129.20 kB | 45.73 kB | 142 kB | 107.92 kB |
+| text engine (lazy)             | 45.73 kB  | —        | 49 kB  | 44.17 kB  |
+| partial: basic                 | 192.93 kB | 45.73 kB | 212 kB | 154.10 kB |
+| full, ESM                      | 217.96 kB | 45.73 kB | 450 kB | 170.06 kB |
+| IIFE (includes three)          | 394.36 kB | inlined  | 650 kB | 345.35 kB |
+
+Wave 1 added area fills (the fill primitive and exact-fill code, ~12 kB of core + scatter), fonts
+and colorscale interpolation, grid and domain placement, pie (~10 kB of basic), shapes and images
+(~10 kB), and the themes and color data (~8 kB; scatter-only bundles ship only the plotly.js
+colorscales, the rest arrive with `registerBuiltinColors()`). By decision, the budgets were raised
+to about 10% above the measured sizes (142 / 212 kB); E21.6 code-splits render so charts without
+fills don't load the fill code.
 
 History: the partial budgets started at 90 kB and 150 kB, set before the SDF text engine's weight
 was known. They were raised to measured + 10% in M1 (165 / 200 kB after wave 2, `basic` 215 kB
-after wave 3) by decision, then tightened to measured + ~10% (120 / 170 kB) after the diet below.
+after wave 3) by decision, then tightened to measured + ~10% (120 / 170 kB) after the diet below,
+and raised to measured + ~10% (142 / 212 kB) after M2 wave 1 by decision.
 
 Splitting the text engine out costs about 1.8 kB in total (two chunks compress separately, and the
 loader adds a little code), and the IIFE about 3.3 kB (the inlined engine is wrapped as a lazily

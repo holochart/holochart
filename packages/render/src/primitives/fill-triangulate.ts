@@ -296,6 +296,70 @@ export function encodeFillPositions(
   return target;
 }
 
+/** Direction of a fill gradient (Plotly `fillgradient.type`). */
+export type FillGradientDirection = 'horizontal' | 'vertical' | 'radial';
+
+/** What {@link writeFillGradient} needs of a gradient paint. */
+export interface FillGradientGeometry {
+  readonly direction: FillGradientDirection;
+  /**
+   * Linear gradients: data coordinate (x for horizontal, y for vertical) of colorscale position 0
+   * and 1. Each defaults to the lowest / highest vertex coordinate. Ignored for radial.
+   */
+  readonly start?: number | undefined;
+  readonly stop?: number | undefined;
+}
+
+/**
+ * Per-vertex gradient coordinates (2 floats per vertex) for the fill shader, from the absolute
+ * triangulated `positions` (xyz per vertex). Linear: `(t, 0)` with `t = (c − start) / (stop −
+ * start)` along the gradient axis. Radial: the position normalized to the bounding box of all
+ * vertices (`[0, 1]²`); the shader measures `t` from the box center, so the gradient is an ellipse
+ * spanning the box (SVG `objectBoundingBox` semantics, as Plotly draws it). Both are affine in the
+ * position, so per-vertex interpolation is exact and zoom/pan never rewrite them.
+ */
+export function writeFillGradient(
+  positions: Float64Array,
+  vertexCount: number,
+  gradient: FillGradientGeometry,
+  out?: Float32Array,
+): Float32Array {
+  const target =
+    out && out.length >= vertexCount * 2 ? out : new Float32Array(Math.max(0, vertexCount * 2));
+  let x0 = Infinity;
+  let x1 = -Infinity;
+  let y0 = Infinity;
+  let y1 = -Infinity;
+  for (let v = 0; v < vertexCount; v++) {
+    const x = positions[3 * v]!;
+    const y = positions[3 * v + 1]!;
+    if (x < x0) x0 = x;
+    if (x > x1) x1 = x;
+    if (y < y0) y0 = y;
+    if (y > y1) y1 = y;
+  }
+  const norm = (v: number, lo: number, hi: number): number => (hi > lo ? (v - lo) / (hi - lo) : 0);
+  if (gradient.direction === 'radial') {
+    for (let v = 0; v < vertexCount; v++) {
+      target[2 * v] = norm(positions[3 * v]!, x0, x1);
+      target[2 * v + 1] = norm(positions[3 * v + 1]!, y0, y1);
+    }
+    return target;
+  }
+  const axis = gradient.direction === 'horizontal' ? 0 : 1;
+  const finite = (v: number | undefined): v is number => v !== undefined && Number.isFinite(v);
+  const start = finite(gradient.start) ? gradient.start : axis === 0 ? x0 : y0;
+  const stop = finite(gradient.stop) ? gradient.stop : axis === 0 ? x1 : y1;
+  const span = stop - start;
+  for (let v = 0; v < vertexCount; v++) {
+    const c = positions[3 * v + axis]!;
+    // A zero span (a flat fill) paints the start color.
+    target[2 * v] = span !== 0 ? (c - start) / span : 0;
+    target[2 * v + 1] = 0;
+  }
+  return target;
+}
+
 /**
  * Expand per-polygon colors to per-vertex RGBA (4 floats per vertex) using the triangulation's
  * `vertexStarts`. This is the whole cost of a color-only update: no re-triangulation.

@@ -44,6 +44,7 @@ import {
   labelStyle,
   labelText,
   pointColor,
+  type DomainHover,
   type Found,
   type HoverEntry,
   type LabelSpec,
@@ -65,6 +66,8 @@ export interface InteractionHost {
   subplots(): readonly SubplotInfo[];
   /** Hoverable / selectable traces of a subplot, in trace order. */
   entries(subplot: SubplotInfo): readonly HoverEntry[];
+  /** Hoverable domain traces (pie; M2 wave 1), asked on every hover. Default: none. */
+  domainEntries?(): DomainHover;
   fullLayout(): FullLayout | undefined;
   /** Number of traces in the figure (names show in labels only with several). */
   traceCount(): number;
@@ -557,6 +560,7 @@ export class Interaction {
       y,
       mode,
       s.hoverdistance,
+      host.domainEntries?.(),
     );
     this.#programmatic = false;
     if (!changed && !force) return;
@@ -610,19 +614,27 @@ export class Interaction {
       host.layer.showCustom(custom, a.x, a.y, size.width);
       return;
     }
-    const unified = mode === 'x unified' || mode === 'y unified';
+    const unified =
+      (mode === 'x unified' || mode === 'y unified') && first.entry.subplot !== undefined;
     const showName = host.traceCount() > 1;
     const specs: LabelSpec[] = [];
     for (let i = 0; i < finder.count; i++) {
       const f = finder.found[i] as Found;
       const color = pointColor(f.entry, f.point, fullLayout);
-      const { text, extra } = labelText(f.entry, f.point, mode, showName, fullLayout);
+      const m = f.entry.subplot ? mode : 'closest';
+      const { text, extra } = labelText(f.entry, f.point, m, showName, fullLayout);
       const a = anchorOf(f.entry, f.point);
       specs.push({
         text,
         extra,
         color,
-        style: labelStyle(f.entry, f.point.pointIndex, color, fullLayout, unified),
+        style: labelStyle(
+          f.entry,
+          f.point.pointIndex,
+          color,
+          fullLayout,
+          unified && m !== 'closest',
+        ),
         ax: a.x,
         ay: a.y,
         traceIndex: f.entry.index,
@@ -630,6 +642,15 @@ export class Interaction {
     }
     const winner = this.#winner();
     const sp = winner.entry.subplot;
+    if (!sp) {
+      // A domain trace (pie): one label at the slice, no common axis label.
+      host.layer.showLabels(specs, {
+        width: size.width,
+        height: size.height,
+        plot: winner.entry.rect,
+      });
+      return;
+    }
     const letter = mode.startsWith('y') ? 'y' : 'x';
     const axis = letter === 'x' ? sp.xaxis : sp.yaxis;
     const value = letter === 'x' ? points[winner.k]?.x : points[winner.k]?.y;
@@ -728,6 +749,7 @@ export class Interaction {
     for (const sp of this.#host.subplots()) {
       for (const e of this.#host.entries(sp)) if (e.index === index) return e;
     }
+    for (const e of this.#host.domainEntries?.().entries ?? []) if (e.index === index) return e;
     return undefined;
   }
 
@@ -787,7 +809,15 @@ export class Interaction {
     if (!mode || (!s.clickEvent && !s.clickSelect)) return;
     const finder = this.#clickFinder;
     finder.reset();
-    finder.find(host.subplots(), this.#entriesFor, this.#px, this.#py, mode, s.hoverdistance);
+    finder.find(
+      host.subplots(),
+      this.#entriesFor,
+      this.#px,
+      this.#py,
+      mode,
+      s.hoverdistance,
+      host.domainEntries?.(),
+    );
     const points: ChartPoint[] = [];
     for (let i = 0; i < finder.count; i++) {
       const f = finder.found[i] as Found;
@@ -807,10 +837,13 @@ export class Interaction {
         if (entry.module.selectPoints) next.set(entry.index, []);
     for (let i = 0; i < finder.count; i++) {
       const f = finder.found[i] as Found;
+      // Traces without selection support (pie) are not click-selected.
+      if (!f.entry.module.selectPoints) continue;
       const list = next.get(f.entry.index) ?? [];
       list.push(f.point.pointIndex);
       next.set(f.entry.index, list);
     }
+    if (next.size === 0) return;
     if (drag.shift) {
       for (const [index, list] of next) {
         const prev = host.selection(index) ?? [];

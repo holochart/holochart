@@ -5,7 +5,7 @@
  */
 import type { FullLayout, FullTrace } from '@mk7s/holochart-core';
 import type { TextFont, ViewportRect } from '@mk7s/holochart-render';
-import type { LegendGlyph, MarginPush } from '@mk7s/holochart-runtime';
+import type { LegendGlyph, LegendItem, MarginPush } from '@mk7s/holochart-runtime';
 import {
   LINE_HEIGHT,
   measureBlock,
@@ -27,8 +27,13 @@ export const DEFAULT_RANK = 1000;
 
 /** One legend item. */
 export interface LegendEntry {
-  /** Trace index in `data`. */
+  /** Trace index in `data` (for per-point items: the first trace showing the item). */
   index: number;
+  /**
+   * Per-point items only (pie labels, `TraceModule.legendItems`): the item key toggled in
+   * `layout.hiddenlabels`. `undefined` for one-item-per-trace entries.
+   */
+  key?: string;
   /** Item text (plain text, lines split on `\n`). */
   name: string;
   group: string;
@@ -57,15 +62,39 @@ function rankOf(trace: FullTrace): number {
  * Legend entries in display order. `traceorder` flags: `reversed` flips the order, `grouped`
  * gathers items by `legendgroup` (groups ordered by their best rank, then first appearance).
  * Within that, `legendrank` sorts (stable, so equal ranks keep trace order).
+ *
+ * Traces for which `itemsOf` returns items (pie: one per label) contribute one entry per item
+ * instead; an item key shows once per `legendgroup` across traces (Plotly's pie-like legends).
  */
 export function legendEntries(
   fullData: readonly FullTrace[],
   traceorder: string,
   glyphOf: (trace: FullTrace) => LegendGlyph,
+  itemsOf?: (trace: FullTrace) => readonly LegendItem[] | undefined,
 ): LegendEntry[] {
   const entries: LegendEntry[] = [];
+  const shown = new Set<string>();
   for (const trace of fullData) {
     if (!hasLegendEntry(trace)) continue;
+    const items = itemsOf?.(trace);
+    if (items) {
+      const group = typeof trace['legendgroup'] === 'string' ? trace['legendgroup'] : '';
+      for (const item of items) {
+        const id = `${group}\u0000${item.key}`;
+        if (shown.has(id)) continue;
+        shown.add(id);
+        entries.push({
+          index: trace._index,
+          key: item.key,
+          name: plainText(item.name),
+          group,
+          rank: rankOf(trace),
+          visible: item.hidden ? 'legendonly' : true,
+          glyph: item.glyph,
+        });
+      }
+      continue;
+    }
     entries.push({
       index: trace._index,
       name: plainText(String(trace.name ?? '')),
@@ -80,8 +109,8 @@ export function legendEntries(
   if (flags.includes('grouped')) {
     const groups = new Map<string, LegendEntry[]>();
     for (const e of ordered) {
-      // Ungrouped traces each form their own group.
-      const key = e.group === '' ? `\u0000${e.index}` : e.group;
+      // Ungrouped traces (and per-point items) each form their own group.
+      const key = e.group === '' ? `\u0000${e.index}\u0000${e.key ?? ''}` : e.group;
       const list = groups.get(key);
       if (list) list.push(e);
       else groups.set(key, [e]);

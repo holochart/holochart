@@ -735,16 +735,16 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `xaxis.domain`, `yaxis.domain`, and `anchor` pairing create subplots such as `xy` and `x2y2`
 - [x] Each subplot gets a viewport (E2.3) and a clip rect
 
-#### E4.4 — Grid layout helper   `P0` `M`   deps: E4.3
+#### E4.4 — Grid layout helper   `P0` `M`   deps: E4.3   · 🟡 Partial (M2 wave 1)
 > As a developer, I want `layout.grid` and a `makeSubplots()` helper, so that I don't compute domains by hand.
-- [ ] `layout.grid.{rows, columns, pattern: 'independent' | 'coupled', roworder, xgap, ygap, subplots, xside, yside}`
-- [ ] `makeSubplots({ rows, cols, sharedX, sharedY, specs, rowHeights, columnWidths, subplotTitles, horizontalSpacing, verticalSpacing, secondaryY })` returns a layout plus a trace-placement helper (like Python's `make_subplots`)
-- [ ] Mixed subplot types in specs (`xy`, `scene`, `polar`, `domain`, `ternary`)
+- [x] `layout.grid.{rows, columns, pattern: 'independent' | 'coupled', roworder, xgap, ygap, subplots, xside, yside}`
+- [x] `makeSubplots({ rows, cols, sharedX, sharedY, specs, rowHeights, columnWidths, subplotTitles, horizontalSpacing, verticalSpacing, secondaryY })` returns a layout plus a trace-placement helper (like Python's `make_subplots`) — shared axes are one real axis until `matches` lands (E3.9)
+- [ ] Mixed subplot types in specs (`xy`, `scene`, `polar`, `domain`, `ternary`) — `xy` and `domain` work; `scene`, `polar`, `ternary` throw with their milestone
 
-#### E4.5 — Domain-based traces placement   `P0` `S`   deps: E4.3
+#### E4.5 — Domain-based traces placement   `P0` `S`   deps: E4.3   · ✅ Done (M2 wave 1)
 > As a developer, I want pie/sunburst/indicator traces to use `domain: {x, y, row, column}`, so that I can place them in grids.
-- [ ] Domain resolution from `grid` row/column
-- [ ] Aspect-preserving fit (pies stay circular)
+- [x] Domain resolution from `grid` row/column
+- [x] Aspect-preserving fit (pies stay circular) — `domainRect`, `fitAspect`, `inscribedCircle`; domain traces get a hover path and per-label legend items (runtime contract)
 
 #### E4.6 — Uniform text sizing   `P1` `S`   deps: E2.9
 > As a designer, I want `uniformtext.{minsize, mode: 'hide' | 'show'}`, so that labels inside bars and pie slices have a consistent size.
@@ -783,16 +783,16 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] Plotly gaps: dragging the arrow head doesn't move a tail given in axis units (`axref`/`ayref`), and `clicktoshow` doesn't check the clicked point's axes against `xref`/`yref`
 - [ ] 3D scene annotations (anchored to 3D points, projected to screen). See E14.1. — *M6*
 
-#### E5.5 — Shapes   `P0` `M`   deps: E2.5, E2.6
+#### E5.5 — Shapes   `P0` `M`   deps: E2.5, E2.6   · 🟡 Partial (M2 wave 1)
 > As a developer, I want lines, rectangles, circles, and SVG paths drawn in data or paper coordinates, so that I can mark thresholds and regions.
-- [ ] `shapes[]: { type: 'line' | 'rect' | 'circle' | 'path', x0, x1, y0, y1, path, xref, yref, xsizemode, ysizemode, xanchor, yanchor, layer: 'above' | 'below' | 'between', line.{color, width, dash}, fillcolor, fillrule, opacity, label.{text, font, textposition, textangle, padding, texttemplate}, showlegend, legendgroup }`
-- [ ] SVG path parser (M, L, H, V, C, Q, Z) with flattening
-- [ ] Helpers: `addHline`, `addVline`, `addHrect`, `addVrect` (like Python's `add_hline`)
-- [ ] Editable shapes (drag and resize), plus drawing new shapes via modebar (`drawline`, `drawopenpath`, `drawclosedpath`, `drawcircle`, `drawrect`, `eraseshape`), `P1`
+- [x] `shapes[]: { type: 'line' | 'rect' | 'circle' | 'path', x0, x1, y0, y1, path, xref, yref, xsizemode, ysizemode, xanchor, yanchor, layer: 'above' | 'below' | 'between', line.{color, width, dash}, fillcolor, fillrule, opacity, label.{text, font, textposition, textangle, padding, texttemplate}, showlegend, legendgroup }` — autorange includes data-referenced shapes (component `extremes` hook); *deferred: shape legend entries*
+- [x] SVG path parser (M, L, H, V, C, Q, Z) with flattening — also relative commands, S/T and arcs
+- [x] Helpers: `addHline`, `addVline`, `addHrect`, `addVrect` (like Python's `add_hline`) — exported functions `addHline(chart, …)` etc. (no chart methods: the runtime can't depend on components)
+- [ ] Editable shapes (drag and resize), plus drawing new shapes via modebar (`drawline`, `drawopenpath`, `drawclosedpath`, `drawcircle`, `drawrect`, `eraseshape`), `P1` — drag and resize done; *drawing tools deferred: need draw `dragmode` values in core and runtime*
 
-#### E5.6 — Layout images   `P1` `S`   deps: E2.3
+#### E5.6 — Layout images   `P1` `S`   deps: E2.3   · ✅ Done (M2 wave 1)
 > As a designer, I want logos or background images placed on the figure, so that I can brand charts.
-- [ ] `images[]: { source, x, y, sizex, sizey, sizing: 'fill' | 'contain' | 'stretch', xref, yref, xanchor, yanchor, layer, opacity }`
+- [x] `images[]: { source, x, y, sizex, sizey, sizing: 'fill' | 'contain' | 'stretch', xref, yref, xanchor, yanchor, layer, opacity }` — new textured-quad primitive; `chart.ready` waits for images
 
 #### E5.7 — Hover labels   `P0` `L`   deps: E2.9, E2.13   · ✅ Done (M1 wave 2)
 > As an end user, I want informative tooltips, so that I can read exact values.
@@ -927,25 +927,25 @@ Customization is a **cascade**. Each layer overrides the one above it:
 **Goal:** Deliver the customization cascade in §8, from templates down to shaders.
 **Milestone:** M2–M5 · **Packages:** `themes`, `render/materials`, `core/style`
 
-#### E8.1 — Built-in themes   `P0` `M`   deps: E1.5
+#### E8.1 — Built-in themes   `P0` `M`   deps: E1.5   · ✅ Done (M2 wave 1)
 > As a designer, I want polished built-in themes, so that charts look good with zero effort.
-- [ ] `holochart` (default), `holochart-dark`, `plotly`, `plotly_white`, `plotly_dark`, `simple_white`, `ggplot2`, `seaborn`, `presentation` (large fonts), `xgridoff`, `ygridoff`, `gridon`, `none`, `high-contrast`, and `neon` (3D glow showcase)
-- [ ] Every theme has a visual regression snapshot on the "theme sampler" figure
-- [ ] Docs page with side-by-side previews
+- [x] `holochart` (default), `holochart-dark`, `plotly`, `plotly_white`, `plotly_dark`, `simple_white`, `ggplot2`, `seaborn`, `presentation` (large fonts), `xgridoff`, `ygridoff`, `gridon`, `none`, `high-contrast`, and `neon` (3D glow showcase) — plotly.py template values written from memory: verify against plotly.py before 1.0; `neon` glow approximated in 2D until E8.12
+- [x] Every theme has a visual regression snapshot on the "theme sampler" figure
+- [x] Docs page with side-by-side previews
 
-#### E8.2 — Color system: colorways, palettes & colorscales   `P0` `M`   deps: E2.12
+#### E8.2 — Color system: colorways, palettes & colorscales   `P0` `M`   deps: E2.12   · ✅ Done (M2 wave 1)
 > As a designer, I want every Plotly and d3 palette and colorscale, plus my own, so that I can encode data with the right colors.
-- [ ] Qualitative: Plotly, D3, G10, T10, Alphabet, Dark24, Light24, Set1–3, Pastel, Bold, Safe, Vivid, Prism, Antique
-- [ ] Sequential: Viridis, Cividis, Inferno, Magma, Plasma, Turbo, Blues…YlOrRd, and all cmocean and carto scales. Diverging: RdBu, PiYG, Picnic, Portland, Balance, … Cyclical: Twilight, IceFire, HSV, mrybm, mygbm.
-- [ ] `_r` reversed variants. `Holochart.colors.register(name, stops)`.
-- [ ] Interpolation space option: `colorscaleInterpolation: 'rgb' | 'oklab' | 'lab' | 'hcl'`
-- [ ] Colorblind-safety checker in dev mode (warns when adjacent colorway colors are indistinguishable under deuteranopia simulation), `P2`
+- [x] Qualitative: Plotly, D3, G10, T10, Alphabet, Dark24, Light24, Set1–3, Pastel, Bold, Safe, Vivid, Prism, Antique — 21 palettes (exact plotly.py 5.18 values)
+- [x] Sequential: Viridis, Cividis, Inferno, Magma, Plasma, Turbo, Blues…YlOrRd, and all cmocean and carto scales. Diverging: RdBu, PiYG, Picnic, Portland, Balance, … Cyclical: Twilight, IceFire, HSV, mrybm, mygbm. — 94 scales; scatter-only bundles ship the plotly.js set, the rest via `registerBuiltinColors()`
+- [x] `_r` reversed variants. `Holochart.colors.register(name, stops)`.
+- [x] Interpolation space option: `colorscaleInterpolation: 'rgb' | 'oklab' | 'lab' | 'hcl'`
+- [ ] Colorblind-safety checker in dev mode (warns when adjacent colorway colors are indistinguishable under deuteranopia simulation), `P2` — *deferred (P2)*
 
-#### E8.3 — Fonts   `P0` `S`   deps: E2.9
+#### E8.3 — Fonts   `P0` `S`   deps: E2.9   · ✅ Done (M2 wave 1)
 > As a designer, I want any web font (WOFF/TTF/OTF URL or a registered family) used in charts, so that charts match my brand.
-- [ ] `Holochart.fonts.register('Inter', { regular: url, bold: url, italic: url })`
-- [ ] Font fallback chain. Glyph atlases generated lazily by troika.
-- [ ] `font.{family, size, color, weight, style, variant, textcase, lineposition, shadow}` everywhere
+- [x] `Holochart.fonts.register('Inter', { regular: url, bold: url, italic: url })`
+- [x] Font fallback chain. Glyph atlases generated lazily by troika.
+- [x] `font.{family, size, color, weight, style, variant, textcase, lineposition, shadow}` everywhere — `variant` approximated (scaled uppercase); DOM hover labels map them to CSS
 
 #### E8.4 — CSS variable & design-token integration   `P2` `S`   deps: E8.1
 > As a designer, I want theme values to reference CSS custom properties (`'var(--brand-500)'`), so that charts follow my app's dark mode automatically.
@@ -1042,18 +1042,18 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `text` (arrayOk), `texttemplate` (same syntax as `hovertemplate`), `textposition: 'top left' | 'top center' | ... | 'bottom right'` (arrayOk), `textfont` (arrayOk)
 - [ ] Label collision culling option (`textoverlap: 'hide' | 'show'`, a holochart extension, `P2`) — *deferred: P2, not started*
 
-#### E9.4 — Filled area & stacked area   `P0` `L`   deps: E9.2, E2.6
+#### E9.4 — Filled area & stacked area   `P0` `L`   deps: E9.2, E2.6   · 🟡 Partial (M2 wave 1)
 > As a developer, I want fills to zero, to the next trace, or to self, and stacked areas, so that I can build area charts.
-- [ ] `fill: 'none' | 'tozeroy' | 'tozerox' | 'tonexty' | 'tonextx' | 'toself' | 'tonext'`, `fillcolor`, `fillgradient.{type, colorscale, start, stop}`, `fillpattern`
-- [ ] `stackgroup`, `stackgaps: 'infer zero' | 'interpolate'`, `groupnorm: '' | 'fraction' | 'percent'`, `orientation` for stacking direction
-- [ ] `hoveron: 'points' | 'fills' | 'points+fills'`
-- [ ] Docs: area, stacked area, 100% stacked, streamgraph recipe, range band (fill between upper and lower)
+- [x] `fill: 'none' | 'tozeroy' | 'tozerox' | 'tonexty' | 'tonextx' | 'toself' | 'tonext'`, `fillcolor`, `fillgradient.{type, colorscale, start, stop}`, `fillpattern` — all modes; `fillgradient` horizontal/vertical/radial; *deferred: `fillpattern` (E8.10)*
+- [x] `stackgroup`, `stackgaps: 'infer zero' | 'interpolate'`, `groupnorm: '' | 'fraction' | 'percent'`, `orientation` for stacking direction
+- [x] `hoveron: 'points' | 'fills' | 'points+fills'` — fill hover in `closest` mode only
+- [x] Docs: area, stacked area, 100% stacked, streamgraph recipe, range band (fill between upper and lower) — `charts/basic/area` (9 examples); `recipes/error-bands` can move to `fill`
 
-#### E9.5 — Bubble charts   `P0` `S`   deps: E9.1
+#### E9.5 — Bubble charts   `P0` `S`   deps: E9.1   · 🟡 Partial (M2 wave 1)
 > As an analyst, I want marker sizes scaled from data, so that I can build bubble charts.
-- [ ] `sizemode: 'area'` with the `sizeref` helper: `Holochart.utils.bubbleSizeref(sizes, maxPx)`
-- [ ] Size legend (a Holochart extension: `marker.sizelegend: { values, title }`), `P2`
-- [ ] Docs: bubble, bubble with colorscale, packed bubble recipe
+- [x] `sizemode: 'area'` with the `sizeref` helper: `Holochart.utils.bubbleSizeref(sizes, maxPx)` — `bubbleSizeref(sizes, maxPx)` is a named export
+- [ ] Size legend (a Holochart extension: `marker.sizelegend: { values, title }`), `P2` — *deferred (P2)*
+- [x] Docs: bubble, bubble with colorscale, packed bubble recipe — `charts/basic/bubble` (5 examples)
 
 #### E9.6 — Dot plots & dumbbell / lollipop recipes   `P1` `S`   deps: E9.1, E3.6   · 🟡 Partial (M1 wave 3)
 > As an analyst, I want documented recipes for dot, dumbbell, and lollipop charts, so that I can build them from scatter + shapes.
@@ -1086,14 +1086,14 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] `depth`, `bevel.{size, segments}`, `material`
 - [ ] Hover and selection still exact in 2.5D view (ray-cast against extruded geometry)
 
-#### E9.11 — `pie` & donut   `P0` `L`   deps: E2.8, E4.5, E5.2
+#### E9.11 — `pie` & donut   `P0` `L`   deps: E2.8, E4.5, E5.2   · 🟡 Partial (M2 wave 1)
 > As a developer, I want pie and donut charts, so that I can show parts of a whole.
-- [ ] `values`, `labels`, `label0`/`dlabel`, `hole`, `pull` (arrayOk), `rotation`, `direction: 'clockwise' | 'counterclockwise'`, `sort`
-- [ ] `marker.{colors, line.{color, width}, pattern}`, `layout.piecolorway`, `extendpiecolors`, `hiddenlabels`
-- [ ] `textinfo` flags (`label`, `text`, `value`, `percent`), `texttemplate`, `textposition: 'inside' | 'outside' | 'auto' | 'none'`, `insidetextorientation: 'horizontal' | 'radial' | 'tangential' | 'auto'`, outside labels with leader lines, automatic label collision resolution
-- [ ] `title.{text, font, position}`, `scalegroup` (area-proportional multiple pies), `domain`
-- [ ] Legend click hides a slice and re-flows the others (animated)
-- [ ] Hover per slice. Click events. Pulled-slice transition.
+- [x] `values`, `labels`, `label0`/`dlabel`, `hole`, `pull` (arrayOk), `rotation`, `direction: 'clockwise' | 'counterclockwise'`, `sort`
+- [x] `marker.{colors, line.{color, width}, pattern}`, `layout.piecolorway`, `extendpiecolors`, `hiddenlabels` — *deferred: `marker.pattern` (E8.10)*
+- [x] `textinfo` flags (`label`, `text`, `value`, `percent`), `texttemplate`, `textposition: 'inside' | 'outside' | 'auto' | 'none'`, `insidetextorientation: 'horizontal' | 'radial' | 'tangential' | 'auto'`, outside labels with leader lines, automatic label collision resolution — *deferred: `uniformtext` (E4.6), pie `automargin`*
+- [x] `title.{text, font, position}`, `scalegroup` (area-proportional multiple pies), `domain`
+- [x] Legend click hides a slice and re-flows the others (animated) — re-flow is immediate; *animation deferred (E7.3)*
+- [x] Hover per slice. Click events. Pulled-slice transition. — *pulled-slice transition deferred (E7.3)*
 
 #### E9.12 — `pie`: 3D-native pie   `P2` `M`   deps: E9.11, E8.9
 > As a designer, I want extruded pies with tilt and explode animations, so that I can build 3D pies (responsibly).
@@ -1838,6 +1838,7 @@ docs/
 - [ ] Keep the bar schema out of the scatter partial (`/* @__PURE__ */` on top-level schema objects, or per-module output — ADR-015 impact)
 - [ ] Decide whether `Chart#toJSON` should stay a method (always bundles the 2.3 kB serializer) or delegate to a lazily imported module
 - [ ] Draw annotation boxes and arrowheads without the general fill path (earcut + self-intersection, 7.4 kB in `basic`)
+- [ ] Code-split render's ESM build so the fill primitive and exact-fill code (~8 kB) load only for traces with `fill` (decided after M2 wave 1, when budgets were raised to 142 / 212 kB)
 
 ---
 
@@ -1980,13 +1981,23 @@ parallel workstreams with separate files, shared contracts first).
 | --- | --- | --- |
 | 0 | Bundle diet: lazy text engine; strip schema descriptions + tree-shaking audit | E21.5 ✅ |
 | 0 | M1 carry-forward: value-based `categoryorder`; annotation interaction tests | E3.x, E5.4 ✅ |
-| 1+ | Area & stacked area, bubble, pie/donut; table, Gantt; shapes & layout components; themes & fonts; rich text; gallery & docs coverage gate | E9.4, E9.5, E9.11, E9.13, E9.14, E5.5, E5.6, E4.4–E4.6, E8.1–E8.3, E2.10, E17.1, E18.1, E19.5, E19.10 |
+| 1 | Area & stacked area, bubble (`scatter`, stack, fill primitive) | E9.4, E9.5 ✅ |
+| 1 | Grid, domain placement, pie & donut (runtime domain contract, legend per label) | E4.4, E4.5, E9.11 ✅ |
+| 1 | Shapes, layout images (components, image primitive) | E5.5, E5.6 ✅ |
+| 1 | Themes, color system, fonts (themes package, core palettes, text) | E8.1, E8.2, E8.3 ✅ |
+| 2 | Rich text, uniform text; table, Gantt; accessibility, raster export; gallery, docs gates, new chart pages | E2.10, E4.6, E9.13, E9.14, E17.1, E18.1, E19.5, E19.10 |
 
 Open after wave 0: one full-suite run failed `schema-properties` › "produces full output that is
 itself valid input" (supplyDefaults on invalid figures). It did not reproduce in 12 further full
 runs or 20,000 isolated cases, and the failing seed wasn't captured. Next step: seed property
 tests from the commit in PR CI (reproducible) and run random seeds nightly, so a failure always
 comes with its seed (E20.1).
+
+Open after wave 1: `crossTraceCalc` can't report which traces it changed, so one stacked trace's
+update redraws every scatter trace on the subplot and streaming appends lose their fast path there
+(E7.2/E16.3); fill hover works in `closest` mode only; shape drawing tools need draw `dragmode`
+values (E5.5); the plotly.py theme values were written from memory and need checking against
+plotly.py (E8.1).
 
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 

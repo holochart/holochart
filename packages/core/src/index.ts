@@ -106,7 +106,11 @@ export { configSchema } from './config/schema.ts';
 
 // Registry & trace module contract
 export { createRegistry } from './registry/registry.ts';
-export { cartesianTraceAttributes, commonTraceAttributes } from './registry/trace-attributes.ts';
+export {
+  cartesianTraceAttributes,
+  commonTraceAttributes,
+  domainTraceAttributes,
+} from './registry/trace-attributes.ts';
 export type {
   ComponentModule,
   LayoutDefaultsContext,
@@ -132,14 +136,33 @@ export type {
   FigureInput,
   FullAxis,
   FullConfig,
+  FullGrid,
   FullLayout,
   FullTrace,
   Subplots,
 } from './defaults/types.ts';
 
+// Subplot grids (E4.4)
+export { makeSubplots } from './subplots/make-subplots.ts';
+export type {
+  Extent,
+  MakeSubplotsOptions,
+  MakeSubplotsResult,
+  PlacedTrace,
+  PlaceOptions,
+  SharedAxes,
+  SubplotCell,
+  SubplotSpec,
+  SubplotType,
+  SupportedSubplotType,
+} from './subplots/make-subplots.ts';
+
 // Templates (E1.5)
 export { composeTemplates, resolveTemplate, templateTraceFor } from './templates/templates.ts';
 export type { ResolvedTemplate, Template, TemplateSource } from './templates/templates.ts';
+
+// Color system: named colorscales, colorways, palettes (E8.2)
+export * from './colors/index.ts';
 
 // Edit types & update planner (E1.7)
 export {
