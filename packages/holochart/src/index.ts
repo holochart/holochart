@@ -6,11 +6,16 @@
 import { builtinComponents } from '@mk7s/holochart-components';
 import * as runtime from '@mk7s/holochart-runtime';
 import { basicTraces } from '@mk7s/holochart-traces-basic';
+import { statsTraces } from '@mk7s/holochart-traces-stats';
 import { builtinThemes } from '@mk7s/holochart-themes';
 import { registerBuiltinColors } from '@mk7s/holochart-core';
 
 /** Every built-in module, registered through the same public `register` API plugins use (E22.1). */
-export const builtins: readonly runtime.Registrable[] = [...basicTraces, ...builtinComponents];
+export const builtins: readonly runtime.Registrable[] = [
+  ...basicTraces,
+  ...statsTraces,
+  ...builtinComponents,
+];
 
 runtime.register(...builtins, ...builtinThemes);
 // Every named palette and colorscale of plan E8.2 (partial bundles opt in; see core `colors`).
@@ -44,6 +49,7 @@ export const registry = runtime.registry;
 export const setDefaultTemplate = runtime.setDefaultTemplate;
 
 export * from '@mk7s/holochart-traces-basic';
+export * from '@mk7s/holochart-traces-stats';
 export * from '@mk7s/holochart-components';
 /** The built-in themes (plan E8.1), namespaced: `themes.THEMES`, `themes.plotly_dark`, … */
 export * as themes from '@mk7s/holochart-themes';

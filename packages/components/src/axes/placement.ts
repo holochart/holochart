@@ -156,3 +156,85 @@ export function lineCrossings(p: AxisPlacement, pad: number): number[] {
   for (const m of p.mirrors) out.push(m.cross - m.sgn * pad);
   return out;
 }
+
+/**
+ * Free-axis `shift` and `autoshift` (plan E3.9, Plotly's `axShifts` in `axes.draw`), tracked in
+ * draw order. Plotly semantics:
+ *
+ * - `shift` moves a free y axis sideways by that many px (negative: left).
+ * - `autoshift` axes are pushed outward past everything drawn before them on the same side of the
+ *   same overlaid axis: the axis they overlay (its line, ticks, labels and title) and earlier
+ *   autoshift axes, each also contributing its own `shift` and half its line width.
+ *
+ * Call {@link begin} before laying out an axis (it returns the axis' shift in container px across
+ * the axis) and {@link end} after, with the axis' outward depth.
+ */
+export class AxisShifts {
+  readonly #acc = new Map<string, number>();
+  /** Axes that autoshift axes overlay: they push the autoshift axes out. */
+  readonly #overlaid = new Set<string>();
+
+  constructor(axes: Iterable<AxisLike>) {
+    for (const axis of axes) {
+      const o = overlayOf(axis);
+      if (axis.full.autoshift === true && o !== undefined) this.#overlaid.add(o);
+    }
+  }
+
+  /** Whether the axis moves axes drawn after it (Plotly's `_shiftPusher`). */
+  #pusher(axis: AxisLike): boolean {
+    const o = overlayOf(axis);
+    return (
+      axis.full.autoshift === true ||
+      this.#overlaid.has(axis.id) ||
+      (o !== undefined && this.#overlaid.has(o))
+    );
+  }
+
+  #key(axis: AxisLike): string {
+    const o = overlayOf(axis);
+    const base = String(axis.full.anchor) !== 'free' && o === undefined ? axis.id : (o ?? axis.id);
+    return `${base}\u0000${sideOf(axis)}`;
+  }
+
+  #push(axis: AxisLike, px: number, outward: boolean): void {
+    const key = this.#key(axis);
+    const signed = outward
+      ? sideOf(axis) === 'right' || sideOf(axis) === 'bottom'
+        ? px
+        : -px
+      : px;
+    this.#acc.set(key, (this.#acc.get(key) ?? 0) + signed);
+  }
+
+  /** The shift (container px, + is right / down) of `axis`, before it is laid out. */
+  begin(axis: AxisLike): number {
+    const f = axis.full;
+    const shift = typeof f.shift === 'number' && Number.isFinite(f.shift) ? f.shift : 0;
+    if (axis.letter !== 'y') return 0;
+    const free = String(f.anchor) === 'free';
+    if (this.#pusher(axis) && free) {
+      let half = f.showline ? f.linewidth / 2 : 0;
+      if (f.ticks === 'inside') half += f.ticklen;
+      this.#push(axis, half, true);
+      this.#push(axis, shift, false);
+    }
+    if (f.autoshift === true && free) return this.#acc.get(this.#key(axis)) ?? 0;
+    return free ? shift : 0;
+  }
+
+  /** Whether the axis neither moves nor pushes other axes (margins can skip measuring it). */
+  passive(axis: AxisLike): boolean {
+    return axis.letter !== 'y' || !this.#pusher(axis);
+  }
+
+  /** After laying out `axis`: `depth` px of line, ticks, labels and title push later axes out. */
+  end(axis: AxisLike, depth: number): void {
+    if (axis.letter === 'y' && this.#pusher(axis)) this.#push(axis, Math.max(0, depth), true);
+  }
+}
+
+function overlayOf(axis: AxisLike): string | undefined {
+  const o: unknown = axis.full.overlaying;
+  return typeof o === 'string' && o !== '' && o !== 'free' && o !== axis.id ? o : undefined;
+}

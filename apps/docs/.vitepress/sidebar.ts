@@ -127,6 +127,17 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
         'gantt',
       ]),
     },
+    {
+      text: 'Statistical',
+      items: pages('charts/statistical/', [
+        'histogram',
+        'histogram2d',
+        'histogram2d-contour',
+        'box',
+        'violin',
+        'strip',
+      ]),
+    },
   ];
 
   const demos: Item[] = [{ text: 'Demos', items: pages('demos/', ['openrouter']) }];

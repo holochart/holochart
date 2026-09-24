@@ -697,21 +697,21 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] Non-positive values are excluded with a single warning
 - [x] Log-specific `dtick` forms and "2, 5" intermediate labels
 
-#### E3.8 — Range breaks   `P1` `M`   deps: E3.5
+#### E3.8 — Range breaks   `P1` `M`   deps: E3.5   · ✅ Done (M3 wave 1)
 > As a finance developer, I want to hide weekends, off-hours, or arbitrary gaps on date axes, so that trading charts don't show empty space.
-- [ ] `rangebreaks[]: { bounds, pattern: 'day of week' | 'hour', values, dvalue, enabled }`
-- [ ] The scale becomes piecewise-linear. Ticks, hover, and zoom all respect breaks.
+- [x] `rangebreaks[]: { bounds, pattern: 'day of week' | 'hour', values, dvalue, enabled }` — date axes, and linear axes for `bounds`/`values` (a Holochart extension; Plotly 3 has date only)
+- [x] The scale becomes piecewise-linear. Ticks, hover, and zoom all respect breaks. — breaks compress the axis' linear space, so the GPU transform stays affine (ADR-022); `x0`/`dx`, `xperiod` and bar widths across a break are computed in compressed space
 
-#### E3.9 — Linked axes, constraints & overlays   `P1` `M`   deps: E3.2
+#### E3.9 — Linked axes, constraints & overlays   `P1` `M`   deps: E3.2   · ✅ Done (M3 wave 1)
 > As a developer, I want shared axes, equal-aspect constraints, and overlaid secondary axes, so that I can build complex multi-axis figures.
-- [ ] `matches: 'x'` (linked ranges), `scaleanchor`/`scaleratio`, `constrain: 'range' | 'domain'`, `constraintoward`
-- [ ] `overlaying: 'y'` for secondary y-axes, with `side: 'right'`, `anchor`, `position`, `autoshift`, `shift`
-- [ ] `fixedrange` to disable zoom per axis
+- [x] `matches: 'x'` (linked ranges), `scaleanchor`/`scaleratio`, `constrain: 'range' | 'domain'`, `constraintoward` — Plotly's constraint groups and `enforce`; match groups autorange together; zoom, pan and `relayout` propagate. Deferred: re-padding autoranged `constrain: 'domain'` axes
+- [x] `overlaying: 'y'` for secondary y-axes, with `side: 'right'`, `anchor`, `position`, `autoshift`, `shift` — overlaid axes zoom and pan with the plot area
+- [x] `fixedrange` to disable zoom per axis — shared across a `matches` group
 
-#### E3.10 — Spikelines   `P1` `S`   deps: E3.4, E6.1
+#### E3.10 — Spikelines   `P1` `S`   deps: E3.4, E6.1   · 🟡 Partial (M3 wave 1)
 > As an end user, I want crosshair spikelines on hover, so that I can read exact values against the axes.
-- [ ] `showspikes`, `spikemode: 'toaxis' | 'across' | 'marker'` combos, `spikesnap: 'data' | 'cursor' | 'hovered data'`, `spikecolor`, `spikethickness`, `spikedash`
-- [ ] Spike labels on the axis (`P2`)
+- [x] `showspikes`, `spikemode: 'toaxis' | 'across' | 'marker'` combos, `spikesnap: 'data' | 'cursor' | 'hovered data'`, `spikecolor`, `spikethickness`, `spikedash` — drawn in the DOM hover layer (never re-renders traces); `layout.spikedistance`; the modebar spike toggle works
+- [ ] Spike labels on the axis (`P2`) — *deferred*
 
 ---
 
@@ -738,7 +738,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 #### E4.4 — Grid layout helper   `P0` `M`   deps: E4.3   · 🟡 Partial (M2 wave 1)
 > As a developer, I want `layout.grid` and a `makeSubplots()` helper, so that I don't compute domains by hand.
 - [x] `layout.grid.{rows, columns, pattern: 'independent' | 'coupled', roworder, xgap, ygap, subplots, xside, yside}`
-- [x] `makeSubplots({ rows, cols, sharedX, sharedY, specs, rowHeights, columnWidths, subplotTitles, horizontalSpacing, verticalSpacing, secondaryY })` returns a layout plus a trace-placement helper (like Python's `make_subplots`) — shared axes are one real axis until `matches` lands (E3.9)
+- [x] `makeSubplots({ rows, cols, sharedX, sharedY, specs, rowHeights, columnWidths, subplotTitles, horizontalSpacing, verticalSpacing, secondaryY })` returns a layout plus a trace-placement helper (like Python's `make_subplots`) — shared axes of the same extent are one real axis; different extents are linked with `matches` (M3 wave 1)
 - [ ] Mixed subplot types in specs (`xy`, `scene`, `polar`, `domain`, `ternary`) — `xy` and `domain` work; `scene`, `polar`, `ternary` throw with their milestone
 
 #### E4.5 — Domain-based traces placement   `P0` `S`   deps: E4.3   · ✅ Done (M2 wave 1)
@@ -850,7 +850,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] Scroll zoom (`config.scrollZoom`) anchored at the cursor. Pinch zoom on touch. — pinch implemented, not covered by a Playwright test
 - [x] Double-click: `config.doubleClick: 'reset+autosize' | 'reset' | 'autosize' | false`
 - [x] During drag: GPU-only camera transform (no re-calc), with tick relayout throttled to rAF. `relayouting` fires during the drag, `relayout` at the end.
-- [ ] Respects `fixedrange`, `minallowed`/`maxallowed`, `matches`, `scaleanchor` — *deferred: `fixedrange` and min/maxallowed done; `matches`/`scaleanchor` are E3.9 (M3)*
+- [x] Respects `fixedrange`, `minallowed`/`maxallowed`, `matches`, `scaleanchor` — `matches`/`scaleanchor` in M3 wave 1
 
 #### E6.3 — Box & lasso selection   `P0` `M`   deps: E6.2, E2.13   · 🟡 Partial (M1 wave 2)
 > As an end user, I want to select points with box or lasso, so that I can highlight and extract subsets.
@@ -1121,46 +1121,46 @@ Customization is a **cascade**. Each layer overrides the one above it:
 **Goal:** Every Plotly statistical chart type.
 **Milestone:** M3 · **Package:** `traces-stats`
 
-#### E10.1 — `histogram`   `P1` `L`   deps: E9.9
+#### E10.1 — `histogram`   `P1` `L`   deps: E9.9   · 🟡 Partial (M3 wave 1)
 > As an analyst, I want histograms with flexible binning and normalization, so that I can see distributions.
-- [ ] `x` or `y` (orientation inferred), `histfunc: 'count' | 'sum' | 'avg' | 'min' | 'max'`, `histnorm: '' | 'percent' | 'probability' | 'density' | 'probability density'`
-- [ ] `nbinsx`/`nbinsy`, `xbins.{start, end, size}` (with date and category support, month-based sizes `'M1'`), `autobinx`, `bingroup` (shared bins across traces)
-- [ ] `cumulative.{enabled, direction: 'increasing' | 'decreasing', currentbin: 'include' | 'exclude' | 'half'}`
-- [ ] Auto-bin algorithm matching Plotly (Freedman–Diaconis-like with nice sizes)
-- [ ] Works with `barmode` overlay/stack/group. Hover shows bin range. Selection selects the underlying samples.
-- [ ] Rebinning on zoom (`P2`, holochart extension `xbins.adaptive: true`)
+- [x] `x` or `y` (orientation inferred), `histfunc: 'count' | 'sum' | 'avg' | 'min' | 'max'`, `histnorm: '' | 'percent' | 'probability' | 'density' | 'probability density'` — checked against plotly.js 3.5 on ~280 random figures (bins, values, bases, widths, hover labels)
+- [x] `nbinsx`/`nbinsy`, `xbins.{start, end, size}` (with date and category support, month-based sizes `'M1'`), `autobinx`, `bingroup` (shared bins across traces) — shared `bins.ts` (Plotly's autoBin, month sizes, categories, bingroup across subplots)
+- [x] `cumulative.{enabled, direction: 'increasing' | 'decreasing', currentbin: 'include' | 'exclude' | 'half'}`
+- [x] Auto-bin algorithm matching Plotly (Freedman–Diaconis-like with nice sizes)
+- [x] Works with `barmode` overlay/stack/group. Hover shows bin range. Selection selects the underlying samples. — one stack group with bars; selection events list samples, not bins; re-binning a whole bingroup on one trace's change needs a runtime hook
+- [ ] Rebinning on zoom (`P2`, holochart extension `xbins.adaptive: true`) — *deferred (P2)*
 
-#### E10.2 — `histogram2d` & density heatmap   `P1` `M`   deps: E10.1, E11.1
+#### E10.2 — `histogram2d` & density heatmap   `P1` `M`   deps: E10.1, E11.1   · 🟡 Partial (M3 wave 1)
 > As an analyst, I want 2D histograms, so that I can see joint distributions.
-- [ ] `x`, `y`, `z` (+ `histfunc`), `nbinsx`, `nbinsy`, `xbins`, `ybins`, `histnorm`, `xgap`, `ygap`, `zsmooth`, colorscale, `texttemplate`
-- [ ] GPU aggregation path for > 1M samples (binning with additive blending into a float render target)
+- [x] `x`, `y`, `z` (+ `histfunc`), `nbinsx`, `nbinsy`, `xbins`, `ybins`, `histnorm`, `xgap`, `ygap`, `zsmooth`, colorscale, `texttemplate` — heatmap primitive (one textured quad, zsmooth, gaps, uneven edges) reusable by E11.1
+- [ ] GPU aggregation path for > 1M samples (binning with additive blending into a float render target) — *deferred*: CPU binning ~25 ms per million samples, and auto-binning needs a CPU pass anyway; float blending isn't guaranteed in SwiftShader (see histogram2d/calc.ts)
 
-#### E10.3 — `histogram2dcontour` (2D density contour)   `P1` `M`   deps: E10.2, E11.2
+#### E10.3 — `histogram2dcontour` (2D density contour)   `P1` `M`   deps: E10.2, E11.2   · ✅ Done (M3 wave 1)
 > As an analyst, I want density contours, so that I can see joint distributions as contours.
-- [ ] Every `contour` styling attribute plus histogram binning
-- [ ] Recipe: scatter + density contour overlay, and marginal histograms (with E10.8)
+- [x] Every `contour` styling attribute plus histogram binning — `contours.type: 'levels'` only (constraint contours with E11.2); reusable contouring module for E11.2
+- [x] Recipe: scatter + density contour overlay, and marginal histograms (with E10.8) — scatter + density contour overlay; marginal histograms come with E10.8
 
-#### E10.4 — `box`   `P1` `L`   deps: E2.7, E2.5, E9.9
+#### E10.4 — `box`   `P1` `L`   deps: E2.7, E2.5, E9.9   · ✅ Done (M3 wave 1)
 > As an analyst, I want box plots with full control over stats and points, so that I can compare distributions.
-- [ ] Sample input (`y`/`x`) or precomputed stats (`q1`, `median`, `q3`, `lowerfence`, `upperfence`, `mean`, `sd`, `notchspan`)
+- [x] Sample input (`y`/`x`) or precomputed stats (`q1`, `median`, `q3`, `lowerfence`, `upperfence`, `mean`, `sd`, `notchspan`)
 - [ ] `quartilemethod: 'linear' | 'exclusive' | 'inclusive'`, `boxmean: true | 'sd' | false`, `notched`, `notchwidth`, `whiskerwidth`, `width`
 - [ ] `boxpoints: 'all' | 'outliers' | 'suspectedoutliers' | false`, `jitter`, `pointpos`, `marker.outliercolor`, `marker.line.outliercolor/outlierwidth`
 - [ ] `boxmode: 'group' | 'overlay'`, `boxgap`, `boxgroupgap`, `offsetgroup`, `orientation`
 - [ ] `hoveron: 'boxes' | 'points' | 'boxes+points'`. Hover shows all stats.
 - [ ] `sizemode: 'quartiles' | 'sd'`, `showwhiskers`
 
-#### E10.5 — `violin`   `P1` `L`   deps: E10.4
+#### E10.5 — `violin`   `P1` `L`   deps: E10.4   · ✅ Done (M3 wave 1)
 > As an analyst, I want violin plots, so that I can see distribution shape.
-- [ ] Gaussian KDE with `bandwidth` (default: Silverman's rule), `scalemode: 'width' | 'count'`, `scalegroup`, `spanmode: 'soft' | 'hard' | 'manual'`, `span`
+- [x] Gaussian KDE with `bandwidth` (default: Silverman's rule), `scalemode: 'width' | 'count'`, `scalegroup`, `spanmode: 'soft' | 'hard' | 'manual'`, `span` — scale groups shared per subplot (Plotly: per figure)
 - [ ] `side: 'both' | 'positive' | 'negative'` (split violins), `box.{visible, width, fillcolor, line}`, `meanline.{visible, color, width}`, `points`, `jitter`, `pointpos`
 - [ ] `violinmode: 'group' | 'overlay'`, `violingap`, `violingroupgap`
 - [ ] `hoveron: 'violins' | 'points' | 'kde'` (hover along the KDE curve)
-- [ ] KDE runs in calc and is worker-able (E16.5)
+- [x] KDE runs in calc and is worker-able (E16.5) — pure functions over typed arrays
 
-#### E10.6 — Strip plot   `P1` `S`   deps: E10.4
+#### E10.6 — Strip plot   `P1` `S`   deps: E10.4   · 🟡 Partial (M3 wave 1)
 > As an analyst, I want strip (jittered categorical scatter) plots, so that I can show every observation by group.
-- [ ] Implemented as `box` with `boxpoints: 'all'` and invisible box (as `px.strip` does), plus an Express helper
-- [ ] Beeswarm layout option (a Holochart extension: `jittermode: 'random' | 'beeswarm'`), `P2`
+- [x] Implemented as `box` with `boxpoints: 'all'` and invisible box (as `px.strip` does), plus an Express helper — `strip()` helper
+- [ ] Beeswarm layout option (a Holochart extension: `jittermode: 'random' | 'beeswarm'`), `P2` — *deferred (P2)*
 
 #### E10.7 — ECDF   `P1` `S`   deps: E9.2
 > As an analyst, I want empirical CDF plots, so that I can compare distributions without binning.
@@ -2068,9 +2068,9 @@ default look (ADR-021) for every new example.
 | 0 | Axis and layout gaps: log-axis coordinate conversion, log tick labels, margins (title vs legend, top band, edge gutter), `makeSubplots` titles | M2 carry-forward ✅ |
 | 0 | Legend-group toggling, shape drawing tools, touch modebar, fill hover in x/y modes, `crossTraceCalc` changed traces | E5.5, M2 carry-forward ✅ |
 | 0 | Test and docs quality: property-test seeding (E20.1), undescribed attributes, example coverage | E20.1, E19.10 ✅ |
-| 1 | `histogram`, `histogram2d`, `histogram2dcontour` (with contouring) | E10.1–E10.3 |
-| 1 | `box`, `violin`, strip | E10.4–E10.6 |
-| 1 | Range breaks, linked axes and constraints, spikelines | E3.8–E3.10 |
+| 1 | `histogram`, `histogram2d`, `histogram2dcontour` (with contouring) | E10.1–E10.3 ✅ |
+| 1 | `box`, `violin`, strip | E10.4–E10.6 ✅ |
+| 1 | Range breaks, linked axes and constraints, spikelines | E3.8–E3.10 ✅ |
 | 2 | `splom`, `parcoords`, `parcats` | E10.9–E10.11 |
 | 2 | Range slider and selector, update menus, sliders, layout selections | E5.9–E5.12 |
 | 3 | Transitions, frames and `animate` | E7.3, E7.4 |
@@ -2089,6 +2089,12 @@ Open after M3 wave 0 (found while fixing the carry-forward):
 - `minorloglabels` (new, Plotly's `small digits` default) draws 6 px digits in the dense default
   look; consider `complete` in the `holochart` template.
 - Heavy fills on dark (ADR-021) and the `toJSON` API decision (E21.6) remain.
+
+Open after M3 wave 1: re-binning a whole `bingroup` when one trace changes needs a runtime hook;
+the `histogram2d` GPU aggregation path (deferred with reasons); constraint contours (with E11.2);
+axis spike labels (E3.10, P2); `x0`/`dx`, `xperiod` and bar widths across range breaks are computed in
+compressed space; Plotly's re-padding of autoranged `constrain: 'domain'` axes; `makeSubplots`
+same-size cells still share one real axis instead of `matches`.
 
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 

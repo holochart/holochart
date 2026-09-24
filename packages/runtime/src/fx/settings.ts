@@ -134,6 +134,8 @@ export interface FxSettings {
   readonly hovermode: Hovermode;
   /** Px; `Infinity` for `hoverdistance: -1`. */
   readonly hoverdistance: number;
+  /** `layout.spikedistance` in px: `-1` for no limit, `0` for no spike lines (E3.10). */
+  readonly spikedistance: number;
   readonly dragmode: Dragmode;
   readonly clickEvent: boolean;
   readonly clickSelect: boolean;
@@ -181,11 +183,13 @@ export function resolveFxSettings(
   const pick = (key: string): unknown =>
     fullLayout && key in fullLayout ? fullLayout[key] : layoutIn[key];
   const distance = Number(pick('hoverdistance') ?? 20);
+  const spikes = Number(pick('spikedistance') ?? -1);
   const clickmode = String(pick('clickmode') ?? 'event').split('+');
   const config = (fullConfig ?? {}) as Record<string, unknown>;
   return {
     hovermode: enumOf(pick('hovermode') ?? 'closest', HOVERMODES, 'closest'),
     hoverdistance: distance < 0 || !Number.isFinite(distance) ? Infinity : distance,
+    spikedistance: spikes < 0 || !Number.isFinite(spikes) ? -1 : spikes,
     dragmode: enumOf(pick('dragmode') ?? 'zoom', DRAGMODES, 'zoom'),
     clickEvent: clickmode.includes('event'),
     clickSelect: clickmode.includes('select'),

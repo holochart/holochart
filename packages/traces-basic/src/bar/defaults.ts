@@ -1,5 +1,6 @@
 /** `bar` supply-defaults (plan E1.4, E9.8, E9.9), following plotly.js' bar defaults. */
 import {
+  autoType,
   isArrayLike,
   type FullLayout,
   type FullTrace,
@@ -74,6 +75,19 @@ export function supplyBarDefaults(
   ctx.coerce('alignmentgroup');
   ctx.coerce('zorder');
 
+  supplyBarStyleDefaults(traceIn, traceOut, ctx);
+}
+
+/**
+ * Bar labels, marker, error bars and selection styles (the part of bar defaults shared with
+ * `histogram`, plotly.js' `handleText` + `handleStyleDefaults` + error bars). The trace's schema
+ * must declare bar's text, marker, `error_x` / `error_y` and `selected` / `unselected` attributes.
+ */
+export function supplyBarStyleDefaults(
+  traceIn: Readonly<Record<string, unknown>>,
+  traceOut: FullTrace,
+  ctx: TraceDefaultsContext,
+): void {
   ctx.coerce('text');
   ctx.coerce('texttemplate');
   const textposition = ctx.coerce('textposition');
@@ -156,13 +170,13 @@ export function alignmentKey(axisId: string, orientation: string, alignmentgroup
  * different subplots sharing a position axis agree on their slots (Plotly's `_alignmentOpts`).
  */
 export function supplyBarLayoutDefaults(
-  _layoutIn: Readonly<Record<string, unknown>>,
+  layoutIn: Readonly<Record<string, unknown>>,
   layoutOut: FullLayout,
   ctx: LayoutDefaultsContext,
 ): void {
   const groups: Record<string, string[]> = {};
   for (const trace of ctx.fullData) {
-    if (trace.type !== 'bar' || trace.visible !== true) continue;
+    if (!isBarLike(trace) || trace.visible !== true) continue;
     const offsetgroup = trace['offsetgroup'];
     if (typeof offsetgroup !== 'string' || offsetgroup === '') continue;
     const key = alignmentKey(
@@ -174,4 +188,50 @@ export function supplyBarLayoutDefaults(
     if (!list.includes(offsetgroup)) list.push(offsetgroup);
   }
   layoutOut[BAR_ALIGNMENT_KEY] = groups;
+  if (ctx.fullData.some((t) => t.type === 'histogram' && t.visible === true)) {
+    supplyHistogramBargap(layoutIn, layoutOut, ctx);
+  }
+}
+
+/** Whether a trace stacks and groups with bars (its module lists `bar-like`: bar, histogram…). */
+export function isBarLike(trace: FullTrace): boolean {
+  return trace._module?.categories.includes('bar-like') === true;
+}
+
+/**
+ * Plotly's gapless histograms: with a visible histogram on a non-category position axis,
+ * `bargap` defaults to 0, unless `barmode: 'group'` puts two bar-like traces on one subplot.
+ * Axis types are not defaulted yet at this point, so the position axis counts as categorical when
+ * its `type` says so or, when automatic, when the histogram's samples look categorical.
+ */
+function supplyHistogramBargap(
+  layoutIn: Readonly<Record<string, unknown>>,
+  layoutOut: FullLayout,
+  ctx: LayoutDefaultsContext,
+): void {
+  let gapless = false;
+  let gapped = false;
+  const used = new Set<string>();
+  const group = layoutOut['barmode'] === 'group';
+  for (const trace of ctx.fullData) {
+    if (!isBarLike(trace) || trace.visible === false) continue;
+    const subplot = `${String(trace['xaxis'])}${String(trace['yaxis'])}`;
+    if (group) {
+      if (used.has(subplot)) gapped = true;
+      used.add(subplot);
+    }
+    if (trace.type !== 'histogram' || trace.visible !== true) continue;
+    const letter = trace['orientation'] === 'h' ? 'y' : 'x';
+    const id = String(trace[`${letter}axis`] ?? letter);
+    const axisIn = layoutIn[`${id.charAt(0)}axis${id.slice(1)}`] as { type?: unknown } | undefined;
+    const type = axisIn?.type;
+    const samples = trace[letter];
+    const category =
+      type === 'category' ||
+      ((type === undefined || type === '-') &&
+        isArrayLike(samples) &&
+        autoType(samples) === 'category');
+    if (!category) gapless = true;
+  }
+  if (gapless && !gapped) ctx.coerce('bargap', 0);
 }

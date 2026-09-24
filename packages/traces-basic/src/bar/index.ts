@@ -58,3 +58,7 @@ export const bar: TraceModule<BarCalc, typeof barAttributes.children> = {
 
 export { barAttributes, barLayoutAttributes } from './attributes.ts';
 export type { BarCalc } from './calc.ts';
+// For trace types drawn as bars (histogram, E10.1): the bar module's parts are reused through
+// `bar.plot`, `bar.crossTraceCalc`, …; these two build a bar calc and bar styling defaults.
+export { layoutBarCalc } from './calc.ts';
+export { supplyBarStyleDefaults } from './defaults.ts';

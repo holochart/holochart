@@ -164,7 +164,7 @@ function overlayingAttr<L extends 'x' | 'y'>(letter: L) {
     dflt: letter,
     extras: ['free'],
     editType: AXIS_EDIT,
-    description: `Draw this axis over another ${letter} axis (\`'${letter}'\`, \`'${letter}2'\`, …), sharing its \`domain\` (this axis' own \`domain\` is ignored), e.g. a secondary y axis with \`side: 'right'\`. Unset (or \`free\`) by default. The target must exist and must not overlay another axis itself; otherwise this is ignored. Templates cannot set it, since it names specific axes. Zoom and pan do not yet move overlaid axes together (plan E3.9).`,
+    description: `Draw this axis over another ${letter} axis (\`'${letter}'\`, \`'${letter}2'\`, …), sharing its \`domain\` (this axis' own \`domain\` is ignored), e.g. a secondary y axis with \`side: 'right'\`. Unset (or \`free\`) by default. The target must exist and must not overlay another axis itself; otherwise this is ignored. Templates cannot set it, since it names specific axes.`,
   }) as unknown as AttrSpec<
     `${L}` | `${L}${number}` | 'free',
     `${L}` | `${L}${number}` | 'free' | undefined
@@ -281,6 +281,47 @@ function axisSchema<const L extends 'x' | 'y'>(letter: L) {
         description:
           'Highest value zoom and pan may reach, in range units (like `range`: exponents on log axes). Also caps the autorange.',
       }),
+      rangebreaks: attr.items(
+        {
+          enabled: attr.boolean({
+            dflt: true,
+            description: 'Whether this range break is applied.',
+          }),
+          visible: attr.boolean({
+            dflt: true,
+            description:
+              'Set to `false` (by the template machinery) when `templateitemname` names no template break; hidden breaks are ignored like disabled ones.',
+          }),
+          bounds: attr.infoArray({
+            items: [attr.any(), attr.any()],
+            description:
+              "Lower and upper bound of the break. Without `pattern`: values in data units (`['2024-01-06', '2024-01-08']`). With `pattern: 'day of week'`: day numbers 0–6 (Sunday = 0) or English day names (`['sat', 'mon']` hides Saturday and Sunday). With `pattern: 'hour'`: hours 0–24 (`[17, 9]` hides 17:00–09:00, wrapping past midnight). Patterns use UTC days and hours.",
+          }),
+          pattern: attr.enumerated({
+            values: ['day of week', 'hour', ''],
+            description:
+              "How `bounds` repeat: `day of week` or `hour` (date axes only), or `''` for a single span. Defaults to `day of week` when `bounds` names days, else `''`.",
+          }),
+          values: attr.infoArray({
+            items: attr.any(),
+            freeLength: true,
+            description:
+              'Individual values to hide when no `bounds` are given, each hiding `[value, value + dvalue)` (e.g. holidays on a date axis).',
+          }),
+          dvalue: attr.number({
+            min: 0,
+            dflt: 86_400_000,
+            description:
+              'Size of each break in `values`, in data units (milliseconds on date axes). Default: one day.',
+          }),
+        },
+        {
+          itemName: 'rangebreak',
+          editType: 'calc',
+          description:
+            'Spans hidden from the axis (plan E3.8): the axis skips them, so a weekday-only stock chart has no gaps for weekends or nights. Date and linear axes; data inside a break is not drawn. Ticks never land in a break; hover, zoom and pan work across breaks.',
+        },
+      ),
 
       // --- Placement (E4.1 / E3.4) ---------------------------------------------------------------
       domain: attr.infoArray({
@@ -303,6 +344,50 @@ function axisSchema<const L extends 'x' | 'y'>(letter: L) {
         dflt: 0,
         editType: rangeEdit,
         description: `Position of the axis in paper coordinates (0–1 across the ${other} direction). Only used when \`anchor\` is \`free\`.`,
+      }),
+      autoshift: attr.boolean({
+        editType: rangeEdit,
+        description:
+          "y axes with `anchor: 'free'` only: move the axis sideways so it does not overlap other free axes on the same side (and default `position` to the overlaid plot's edge, `automargin` to `true`, `shift` to ∓3 px). Plotly semantics.",
+      }),
+      shift: attr.number({
+        editType: rangeEdit,
+        description:
+          "y axes with `anchor: 'free'` only: extra horizontal offset in px (negative to the left). Defaults to -3 on the left and 3 on the right when `autoshift` is on, else 0.",
+      }),
+
+      // --- Linked axes and constraints (E3.9) ---------------------------------------------------
+      matches: attr.string({
+        strict: true,
+        noBlank: true,
+        editType: 'calc',
+        description:
+          "Link this axis' range to another axis of the same type (`'x'`, `'x2'`, `'y'`, …): they autorange together over all their data, and zoom, pan and `relayout` of one move all. The linked axes share `range`, `autorange`, `rangemode`, `rangebreaks`, `constrain` and the category order. An axis that would create a loop, or a target of another type, is ignored.",
+      }),
+      scaleanchor: attr.any({
+        editType: rangeEdit,
+        description:
+          "Lock the scale (px per unit) of this axis to another axis (`'x'`, `'y2'`, …) of the same type, times `scaleratio`: `yaxis: { scaleanchor: 'x' }` keeps one unit the same length on both axes, e.g. for maps or square plots. Zooming either axis zooms the other. `false` or unset for none; ignored with `matches` or when it would create a loop.",
+      }),
+      scaleratio: attr.number({
+        min: 0,
+        dflt: 1,
+        editType: rangeEdit,
+        description:
+          'With `scaleanchor`: px per unit of this axis divided by px per unit of the anchor axis (2 makes one unit here twice as long).',
+      }),
+      constrain: attr.enumerated({
+        values: ['range', 'domain'],
+        dflt: 'range',
+        editType: rangeEdit,
+        description:
+          'How a `scaleanchor` / `matches` constraint is met on this axis: `range` widens the range, `domain` shrinks the axis (and its subplot) inside its `domain`.',
+      }),
+      constraintoward: attr.enumerated({
+        values: ['left', 'center', 'right', 'top', 'middle', 'bottom'],
+        editType: rangeEdit,
+        description:
+          'Which end stays put when a constraint changes the range or domain: `left`/`center`/`right` for x axes (default `center`), `bottom`/`middle`/`top` for y axes (default `middle`).',
       }),
       layer: attr.enumerated({
         values: ['above traces', 'below traces'],
@@ -620,6 +705,42 @@ function axisSchema<const L extends 'x' | 'y'>(letter: L) {
         dflt: 1,
         editType: 'ticks',
         description: 'Zero line width in px.',
+      }),
+
+      // --- Spike lines (E3.10) -------------------------------------------------------------------
+      showspikes: attr.boolean({
+        editType: 'modebar',
+        description:
+          "Draw a spike line from the hovered point to this axis. Defaults to `false`, or `true` when any other `spike*` attribute is set or `hovermode` is this axis' unified mode (`x unified` for x axes).",
+      }),
+      spikecolor: attr.color({
+        editType: 'none',
+        description:
+          "Spike line color. Defaults to the hovered point's color (or a contrasting color when that is too close to the background).",
+      }),
+      spikethickness: attr.number({
+        dflt: 3,
+        editType: 'none',
+        description: 'Spike line width in px (1.5 in unified hover).',
+      }),
+      spikedash: attr.string({
+        dflt: 'dash',
+        editType: 'none',
+        description: `Spike line dash (\`dot\` in unified hover). ${GRIDDASH_DESCRIPTION}`,
+      }),
+      spikemode: attr.flaglist({
+        flags: ['toaxis', 'across', 'marker'],
+        dflt: 'toaxis',
+        editType: 'none',
+        description:
+          '`toaxis`: from the point to the axis; `across`: across the whole plot area; `marker`: a dot on the axis. Combine with `+` (`across+marker`). Unified hover defaults to `across`.',
+      }),
+      spikesnap: attr.enumerated({
+        values: ['data', 'cursor', 'hovered data'],
+        dflt: 'hovered data',
+        editType: 'none',
+        description:
+          '`hovered data`: the spike follows the hovered point; `data`: the closest point within `spikedistance`, even when no label shows; `cursor`: the pointer position.',
       }),
 
       // --- Minor ticks (E3.3) --------------------------------------------------------------------

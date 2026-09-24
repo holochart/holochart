@@ -6,7 +6,7 @@ import type { FullLayout } from '@mk7s/holochart-core';
 import type { MarginPush } from '@mk7s/holochart-runtime';
 import type { MeasureLine } from '../shared/text.ts';
 import { axisGeometry, axisTicks, cloneScale, type AxisLike } from './geometry.ts';
-import { automarginAllows, axisMarginSide, type MarginSide } from './placement.ts';
+import { AxisShifts, automarginAllows, axisMarginSide, type MarginSide } from './placement.ts';
 
 /** One axis' margin requirement. */
 export interface AxisMarginNeed {
@@ -30,11 +30,16 @@ export function axisMarginNeeds(
 ): AxisMarginNeed[] {
   const out: AxisMarginNeed[] = [];
   const pad = fullLayout.margin.pad;
+  const shifts = new AxisShifts(axes.values());
   for (const axis of axes.values()) {
     const f = axis.full;
     if (!f.visible) continue;
+    // Free y axes moved by `shift` / `autoshift` (E3.9) reach further into the margin, and axes
+    // that push others need their depth measured even without automargin.
+    const shift = shifts.begin(axis);
     const side = axisMarginSide(axis, axes);
-    if (!side || !automarginAllows(f.automargin, side)) continue;
+    const wanted = side !== undefined && automarginAllows(f.automargin, side);
+    if (!wanted && shifts.passive(axis)) continue;
     let subject: AxisLike = axis;
     if (!(axis.scale.length > 1) && lengthHint) {
       const scale = cloneScale(axis.scale, Math.max(1, lengthHint(axis)));
@@ -51,13 +56,23 @@ export function axisMarginNeeds(
         l2c: (l) => (axis.letter === 'x' ? scale.l2p(l) : scale.length - scale.l2p(l)),
       };
     }
-    const sgn: 1 | -1 = side === 'b' || side === 'r' ? 1 : -1;
-    const geo = axisGeometry(subject, { cross: 0, sgn }, axisTicks(subject), {
+    const outwardSgn: 1 | -1 =
+      side !== undefined
+        ? side === 'b' || side === 'r'
+          ? 1
+          : -1
+        : String(f.side) === 'right' || String(f.side) === 'bottom'
+          ? 1
+          : -1;
+    const geo = axisGeometry(subject, { cross: 0, sgn: outwardSgn }, axisTicks(subject), {
       measure,
       width: size.width,
       height: size.height,
     });
-    if (geo.extent > 0) out.push({ axis: axis.id, side, need: Math.ceil(pad + geo.extent) });
+    shifts.end(axis, geo.extent);
+    if (!wanted || side === undefined) continue;
+    const reach = geo.extent + outwardSgn * shift;
+    if (reach > 0) out.push({ axis: axis.id, side, need: Math.ceil(pad + reach) });
   }
   return out;
 }

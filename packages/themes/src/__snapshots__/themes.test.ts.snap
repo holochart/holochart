@@ -201,9 +201,14 @@ exports[`built-in themes (E8.1) > holochart: layout values snapshot 1`] = `
   ],
   "dataTypes": [
     "bar",
+    "box",
+    "histogram",
+    "histogram2d",
+    "histogram2dcontour",
     "pie",
     "scatter",
     "table",
+    "violin",
   ],
   "font": {
     "color": "#a4a7b5",
@@ -265,9 +270,14 @@ exports[`built-in themes (E8.1) > holochart-dark: layout values snapshot 1`] = `
   ],
   "dataTypes": [
     "bar",
+    "box",
+    "histogram",
+    "histogram2d",
+    "histogram2dcontour",
     "pie",
     "scatter",
     "table",
+    "violin",
   ],
   "font": {
     "color": "#a4a7b5",

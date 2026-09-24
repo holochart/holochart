@@ -85,6 +85,11 @@ const PACKAGES: readonly SizeEntry[] = [
     name: '@mk7s/holochart-traces-basic',
     imports: [{ pkg: 'traces-basic' }],
   },
+  {
+    id: 'traces-stats',
+    name: '@mk7s/holochart-traces-stats',
+    imports: [{ pkg: 'traces-stats' }],
+  },
   { id: 'themes', name: '@mk7s/holochart-themes', imports: [{ pkg: 'themes' }] },
 ];
 

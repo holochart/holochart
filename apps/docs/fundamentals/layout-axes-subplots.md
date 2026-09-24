@@ -12,7 +12,6 @@ Planned topics:
 
 - Axis types: linear, log, date, category, and multicategory
 - Ranges and autorange, ticks and tick formatting, grid lines, and axis titles
-- Linked axes (`matches`, `scaleanchor`)
 - Subplots with axis `domain`
 - Figure size, margins, and automargin
 - Title, legend, and other layout components
@@ -125,8 +124,45 @@ createChart(el, {
 ```
 
 The target axis must exist and must not overlay another axis itself; otherwise `overlaying` is
-ignored. Zoom and pan don't move overlaid axes together yet; that comes with linked axes (plan
-E3.9).
+ignored. A zoom box, pan, scroll or pinch on the plot area moves every axis drawn over it, so the
+secondary axis zooms with its primary one (each by the same pixels, as in Plotly); the drag strips
+beside an axis move that axis alone.
+
+#### More than two y axes: free axes, `shift` and `autoshift`
+
+A third y axis needs a place outside the plot area: give it `anchor: 'free'` and a `position`
+(0–1 across the plot area; a numeric `position` alone makes the anchor default to `'free'`).
+`shift` moves a free y axis sideways by that many pixels (negative to the left). With
+`autoshift: true` it moves out past everything already drawn on that side of the axis it overlays
+(the primary axis' ticks, labels and title, then earlier autoshifted axes), and `position` then
+defaults to that plot's edge, `automargin` to `true` and `shift` to ∓3 px:
+
+```ts
+const t = [1, 2, 3, 4, 5, 6];
+createChart(el, {
+  data: [
+    { type: 'scatter', x: t, y: [20, 22, 25, 24, 27, 30], name: 'Temperature' },
+    { type: 'scatter', x: t, y: [61, 58, 55, 57, 50, 48], name: 'Humidity', yaxis: 'y2' },
+    {
+      type: 'scatter',
+      x: t,
+      y: [1012, 1010, 1007, 1009, 1004, 1001],
+      name: 'Pressure',
+      yaxis: 'y3',
+    },
+  ],
+  layout: {
+    yaxis2: { overlaying: 'y', side: 'right', title: { text: '%' } },
+    yaxis3: {
+      overlaying: 'y',
+      side: 'left',
+      anchor: 'free',
+      autoshift: true,
+      title: { text: 'hPa' },
+    },
+  },
+});
+```
 
 ### `makeSubplots`
 
@@ -191,13 +227,176 @@ milestone that adds them.
 
 #### Differences from Python's `make_subplots`
 
-Until linked axes (`matches`, plan E3.9) exist:
+- **Shared axes of the same extent are one axis.** `sharedX: true` (or `'columns'`) gives each
+  column a single x axis, anchored to its bottom-most subplot; `sharedY: true` (or `'rows'`) gives
+  each row a single y axis, anchored to its left-most subplot. Python instead creates one axis per
+  subplot and links them with `matches`. Zoom and pan are shared either way.
+- **Subplots of different extents are linked with `matches`.** One axis has one domain, so when
+  shared subplots differ in extent (`sharedX: 'rows'`, or `sharedX: 'all'` over several columns),
+  each extent gets its own axis with [`matches`](#linked-axes-matches) set to the first one, as in
+  Python. A spanning cell in a shared column (or row) keeps its own, unlinked axis.
 
-- **Shared axes are one axis.** `sharedX: true` (or `'columns'`) gives each column a single x axis,
-  anchored to its bottom-most subplot; `sharedY: true` (or `'rows'`) gives each row a single y axis,
-  anchored to its left-most subplot. Python instead creates one axis per subplot and links them
-  with `matches`. Zoom and pan are shared either way, but one axis has one domain, so
-  only subplots of the same extent can share it: a spanning cell in a shared column (or row) keeps
-  its own axis, and sharing between subplots of different extents throws (for example
-  `sharedX: 'rows'`, or `sharedX: 'all'` over several columns).
-- **Secondary y axes don't zoom with their primary axis** yet, as with any overlaid axis.
+## Range breaks
+
+[`rangebreaks`](/reference/layout#xaxis.rangebreaks) hide spans of a date (or linear) axis: the axis
+skips them, so a trading chart has no gaps for weekends, nights or holidays. Each break is one of:
+
+- `bounds` with `pattern: 'day of week'`: days to hide, as numbers (Sunday = 0) or English day
+  names. `bounds: ['sat', 'mon']` hides Saturday 00:00 through Monday 00:00 (the pattern defaults
+  to `'day of week'` when the bounds name days).
+- `bounds` with `pattern: 'hour'`: hours to hide, wrapping past midnight. `bounds: [16, 9.5]` hides
+  16:00 to 09:30.
+- `bounds` without a pattern: one span in data units, such as `['2024-12-24', '2024-12-27']`.
+- `values` (with no `bounds`): single values to hide, each for `dvalue` (default one day, in ms),
+  such as a list of holidays.
+
+```ts
+const days = ['2024-01-11', '2024-01-12', '2024-01-16', '2024-01-17', '2024-01-18'];
+const close = [185.6, 185.9, 183.6, 182.7, 188.6];
+
+createChart(el, {
+  data: [{ type: 'scatter', x: days, y: close }],
+  layout: {
+    xaxis: {
+      rangebreaks: [
+        { bounds: ['sat', 'mon'] },
+        { values: ['2024-01-15', '2024-02-19', '2024-03-29', '2024-05-27'] },
+      ],
+    },
+  },
+});
+```
+
+<Example id="_dev/rangebreaks-stocks" :height="440" />
+
+Overlapping breaks merge. Here nights and weekends together leave only the 09:30–16:00 sessions:
+
+<Example id="_dev/rangebreaks-intraday" :height="380" />
+
+What to know:
+
+- **Patterns use UTC** days and hours (as Plotly; `layout.timezone` is not supported yet). UTC has
+  no daylight-saving changes, so every day loses exactly the same hours.
+- **Data inside a break is not drawn**, and the line joins the points on either side.
+- **Ticks never land in a break.** A tick that would fall inside one moves to its end (a weekly
+  tick on Sunday shows as Monday), and ticks that end up crowded are dropped. With `'day of week'`
+  breaks, day steps are 1, 2, 7 or 14 days.
+- **Hover, zoom and pan work across breaks.** Hover labels show the real dates, and the ranges a
+  zoom or pan reports (`relayout`, `fullLayout`) are real dates too.
+- A span break that covers the whole fixed `range` is ignored.
+
+How it works: an axis with breaks maps data to a _compressed_ linear space in which each break has
+zero width, so the axis stays a straight line from data to pixels and the GPU transform that pans
+and zooms traces does not change.
+Because of that, per-point steps in data units are taken in that compressed space: `x0` + `dx`
+series and `xperiod` alignment across a break are not exact, and bar widths are measured without
+the hidden time.
+
+## Linked axes (`matches`)
+
+[`matches`](/reference/layout#xaxis.matches) links an axis to another of the same type. Linked axes
+keep their own `domain`, anchor and tick style but share one range:
+
+- they autorange together over the data of every linked axis;
+- a zoom, pan, scroll or `relayout` of any of them moves all of them (`relayout` reports every
+  linked axis);
+- `range`, `autorange`, `rangemode`, `rangebreaks`, `constrain` and the category order are taken
+  from the first axis without `matches` (or the first one that sets them), and `fixedrange` on one
+  fixes them all.
+
+Link any number of axes to one (`xaxis2: { matches: 'x' }`, `xaxis3: { matches: 'x' }`). A link to
+an axis of another type, to a missing axis or one that would make a loop is ignored.
+
+```ts
+const weeks = [1, 2, 3, 4, 5, 6];
+const oslo = [-4.1, -3.8, -2.2, -1.5, 0.3, 1.1];
+const madrid = [6.2, 6.9, 7.4, 8.8, 9.1, 10.4];
+
+createChart(el, {
+  data: [
+    { type: 'scatter', x: weeks, y: oslo },
+    { type: 'scatter', x: weeks, y: madrid, xaxis: 'x2', yaxis: 'y2' },
+  ],
+  layout: {
+    grid: { rows: 1, columns: 2, pattern: 'independent' },
+    xaxis2: { matches: 'x' },
+    yaxis2: { matches: 'y' },
+  },
+});
+```
+
+<Example id="_dev/matches-subplots" :height="480" />
+
+## Aspect lock (`scaleanchor`)
+
+[`scaleanchor`](/reference/layout#yaxis.scaleanchor) locks an axis' scale (pixels per unit) to
+another axis: `yaxis: { scaleanchor: 'x' }` makes one unit on y as long as one unit on x, which
+keeps circles round and maps undistorted. `scaleratio` sets the ratio (`2`: a y unit is twice as
+long as an x unit). Zooming either axis zooms the other by the same factor, so the lock holds while
+exploring; a zoom box is widened to the plot's aspect.
+
+`constrain` says how an axis gives way when the lock needs it:
+
+- `'range'` (default): its range widens (or narrows) around the point `constraintoward` names;
+- `'domain'`: its range stays and the axis, with its subplot, shrinks inside its `domain`.
+
+`constraintoward` picks the fixed end: `'left'`, `'center'` (default) or `'right'` on x axes,
+`'bottom'`, `'middle'` (default) or `'top'` on y axes.
+
+```ts
+const angles = Array.from({ length: 65 }, (_, i) => (i / 64) * 2 * Math.PI);
+const circleX = angles.map(Math.cos);
+const circleY = angles.map(Math.sin);
+
+createChart(el, {
+  data: [{ type: 'scatter', mode: 'lines', x: circleX, y: circleY }],
+  layout: {
+    xaxis: { constrain: 'domain', constraintoward: 'left' },
+    yaxis: { scaleanchor: 'x' },
+  },
+});
+```
+
+<Example id="_dev/scaleanchor-square" :height="380" />
+
+Chains and groups work as in Plotly: axes linked by `scaleanchor` or `matches` form one group whose
+scales all agree, and an anchor that would make a loop (x anchored to y and y to x) is ignored.
+When an update sets the range of some axes in a group (a zoom, or `relayout`), those win and the
+others adapt; otherwise the axis showing the most data decides and the others widen.
+
+## Spike lines
+
+Spike lines are crosshair lines from the hovered point to the axes. Turn them on per axis with
+[`showspikes`](/reference/layout#xaxis.showspikes) (setting any other `spike*` attribute also
+turns them on):
+
+- `spikemode`: `'toaxis'` (default, from the point to the axis line), `'across'` (across every
+  subplot on the axis) and `'marker'` (a dot on the axis line), combined with `+`.
+- `spikesnap`: `'hovered data'` (default) follows the hovered point, `'data'` also spikes the
+  closest point when no label shows, and `'cursor'` follows the pointer.
+- `spikecolor` (default: the point's color, or a contrasting color when that would not show),
+  `spikethickness` (default 3 px) and `spikedash` (default `'dash'`).
+- `layout.spikedistance`: how far (px) the spiked point may be from the pointer; `-1` (default)
+  for no limit and `0` for no spikes.
+
+With `hovermode: 'x unified'` (or `'y unified'`), spikes are on by default for that axis, drawn
+`across`, dotted and 1.5 px wide. The modebar's spike button (add it with
+`config.modeBarButtonsToAdd: ['togglespikelines']`) turns them on and off on every axis.
+
+```ts
+const x = [1, 2, 3, 4, 5, 6, 7, 8];
+const y = [52, 55, 61, 58, 63, 67, 64, 70];
+
+createChart(el, {
+  data: [{ type: 'scatter', mode: 'lines+markers', x, y }],
+  layout: {
+    xaxis: { showspikes: true, spikemode: 'across+marker', spikethickness: 1, spikedash: 'dot' },
+    yaxis: { showspikes: true, spikecolor: '#5e74d5', spikedash: 'solid' },
+  },
+});
+```
+
+<Example id="_dev/spikes-hover" />
+
+Spikes are drawn in the hover layer over the canvas, like hover labels: moving them never redraws
+a trace, and they are not part of image exports. Spike labels on the axis are not supported yet.

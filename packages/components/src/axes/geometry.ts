@@ -242,6 +242,8 @@ export function cloneScale(scale: Scale, length: number): Scale {
     length,
     ...(scale.categories.length > 0 ? { categories: scale.categories } : {}),
     ...(scale.multicategories.length > 0 ? { multicategories: scale.multicategories } : {}),
+    // Range breaks (E3.8): the same compressed linear space.
+    ...(scale.breaks ? { breaks: scale.breaks } : {}),
   });
   return copy;
 }
@@ -581,7 +583,9 @@ export function gridGeometry(
     axis.type === 'linear' &&
     Math.min(r0, r1) <= 0 &&
     Math.max(r0, r1) >= 0 &&
-    f.zerolinewidth > 0;
+    f.zerolinewidth > 0 &&
+    // Range breaks (E3.8): no zero line when 0 is hidden (raw 0 is linear 0 on such axes).
+    axis.scale.breaks?.inBreak(0) !== true;
   const zeroP = zeroOk ? axis.l2c(0) : NaN;
   const showZero = zeroOk && Number.isFinite(zeroP) && !near(zeroP, edges);
 

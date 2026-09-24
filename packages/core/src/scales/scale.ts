@@ -9,8 +9,13 @@
  *   Unlike Plotly, a *number* on a date axis is always ms (Plotly reads numbers below 10000 as
  *   years) — the same convention as data ingestion (E1.6);
  * - category/multicategory look values up in a fixed category list; unknown values are NaN.
+ *
+ * With `breaks` (date/linear only), linear space is the compressed space of `breaks.ts`: `d2l`
+ * masks values inside a break to NaN (Plotly's `maskBreaks`), `r2l` compresses without masking,
+ * and `l2d` / `l2r` expand back to raw values.
  */
 import { formatDate, isValidDate, parseDate } from '../data/dates.ts';
+import type { BreakMap } from './breaks.ts';
 import type { AxisType, Scale, ScaleOptions } from './types.ts';
 
 // Leading/trailing quotes, %, $, # and whitespace, and embedded commas/spaces (Plotly's `JUNK`).
@@ -93,6 +98,8 @@ export function createScale(options: ScaleOptions): Scale {
   let r0 = options.range?.[0] ?? 0;
   let r1 = options.range?.[1] ?? 1;
   let length = options.length ?? 1;
+  const breaks: BreakMap | undefined =
+    type === 'date' || type === 'linear' ? options.breaks : undefined;
   const warnFn = options.onWarning;
   const seenWarnings = new Set<string>();
   const warn = (message: string): void => {
@@ -177,6 +184,15 @@ export function createScale(options: ScaleOptions): Scale {
       l2d = (l) => l;
       l2r = (l) => l;
   }
+  if (breaks !== undefined) {
+    const rawD2l = d2l;
+    const rawR2l = r2l;
+    const rawL2r = l2r;
+    d2l = (v) => mask(breaks, rawD2l(v));
+    r2l = (v) => breaks.toLinear(rawR2l(v));
+    l2d = (l) => breaks.toRaw(l);
+    l2r = (l) => rawL2r(breaks.toRaw(l));
+  }
 
   const slope = (): number => length / (r1 - r0 || 1);
 
@@ -194,6 +210,9 @@ export function createScale(options: ScaleOptions): Scale {
     if (typed && (type === 'linear' || type === 'date')) {
       // Typed arrays hold numbers only: one native copy, no per-element dispatch.
       o.set(values as unknown as ArrayLike<number>);
+      if (breaks !== undefined) {
+        for (let i = 0; i < n; i++) o[i] = mask(breaks, o[i] as number);
+      }
       return o;
     }
     if (type === 'log') {
@@ -216,7 +235,8 @@ export function createScale(options: ScaleOptions): Scale {
     if (type === 'linear') {
       for (let i = 0; i < n; i++) {
         const v = values[i];
-        o[i] = typeof v === 'number' ? (Number.isFinite(v) ? v : NaN) : cleanNumber(v);
+        const x = typeof v === 'number' ? (Number.isFinite(v) ? v : NaN) : cleanNumber(v);
+        o[i] = breaks === undefined ? x : mask(breaks, x);
       }
       return o;
     }
@@ -254,8 +274,14 @@ export function createScale(options: ScaleOptions): Scale {
     },
     categories,
     multicategories,
+    breaks,
   };
   return scale;
+}
+
+/** Plotly's `maskBreaks`, then compression: NaN inside a break, else the compressed value. */
+function mask(breaks: BreakMap, raw: number): number {
+  return breaks.inBreak(raw) ? NaN : breaks.toLinear(raw);
 }
 
 function target(out: Float64Array | undefined, n: number): Float64Array {

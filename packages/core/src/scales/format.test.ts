@@ -4,6 +4,7 @@ import { coerceContainer } from '../defaults/container.ts';
 import type { FullAxis } from '../defaults/types.ts';
 import { xaxisSchema, yaxisSchema } from '../layout/schema.ts';
 import type { ObjectNode } from '../schema/types.ts';
+import { createBreakMap } from './breaks.ts';
 import { EPOCH_2000, ONEDAY, ONEHOUR, ONEMIN, ONESEC, ONEWEEK } from './date-math.ts';
 import {
   autoTicks,
@@ -593,5 +594,68 @@ describe('createTickFormatter / formatValue', () => {
         },
       ),
     );
+  });
+});
+
+describe('formatting on axes with range breaks', () => {
+  const breaks = createBreakMap(
+    [{ bounds: ['sat', 'mon'] }, { bounds: [17, 9], pattern: 'hour' }],
+    'date',
+  );
+
+  function stockScale() {
+    const s = createScale({ type: 'date', breaks, length: 800 });
+    s.setRange(s.r2l('2024-01-08 09:00'), s.r2l('2024-01-12 17:00'));
+    return s;
+  }
+
+  it('formats compressed (linear) values as the raw dates they stand for', () => {
+    const s = stockScale();
+    const l = s.d2l('2024-01-10 15:30');
+    expect(l).not.toBe(utc(2024, 1, 10, 15, 30));
+    expect(formatValue(s, axis(), l, true)).toBe('Jan 10, 2024, 15:30');
+    expect(formatValue(s, axis({ hoverformat: '%a %H:%M' }), l, true)).toBe('Wed 15:30');
+    // A break's linear point reads as the break's end.
+    expect(formatValue(s, axis(), s.r2l('2024-01-06'), true)).toBe('Jan 8, 2024, 09:00');
+    const f = createTickFormatter(s, axis());
+    expect(f.label(l, true).text).toBe('Jan 10, 2024, 15:30');
+    f.first = l;
+    expect(f.first).toBe(l);
+    f.last = undefined;
+    expect(f.last).toBeUndefined();
+    f.inCalcTicks = true;
+    f.prevDateHead = 'x';
+    expect([f.inCalcTicks, f.prevDateHead]).toEqual([true, 'x']);
+
+    const lin = createScale({
+      type: 'linear',
+      breaks: createBreakMap([{ bounds: [10, 20] }], 'linear'),
+      range: [0, 30],
+      length: 300,
+    });
+    expect(formatValue(lin, axis(), lin.d2l(25), true)).toBe('25');
+    expect(formatValue(lin, axis(), 15, false)).toBe('25');
+  });
+
+  it('computes the tick spec on the raw range', () => {
+    const s = stockScale();
+    const spec = tickSpec(s, axis());
+    // The raw span (Mon 09:00 → Fri 17:00, 4⅓ days) sets the step, as in Plotly.
+    expect(spec.dtick).toBe(12 * ONEHOUR);
+    expect(spec.tick0).toBe(EPOCH_2000);
+    // `range` is linear, converted too.
+    const r = s.range;
+    expect(tickSpec(s, axis(), { range: r })).toEqual(spec);
+  });
+
+  it('rounds day steps to 1, 2, 7 or 14 days with day-of-week breaks', () => {
+    expect(autoTicks('date', 2.5 * ONEDAY).dtick).toBe(3 * ONEDAY);
+    expect(autoTicks('date', 2.5 * ONEDAY, { dayOfWeekBreaks: true }).dtick).toBe(ONEWEEK);
+    expect(autoTicks('date', 1.5 * ONEDAY, { dayOfWeekBreaks: true }).dtick).toBe(2 * ONEDAY);
+    expect(autoTicks('date', 9 * ONEDAY, { dayOfWeekBreaks: true }).dtick).toBe(14 * ONEDAY);
+    const s = createScale({ type: 'date', breaks, length: 800 });
+    s.setRange(s.r2l('2024-01-01'), s.r2l('2024-01-29'));
+    expect(tickSpec(s, axis()).dtick).toBe(ONEWEEK);
+    expect(tickSpec(s, axis(), { dayOfWeekBreaks: false }).dtick).toBe(3 * ONEDAY);
   });
 });

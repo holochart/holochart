@@ -141,7 +141,7 @@ describe('makeSubplots: layout', () => {
   });
 });
 
-describe('makeSubplots: shared axes (one axis instead of matches)', () => {
+describe('makeSubplots: shared axes (one axis per extent, matches across extents)', () => {
   it('sharedX: one x axis per column, anchored to the bottom row', () => {
     const { layout, cells } = makeSubplots({ rows: 2, cols: 2, sharedX: true });
     const ids = cells.flat().map((c) => `${c?.xaxis}${c?.yaxis}`);
@@ -191,10 +191,18 @@ describe('makeSubplots: shared axes (one axis instead of matches)', () => {
     expect(cells.flat().map((c) => c?.xaxis)).toEqual(['x', undefined, 'x2', 'x3']);
   });
 
-  it('throws when sharing needs linked axes (E3.9)', () => {
-    expect(() => makeSubplots({ cols: 2, sharedX: 'rows' })).toThrow(/matches.*E3\.9/);
-    expect(() => makeSubplots({ rows: 2, cols: 2, sharedX: 'all' })).toThrow(/different x extents/);
-    expect(() => makeSubplots({ rows: 2, sharedY: 'columns' })).toThrow(/different y extents/);
+  it('links shared axes of different extents with matches (E3.9)', () => {
+    // x shared across a row: one x axis per column, the second matching the first.
+    const rowsShared = makeSubplots({ cols: 2, sharedX: 'rows' });
+    expect(rowsShared.layout['xaxis']).toEqual({ domain: [0, 0.45], anchor: 'y' });
+    expect(rowsShared.layout['xaxis2']).toMatchObject({ anchor: 'y2', matches: 'x' });
+    // 'all' over a 2×2 grid: columns share one axis each, linked across columns.
+    const all = makeSubplots({ rows: 2, cols: 2, sharedX: 'all' });
+    expect(all.cells[0]?.[0]?.xaxis).toBe(all.cells[1]?.[0]?.xaxis);
+    expect(all.layout['xaxis']).not.toHaveProperty('matches');
+    expect(all.layout['xaxis2']).toMatchObject({ matches: 'x' });
+    const cols = makeSubplots({ rows: 2, sharedY: 'columns' });
+    expect(cols.layout['yaxis2']).toMatchObject({ matches: 'y' });
     expect(() => makeSubplots({ sharedX: 'yes' as unknown as boolean })).toThrow(/sharedX must be/);
   });
 });

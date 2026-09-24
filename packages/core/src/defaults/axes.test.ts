@@ -367,3 +367,118 @@ describe('autoType on malformed data (property-test regression)', () => {
     expect(autoType([Object.create(null), 1, 2])).toBe('linear');
   });
 });
+
+describe('spike defaults (E3.10, Plotly layout_defaults)', () => {
+  const axes = (layout: Record<string, unknown>) => {
+    const first = run({ data: [{ y: [1] }], layout }).fullLayout;
+    const again = run({ data: [{ y: [1] }], layout: stripInternal(first) }).fullLayout;
+    expect(stripInternal(again)).toEqual(stripInternal(first));
+    return {
+      x: first.xaxis as FullAxis & Record<string, unknown>,
+      y: first.yaxis as FullAxis & Record<string, unknown>,
+    };
+  };
+
+  it('are off with the schema styles by default', () => {
+    const { x } = axes({});
+    expect(x).toMatchObject({
+      showspikes: false,
+      spikethickness: 3,
+      spikedash: 'dash',
+      spikemode: 'toaxis',
+      spikesnap: 'hovered data',
+    });
+    expect(x.spikecolor).toBeUndefined();
+  });
+
+  it('turn on when a spike style is set by the user or the template', () => {
+    expect(axes({ xaxis: { spikecolor: 'red' } }).x.showspikes).toBe(true);
+    expect(axes({ xaxis: { spikesnap: 'cursor' } }).x.showspikes).toBe(true);
+    expect(axes({ xaxis: { spikethickness: 'bad' } }).x.showspikes).toBe(false);
+    const tmpl = axes({ template: { layout: { yaxis: { spikemode: 'across' } } } });
+    expect(tmpl.y.showspikes).toBe(true);
+    expect(tmpl.x.showspikes).toBe(false);
+    expect(axes({ xaxis: { spikecolor: 'red', showspikes: false } }).x.showspikes).toBe(false);
+  });
+
+  it('follow unified hover', () => {
+    const { x, y } = axes({ hovermode: 'x unified', xaxis: { color: 'red' } });
+    expect(x).toMatchObject({
+      showspikes: true,
+      spikecolor: 'rgb(255, 0, 0)',
+      spikethickness: 1.5,
+      spikedash: 'dot',
+      spikemode: 'across',
+    });
+    // Unified styles apply to both letters (Plotly); only x shows spikes.
+    expect(y).toMatchObject({ showspikes: false, spikethickness: 1.5, spikemode: 'across' });
+    expect(axes({ hovermode: 'y unified' }).y.showspikes).toBe(true);
+    expect(axes({ hovermode: 'y unified', yaxis: { spikethickness: 4 } }).y.spikethickness).toBe(4);
+    expect(axes({ hovermode: 'x' }).x.showspikes).toBe(false);
+  });
+});
+
+describe('free axis defaults (Plotly position_defaults)', () => {
+  const layoutOf = (layout: Record<string, unknown>) => {
+    const first = run({ data: [{ y: [1] }], layout }).fullLayout;
+    const again = run({ data: [{ y: [1] }], layout: stripInternal(first) }).fullLayout;
+    expect(stripInternal(again)).toEqual(stripInternal(first));
+    return (key: string) => first[key] as FullAxis & Record<string, unknown>;
+  };
+
+  it('autoshift puts the axis at the overlaid plot edge with automargin and a shift', () => {
+    const axes = layoutOf({
+      xaxis: { domain: [0.1, 0.9] },
+      yaxis2: { anchor: 'free', overlaying: 'y', autoshift: true, side: 'right' },
+      yaxis3: { anchor: 'free', overlaying: 'y', autoshift: true },
+    });
+    expect(axes('yaxis2')).toMatchObject({ autoshift: true, position: 0.9, shift: 3 });
+    expect(axes('yaxis2').automargin).toBe(true);
+    expect(axes('yaxis3')).toMatchObject({ autoshift: true, position: 0.1, shift: -3 });
+  });
+
+  it('uses [0, 1] without an overlaid axis and keeps user values', () => {
+    const axes = layoutOf({
+      xaxis: { domain: [0.1, 0.9] },
+      yaxis2: { anchor: 'free', autoshift: true, side: 'right' },
+      yaxis3: {
+        anchor: 'free',
+        autoshift: true,
+        position: 0.3,
+        shift: 10,
+        automargin: false,
+        overlaying: 'y',
+      },
+    });
+    expect(axes('yaxis2')).toMatchObject({ position: 1, shift: 3, automargin: true });
+    expect(axes('yaxis3')).toMatchObject({ position: 0.3, shift: 10, automargin: false });
+  });
+
+  it('coerces shift only on free y axes', () => {
+    const axes = layoutOf({
+      yaxis2: { anchor: 'free', shift: -5 },
+      yaxis3: { anchor: 'free' },
+      yaxis4: { anchor: 'x', autoshift: true, shift: 4 },
+      xaxis: { anchor: 'free', autoshift: true, shift: 4 },
+    });
+    expect(axes('yaxis2')).toMatchObject({ autoshift: false, shift: -5, position: 0 });
+    expect(axes('yaxis3')).toMatchObject({ autoshift: false, shift: 0 });
+    for (const key of ['yaxis4', 'xaxis', 'yaxis']) {
+      expect(axes(key).autoshift).toBeUndefined();
+      expect(axes(key).shift).toBeUndefined();
+    }
+  });
+
+  it('defaults anchor to free when the user gives a numeric position', () => {
+    const axes = layoutOf({
+      yaxis2: { position: 0.4 },
+      yaxis3: { position: '0.6' },
+      yaxis4: { position: 0.4, anchor: 'x' },
+      xaxis2: { position: 'bad' },
+    });
+    expect(axes('yaxis2')).toMatchObject({ anchor: 'free', position: 0.4 });
+    expect(axes('yaxis3').anchor).toBe('free');
+    expect(axes('yaxis4').anchor).toBe('x');
+    expect(axes('xaxis2').anchor).toBe('y');
+  });
+});

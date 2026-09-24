@@ -6,8 +6,14 @@
  * places major ticks from the first one inside the range, adds period-mode label positions and
  * minor ticks, and labels the majors. Numeric ticks are computed as `x0 + k·dtick` and rounded to
  * the precision of `dtick`/`tick0` rather than accumulated, so labels never show float drift.
+ *
+ * Axes with range breaks get their ticks in raw space, as in Plotly: on `rawScale(scale)`, then
+ * ticks inside a break move to its end (`moveOutsideBreak`), crowded ones are dropped, and the
+ * result is converted back to linear (compressed) space.
  */
 import type { FullAxis } from '../defaults/types.ts';
+import { rawScale } from './breaks.ts';
+import type { BreakMap } from './breaks.ts';
 import {
   HALFDAY,
   incrementMonth,
@@ -255,6 +261,7 @@ function minorTickSpec(
   o: TickOptions,
   major: TickSpec,
   tmin: number | undefined,
+  dayOfWeekBreaks: boolean,
 ): { mode: TickMode; dtick: Dtick; tick0: number } {
   const type = scale.type;
   const userDtick = parseDtick(o.minor.dtick, type);
@@ -276,7 +283,7 @@ function minorTickSpec(
       // No major step: let minor.nticks span a fifth of the axis.
       mockRange = [r0, 0.8 * r0 + 0.2 * r1];
     }
-    dtick = tickSpec(scale, axis, { minor: true, range: mockRange }).dtick;
+    dtick = tickSpec(scale, axis, { minor: true, range: mockRange, dayOfWeekBreaks }).dtick;
     if (hasMajor) dtick = adjustMinorDtick(major.dtick, dtick, o.minor.nticks !== 5);
   }
   let tick0 = major.tick0;
@@ -335,14 +342,26 @@ interface MajorValue {
   skipLabel?: boolean;
   /** Period mode: label position. */
   periodX?: number;
+  /** Period mode: the extra label-only tick before the first one. */
+  lead?: boolean;
+  /** Rangebreaks period mode: the whole period is hidden (Plotly `drop`). */
+  drop?: boolean;
 }
+
+/** Samples per period when measuring how much of it range breaks hide (Plotly). */
+const PERIOD_BREAK_SAMPLES = 84;
 
 /**
  * Plotly's `positionPeriodTicks`: move each label to the middle of the period starting at its
  * tick — the period the tick format names (`definedDelta`) or the calendar unit nearest the step,
- * never past the next tick.
+ * never past the next tick. With range breaks (raw values), the period shrinks by the fraction of
+ * it the breaks hide, and fully hidden periods are marked `drop`.
  */
-function positionPeriodTicks(ticks: MajorValue[], definedDelta: number | undefined): void {
+function positionPeriodTicks(
+  ticks: MajorValue[],
+  definedDelta: number | undefined,
+  breaks?: BreakMap,
+): void {
   for (let i = 0; i < ticks.length; i++) {
     const v = (ticks[i] as MajorValue).l;
     let a = i;
@@ -371,9 +390,63 @@ function positionPeriodTicks(ticks: MajorValue[], definedDelta: number | undefin
       periodLength = ONEHOUR;
     }
     // Labels stay between their tick and the next.
-    if (periodLength >= actualDelta) periodLength = actualDelta;
+    let clipped = false;
+    if (periodLength >= actualDelta) {
+      periodLength = actualDelta;
+      clipped = true;
+    }
+    if (breaks !== undefined && periodLength > 0) {
+      const end = v + periodLength;
+      let shown = 0;
+      for (let k = 0; k < PERIOD_BREAK_SAMPLES; k++) {
+        const f = (k + 0.5) / PERIOD_BREAK_SAMPLES;
+        if (!breaks.inBreak(v * (1 - f) + f * end)) shown++;
+      }
+      periodLength *= shown / PERIOD_BREAK_SAMPLES;
+      if (!periodLength) (ticks[i] as MajorValue).drop = true;
+      if (clipped && actualDelta > ONEWEEK) periodLength = actualDelta;
+    }
     (ticks[i] as MajorValue).periodX = v + periodLength / 2;
   }
+}
+
+/**
+ * Plotly's rangebreaks pass of `calcTicks` over raw major ticks in range order: drop fully hidden
+ * periods, move ticks inside a break to its end (dropping those that land on or past the range
+ * ends), and walking back from the end of the range, drop ticks closer than `minPx` to the
+ * previously kept one (later ticks win; the larger value on reversed axes).
+ */
+function moveMajorsOutOfBreaks(
+  majors: readonly MajorValue[],
+  breaks: BreakMap,
+  scale: Scale,
+  rawRange: readonly [number, number],
+  minPx: number,
+): MajorValue[] {
+  const lo = Math.min(rawRange[0], rawRange[1]);
+  const hi = Math.max(rawRange[0], rawRange[1]);
+  const axrev = scale.range[1] < scale.range[0];
+  const kept: MajorValue[] = [];
+  let prevP = NaN;
+  for (let i = majors.length - 1; i >= 0; i--) {
+    const m = majors[i] as MajorValue;
+    if (m.drop === true) continue;
+    const v = breaks.moveOutside(m.l);
+    if (v !== m.l && m.lead !== true && (v >= hi || v <= lo)) continue;
+    m.l = v;
+    const p = scale.l2p(breaks.toLinear(v));
+    // Pixels grow along the range in either direction, so kept ticks are at or after p.
+    if (prevP < p + minPx) {
+      if (axrev) {
+        kept[kept.length - 1] = m;
+        prevP = p;
+      }
+      continue;
+    }
+    kept.push(m);
+    prevP = p;
+  }
+  return kept.reverse();
 }
 
 /** Sorted-array membership within `eps`. */
@@ -399,6 +472,12 @@ function hasNear(sorted: readonly number[], v: number, eps: number): boolean {
  * period via `labelL`, plus a label-only leading tick with `noTick`) and the label attributes (see
  * `createTickFormatter`). The range and length come from `scale`; `axis` is never mutated.
  *
+ * With range breaks (`scale.breaks`), ticks are placed on the raw scale (`rawScale`), then, as in
+ * Plotly: majors inside a break move to its end and are labelled there (a Sunday tick moved to
+ * Monday 00:00 reads as Monday), moved ticks landing on the range ends are dropped, and in `auto`
+ * mode ticks closer than `tickfont.size` px (1 px otherwise) to the next kept one are dropped.
+ * `tickvals` and minor ticks inside a break are dropped. `l` and `labelL` are linear (compressed).
+ *
  * @example
  * ```ts
  * const scale = createScale({ type: 'linear', range: [0, 10], length: 400 });
@@ -406,6 +485,21 @@ function hasNear(sorted: readonly number[], v: number, eps: number): boolean {
  * ```
  */
 export const computeTicks: ComputeTicks = (scale, axis) => {
+  const breaks = scale.breaks;
+  if (breaks === undefined) return ticksOf(scale, axis);
+  const ticks = ticksOf(rawScale(scale), axis, breaks, scale);
+  for (const t of ticks) {
+    t.l = breaks.toLinear(t.l);
+    if (t.labelL !== undefined) t.labelL = breaks.toLinear(t.labelL);
+  }
+  return ticks;
+};
+
+/**
+ * `computeTicks` on a scale without breaks. With `breaks`, `scale` is the raw scale of `outer`
+ * (the scale with breaks, for pixel spacing) and the ticks come out in raw space.
+ */
+function ticksOf(scale: Scale, axis: FullAxis, breaks?: BreakMap, outer?: Scale): Tick[] {
   const range = scale.range;
   const [r0, r1] = range;
   if (!Number.isFinite(r0) || !Number.isFinite(r1)) return [];
@@ -418,20 +512,27 @@ export const computeTicks: ComputeTicks = (scale, axis) => {
   const maxTicks = Math.max(1000, Number.isFinite(scale.length) ? scale.length : 0);
   const hasMinor = o.minor.ticks !== '' || o.minor.showgrid;
   const isPeriod = type === 'date' && o.ticklabelmode === 'period';
+  const dayOfWeekBreaks = breaks?.hasDayOfWeek === true;
   const minorMode = resolveTickMode(
     o.minor.tickmode,
     o.minor.tickvals,
     parseDtick(o.minor.dtick, type),
   );
-  const spec = tickSpec(scale, axis, { arrayPrecision: !hasMinor || minorMode === 'array' });
+  const spec = tickSpec(scale, axis, {
+    arrayPrecision: !hasMinor || minorMode === 'array',
+    dayOfWeekBreaks,
+  });
   const fmt = createTickFormatter(scale, axis, spec);
 
   const ticks: Tick[] = [];
-  const majors: MajorValue[] = [];
+  let majors: MajorValue[] = [];
   let tmin: number | undefined;
   let visible = true;
   if (spec.mode === 'array') {
-    ticks.push(...arrayTicks(scale, o.tickvals, o.ticktext, fmt, false));
+    let array = arrayTicks(scale, o.tickvals, o.ticktext, fmt, false);
+    // Plotly filters array ticks with `maskBreaks`: those inside a break are dropped.
+    if (breaks !== undefined) array = array.filter((t) => !breaks.inBreak(t.l));
+    ticks.push(...array);
   } else {
     const ex = expandRange(range);
     let end = ex[1];
@@ -472,13 +573,21 @@ export const computeTicks: ComputeTicks = (scale, axis) => {
         }
         majors.push(m);
       }
+      if (isPeriod && majors[0] !== undefined) majors[0].lead = true;
     }
+  }
+
+  if (isPeriod) positionPeriodTicks(majors, spec.definedDelta, breaks);
+  if (breaks !== undefined && outer !== undefined && majors.length > 0) {
+    // Plotly: tickfont.size px apart in auto mode, else just distinct pixels.
+    const minPx = spec.mode === 'auto' ? o.tickfontSize : 1;
+    majors = moveMajorsOutOfBreaks(majors, breaks, outer, range, minPx);
   }
 
   let minors: number[] = [];
   const minorTicks: Tick[] = [];
   if (hasMinor && visible) {
-    const mspec = minorTickSpec(scale, axis, o, spec, tmin);
+    const mspec = minorTickSpec(scale, axis, o, spec, tmin, dayOfWeekBreaks);
     if (mspec.mode === 'array') {
       minorTicks.push(...arrayTicks(scale, o.minor.tickvals, undefined, fmt, true));
     } else {
@@ -495,10 +604,8 @@ export const computeTicks: ComputeTicks = (scale, axis) => {
     }
   }
 
-  if (isPeriod) positionPeriodTicks(majors, spec.definedDelta);
-
   fmt.inCalcTicks = true;
-  fmt.first = tmin;
+  fmt.first = breaks === undefined ? tmin : majors.find((m) => m.lead !== true)?.l;
   fmt.last = majors[majors.length - 1]?.l;
   for (const m of majors) {
     const lastVisibleHead = fmt.prevDateHead;
@@ -517,10 +624,14 @@ export const computeTicks: ComputeTicks = (scale, axis) => {
     }
     ticks.push(tick);
   }
-  // The leading period tick only carries the label of the period the range starts in.
-  if (isPeriod && ticks[0] !== undefined) ticks[0].noTick = true;
+  // The leading period tick only carries the label of the period the range starts in (Plotly
+  // marks the first tick; with breaks, only if the leading tick survived).
+  const lead = breaks === undefined || spec.mode === 'array' || majors[0]?.lead === true;
+  if (isPeriod && lead && ticks[0] !== undefined) ticks[0].noTick = true;
 
   for (const l of minors) ticks.push({ l, text: '', minor: true });
   ticks.push(...minorTicks);
-  return ticks;
-};
+  if (breaks === undefined) return ticks;
+  // Minor ticks (and minor tickvals) inside a break are dropped.
+  return ticks.filter((t) => t.minor !== true || !breaks.inBreak(t.l));
+}
