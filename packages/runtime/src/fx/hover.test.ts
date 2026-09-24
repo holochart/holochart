@@ -4,6 +4,7 @@ import type { AxisInfo, HoverPoint, TraceModule } from '../contracts.ts';
 import {
   buildPoint,
   contrastColor,
+  HoverFinder,
   fontCss,
   labelStyle,
   labelText,
@@ -194,5 +195,50 @@ describe('fontCss (E8.3 font fields on DOM hover labels)', () => {
     } as unknown as FullLayout;
     const style = labelStyle(entry({}), 0, '#123456', layout, false);
     expect(style.fontCss).toMatchObject({ textTransform: 'uppercase', fontWeight: '300' });
+  });
+});
+
+describe('multi-label hover (box statistics, M3)', () => {
+  const stat = (py: number, name: boolean): HoverPoint => ({
+    pointIndex: -1,
+    distance: 19,
+    px: 50,
+    py,
+    hoverText: `v${py}`,
+    multi: true,
+    showName: name,
+  });
+  function box(points: HoverPoint[]): HoverEntry {
+    const e = entry({});
+    return { ...e, module: { hoverPoints: () => points } as unknown as TraceModule };
+  }
+
+  it('keeps every multi point of the winning trace in closest mode', () => {
+    const boxes = box([stat(10, false), stat(20, true), stat(30, false)]);
+    const other = { ...box([{ pointIndex: 0, distance: 25, px: 0, py: 0 }]), index: 1 };
+    const finder = new HoverFinder();
+    finder.find([boxes.subplot!], () => [boxes, other], 60, 70, 'closest', 20);
+    expect(finder.count).toBe(3);
+    expect(
+      finder.found
+        .slice(0, 3)
+        .map((f) => f.point.py)
+        .sort(),
+    ).toEqual([10, 20, 30]);
+  });
+
+  it('keeps a single winner when it is not part of a multi-label hover', () => {
+    const near = box([{ pointIndex: 0, distance: 1, px: 0, py: 0 }]);
+    const boxes = { ...box([stat(10, false), stat(20, true)]), index: 1 };
+    const finder = new HoverFinder();
+    finder.find([near.subplot!], () => [near, boxes], 60, 70, 'closest', 20);
+    expect(finder.count).toBe(1);
+    expect(finder.found[0]!.point.distance).toBe(1);
+  });
+
+  it('leaves the trace name out of labels with showName false', () => {
+    const e = entry({ name: 'Group A' });
+    expect(labelText(e, stat(10, false), 'closest', true, LAYOUT).extra).toBeUndefined();
+    expect(labelText(e, stat(20, true), 'closest', true, LAYOUT).extra).toBe('Group A');
   });
 });

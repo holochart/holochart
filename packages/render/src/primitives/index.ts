@@ -9,6 +9,7 @@ export * from './line.glsl.ts';
 export * from './fill.ts';
 export * from './fill-loader.ts';
 export * from './rect.ts';
+export * from './heatmap.ts';
 export * from './arc.ts';
 export * from './text.ts';
 export * from './text-metrics.ts';

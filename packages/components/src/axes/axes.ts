@@ -44,7 +44,7 @@ import {
   type RectItem,
 } from './geometry.ts';
 import { axisMarginNeeds, marginPushOf } from './margins.ts';
-import { axisPlacement, lineCrossings } from './placement.ts';
+import { AxisShifts, axisPlacement, lineCrossings } from './placement.ts';
 
 /** Stages after which the axes redraw (anything that can move ticks, labels or colors). */
 const REDRAW_STAGES = new Set(['calc', 'crossTraceCalc', 'layout', 'ticks', 'plot', 'style']);
@@ -100,10 +100,20 @@ export function buildAxesScene(
     placements.set(axis.id, axisPlacement(axis, ctx.axes, subplots, ctx.plotArea, pad));
   }
 
+  const shifts = new AxisShifts(ctx.axes.values());
   for (const axis of ctx.axes.values()) {
     if (!axis.full.visible) continue;
-    const placement = placements.get(axis.id);
+    let placement = placements.get(axis.id);
     if (!placement) continue;
+    // Free y axes with `shift` / `autoshift` move sideways (E3.9).
+    const shift = shifts.begin(axis);
+    if (shift !== 0) {
+      placement = {
+        ...placement,
+        frame: { ...placement.frame, cross: placement.frame.cross + shift },
+      };
+      placements.set(axis.id, placement);
+    }
     const ticks = axisTicks(axis);
     const geo = axisGeometry(axis, placement.frame, ticks, {
       measure,
@@ -113,6 +123,7 @@ export function buildAxesScene(
       lineOverhang: placement.overhang,
     });
     labels.push(...geo.labels);
+    shifts.end(axis, geo.extent);
 
     // `layer: 'below traces'`: what lies inside the axis' own subplot goes under the traces
     // (outside the plot area nothing overlaps traces, so the rest stays in the overlay).

@@ -72,6 +72,22 @@ export interface BarCalc {
   /** Error bars along x and y, at the bar ends (after stacking, as in Plotly). */
   errorX: ErrorBarCalc | undefined;
   errorY: ErrorBarCalc | undefined;
+  /**
+   * A minimum position spacing (Plotly's `width1`): a histogram collapsed to one bin knows its
+   * bin width, which then sizes the bars. Unset for bars.
+   */
+  readonly minSpacing?: number;
+  /**
+   * The position of each bar as label and template value (`%{label}`, `%{x}`), when it is not the
+   * trace's position coordinate: a histogram's bin centers (calc space). Unset for bars.
+   */
+  readonly positionValues?: ArrayLike<unknown>;
+  /**
+   * In `overlay` mode, lay this trace out on its own, with its own position spacing (Plotly lays
+   * out every overlaid trace alone): overlaid histograms keep their own bin widths. Unset for bars,
+   * which share one layout.
+   */
+  readonly overlayAlone?: boolean;
 }
 
 /** Linear positions from the data array or from `letter0 + i·dletter`. */
@@ -178,6 +194,7 @@ function stackInput(calc: BarCalc, trace: FullTrace, index: number): StackInput 
     offsetgroup: String(trace['offsetgroup'] ?? ''),
     alignmentgroup: String(trace['alignmentgroup'] ?? ''),
     key: String(index),
+    ...(calc.minSpacing !== undefined ? { minSpacing: calc.minSpacing } : {}),
   };
 }
 
@@ -238,9 +255,24 @@ export function calcBar(trace: FullTrace, ctx: CalcContext): BarCalc {
     errorX: undefined,
     errorY: undefined,
   };
-  const options = stackOptions(ctx.fullLayout, positionAxisId(trace), orientation, calc.sizeType);
-  applyLayout(calc, layoutBars([stackInput(calc, trace, ctx.index)], options)[0]!, trace);
+  layoutBarCalc(calc, trace, ctx);
   return calc;
+}
+
+/**
+ * Lay out a bar-like calc as if its trace were alone (grouping and stacking with other traces
+ * comes from `crossTraceCalc`): fills `bars`, `s0`/`s1`, `ends` and the error bars. For trace
+ * types that build a {@link BarCalc} themselves (histogram), with `pos`, `size`, `base`,
+ * `hasBase`, `sizeType` and `posType` set.
+ */
+export function layoutBarCalc(calc: BarCalc, trace: FullTrace, ctx: CalcContext): void {
+  const options = stackOptions(
+    ctx.fullLayout,
+    positionAxisId(trace),
+    calc.orientation,
+    calc.sizeType,
+  );
+  applyLayout(calc, layoutBars([stackInput(calc, trace, ctx.index)], options)[0]!, trace);
 }
 
 /**
@@ -256,11 +288,21 @@ export function crossTraceCalcBar(
     if (group.length === 0) continue;
     const [pa, sa] = orientation === 'h' ? [ctx.yaxis, ctx.xaxis] : [ctx.xaxis, ctx.yaxis];
     const options = stackOptions(ctx.fullLayout, pa.id, orientation, sa.scale.type);
+    const shared =
+      options.mode === 'overlay' ? group.filter((e) => e.calc.overlayAlone !== true) : group;
+    if (shared.length !== group.length) {
+      for (const e of group) {
+        if (e.calc.overlayAlone !== true) continue;
+        const [output] = layoutBars([stackInput(e.calc, e.trace, e.index)], options);
+        applyLayout(e.calc, output!, e.trace);
+      }
+    }
+    if (shared.length === 0) continue;
     const outputs = layoutBars(
-      group.map((e) => stackInput(e.calc, e.trace, e.index)),
+      shared.map((e) => stackInput(e.calc, e.trace, e.index)),
       options,
     );
-    group.forEach((e, i) => applyLayout(e.calc, outputs[i]!, e.trace));
+    shared.forEach((e, i) => applyLayout(e.calc, outputs[i]!, e.trace));
   }
 }
 

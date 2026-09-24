@@ -57,6 +57,13 @@ import {
 } from './hover.ts';
 import type { HoverLayer } from './labels.ts';
 import { isDrawDragmode, type FxSettings, type Hovermode } from './settings.ts';
+import {
+  selectSpikePoint,
+  showsSpikes,
+  spikeGeometry,
+  type SpikeFrame,
+  type SpikePoint,
+} from './spikes.ts';
 
 /** What the interaction layer needs from its chart. */
 export interface InteractionHost {
@@ -99,6 +106,15 @@ export interface InteractionHost {
   drawShape?(gesture: DrawGesture): void;
   /** `config.renderHover(points)`: a custom label element, if configured. */
   renderHover?(points: readonly ChartPoint[]): HTMLElement | null | undefined;
+  /** Every cartesian axis by id (spike lines reach anchor axes). Default: the subplots' axes. */
+  axes?(): ReadonlyMap<string, AxisInfo>;
+  /** The plot area in container px (free-axis spike positions). Default: the figure. */
+  plotArea?(): {
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+  };
 }
 
 type Action = 'none' | 'zoom' | 'pan' | 'select' | 'lasso' | 'draw' | 'axis-pan' | 'axis-end';
@@ -117,6 +133,8 @@ interface Drag {
   /** Linear ranges of the subplot's axes at the start. */
   rx: LinearRange;
   ry: LinearRange;
+  /** Start ranges of every axis the gesture may move (the subplot's axes and their overlays). */
+  starts: Map<string, LinearRange>;
   /** Lasso outline (and freeform draw vertices), flat container px. */
   lasso: number[];
   /** The draw `dragmode` of a `draw` gesture. */
@@ -134,6 +152,7 @@ interface Pinch {
   my0: number;
   rx: LinearRange;
   ry: LinearRange;
+  starts: Map<string, LinearRange>;
   last: Map<string, LinearRange>;
 }
 
@@ -158,6 +177,10 @@ export class Interaction {
   readonly #host: InteractionHost;
   readonly #finder = new HoverFinder();
   readonly #clickFinder = new HoverFinder();
+  /** Points near the pointer for `spikesnap: 'data'` when nothing is hovered (E3.10). */
+  readonly #spikeFinder = new HoverFinder();
+  /** Some axis has `showspikes` (read on refresh; no spike work at all otherwise). */
+  #spikesOn = false;
   readonly #cev: ComponentPointerEvent = {
     type: 'move',
     x: 0,
@@ -180,6 +203,8 @@ export class Interaction {
   #hoverForce = false;
   #dragPending = false;
   #programmatic = false;
+  /** The last programmatic hover target, re-applied after a pipeline run (see `refresh`). */
+  #programmaticTarget: Parameters<Interaction['hover']>[0] | undefined;
   #drag: Drag | null = null;
   #pinch: Pinch | null = null;
   readonly #touches = new Map<number, { x: number; y: number }>();
@@ -229,10 +254,23 @@ export class Interaction {
     const s = (this.#settings = this.#host.settings());
     // Page scrolling on touch keeps working when dragging does nothing (E6.6).
     this.#host.target.style.touchAction = s.dragmode === false ? 'auto' : 'none';
+    this.#spikesOn = this.#host
+      .subplots()
+      .some((sp) => showsSpikes(sp.xaxis) || showsSpikes(sp.yaxis));
+    if (!this.#spikesOn) this.#host.layer.hideSpikes();
     if (this.#programmatic) {
-      this.#programmatic = false;
-      this.#finder.reset();
-      this.#host.layer.hideLabels();
+      const target = this.#programmaticTarget;
+      if (target !== undefined && !this.#pointerInside && !this.#drag) {
+        // Still the app's hover (nothing under the pointer replaced it): redraw it for the new
+        // layout. The finder keeps the previous points, so no duplicate `hover` event.
+        this.hover(target);
+      } else {
+        this.#programmatic = false;
+        this.#programmaticTarget = undefined;
+        this.#finder.reset();
+        this.#host.layer.hideLabels();
+        this.#host.layer.hideSpikes();
+      }
     }
     if (this.#pointerInside && !this.#drag) {
       this.#hoverForce = true;
@@ -362,6 +400,7 @@ export class Interaction {
       shift: e.shiftKey,
       rx: [0, 1],
       ry: [0, 1],
+      starts: new Map(),
       lasso: [],
       draw: undefined,
       last: new Map(),
@@ -383,6 +422,7 @@ export class Interaction {
       drag.zone = zone;
       drag.rx = range(sp.xaxis);
       drag.ry = range(sp.yaxis);
+      drag.starts = this.#startRanges(sp);
       drag.action = this.#actionFor(zone, sp, s);
       if (drag.action === 'lasso') drag.lasso.push(this.#px, this.#py);
       if (drag.action === 'draw' && isDrawDragmode(s.dragmode)) {
@@ -521,13 +561,7 @@ export class Interaction {
     this.#host.layer.hideOverlay();
     if (drag.action === 'draw' && drag.moved) this.#drawGesture(drag, 'cancel');
     // Undo previews: back to the ranges the gesture started from.
-    if (drag.last.size > 0 && drag.subplot) {
-      const back = new Map<string, LinearRange>([
-        [drag.subplot.xaxis.id, drag.rx],
-        [drag.subplot.yaxis.id, drag.ry],
-      ]);
-      this.#host.preview(back);
-    }
+    if (drag.last.size > 0 && drag.subplot) this.#host.preview(new Map(drag.starts));
   };
 
   readonly #onLeave = (e: PointerEvent): void => {
@@ -536,7 +570,9 @@ export class Interaction {
     this.#hoverPending = false;
     this.#component('leave', e);
     this.#setCursor('');
-    this.#unhover(e);
+    // A programmatic hover (`chart.hover`) is not the pointer's: leaving keeps it (a move over
+    // the plot replaces it).
+    if (!this.#programmatic) this.#unhover(e);
   };
 
   #componentClick(e: MouseEvent, view: unknown): void {
@@ -583,8 +619,96 @@ export class Interaction {
       host.domainEntries?.(),
     );
     this.#programmatic = false;
+    this.#programmaticTarget = undefined;
+    // Spikes may follow the pointer (`spikesnap: 'cursor'`) while the hovered points stay.
+    if (this.#spikesOn) this.#drawSpikes(mode, x, y, true);
     if (!changed && !force) return;
     this.#afterFind(changed, mode, this.#lastEvent, x, y);
+  }
+
+  // ---- spike lines (E3.10) -----------------------------------------------------------------------
+
+  /**
+   * Draw the spike lines for the current hover result (Plotly's spike pass in `_hover`): the
+   * hovered points first; when nothing is hovered and `search` is set, the closest point within
+   * `spikedistance` on axes whose `spikesnap` is not `hovered data`.
+   */
+  #drawSpikes(mode: Exclude<Hovermode, false>, x: number, y: number, search: boolean): void {
+    const host = this.#host;
+    const fullLayout = host.fullLayout();
+    const maxDistance = this.#settings.spikedistance;
+    if (!fullLayout || maxDistance === 0) {
+      host.layer.hideSpikes();
+      return;
+    }
+    const finder = this.#finder;
+    let found = finder.found;
+    let count = finder.count;
+    let preferFirst = false;
+    if (count > 0) {
+      const first = found[0] as Found;
+      // Plotly: in x / y modes a bar-like winner keeps the spikes.
+      preferFirst = mode !== 'closest' && first.entry.module.categories.includes('bar-like');
+    } else if (search) {
+      const spikeFinder = this.#spikeFinder;
+      spikeFinder.reset();
+      spikeFinder.find(
+        host.subplots(),
+        (sp) =>
+          (sp.xaxis.full as { spikesnap?: unknown }).spikesnap === 'hovered data' &&
+          (sp.yaxis.full as { spikesnap?: unknown }).spikesnap === 'hovered data'
+            ? []
+            : this.#entriesFor(sp),
+        x,
+        y,
+        'closest',
+        maxDistance < 0 ? Infinity : maxDistance,
+      );
+      found = spikeFinder.found;
+      count = spikeFinder.count;
+    }
+    const pick = (letter: 'x' | 'y'): SpikePoint | undefined => {
+      const f = selectSpikePoint(found, count, letter, maxDistance, x, y, preferFirst);
+      if (!f) return undefined;
+      if (finder.count === 0) {
+        // Found by the spike search: only axes that spike data they don't hover.
+        const axis = letter === 'x' ? f.entry.subplot?.xaxis : f.entry.subplot?.yaxis;
+        if ((axis?.full as { spikesnap?: unknown } | undefined)?.spikesnap === 'hovered data') {
+          return undefined;
+        }
+      }
+      const a = anchorOf(f.entry, f.point);
+      return {
+        entry: f.entry,
+        point: f.point,
+        x: a.x,
+        y: a.y,
+        color: pointColor(f.entry, f.point, fullLayout),
+      };
+    };
+    const v = pick('x');
+    const h = pick('y');
+    if (!v && !h) {
+      host.layer.hideSpikes();
+      return;
+    }
+    const size = host.size();
+    const frame: SpikeFrame = {
+      fullLayout,
+      axes: host.axes?.() ?? this.#subplotAxes(),
+      subplots: host.subplots(),
+      plotArea: host.plotArea?.() ?? { x: 0, y: 0, width: size.width, height: size.height },
+    };
+    host.layer.showSpikes(spikeGeometry(frame, { v, h }, { x, y }));
+  }
+
+  #subplotAxes(): Map<string, AxisInfo> {
+    const out = new Map<string, AxisInfo>();
+    for (const sp of this.#host.subplots()) {
+      out.set(sp.xaxis.id, sp.xaxis);
+      out.set(sp.yaxis.id, sp.yaxis);
+    }
+    return out;
   }
 
   /** Emit hover / unhover for a new result and draw its labels. */
@@ -716,6 +840,7 @@ export class Interaction {
     const had = this.#finder.count > 0;
     this.#finder.reset();
     this.#host.layer.hideLabels();
+    this.#host.layer.hideSpikes();
     if (had) this.#host.events.emit('unhover', { points: [], ...(event ? { event } : {}) });
   }
 
@@ -730,6 +855,7 @@ export class Interaction {
   ): void {
     const host = this.#host;
     const mode = this.#hovermode() ?? 'closest';
+    this.#programmaticTarget = target;
     if (!Array.isArray(target)) {
       const t = target as { xval?: unknown; yval?: unknown; subplot?: string };
       const all = host.subplots();
@@ -742,6 +868,7 @@ export class Interaction {
       const changed = this.#finder.find(host.subplots(), this.#entriesFor, x, y, mode, Infinity);
       this.#programmatic = true;
       this.#afterFind(changed, mode, undefined, x, y);
+      if (this.#spikesOn) this.#drawSpikes(mode, x, y, false);
       return;
     }
     const found: Found[] = [];
@@ -751,17 +878,23 @@ export class Interaction {
     }[]) {
       const entry = this.#entryFor(curveNumber);
       if (!entry) continue;
-      found.push({ entry, point: this.#pointOf(entry, pointNumber) });
+      const point = this.#pointOf(entry, pointNumber);
+      // A point that no longer exists (data changed since the hover) is skipped.
+      if (!Number.isFinite(point.px) || !Number.isFinite(point.py)) continue;
+      found.push({ entry, point });
     }
     const changed = this.#finder.set(found);
     this.#programmatic = true;
     const first = found[0];
     const a = first ? anchorOf(first.entry, first.point) : { x: 0, y: 0 };
     this.#afterFind(changed, mode, undefined, a.x, a.y);
+    if (this.#spikesOn) this.#drawSpikes(mode, a.x, a.y, false);
   }
 
   /** Hide hover labels and emit `unhover` if something was hovered. */
   unhover(): void {
+    this.#programmatic = false;
+    this.#programmaticTarget = undefined;
     this.#unhover(undefined);
   }
 
@@ -915,15 +1048,22 @@ export class Interaction {
         const zone = drag.zone as DragZone;
         const doX = drag.action === 'pan' ? !host.isFixed(sp.xaxis) : zone.startsWith('x');
         const doY = drag.action === 'pan' ? !host.isFixed(sp.yaxis) : zone.startsWith('y');
+        const panAxis = (axis: AxisInfo, dp: number): void => {
+          const start = drag.starts.get(axis.id) ?? range(axis);
+          const [lo, hi] = host.limits(axis);
+          ranges.set(axis.id, limitRange(panBy(start, dp / pxPerUnit(axis, start)), lo, hi, true));
+        };
+        // A plot-area pan moves every axis drawn over the subplot (its overlays too); an axis
+        // strip pans that axis.
         if (doX) {
-          const [lo, hi] = host.limits(sp.xaxis);
-          const dl = -(drag.x - drag.x0) / pxPerUnit(sp.xaxis, drag.rx);
-          ranges.set(sp.xaxis.id, limitRange(panBy(drag.rx, dl), lo, hi, true));
+          const dx = -(drag.x - drag.x0);
+          if (drag.action === 'pan') for (const a of this.#family(sp.xaxis)) panAxis(a, dx);
+          else panAxis(sp.xaxis, dx);
         }
         if (doY) {
-          const [lo, hi] = host.limits(sp.yaxis);
-          const dl = (drag.y - drag.y0) / pxPerUnit(sp.yaxis, drag.ry);
-          ranges.set(sp.yaxis.id, limitRange(panBy(drag.ry, dl), lo, hi, true));
+          const dy = drag.y - drag.y0;
+          if (drag.action === 'pan') for (const a of this.#family(sp.yaxis)) panAxis(a, dy);
+          else panAxis(sp.yaxis, dy);
         }
         this.#preview(ranges);
         return;
@@ -972,6 +1112,41 @@ export class Interaction {
     }
   }
 
+  /**
+   * `axis` and the axes of the same letter drawn over the same area through `overlaying` (a
+   * secondary y axis and the axis it overlays), without fixed ones: plot-area gestures move them
+   * together, like Plotly's overlaid subplots.
+   */
+  #family(axis: AxisInfo): AxisInfo[] {
+    const base = (a: AxisInfo): string => {
+      const o = (a.full as { overlaying?: unknown }).overlaying;
+      return typeof o === 'string' && o !== '' && o !== 'free' ? o : a.id;
+    };
+    const root = base(axis);
+    const out: AxisInfo[] = [];
+    const seen = new Set<string>();
+    const add = (a: AxisInfo): void => {
+      if (seen.has(a.id)) return;
+      seen.add(a.id);
+      if (!this.#host.isFixed(a)) out.push(a);
+    };
+    add(axis);
+    for (const sp of this.#host.subplots()) {
+      const a = axis.letter === 'x' ? sp.xaxis : sp.yaxis;
+      if (base(a) === root) add(a);
+    }
+    return out;
+  }
+
+  /** Current ranges of a subplot's axes and their overlays (a gesture's starting point). */
+  #startRanges(sp: SubplotInfo): Map<string, LinearRange> {
+    const out = new Map<string, LinearRange>();
+    for (const a of [...this.#family(sp.xaxis), ...this.#family(sp.yaxis), sp.xaxis, sp.yaxis]) {
+      if (!out.has(a.id)) out.set(a.id, range(a));
+    }
+    return out;
+  }
+
   #preview(ranges: ReadonlyMap<string, LinearRange>): void {
     if (ranges.size === 0) return;
     this.#host.preview(ranges);
@@ -1016,22 +1191,27 @@ export class Interaction {
         if (!box) return;
         const r = sp.rect;
         const ranges = new Map<string, LinearRange>();
+        const bottom = r.y + r.height;
+        // Every axis drawn over the subplot zooms to the same box (overlays too, as in Plotly).
         if (box.x) {
-          const [lo, hi] = host.limits(sp.xaxis);
-          const s = sp.xaxis.scale;
-          ranges.set(
-            sp.xaxis.id,
-            limitRange([s.p2l(box.x0 - r.x), s.p2l(box.x1 - r.x)], lo, hi, false),
-          );
+          for (const axis of this.#family(sp.xaxis)) {
+            const [lo, hi] = host.limits(axis);
+            const s = axis.scale;
+            ranges.set(
+              axis.id,
+              limitRange([s.p2l(box.x0 - r.x), s.p2l(box.x1 - r.x)], lo, hi, false),
+            );
+          }
         }
         if (box.y) {
-          const [lo, hi] = host.limits(sp.yaxis);
-          const s = sp.yaxis.scale;
-          const bottom = r.y + r.height;
-          ranges.set(
-            sp.yaxis.id,
-            limitRange([s.p2l(bottom - box.y1), s.p2l(bottom - box.y0)], lo, hi, false),
-          );
+          for (const axis of this.#family(sp.yaxis)) {
+            const [lo, hi] = host.limits(axis);
+            const s = axis.scale;
+            ranges.set(
+              axis.id,
+              limitRange([s.p2l(bottom - box.y1), s.p2l(bottom - box.y0)], lo, hi, false),
+            );
+          }
         }
         host.commit(ranges);
         return;
@@ -1217,9 +1397,16 @@ export class Interaction {
       const [lo, hi] = host.limits(axis);
       ranges.set(axis.id, limitRange(zoomAround(current, anchor, factor), lo, hi, false));
     };
-    if (hitZone === 'plot' || hitZone.startsWith('x')) zoomAxis(sp.xaxis, this.#px - r.x);
-    if (hitZone === 'plot' || hitZone.startsWith('y'))
-      zoomAxis(sp.yaxis, r.y + r.height - this.#py);
+    if (hitZone === 'plot' || hitZone.startsWith('x')) {
+      for (const a of hitZone === 'plot' ? this.#family(sp.xaxis) : [sp.xaxis]) {
+        zoomAxis(a, this.#px - r.x);
+      }
+    }
+    if (hitZone === 'plot' || hitZone.startsWith('y')) {
+      for (const a of hitZone === 'plot' ? this.#family(sp.yaxis) : [sp.yaxis]) {
+        zoomAxis(a, r.y + r.height - this.#py);
+      }
+    }
     this.#unhover(e);
     this.#preview(ranges);
     if (this.#wheelTimer !== undefined) clearTimeout(this.#wheelTimer);
@@ -1250,6 +1437,7 @@ export class Interaction {
       my0: my,
       rx: range(hit.xaxis),
       ry: range(hit.yaxis),
+      starts: this.#startRanges(hit),
       last: new Map(),
     };
   }
@@ -1278,8 +1466,17 @@ export class Interaction {
         limitRange(panBy(zoomed, -dp / pxPerUnit(axis, zoomed)), lo, hi, false),
       );
     };
-    axisRange(sp.xaxis, pinch.rx, pinch.mx0 - r.x, mx - pinch.mx0);
-    axisRange(sp.yaxis, pinch.ry, r.y + r.height - pinch.my0, -(my - pinch.my0));
+    for (const a of this.#family(sp.xaxis)) {
+      axisRange(a, pinch.starts.get(a.id) ?? range(a), pinch.mx0 - r.x, mx - pinch.mx0);
+    }
+    for (const a of this.#family(sp.yaxis)) {
+      axisRange(
+        a,
+        pinch.starts.get(a.id) ?? range(a),
+        r.y + r.height - pinch.my0,
+        -(my - pinch.my0),
+      );
+    }
     this.#preview(pinch.last);
   }
 

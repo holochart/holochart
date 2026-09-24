@@ -13,12 +13,14 @@
 import { avoidOverlaps, type Placed, type Rect } from './geometry.ts';
 import type { FontCss, LabelSpec, LabelStyle } from './hover.ts';
 import { appendRichText } from './richtext.ts';
+import type { SpikeScene } from './spikes.ts';
 
 /** Gap (px) between a label and its point, and between stacked labels. */
 const ARROW = 6;
 const GAP = 2;
 const PAD_X = 6;
 const PAD_Y = 3;
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 interface LabelEl {
   root: HTMLDivElement;
@@ -82,6 +84,11 @@ export class HoverLayer {
   #custom: HTMLElement | undefined;
   #svg: SVGSVGElement | undefined;
   #path: SVGPathElement | undefined;
+  #spikes: SVGSVGElement | undefined;
+  /** Pooled spike elements (lines, then dots), reused from hover to hover. */
+  readonly #spikeLines: SVGLineElement[] = [];
+  readonly #spikeDots: SVGCircleElement[] = [];
+  #spikesShown = false;
   readonly #placed: Placed[] = [];
 
   constructor(container: HTMLElement) {
@@ -273,11 +280,91 @@ export class HoverLayer {
     el.style.top = `${Math.round(y - el.offsetHeight / 2)}px`;
   }
 
+  // ---- spike lines (E3.10) -----------------------------------------------------------------------
+
+  #spikeSvg(): SVGSVGElement {
+    if (this.#spikes) return this.#spikes;
+    const svg = this.#doc.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('class', 'holochart-spikelines');
+    svg.setAttribute('width', '1');
+    svg.setAttribute('height', '1');
+    svg.style.cssText = 'position:absolute;left:0;top:0;overflow:visible;display:none;';
+    // Under the hover labels.
+    this.layer.insertBefore(svg, this.layer.firstChild);
+    this.#spikes = svg;
+    return svg;
+  }
+
+  /** Draw spike lines (container px); an empty scene hides them. */
+  showSpikes(scene: SpikeScene): void {
+    if (scene.lines.length === 0 && scene.dots.length === 0) {
+      this.hideSpikes();
+      return;
+    }
+    const svg = this.#spikeSvg();
+    const lines = this.#spikeLines;
+    const dots = this.#spikeDots;
+    scene.lines.forEach((l, i) => {
+      let el = lines[i];
+      if (!el) {
+        el = this.#doc.createElementNS(SVG_NS, 'line');
+        el.setAttribute('class', 'holochart-spikeline');
+        el.setAttribute('shape-rendering', 'crispEdges');
+        svg.appendChild(el);
+        lines.push(el);
+      }
+      el.setAttribute('x1', String(l.x1));
+      el.setAttribute('y1', String(l.y1));
+      el.setAttribute('x2', String(l.x2));
+      el.setAttribute('y2', String(l.y2));
+      el.setAttribute('stroke', l.color);
+      el.setAttribute('stroke-width', String(l.width));
+      if (l.dash) el.setAttribute('stroke-dasharray', l.dash);
+      else el.removeAttribute('stroke-dasharray');
+      el.style.display = '';
+    });
+    for (let i = scene.lines.length; i < lines.length; i++) {
+      (lines[i] as SVGLineElement).style.display = 'none';
+    }
+    scene.dots.forEach((d, i) => {
+      let el = dots[i];
+      if (!el) {
+        el = this.#doc.createElementNS(SVG_NS, 'circle');
+        el.setAttribute('class', 'holochart-spikemarker');
+        svg.appendChild(el);
+        dots.push(el);
+      }
+      el.setAttribute('cx', String(d.cx));
+      el.setAttribute('cy', String(d.cy));
+      el.setAttribute('r', String(d.r));
+      el.setAttribute('fill', d.color);
+      el.style.display = '';
+    });
+    for (let i = scene.dots.length; i < dots.length; i++) {
+      (dots[i] as SVGCircleElement).style.display = 'none';
+    }
+    // Dots above every line.
+    for (const d of dots) svg.appendChild(d);
+    svg.style.display = 'block';
+    this.#spikesShown = true;
+  }
+
+  hideSpikes(): void {
+    if (!this.#spikesShown) return;
+    this.#spikesShown = false;
+    if (this.#spikes) this.#spikes.style.display = 'none';
+  }
+
+  /** Whether spike lines are showing. */
+  get spikesShowing(): boolean {
+    return this.#spikesShown;
+  }
+
   // ---- drag overlay ------------------------------------------------------------------------------
 
   #outline(): SVGPathElement {
     if (this.#path) return this.#path;
-    const ns = 'http://www.w3.org/2000/svg';
+    const ns = SVG_NS;
     const svg = this.#doc.createElementNS(ns, 'svg');
     svg.setAttribute('class', 'holochart-dragoverlay');
     svg.style.cssText = 'position:absolute;left:0;top:0;overflow:visible;';
@@ -320,5 +407,7 @@ export class HoverLayer {
   destroy(): void {
     this.layer.remove();
     this.#labels.length = 0;
+    this.#spikeLines.length = 0;
+    this.#spikeDots.length = 0;
   }
 }

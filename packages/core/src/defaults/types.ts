@@ -84,6 +84,19 @@ export type FullLayout = BaseFullLayout & {
   /** Only for a grid of more than one cell. */
   grid?: FullGrid;
   _subplots: Subplots;
+  /**
+   * Axes linked by `matches` (plan E3.9, `defaults/constraints.ts`): one object per group, axis id
+   * → 1, e.g. `[{ x: 1, x2: 1 }]`. Axes of a group share their range. Set by supply-defaults.
+   */
+  _axisMatchGroups?: Record<string, 1>[];
+  /**
+   * Axes whose scales are linked by `scaleanchor` or `matches` (plan E3.9): one object per group,
+   * axis id → ratio, e.g. `[{ x: 1, y: 2 }]` for `yaxis: { scaleanchor: 'x', scaleratio: 2 }`.
+   * px per unit ÷ ratio is the same for every axis of a group once constraints are enforced
+   * (`enforceConstraints`). Cross-letter ratios are strings with one `x`/`y` prefix per plot-aspect
+   * factor (`'x0.5'`). Groups that are exactly a match group are left out. Set by supply-defaults.
+   */
+  _axisConstraintGroups?: Record<string, number | string>[];
   [key: string]: unknown;
 };
 

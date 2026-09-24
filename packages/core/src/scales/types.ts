@@ -8,11 +8,18 @@
  * - **Linear (`l`)**: where GPU buffers live — identity for `linear`, log10 for `log`, ms since the
  *   epoch (UTC) for `date`, category index for `category` / `multicategory`. Every M1 axis type is
  *   affine from linear space to pixels, so a pan/zoom is just a new `DataTransform` (no re-upload).
+ *   On rangebreaks axes (`date` / `linear` with `ScaleOptions.breaks`), linear space is the
+ *   compressed space: raw value (ms or number) minus the length of the breaks between raw 0 and
+ *   it (see `breaks.ts`), so it stays affine to pixels. There `d2l` gives NaN inside a break,
+ *   `r2l` compresses without masking, and `l2d` / `l2r` expand back to raw values.
+ * - **Raw**: on rangebreaks axes only, the uncompressed values (ms, numbers) — what ticks and
+ *   labels are computed from (`rawScale`).
  * - **Pixel (`p`)**: CSS px along the axis, 0 at `range[0]`, `length` at `range[1]`.
  *
  * Keep this interface stable: the runtime and every trace build on it. Additions are fine.
  */
 import type { FullAxis } from '../defaults/types.ts';
+import type { BreakMap } from './breaks.ts';
 
 export type AxisType = 'linear' | 'log' | 'date' | 'category' | 'multicategory';
 
@@ -34,6 +41,11 @@ export interface ScaleOptions {
    * per scale. Defaults to a process-wide warn-once `console.warn`.
    */
   onWarning?: (message: string) => void;
+  /**
+   * Range breaks (`createBreakMap`) of a `date` or `linear` axis: linear space becomes the
+   * compressed space (see above). Ignored on other types.
+   */
+  breaks?: BreakMap;
 }
 
 export interface Scale {
@@ -75,6 +87,8 @@ export interface Scale {
   readonly categories: readonly string[];
   /** `[group, item]` categories of a `multicategory` axis; empty for other types. */
   readonly multicategories: readonly (readonly [string, string])[];
+  /** Range breaks of a `date` / `linear` axis (linear space is compressed); else undefined. */
+  readonly breaks: BreakMap | undefined;
 }
 
 /** A data extreme a trace contributes to autorange, with the pixel padding it needs (marker size). */

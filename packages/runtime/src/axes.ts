@@ -9,6 +9,7 @@ import {
   axisCategories,
   createScale,
   type AxisExtremes,
+  type BreakMap,
   type CategoryOrder,
   type AxisType,
   type ExtremePoint,
@@ -106,35 +107,53 @@ export interface ScaleState {
   readonly type: AxisType;
   readonly categories: readonly string[] | undefined;
   readonly multicategories?: readonly (readonly [string, string])[] | undefined;
+  /** Range breaks (E3.8): the scale's linear space is compressed by them. */
+  readonly breaks?: BreakMap | undefined;
   readonly scale: Scale;
 }
 
 /**
- * Reuse `prev` when the type and categories are unchanged (so range and length carry over and
- * traces keep their linear coordinates), otherwise build a new scale. A new scale means every
- * trace on the axis must re-run calc.
+ * Reuse `prev` when the type, categories and range breaks are unchanged (so range and length
+ * carry over and traces keep their linear coordinates), otherwise build a new scale. A new scale
+ * means every trace on the axis must re-run calc.
  */
 export function syncScale(
   prev: ScaleState | undefined,
   type: AxisType,
   categories: readonly string[] | undefined,
   multicategories?: readonly (readonly [string, string])[],
+  breaks?: BreakMap,
 ): ScaleState {
   if (
     prev &&
     prev.type === type &&
     sameList(prev.categories, categories) &&
-    sameList(prev.multicategories, multicategories)
+    sameList(prev.multicategories, multicategories) &&
+    prev.breaks?.key === breaks?.key
   ) {
     return prev;
   }
+  // A scale whose linear space changes (breaks on or off) must not keep the old linear range.
+  const keepRange = prev !== undefined && prev.breaks?.key === breaks?.key;
   const scale = createScale({
     type,
-    ...(prev ? { range: prev.scale.range, length: prev.scale.length } : {}),
+    ...(prev ? { length: prev.scale.length } : {}),
+    ...(keepRange ? { range: prev.scale.range } : {}),
     ...(categories ? { categories } : {}),
     ...(multicategories ? { multicategories } : {}),
+    ...(breaks ? { breaks } : {}),
   });
-  return { type, categories, multicategories, scale };
+  return { type, categories, multicategories, breaks, scale };
+}
+
+/**
+ * The range to report in `fullLayout` for a linear range: linear coordinates, except on axes with
+ * range breaks, whose compressed linear space means nothing outside the chart — there it is the
+ * raw value (ms on date axes), still valid as a range value (`r2l` compresses it again).
+ */
+export function reportedRange(scale: Scale, r0: number, r1: number): [number, number] {
+  const b = scale.breaks;
+  return b ? [b.toRaw(r0), b.toRaw(r1)] : [r0, r1];
 }
 
 /**

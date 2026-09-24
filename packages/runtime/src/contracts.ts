@@ -529,6 +529,19 @@ export interface HoverPoint {
    * the x/y text when there is no `hovertemplate`; the trace name still follows the `name` flag.
    */
   readonly hoverText?: string;
+  /**
+   * Px from the pointer used to pick the point spike lines follow (E3.10, Plotly's
+   * `spikeDistance`). Default: the distance from the pointer to (`px`, `py`).
+   */
+  readonly spikeDistance?: number;
+  /**
+   * Part of a multi-label hover (M3: box and violin statistics, one label per value, as Plotly):
+   * in `closest` mode, when a point with `multi` wins, every other `multi` point its trace returned
+   * is shown with it (Plotly keeps all the labels of the closest trace's call).
+   */
+  readonly multi?: boolean;
+  /** `false` leaves the trace name out of this label (Plotly names one label of a multi-label hover). */
+  readonly showName?: boolean;
 }
 
 /** A box or lasso selection in one subplot, in the trace's linear coordinates. */

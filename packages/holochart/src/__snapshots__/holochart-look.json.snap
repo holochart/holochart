@@ -375,6 +375,7 @@
    "autorangeoptions": {},
    "rangemode": "normal",
    "fixedrange": false,
+   "rangebreaks": [],
    "domain": [
     0,
     0.45
@@ -382,6 +383,8 @@
    "anchor": "y",
    "side": "bottom",
    "position": 0,
+   "scaleratio": 1,
+   "constrain": "range",
    "layer": "above traces",
    "automargin": true,
    "tickmode": "auto",
@@ -441,6 +444,11 @@
    "zeroline": true,
    "zerolinecolor": "rgb(62, 62, 76)",
    "zerolinewidth": 1,
+   "showspikes": false,
+   "spikethickness": 3,
+   "spikedash": "dash",
+   "spikemode": "toaxis",
+   "spikesnap": "hovered data",
    "minor": {
     "tickmode": "auto",
     "nticks": 5,
@@ -467,7 +475,8 @@
      "shadow": "none"
     },
     "standoff": 4
-   }
+   },
+   "constraintoward": "center"
   },
   "xaxis2": {
    "visible": true,
@@ -478,6 +487,7 @@
    "autorangeoptions": {},
    "rangemode": "normal",
    "fixedrange": false,
+   "rangebreaks": [],
    "domain": [
     0.55,
     1
@@ -485,6 +495,8 @@
    "anchor": "y2",
    "side": "bottom",
    "position": 0,
+   "scaleratio": 1,
+   "constrain": "range",
    "layer": "above traces",
    "automargin": true,
    "tickmode": "auto",
@@ -544,6 +556,11 @@
    "zeroline": true,
    "zerolinecolor": "rgb(62, 62, 76)",
    "zerolinewidth": 1,
+   "showspikes": false,
+   "spikethickness": 3,
+   "spikedash": "dash",
+   "spikemode": "toaxis",
+   "spikesnap": "hovered data",
    "minor": {
     "tickmode": "auto",
     "nticks": 5,
@@ -570,7 +587,8 @@
      "shadow": "none"
     },
     "standoff": 4
-   }
+   },
+   "constraintoward": "center"
   },
   "yaxis": {
    "visible": true,
@@ -581,6 +599,7 @@
    "autorangeoptions": {},
    "rangemode": "normal",
    "fixedrange": false,
+   "rangebreaks": [],
    "domain": [
     0,
     1
@@ -588,6 +607,8 @@
    "anchor": "x",
    "side": "left",
    "position": 0,
+   "scaleratio": 1,
+   "constrain": "range",
    "layer": "above traces",
    "automargin": true,
    "tickmode": "auto",
@@ -647,6 +668,11 @@
    "zeroline": true,
    "zerolinecolor": "rgb(62, 62, 76)",
    "zerolinewidth": 1,
+   "showspikes": false,
+   "spikethickness": 3,
+   "spikedash": "dash",
+   "spikemode": "toaxis",
+   "spikesnap": "hovered data",
    "minor": {
     "tickmode": "auto",
     "nticks": 5,
@@ -673,7 +699,8 @@
      "shadow": "none"
     },
     "standoff": 4
-   }
+   },
+   "constraintoward": "middle"
   },
   "yaxis2": {
    "visible": true,
@@ -684,6 +711,7 @@
    "autorangeoptions": {},
    "rangemode": "normal",
    "fixedrange": false,
+   "rangebreaks": [],
    "domain": [
     0,
     1
@@ -691,6 +719,8 @@
    "anchor": "x2",
    "side": "left",
    "position": 0,
+   "scaleratio": 1,
+   "constrain": "range",
    "layer": "above traces",
    "automargin": true,
    "tickmode": "auto",
@@ -750,6 +780,11 @@
    "zeroline": true,
    "zerolinecolor": "rgb(62, 62, 76)",
    "zerolinewidth": 1,
+   "showspikes": false,
+   "spikethickness": 3,
+   "spikedash": "dash",
+   "spikemode": "toaxis",
+   "spikesnap": "hovered data",
    "minor": {
     "tickmode": "auto",
     "nticks": 5,
@@ -776,7 +811,8 @@
      "shadow": "none"
     },
     "standoff": 4
-   }
+   },
+   "constraintoward": "middle"
   },
   "showlegend": true
  },

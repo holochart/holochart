@@ -40,6 +40,9 @@ import {
   coerceContainer,
   collectCategoryValues,
   configSchema,
+  createBreakMap,
+  createScale,
+  enforceConstraints,
   createUiState,
   deepMerge,
   diffFigures,
@@ -51,7 +54,10 @@ import {
   toRGBA,
   valueCategoryOrder,
   type AxisExtremes,
+  type AxisType,
   type CategorySamples,
+  type ConstraintAxisState,
+  type ConstraintGroup,
   type FigureInput,
   type FullAxis,
   type FullConfig,
@@ -80,6 +86,7 @@ import {
   axisTypeOf,
   dataTransform,
   isCategorical,
+  reportedRange,
   resolveAxisRange,
   syncScale,
   type ScaleState,
@@ -226,6 +233,12 @@ interface Plan {
   after: (() => void)[];
   /** Layout edits were axis ranges / autorange only (the a11y mirror debounces those). */
   layoutRanges: boolean;
+  /**
+   * Axis ids whose `range` an edit set (not reset): their scale wins when a `scaleanchor`
+   * constraint is enforced, and the other axes of the group adapt (Plotly's
+   * `_constraintShrinkable`, E3.9).
+   */
+  rangesAltered: Set<string>;
   /** Layout edits other than ranges and interaction modes. */
   layoutOther: boolean;
   /** Interaction-mode layout edits (`dragmode`, `hovermode`, …). */
@@ -310,6 +323,10 @@ class AxisSlot implements AxisInfo {
   state: ScaleState;
   /** Value-based `categoryorder` only: categories in trace order, the tie order of the sort. */
   traceOrder: readonly string[] | undefined;
+  /** The defaulted `domain`, before a `constrain: 'domain'` constraint shrank it (E3.9). */
+  inputDomain: readonly [number, number] = [0, 1];
+  /** The domain in use (the input one, or shrunk by a constraint). */
+  domain: readonly [number, number] = [0, 1];
   start = 0;
   end = 0;
 
@@ -372,6 +389,7 @@ function emptyPlan(): Plan {
     appends: new Map(),
     after: [],
     layoutRanges: false,
+    rangesAltered: new Set(),
     layoutOther: false,
     layoutQuiet: false,
   };
@@ -381,9 +399,19 @@ function emptyPlan(): Plan {
 const RANGE_PATH = /^[xy]axis\d*\.(?:range(?:\[[01]\])?|autorange)$/;
 const QUIET_PATH = /^(?:dragmode|hovermode|selectdirection|clickmode)$/;
 
+const RANGE_SET_PATH = /^([xy])axis(\d*)\.range(?:\[[01]\])?$/;
+
 /** Record what kind of layout edit `paths` are, for {@link a11yChangeOf}. */
-function classifyLayoutPaths(plan: Plan, paths: readonly string[]): void {
+function classifyLayoutPaths(
+  plan: Plan,
+  paths: readonly string[],
+  values?: Readonly<Record<string, unknown>>,
+): void {
   for (const path of paths) {
+    const set = RANGE_SET_PATH.exec(path);
+    if (set && (values === undefined || values[path] !== null)) {
+      plan.rangesAltered.add(`${set[1]}${set[2] === '1' ? '' : (set[2] ?? '')}`);
+    }
     if (RANGE_PATH.test(path)) plan.layoutRanges = true;
     else if (QUIET_PATH.test(path)) plan.layoutQuiet = true;
     else plan.layoutOther = true;
@@ -519,6 +547,8 @@ export class Chart {
   /** `#subplots` as an array, for per-frame pointer work (no iterator allocations). */
   #subplotList: SubplotSlot[] = [];
   #initialAxes = new Map<string, InitialAxis>();
+  /** Axis ids whose range the running update set (see `Plan.rangesAltered`). */
+  #altered: ReadonlySet<string> = new Set();
   #scheduled = false;
   #destroyed = false;
   #unsubscribeFonts: (() => void) | undefined;
@@ -932,7 +962,7 @@ export class Chart {
           byTrace.set(change.traceIndex, entry);
         }
       }
-      classifyLayoutPaths(plan, layoutPaths);
+      classifyLayoutPaths(plan, layoutPaths, rangeValues(effective.layout, layoutPaths));
       for (const s of planLayoutEdit(layoutPaths, this.#registry.core)) plan.layout.add(s);
       for (const [i, { type, paths }] of byTrace) {
         addStages(plan, i, planTraceEdit(paths, type, i, this.#registry.core, this.#fullFor(plan)));
@@ -1161,15 +1191,18 @@ export class Chart {
   }
 
   #relayoutInto(plan: Plan, update: AttributeUpdate, payload?: AttributeUpdate): void {
-    const edits = withRangeImplications(
-      axisTypeChangeEdits(update, this.#figure.layout, this.#full?.fullLayout),
-      this.#figure.layout,
+    const edits = withMatchedAxes(
+      withRangeImplications(
+        axisTypeChangeEdits(update, this.#figure.layout, this.#full?.fullLayout),
+        this.#figure.layout,
+        this.#full?.fullLayout,
+      ),
       this.#full?.fullLayout,
     );
     const paths = Object.keys(edits).filter((p) => edits[p] !== undefined);
     if (paths.length === 0) return;
     this.#figure.layout = applyEdits(this.#figure.layout, edits);
-    classifyLayoutPaths(plan, paths);
+    classifyLayoutPaths(plan, paths, edits);
     for (const s of planLayoutEdit(paths, this.#registry.core)) plan.layout.add(s);
     plan.after.push(() => this.#events.emit('relayout', payload ?? edits));
   }
@@ -1443,6 +1476,7 @@ export class Chart {
 
   #run(plan: Plan): void {
     const registry = this.#registry;
+    this.#altered = plan.rangesAltered;
     const validate =
       plan.full ||
       plan.validate ||
@@ -1502,6 +1536,7 @@ export class Chart {
       [...plan.traces.values()].some(needsLayout);
 
     const rescaled = layoutRan ? this.#syncAxes(fullLayout, fullData) : new Set<string>();
+    if (!layoutRan) this.#refreshAxes(fullLayout);
 
     // Margins, axis spans and subplot viewports first: `crossTraceCalc` gets its subplot.
     if (layoutRan) this.#layoutSubplots(fullLayout, fullData, size);
@@ -1715,16 +1750,40 @@ export class Chart {
         }
         lists = axisCategoryLists(full, type, columns, prev?.state.categories);
       }
-      const state = syncScale(prev?.state, type, lists.categories, lists.multicategories);
+      const breaks = createBreakMap(
+        (full as { rangebreaks?: readonly Record<string, unknown>[] }).rangebreaks,
+        type,
+        fixedRangeOf(full, type),
+      );
+      const state = syncScale(prev?.state, type, lists.categories, lists.multicategories, breaks);
       if (!prev || prev.state !== state) rescaled.add(id);
       const slot = prev ?? new AxisSlot(id, full, state);
       slot.full = full;
       slot.state = state;
       slot.traceOrder = lists.traceOrder;
+      const d = full.domain as readonly number[];
+      slot.inputDomain = [d[0] ?? 0, d[1] ?? 1];
+      slot.domain = slot.inputDomain;
       next.set(id, slot);
     }
     this.#axes = next;
     return rescaled;
+  }
+
+  /**
+   * Point the axes at the new defaulted layout when the layout stage does not run (edits such as
+   * `spikecolor` or `showspikes`, whose edit type is `none` / `modebar`), so interaction and
+   * components read current attributes. The range and domain in use are carried over.
+   */
+  #refreshAxes(fullLayout: FullLayout): void {
+    for (const axis of this.#axes.values()) {
+      const full = fullLayout[axis.name] as FullAxis | undefined;
+      if (!full || full === axis.full) continue;
+      const [r0, r1] = axis.scale.range;
+      full.range = reportedRange(axis.scale, r0, r1);
+      (full as { domain: unknown }).domain = [...axis.domain];
+      axis.full = full;
+    }
   }
 
   /**
@@ -1795,7 +1854,7 @@ export class Chart {
     this.#plotArea = area;
 
     for (const axis of this.#axes.values()) {
-      const span = domainSpan(area, axis.letter, axis.full.domain as [number, number]);
+      const span = domainSpan(area, axis.letter, axis.domain);
       axis.start = span.start;
       axis.end = span.end;
       axis.scale.setLength(Math.abs(span.end - span.start));
@@ -1844,10 +1903,19 @@ export class Chart {
     this.#subplotList = [...next.values()];
   }
 
-  /** Axis ranges from trace and component extremes (E3.2), then every subplot's transform. */
+  /**
+   * Axis ranges from trace and component extremes (E3.2), then every subplot's transform.
+   *
+   * Linked axes (E3.9): the axes of a `matches` group autorange together over all their extremes
+   * and share one range; then `scaleanchor` / `matches` constraints are enforced (core
+   * `enforceConstraints`, Plotly's `enforce`): with `constrain: 'range'` ranges widen (or, for axes
+   * whose range this update did not set, zoom in) until px per unit agree; with
+   * `constrain: 'domain'` the axis' domain shrinks instead, which moves its subplots.
+   */
   #autorange(fullData: readonly FullTrace[]): void {
+    const fullLayout = this.#full?.fullLayout;
     const fromComponents = this.#componentExtremes(fullData);
-    for (const axis of this.#axes.values()) {
+    const extremesOf = (axis: AxisSlot): AxisExtremes[] => {
       const extremes: AxisExtremes[] = [];
       const key = `${axis.letter}axis`;
       fullData.forEach((trace, i) => {
@@ -1859,14 +1927,141 @@ export class Chart {
         const e = byAxis[axis.id];
         if (e) extremes.push(e);
       }
-      const [r0, r1] = resolveAxisRange(axis.full, axis.scale, extremes);
-      axis.scale.setRange(r0, r1);
-      // Like Plotly, the range in use is readable from fullLayout (linear coordinates).
-      axis.full.range = [r0, r1];
+      return extremes;
+    };
+    const ranges = new Map<string, [number, number]>();
+    const matchGroups = matchGroupsOf(fullLayout);
+    const grouped = new Set<string>();
+    for (const group of matchGroups) {
+      const members = group.map((id) => this.#axes.get(id)).filter((a) => a !== undefined);
+      if (members.length === 0) continue;
+      const all = members.flatMap(extremesOf);
+      const own = members.map((a) => resolveAxisRange(a.full, a.scale, all));
+      // One range for the group (Plotly copies the last autoranged one; the union keeps every
+      // member's padding). An axis with a fixed range fixes the group (defaults synced them).
+      const fixed = members.findIndex((a) => a.full.autorange === false);
+      const shared = fixed >= 0 ? (own[fixed] as [number, number]) : coverRange(own);
+      for (const a of members) {
+        ranges.set(a.id, [shared[0], shared[1]]);
+        grouped.add(a.id);
+      }
+    }
+    for (const axis of this.#axes.values()) {
+      if (grouped.has(axis.id)) continue;
+      ranges.set(axis.id, resolveAxisRange(axis.full, axis.scale, extremesOf(axis)));
+    }
+    const domainsMoved = this.#constrain(ranges, this.#altered, true);
+    for (const axis of this.#axes.values()) {
+      const r = ranges.get(axis.id);
+      if (!r) continue;
+      axis.scale.setRange(r[0], r[1]);
+      // Like Plotly, the range in use is readable from fullLayout (linear coordinates; raw values
+      // on axes with range breaks).
+      axis.full.range = reportedRange(axis.scale, r[0], r[1]);
+    }
+    if (domainsMoved && fullLayout) {
+      // A `constrain: 'domain'` constraint moved axes: re-place them and their subplots.
+      this.#placeSubplots(fullLayout, this.#margins, this.#size);
     }
     for (const sp of this.#subplots.values()) {
       sp.transform = dataTransform(sp.xaxis.scale, sp.yaxis.scale);
     }
+  }
+
+  /**
+   * Enforce `scaleanchor` / `matches` constraints (E3.9) on `ranges` (linear, by axis id; changed
+   * in place, including matched axes). `altered`: axes whose range was set by this update — the
+   * others in their group may zoom in to match them. With `domains`, `constrain: 'domain'` results
+   * are applied to the axes (returns whether any domain changed); otherwise they are ignored
+   * (drag previews).
+   */
+  #constrain(
+    ranges: Map<string, [number, number]>,
+    altered: ReadonlySet<string>,
+    domains: boolean,
+  ): boolean {
+    const fullLayout = this.#full?.fullLayout;
+    const groups = constraintGroupsOf(fullLayout);
+    let moved = false;
+    if (domains) {
+      for (const axis of this.#axes.values()) {
+        if (axis.domain !== axis.inputDomain) moved = true;
+        axis.domain = axis.inputDomain;
+        (axis.full as { domain: unknown }).domain = [...axis.inputDomain];
+      }
+    }
+    if (groups.length === 0) return moved;
+    const area = this.#plotArea;
+    const states = new Map<string, ConstraintAxisState>();
+    for (const group of groups) {
+      const ids = Object.keys(group);
+      const anyAltered = ids.some((id) => altered.has(id));
+      for (const id of ids) {
+        const axis = this.#axes.get(id);
+        const range = ranges.get(id) ?? axis?.scale.range;
+        if (!axis || !range) continue;
+        // Layout: from the input domain (constraints may shrink it again); previews: as placed.
+        const domain = domains ? axis.inputDomain : axis.domain;
+        const span = domainSpan(area, axis.letter, domain);
+        states.set(id, {
+          range: [range[0], range[1]],
+          domain,
+          length: Math.abs(span.end - span.start),
+          constrain: axis.full.constrain === 'domain' ? 'domain' : 'range',
+          constraintoward: String(
+            axis.full.constraintoward ?? (axis.letter === 'x' ? 'center' : 'middle'),
+          ),
+          shrinkable: anyAltered && !altered.has(id),
+        });
+      }
+    }
+    const result = enforceConstraints(groups, states, { width: area.width, height: area.height });
+    for (const [id, r] of result.ranges) ranges.set(id, [r[0], r[1]]);
+    // A constrained axis may belong to a match group: its partners follow.
+    for (const group of matchGroupsOf(fullLayout)) {
+      const source = group.find((id) => result.ranges.has(id));
+      const r = source === undefined ? undefined : ranges.get(source);
+      if (r) for (const id of group) ranges.set(id, [r[0], r[1]]);
+    }
+    if (domains && result.domains.size > 0) {
+      for (const [id, d] of result.domains) {
+        const axis = this.#axes.get(id);
+        if (!axis) continue;
+        axis.domain = [d[0], d[1]];
+        (axis.full as { domain: unknown }).domain = [d[0], d[1]];
+        moved = true;
+      }
+      // Overlaying axes share the domain of the axis they overlay.
+      for (const axis of this.#axes.values()) {
+        const o = (axis.full as { overlaying?: unknown }).overlaying;
+        const base = typeof o === 'string' ? this.#axes.get(o) : undefined;
+        if (base && base !== axis && base.domain !== base.inputDomain) {
+          axis.domain = base.domain;
+          (axis.full as { domain: unknown }).domain = [...base.domain];
+        }
+      }
+    }
+    return moved;
+  }
+
+  /**
+   * Ranges of an interaction (zoom, pan, wheel, reset) with their linked axes (E3.9): the other
+   * axes of a `matches` group get the same range, and `scaleanchor` partners zoom by the same
+   * factor so px per unit stay locked.
+   */
+  #linked(ranges: ReadonlyMap<string, LinearRange>): Map<string, LinearRange> {
+    const fullLayout = this.#full?.fullLayout;
+    const out = new Map<string, [number, number]>();
+    for (const [id, r] of ranges) out.set(id, [r[0], r[1]]);
+    if (!fullLayout) return out;
+    for (const group of matchGroupsOf(fullLayout)) {
+      const source = group.find((id) => ranges.has(id));
+      const r = source === undefined ? undefined : ranges.get(source);
+      if (r) for (const id of group) if (!out.has(id)) out.set(id, [r[0], r[1]]);
+    }
+    const altered = new Set(out.keys());
+    if (constraintGroupsOf(fullLayout).length > 0) this.#constrain(out, altered, false);
+    return out;
   }
 
   /**
@@ -2177,6 +2372,8 @@ export class Chart {
       selection: (index) => this.#selectionOf(index),
       select: (selection) => this.#select(selection),
       clearSelection: () => this.#clearSelection(),
+      axes: () => this.#axes,
+      plotArea: () => this.#plotArea,
       renderHover: (points: readonly ChartPoint[]) => {
         const fn = isPlainObject(this.#figure.config)
           ? this.#figure.config['renderHover']
@@ -2296,15 +2493,16 @@ export class Chart {
    * transforms change, traces get transform-only updates (uniforms), components redraw ticks. The
    * input layout is untouched until {@link #commitRanges}.
    */
-  #previewRanges(ranges: ReadonlyMap<string, LinearRange>): void {
+  #previewRanges(requested: ReadonlyMap<string, LinearRange>): void {
     const full = this.#full;
     const root = this.#root;
     if (!full || !root) return;
+    const ranges = this.#linked(requested);
     for (const [id, [r0, r1]] of ranges) {
       const axis = this.#axes.get(id);
       if (!axis) continue;
       axis.scale.setRange(r0, r1);
-      axis.full.range = [r0, r1];
+      axis.full.range = reportedRange(axis.scale, r0, r1);
     }
     for (const sp of this.#subplots.values()) {
       if (!ranges.has(sp.xaxis.id) && !ranges.has(sp.yaxis.id)) continue;
@@ -2326,7 +2524,8 @@ export class Chart {
   }
 
   /** Commit ranges as a GUI relayout; the `relayout` event carries Plotly's `range[i]` keys. */
-  #commitRanges(ranges: ReadonlyMap<string, LinearRange>): Promise<Chart> {
+  #commitRanges(requested: ReadonlyMap<string, LinearRange>): Promise<Chart> {
+    const ranges = this.#linked(requested);
     const update: Record<string, unknown> = {};
     const payload: Record<string, unknown> = {};
     for (const [id, [r0, r1]] of ranges) {
@@ -2457,6 +2656,91 @@ export class Chart {
 /** `{ [key]: value }`, or `{}` when `value` is undefined (for `exactOptionalPropertyTypes`). */
 function optional<K extends string, V>(key: K, value: V | undefined): { [P in K]?: V } {
   return value === undefined ? {} : ({ [key]: value } as { [P in K]?: V });
+}
+
+/**
+ * The fixed range of an axis in raw units (ms on date axes), for range breaks: a single span
+ * covering all of it is dropped (Plotly). Empty unless `autorange` is off.
+ */
+function fixedRangeOf(full: FullAxis, type: AxisType): { fixedRange?: [number, number] } {
+  if (full.autorange !== false || !Array.isArray(full.range)) return {};
+  const plain = createScale({ type });
+  const a = plain.r2l(full.range[0]);
+  const b = plain.r2l(full.range[1]);
+  return Number.isFinite(a) && Number.isFinite(b) ? { fixedRange: [a, b] } : {};
+}
+
+/** `matches` groups of a defaulted layout (E3.9), as lists of axis ids. */
+function matchGroupsOf(fullLayout: FullLayout | undefined): string[][] {
+  const groups = (fullLayout as { _axisMatchGroups?: readonly Readonly<Record<string, unknown>>[] })
+    ?._axisMatchGroups;
+  return Array.isArray(groups) ? groups.map((g) => Object.keys(g)) : [];
+}
+
+/** `scaleanchor` / `matches` constraint groups of a defaulted layout (E3.9). */
+function constraintGroupsOf(fullLayout: FullLayout | undefined): readonly ConstraintGroup[] {
+  const groups = (fullLayout as { _axisConstraintGroups?: readonly ConstraintGroup[] })
+    ?._axisConstraintGroups;
+  return Array.isArray(groups) ? groups : [];
+}
+
+/** The smallest range covering every range in `list`, in the direction of the first one. */
+function coverRange(list: readonly (readonly [number, number])[]): [number, number] {
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const [a, b] of list) {
+    lo = Math.min(lo, a, b);
+    hi = Math.max(hi, a, b);
+  }
+  const first = list[0];
+  if (!first || !Number.isFinite(lo) || !Number.isFinite(hi))
+    return first ? [first[0], first[1]] : [0, 1];
+  return first[0] > first[1] ? [hi, lo] : [lo, hi];
+}
+
+const AXIS_RANGE_EDIT = /^([xy]axis\d*)\.(range(?:\[[01]\])?|autorange)$/;
+
+/**
+ * Range and autorange edits applied to every axis of the edited axis' `matches` group (E3.9), so
+ * `relayout({ 'xaxis2.range': … })` moves the whole group — defaults would otherwise sync the
+ * group to its first axis' range. Edits already given for a member win.
+ */
+function withMatchedAxes(
+  edits: Record<string, unknown>,
+  fullLayout: FullLayout | undefined,
+): Record<string, unknown> {
+  const groups = matchGroupsOf(fullLayout);
+  if (groups.length === 0) return edits;
+  const out: Record<string, unknown> = { ...edits };
+  for (const [path, value] of Object.entries(edits)) {
+    const m = AXIS_RANGE_EDIT.exec(path);
+    if (!m || value === undefined) continue;
+    const id = axisIdOf(m[1] as string);
+    const group = groups.find((g) => g.includes(id));
+    if (!group) continue;
+    for (const other of group) {
+      if (other === id) continue;
+      const target = `${axisName(other)}.${m[2] as string}`;
+      if (!(target in out)) out[target] = Array.isArray(value) ? [...(value as unknown[])] : value;
+    }
+  }
+  return out;
+}
+
+/** Axis id of a layout key: `'xaxis'` → `'x'`, `'yaxis2'` → `'y2'`. */
+function axisIdOf(name: string): string {
+  const n = name.slice(5);
+  return `${name.charAt(0)}${n === '1' ? '' : n}`;
+}
+
+/** The values of the range paths among `paths` in `layout` (to tell a set range from a reset). */
+function rangeValues(
+  layout: Readonly<Record<string, unknown>>,
+  paths: readonly string[],
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const p of paths) if (RANGE_SET_PATH.test(p)) out[p] = getIn(layout, p) ?? null;
+  return out;
 }
 
 /** Does this subplot sit on an axis that `overlaying`s another one (a secondary axis)? */

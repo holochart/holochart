@@ -12,3 +12,5 @@ export * from './labels.ts';
 export * from './period.ts';
 export * from './format.ts';
 export * from './convert-coords.ts';
+export * from './constraints.ts';
+export * from './breaks.ts';

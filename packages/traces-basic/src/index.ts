@@ -16,3 +16,16 @@ export * from './timeline.ts';
 
 /** Every trace module in this package, in registration order (the full bundle registers these). */
 export const basicTraces: readonly Registrable[] = [scatter, bar, pie, table];
+// Colorscale and colorbar helpers for colorscaled trace types in other packages (histogram2d,
+// histogram2dcontour; later heatmap and contour).
+export {
+  coloraxisLayoutSchema,
+  colorbarAttributes,
+  colorscaleInterpolation,
+  resolveColorscale,
+  rgbaToCss,
+  supplyColorbarDefaults,
+  supplyColorscaleDefaults,
+} from './shared/colorscale.ts';
+// Draw order of traces (Plotly's layer order), for trace types in other packages (box, violin).
+export { traceRenderOrder } from './shared/render-order.ts';

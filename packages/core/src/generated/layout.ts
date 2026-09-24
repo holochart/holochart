@@ -596,6 +596,10 @@ export interface LayoutXaxis {
    */
   maxallowed?: unknown;
   /**
+   * Spans hidden from the axis (plan E3.8): the axis skips them, so a weekday-only stock chart has no gaps for weekends or nights. Date and linear axes; data inside a break is not drawn. Ticks never land in a break; hover, zoom and pan work across breaks.
+   */
+  rangebreaks?: Array<LayoutXaxisRangebreak>;
+  /**
    * Fraction of the plot area `[start, end]` this axis spans.
    *
    * @defaultValue `[0,1]`
@@ -614,7 +618,7 @@ export interface LayoutXaxis {
    */
   side?: 'bottom' | 'top';
   /**
-   * Draw this axis over another x axis (`'x'`, `'x2'`, …), sharing its `domain` (this axis' own `domain` is ignored), e.g. a secondary y axis with `side: 'right'`. Unset (or `free`) by default. The target must exist and must not overlay another axis itself; otherwise this is ignored. Templates cannot set it, since it names specific axes. Zoom and pan do not yet move overlaid axes together (plan E3.9).
+   * Draw this axis over another x axis (`'x'`, `'x2'`, …), sharing its `domain` (this axis' own `domain` is ignored), e.g. a secondary y axis with `side: 'right'`. Unset (or `free`) by default. The target must exist and must not overlay another axis itself; otherwise this is ignored. Templates cannot set it, since it names specific axes.
    *
    * @defaultValue `"x"`
    */
@@ -627,6 +631,40 @@ export interface LayoutXaxis {
    * @defaultValue `0`
    */
   position?: number;
+  /**
+   * y axes with `anchor: 'free'` only: move the axis sideways so it does not overlap other free axes on the same side (and default `position` to the overlaid plot's edge, `automargin` to `true`, `shift` to ∓3 px). Plotly semantics.
+   */
+  autoshift?: boolean;
+  /**
+   * y axes with `anchor: 'free'` only: extra horizontal offset in px (negative to the left). Defaults to -3 on the left and 3 on the right when `autoshift` is on, else 0.
+   */
+  shift?: number;
+  /**
+   * Link this axis' range to another axis of the same type (`'x'`, `'x2'`, `'y'`, …): they autorange together over all their data, and zoom, pan and `relayout` of one move all. The linked axes share `range`, `autorange`, `rangemode`, `rangebreaks`, `constrain` and the category order. An axis that would create a loop, or a target of another type, is ignored.
+   */
+  matches?: string;
+  /**
+   * Lock the scale (px per unit) of this axis to another axis (`'x'`, `'y2'`, …) of the same type, times `scaleratio`: `yaxis: { scaleanchor: 'x' }` keeps one unit the same length on both axes, e.g. for maps or square plots. Zooming either axis zooms the other. `false` or unset for none; ignored with `matches` or when it would create a loop.
+   */
+  scaleanchor?: unknown;
+  /**
+   * With `scaleanchor`: px per unit of this axis divided by px per unit of the anchor axis (2 makes one unit here twice as long).
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `1`
+   */
+  scaleratio?: number;
+  /**
+   * How a `scaleanchor` / `matches` constraint is met on this axis: `range` widens the range, `domain` shrinks the axis (and its subplot) inside its `domain`.
+   *
+   * @defaultValue `"range"`
+   */
+  constrain?: 'range' | 'domain';
+  /**
+   * Which end stays put when a constraint changes the range or domain: `left`/`center`/`right` for x axes (default `center`), `bottom`/`middle`/`top` for y axes (default `middle`).
+   */
+  constraintoward?: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom';
   /**
    * Draw the axis line, ticks and labels above or below the traces. Grid lines are always below.
    *
@@ -953,6 +991,38 @@ export interface LayoutXaxis {
    */
   zerolinewidth?: number;
   /**
+   * Draw a spike line from the hovered point to this axis. Defaults to `false`, or `true` when any other `spike*` attribute is set or `hovermode` is this axis' unified mode (`x unified` for x axes).
+   */
+  showspikes?: boolean;
+  /**
+   * Spike line color. Defaults to the hovered point's color (or a contrasting color when that is too close to the background).
+   */
+  spikecolor?: string;
+  /**
+   * Spike line width in px (1.5 in unified hover).
+   *
+   * @defaultValue `3`
+   */
+  spikethickness?: number;
+  /**
+   * Spike line dash (`dot` in unified hover). Dash style: `solid`, `dot`, `dash`, `longdash`, `dashdot`, `longdashdot`, or a CSS-like list of dash lengths in px (`5px,10px,2px,2px`).
+   *
+   * @defaultValue `"dash"`
+   */
+  spikedash?: string;
+  /**
+   * `toaxis`: from the point to the axis; `across`: across the whole plot area; `marker`: a dot on the axis. Combine with `+` (`across+marker`). Unified hover defaults to `across`.
+   *
+   * @defaultValue `"toaxis"`
+   */
+  spikemode?: 'toaxis' | 'across' | 'marker' | `${'toaxis' | 'across' | 'marker'}+${string}`;
+  /**
+   * `hovered data`: the spike follows the hovered point; `data`: the closest point within `spikedistance`, even when no label shows; `cursor`: the pointer position.
+   *
+   * @defaultValue `"hovered data"`
+   */
+  spikesnap?: 'data' | 'cursor' | 'hovered data';
+  /**
    * Minor ticks and grid lines between the major ticks.
    */
   minor?: LayoutXaxisMinor;
@@ -986,6 +1056,54 @@ export interface LayoutXaxisAutorangeoptions {
    * Value(s) the autorange must include (data units).
    */
   include?: unknown;
+}
+
+/**
+ * One item of `rangebreaks`.
+ *
+ * Template defaults for every item go in `rangebreakdefaults`.
+ */
+export interface LayoutXaxisRangebreak {
+  /**
+   * Whether this range break is applied.
+   *
+   * @defaultValue `true`
+   */
+  enabled?: boolean;
+  /**
+   * Set to `false` (by the template machinery) when `templateitemname` names no template break; hidden breaks are ignored like disabled ones.
+   *
+   * @defaultValue `true`
+   */
+  visible?: boolean;
+  /**
+   * Lower and upper bound of the break. Without `pattern`: values in data units (`['2024-01-06', '2024-01-08']`). With `pattern: 'day of week'`: day numbers 0–6 (Sunday = 0) or English day names (`['sat', 'mon']` hides Saturday and Sunday). With `pattern: 'hour'`: hours 0–24 (`[17, 9]` hides 17:00–09:00, wrapping past midnight). Patterns use UTC days and hours.
+   */
+  bounds?: readonly [unknown, unknown];
+  /**
+   * How `bounds` repeat: `day of week` or `hour` (date axes only), or `''` for a single span. Defaults to `day of week` when `bounds` names days, else `''`.
+   */
+  pattern?: 'day of week' | 'hour' | '';
+  /**
+   * Individual values to hide when no `bounds` are given, each hiding `[value, value + dvalue)` (e.g. holidays on a date axis).
+   */
+  values?: readonly unknown[];
+  /**
+   * Size of each break in `values`, in data units (milliseconds on date axes). Default: one day.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `86400000`
+   */
+  dvalue?: number;
+  /**
+   * Name of this rangebreak, used to reference it from a template via `templateitemname`.
+   */
+  name?: string;
+  /**
+   * Name of a template rangebreak to inherit from. If no template item matches, this rangebreak is hidden (`visible: false`).
+   */
+  templateitemname?: string;
 }
 
 /**
@@ -1279,6 +1397,10 @@ export interface LayoutYaxis {
    */
   maxallowed?: unknown;
   /**
+   * Spans hidden from the axis (plan E3.8): the axis skips them, so a weekday-only stock chart has no gaps for weekends or nights. Date and linear axes; data inside a break is not drawn. Ticks never land in a break; hover, zoom and pan work across breaks.
+   */
+  rangebreaks?: Array<LayoutYaxisRangebreak>;
+  /**
    * Fraction of the plot area `[start, end]` this axis spans.
    *
    * @defaultValue `[0,1]`
@@ -1297,7 +1419,7 @@ export interface LayoutYaxis {
    */
   side?: 'left' | 'right';
   /**
-   * Draw this axis over another y axis (`'y'`, `'y2'`, …), sharing its `domain` (this axis' own `domain` is ignored), e.g. a secondary y axis with `side: 'right'`. Unset (or `free`) by default. The target must exist and must not overlay another axis itself; otherwise this is ignored. Templates cannot set it, since it names specific axes. Zoom and pan do not yet move overlaid axes together (plan E3.9).
+   * Draw this axis over another y axis (`'y'`, `'y2'`, …), sharing its `domain` (this axis' own `domain` is ignored), e.g. a secondary y axis with `side: 'right'`. Unset (or `free`) by default. The target must exist and must not overlay another axis itself; otherwise this is ignored. Templates cannot set it, since it names specific axes.
    *
    * @defaultValue `"y"`
    */
@@ -1310,6 +1432,40 @@ export interface LayoutYaxis {
    * @defaultValue `0`
    */
   position?: number;
+  /**
+   * y axes with `anchor: 'free'` only: move the axis sideways so it does not overlap other free axes on the same side (and default `position` to the overlaid plot's edge, `automargin` to `true`, `shift` to ∓3 px). Plotly semantics.
+   */
+  autoshift?: boolean;
+  /**
+   * y axes with `anchor: 'free'` only: extra horizontal offset in px (negative to the left). Defaults to -3 on the left and 3 on the right when `autoshift` is on, else 0.
+   */
+  shift?: number;
+  /**
+   * Link this axis' range to another axis of the same type (`'x'`, `'x2'`, `'y'`, …): they autorange together over all their data, and zoom, pan and `relayout` of one move all. The linked axes share `range`, `autorange`, `rangemode`, `rangebreaks`, `constrain` and the category order. An axis that would create a loop, or a target of another type, is ignored.
+   */
+  matches?: string;
+  /**
+   * Lock the scale (px per unit) of this axis to another axis (`'x'`, `'y2'`, …) of the same type, times `scaleratio`: `yaxis: { scaleanchor: 'x' }` keeps one unit the same length on both axes, e.g. for maps or square plots. Zooming either axis zooms the other. `false` or unset for none; ignored with `matches` or when it would create a loop.
+   */
+  scaleanchor?: unknown;
+  /**
+   * With `scaleanchor`: px per unit of this axis divided by px per unit of the anchor axis (2 makes one unit here twice as long).
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `1`
+   */
+  scaleratio?: number;
+  /**
+   * How a `scaleanchor` / `matches` constraint is met on this axis: `range` widens the range, `domain` shrinks the axis (and its subplot) inside its `domain`.
+   *
+   * @defaultValue `"range"`
+   */
+  constrain?: 'range' | 'domain';
+  /**
+   * Which end stays put when a constraint changes the range or domain: `left`/`center`/`right` for x axes (default `center`), `bottom`/`middle`/`top` for y axes (default `middle`).
+   */
+  constraintoward?: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom';
   /**
    * Draw the axis line, ticks and labels above or below the traces. Grid lines are always below.
    *
@@ -1636,6 +1792,38 @@ export interface LayoutYaxis {
    */
   zerolinewidth?: number;
   /**
+   * Draw a spike line from the hovered point to this axis. Defaults to `false`, or `true` when any other `spike*` attribute is set or `hovermode` is this axis' unified mode (`x unified` for x axes).
+   */
+  showspikes?: boolean;
+  /**
+   * Spike line color. Defaults to the hovered point's color (or a contrasting color when that is too close to the background).
+   */
+  spikecolor?: string;
+  /**
+   * Spike line width in px (1.5 in unified hover).
+   *
+   * @defaultValue `3`
+   */
+  spikethickness?: number;
+  /**
+   * Spike line dash (`dot` in unified hover). Dash style: `solid`, `dot`, `dash`, `longdash`, `dashdot`, `longdashdot`, or a CSS-like list of dash lengths in px (`5px,10px,2px,2px`).
+   *
+   * @defaultValue `"dash"`
+   */
+  spikedash?: string;
+  /**
+   * `toaxis`: from the point to the axis; `across`: across the whole plot area; `marker`: a dot on the axis. Combine with `+` (`across+marker`). Unified hover defaults to `across`.
+   *
+   * @defaultValue `"toaxis"`
+   */
+  spikemode?: 'toaxis' | 'across' | 'marker' | `${'toaxis' | 'across' | 'marker'}+${string}`;
+  /**
+   * `hovered data`: the spike follows the hovered point; `data`: the closest point within `spikedistance`, even when no label shows; `cursor`: the pointer position.
+   *
+   * @defaultValue `"hovered data"`
+   */
+  spikesnap?: 'data' | 'cursor' | 'hovered data';
+  /**
    * Minor ticks and grid lines between the major ticks.
    */
   minor?: LayoutYaxisMinor;
@@ -1669,6 +1857,54 @@ export interface LayoutYaxisAutorangeoptions {
    * Value(s) the autorange must include (data units).
    */
   include?: unknown;
+}
+
+/**
+ * One item of `rangebreaks`.
+ *
+ * Template defaults for every item go in `rangebreakdefaults`.
+ */
+export interface LayoutYaxisRangebreak {
+  /**
+   * Whether this range break is applied.
+   *
+   * @defaultValue `true`
+   */
+  enabled?: boolean;
+  /**
+   * Set to `false` (by the template machinery) when `templateitemname` names no template break; hidden breaks are ignored like disabled ones.
+   *
+   * @defaultValue `true`
+   */
+  visible?: boolean;
+  /**
+   * Lower and upper bound of the break. Without `pattern`: values in data units (`['2024-01-06', '2024-01-08']`). With `pattern: 'day of week'`: day numbers 0–6 (Sunday = 0) or English day names (`['sat', 'mon']` hides Saturday and Sunday). With `pattern: 'hour'`: hours 0–24 (`[17, 9]` hides 17:00–09:00, wrapping past midnight). Patterns use UTC days and hours.
+   */
+  bounds?: readonly [unknown, unknown];
+  /**
+   * How `bounds` repeat: `day of week` or `hour` (date axes only), or `''` for a single span. Defaults to `day of week` when `bounds` names days, else `''`.
+   */
+  pattern?: 'day of week' | 'hour' | '';
+  /**
+   * Individual values to hide when no `bounds` are given, each hiding `[value, value + dvalue)` (e.g. holidays on a date axis).
+   */
+  values?: readonly unknown[];
+  /**
+   * Size of each break in `values`, in data units (milliseconds on date axes). Default: one day.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `86400000`
+   */
+  dvalue?: number;
+  /**
+   * Name of this rangebreak, used to reference it from a template via `templateitemname`.
+   */
+  name?: string;
+  /**
+   * Name of a template rangebreak to inherit from. If no template item matches, this rangebreak is hidden (`visible: false`).
+   */
+  templateitemname?: string;
 }
 
 /**

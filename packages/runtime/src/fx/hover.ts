@@ -207,7 +207,17 @@ export class HoverFinder {
         const first = this.found[0] as Found;
         this.found[0] = winner;
         this.found[best] = first;
-        this.count = 1;
+        let kept = 1;
+        // A multi-label hover (box statistics) keeps the winner's companions from its trace.
+        if (winner.point.multi === true) {
+          for (let i = 1; i < this.count; i++) {
+            const f = this.found[i] as Found;
+            if (f.entry !== winner.entry || f.point.multi !== true) continue;
+            this.found[i] = this.found[kept] as Found;
+            this.found[kept++] = f;
+          }
+        }
+        this.count = kept;
       }
     }
     return this.#commit();
@@ -532,7 +542,7 @@ export function labelText(
     // The trace built its own lines from its `hoverinfo` flags (pie: label, value, percent; a
     // scatter fill: its text or name). The name box is left out when it would repeat the label.
     const extra =
-      flags.has('name') && showName && p.hoverText !== name
+      flags.has('name') && showName && p.showName !== false && p.hoverText !== name
         ? truncateName(name, style.namelength)
         : undefined;
     return { text: p.hoverText, extra };

@@ -3,17 +3,15 @@
  * `plotly.subplots.make_subplots`. Pure: it returns layout axes (and title annotations) to spread
  * into a figure's layout, plus a `place` helper that points a trace at a cell.
  *
- * Deviations from Python, until linked axes (`matches`, plan E3.9) exist:
+ * Deviations from Python:
  *
- * - Shared axes are ONE axis rather than several axes linked with `matches`. `sharedX` gives
- *   every `'xy'` cell of a column the same x axis, anchored to the bottom-most cell's y axis (so
- *   tick labels show only at the bottom, and zoom/pan ranges are shared because it is one axis);
- *   `sharedY` does the same per row, anchored to the left-most cell. One axis has one domain, so
- *   cells can only share when they have the same extent along it: a spanning cell in a shared
- *   column (row) keeps its own axis, and sharing x across a row (`sharedX: 'rows'`, or `'all'`
- *   over several columns; likewise for y) throws.
- * - Secondary y axes (`secondaryY`) overlay their cell's y axis, but zoom and pan do not move them
- *   together yet.
+ * - Cells of the same extent that share an axis share ONE axis rather than several axes linked
+ *   with `matches`. `sharedX` gives every `'xy'` cell of a column the same x axis, anchored to the
+ *   bottom-most cell's y axis (so tick labels show only at the bottom, and zoom/pan ranges are
+ *   shared because it is one axis); `sharedY` does the same per row, anchored to the left-most
+ *   cell. One axis has one domain, so cells of different extents that share (`sharedX: 'rows'` or
+ *   `'all'`, likewise for y) get one axis per extent, linked to the first one with `matches`
+ *   (E3.9) as in Python. A spanning cell in a shared column (row) keeps its own, unlinked axis.
  * - Only `'xy'` and `'domain'` cells are supported; other subplot types throw an error naming the
  *   plan story that adds them.
  */
@@ -253,6 +251,8 @@ interface Group {
   first: SubplotCell;
   /** The cell whose counter axis anchors this axis (bottom-most for x, left-most for y). */
   anchorCell: SubplotCell;
+  /** Sharing across extents: the group whose axis this one `matches`. */
+  matchOf?: Group;
 }
 
 /**
@@ -265,12 +265,12 @@ interface Group {
  * and y to its x. `specs` can span cells (`colspan`, `rowspan`; the covered cells must be `null`),
  * pad them (`l`, `r`, `t`, `b`), leave them empty (`null`) or make them `'domain'` cells.
  *
- * Shared axes are one axis, not Python's `matches`-linked axes (linked axes are plan E3.9):
+ * Cells of the same extent share one axis rather than Python's `matches`-linked axes:
  * `sharedX: true | 'columns'` gives each column one x axis, drawn under its bottom-most subplot;
- * `sharedY: true | 'rows'` gives each row one y axis, drawn left of its left-most subplot. Only
- * cells of the same extent along the shared axis can share it: a spanning cell in a shared column
- * (row) keeps its own axis, and `sharedX: 'rows'` / `sharedY: 'columns'`, or `'all'` over cells of
- * different extents, throw.
+ * `sharedY: true | 'rows'` gives each row one y axis, drawn left of its left-most subplot. Cells of
+ * different extents that share (`sharedX: 'rows'` / `sharedY: 'columns'`, or `'all'`) get one axis
+ * per extent, linked with `matches` to the first (E3.9). A spanning cell in a shared column (row)
+ * keeps its own axis.
  *
  * @example
  * ```ts
@@ -412,7 +412,12 @@ export function makeSubplots(options: MakeSubplotsOptions = {}): MakeSubplotsRes
   const ordered = [...axes].sort(([, a], [, b]) => axisOrder(a) - axisOrder(b));
   for (const [group, id] of ordered) {
     const counter = id.charAt(0) === 'x' ? group.anchorCell.yaxis : group.anchorCell.xaxis;
-    layout[axisKey(id)] = { domain: [...group.extent], anchor: counter };
+    const matches = group.matchOf ? axes.get(group.matchOf) : undefined;
+    layout[axisKey(id)] = {
+      domain: [...group.extent],
+      anchor: counter,
+      ...(matches !== undefined ? { matches } : {}),
+    };
   }
   for (const [cell, id] of secondaries) {
     layout[axisKey(id)] = { anchor: cell.xaxis, overlaying: cell.yaxis, side: 'right' };
@@ -509,7 +514,8 @@ function keyOrder(key: string): number {
 
 /**
  * Group the `'xy'` cells that share one `letter` axis. Without sharing every cell is its own
- * group; with it, all cells of a group must have the same extent along the axis.
+ * group; with it, the cells of a sharing key with the same extent along the axis form a group, and
+ * the groups of other extents under the same key `matches` the key's first group.
  */
 function shareGroups(
   letter: 'x' | 'y',
@@ -517,8 +523,7 @@ function shareGroups(
   mode: 'columns' | 'rows' | 'all' | undefined,
 ): Map<SubplotCell, Group> {
   const byCell = new Map<SubplotCell, Group>();
-  const byKey = new Map<string, Group>();
-  const option = letter === 'x' ? 'sharedX' : 'sharedY';
+  const byKey = new Map<string, Group[]>();
   for (const cell of xyCells) {
     const extent = cell.domain[letter];
     // Along the natural direction (x per column, y per row) a spanning cell simply gets its own
@@ -532,17 +537,14 @@ function shareGroups(
           : mode === 'columns'
             ? `c${cell.col}${natural ? `|${extent.join(',')}` : ''}`
             : `r${cell.row}${natural ? `|${extent.join(',')}` : ''}`;
-    let group = byKey.get(key);
+    const list = byKey.get(key) ?? [];
+    byKey.set(key, list);
+    let group = list.find((g) => sameExtent(g.extent, extent));
     if (!group) {
-      group = { extent, first: cell, anchorCell: cell };
-      byKey.set(key, group);
+      // A new extent under a shared key: its own axis, linked to the key's first one.
+      group = { extent, first: cell, anchorCell: cell, ...(list[0] ? { matchOf: list[0] } : {}) };
+      list.push(group);
     } else {
-      if (!sameExtent(group.extent, extent)) {
-        const a = group.first;
-        fail(
-          `${option}: the subplots at (row ${a.row}, col ${a.col}) and (row ${cell.row}, col ${cell.col}) have different ${letter} extents, so they cannot share one ${letter} axis. Sharing across different extents needs linked axes (\`matches\`, plan E3.9); share ${letter === 'x' ? "per column (sharedX: true | 'columns')" : "per row (sharedY: true | 'rows')"} between cells of the same ${letter === 'x' ? 'width' : 'height'}.`,
-        );
-      }
       // x axes sit under the bottom-most subplot of the group; y axes left of the left-most.
       const current = group.anchorCell.domain;
       if (letter === 'x' ? cell.domain.y[0] < current.y[0] : cell.domain.x[0] < current.x[0]) {

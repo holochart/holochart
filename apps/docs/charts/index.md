@@ -32,20 +32,20 @@ types are added as their traces land.
 
 ## Statistical
 
-| Chart                | Trace type(s)                                   | Milestone |
-| -------------------- | ----------------------------------------------- | --------- |
-| Histogram            | `histogram`                                     | M3        |
-| 2D Histogram         | `histogram2d`                                   | M3        |
-| Density Contour      | `histogram2dcontour`                            | M3        |
-| Box                  | `box`                                           | M3        |
-| Violin               | `violin`                                        | M3        |
-| Strip                | `box` (points only, with a helper)              | M3        |
-| ECDF                 | `scatter` (via a helper)                        | M3        |
-| Distplot             | `histogram`, `scatter` (via a helper)           | M3        |
-| Marginals            | `histogram`, `box`, `violin` on linked subplots | M3        |
-| SPLOM                | `splom`                                         | M3        |
-| Parallel Coordinates | `parcoords`                                     | M3        |
-| Parallel Categories  | `parcats`                                       | M3        |
+| Chart                                                      | Trace type(s)                                   | Milestone |
+| ---------------------------------------------------------- | ----------------------------------------------- | --------- |
+| [Histogram](/charts/statistical/histogram)                 | `histogram`                                     | M3        |
+| [2D Histogram](/charts/statistical/histogram2d)            | `histogram2d`                                   | M3        |
+| [Density Contour](/charts/statistical/histogram2d-contour) | `histogram2dcontour`                            | M3        |
+| [Box](/charts/statistical/box)                             | `box`                                           | M3        |
+| [Violin](/charts/statistical/violin)                       | `violin`                                        | M3        |
+| [Strip](/charts/statistical/strip)                         | `box` (points only, with a helper)              | M3        |
+| ECDF                                                       | `scatter` (via a helper)                        | M3        |
+| Distplot                                                   | `histogram`, `scatter` (via a helper)           | M3        |
+| Marginals                                                  | `histogram`, `box`, `violin` on linked subplots | M3        |
+| SPLOM                                                      | `splom`                                         | M3        |
+| Parallel Coordinates                                       | `parcoords`                                     | M3        |
+| Parallel Categories                                        | `parcats`                                       | M3        |
 
 ## Scientific
 

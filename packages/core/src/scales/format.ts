@@ -7,12 +7,16 @@
  * step, anchor and rounding Plotly's `prepTicks` / `autoTicks` compute) lives here too, which keeps
  * `formatValue` self-contained; `ticks.ts` builds on it to place the ticks.
  *
+ * On axes with range breaks, the spec and labels are computed in raw space (`rawScale`), as Plotly
+ * does; formatters take linear (compressed) values and expand them before formatting.
+ *
  * Everything is en-US and UTC: `.` decimal point, `,` thousands, `−` (U+2212) for negatives,
  * d3-time-format in UTC. Locales and display time zones are later stories.
  */
 import { format as d3Format } from 'd3-format';
 import { utcFormat } from 'd3-time-format';
 import type { FullAxis } from '../defaults/types.ts';
+import { rawRange, rawScale } from './breaks.ts';
 import {
   dateTick0,
   EPOCH_2000,
@@ -156,6 +160,8 @@ export const ROUND_BASE_10: readonly number[] = [2, 5, 10];
 const ROUND_BASE_24: readonly number[] = [1, 2, 3, 6, 12];
 const ROUND_BASE_60: readonly number[] = [1, 2, 5, 10, 15, 30];
 const ROUND_DAYS: readonly number[] = [1, 2, 3, 7, 14];
+/** Day steps with `day of week` range breaks (a 3-day step would wander through the week). */
+const ROUND_DAYS_DOW_BREAKS: readonly number[] = [1, 2, 7, 14];
 /** log10 of 0.9 (a hair below, for reversed axes), 1 … 10: the `D1` tick positions in a decade. */
 export const ROUND_LOG_1: readonly number[] = [
   -0.046, 0, 0.301, 0.477, 0.602, 0.699, 0.778, 0.845, 0.903, 0.954, 1,
@@ -334,6 +340,8 @@ export interface AutoTicksOptions {
   isMinor?: boolean;
   /** The tick format; `%u`, `%V`, `%W` move day-based ticks to Mondays. */
   tickformat?: string;
+  /** Date axes with `day of week` range breaks: day steps round to 1, 2, 7 or 14 days. */
+  dayOfWeekBreaks?: boolean;
 }
 
 /** Result of {@link autoTicks}. */
@@ -370,7 +378,11 @@ export function autoTicks(
       rough /= ONEAVGMONTH;
       dtick = `M${roundDTick(rough, 1, ROUND_BASE_24)}`;
     } else if (roughX2 > ONEDAY) {
-      dtick = roundDTick(rough, ONEDAY, ROUND_DAYS);
+      dtick = roundDTick(
+        rough,
+        ONEDAY,
+        options.dayOfWeekBreaks === true ? ROUND_DAYS_DOW_BREAKS : ROUND_DAYS,
+      );
       if (options.isMinor !== true) {
         // Week ticks on Sundays (Mondays for ISO-week formats). This also moves 2- and 3-day
         // ticks off 2000-01-01, which Plotly accepts as harmless.
@@ -589,6 +601,11 @@ export interface TickSpecOptions {
   /** Linear range to fit the ticks to; default `scale.range`. */
   range?: readonly [number, number];
   /**
+   * Round day steps as with `day of week` range breaks (see {@link AutoTicksOptions}). Default:
+   * `scale.breaks?.hasDayOfWeek` — pass it explicitly when `scale` is already a `rawScale`.
+   */
+  dayOfWeekBreaks?: boolean;
+  /**
    * Array-mode majors: estimate label precision from 100× more ticks than auto would draw, so
    * `tickvals` without `ticktext` get enough digits (Plotly skips this when minor ticks are
    * auto). Default true.
@@ -600,8 +617,20 @@ export interface TickSpecOptions {
  * Plotly's `prepTicks`: resolve the step (`dtick`), anchor (`tick0`) and label rounding of an
  * axis. Auto mode aims for `nticks` ticks, or one per 80 px (x) / 40 px (y) clamped to 5–10, or one
  * per `1.2 × tickfont.size` px on category axes. Never mutates `axis`.
+ *
+ * With range breaks, the spec is that of the raw scale (`rawScale`; `options.range` is converted
+ * to raw too), so `tick0` and steps are raw values, as in Plotly.
  */
 export function tickSpec(scale: Scale, axis: FullAxis, options: TickSpecOptions = {}): TickSpec {
+  const breaks = scale.breaks;
+  if (breaks !== undefined) {
+    const r = options.range;
+    return tickSpec(rawScale(scale), axis, {
+      ...options,
+      range: r === undefined ? undefined : rawRange(breaks, r),
+      dayOfWeekBreaks: options.dayOfWeekBreaks ?? breaks.hasDayOfWeek,
+    });
+  }
   const o = tickOptions(axis);
   const type = scale.type;
   const isMinor = options.minor === true;
@@ -634,6 +663,7 @@ export function tickSpec(scale: Scale, axis: FullAxis, options: TickSpecOptions 
         range,
         isMinor,
         tickformat: getTickFormat(o, type, userDtick),
+        dayOfWeekBreaks: options.dayOfWeekBreaks === true,
       });
       dtick = r.dtick;
       tick0 = r.tick0;
@@ -893,11 +923,12 @@ const NEXT_ROUND: Record<string, TickRound> = { y: 'm', m: 'd', d: 'M', M: 'S', 
  */
 export interface TickFormatter {
   /**
-   * Label the value `l` (linear space). `hover` gives the one-line hover form with extra precision;
+   * Label the value `l` (linear space; on rangebreaks axes the compressed value, expanded to raw
+   * before formatting). `hover` gives the one-line hover form with extra precision;
    * `noSuffixPrefix` leaves out `tickprefix` / `ticksuffix`.
    */
   label(l: number, hover?: boolean, noSuffixPrefix?: boolean): TickLabel;
-  /** First / last major tick, for `show*: 'first' | 'last'`. */
+  /** First / last major tick (linear space), for `show*: 'first' | 'last'`. */
   first: number | undefined;
   last: number | undefined;
   /** Head of the last date label that showed one (Plotly `_prevDateHead`). */
@@ -908,12 +939,52 @@ export interface TickFormatter {
 
 /**
  * Create the label formatter of an axis for a tick spec (default: the axis' current auto spec).
+ * On rangebreaks axes it formats on the raw scale and takes linear (compressed) values, so hover
+ * and tick callers need no conversion.
  */
 export function createTickFormatter(
   scale: Scale,
   axis: FullAxis,
   spec: TickSpec = tickSpec(scale, axis),
 ): TickFormatter {
+  const breaks = scale.breaks;
+  if (breaks === undefined) return rawTickFormatter(scale, axis, spec);
+  const inner = rawTickFormatter(rawScale(scale), axis, spec);
+  let first: number | undefined;
+  let last: number | undefined;
+  return {
+    label: (l, hover, noSuffixPrefix) => inner.label(breaks.toRaw(l), hover, noSuffixPrefix),
+    get first() {
+      return first;
+    },
+    set first(l) {
+      first = l;
+      inner.first = l === undefined ? undefined : breaks.toRaw(l);
+    },
+    get last() {
+      return last;
+    },
+    set last(l) {
+      last = l;
+      inner.last = l === undefined ? undefined : breaks.toRaw(l);
+    },
+    get prevDateHead() {
+      return inner.prevDateHead;
+    },
+    set prevDateHead(v) {
+      inner.prevDateHead = v;
+    },
+    get inCalcTicks() {
+      return inner.inCalcTicks;
+    },
+    set inCalcTicks(v) {
+      inner.inCalcTicks = v;
+    },
+  };
+}
+
+/** The formatter of a scale without breaks (values are formatted as they are). */
+function rawTickFormatter(scale: Scale, axis: FullAxis, spec: TickSpec): TickFormatter {
   const o = tickOptions(axis);
   const type = scale.type;
 
@@ -1097,7 +1168,8 @@ export function createTickFormatter(
  * Format one value of an axis for display — the hover-label helper (Plotly's `hoverLabelText` /
  * `tickText(ax, x, 'hover')`). With `forHover`, uses `hoverformat` (else the tick format with
  * extra precision: `4.1235`, `Jan 5, 2026, 12:30`), writes date heads on the same line and never
- * hides the exponent; without, gives the tick label of `l`. Non-finite values give `''`.
+ * hides the exponent; without, gives the tick label of `l`. Non-finite values give `''`. On
+ * rangebreaks axes `l` is the compressed linear value (as from `d2l`); it is expanded first.
  *
  * `spec` defaults to the axis' current tick spec; pass the one from a tick pass to skip
  * recomputing it.

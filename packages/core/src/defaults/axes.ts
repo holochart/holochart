@@ -12,7 +12,17 @@
  * - `tickmode` → `array` with `tickvals`, `linear` with `dtick`, else `auto` (same for `minor`);
  * - `categoryorder` → `array` with a `categoryarray`, else `trace`;
  * - `ticklabeloverflow` → by `ticklabelposition`; `minor.*` styles → the major ones;
- * - `dtick`/`tick0` of linear tick modes are validated per axis type.
+ * - `dtick`/`tick0` of linear tick modes are validated per axis type;
+ * - spikes (E3.10): `showspikes` → `true` when `hovermode` is this letter's unified mode or any
+ *   other `spike*` attribute is set; in unified hover (either letter, as Plotly) `spikecolor` →
+ *   `color`, `spikethickness` → 1.5, `spikedash` → `dot`, `spikemode` → `across`;
+ * - `anchor` → `free` when the user gives a numeric `position` (and no grid places the axis);
+ * - free y axes (`anchor: 'free'`, Plotly `position_defaults`): `autoshift` → `false`; with
+ *   `autoshift`, `position` → the edge of the overlaid axis' anchor axis domain on this `side`,
+ *   `automargin` → `true`, `shift` → ∓3; `shift` → 0 otherwise. `autoshift`/`shift` are unset
+ *   on every other axis;
+ * - linked axes and constraints (`matches`, `scaleanchor`, `constraintoward`, E3.9):
+ *   `defaults/constraints.ts`.
  *
  * Every rule reads the resolved input the same way it writes it, so the output fed back in is a
  * fixed point (supply-defaults idempotence).
@@ -31,6 +41,7 @@ import {
 } from '../schema/walk.ts';
 import type { AttrSpec, ObjectNode } from '../schema/types.ts';
 import { isPlainObject } from '../util/objects.ts';
+import { supplyAxisConstraints } from './constraints.ts';
 import { coerceContainer, resolveWithTemplate } from './container.ts';
 import type { FullAxis, FullLayout, FullTrace, Subplots } from './types.ts';
 
@@ -229,8 +240,35 @@ function rangeAutorange(range: unknown, reversed: boolean): unknown {
   return true;
 }
 
+const SPIKE_STYLE = ['spikecolor', 'spikethickness', 'spikedash', 'spikemode', 'spikesnap'];
+
+/**
+ * Spike defaults (Plotly `layout_defaults`): unified hover restyles spikes on every axis, and
+ * turns them on for its own letter; setting any spike style turns them on too.
+ */
+function spikeDefaults(
+  resolve: Resolver,
+  hovermode: unknown,
+  letter: 'x' | 'y',
+  color: string,
+): Record<string, unknown> {
+  const unified = hovermode === 'x unified' || hovermode === 'y unified';
+  // `null` default: only a valid user or template value counts as set.
+  const styled = SPIKE_STYLE.some((k) => resolve(k, null) !== undefined);
+  return {
+    showspikes: hovermode === `${letter} unified` || styled,
+    ...(unified
+      ? { spikecolor: color, spikethickness: 1.5, spikedash: 'dot', spikemode: 'across' }
+      : {}),
+  };
+}
+
 /** Defaults of one axis that depend on other attributes (see the module comment). */
-function dependentDefaults(resolve: Resolver, fullLayout: FullLayout): Record<string, unknown> {
+function dependentDefaults(
+  resolve: Resolver,
+  fullLayout: FullLayout,
+  letter: 'x' | 'y',
+): Record<string, unknown> {
   const font = fullLayout.font;
   const color = resolve('color') as string;
   const baseColor = canonicalColor('#444');
@@ -263,6 +301,7 @@ function dependentDefaults(resolve: Resolver, fullLayout: FullLayout): Record<st
     'minor.gridcolor': mixColors(gridcolor, fullLayout.plot_bgcolor, 0.5),
     'minor.gridwidth': resolve('gridwidth'),
     'minor.griddash': resolve('griddash'),
+    ...spikeDefaults(resolve, fullLayout.hovermode, letter, color),
   };
   for (const [prefix, scale] of [
     ['tickfont', 1],
@@ -355,6 +394,59 @@ function supplyOverlaying(
   }
 }
 
+/** fast-isnumeric: a finite number or a numeric string. */
+function isNumeric(v: unknown): boolean {
+  if (typeof v === 'number') return Number.isFinite(v);
+  if (typeof v !== 'string' || v.trim() === '') return false;
+  return Number.isFinite(Number(v));
+}
+
+/**
+ * Free-axis defaults (Plotly `position_defaults`, see the module comment). Runs after every axis
+ * is coerced and `overlaying` resolved: the `autoshift` position default reads the domain of the
+ * x axis the overlaid y axis is anchored to.
+ */
+function supplyFreeAxes(
+  fullLayout: FullLayout,
+  subplots: Subplots,
+  resolvers: ReadonlyMap<string, Resolver>,
+): void {
+  const unset = (ax: FullAxis): void => {
+    delete (ax as { autoshift?: unknown }).autoshift;
+    delete (ax as { shift?: unknown }).shift;
+  };
+  for (const id of subplots.xaxis) unset(fullLayout[keyForSubplotId(id, 'xaxis', 'x')] as FullAxis);
+  for (const id of subplots.yaxis) {
+    const ax = fullLayout[keyForSubplotId(id, 'yaxis', 'y')] as FullAxis;
+    const resolve = resolvers.get(id);
+    if (ax.anchor !== 'free' || !resolve) {
+      unset(ax);
+      continue;
+    }
+    const autoshift = resolve('autoshift', false) === true;
+    ax.autoshift = autoshift;
+    if (!autoshift) {
+      ax.shift = resolve('shift', 0) as number;
+      continue;
+    }
+    let domain: readonly number[] = [0, 1];
+    const target = ax.overlaying;
+    if (target !== undefined && target !== 'free') {
+      const base = fullLayout[keyForSubplotId(target, 'yaxis', 'y')] as FullAxis | undefined;
+      const anchor = base?.anchor;
+      if (anchor !== undefined && anchor !== 'free') {
+        const x = fullLayout[keyForSubplotId(anchor, 'xaxis', 'x')] as FullAxis | undefined;
+        if (x) domain = x.domain;
+      }
+    }
+    // FullAxis is typed from the x axis schema; y axes have left/right sides.
+    const left = (ax.side as string) === 'left';
+    ax.position = resolve('position', domain[left ? 0 : 1]) as number;
+    ax.automargin = resolve('automargin', true) as FullAxis['automargin'];
+    ax.shift = resolve('shift', left ? -3 : 3) as number;
+  }
+}
+
 /**
  * Discover cartesian subplots and coerce one axis per id into `fullLayout`.
  * Returns the `_subplots` registry.
@@ -410,6 +502,7 @@ export function supplyCartesianAxes(
   subplots.xaxis.sort(byId);
   subplots.yaxis.sort(byId);
   const extra = axisOverrides?.(subplots);
+  const resolvers = new Map<string, Resolver>();
 
   for (const letter of ['x', 'y'] as const) {
     const family = `${letter}axis`;
@@ -429,6 +522,7 @@ export function supplyCartesianAxes(
           dflt === undefined ? spec.dflt : dflt,
         );
       };
+      resolvers.set(id, resolve);
       const ax = coerceContainer(
         node,
         axIn,
@@ -436,10 +530,13 @@ export function supplyCartesianAxes(
         {
           template: tmpl,
           overrides: {
-            anchor: counterpart[letter].get(id) ?? other,
+            // A numeric `position` only means something on a free axis (Plotly).
+            anchor: isNumeric(getIn(axIn, 'position'))
+              ? 'free'
+              : (counterpart[letter].get(id) ?? other),
             // Unset unless the user sets it (see supplyOverlaying).
             overlaying: null,
-            ...dependentDefaults(resolve, fullLayout),
+            ...dependentDefaults(resolve, fullLayout, letter),
             ...extra?.get(id),
           },
         },
@@ -467,5 +564,12 @@ export function supplyCartesianAxes(
       overlaying?.kind === 'attr' ? overlaying : undefined,
     );
   }
+  supplyFreeAxes(fullLayout, subplots, resolvers);
+  supplyAxisConstraints(
+    layoutIn,
+    fullLayout,
+    [...subplots.xaxis, ...subplots.yaxis],
+    templateLayout,
+  );
   return subplots;
 }

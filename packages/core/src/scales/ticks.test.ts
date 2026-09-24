@@ -1,8 +1,11 @@
+import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { coerceContainer } from '../defaults/container.ts';
 import type { FullAxis } from '../defaults/types.ts';
 import { xaxisSchema, yaxisSchema } from '../layout/schema.ts';
 import type { ObjectNode } from '../schema/types.ts';
+import { createBreakMap } from './breaks.ts';
+import type { BreakMap, RangeBreakInput } from './breaks.ts';
 import { EPOCH_2000, ONEDAY, ONEHOUR } from './date-math.ts';
 import { MINUS_SIGN } from './format.ts';
 import { createScale } from './scale.ts';
@@ -887,5 +890,210 @@ describe('helpers', () => {
     expect(iso(tickFirst(d, { dtick: 'M1', tick0: utc(2030) }))).toBe('2020-03-01T00:00:00.000Z');
     // Does not converge in 10 jumps for absurd spans: returns the last estimate.
     expect(Number.isFinite(tickFirst(d, { dtick: 'M1', tick0: utc(-200000) }))).toBe(true);
+  });
+});
+
+describe('computeTicks with range breaks', () => {
+  const WEEKENDS: RangeBreakInput = { bounds: ['sat', 'mon'] };
+  const NIGHTS: RangeBreakInput = { bounds: [17, 9], pattern: 'hour' };
+
+  function breakMap(input: RangeBreakInput[], type: 'date' | 'linear' = 'date'): BreakMap {
+    const b = createBreakMap(input, type);
+    if (b === undefined) throw new Error('expected breaks');
+    return b;
+  }
+
+  /** Ticks of an axis with breaks over a raw range (data values). */
+  function breakTicks(
+    b: BreakMap,
+    type: 'date' | 'linear',
+    raw: readonly [unknown, unknown],
+    length: number,
+    input: Record<string, unknown> = {},
+    id = 'x',
+  ): { ticks: Tick[]; raw: (l: number) => number; l: (v: unknown) => number } {
+    const s = createScale({ type, breaks: b, length });
+    s.setRange(s.r2l(raw[0]), s.r2l(raw[1]));
+    return {
+      ticks: computeTicks(s, axis(input, id)),
+      raw: (l) => b.toRaw(l),
+      l: (v) => s.r2l(v),
+    };
+  }
+
+  it('moves ticks out of weekends and labels them where they land (weekday stock chart)', () => {
+    const b = breakMap([WEEKENDS]);
+    const { ticks: t, raw } = breakTicks(b, 'date', ['2024-01-02', '2024-04-01'], 800);
+    // Two-week steps on Sundays (Plotly's tick0 for day steps), each moved to the Monday.
+    expect(texts(t)).toEqual(['Jan 15<br>2024', 'Jan 29', 'Feb 12', 'Feb 26', 'Mar 11', 'Mar 25']);
+    for (const x of majors(t)) {
+      expect(new Date(raw(x.l)).getUTCDay()).toBe(1);
+      expect(new Date(raw(x.l)).getUTCHours()).toBe(0);
+    }
+    expect(values(t)).toEqual(
+      ['2024-01-15', '2024-01-29', '2024-02-12', '2024-02-26', '2024-03-11', '2024-03-25'].map(
+        (d) => b.toLinear(Date.parse(`${d}T00:00Z`)),
+      ),
+    );
+  });
+
+  it('rounds day steps to 1, 2, 7 or 14 days with day-of-week breaks', () => {
+    // 11 ticks over 28 raw days: a rough 2.5-day step, which becomes a week (not 3 days).
+    const b = breakMap([WEEKENDS]);
+    const { ticks: t, raw } = breakTicks(b, 'date', ['2024-01-01', '2024-01-29'], 800);
+    const r = majors(t).map((x) => raw(x.l));
+    for (let i = 1; i < r.length; i++)
+      expect((r[i] as number) - (r[i - 1] as number)).toBe(7 * ONEDAY);
+    // Without day-of-week breaks the same span gets 3-day ticks.
+    const plain = ticks('date', [utc(2024), utc(2024, 1, 29)], 800);
+    expect((values(plain)[1] as number) - (values(plain)[0] as number)).toBe(3 * ONEDAY);
+  });
+
+  it('ticks an intraday chart (weekends and nights) over a week', () => {
+    const b = breakMap([WEEKENDS, NIGHTS]);
+    const { ticks: t, raw } = breakTicks(b, 'date', ['2024-01-08 09:00', '2024-01-12 17:00'], 800);
+    expect(texts(t)).toEqual([
+      '12:00<br>Jan 8, 2024',
+      '09:00<br>Jan 9, 2024',
+      '12:00',
+      '09:00<br>Jan 10, 2024',
+      '12:00',
+      '09:00<br>Jan 11, 2024',
+      '12:00',
+      '09:00<br>Jan 12, 2024',
+      '12:00',
+    ]);
+    // Midnight ticks moved to 09:00 (the end of the night break).
+    expect(new Date(raw((majors(t)[1] as Tick).l)).toISOString()).toBe('2024-01-09T09:00:00.000Z');
+    for (const x of majors(t)) expect(b.inBreak(raw(x.l))).toBe(false);
+  });
+
+  it('drops duplicates and moved ticks past the range end (explicit daily ticks)', () => {
+    const b = breakMap([WEEKENDS]);
+    const { ticks: t, raw } = breakTicks(b, 'date', ['2024-01-01', '2024-01-20'], 800, {
+      tickmode: 'linear',
+      dtick: ONEDAY,
+      tick0: '2024-01-01',
+      tickformat: '%a %d',
+    });
+    expect(texts(t)).toEqual([
+      'Mon 01', 'Tue 02', 'Wed 03', 'Thu 04', 'Fri 05',
+      'Mon 08', 'Tue 09', 'Wed 10', 'Thu 11', 'Fri 12',
+      'Mon 15', 'Tue 16', 'Wed 17', 'Thu 18', 'Fri 19',
+    ]); // prettier-ignore
+    const r = majors(t).map((x) => raw(x.l));
+    expect(new Set(r).size).toBe(r.length);
+  });
+
+  it('labels moved ticks from their new value and drops crowded ones in auto mode', () => {
+    // Linear axis, [10, 18) hidden: raw 0…40 is 32 linear units on 64 px (2 px per unit).
+    const b = breakMap([{ bounds: [10, 18] }], 'linear');
+    const auto = breakTicks(b, 'linear', [0, 40], 64);
+    // Raw ticks 0, 10, 20, 30, 40; 10 moves to 18, only 4 px before 20: dropped (12 px font).
+    expect(texts(auto.ticks)).toEqual(['0', '20', '30', '40']);
+    expect(values(auto.ticks)).toEqual([0, 12, 22, 32]);
+    // y axes too (Plotly 3: one tickfont.size on either axis).
+    expect(texts(breakTicks(b, 'linear', [0, 40], 64, {}, 'y').ticks)).toEqual([
+      '0',
+      '20',
+      '30',
+      '40',
+    ]);
+    // Explicit steps only drop ticks sharing a pixel: the moved one is labelled 18.
+    const linear = breakTicks(b, 'linear', [0, 40], 64, { tickmode: 'linear', dtick: 10 });
+    expect(texts(linear.ticks)).toEqual(['0', '18', '20', '30', '40']);
+    expect(values(linear.ticks)).toEqual([0, 10, 12, 22, 32]);
+    // Reversed: same ticks in range order.
+    const rev = breakTicks(b, 'linear', [40, 0], 64);
+    expect(texts(rev.ticks)).toEqual(['40', '30', '20', '0']);
+  });
+
+  it('drops tickvals and minor ticks inside breaks', () => {
+    const b = breakMap([{ bounds: [10, 20] }], 'linear');
+    const arr = breakTicks(b, 'linear', [0, 40], 400, {
+      tickvals: [5, 12, 25],
+      ticktext: ['a', 'b', 'c'],
+    });
+    expect(texts(arr.ticks)).toEqual(['a', 'c']);
+    expect(values(arr.ticks)).toEqual([5, 15]);
+    const withMinor = breakTicks(b, 'linear', [0, 40], 400, {
+      tickmode: 'linear',
+      dtick: 5,
+      minor: { ticks: 'outside', dtick: 1 },
+    });
+    expect(texts(withMinor.ticks)).toEqual(['0', '5', '20', '25', '30', '35', '40']);
+    const m = minors(withMinor.ticks).map(withMinor.raw);
+    expect(m).toEqual([
+      1, 2, 3, 4, 6, 7, 8, 9, 21, 22, 23, 24, 26, 27, 28, 29, 31, 32, 33, 34, 36, 37, 38, 39,
+    ]);
+  });
+
+  it('centers period labels in the visible part of their period and skips hidden periods', () => {
+    const b = breakMap([WEEKENDS]);
+    const { ticks: t, raw } = breakTicks(b, 'date', ['2024-01-01', '2024-01-13'], 800, {
+      ticklabelmode: 'period',
+      tickformat: '%a',
+      dtick: ONEDAY,
+      tickmode: 'linear',
+      tick0: '2024-01-01',
+    });
+    const shown = majors(t).filter((x) => x.text !== '');
+    expect(shown.map((x) => x.text)).toEqual([
+      'Mon',
+      'Tue',
+      'Wed',
+      'Thu',
+      'Fri',
+      'Mon',
+      'Tue',
+      'Wed',
+      'Thu',
+      'Fri',
+    ]);
+    for (const x of shown) {
+      // Mid-day of the labelled day.
+      expect(raw(x.labelL as number) - raw(x.l)).toBe(ONEDAY / 2);
+    }
+  });
+
+  it('keeps ticks sorted, finite, distinct and out of breaks for any range', () => {
+    const b = breakMap([WEEKENDS, NIGHTS, { values: ['2024-01-15'] }]);
+    const lo = b.toLinear(utc(2023));
+    const hi = b.toLinear(utc(2026));
+    fc.assert(
+      fc.property(
+        fc.double({ min: lo, max: hi, noNaN: true }),
+        fc.double({ min: -9, max: -3, noNaN: true }),
+        fc.boolean(),
+        fc.integer({ min: 50, max: 2000 }),
+        fc.boolean(),
+        (a, span, rev, length, minor) => {
+          const r1 = a + (hi - lo) * 10 ** span;
+          const s = createScale({ type: 'date', breaks: b, length });
+          s.setRange(rev ? r1 : a, rev ? a : r1);
+          const t = computeTicks(s, axis(minor ? { minor: { ticks: 'outside' } } : {}));
+          const ls = values(t);
+          for (let i = 1; i < ls.length; i++) {
+            const d = (ls[i] as number) - (ls[i - 1] as number);
+            expect(rev ? d < 0 : d > 0).toBe(true);
+            // Auto mode: at least a tickfont size apart.
+            expect(
+              Math.abs(s.l2p(ls[i] as number) - s.l2p(ls[i - 1] as number)),
+            ).toBeGreaterThanOrEqual(12);
+          }
+          for (const x of t) {
+            expect(Number.isFinite(x.l)).toBe(true);
+            expect(b.inBreak(b.toRaw(x.l))).toBe(false);
+          }
+        },
+      ),
+      { numRuns: 200 },
+    );
+  });
+
+  it('leaves axes without breaks alone', () => {
+    const plain = createScale({ type: 'date', range: [utc(2024), utc(2024, 4)], length: 800 });
+    const same = createScale({ type: 'date', range: [utc(2024), utc(2024, 4)], length: 800 });
+    expect(computeTicks(plain, axis())).toEqual(computeTicks(same, axis()));
   });
 });

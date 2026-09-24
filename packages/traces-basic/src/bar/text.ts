@@ -289,7 +289,7 @@ export function barValues(
   const [posLetter, sizeLetter] =
     calc.orientation === 'h' ? (['y', 'x'] as const) : (['x', 'y'] as const);
   const value = calc.bars.value[i];
-  const label = coordinateAt(trace, posLetter, i);
+  const label = calc.positionValues ? calc.positionValues[i] : coordinateAt(trace, posLetter, i);
   const marker = (trace['marker'] ?? {}) as { color?: unknown };
   return {
     posLetter,

@@ -188,3 +188,80 @@ describe('buildAxesScene', () => {
     expect(scene.under.get('xy')?.rects).toEqual([]);
   });
 });
+
+describe('free-axis shift and autoshift (E3.9)', () => {
+  // y2 and y3 overlay y on its left, free at the plot edge; y's tick labels are ~20 px deep.
+  const LAYOUT = {
+    yaxis: { showline: true, ticks: 'outside', ticklen: 5 },
+    yaxis2: { overlaying: 'y', anchor: 'free', autoshift: true, showline: true },
+    yaxis3: { overlaying: 'y', anchor: 'free', autoshift: true, showline: true },
+  };
+  const DATA = [{}, { yaxis: 'y2' }, { yaxis: 'y3' }];
+
+  function scene(layout: Record<string, unknown>, data = DATA) {
+    const { fullLayout, axes, subplots } = setup(layout, data);
+    const s = buildAxesScene(
+      {
+        axes: axes as never,
+        subplots: subplots as never,
+        plotArea: AREA,
+        fullLayout,
+        width: 560,
+        height: 420,
+      },
+      measure,
+    );
+    // The x of each y axis line (1 px wide rects spanning the plot height).
+    const lines = s.over
+      .filter((r) => r.x1 - r.x0 <= 1.01 && r.y1 - r.y0 >= AREA.height - 1)
+      .map((r) => r.x1)
+      .sort((a, b) => a - b);
+    return { fullLayout, axes, lines };
+  }
+
+  it('stacks autoshift axes outward past the axes drawn before them', () => {
+    const { lines, fullLayout } = scene(LAYOUT);
+    expect(fullLayout['yaxis2']).toMatchObject({ position: 0, shift: -3, automargin: true });
+    // y at the plot edge, then y2 and y3 further left, each past the previous one's labels.
+    expect(lines).toHaveLength(3);
+    const [y3, y2, y] = lines as [number, number, number];
+    expect(y).toBe(AREA.x);
+    expect(y2).toBeLessThan(y - 10);
+    expect(y3).toBeLessThan(y2 - 10);
+  });
+
+  it('moves a free axis by its shift without autoshift', () => {
+    const { lines } = scene(
+      {
+        yaxis2: {
+          overlaying: 'y',
+          anchor: 'free',
+          position: 1,
+          side: 'right',
+          shift: 12,
+          showline: true,
+        },
+      },
+      [{}, { yaxis: 'y2' }],
+    );
+    expect(lines).toContain(AREA.x + AREA.width + 12 + 1);
+  });
+
+  it('reserves margin for the shifted axes', () => {
+    const { fullLayout, axes } = scene(LAYOUT);
+    const plain = axisMarginNeeds(axes, fullLayout, { width: 560, height: 420 }, measure).find(
+      (n) => n.axis === 'y2',
+    );
+    const shifted = plain?.need ?? 0;
+    const y = axisMarginNeeds(axes, fullLayout, { width: 560, height: 420 }, measure).find(
+      (n) => n.axis === 'y',
+    );
+    // y2 sits outside y's labels, so it needs more room than y does (y has no automargin here).
+    expect(y).toBeUndefined();
+    expect(shifted).toBeGreaterThan(20);
+    const y3 = axisMarginNeeds(axes, fullLayout, { width: 560, height: 420 }, measure).find(
+      (n) => n.axis === 'y3',
+    );
+    expect(y3?.need ?? 0).toBeGreaterThan(shifted);
+  });
+});

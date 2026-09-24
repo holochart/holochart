@@ -30,3 +30,4 @@ them and the old one is marked **Superseded by ADR-XXX**.
 | 019 | [A runtime package owns charts, the pipeline and the plugin contracts](019-runtime-package.md)          | Accepted      |
 | 020 | [Strip schema descriptions from production builds](020-strip-schema-descriptions.md)                    | Accepted      |
 | 021 | [A dark, dense default look, applied by the runtime](021-default-look.md)                               | Accepted      |
+| 022 | [Range breaks compress an axis' linear space](022-range-breaks-compressed-linear-space.md)              | Accepted      |

@@ -40,7 +40,7 @@ describe('planUpdate (plan E1.7 acceptance)', () => {
 
   it('unions the subtree when a whole container changes', () => {
     expect(plan(trace('marker.line'))).toEqual(['style']);
-    expect(plan(layout('xaxis'))).toEqual(['calc', 'layout', 'plot', 'ticks']);
+    expect(plan(layout('xaxis'))).toEqual(['calc', 'layout', 'modebar', 'plot', 'ticks']);
     expect(plan(layout('transition'))).toEqual([]);
   });
 

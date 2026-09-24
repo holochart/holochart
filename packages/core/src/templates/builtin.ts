@@ -65,6 +65,14 @@ const TITLE = '#eceef4';
  *   interesting values the most prominent.
  */
 export const holochartTemplate: Template = /* @__PURE__ */ (() => {
+  // Starts at a violet that still reads on the background, so the lowest values show.
+  const sequential = [
+    [0, '#3a0ca3'],
+    [0.3, '#6a00f4'],
+    [0.6, '#ff2bd6'],
+    [0.85, '#ff9e00'],
+    [1, '#f9f871'],
+  ];
   const colorbar = {
     thickness: 10,
     outlinewidth: 0,
@@ -106,14 +114,7 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
       },
       colorway: [...HOLOCHART_COLORWAY],
       colorscale: {
-        sequential: [
-          // Starts at a violet that still reads on the background, so the lowest values show.
-          [0, '#3a0ca3'],
-          [0.3, '#6a00f4'],
-          [0.6, '#ff2bd6'],
-          [0.85, '#ff9e00'],
-          [1, '#f9f871'],
-        ],
+        sequential,
         sequentialminus: [
           [0, '#c8f7ff'],
           [0.15, '#3fd0e0'],
@@ -175,6 +176,21 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
       ],
       // A background-colored rim separates the slices.
       pie: [{ marker: { line: { color: BG, width: 1 } } }],
+      // Histograms are bars: same borderless look and readable error bars.
+      histogram: [
+        {
+          marker: { line: { width: 0 }, colorbar },
+          error_x: { color: TICK },
+          error_y: { color: TICK },
+        },
+      ],
+      // Thin outlines and small points, like scatter (Plotly's 2 px / 6 px read heavy when dense).
+      box: [{ line: { width: 1 }, marker: { size: 3, line: { width: 0, color: BG } } }],
+      violin: [{ line: { width: 1 }, marker: { size: 3, line: { width: 0, color: BG } } }],
+      // Heatmap-like traces don't pick automatic colorscales (Plotly): give them the sequential
+      // ramp, as plotly.py's templates do. Contours use it automatically (`autocolorscale`).
+      histogram2d: [{ colorscale: sequential, colorbar }],
+      histogram2dcontour: [{ colorbar }],
       // A raised header (the hover-label background) over background-colored cells, both with
       // faint 1 px rules; bright header text, 9 px throughout.
       table: [

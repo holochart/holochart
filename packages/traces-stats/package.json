@@ -1,0 +1,55 @@
+{
+  "name": "@mk7s/holochart-traces-stats",
+  "version": "0.0.0",
+  "description": "Statistical trace types: histogram, histogram2d, histogram2dcontour, box, violin.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holochart/holochart.git",
+    "directory": "packages/traces-stats"
+  },
+  "homepage": "https://mk7s.dev/holochart",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "development": "./dist/index.development.js",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@mk7s/holochart-core": "workspace:*",
+    "@mk7s/holochart-render": "workspace:*",
+    "@mk7s/holochart-runtime": "workspace:*",
+    "@mk7s/holochart-traces-basic": "workspace:*"
+  },
+  "peerDependencies": {
+    "three": ">=0.180.0"
+  },
+  "devDependencies": {
+    "three": "catalog:",
+    "@types/three": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "development": "./dist/index.development.js",
+        "import": "./dist/index.js"
+      }
+    }
+  }
+}
