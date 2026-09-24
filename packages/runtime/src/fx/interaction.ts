@@ -354,6 +354,8 @@ export class Interaction {
     if (handled) {
       drag.component = handled;
       this.#drag = drag;
+      // Capture here too, or a component drag released outside the chart never gets its `up`.
+      this.#capture(pointerId);
       return;
     }
     const s = this.#settings;
@@ -368,12 +370,16 @@ export class Interaction {
       if (drag.action === 'lasso') drag.lasso.push(this.#px, this.#py);
     }
     this.#drag = drag;
+    this.#capture(pointerId);
+  };
+
+  #capture(pointerId: number): void {
     try {
       this.#host.target.setPointerCapture?.(pointerId);
     } catch {
       // Synthetic events (tests) have no active pointer to capture.
     }
-  };
+  }
 
   #actionFor(zone: DragZone, sp: SubplotInfo, s: FxSettings): Action {
     if (s.dragmode === false || s.dragmode === 'orbit' || s.dragmode === 'turntable') return 'none';
@@ -456,7 +462,7 @@ export class Interaction {
         this.#host.target.releasePointerCapture(pointerId);
       }
     } catch {
-      // See #onDown.
+      // See #capture.
     }
     if (drag.component) {
       this.#drag = null;
@@ -484,7 +490,12 @@ export class Interaction {
     this.#pinch = null;
     const drag = this.#drag;
     this.#drag = null;
-    if (!drag || drag.component) return;
+    if (!drag) return;
+    if (drag.component) {
+      // The gesture's view must hear that it ended (`leave`: no `up` or click follows).
+      this.#component('leave', e, drag.component);
+      return;
+    }
     this.#host.layer.hideOverlay();
     // Undo previews: back to the ranges the gesture started from.
     if (drag.last.size > 0 && drag.subplot) {

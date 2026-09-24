@@ -7,7 +7,13 @@ import type { FullLayout, LayoutDefaultsContext } from '@mk7s/holochart-core';
 import type { TraceModule } from '@mk7s/holochart-runtime';
 import { coloraxisLayoutSchema, supplyColoraxisDefaults } from '../shared/colorscale.ts';
 import { barAttributes, barLayoutAttributes } from './attributes.ts';
-import { barExtremes, calcBar, crossTraceCalcBar, type BarCalc } from './calc.ts';
+import {
+  barCategoryValues,
+  barExtremes,
+  calcBar,
+  crossTraceCalcBar,
+  type BarCalc,
+} from './calc.ts';
 import { barColorbar } from './colorbar.ts';
 import { supplyBarDefaults, supplyBarLayoutDefaults } from './defaults.ts';
 import { barHoverPoints, barSelectPoints } from './hover.ts';
@@ -38,6 +44,7 @@ export const bar: TraceModule<BarCalc, typeof barAttributes.children> = {
   calc: calcBar,
   crossTraceCalc: crossTraceCalcBar,
   extremes: barExtremes,
+  categoryValues: barCategoryValues,
   plot: barRenderer,
   hoverPoints: barHoverPoints,
   selectPoints: barSelectPoints,

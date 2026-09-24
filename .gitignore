@@ -5,6 +5,9 @@ node_modules/
 # Build output
 dist/
 build/
+# Source folders that happen to be named build/ (tsdown preset and plugins, their tests)
+!scripts/build/
+!tests/build/
 *.tsbuildinfo
 .turbo/
 

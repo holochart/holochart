@@ -1,4 +1,5 @@
 import { defineConfig } from 'tsdown';
+import { productionPlugins } from '../../scripts/build/tsdown-preset.ts';
 
 /**
  * Two builds of the full bundle (ADR-015):
@@ -8,7 +9,8 @@ import { defineConfig } from 'tsdown';
  * - `dist/holochart.iife.min.js`: self-contained, minified IIFE for `<script>` / CDN use, exposing
  *   `window.Holochart`. Everything is bundled, including `three` (which no longer ships a UMD or
  *   global build). Workspace packages resolve through the `source` export condition so the bundle
- *   and its sourcemap come straight from TypeScript sources.
+ *   and its sourcemap come straight from TypeScript sources, so the strip-descriptions plugin
+ *   (ADR-020) runs on them here: the IIFE ships without attribute-schema descriptions.
  */
 export default defineConfig([
   {
@@ -19,6 +21,7 @@ export default defineConfig([
     sourcemap: true,
     dts: true,
     clean: true,
+    plugins: productionPlugins(),
   },
   {
     entry: { holochart: 'src/index.ts' },
@@ -32,6 +35,7 @@ export default defineConfig([
     clean: false,
     outputOptions: { entryFileNames: '[name].iife.min.js' },
     deps: { alwaysBundle: [/.*/], onlyBundle: false },
+    plugins: productionPlugins(),
     inputOptions: {
       resolve: { conditionNames: ['source', 'browser', 'import', 'module', 'default'] },
     },

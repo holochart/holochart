@@ -6,7 +6,7 @@
 import type { TraceModule } from '@mk7s/holochart-runtime';
 import { coloraxisLayoutSchema, supplyColoraxisDefaults } from '../shared/colorscale.ts';
 import { scatterAttributes } from './attributes.ts';
-import { calcScatter, scatterExtremes, type ScatterCalc } from './calc.ts';
+import { calcScatter, scatterCategoryValues, scatterExtremes, type ScatterCalc } from './calc.ts';
 import { calcScatterAppend, scatterExtremesAppend } from './calc-stream.ts';
 import { scatterColorbar } from './colorbar.ts';
 import { supplyScatterDefaults } from './defaults.ts';
@@ -31,6 +31,7 @@ export const scatter: TraceModule<ScatterCalc, typeof scatterAttributes.children
   extremes: scatterExtremes,
   calcAppend: calcScatterAppend,
   extremesAppend: scatterExtremesAppend,
+  categoryValues: scatterCategoryValues,
   plot: scatterRenderer,
   hoverPoints: scatterHoverPoints,
   selectPoints: (calc, trace, query) => scatterSelectPoints(calc, trace, query),

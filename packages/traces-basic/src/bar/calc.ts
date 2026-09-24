@@ -14,6 +14,7 @@ import {
   isArrayLike,
   type AxisExtremes,
   type AxisType,
+  type CategorySamples,
   type FullLayout,
   type FullTrace,
   type Scale,
@@ -278,6 +279,21 @@ function withErrorBars(extremes: AxisExtremes, bars: ErrorBarCalc | undefined): 
   if (!bars || bars.count === 0) return extremes;
   const ends = linearExtremes(errorBarExtremeValues(bars), 0, { padded: true });
   return { ...extremes, min: [...extremes.min, ...ends.min], max: [...extremes.max, ...ends.max] };
+}
+
+/**
+ * Samples for value-based `categoryorder`s (E3.6), as Plotly's `sortAxisCategoriesByValue` reads
+ * bar calcdata: on the position axis, each bar's category index and its own size after
+ * cross-trace calc (`barnorm`-normalized, not the stacked top, so `total` adds every trace of a
+ * stack). A category size axis contributes nothing.
+ */
+export function barCategoryValues(
+  calc: BarCalc,
+  _trace: FullTrace,
+  axis: 'x' | 'y',
+): CategorySamples | undefined {
+  if ((calc.orientation === 'h' ? 'y' : 'x') !== axis) return undefined;
+  return { index: calc.pos, value: calc.bars.value };
 }
 
 /** Autorange extremes: full position slots (unpadded), bar ends including zero, error bars. */

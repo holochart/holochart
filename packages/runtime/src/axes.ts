@@ -14,6 +14,7 @@ import {
   type ExtremePoint,
   type FullAxis,
   type Scale,
+  valueCategoryOrder,
 } from '@mk7s/holochart-core';
 import type { DataTransform } from '@mk7s/holochart-render';
 
@@ -35,28 +36,56 @@ export function isCategorical(type: AxisType): boolean {
   return type === 'category' || type === 'multicategory';
 }
 
+/** The category lists of one axis (see {@link axisCategoryLists}). */
+export interface AxisCategoryLists {
+  categories?: readonly string[];
+  multicategories?: readonly (readonly [string, string])[];
+  /**
+   * Value-based orders only: the categories in trace order (first appearance), which the runtime
+   * sorts once calc has run. `categories` then holds the order to calc with first.
+   */
+  traceOrder?: readonly string[];
+}
+
 /**
  * The category lists of one axis from the data of its traces, through core's `axisCategories` (plan
  * E3.6): first-appearance order, then `categoryorder` / `categoryarray`; multicategory axes get
  * `[group, item]` pairs from two-row columns. Non-categorical types give `{}`.
  *
- * Aggregate orders (`total ascending`, …) need per-category values from each trace type; until
- * traces report them they keep trace order.
+ * Value-based orders (`total descending`, …) need calc results, so they are sorted later by the
+ * runtime (see `sortCategoriesByValue` in core). Until then the list is `previous` — the order the
+ * axis ended with last time — when it holds exactly the same categories, so an update that doesn't
+ * change the order keeps the scale (and skips the second calc); otherwise trace order.
  */
 export function axisCategoryLists(
   full: Partial<Pick<FullAxis, 'categoryorder' | 'categoryarray'>>,
   type: AxisType,
   columns: Iterable<unknown>,
-): { categories?: readonly string[]; multicategories?: readonly (readonly [string, string])[] } {
+  previous?: readonly string[],
+): AxisCategoryLists {
   if (!isCategorical(type)) return {};
-  return axisCategories(
+  const order = full.categoryorder as CategoryOrder | undefined;
+  const lists = axisCategories(
     {
       type,
-      categoryorder: full.categoryorder as CategoryOrder | undefined,
+      categoryorder: order,
       categoryarray: full.categoryarray as ArrayLike<unknown> | undefined,
     },
     columns,
   );
+  const traceOrder = lists.categories;
+  if (type !== 'category' || !traceOrder || !valueCategoryOrder(order)) return lists;
+  const seed = previous && samePermutation(previous, traceOrder) ? previous : traceOrder;
+  return { categories: seed, traceOrder };
+}
+
+/** Whether `a` and `b` hold the same distinct strings (in any order). */
+function samePermutation(a: readonly string[], b: readonly string[]): boolean {
+  if (a.length !== b.length) return false;
+  const set = new Set(a);
+  if (set.size !== a.length) return false;
+  for (const c of b) if (!set.has(c)) return false;
+  return true;
 }
 
 function sameList(a: readonly unknown[] | undefined, b: readonly unknown[] | undefined): boolean {

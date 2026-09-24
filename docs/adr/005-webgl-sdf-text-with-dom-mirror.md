@@ -41,7 +41,9 @@ where DOM is cheaper.
 ### Negative
 
 - SDF text is less sharp than native text at small sizes, and troika layout adds CPU cost and
-  bundle size (risk R9). Rich text (E2.10), RTL, and CJK need extra work.
+  bundle size (risk R9). Mitigated in M2 wave 0 (E21.5): troika and its dependencies (~44 kB gz)
+  load with a dynamic `import()` the first time a chart draws text, and layout measures
+  synchronously without it. Rich text (E2.10), RTL, and CJK need extra work.
 - Two text paths (WebGL and DOM) must be kept visually consistent and tested.
 - The DOM mirror must be kept in sync with the rendered chart.
 

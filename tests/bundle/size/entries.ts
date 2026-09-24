@@ -9,6 +9,10 @@ import path from 'node:path';
  * entry is bundled from the packages' built `dist/` with all dependencies included except `three`
  * (a peer dependency, ADR-003), so a number is what that import adds to an app that already has
  * three. The IIFE bundles three itself (ADR-015) and has its own budget.
+ *
+ * An ESM entry's size is its **initial** chunk (what loads before the page runs); code behind a
+ * dynamic `import()` (the SDF text engine, E21.5) is measured separately as that entry's lazy
+ * chunks (see bundle.ts), reported per entry and gated by a `lazyOf` row.
  */
 
 export const ROOT = path.resolve(import.meta.dirname, '../../..');
@@ -39,6 +43,8 @@ export interface SizeEntry {
   imports?: readonly EntryImport[];
   /** A prebuilt file measured as-is (relative to the repo root), instead of `imports`. */
   file?: string;
+  /** Measure the lazy (dynamically imported) chunks of the entry with this id, instead. */
+  lazyOf?: string;
 }
 
 /** One entry per published package: the cost of `import … from '<package>'`. */
@@ -62,21 +68,31 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     // import { scatter } from '@mk7s/holochart-traces-basic'; register(scatter);`
     id: 'partial-core-scatter',
     name: 'partial: core + scatter',
-    // Raised from 90 kB after M1 wave 2 (measured 148.5 kB: ~40 kB is the SDF text engine). E21.5
-    // (bundle diet) lazy-loads text and strips schema descriptions, then tightens this again.
-    limit: '165 kB',
+    // Initial chunk only (the text engine is the lazy row below). 90 kB was set before the text
+    // engine's weight was known; raised to 165 kB after M1 wave 2, then tightened to measured + ~10%
+    // after the E21.5 diet (M2 wave 0: lazy text engine, stripped descriptions; 107.9 kB).
+    limit: '120 kB',
     imports: [
       { pkg: 'runtime', names: ['createChart', 'register'] },
       { pkg: 'traces-basic', names: ['scatter'] },
     ],
   },
   {
+    // Plan E21.5: troika-three-text + bidi-js + webgl-sdf-generator + troika-worker-utils, loaded
+    // with a dynamic import() on first text use; the same chunk for every entry that has text.
+    // Measured 44.2 kB when split out (2026-09-23); budget = measured + ~10%.
+    id: 'text-engine-lazy',
+    name: 'text engine (lazy chunk of core + scatter)',
+    limit: '49 kB',
+    lazyOf: 'partial-core-scatter',
+  },
+  {
     // The future `holochart-basic` CDN variant: runtime, components, and the basic traces.
     id: 'partial-basic',
     name: 'partial: basic (runtime + components + traces-basic + themes)',
-    // Raised from 150 kB after M1 wave 2 (measured 181 kB), then to 215 kB after wave 3 (colorbar,
-    // annotations, streaming: measured 209.6 kB); see E21.5.
-    limit: '215 kB',
+    // Initial chunk only. Raised from 150 kB to 200 / 215 kB in M1 (waves 2 and 3), then tightened
+    // to measured + ~10% after the E21.5 diet (M2 wave 0: 154.1 kB).
+    limit: '170 kB',
     imports: [
       { pkg: 'runtime' },
       { pkg: 'components' },
@@ -100,8 +116,14 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
   },
 ];
 
+/** Lazy chunks of an entry, concatenated (written by bundle.ts only when there are any). */
+export function lazyFile(id: string): string {
+  return path.join(OUT_DIR, `${id}.lazy.js`);
+}
+
 /** Path of the file size-limit measures for an entry, relative to the repo root. */
 export function measuredFile(entry: SizeEntry): string {
+  if (entry.lazyOf) return path.relative(ROOT, lazyFile(entry.lazyOf));
   return entry.file ?? path.relative(ROOT, path.join(OUT_DIR, `${entry.id}.js`));
 }
 
@@ -112,4 +134,6 @@ export interface ManifestEntry {
   id: string;
   /** Set when wanted named exports don't exist yet and the entry fell back to `export *`. */
   note?: string;
+  /** Set when the entry has lazy chunks (in `lazyFile(id)`): how many, and which packages. */
+  lazy?: { chunks: number; packages: string[] };
 }

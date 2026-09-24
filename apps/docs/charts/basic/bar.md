@@ -46,6 +46,8 @@ adds a negative value, outlines, and rounded corners:
 - `x0`/`dx` (or `y0`/`dy`) give implicit positions when you leave out `x` (or `y`).
 - `text` and `customdata`: per-bar labels and extra data for templates.
 - A `null` or `NaN` value draws no bar.
+- Categories appear in the order of the data unless the axis sets `categoryorder` (see
+  [sorted by value](#sorted-by-value)).
 
 ## Variations
 
@@ -87,6 +89,16 @@ with `mode: 'text'` at the totals, `textposition: 'top center'`, `showlegend: fa
 
 <Example id="recipes/stacked-totals" />
 
+### Sorted by value
+
+Set `categoryorder` on the category axis to sort it by the bar values, whatever the order of the
+data: `'total descending'` ranks each category by the sum over all traces (stacked or grouped),
+and `'min'`, `'max'`, `'sum'`, `'mean'` and `'median'` work the same way, `ascending` or
+`descending`. Ties keep the data order. On horizontal bars, sort the y axis `'total ascending'` to
+put the largest bar on top, because category axes run bottom-up.
+
+<Example id="bar/sorted" />
+
 ### Horizontal bars on a log axis
 
 `orientation: 'h'` turns bars sideways. On a log axis, bars start below the visible range, as in
@@ -105,6 +117,8 @@ Plotly. Numeric `marker.color` maps through a colorscale. More in
 - `textfont`, `insidetextfont`, `outsidetextfont`, `textangle`, `insidetextanchor`, and
   `constraintext` for labels.
 - `layout.barmode`, `bargap`, `bargroupgap`, and `barnorm` for how bar traces combine.
+- `xaxis.categoryorder` (or `yaxis.` for horizontal bars) and `categoryarray` for the order of
+  the categories.
 - Pattern fills (`marker.pattern`) come later (plan E8.10).
 
 ## Interactivity
@@ -159,6 +173,9 @@ Bar layout options such as [`barmode`](/reference/layout#barmode) and
 
 - Attribute names, `barmode` values, `barnorm`, and `offsetgroup`/`alignmentgroup` behavior match
   Plotly.
+- Value-based `categoryorder`s (`'total descending'`, …) match Plotly, with two small
+  differences: `median` sorts numerically (Plotly compares the values as strings), and categories
+  without values sort last for `min`/`max`/`mean`/`median`. `'geometric mean …'` is not supported.
 - Draw order matches Plotly: bars draw below scatter traces whatever their order in `data`, and
   a higher `zorder` (on bars too) draws a trace on top of lower ones.
 - Not supported yet: `marker.pattern` (E8.10) and `xperiod` alignment for bars.

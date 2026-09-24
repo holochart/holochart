@@ -102,6 +102,15 @@ test('IIFE exposes window.Holochart and renders with the bundled three.js', asyn
   });
 
   expect(result).toEqual({ width: 320, issues: 0, pixel: [255, 0, 0, 255], isWebGL2: true });
+
+  // The SDF text engine is behind a dynamic import() (plan E21.5). The IIFE cannot load chunks, so
+  // the build inlines it: loading it must work without fetching anything (no chunk is served).
+  const engine = await page.evaluate(async () => {
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global from the IIFE */
+    await (window as any).Holochart.render.preloadTextEngine();
+    return 'loaded';
+  });
+  expect(engine).toBe('loaded');
   expect(errors).toEqual([]);
   // Self-contained: only the page and the bundle itself are fetched.
   expect(requests.filter((url) => !url.startsWith(`${ORIGIN}/`))).toEqual([]);

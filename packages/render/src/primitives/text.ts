@@ -36,18 +36,26 @@
  * Families resolve to font files through `registerFont` (text-fonts.ts). Unregistered families use
  * troika's default font: `configureText({ defaultFontURL })` or, if unset, troika's CDN fallback.
  * Visual tests need a vendored font (e.g. Inter, OFL) so rendering is offline and deterministic.
+ *
+ * ## Lazy engine (plan E21.5)
+ *
+ * troika is loaded on demand (text-engine.ts): a primitive loads it when it first gets labels, so
+ * charts without text never fetch it. Until it arrives, labels are only stored; `object` is a plain
+ * `Object3D` root that the `BatchedText` joins on load (it forwards `renderOrder` to the batch, so
+ * sorting is unchanged). {@link TextPrimitive.ready} covers the load too. Once loaded, later
+ * primitives attach synchronously. Layout does not wait: the metrics oracle is synchronous.
  */
-import { BatchedText, Text, configureTextBuilder, preloadFont } from 'troika-three-text';
+import type { BatchedText, Text, TroikaTextBuilderConfig } from 'troika-three-text';
 import {
   Color,
   DoubleSide,
   Matrix4,
   MeshBasicMaterial,
+  Object3D,
   Quaternion,
   SRGBColorSpace,
   Vector3,
   type Camera,
-  type Object3D,
   type WebGLRenderer,
 } from 'three';
 import type { DataTransform, Primitive, PrimitiveContext, ViewportSize } from '../types.ts';
@@ -78,6 +86,12 @@ import {
   type TextStyle,
 } from './text-layout.ts';
 import { getDefaultFontMetricsOracle, type FontMetricsOracle } from './text-metrics.ts';
+import {
+  configureTextEngine,
+  loadTextEngine,
+  loadedTextEngine,
+  type TextEngine,
+} from './text-engine.ts';
 
 export type {
   TextAnchorX,
@@ -90,6 +104,7 @@ export type {
   TextStyle,
 } from './text-layout.ts';
 export { TEXT_DEFAULT_FONT } from './text-layout.ts';
+export { preloadTextEngine } from './text-engine.ts';
 
 /** Data for {@link TextPrimitive}. */
 export interface TextData {
@@ -131,15 +146,16 @@ export interface TextConfig {
 
 /**
  * Configure text rendering globally. Must run before the first label is typeset (troika ignores
- * later calls and warns).
+ * later calls and warns). Does not load the text engine: before it has loaded, the configuration is
+ * kept and applied when it loads.
  */
 export function configureText(config: TextConfig): void {
-  const out: Parameters<typeof configureTextBuilder>[0] = {};
+  const out: TroikaTextBuilderConfig = {};
   if (config.defaultFontURL !== undefined) out.defaultFontURL = config.defaultFontURL;
   if (config.unicodeFontsURL !== undefined) out.unicodeFontsURL = config.unicodeFontsURL;
   if (config.useWorker !== undefined) out.useWorker = config.useWorker;
   if (config.sdfGlyphSize !== undefined) out.sdfGlyphSize = config.sdfGlyphSize;
-  configureTextBuilder(out);
+  configureTextEngine(out);
   // Tell the metrics oracle which files troika draws unregistered families with (E2.18).
   if (config.defaultFontURL !== undefined) setDefaultFontURL(config.defaultFontURL);
   if (config.unicodeFontsURL !== undefined) setUnicodeFontsURL(config.unicodeFontsURL);
@@ -147,7 +163,8 @@ export function configureText(config: TextConfig): void {
 
 /**
  * Load a font and pre-generate glyph SDFs (e.g. digits for tick labels) so the first frame with
- * text does not stall. Resolves the family through the font registry.
+ * text does not stall. Resolves the family through the font registry. Loads the text engine first
+ * if needed.
  */
 export function preloadTextFont(options: {
   family?: string;
@@ -163,9 +180,13 @@ export function preloadTextFont(options: {
           normalizeFontStyle(options.style),
         ) ?? null)
       : null;
-  return new Promise((resolve) => {
-    preloadFont({ font, characters: options.characters ?? ' ' }, () => resolve());
-  });
+  const characters = options.characters ?? ' ';
+  return loadTextEngine().then(
+    (engine) =>
+      new Promise((resolve) => {
+        engine.preloadFont({ font, characters }, () => resolve());
+      }),
+  );
 }
 
 interface Member {
@@ -189,13 +210,23 @@ const IDENTITY_QUAT = new Quaternion();
  * Batched label set. Create with {@link createTextPrimitive}; add `object` to a scene.
  *
  * `ready` resolves once every typesetting triggered so far has finished (a fresh promise after each
- * update that re-typesets), which visual tests await before capturing.
+ * update that re-typesets), including loading the text engine when the first labels arrive before
+ * it has loaded; visual tests and `chart.ready` await it before capturing.
  */
 export class TextPrimitive implements Primitive<TextData> {
+  /**
+   * Root to add to a scene: a plain `Object3D` holding the troika `BatchedText` once the text engine
+   * has loaded. Its `renderOrder` is forwarded to the batch (a plain parent's order would not
+   * affect its children's sorting, and a `Group`'s would sort them apart from sibling primitives).
+   */
   readonly object: Object3D;
 
   private readonly context: PrimitiveContext;
-  private readonly batch: BatchedText;
+  /** `null` until the text engine has loaded and labels exist (see {@link attachEngine}). */
+  private batch: BatchedText | null = null;
+  private engine: TextEngine | null = null;
+  /** A text-engine load started by this primitive is in flight. */
+  private attaching = false;
   private readonly baseMaterial: MeshBasicMaterial;
   private readonly metrics: FontMetricsOracle;
   private readonly resolveFont: FontURLResolver;
@@ -237,18 +268,10 @@ export class TextPrimitive implements Primitive<TextData> {
       depthWrite: false,
       toneMapped: false,
     });
-    const batch = new BatchedText();
-    batch.material = this.baseMaterial;
-    batch.name = 'holochart:text';
-    batch.visible = false;
-    this.batch = batch;
-    this.object = batch;
-
-    const renderBatch = batch.onBeforeRender;
-    batch.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
-      this.beforeRender(renderer, camera);
-      renderBatch.call(batch, renderer, scene, camera, geometry, material, group);
-    };
+    this.object = createTextRoot((order) => {
+      if (this.batch) this.batch.renderOrder = order;
+    });
+    this.object.name = 'holochart:text';
 
     this.placement = {
       position: new Vector3(),
@@ -257,7 +280,10 @@ export class TextPrimitive implements Primitive<TextData> {
     };
   }
 
-  /** Resolves when all typesetting requested so far has completed and been packed. */
+  /**
+   * Resolves when all typesetting requested so far has completed and been packed, including
+   * loading the text engine first if labels arrived before it had loaded.
+   */
   get ready(): Promise<void> {
     return this.pending;
   }
@@ -278,17 +304,25 @@ export class TextPrimitive implements Primitive<TextData> {
     const next: TextData = { ...prev, ...patch };
     this.data = next;
 
+    const batch = this.batch;
+    if (!batch) {
+      // Nothing is drawn before the engine is attached: keep the data, which install() applies in
+      // full. No labels yet → don't load troika at all (charts without text never fetch it).
+      if (next.labels.length > 0) this.attachEngine();
+      return;
+    }
+
     let needsSync = false;
     if (patch.labels !== undefined || patch.style !== undefined) {
-      needsSync = this.syncLabels(next);
+      needsSync = this.syncLabels(batch, next);
       this.updatePositions();
     }
     if (next.mode !== prev.mode || next.sizing !== prev.sizing) this.placementDirty = true;
     // Per-frame modes may place labels anywhere; bounds-based culling would lag a frame behind.
-    this.batch.frustumCulled = !this.perFrame();
+    batch.frustumCulled = !this.perFrame();
     this.applyStaticPlacement();
 
-    if (needsSync) this.startSync();
+    if (needsSync) this.startSync(batch);
     this.context.invalidate();
   }
 
@@ -309,20 +343,80 @@ export class TextPrimitive implements Primitive<TextData> {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    const batch = this.batch;
     for (const m of this.members) {
-      this.batch.removeText(m.text);
+      batch?.removeText(m.text);
       m.text.dispose();
     }
     for (const m of this.pool) m.text.dispose();
     this.members = [];
     this.pool = [];
-    this.batch.dispose();
+    if (batch) {
+      this.object.remove(batch);
+      batch.dispose();
+    }
     // Disposing the base material also disposes troika's derived (and outline) materials.
     this.baseMaterial.dispose();
   }
 
+  /**
+   * Make sure the text engine is attached: synchronously when it has already loaded (every
+   * primitive after the first), else load it and attach on arrival. `pending` covers the load and
+   * the typesetting that follows, so `ready` stays the single "labels are drawn" signal.
+   */
+  private attachEngine(): void {
+    if (this.attaching) return;
+    const loaded = loadedTextEngine();
+    if (loaded) {
+      this.install(loaded);
+      return;
+    }
+    this.attaching = true;
+    const installed = loadTextEngine().then(
+      (engine) => {
+        this.attaching = false;
+        return this.disposed ? undefined : this.install(engine);
+      },
+      (error: unknown) => {
+        // Resolve `ready` anyway (the labels just stay undrawn) so charts and tests don't hang; the
+        // next update with labels retries the load.
+        this.attaching = false;
+        reportEngineError(error);
+      },
+    );
+    this.pending = Promise.all([this.pending, installed]).then(() => undefined);
+  }
+
+  /**
+   * Create the batch and apply the current data to it: the queued labels are typeset now. Returns
+   * the typesetting promise (resolved when there is nothing to typeset).
+   */
+  private install(engine: TextEngine): Promise<void> {
+    this.engine = engine;
+    const batch = new engine.BatchedText();
+    batch.material = this.baseMaterial;
+    batch.name = 'holochart:text-batch';
+    batch.visible = false;
+    batch.renderOrder = this.object.renderOrder;
+    const renderBatch = batch.onBeforeRender;
+    batch.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
+      this.beforeRender(batch, renderer, camera);
+      renderBatch.call(batch, renderer, scene, camera, geometry, material, group);
+    };
+    this.batch = batch;
+    this.object.add(batch);
+
+    const needsSync = this.syncLabels(batch, this.data);
+    this.updatePositions();
+    batch.frustumCulled = !this.perFrame();
+    this.applyStaticPlacement();
+    const done = needsSync ? this.startSync(batch) : Promise.resolve();
+    this.context.invalidate();
+    return done;
+  }
+
   /** Resolve labels, reuse/pool members, and apply layout + paint. Returns true if a sync is due. */
-  private syncLabels(data: TextData): boolean {
+  private syncLabels(batch: BatchedText, data: TextData): boolean {
     const labels = data.labels;
     const resolved = labels.map((label) =>
       resolveTextLabel(label, data.style, this.metrics, this.resolveFont),
@@ -337,7 +431,7 @@ export class TextPrimitive implements Primitive<TextData> {
     const nextMembers: Member[] = new Array<Member>(resolved.length);
     for (let i = 0; i < resolved.length; i++) {
       const s = slot[i]!;
-      const member = s >= 0 ? candidates[s]! : this.createMember();
+      const member = s >= 0 ? candidates[s]! : this.createMember(this.engine!);
       const r = resolved[i]!;
       if (resync[i]) {
         applyLayout(member.text, r);
@@ -352,7 +446,7 @@ export class TextPrimitive implements Primitive<TextData> {
     const wasActive = new Set(this.members);
     for (const m of nextMembers) {
       if (!wasActive.has(m)) {
-        this.batch.addText(m.text);
+        batch.addText(m.text);
         needsSync = true;
       }
     }
@@ -360,7 +454,7 @@ export class TextPrimitive implements Primitive<TextData> {
     for (const m of candidates) {
       if (active.has(m)) continue;
       if (wasActive.has(m)) {
-        this.batch.removeText(m.text);
+        batch.removeText(m.text);
         needsSync = true;
       }
       if (pool.length < this.poolSize) pool.push(m);
@@ -370,13 +464,13 @@ export class TextPrimitive implements Primitive<TextData> {
     this.members = nextMembers;
     this.pool = pool;
     this.resolved = resolved;
-    this.batch.visible = nextMembers.length > 0;
+    batch.visible = nextMembers.length > 0;
     this.placementDirty = true;
     return needsSync;
   }
 
-  private createMember(): Member {
-    const text = new Text();
+  private createMember(engine: TextEngine): Member {
+    const text = new engine.Text();
     const color = new Color();
     const outlineColor = new Color();
     text.color = color;
@@ -470,14 +564,13 @@ export class TextPrimitive implements Primitive<TextData> {
   }
 
   /** Per-frame billboard / screen-size placement (called for each material pass). */
-  private beforeRender(renderer: WebGLRenderer, camera: Camera): void {
+  private beforeRender(batch: BatchedText, renderer: WebGLRenderer, camera: Camera): void {
     if (!this.perFrame() || this.members.length === 0) return;
     const frame = renderer.info.render.frame;
     if (frame === this.lastFrame && camera === this.lastCamera && !this.placementDirty) return;
     this.lastFrame = frame;
     this.lastCamera = camera;
 
-    const batch = this.batch;
     const parentScale = batch.matrixWorld.getMaxScaleOnAxis() || 1;
     let orientation: Quaternion = IDENTITY_QUAT;
     if (this.data.mode === 'billboard') {
@@ -506,14 +599,43 @@ export class TextPrimitive implements Primitive<TextData> {
     this.placementDirty = false;
   }
 
-  private startSync(): void {
-    const batch = this.batch;
+  private startSync(batch: BatchedText): Promise<void> {
     const done = new Promise<void>((resolve) => batch.sync(resolve));
     void done.then(() => {
       if (!this.disposed) this.context.invalidate();
     });
     this.pending = Promise.all([this.pending, done]).then(() => undefined);
+    return done;
   }
+}
+
+/**
+ * The primitive's scene root. `renderOrder` becomes an accessor that also sets the batch's order:
+ * three sorts render items by their own `renderOrder` (a plain parent's is ignored), and callers
+ * set it on `primitive.object` like on every other primitive.
+ */
+function createTextRoot(onRenderOrder: (order: number) => void): Object3D {
+  const root = new Object3D();
+  let order = root.renderOrder;
+  Object.defineProperty(root, 'renderOrder', {
+    configurable: true,
+    enumerable: true,
+    get: () => order,
+    set: (value: number) => {
+      order = value;
+      onRenderOrder(value);
+    },
+  });
+  return root;
+}
+
+let engineErrorReported = false;
+
+/** Report a failed text-engine load once (e.g. the lazy chunk could not be fetched). */
+function reportEngineError(error: unknown): void {
+  if (engineErrorReported) return;
+  engineErrorReported = true;
+  console.error('[holochart] could not load the SDF text engine (troika-three-text):', error);
 }
 
 /** Copy resolved layout props onto a troika member (setters flag a re-typeset on change). */

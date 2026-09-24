@@ -1,8 +1,10 @@
 {
   "$schema": "https://turborepo.com/schema.json",
+  "globalDependencies": ["scripts/build/**"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": ["HOLOCHART_KEEP_DESCRIPTIONS"],
       "outputs": ["dist/**"]
     },
     "typecheck": {

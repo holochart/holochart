@@ -110,7 +110,10 @@ Related decisions:
 - One WebGL context per figure, subplots as scissored viewports
   ([ADR-004](docs/adr/004-one-webgl-context-per-figure.md)).
 - Text is SDF in WebGL (troika-three-text) with a hidden DOM mirror
-  ([ADR-005](docs/adr/005-webgl-sdf-text-with-dom-mirror.md)).
+  ([ADR-005](docs/adr/005-webgl-sdf-text-with-dom-mirror.md)). The text engine is loaded lazily on
+  first text use; layout measures text synchronously without it.
+- Production builds strip attribute `description` strings; a `development` export condition keeps
+  them ([ADR-020](docs/adr/020-strip-schema-descriptions.md)).
 - 2D hover uses CPU spatial indexes; 3D uses GPU ID picking
   ([ADR-010](docs/adr/010-cpu-spatial-hover-gpu-picking-3d.md)).
 - Calc can move to a Web Worker for large data
