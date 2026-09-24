@@ -6,7 +6,7 @@ import {
   type FullLayout,
   type FullTrace,
 } from '@mk7s/holochart-core';
-import type { ModebarAxisLike } from './actions.ts';
+import { modebarDownloadImage, type ModebarAxisLike } from './actions.ts';
 import {
   createModebarView,
   modebarComponent,
@@ -23,17 +23,13 @@ interface FakeChart extends ModebarChartLike {
   relayout: ReturnType<typeof vi.fn<(update: Record<string, unknown>) => Promise<unknown>>>;
   fullConfig: Record<string, unknown>;
   layout: Record<string, unknown>;
-  renderNow: ReturnType<typeof vi.fn>;
-  canvas: HTMLCanvasElement;
+  downloadImage: ReturnType<typeof vi.fn<(options: Record<string, unknown>) => Promise<unknown>>>;
 }
 
 function fakeChart(config: Record<string, unknown> = {}): FakeChart {
   const element = document.createElement('div');
   document.body.appendChild(element);
-  const canvas = document.createElement('canvas');
-  element.appendChild(canvas);
-  canvas.toDataURL = vi.fn(() => 'data:image/png;base64,AAAA');
-  const renderNow = vi.fn();
+  element.appendChild(document.createElement('canvas'));
   return {
     element,
     layout: { xaxis: { range: [0, 10] } },
@@ -50,9 +46,7 @@ function fakeChart(config: Record<string, unknown> = {}): FakeChart {
       ['y', axis('yaxis', [0, 4])],
     ]),
     relayout: vi.fn(() => Promise.resolve()),
-    three: { renderer: { domElement: canvas }, root: { renderNow } },
-    renderNow,
-    canvas,
+    downloadImage: vi.fn(() => Promise.resolve('my-plot.png')),
   };
 }
 
@@ -183,24 +177,37 @@ describe('modebar view', () => {
     expect(chart.relayout).toHaveBeenCalledTimes(4);
   });
 
-  it('downloads a PNG after a synchronous render', () => {
+  it('exports with chart.downloadImage and config.toImageButtonOptions', () => {
     const chart = fakeChart();
     const view = createModebarView(chart, context(chart));
-    let download = '';
-    let href = '';
-    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
-      this: HTMLAnchorElement,
-    ) {
-      download = this.download;
-      href = this.href;
-    });
     button(view.toolbar, 'toImage').click();
-    expect(chart.renderNow).toHaveBeenCalledTimes(1);
-    expect(chart.canvas.toDataURL).toHaveBeenCalledWith('image/png');
-    expect(click).toHaveBeenCalledTimes(1);
-    expect(download).toBe('my-plot.png');
-    expect(href).toBe('data:image/png;base64,AAAA');
-    expect(document.querySelector('a')).toBeNull();
+    expect(chart.downloadImage).toHaveBeenCalledTimes(1);
+    expect(chart.downloadImage).toHaveBeenCalledWith({ filename: 'my-plot' });
+  });
+
+  it('passes format, size and scale from toImageButtonOptions, dropping invalid values', () => {
+    const chart = fakeChart({
+      toImageButtonOptions: {
+        format: 'webp',
+        filename: '',
+        width: 800,
+        height: -1,
+        scale: 2,
+      },
+    });
+    const view = createModebarView(chart, context(chart));
+    button(view.toolbar, 'toImage').click();
+    expect(chart.downloadImage).toHaveBeenCalledWith({ format: 'webp', width: 800, scale: 2 });
+  });
+
+  it('logs a failed export instead of throwing', async () => {
+    const chart = fakeChart();
+    const error = new Error('no GPU');
+    chart.downloadImage.mockImplementation(() => Promise.reject(error));
+    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    await modebarDownloadImage(chart);
+    expect(log).toHaveBeenCalledWith('holochart: image export failed', error);
+    log.mockRestore();
   });
 
   it('calls custom buttons with the chart and the event', () => {

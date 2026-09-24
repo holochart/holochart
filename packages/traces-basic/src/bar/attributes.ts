@@ -126,14 +126,14 @@ export const barAttributes = attr.object(
       arrayOk: true,
       editType: 'calc',
       description:
-        'Where bars start on the length axis (default 0), one value or one per bar. On log axes, bars without a positive base start below the visible range.',
+        "Where bars start on the length axis (default 0), one value or one per bar, in that axis' data units. On a date axis the base is a date (a date string, a `Date` or ms since the epoch) and the lengths are durations in ms, so a bar spans `base` to `base + length` (Gantt charts); hover then reports the end, `base + length`. Set the axis `type: 'date'` explicitly: numeric lengths alone make it linear. On log axes, bars without a positive base start below the visible range.",
     }),
     width: attr.number({
       min: 0,
       arrayOk: true,
       editType: 'calc',
       description:
-        'Bar width in position-axis units (category slots, or ms on date axes), one value or one per bar. Default: the slot left by `layout.bargap` and the bar mode.',
+        'Bar width in position-axis units (category slots, or ms on date axes: `86400000` is one day), one value or one per bar. Default: the slot left by `layout.bargap` and the bar mode.',
     }),
     offset: attr.number({
       arrayOk: true,

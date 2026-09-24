@@ -13,10 +13,12 @@
  * the outer radius (and the hole's edge): the same primitive, extra instances.
  *
  * Every update rebuilds the slice buffers (pies have few slices) but reuses the primitives.
+ * Labels may be rich text with clickable links (E2.10); `layout.uniformtext` (E4.6) sizes the
+ * slice labels of every pie of the chart alike (see `shared/uniform-text.ts`).
  * Deferred: animated re-flow when slices are hidden and pull transitions (E7.3), `marker.pattern`
- * (E8.10), `uniformtext` (E4.6), `automargin`.
+ * (E8.10), `automargin`.
  */
-import { toRGBA, type FullTrace } from '@mk7s/holochart-core';
+import { toRGBA, uniformTextOf, type FullTrace, type UniformText } from '@mk7s/holochart-core';
 import {
   createArcPrimitive,
   createTextPrimitive,
@@ -25,9 +27,17 @@ import {
   type ArcPrimitive,
   type RGBA,
   type TextLabel,
+  type TextLink,
   type TextPrimitive,
 } from '@mk7s/holochart-render';
-import type { TracePlotContext, TraceRenderer, TraceView } from '@mk7s/holochart-runtime';
+import type {
+  ComponentPointerEvent,
+  TracePlotContext,
+  TraceRenderer,
+  TraceView,
+} from '@mk7s/holochart-runtime';
+import { fadeRuns, handleLinkPointer, hasLink, labelLinkAt } from '../shared/rich-text.ts';
+import { negotiateUniformText, releaseUniformText } from '../shared/uniform-text.ts';
 import { sliceCenter, type PieCalc } from './calc.ts';
 import { castOption } from './helpers.ts';
 import { layoutPieAreas, measureTitles, resolvePieColors } from './layout.ts';
@@ -134,18 +144,22 @@ export function pieArcs(trace: FullTrace, calc: PieCalc, height: number): PieArc
 
 /** Text labels for the text primitive, in world px. `opacity` multiplies the alpha. */
 export function pieTextLabels(text: PieTextLayout, height: number, opacity: number): TextLabel[] {
-  return text.labels.map((l) => ({
-    text: l.text,
-    x: l.x,
-    y: height - l.y,
-    font: l.font,
-    color: [l.color[0], l.color[1], l.color[2], l.color[3] * opacity],
-    anchorX: l.anchorX,
-    anchorY: l.anchorY,
-    align: l.anchorX,
-    angle: l.angle,
-    lineHeight: LINE_HEIGHT,
-  }));
+  return text.labels.map((l) => {
+    const label: TextLabel = {
+      text: l.text,
+      x: l.x,
+      y: height - l.y,
+      font: l.font,
+      color: [l.color[0], l.color[1], l.color[2], l.color[3] * opacity],
+      anchorX: l.anchorX,
+      anchorY: l.anchorY,
+      align: l.anchorX,
+      angle: l.angle,
+      lineHeight: LINE_HEIGHT,
+    };
+    if (l.runs) label.runs = fadeRuns(l.runs, opacity);
+    return label;
+  });
 }
 
 function traceOpacity(trace: FullTrace): number {
@@ -175,9 +189,31 @@ class PieView implements TraceView<PieCalc> {
   #arcs: ArcPrimitive | undefined;
   #text: TextPrimitive | undefined;
   #lines: LinePrimitive | undefined;
+  /** The last context (uniformtext refreshes). */
+  #ctx: TracePlotContext<PieCalc> | undefined;
+  /** Drawn labels with links (world px) and the world height that flips them to container px. */
+  #links: TextLabel[] = [];
+  #height = 0;
 
   constructor(ctx: TracePlotContext<PieCalc>) {
     this.#sync(ctx);
+  }
+
+  /** Clicks on label links (`<a href>`) open them; hovering one shows a pointer cursor. */
+  handlePointer(event: ComponentPointerEvent): boolean {
+    if (this.#links.length === 0) return false;
+    let link: TextLink | null = null;
+    for (let k = this.#links.length - 1; k >= 0 && !link; k--) {
+      const l = this.#links[k]!;
+      link = labelLinkAt(l, l.x, this.#height - l.y, event.x, event.y);
+    }
+    return handleLinkPointer(event, link);
+  }
+
+  dispose(): void {
+    // Other pies are being updated or disposed too: no refresh from here.
+    const ctx = this.#ctx;
+    if (ctx) releaseUniformText(ctx.primitives, ctx.trace.type, this, false);
   }
 
   update(ctx: TracePlotContext<PieCalc>): void {
@@ -185,7 +221,11 @@ class PieView implements TraceView<PieCalc> {
     this.#sync(ctx);
   }
 
-  #sync(ctx: TracePlotContext<PieCalc>): void {
+  #sync(
+    ctx: TracePlotContext<PieCalc>,
+    uniform: UniformText = uniformTextOf(ctx.fullLayout),
+  ): void {
+    this.#ctx = ctx;
     ensureLayout(ctx);
     const { trace, calc } = ctx;
     const height = calc.layout?.height ?? ctx.viewport.size.height;
@@ -211,9 +251,27 @@ class PieView implements TraceView<PieCalc> {
     this.#arcs.object.renderOrder = orderOf(ORDER.arcs, ctx.index);
     this.#arcs.setTransform(ctx.transform);
 
-    const text = layoutPieText(trace, calc, ctx.fullLayout);
-    this.#syncText(ctx, pieTextLabels(text, height, opacity));
+    let text = layoutPieText(trace, calc, ctx.fullLayout, { uniformText: uniform });
+    // Plotly negotiates per trace type (`_pieText_minsize`), across every pie of the chart.
+    const size = negotiateUniformText(ctx.primitives, trace.type, this, text.items, uniform, (u) =>
+      this.#refresh(u),
+    );
+    if (size !== text.uniformSize) {
+      text = layoutPieText(trace, calc, ctx.fullLayout, {
+        uniformText: uniform,
+        ...(size !== undefined ? { uniformSize: size } : {}),
+      });
+    }
+    const labels = pieTextLabels(text, height, opacity);
+    this.#links = labels.some(hasLink) ? labels.filter(hasLink) : [];
+    this.#height = height;
+    this.#syncText(ctx, labels);
     this.#syncLines(ctx, text, height, opacity);
+  }
+
+  /** Redraw from the last context with another pie's `uniformtext` negotiation. */
+  #refresh(uniform: UniformText): void {
+    if (this.#ctx) this.#sync(this.#ctx, uniform);
   }
 
   #syncText(ctx: TracePlotContext<PieCalc>, labels: TextLabel[]): void {

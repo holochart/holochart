@@ -40,6 +40,11 @@ which axes go in which cells:
 - `'independent'`: every cell gets its own axis pair, `xy`, `x2y2`, … in row-major order.
 
 ```ts
+const temp = [14, 18, 23, 27, 31];
+const humidity = [40, 52, 61, 70, 83];
+const iceCream = [120, 175, 260, 330, 410];
+const umbrellas = [34, 25, 19, 22, 41];
+
 createChart(el, {
   data: [
     { type: 'scatter', x: temp, y: iceCream }, // x, y: top left
@@ -83,11 +88,15 @@ Traces without axes, such as [pie](/charts/basic/pie), take a cell with `domain.
 `domain.y` of the trace:
 
 ```ts
-layout: { grid: { rows: 1, columns: 2 } },
-data: [
-  { type: 'pie', labels, values: values2024, domain: { row: 0, column: 0 } },
-  { type: 'pie', labels, values: values2025, domain: { row: 0, column: 1 } },
-],
+const labels = ['Housing', 'Food', 'Transport', 'Other'];
+
+createChart(el, {
+  data: [
+    { type: 'pie', labels, values: [35, 25, 20, 20], domain: { row: 0, column: 0 } },
+    { type: 'pie', labels, values: [38, 22, 15, 25], domain: { row: 0, column: 1 } },
+  ],
+  layout: { grid: { rows: 1, columns: 2 } },
+});
 ```
 
 <Example id="pie/grid-scalegroup" :height="420" />
@@ -99,6 +108,10 @@ letter is drawn over it and takes its `domain` (its own `domain` is ignored). Th
 secondary y axis, usually with `side: 'right'`:
 
 ```ts
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+const sales = [120, 135, 160, 190, 240, 280];
+const temperature = [2, 4, 9, 14, 18, 22];
+
 createChart(el, {
   data: [
     { type: 'bar', x: months, y: sales },
@@ -132,6 +145,10 @@ It returns:
 
 ```ts
 import { createChart, makeSubplots } from '@mk7s/holochart';
+
+const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+const temp = [2, 4, 9, 14, 18, 22];
+const sales = [120, 135, 160, 190, 240, 280];
 
 const sp = makeSubplots({
   rows: 2,

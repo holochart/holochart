@@ -11,6 +11,7 @@ import type { ViewportRect } from '@mk7s/holochart-render';
 import type {
   ComponentDrawContext,
   ComponentModule,
+  ComponentPointerEvent,
   ComponentUpdatePlan,
   ComponentView,
   MarginPush,
@@ -19,8 +20,9 @@ import type { LabelItem } from '../axes/geometry.ts';
 import { TextBatch } from '../shared/batches.ts';
 import { overlayTransform } from '../shared/host.ts';
 import {
+  handleLinkPointer,
   inheritFont,
-  measureBlock,
+  measureStyled,
   oracleMeasure,
   rgba,
   styledText,
@@ -102,17 +104,19 @@ function titleOf(fullLayout: FullLayout): FullTitle | undefined {
 
 /** Height of the title + subtitle block and its pieces. */
 function blocks(t: FullTitle, fullLayout: FullLayout, measure: MeasureLine) {
-  const { text, font } = styledText(t.text, textFont(t.font));
+  const title = styledText(t.text, textFont(t.font));
   const subFull = inheritFont(t.subtitle?.font, fullLayout.font as FullFont);
-  const { text: subText, font: subFont } = styledText(t.subtitle?.text ?? '', textFont(subFull));
-  const main = measureBlock(text, font, measure);
-  const sub = measureBlock(subText, subFont, measure);
+  const subtitle = styledText(t.subtitle?.text ?? '', textFont(subFull));
+  const main = measureStyled(title, measure);
+  const sub = measureStyled(subtitle, measure);
   const gap = main.height > 0 && sub.height > 0 ? SUBTITLE_GAP : 0;
   return {
-    text,
-    subText,
-    font,
-    subFont,
+    text: title.text,
+    subText: subtitle.text,
+    font: title.font,
+    subFont: subtitle.font,
+    runs: title.runs,
+    subRuns: subtitle.runs,
     subFull,
     main,
     sub,
@@ -174,6 +178,7 @@ export function titleLayout(
       angle: 0,
       font: b.font,
       color: rgba(t.font.color),
+      ...(b.runs ? { runs: b.runs } : {}),
     });
   }
   if (b.subText !== '') {
@@ -186,6 +191,7 @@ export function titleLayout(
       angle: 0,
       font: b.subFont,
       color: rgba(b.subFull.color),
+      ...(b.subRuns ? { runs: b.subRuns } : {}),
     });
   }
 
@@ -214,6 +220,11 @@ class TitleView implements ComponentView {
     const lay = titleLayout(ctx.fullLayout, ctx, ctx.plotArea, ctx.margin, oracleMeasure);
     this.#text.setTransform(overlayTransform(ctx.height));
     this.#text.set(lay.labels);
+  }
+
+  /** Links in the title (E2.10). */
+  handlePointer(event: ComponentPointerEvent): boolean {
+    return handleLinkPointer(event, this.#text.linkAt(event.x, event.y));
   }
 }
 

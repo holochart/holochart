@@ -16,6 +16,7 @@ import { pieHoverPoints } from './hover.ts';
 import { crossTraceLayoutPie } from './layout.ts';
 import { pieLegendIcon, pieLegendItems } from './legend.ts';
 import { pieRenderer } from './plot.ts';
+import { describePie } from './describe.ts';
 
 export const pie: TraceModule<PieCalc, typeof pieAttributes.children> = {
   type: 'pie',
@@ -36,6 +37,7 @@ export const pie: TraceModule<PieCalc, typeof pieAttributes.children> = {
   hoverPoints: pieHoverPoints,
   legendIcon: pieLegendIcon,
   legendItems: pieLegendItems,
+  describe: describePie,
 };
 
 export { pieAttributes, pieLayoutAttributes } from './attributes.ts';

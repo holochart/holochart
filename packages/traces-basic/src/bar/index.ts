@@ -19,6 +19,7 @@ import { supplyBarDefaults, supplyBarLayoutDefaults } from './defaults.ts';
 import { barHoverPoints, barSelectPoints } from './hover.ts';
 import { barRenderer } from './plot.ts';
 import { barLegendIcon } from './style.ts';
+import { describeBar } from './describe.ts';
 
 export const bar: TraceModule<BarCalc, typeof barAttributes.children> = {
   type: 'bar',
@@ -50,6 +51,7 @@ export const bar: TraceModule<BarCalc, typeof barAttributes.children> = {
   selectPoints: barSelectPoints,
   legendIcon: barLegendIcon,
   colorbar: barColorbar,
+  describe: describeBar,
 };
 
 export { barAttributes, barLayoutAttributes } from './attributes.ts';

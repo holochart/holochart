@@ -3,7 +3,13 @@
  * and percent formatting, per-slice attribute lookup over aggregated points, and the color
  * operations pie defaults need (`rgbaString`, `hexString`, HSL lightness, contrast).
  */
-import { isArrayLike, isValidColor, toRGBA, type RGBA } from '@mk7s/holochart-core';
+import {
+  isArrayLike,
+  isValidColor,
+  richTextToPlain,
+  toRGBA,
+  type RGBA,
+} from '@mk7s/holochart-core';
 
 // ---- Formatting ---------------------------------------------------------------------------------
 
@@ -83,19 +89,11 @@ export function isNumeric(v: unknown): boolean {
 }
 
 /**
- * Plotly pseudo-HTML → plain text for the SDF text primitive: `<br>` breaks lines, other tags are
- * dropped and the common entities decoded (rich text is E2.10).
+ * Plotly pseudo-HTML → plain text: `<br>` (and raw newlines) break lines, tags are dropped and
+ * entities decoded, exactly as the rich-text path (E2.10) reduces a label to its plain equivalent.
  */
 export function plainText(text: string): string {
-  return text
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<[^>]*>/g, '')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, '\u00a0')
-    .replace(/&amp;/g, '&');
+  return richTextToPlain(text);
 }
 
 // ---- Colors -------------------------------------------------------------------------------------

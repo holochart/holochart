@@ -65,6 +65,10 @@
    },
    "automargin": false
   },
+  "uniformtext": {
+   "mode": false,
+   "minsize": 0
+  },
   "hovermode": "closest",
   "dragmode": "zoom",
   "transition": {

@@ -34,7 +34,7 @@ import {
 import { anchoredMarginPush, anchoredOrigin, type AnchoredBox } from '../shared/placement.ts';
 import {
   inheritFont,
-  measureBlock,
+  measureStyled,
   rgba,
   styledText,
   textFont,
@@ -296,7 +296,7 @@ function sizeColorbar(spec: ColorbarSpec, cb: FullColorbar, env: ColorbarEnv): S
     size: Math.round(tickfont.size * 1.2),
   });
   const styled = styledText(cb.title.text, textFont(titleFull));
-  const tbox = measureBlock(styled.text, styled.font, measure);
+  const tbox = measureStyled(styled, measure);
   const hasTitle = styled.text !== '';
   const side = cb.title.side;
 
@@ -395,7 +395,13 @@ function sizeColorbar(spec: ColorbarSpec, cb: FullColorbar, env: ColorbarEnv): S
     let contentAlong = A(len - bw - padAlong);
     if (hasTitle) {
       const color = rgba(titleFull.color);
-      const item = { text: styled.text, font: styled.font, color, angle: 0 };
+      const item = {
+        text: styled.text,
+        font: styled.font,
+        color,
+        angle: 0,
+        ...(styled.runs ? { runs: styled.runs } : {}),
+      };
       if (vertical && side === 'right') {
         labels.push({
           ...item,

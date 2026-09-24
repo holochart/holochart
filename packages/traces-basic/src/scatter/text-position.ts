@@ -1,7 +1,8 @@
 /**
  * Scatter text labels (plan E9.3): Plotly `textposition` → anchor and pixel offset for the
  * render package's text primitive, ported from plotly.js `Drawing.textPointPosition`, plus a
- * pseudo-HTML → plain-text reduction until rich text (E2.10) lands.
+ * pseudo-HTML → plain-text reduction. Scatter labels with markup are drawn as rich text (E2.10,
+ * see `shared/rich-text.ts`); {@link plainText} remains for plain-text consumers (table cells).
  */
 
 /** The nine Plotly `textposition` values; `middle center` is the default. */

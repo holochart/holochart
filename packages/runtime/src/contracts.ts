@@ -229,6 +229,14 @@ export interface TraceView<Calc = unknown> {
   /** Bring the objects up to date. Only called when at least one plan flag is set. */
   update(ctx: TracePlotContext<Calc>, plan: TraceUpdatePlan): void;
   /**
+   * Take a pointer event before the chart's own interactions (zoom, pan, select, hover), e.g. a
+   * `table` scrolling on wheel or drag. Offered after every component (components draw on top),
+   * then to trace views from the last trace to the first. Return `true` to consume it; a view that
+   * consumed `down` receives every event until `up`. Positions are container px, so compare them
+   * with `ctx.domain` / `ctx.subplot.rect` from the last `update`.
+   */
+  handlePointer?(event: ComponentPointerEvent): boolean | void;
+  /**
    * Free anything not added through `ctx.add` (primitives added there are removed and disposed by
    * the runtime right after this call).
    */
@@ -356,6 +364,55 @@ export interface TraceModule<
     trace: FullTrace,
     ctx: LegendIconContext,
   ): readonly LegendItem[] | undefined;
+  /**
+   * What assistive technology is told about this trace (E17.1, M2 wave 2): the runtime renders
+   * it into the chart's visually hidden description. Traces without it get a generic line (type,
+   * name, point count).
+   */
+  describe?(ctx: DescribeContext<Calc>): TraceDescription | undefined;
+}
+
+/** Context for {@link TraceModule.describe}. */
+export interface DescribeContext<Calc = unknown> {
+  readonly trace: FullTrace;
+  readonly calc: Calc;
+  readonly index: number;
+  readonly fullLayout: FullLayout;
+  /** The trace's axes (cartesian traces), for formatting values the way the axes do. */
+  readonly xaxis: AxisInfo | undefined;
+  readonly yaxis: AxisInfo | undefined;
+  /**
+   * Most rows the runtime shows in a trace's hidden table (100): build at most this many and
+   * report the full count in `table.total`, so describing a million points stays cheap. Longer
+   * `rows` are cut by the runtime.
+   */
+  readonly maxRows: number;
+}
+
+/** A trace's accessible description (E17.1). */
+export interface TraceDescription {
+  /** One or two plain-text sentences, e.g. "Scatter 'Revenue': 120 points; x 2020–2024; y 3.1–9.8." */
+  readonly summary: string;
+  /**
+   * What kind of chart this trace makes, as a lowercase noun for the chart-level summary
+   * ("Line and bar chart with 3 traces"): `'line'`, `'area'`, `'bubble'`, `'horizontal bar'`,
+   * `'donut'`, … Default: the trace type.
+   */
+  readonly kind?: string;
+  /**
+   * An optional data table rendered as a hidden `<table>` (the `table` trace's cells, or a sample
+   * of a trace's points). Cell text is plain text.
+   */
+  readonly table?: {
+    readonly caption?: string;
+    readonly columns: readonly string[];
+    readonly rows: readonly (readonly string[])[];
+    /**
+     * Rows the data has when `rows` holds only the first {@link DescribeContext.maxRows}: the
+     * table then says "first N of M". Default: `rows.length`.
+     */
+    readonly total?: number;
+  };
 }
 
 // ---- Interaction parts of the trace contract (M1 wave 2) --------------------------------------

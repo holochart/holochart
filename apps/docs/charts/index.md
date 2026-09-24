@@ -26,8 +26,8 @@ types are added as their traces land.
 | [Bar](/charts/basic/bar)                       | `bar`                                     | M1        |
 | [Horizontal Bar](/charts/basic/horizontal-bar) | `bar` (`orientation: 'h'`)                | M1        |
 | [Pie](/charts/basic/pie)                       | `pie`                                     | M2        |
-| Table                                          | `table`                                   | M2        |
-| Gantt                                          | `bar` (with a timeline helper)            | M2        |
+| [Table](/charts/basic/table)                   | `table`                                   | M2        |
+| [Gantt](/charts/basic/gantt)                   | `bar` (with a timeline helper)            | M2        |
 | [Error Bars](/charts/basic/scatter#error-bars) | `error_x` / `error_y` on `scatter`, `bar` | M1        |
 
 ## Statistical

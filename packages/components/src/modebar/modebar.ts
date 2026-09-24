@@ -28,6 +28,8 @@ import {
   modebarZoomUpdate,
   recordModebarResetState,
   type ModebarAxisLike,
+  type ModebarDownloadRequest,
+  type ModebarImageOptions,
   type ModebarLayoutUpdate,
   type ModebarResetState,
 } from './actions.ts';
@@ -207,16 +209,14 @@ export interface ModebarChartLike {
         readonly staticPlot?: unknown;
         readonly modeBarButtonsToRemove?: unknown;
         readonly modeBarButtonsToAdd?: unknown;
-        readonly toImageButtonOptions?: { readonly filename?: unknown };
+        readonly toImageButtonOptions?: ModebarImageOptions;
       }
     | undefined;
   /** Cartesian axes, read at click time (current ranges). */
   readonly axes: ReadonlyMap<string, ModebarAxisLike>;
   relayout(update: ModebarLayoutUpdate): Promise<unknown>;
-  readonly three: {
-    readonly renderer: { readonly domElement: HTMLCanvasElement };
-    readonly root: { renderNow(): void };
-  };
+  /** Raster export (E18.1), for the camera button. */
+  downloadImage(options: ModebarDownloadRequest): Promise<unknown>;
 }
 
 /** What the view reads from the component draw context. */
@@ -314,7 +314,7 @@ export function createModebarView<Ctx extends ModebarViewContext>(
     const fl = last.fullLayout;
     switch (button.builtin) {
       case 'toImage':
-        modebarDownloadImage(chart);
+        void modebarDownloadImage(chart);
         return;
       case 'zoom2d':
       case 'pan2d':

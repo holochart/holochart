@@ -13,6 +13,8 @@ full. The interface is being finalized in M1 and becomes a stable public API in 
 
 The current shape, in summary:
 
+<!-- docs-gates: no-typecheck (a summary of the interface, not compilable code) -->
+
 ```ts
 interface TraceModule<Attrs, Calc> {
   type: string; // 'scatter'

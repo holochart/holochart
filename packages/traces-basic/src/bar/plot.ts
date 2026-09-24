@@ -7,7 +7,7 @@
  * radii, the start of bars below a log axis), which is recomputed from the calc without new geometry
  * in the common case.
  */
-import { toRGBA, type FullTrace } from '@mk7s/holochart-core';
+import { toRGBA, uniformTextOf, type FullTrace, type UniformText } from '@mk7s/holochart-core';
 import {
   createRectPrimitive,
   createTextPrimitive,
@@ -15,10 +15,12 @@ import {
   type RectPrimitive,
   type RGBA,
   type ScalarInput,
+  type TextLabel,
   type TextPrimitive,
 } from '@mk7s/holochart-render';
 import type {
   AxisInfo,
+  ComponentPointerEvent,
   TracePlotContext,
   TraceRenderer,
   TraceUpdatePlan,
@@ -26,10 +28,12 @@ import type {
 } from '@mk7s/holochart-runtime';
 import { ErrorBarLayer, errorBarStyle } from '../shared/error-bars/index.ts';
 import { traceRenderOrder } from '../shared/render-order.ts';
+import { cartesianLinkAt, handleLinkPointer, hasLink } from '../shared/rich-text.ts';
+import { negotiateUniformText, releaseUniformText } from '../shared/uniform-text.ts';
 import type { BarCalc } from './calc.ts';
 import { mayShowText } from './defaults.ts';
 import { barStyle, cornerRadiusPx, selectionSet, type BarStyle } from './style.ts';
-import { barTextLabels, valueFormatters } from './text.ts';
+import { planBarText, valueFormatters } from './text.ts';
 
 /** Bars narrower than this (px) are not snapped to device pixels, so dense bars keep their widths. */
 const SNAP_MIN_WIDTH_PX = 2;
@@ -146,9 +150,27 @@ class BarView implements TraceView<BarCalc> {
   #floor = NaN;
   #relativeRadius = false;
   #errors: { x?: ErrorBarLayer; y?: ErrorBarLayer } = {};
+  /** The context labels were last computed with (uniformtext refreshes, link hit tests). */
+  #textCtx: TracePlotContext<BarCalc> | undefined;
+  /** Drawn labels with links (E2.10), for {@link BarView.handlePointer}. */
+  #links: TextLabel[] = [];
 
   constructor(ctx: TracePlotContext<BarCalc>) {
     this.#sync(ctx);
+  }
+
+  /** Clicks on label links (`<a href>`) open them; hovering one shows a pointer cursor. */
+  handlePointer(event: ComponentPointerEvent): boolean {
+    const ctx = this.#textCtx;
+    if (this.#links.length === 0 || !ctx) return false;
+    const link = cartesianLinkAt(this.#links, ctx.transform, ctx.subplot, event.x, event.y);
+    return handleLinkPointer(event, link);
+  }
+
+  dispose(): void {
+    // Other bar views are being updated or disposed too: no refresh from here.
+    const ctx = this.#textCtx;
+    if (ctx) releaseUniformText(ctx.primitives, ctx.trace.type, this, false);
   }
 
   update(ctx: TracePlotContext<BarCalc>, plan: TraceUpdatePlan): void {
@@ -251,16 +273,26 @@ class BarView implements TraceView<BarCalc> {
     this.#syncText(ctx);
   }
 
-  /** Labels depend on bar sizes in px, colors and the selection: recompute them all. */
-  #syncText(ctx: TracePlotContext<BarCalc>): void {
+  /**
+   * Labels depend on bar sizes in px, colors and the selection: recompute them all. With
+   * `layout.uniformtext`, their size is negotiated with every other bar trace of the chart (E4.6);
+   * `uniform` overrides the layout's when another view asks for a refresh.
+   */
+  #syncText(
+    ctx: TracePlotContext<BarCalc>,
+    uniform: UniformText = uniformTextOf(ctx.fullLayout),
+  ): void {
     const { trace, calc } = ctx;
+    this.#textCtx = ctx;
     if (!hasText(trace)) {
+      releaseUniformText(ctx.primitives, trace.type, this);
       if (this.#text) ctx.remove(this.#text);
       this.#text = undefined;
+      this.#links = [];
       return;
     }
     const style = this.#style ?? this.#computeStyle(ctx);
-    const labels = barTextLabels(trace, calc, {
+    const plan = planBarText(trace, calc, {
       transform: ctx.transform,
       xRange: ctx.xaxis?.scale.range,
       yRange: ctx.yaxis?.scale.range,
@@ -269,7 +301,14 @@ class BarView implements TraceView<BarCalc> {
       formatters: valueFormatters(calc, ctx.xaxis, ctx.yaxis),
       floor: this.#floor,
       selected: selectionSet(ctx.selectedPoints),
+      uniformText: uniform,
     });
+    // Plotly negotiates per trace type (`_barText_minsize`), across subplots.
+    const size = negotiateUniformText(ctx.primitives, trace.type, this, plan.items, uniform, (u) =>
+      this.#refreshText(u),
+    );
+    const labels = plan.labels(size);
+    this.#links = labels.some(hasLink) ? labels.filter(hasLink) : [];
     if (!this.#text) {
       this.#text = createTextPrimitive(ctx.primitives, { labels });
       ctx.add(this.#text);
@@ -279,6 +318,12 @@ class BarView implements TraceView<BarCalc> {
     // Labels draw over this trace's bars, below the next bar trace.
     this.#text.object.renderOrder = traceRenderOrder(ctx.trace, ctx.index) + LAYER.text;
     this.#text.setTransform(ctx.transform);
+  }
+
+  /** Redraw the labels from the last context with another trace's `uniformtext` negotiation. */
+  #refreshText(uniform: UniformText): void {
+    const ctx = this.#textCtx;
+    if (ctx && this.#rects) this.#syncText(ctx, uniform);
   }
 }
 

@@ -7,7 +7,12 @@
  * decimated lines (and spline fills), whose geometry is rebuilt when the zoom changes the axis
  * scales enough to matter.
  */
-import { createTickFormatter, isArrayLike, type FullTrace } from '@mk7s/holochart-core';
+import {
+  createTickFormatter,
+  isArrayLike,
+  mayContainRichText,
+  type FullTrace,
+} from '@mk7s/holochart-core';
 import {
   createFillPrimitive,
   createMarkers,
@@ -20,6 +25,8 @@ import {
   type MarkerSet,
   type Primitive,
   type RGBA,
+  TEXT_DEFAULT_FONT,
+  type TextFont,
   type TextFontWeight,
   type TextLabel,
   type TextPrimitive,
@@ -27,6 +34,7 @@ import {
 import {
   formatTemplate,
   type AxisInfo,
+  type ComponentPointerEvent,
   type TemplateContext,
   type TraceAppend,
   type TracePlotContext,
@@ -37,6 +45,14 @@ import {
 import { toRGBA } from '@mk7s/holochart-core';
 import { ErrorBarLayer, errorBarStyle } from '../shared/error-bars/index.ts';
 import { traceRenderOrder } from '../shared/render-order.ts';
+import {
+  cartesianLinkAt,
+  fadeRuns,
+  handleLinkPointer,
+  hasLink,
+  richLabel,
+  type RichLabel,
+} from '../shared/rich-text.ts';
 import { drawnSeries, type ScatterCalc } from './calc.ts';
 import { windowChange } from './calc-stream.ts';
 import { fillStyle, traceFill, type TraceFill } from './fill-trace.ts';
@@ -156,7 +172,8 @@ export function pointTemplateContext(
 
 /**
  * Text labels for `mode` `text`, one per point with non-empty text (`texttemplate` over `text`),
- * placed like Plotly's `textPointPosition` around the marker.
+ * placed like Plotly's `textPointPosition` around the marker. Pseudo-HTML (E2.10) becomes styled
+ * runs; as in Plotly's SVG text, raw newlines are spaces and only `<br>` breaks lines.
  */
 export function textLabels(
   trace: FullTrace,
@@ -195,15 +212,30 @@ export function textLabels(
       raw = t === undefined || t === null ? '' : String(t);
     }
     if (raw === '') continue;
-    const s = plainText(raw);
     const size = Number(valueAt(font.size, i)) || 12;
+    const family = valueAt(font.family, i);
+    const labelFont: Partial<TextFont> = {
+      ...(typeof family === 'string' ? { family } : {}),
+      size,
+      ...(font.weight !== undefined ? { weight: font.weight as TextFontWeight } : {}),
+      ...(font.style === 'italic' ? { style: 'italic' as const } : {}),
+    };
+    // Plain strings keep the plain-text path (and label objects) exactly as before rich text.
+    let rich: RichLabel | undefined;
+    let richFont: TextFont | undefined;
+    if (mayContainRichText(raw)) {
+      const base: TextFont = { ...TEXT_DEFAULT_FONT, ...labelFont };
+      rich = richLabel(raw, base, 'space');
+      if (rich && !rich.runs && rich.font !== base) richFont = rich.font;
+    }
+    const s = rich ? rich.text : plainText(raw);
     const radius = markers ? (typeof sizes === 'number' ? sizes : (sizes[i] ?? 0)) / 2 : 0;
     const pos = valueAt(position, i);
     const placement = textPlacement(
       typeof pos === 'string' ? pos : 'middle center',
       size,
       radius,
-      lineCount(s),
+      rich ? rich.lineCount : lineCount(s),
     );
     let colorIn = valueAt(font.color, i);
     if (selected) {
@@ -219,7 +251,6 @@ export function textLabels(
     }
     // Plotly dims unselected text like markers when no unselected color is given.
     const dim = selected && !selected.has(i) && typeof unselColor !== 'string' ? 0.2 : 1;
-    const family = valueAt(font.family, i);
     labels.push({
       text: s,
       x,
@@ -227,12 +258,9 @@ export function textLabels(
       ...placement,
       lineHeight: TEXT_LINE_HEIGHT,
       color: [color[0], color[1], color[2], color[3] * opacity * dim],
-      font: {
-        ...(typeof family === 'string' ? { family } : {}),
-        size,
-        ...(font.weight !== undefined ? { weight: font.weight as TextFontWeight } : {}),
-        ...(font.style === 'italic' ? { style: 'italic' as const } : {}),
-      },
+      // A label-wide style (`<b>…</b>`) is merged into the font; mixed styles become runs.
+      font: richFont ?? labelFont,
+      ...(rich?.runs ? { runs: fadeRuns(rich.runs, opacity * dim) } : {}),
     });
   }
   return labels;
@@ -355,9 +383,20 @@ class ScatterView implements TraceView<ScatterCalc> {
    */
   #markerHead = 0;
   #text: TextPrimitive | undefined;
+  /** The context text was last drawn with, and its labels with links (E2.10), for pointers. */
+  #textCtx: TracePlotContext<ScatterCalc> | undefined;
+  #links: TextLabel[] = [];
 
   constructor(ctx: TracePlotContext<ScatterCalc>) {
     this.#sync(ctx);
+  }
+
+  /** Clicks on label links (`<a href>`) open them; hovering one shows a pointer cursor. */
+  handlePointer(event: ComponentPointerEvent): boolean {
+    const ctx = this.#textCtx;
+    if (!this.#text || this.#links.length === 0 || !ctx) return false;
+    const link = cartesianLinkAt(this.#links, ctx.transform, ctx.subplot, event.x, event.y);
+    return handleLinkPointer(event, link);
   }
 
   update(ctx: TracePlotContext<ScatterCalc>, plan: TraceUpdatePlan): void {
@@ -619,6 +658,7 @@ class ScatterView implements TraceView<ScatterCalc> {
     }
     this.#markers?.setTransform(t);
     this.#text?.setTransform(t);
+    this.#textCtx = ctx;
   }
 
   #linePath(ctx: TracePlotContext<ScatterCalc>): { x: Float64Array; y: Float64Array } {
@@ -642,12 +682,15 @@ class ScatterView implements TraceView<ScatterCalc> {
   }
 
   #labels(ctx: TracePlotContext<ScatterCalc>): TextLabel[] {
-    return textLabels(
+    const labels = textLabels(
       ctx.trace,
       ctx.calc,
       { x: ctx.xaxis, y: ctx.yaxis },
       ctx.selectedPoints ?? null,
     );
+    this.#textCtx = ctx;
+    this.#links = labels.some(hasLink) ? labels.filter(hasLink) : [];
+    return labels;
   }
 
   #add<P extends Primitive<unknown>>(ctx: TracePlotContext<ScatterCalc>, primitive: P): P {

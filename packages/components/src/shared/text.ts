@@ -1,142 +1,64 @@
 /**
- * Text helpers shared by the components: Plotly pseudo-HTML → plain text, fonts, and measurement
- * through the synchronous font-metrics oracle (the same one layout uses, ADR-005).
+ * Text helpers shared by the components: Plotly pseudo-HTML → text for the SDF primitive, fonts,
+ * and measurement through the synchronous font-metrics oracle (the same one layout uses, ADR-005).
  *
- * Rich text (E2.10) is not built yet. Until it is, labels are simplified here: `<br>` becomes a
- * line break, `<sup>`/`<sub>` digits and signs become Unicode super/subscripts (so log-axis
- * `10<sup>3</sup>` labels still read correctly), a few entities are decoded, and every other tag
- * is dropped (keeping its text).
+ * Rich text (E2.10): {@link styledText} parses a label with core's rich-text parser. Plain text
+ * (and text whose runs all share one style, e.g. a title wrapped in `<b>`) stays one plain label
+ * with that font; anything else becomes lines of styled runs, drawn by the text primitive as one
+ * member per run and measured with {@link measureStyled}. Tick labels included: `10<sup>3</sup>`
+ * exponents are drawn as real superscripts, as in Plotly (Unicode super/subscript digits, which
+ * the text used to be mapped to, are missing from most fonts, including the bundled default).
  */
-import type { RGBA } from '@mk7s/holochart-render';
-import { getDefaultFontMetricsOracle, type TextFont } from '@mk7s/holochart-render';
-import { toRGBA } from '@mk7s/holochart-core';
+import type { RGBA, TextRunLines } from '@mk7s/holochart-render';
+import { getDefaultFontMetricsOracle, layoutTextRuns, type TextFont } from '@mk7s/holochart-render';
+import { richTextLabel, richTextToPlain, toRGBA } from '@mk7s/holochart-core';
 
 /** Line height of multi-line labels, relative to the font size (Plotly's `LINE_SPACING`). */
 export const LINE_HEIGHT = 1.3;
 
-const SUPERSCRIPT: Readonly<Record<string, string>> = {
-  '0': '⁰',
-  '1': '¹',
-  '2': '²',
-  '3': '³',
-  '4': '⁴',
-  '5': '⁵',
-  '6': '⁶',
-  '7': '⁷',
-  '8': '⁸',
-  '9': '⁹',
-  '+': '⁺',
-  '-': '⁻',
-  '−': '⁻',
-  '=': '⁼',
-  '(': '⁽',
-  ')': '⁾',
-  n: 'ⁿ',
-  i: 'ⁱ',
-};
-
-const SUBSCRIPT: Readonly<Record<string, string>> = {
-  '0': '₀',
-  '1': '₁',
-  '2': '₂',
-  '3': '₃',
-  '4': '₄',
-  '5': '₅',
-  '6': '₆',
-  '7': '₇',
-  '8': '₈',
-  '9': '₉',
-  '+': '₊',
-  '-': '₋',
-  '−': '₋',
-  '=': '₌',
-  '(': '₍',
-  ')': '₎',
-};
-
-const ENTITIES: Readonly<Record<string, string>> = {
-  amp: '&',
-  lt: '<',
-  gt: '>',
-  quot: '"',
-  apos: "'",
-  nbsp: ' ',
-};
-
-function mapChars(text: string, table: Readonly<Record<string, string>>): string {
-  let out = '';
-  for (const ch of text) out += table[ch] ?? ch;
-  return out;
-}
-
-function decodeEntities(text: string): string {
-  return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (match, name: string) => {
-    if (name.startsWith('#x') || name.startsWith('#X')) {
-      const code = Number.parseInt(name.slice(2), 16);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
-    }
-    if (name.startsWith('#')) {
-      const code = Number.parseInt(name.slice(1), 10);
-      return Number.isFinite(code) ? String.fromCodePoint(code) : match;
-    }
-    return ENTITIES[name.toLowerCase()] ?? match;
-  });
-}
-
 /**
- * Plotly pseudo-HTML → plain text for the SDF text primitive: `<br>` → `\n`, `<sup>`/`<sub>` →
- * Unicode super/subscripts where they exist, other tags removed, entities decoded.
+ * Plotly pseudo-HTML → plain text (core's rich-text parser): tags removed, entities decoded,
+ * `<br>` and raw newlines → `\n`. Unknown tags stay literal, as they are drawn.
  *
  * @example
  * ```ts
- * plainText('10<sup>−3</sup>'); // '10⁻³'
+ * plainText('10<sup>−3</sup>'); // '10−3'
  * plainText('Jan 5<br>2026');   // 'Jan 5\n2026'
  * ```
  */
 export function plainText(text: string): string {
-  if (text === '') return '';
-  let s = text.replace(/<br\s*\/?>/gi, '\n');
-  s = s.replace(/<sup>([\s\S]*?)<\/sup>/gi, (_, inner: string) =>
-    mapChars(inner.replace(/<[^>]*>/g, ''), SUPERSCRIPT),
-  );
-  s = s.replace(/<sub>([\s\S]*?)<\/sub>/gi, (_, inner: string) =>
-    mapChars(inner.replace(/<[^>]*>/g, ''), SUBSCRIPT),
-  );
-  s = s.replace(/<[^>]*>/g, '');
-  return decodeEntities(s);
+  return richTextToPlain(text);
 }
 
-/** Whether `<tag>`/`</tag>` pairs in `text` nest properly (`a</b><b>b` does not). */
-function balanced(text: string, tag: string): boolean {
-  let depth = 0;
-  for (const m of text.matchAll(new RegExp(`<(/?)${tag}>`, 'gi'))) {
-    depth += m[1] === '/' ? -1 : 1;
-    if (depth < 0) return false;
-  }
-  return depth === 0;
+/** A label's text for the text primitive: plain `text`, its font, and runs when it is rich. */
+export interface StyledText {
+  /** Plain text (tags removed, entities decoded, `<br>` → `\n`). */
+  readonly text: string;
+  readonly font: TextFont;
+  /** Lines of styled runs (E2.10), or `undefined` for a plain single-style label. */
+  readonly runs?: TextRunLines;
 }
 
 /**
- * {@link plainText} plus whole-label styling: a label entirely wrapped in `<b>…</b>` or
- * `<i>…</i>` (common for titles) is drawn bold or italic. Partial styling needs rich text (E2.10).
+ * Plotly pseudo-HTML → a label (core's `richTextLabel`): plain text with its font when every run
+ * shares one style (a whole label in `<b>…</b>` is drawn bold, like before), else lines of styled
+ * runs (partial bold, `<sup>`, colored spans, links…). Plain strings take the fast path untouched.
  */
-export function styledText(text: string, font: TextFont): { text: string; font: TextFont } {
-  let inner = text.trim();
-  let bold = false;
-  let italic = false;
-  for (;;) {
-    const m = /^<(b|i|em|strong)>([\s\S]*)<\/\1>$/i.exec(inner);
-    if (!m || !balanced(m[2] as string, m[1] as string)) break;
-    const tag = (m[1] as string).toLowerCase();
-    if (tag === 'b' || tag === 'strong') bold = true;
-    else italic = true;
-    inner = m[2] as string;
-  }
-  if (!bold && !italic) return { text: plainText(text), font };
-  return {
-    text: plainText(inner),
-    font: { ...font, ...(bold ? { weight: 'bold' } : {}), ...(italic ? { style: 'italic' } : {}) },
-  };
+export function styledText(text: string, font: TextFont): StyledText {
+  const r = richTextLabel(text, font);
+  if (!r) return { text, font };
+  return r.runs ? { text: r.text, font: r.font, runs: r.runs } : { text: r.text, font: r.font };
+}
+
+/** Size of a {@link styledText} label in px (runs laid out like the text primitive draws them). */
+export function measureStyled(styled: StyledText, measure: MeasureLine): TextBox {
+  if (!styled.runs) return measureBlock(styled.text, styled.font, measure);
+  const layout = layoutTextRuns(
+    styled.runs,
+    { font: styled.font, lineHeight: LINE_HEIGHT },
+    getDefaultFontMetricsOracle(),
+  );
+  return { width: layout.width, height: layout.height, lines: layout.lineCount };
 }
 
 /** A defaulted Plotly font (`layout.font`, `tickfont`, …). */
@@ -223,3 +145,9 @@ export function measureBlock(text: string, font: TextFont, measure: MeasureLine)
   for (const line of lines) width = Math.max(width, measure(line, font));
   return { width, height: lines.length * font.size * LINE_HEIGHT, lines: lines.length };
 }
+
+export {
+  fadeTextRuns as fadeRuns,
+  handleTextLinkPointer as handleLinkPointer,
+  openTextLink,
+} from '@mk7s/holochart-render';

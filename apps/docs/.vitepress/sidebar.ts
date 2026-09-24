@@ -123,6 +123,8 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
         'bar',
         'horizontal-bar',
         'pie',
+        'table',
+        'gantt',
       ]),
     },
   ];

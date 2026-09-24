@@ -10,11 +10,13 @@ import {
   createRectPrimitive,
   createTextPrimitive,
   LinePrimitive,
+  textLinkAt,
   type DataTransform,
   type Primitive,
   type PrimitiveContext,
   type RectPrimitive,
   type TextLabel,
+  type TextLink,
   type TextPrimitive,
   type Viewport,
 } from '@mk7s/holochart-render';
@@ -187,7 +189,34 @@ export function toTextLabel(l: LabelItem): TextLabel {
     color: l.color,
     lineHeight: LINE_HEIGHT,
     ...(l.align ? { align: l.align } : {}),
+    ...(l.runs ? { runs: l.runs } : {}),
   };
+}
+
+/**
+ * The link (rich-text `<a href>`, E2.10) under a point of a set of labels, topmost (last) first;
+ * `x`, `y` in the same px as the labels (container px for component labels).
+ */
+export function labelLinkAt(labels: readonly LabelItem[], x: number, y: number): TextLink | null {
+  for (let i = labels.length - 1; i >= 0; i--) {
+    const l = labels[i] as LabelItem;
+    if (!l.runs) continue;
+    const link = textLinkAt(
+      l.runs,
+      {
+        font: l.font,
+        lineHeight: LINE_HEIGHT,
+        anchorX: l.anchorX,
+        anchorY: l.anchorY,
+        angle: l.angle,
+        ...(l.align ? { align: l.align } : {}),
+      },
+      x - l.x,
+      y - l.y,
+    );
+    if (link) return link;
+  }
+  return null;
 }
 
 /** Batched SDF labels (one draw call); only labels whose layout changed are re-typeset. */
@@ -203,11 +232,19 @@ export class TextBatch extends Batch<TextPrimitive> {
     );
   }
 
+  #labels: readonly LabelItem[] = [];
+
   set(labels: readonly LabelItem[]): void {
+    this.#labels = labels;
     const key = JSON.stringify(labels);
     if (key === this.#key) return;
     this.#key = key;
     this.primitive.update({ labels: labels.map(toTextLabel) });
+  }
+
+  /** The link under a point (container px, like the labels), for pointer handling. */
+  linkAt(x: number, y: number): TextLink | null {
+    return labelLinkAt(this.#labels, x, y);
   }
 
   /** Resolves when every label requested so far is typeset. */

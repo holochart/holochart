@@ -26,6 +26,7 @@ import type {
 import type { LabelItem } from '../axes/geometry.ts';
 import { TextBatch } from '../shared/batches.ts';
 import { findChart, fireAndForget } from '../shared/host.ts';
+import { handleLinkPointer } from '../shared/text.ts';
 import {
   classTransform,
   LayerHost,
@@ -501,6 +502,10 @@ class ShapesView implements ComponentView {
         this.#commit(drag);
       }
       return event.type !== 'leave';
+    }
+    // Links in shape labels (E2.10).
+    for (const batch of this.#texts.values()) {
+      if (handleLinkPointer(event, batch.linkAt(event.x, event.y))) return true;
     }
     if (event.type !== 'move' && event.type !== 'down' && event.type !== 'click') return false;
     // Topmost first: upper-layer shapes, then later shapes.

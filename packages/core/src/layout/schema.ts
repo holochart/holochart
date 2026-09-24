@@ -832,6 +832,23 @@ export const layoutSchema = attr.object(
       description:
         'Show the legend. Defaults to `true` when more than one trace has a legend entry.',
     }),
+    uniformtext: attr.object(
+      {
+        mode: attr.enumerated({
+          values: [false, 'hide', 'show'],
+          dflt: false,
+          description:
+            'Uniform size for the text inside bars and pie slices, per trace type (E4.6): labels are drawn at the smallest fitted size; `hide` drops labels that would be smaller than `minsize`, `show` draws them at the uniform size. `false` lets every label scale on its own.',
+        }),
+        minsize: attr.number({
+          min: 0,
+          dflt: 0,
+          description:
+            'Minimum text size in px for `uniformtext.mode`. Also raises trace fonts smaller than it.',
+        }),
+      },
+      { editType: 'plot', description: 'Uniform text sizing for bar and pie labels (E4.6).' },
+    ),
     hovermode: attr.enumerated({
       values: ['x', 'y', 'closest', false, 'x unified', 'y unified'],
       dflt: 'closest',

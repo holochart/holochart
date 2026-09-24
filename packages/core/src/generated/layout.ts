@@ -68,6 +68,10 @@ export interface Layout {
    */
   showlegend?: boolean;
   /**
+   * Uniform text sizing for bar and pie labels (E4.6).
+   */
+  uniformtext?: LayoutUniformtext;
+  /**
    * How hover picks points: nearest point, all points at the same x/y, or unified labels.
    *
    * @defaultValue `"closest"`
@@ -337,6 +341,26 @@ export interface LayoutTitleFont {
    * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
    */
   shadow?: string;
+}
+
+/**
+ * Uniform text sizing for bar and pie labels (E4.6).
+ */
+export interface LayoutUniformtext {
+  /**
+   * Uniform size for the text inside bars and pie slices, per trace type (E4.6): labels are drawn at the smallest fitted size; `hide` drops labels that would be smaller than `minsize`, `show` draws them at the uniform size. `false` lets every label scale on its own.
+   *
+   * @defaultValue `false`
+   */
+  mode?: false | 'hide' | 'show';
+  /**
+   * Minimum text size in px for `uniformtext.mode`. Also raises trace fonts smaller than it.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `0`
+   */
+  minsize?: number;
 }
 
 /**

@@ -9,13 +9,13 @@ Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's
 
 | Entry                                   | What it measures                                           | Budget |
 | --------------------------------------- | ---------------------------------------------------------- | ------ |
-| `partial: core + scatter`               | `createChart` + `register` from runtime, `scatter` trace   | 142 kB |
+| `partial: core + scatter`               | `createChart` + `register` from runtime, `scatter` trace   | 153 kB |
 | `text engine (lazy chunk …)`            | the SDF text engine chunk, loaded on first text use        | 49 kB  |
 | `default font, regular face (lazy …)`   | TeX Gyre Heros Regular chunk, loaded on first text use     | 95 kB  |
 | `default font, bold face (lazy …)`      | the bold face chunk, loaded when bold text is drawn        | 95 kB  |
 | `default font, italic face (lazy …)`    | the italic face chunk, loaded when italic text is drawn    | 98 kB  |
 | `default font, bold italic face (…)`    | the bold italic face chunk                                 | 95 kB  |
-| `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 212 kB |
+| `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 234 kB |
 | `@mk7s/holochart (full, ESM)`           | everything the full bundle exports                         | 450 kB |
 | `@mk7s/holochart IIFE (includes three)` | `dist/holochart.iife.min.js` as shipped, **with** three.js | 650 kB |
 | each `@mk7s/holochart-*` package        | `export *` of that package                                 | report |
@@ -77,25 +77,30 @@ In CI, the job writes the table to the job summary, uploads `size.json` as the `
 artifact, compares with the latest successful `main` run, and posts or updates one PR comment
 (same-repo PRs only; fork PRs get a read-only token, so they get the job summary only).
 
-## Current sizes (2026-09-23, M2 default look)
+## Current sizes (2026-09-24, M2 wave 2)
 
 Initial download per entry. Lazy chunks are listed separately: the text engine (loaded the first
-time a chart draws text) and the default font's faces (the regular face with the first text; bold
-and italic only when used). Charts without text load none of them.
+time a chart draws text; the export code rides in the same lazy chunk), and the default font's
+faces (the regular face with the first text; bold and italic only when used). Charts without text
+load none of them.
 
-| Entry                          | Initial   | Text engine | Budget | M2 wave 1 |
-| ------------------------------ | --------- | ----------- | ------ | --------- |
-| `@mk7s/holochart-core`         | 58.73 kB  | —           | —      | 57.74 kB  |
-| `@mk7s/holochart-render`       | 59.78 kB  | 45.73 kB    | —      | 58.99 kB  |
-| `@mk7s/holochart-runtime`      | 70.19 kB  | —           | —      | 68.70 kB  |
-| `@mk7s/holochart-components`   | 98.33 kB  | 45.73 kB    | —      | 98.54 kB  |
-| `@mk7s/holochart-traces-basic` | 106.66 kB | 45.73 kB    | —      | 106.86 kB |
-| `@mk7s/holochart-themes`       | 8.53 kB   | —           | —      | 8.09 kB   |
-| partial: core + scatter        | 131.09 kB | 45.73 kB    | 142 kB | 129.20 kB |
-| text engine (lazy)             | 45.73 kB  | —           | 49 kB  | 45.73 kB  |
-| partial: basic                 | 194.67 kB | 45.73 kB    | 212 kB | 192.93 kB |
-| full, ESM                      | 219.74 kB | 45.73 kB    | 450 kB | 217.96 kB |
-| IIFE (includes three)          | 396.23 kB | inlined     | 650 kB | 394.36 kB |
+| Entry                          | Initial   | Text engine | Budget | Default look |
+| ------------------------------ | --------- | ----------- | ------ | ------------ |
+| `@mk7s/holochart-core`         | 61.65 kB  | —           | —      | 58.73 kB     |
+| `@mk7s/holochart-render`       | 61.10 kB  | 46.62 kB    | —      | 59.78 kB     |
+| `@mk7s/holochart-runtime`      | 74.66 kB  | —           | —      | 70.19 kB     |
+| `@mk7s/holochart-components`   | 101.97 kB | 46.62 kB    | —      | 98.33 kB     |
+| `@mk7s/holochart-traces-basic` | 121.59 kB | 46.62 kB    | —      | 106.66 kB    |
+| `@mk7s/holochart-themes`       | 8.61 kB   | —           | —      | 8.53 kB      |
+| partial: core + scatter        | 139.02 kB | 46.62 kB    | 153 kB | 131.09 kB    |
+| text engine (lazy)             | 46.62 kB  | —           | 49 kB  | 45.73 kB     |
+| partial: basic                 | 212.49 kB | 46.62 kB    | 234 kB | 194.67 kB    |
+| full, ESM                      | 238.59 kB | 46.62 kB    | 450 kB | 219.74 kB    |
+| IIFE (includes three)          | 416.47 kB | inlined     | 650 kB | 396.23 kB    |
+
+Wave 2 added rich text (~3.7 kB of core + scatter, ~5 kB of basic), the accessible description
+and lazy export path (~3 kB / ~5 kB), and to `basic` only the `table` trace (~6.5 kB) and the
+`timeline()` helper (~1 kB).
 
 | Default font face (lazy)   | Size     | Budget |
 | -------------------------- | -------- | ------ |
@@ -118,7 +123,8 @@ fills don't load the fill code.
 History: the partial budgets started at 90 kB and 150 kB, set before the SDF text engine's weight
 was known. They were raised to measured + 10% in M1 (165 / 200 kB after wave 2, `basic` 215 kB
 after wave 3) by decision, then tightened to measured + ~10% (120 / 170 kB) after the diet below,
-and raised to measured + ~10% (142 / 212 kB) after M2 wave 1 by decision.
+raised to measured + ~10% (142 / 212 kB) after M2 wave 1, and to 153 / 234 kB after M2 wave 2
+(rich text, table, accessibility and export), both by decision.
 
 Splitting the text engine out costs about 1.8 kB in total (two chunks compress separately, and the
 loader adds a little code), and the IIFE about 3.3 kB (the inlined engine is wrapped as a lazily

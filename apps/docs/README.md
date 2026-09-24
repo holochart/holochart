@@ -99,6 +99,43 @@ fails if a page embeds an id that doesn't exist.
 To add an example, create `examples/<category>/<trace>/<slug>.ts` exporting `meta` and `run(el)`
 (see CONTRIBUTING.md). The same file feeds the sandbox and the visual regression suite.
 
+## Gallery
+
+`/gallery/` (plan E19.5) shows a thumbnail of every example that is a visual test (examples
+tagged `no-visual-test` or `perf` are left out), filterable by category, trace type, tag and
+"3D-native", with a title search. Selecting a card opens the example live with its source and
+links to the docs pages that embed it (each `<Example>` has the anchor `#example-<id>`, `/`
+becoming `-`). The open example is in the URL hash (`/gallery/#scatter/basic`), the filters in
+the query string.
+
+Thumbnails come from `tools/gallery-gen`, which runs the visual suite's pipeline (the same
+Playwright config, Chromium + SwiftShader flags, sandbox test mode and screenshot helpers in
+`tests/visual/harness.ts`) and, instead of comparing, re-encodes each screenshot as WebP in the
+page (`canvas.toBlob`, no image dependency), in the default `holochart` look:
+
+| Output (committed)                | Content                                                                                           |
+| --------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `public/gallery/thumbs/<id>.webp` | ≤ 640 px wide, quality 0.8, about 10 KB each                                                      |
+| `public/gallery/manifest.json`    | id, title, description, tags, category, rendered trace types, size, `threeD`, thumbnail path/size |
+
+The page (`gallery/index.md` → `.vitepress/theme/components/Gallery.vue`) reads the manifest
+through a build-time data loader (`.vitepress/theme/data/gallery.data.ts`) that also finds the
+pages embedding each example. Without a manifest the page shows an empty state.
+
+```sh
+pnpm gallery                  # render every example (a few minutes; 4 workers, SwiftShader)
+pnpm gallery -g "bar/"        # re-render a subset; other entries are kept, deleted examples dropped
+pnpm gallery:check            # no browser: manifest and thumbnails match examples/ (CI)
+```
+
+**Thumbnails are committed, not generated at build time.** Rendering ~110 examples needs
+Playwright's Chromium and takes minutes, which the docs build and the deploy job (plain
+`ubuntu-latest`, no browsers) shouldn't pay on every run; the whole set is about 1 MB of WebP and
+only changes when an example's look does. `pnpm gallery:check` runs in the CI docs job and fails
+when an example is added, removed or re-tagged, or its literal title, description, tags or size
+changed, without regenerating the gallery. It can't see pure rendering changes: when you update an
+example's visual baseline (`pnpm test:visual:update -g <id>`), also run `pnpm gallery -g <id>`.
+
 ## Attribute reference
 
 Generated from the attribute schema: one page per registered trace type, plus layout and config.
@@ -108,6 +145,60 @@ discovered by shape from `packages/traces-*` and `packages/components`, so a new
 its package exports the module. Trace types that have a chart page but no module yet get a
 placeholder page. To change what the reference says, change the schema (descriptions,
 `plotlyPath`, `animatable`, ...), not the generated Markdown.
+
+## Quality gates
+
+`scripts/quality.ts` (plan E19.10) measures docs completeness. It is static and offline: nothing
+is fetched and no example is executed, and it runs in a few seconds.
+
+```sh
+pnpm --filter @mk7s/holochart-docs quality                    # report; exits 1 if a hard gate fails
+pnpm --filter @mk7s/holochart-docs quality --json report.json # also write the numbers as JSON
+```
+
+With `GITHUB_STEP_SUMMARY` set (GitHub Actions), a short Markdown summary is appended to it.
+
+| Gate                          | Kind        | What it checks                                                                                                                                                                                                             |
+| ----------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Attribute descriptions        | hard, 100%  | Every leaf attribute (`valType`) of layout, config and every discovered trace has a non-empty `description`. Missing ones are listed by path. Containers (`role: object` / `items`) without one are listed but don't fail. |
+| Attributes used in examples   | report only | Share of leaf attributes that some example under `examples/` sets (target ≥ 70%), overall, per namespace, and the least covered groups (`bar.error_x`, …).                                                                 |
+| Trace types with ≥ 5 examples | hard        | Every **released** trace type has at least 5 examples. Draft chart pages' types are only reported.                                                                                                                         |
+| Snippet type-check            | hard        | Every ` ```ts ` / ` ```typescript ` block of the hand-written pages compiles.                                                                                                                                              |
+| Internal links                | hard        | Markdown links to site paths (`/fundamentals/traces#…`, `./page`) resolve to a page. Anchors and external links (counted per host, never fetched) are report only.                                                         |
+| Spelling                      | report only | A list of common misspellings (`teh`, `recieve`, `seperate`, …) and doubled words (`the the`) in prose. Full dictionary spell checking is deferred: there is no English word list in CI.                                   |
+
+Details:
+
+- **Released** means the trace type is named by `chart:` in the frontmatter of a chart page
+  (`charts/**`, not `index.md` or `_*.md`) with `status: complete`. Examples are counted per trace
+  type from `type: '<name>'` in their source; a trace without `type` counts as `scatter`, Plotly's
+  default.
+- **Attribute usage** parses each example with the TypeScript compiler API and collects the keys
+  of its object literals (`marker.line.width`, `'xaxis.range'`). Arrays are transparent, numbered
+  ids (`xaxis2`, `scene3`) count as their base name, and literals are attributed to a trace type,
+  `layout` or `config` when the scan can tell. It is an estimate, not a runtime trace.
+- **Snippets** are written as one module each to `node_modules/.cache/docs-gates/` with a
+  generated `tsconfig.json` extending `tsconfig.base.json`, so imports resolve like in the docs
+  app (every workspace package resolves to its sources). A snippet may use these names without
+  declaring them, as the conventional context of the docs: `el` (the container), `chart` (a
+  `Chart`), `figure`, `data`, `layout` and `createChart`. Anything else it uses (sample data, other
+  imports, types) must be in the snippet. When a snippet is deliberately not compilable (a summary
+  of an interface, an API that doesn't exist yet), put this comment on the line before its fence;
+  it doesn't render:
+
+  ```md
+  <!-- docs-gates: no-typecheck (reason) -->
+  ```
+
+  Prefer fixing the snippet over opting out; the report lists every opted-out block.
+
+- **Links:** dead internal links already fail `vitepress build` (the config has no
+  `ignoreDeadLinks`); this gate catches them without a build. Links to generated pages
+  (`/reference/<trace>` from `reference/attributes/`, `/reference/api/`, `/plot-schema.json`) are
+  only checked when the generated files exist (run `pnpm run gen` first); otherwise they are
+  skipped with a note.
+- **Spelling exceptions** go in `scripts/quality/dictionary.txt`: one word from the misspellings
+  list or one intentional doubled-word phrase (`that that`) per line.
 
 ## Deployment
 

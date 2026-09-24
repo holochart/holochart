@@ -102,11 +102,13 @@ numeric data, and registering your own palettes.
 hover labels, annotations) inherits the fields it doesn't set from it:
 
 ```ts
-layout: {
+import type { Layout } from '@mk7s/holochart';
+
+const layout: Layout = {
   font: { family: 'Inter, sans-serif', size: 11, color: '#c9ccd6' },
   title: { text: 'Revenue', font: { size: 16, weight: 600 } },
   xaxis: { tickfont: { color: '#8b8e9a' } },
-}
+};
 ```
 
 In the default look, `layout.font` is `'Helvetica Neue', Helvetica, Arial, sans-serif` at 9 px in

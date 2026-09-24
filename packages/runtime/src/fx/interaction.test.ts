@@ -7,9 +7,9 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createChart, type Chart } from '../chart.ts';
-import type { ComponentModule } from '../contracts.ts';
+import type { ComponentModule, TraceModule } from '../contracts.ts';
 import type { ChartEventName } from '../events.ts';
-import { setup, type TestSetup } from '../__testing__/fakes.ts';
+import { createDotsModule, createLog, setup, type TestSetup } from '../__testing__/fakes.ts';
 
 const MARGIN = { l: 40, r: 20, t: 30, b: 50 };
 const RANGES = { xaxis: { range: [0, 10] }, yaxis: { range: [0, 100] } };
@@ -559,5 +559,52 @@ describe('static plots', () => {
     frame();
     expect(log).toHaveLength(0);
     expect(c.element.querySelector('.holochart-fx')).toBeNull();
+  });
+});
+
+describe('trace view pointer hook', () => {
+  /** A dots-like trace type whose view consumes wheel events and records what it saw. */
+  function scroller(type: string, seen: string[], consume: boolean): TraceModule {
+    const dots = createDotsModule(createLog(), { cross: false });
+    return {
+      ...dots,
+      type,
+      plot: {
+        create: () => ({
+          update: () => undefined,
+          handlePointer(e) {
+            seen.push(`${type}:${e.type}`);
+            return consume && e.type === 'wheel';
+          },
+        }),
+      },
+    } as TraceModule;
+  }
+
+  it('offers events after components, last trace first, and a consumed wheel skips scroll zoom', async () => {
+    const seen: string[] = [];
+    const s = setup({ width: 640, height: 400 });
+    s.registry.register(scroller('lower', seen, true), scroller('upper', seen, false));
+    t = s;
+    const c = await chart(
+      [
+        { ...DOTS, type: 'lower' },
+        { ...DOTS, type: 'upper' },
+      ],
+      {},
+      { scrollZoom: true },
+      s,
+    );
+    const wheel = new WheelEvent('wheel', {
+      clientX: cx(5),
+      clientY: cy(50),
+      deltaY: -20,
+      bubbles: true,
+      cancelable: true,
+    });
+    canvas(c).dispatchEvent(wheel);
+    // The upper (later) trace sees it first and passes; the lower one consumes it.
+    expect(seen.slice(-2)).toEqual(['upper:wheel', 'lower:wheel']);
+    expect(c.axes.get('x')?.scale.range).toEqual([0, 10]);
   });
 });

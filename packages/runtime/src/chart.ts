@@ -150,14 +150,23 @@ import {
   type StreamUpdate,
 } from './plan.ts';
 import { chartToJSON, type ChartToJSONOptions } from './json.ts';
+import { describeChart, type ChartDescription } from './a11y/describe.ts';
+import { A11yMirror, type A11yChange } from './a11y/mirror.ts';
+import type { DownloadImageOptions, ExportSource, ToImageOptions } from './export/types.ts';
 import { registry as defaultRegistry, type ChartRegistry } from './registry.ts';
 
 /** Options for {@link createChart} that are not part of the figure. */
 export interface ChartOptions {
   /** Registry to resolve trace types and components from. Default: the shared `registry`. */
   registry?: ChartRegistry;
-  /** Low-level render-root options (tests inject a fake renderer and frame scheduler here). */
-  renderRoot?: Pick<RenderRootOptions, 'createRenderer' | 'scheduler' | 'preserveDrawingBuffer'>;
+  /**
+   * Low-level render-root options (tests inject a fake renderer and frame scheduler here). A
+   * `pixelRatio` here wins over `config.pixelRatio` (image export renders at its `scale`).
+   */
+  renderRoot?: Pick<
+    RenderRootOptions,
+    'createRenderer' | 'scheduler' | 'preserveDrawingBuffer' | 'pixelRatio'
+  >;
 }
 
 /** A partial figure for {@link Chart.update}: merged into the current figure. */
@@ -214,6 +223,12 @@ interface Plan {
   appends: Map<number, PendingAppend>;
   /** Events to emit after the frame. */
   after: (() => void)[];
+  /** Layout edits were axis ranges / autorange only (the a11y mirror debounces those). */
+  layoutRanges: boolean;
+  /** Layout edits other than ranges and interaction modes. */
+  layoutOther: boolean;
+  /** Interaction-mode layout edits (`dragmode`, `hovermode`, …). */
+  layoutQuiet: boolean;
 }
 
 /**
@@ -355,8 +370,42 @@ function emptyPlan(): Plan {
     selection: new Set(),
     appends: new Map(),
     after: [],
+    layoutRanges: false,
+    layoutOther: false,
+    layoutQuiet: false,
   };
 }
+
+/** Layout paths that are axis ranges (debounced in the a11y mirror) or change nothing it says. */
+const RANGE_PATH = /^[xy]axis\d*\.(?:range(?:\[[01]\])?|autorange)$/;
+const QUIET_PATH = /^(?:dragmode|hovermode|selectdirection|clickmode)$/;
+
+/** Record what kind of layout edit `paths` are, for {@link a11yChangeOf}. */
+function classifyLayoutPaths(plan: Plan, paths: readonly string[]): void {
+  for (const path of paths) {
+    if (RANGE_PATH.test(path)) plan.layoutRanges = true;
+    else if (QUIET_PATH.test(path)) plan.layoutQuiet = true;
+    else plan.layoutOther = true;
+  }
+}
+
+/**
+ * How a pipeline run changed what the accessible description says (E17.1): data, traces or
+ * layout rebuild it now, ranges and resizes debounce, streaming throttles, selection and
+ * interaction modes don't touch it.
+ */
+function a11yChangeOf(plan: Plan): A11yChange {
+  if (plan.full || plan.remount || plan.structural || plan.validate) return 'content';
+  if (plan.traces.size > 0 || plan.layoutOther) return 'content';
+  // Layout stages with no recorded paths (web fonts loaded): re-describe, it's rare.
+  if (plan.layout.size > 0 && !plan.layoutRanges && !plan.layoutQuiet) return 'content';
+  if (plan.appends.size > 0) return 'stream';
+  if (plan.layoutRanges || plan.resize) return 'range';
+  return 'none';
+}
+
+/** Hosts of offscreen export charts (no a11y mirror): see {@link Chart.toImage}. */
+const OFFSCREEN = new WeakSet<HTMLElement>();
 
 function addStages(plan: Plan, index: number, stages: Iterable<Stage>): void {
   let set = plan.traces.get(index);
@@ -472,6 +521,7 @@ export class Chart {
   #scheduled = false;
   #destroyed = false;
   #unsubscribeFonts: (() => void) | undefined;
+  #a11y: A11yMirror | undefined;
 
   /** Prefer {@link createChart}. A chart already in `el` is destroyed first. */
   constructor(el: HTMLElement, figure: FigureInput = {}, options: ChartOptions = {}) {
@@ -537,6 +587,88 @@ export class Chart {
     // JSON.stringify passes the property key as the argument.
     const opts = typeof options === 'object' ? options : {};
     return chartToJSON(this, { registry: this.#registry, ...opts });
+  }
+
+  // ---- export (E18.1) --------------------------------------------------------------------------
+
+  /**
+   * Render the chart to an image (Plotly's `toImage`): resolves to a data URL (`data:image/png;
+   * base64,…`). The figure is laid out again at `width` × `height` (default: the chart's size) and
+   * drawn offscreen at `scale` pixels per CSS px — not a screenshot of the canvas, and the live
+   * chart is untouched. Includes everything drawn in WebGL (traces, axes, text, legend,
+   * annotations, shapes, images) and the current interactive selection; excludes the modebar,
+   * hover labels and selection outlines. `transparent: true` drops the background. The export
+   * code loads on first use.
+   *
+   * @example
+   * ```ts
+   * const png = await chart.toImage({ width: 1200, height: 600, scale: 2 });
+   * ```
+   */
+  toImage(options: ToImageOptions = {}): Promise<string> {
+    if (this.#destroyed) return Promise.reject(destroyedError());
+    const source = this.#exportSource();
+    return import('./export/image.ts').then((m) => m.renderImage(source, options));
+  }
+
+  /**
+   * {@link toImage} and save the result as `<filename>.<format>` (default `newplot.png`) through a
+   * download link (Plotly's `downloadImage`). Resolves to the file name.
+   */
+  downloadImage(options: DownloadImageOptions = {}): Promise<string> {
+    if (this.#destroyed) return Promise.reject(destroyedError());
+    const source = this.#exportSource();
+    return import('./export/image.ts').then((m) => m.downloadImage(source, options));
+  }
+
+  /** The current figure, size and renderer setup, for an offscreen export chart. */
+  #exportSource(): ExportSource {
+    const figure = this.#figure;
+    // The interactive selection (E6.3) lives in the trace slots: hand it over as `selectedpoints`.
+    const data = figure.data.map((trace, i) => {
+      const selection = this.#traces[i]?.selection;
+      if (selection === undefined || !isPlainObject(trace)) return trace;
+      return { ...trace, selectedpoints: selection === null ? null : [...selection] };
+    });
+    return figureExportSource(
+      {
+        data,
+        layout: figure.layout,
+        ...(figure.config === undefined ? {} : { config: figure.config }),
+        ...(figure.frames === undefined ? {} : { frames: figure.frames }),
+        ...(figure.datasets === undefined ? {} : { datasets: figure.datasets }),
+      } as FigureInput,
+      this.element.ownerDocument,
+      { ...this.#options, registry: this.#registry },
+      this.#size,
+    );
+  }
+
+  // ---- accessibility (E17.1) ----------------------------------------------------------------------
+
+  /**
+   * What assistive technology is told about the chart (as of the last pipeline run): the
+   * accessible name, chart type summary, axes, trace summaries and data tables the hidden DOM
+   * mirror shows. `undefined` before the first draw.
+   */
+  get description(): ChartDescription | undefined {
+    return this.#describe();
+  }
+
+  #describe(): ChartDescription | undefined {
+    const full = this.#full;
+    if (!full) return undefined;
+    return describeChart({
+      fullLayout: full.fullLayout,
+      fullData: full.fullData,
+      fullConfig: full.fullConfig,
+      axes: this.#axes,
+      module: (i) => this.#traces[i]?.module,
+      calc: (i) => {
+        const slot = this.#traces[i];
+        return slot?.hasCalc ? { value: slot.calc } : undefined;
+      },
+    });
   }
 
   /** Traces after defaults (as of the last pipeline run). */
@@ -799,6 +931,7 @@ export class Chart {
           byTrace.set(change.traceIndex, entry);
         }
       }
+      classifyLayoutPaths(plan, layoutPaths);
       for (const s of planLayoutEdit(layoutPaths, this.#registry.core)) plan.layout.add(s);
       for (const [i, { type, paths }] of byTrace) {
         addStages(plan, i, planTraceEdit(paths, type, i, this.#registry.core, this.#fullFor(plan)));
@@ -1031,6 +1164,7 @@ export class Chart {
     const paths = Object.keys(edits).filter((p) => edits[p] !== undefined);
     if (paths.length === 0) return;
     this.#figure.layout = applyEdits(this.#figure.layout, edits);
+    classifyLayoutPaths(plan, paths);
     for (const s of planLayoutEdit(paths, this.#registry.core)) plan.layout.add(s);
     plan.after.push(() => this.#events.emit('relayout', payload ?? edits));
   }
@@ -1132,6 +1266,12 @@ export class Chart {
       return;
     }
     try {
+      this.#a11y?.invalidate(a11yChangeOf(plan));
+    } catch (error) {
+      // The description must never break drawing.
+      console.warn('holochart: updating the accessible description failed', error);
+    }
+    try {
       for (const emit of plan.after) emit();
       this.#events.emit('afterplot', undefined);
     } finally {
@@ -1213,6 +1353,7 @@ export class Chart {
 
   #mount(config: FullConfig, size: Size): void {
     const pixelRatio = typeof config.pixelRatio === 'number' ? config.pixelRatio : undefined;
+    const offscreen = OFFSCREEN.has(this.element);
     const root = createRenderRoot(this.element, {
       // The chart owns sizing (layout.width/height vs the container), so the root must not resize
       // itself to the container.
@@ -1227,6 +1368,14 @@ export class Chart {
     });
     this.#root = root;
     this.#size = { ...size };
+    // The canvas has no accessible content of its own: the a11y mirror describes it.
+    root.canvas.setAttribute('aria-hidden', 'true');
+    if (!offscreen) {
+      this.#a11y = new A11yMirror(this.element, {
+        interactive: config.staticPlot !== true,
+        describe: () => this.#describe(),
+      });
+    }
     const events = this.#events;
     this.#rootListeners = [
       root.on('beforerender', (info) => events.emit('beforerender', info)),
@@ -1246,6 +1395,8 @@ export class Chart {
   }
 
   #unmount(): void {
+    this.#a11y?.destroy();
+    this.#a11y = undefined;
     this.#fx?.destroy();
     this.#fx = undefined;
     this.#layer?.destroy();
@@ -2100,6 +2251,12 @@ export class Chart {
       if (!view?.handlePointer || (only !== undefined && view !== only)) continue;
       if (view.handlePointer(event) === true) return view;
     }
+    // Then trace views (e.g. a scrolling table), last trace first: later traces draw on top.
+    for (let i = this.#traces.length - 1; i >= 0; i--) {
+      const view = this.#traces[i]?.view;
+      if (!view?.handlePointer || (only !== undefined && view !== only)) continue;
+      if (view.handlePointer(event) === true) return view;
+    }
     return undefined;
   }
 
@@ -2293,6 +2450,44 @@ function overlays(sp: SubplotSlot): boolean {
     return typeof o === 'string' && o !== '' && o !== 'free' && o !== axis.id;
   };
   return over(sp.xaxis) || over(sp.yaxis);
+}
+
+/**
+ * What the export code needs to draw `figure` offscreen (see `export/image.ts`): an offscreen
+ * chart factory with `options`' registry and renderer factory, and the default size — `size`, else
+ * the figure's `layout.width` / `height`, else 700 × 450 like a chart in an unsized element.
+ * Internal: used by `chart.toImage` and the functional `toImage(figure)`.
+ */
+export function figureExportSource(
+  figure: FigureInput,
+  document: Document,
+  options: ChartOptions = {},
+  size?: Readonly<Size>,
+): ExportSource {
+  const layout = isPlainObject(figure.layout) ? figure.layout : {};
+  const dim = (key: 'width' | 'height'): number => {
+    const v = layout[key];
+    return typeof v === 'number' && v >= 10 ? v : DEFAULT_SIZE[key];
+  };
+  const renderRoot = options.renderRoot;
+  return {
+    figure,
+    width: size?.width ?? dim('width'),
+    height: size?.height ?? dim('height'),
+    document,
+    create: (host, input, pixelRatio) => {
+      OFFSCREEN.add(host);
+      return new Chart(host, input, {
+        ...(options.registry ? { registry: options.registry } : {}),
+        renderRoot: {
+          ...(renderRoot?.createRenderer ? { createRenderer: renderRoot.createRenderer } : {}),
+          ...(renderRoot?.scheduler ? { scheduler: renderRoot.scheduler } : {}),
+          preserveDrawingBuffer: true,
+          pixelRatio,
+        },
+      });
+    },
+  };
 }
 
 function destroyedError(): Error {

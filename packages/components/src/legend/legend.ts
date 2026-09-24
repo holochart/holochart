@@ -34,7 +34,13 @@ import type {
 import type { DashItem, LabelItem, RectItem } from '../axes/geometry.ts';
 import { DashBatch, RectBatch, TextBatch } from '../shared/batches.ts';
 import { findChart, fireAndForget, overlayTransform } from '../shared/host.ts';
-import { oracleMeasure, rgba, textFont, type MeasureLine } from '../shared/text.ts';
+import {
+  fadeRuns,
+  handleLinkPointer,
+  oracleMeasure,
+  rgba,
+  type MeasureLine,
+} from '../shared/text.ts';
 import {
   hasLegendEntry,
   layoutLegend,
@@ -219,7 +225,6 @@ export function buildLegendScene(
   });
   scene.rectBorders.push({ color: rgba(legend.bordercolor), width: legend.borderwidth });
 
-  const font = textFont(legend.font);
   const textColor = rgba(legend.font.color);
   const constant = legend.itemsizing === 'constant';
   for (const item of boxes.items) {
@@ -271,16 +276,17 @@ export function buildLegendScene(
         opacity: (m.opacity ?? 1) * (hidden ? HIDDEN_ALPHA : 1),
       });
     }
-    if (e.name !== '') {
+    if (item.text.text !== '') {
       scene.labels.push({
-        text: e.name,
+        text: item.text.text,
         x: left + item.textX,
         y: top + item.textY,
         anchorX: 'left',
         anchorY: 'middle',
         angle: 0,
-        font,
+        font: item.text.font,
         color: faded(textColor, hidden),
+        ...(item.text.runs ? { runs: fadeRuns(item.text.runs, hidden ? HIDDEN_ALPHA : 1) } : {}),
       });
     }
     scene.hits.push({
@@ -302,6 +308,7 @@ export function buildLegendScene(
       angle: 0,
       font: boxes.title.font,
       color: rgba(legend.title.font.color),
+      ...(boxes.title.runs ? { runs: boxes.title.runs } : {}),
     });
   }
   return scene;
@@ -467,6 +474,8 @@ class LegendView implements ComponentView {
   }
 
   handlePointer(event: ComponentPointerEvent): boolean {
+    // Links in item names and the title (E2.10) take the event before the item toggles.
+    if (handleLinkPointer(event, this.#text.linkAt(event.x, event.y))) return true;
     if (event.type === 'leave' || !this.hitTest(event.x, event.y)) return false;
     const hit = this.#hitAt(event.x, event.y);
     const id = hit ? hitId(hit) : undefined;

@@ -47,11 +47,13 @@ A colorscale maps numbers to colors. Pass numbers to a color attribute that supp
 (`marker.color`, `marker.line.color`) and name the scale:
 
 ```ts
+const temperature = [12.5, 17.1, 21.8, 26.4];
+
 const trace = {
   type: 'scatter',
   mode: 'markers',
-  x,
-  y,
+  x: [1, 2, 3, 4],
+  y: [3, 1, 4, 2],
   marker: { color: temperature, colorscale: 'Viridis', showscale: true },
 };
 ```

@@ -72,6 +72,11 @@ export const configSchema = attr.object(
       noBlank: true,
       description: 'BCP 47 locale for number/date formatting and UI strings.',
     }),
+    ariaLabel: attr.string({
+      dflt: '',
+      description:
+        'The chart\'s accessible name (`aria-label`), read by screen readers. Empty: `layout.meta.description` when set, else the figure title followed by an automatic summary ("Line chart with 3 traces"). Holochart only (plan E17.1).',
+    }),
     toImageButtonOptions: attr.object(
       {
         format: attr.enumerated({

@@ -227,3 +227,43 @@ export type { GuiEdit, GuiTarget, UiState } from './diff/uirevision.ts';
 
 // Scales, autorange, ticks, formatting, categories, periods (E3) — contract in scales/types.ts
 export * from './scales/index.ts';
+
+// Rich text (E2.10) and uniform text sizing (E4.6)
+export {
+  decodeEntities,
+  isStyledRichText,
+  mayContainRichText,
+  parseRichText,
+  parseRichTextStyle,
+  richTextLabel,
+  richTextLines,
+  richTextToPlain,
+  sanitizeHref,
+  SCRIPT_SIZE,
+  SUB_SHIFT,
+  SUP_SHIFT,
+  uniformRichTextStyle,
+} from './text/richtext.ts';
+export type {
+  RichTextBreak,
+  RichTextDeclaration,
+  RichTextElement,
+  RichTextLabel,
+  RichTextLine,
+  RichTextLink,
+  RichTextLinesOptions,
+  RichTextNode,
+  RichTextParseOptions,
+  RichTextRun,
+  RichTextRunFont,
+  RichTextString,
+  RichTextTag,
+} from './text/richtext.ts';
+export {
+  isUniformTextHidden,
+  uniformFontSize,
+  uniformTextOf,
+  uniformTextScale,
+  uniformTextSize,
+} from './text/uniform-text.ts';
+export type { UniformText, UniformTextItem, UniformTextMode } from './text/uniform-text.ts';
