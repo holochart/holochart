@@ -44,14 +44,14 @@ export async function loadNamespaces(
 
 /** Result of the attribute-description gate. */
 export interface DescriptionReport {
-  /** Leaf attributes (`valType`), the gated set. */
+  /** Leaf attributes (`valType`). */
   attributes: number;
   described: number;
   /** `<namespace>:<path>` of leaf attributes without a description (gate failures). */
   missing: string[];
-  /** Containers (`role: object` / `items`); reported, not gated. */
+  /** Containers (`role: object` / `items`). */
   containers: number;
-  /** `<namespace>:<path>` of containers without a description. */
+  /** `<namespace>:<path>` of containers without a description (gate failures). */
   containersMissing: string[];
 }
 
@@ -61,9 +61,9 @@ function hasDescription(node: JSONSchemaNode): boolean {
 }
 
 /**
- * Gate 1: every leaf attribute has a non-empty description. Containers (`role: object` and
- * `items`) only group their children, and their reference entry is a heading above the children's
- * descriptions, so missing container descriptions are listed but do not fail the gate.
+ * Gate 1: every leaf attribute and every container (`role: object` and `items`) has a non-empty
+ * description. A container's description is the text under its heading in the attribute
+ * reference, so an undescribed container leaves a gap there just like a leaf.
  */
 export function checkDescriptions(namespaces: readonly Namespace[]): DescriptionReport {
   const report: DescriptionReport = {

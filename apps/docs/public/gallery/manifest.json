@@ -51,6 +51,18 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "_dev/axes-log-ticks",
+      "title": "Axes: automatic log ticks and labels",
+      "description": "Log axes at four spans: 1-2-5 ticks with small-digit or complete labels, powers of ten in power format, and linear steps within a decade, with tick prefixes and suffixes.",
+      "tags": ["dev", "chart", "axes", "log"],
+      "category": "_dev",
+      "traceTypes": ["scatter"],
+      "size": { "width": 720, "height": 460 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/_dev/axes-log-ticks.webp",
+      "thumbnailSize": { "width": 640, "height": 409 }
+    },
+    {
       "id": "_dev/axes-styles",
       "title": "Axes: mirror, minor ticks, rotation, sides, layer, free position",
       "description": "Axis lines, inside/outside ticks, minor grid, dashes, rotated labels, top/right sides, titles, layer and free axes.",
@@ -73,6 +85,18 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/_dev/axes-types.webp",
       "thumbnailSize": { "width": 640, "height": 448 }
+    },
+    {
+      "id": "_dev/axis-type-convert",
+      "title": "Axes: type change converts coordinates",
+      "description": "A linear axis with a fixed range, a data-unit arrow annotation and a data-referenced image, relayouted to log: everything stays on its data points.",
+      "tags": ["dev", "chart", "axes", "annotations", "images"],
+      "category": "_dev",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/_dev/axis-type-convert.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
       "id": "_dev/chart-scatter-basic",
@@ -277,6 +301,18 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/_dev/lines-series.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "_dev/margins-title-legend",
+      "title": "Margins: title over a multi-row legend, edge gutter",
+      "description": "A title stacked over a legend that wraps to three rows, and automargin tick labels kept off the figure edge by the gutter.",
+      "tags": ["dev", "chart", "legend", "title", "margins"],
+      "category": "_dev",
+      "traceTypes": ["scatter"],
+      "size": { "width": 560, "height": 360 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/_dev/margins-title-legend.webp",
+      "thumbnailSize": { "width": 560, "height": 360 }
     },
     {
       "id": "_dev/markers-colorscale",
@@ -591,6 +627,42 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "axes/hr-diagram",
+      "title": "Axes: Hertzsprung–Russell diagram",
+      "description": "A reversed log temperature axis, an overlaying spectral-class axis with array minor ticks, and a power-of-ten luminosity axis.",
+      "tags": ["axes", "log", "secondary-axis", "science", "scatter", "minor-ticks"],
+      "category": "axes",
+      "traceTypes": ["scatter"],
+      "size": { "width": 720, "height": 520 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/axes/hr-diagram.webp",
+      "thumbnailSize": { "width": 640, "height": 462 }
+    },
+    {
+      "id": "axes/noise-spectrum",
+      "title": "Axes: log–log noise spectrum",
+      "description": "Accelerometer noise density on log axes: SI and power exponent formats, minor log grid, autorange pinned and clipped.",
+      "tags": ["axes", "log", "science", "line", "minor-ticks"],
+      "category": "axes",
+      "traceTypes": ["scatter"],
+      "size": { "width": 760, "height": 460 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/axes/noise-spectrum.webp",
+      "thumbnailSize": { "width": 640, "height": 387 }
+    },
+    {
+      "id": "axes/revenue-margin",
+      "title": "Axes: revenue and margin on two y axes",
+      "description": "Monthly revenue bars with a secondary margin axis, period tick labels, tickformatstops and prefix/suffix placement.",
+      "tags": ["axes", "date", "secondary-axis", "bar", "line", "finance"],
+      "category": "axes",
+      "traceTypes": ["bar", "scatter"],
+      "size": { "width": 760, "height": 440 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/axes/revenue-margin.webp",
+      "thumbnailSize": { "width": 640, "height": 371 }
+    },
+    {
       "id": "bar/basic",
       "title": "Bar: basic",
       "description": "Vertical bars over categories with a negative value, outlines and rounded ends.",
@@ -735,6 +807,42 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "colorbars/bar-metric-colorbars",
+      "title": "Colorbar: bars colored by a metric, one colorbar per panel",
+      "description": "Latency bars filled by error-rate bands with named band ticks and outlines colored by week-over-week change; cost bars with a dollar colorbar.",
+      "tags": ["colorbar", "bar", "colorscale", "subplots"],
+      "category": "colorbars",
+      "traceTypes": ["bar"],
+      "size": { "width": 760, "height": 500 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/colorbars/bar-metric-colorbars.webp",
+      "thumbnailSize": { "width": 640, "height": 421 }
+    },
+    {
+      "id": "colorbars/scatter-exponent-colorbar",
+      "title": "Colorbar: floating key with power-of-ten labels",
+      "description": "Soil cores colored by bacterial density with an in-plot colorbar on a translucent panel, power-of-ten tick labels, and confidence-colored marker rims.",
+      "tags": ["colorbar", "scatter", "colorscale", "markers"],
+      "category": "colorbars",
+      "traceTypes": ["scatter"],
+      "size": { "width": 720, "height": 440 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/colorbars/scatter-exponent-colorbar.webp",
+      "thumbnailSize": { "width": 640, "height": 391 }
+    },
+    {
+      "id": "colorbars/shared-coloraxis",
+      "title": "Colorbar: one coloraxis shared by two panels",
+      "description": "Two years of monthly anomalies colored through one fixed-domain coloraxis, with a horizontal colorbar anchored to the figure bottom.",
+      "tags": ["colorbar", "coloraxis", "bar", "subplots"],
+      "category": "colorbars",
+      "traceTypes": ["bar"],
+      "size": { "width": 720, "height": 440 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/colorbars/shared-coloraxis.webp",
+      "thumbnailSize": { "width": 640, "height": 391 }
+    },
+    {
       "id": "demos/openrouter/authors-area",
       "title": "OpenRouter: weekly tokens by author, stacked",
       "description": "A year of weekly tokens by model author as stacked areas, with a toggle between totals and 100% shares (groupnorm).",
@@ -867,6 +975,18 @@
       "thumbnailSize": { "width": 640, "height": 320 }
     },
     {
+      "id": "embedding/station-widget",
+      "title": "Embedding: weather-station widget",
+      "description": "A meteogram widget: period-aligned monthly and weekly series, a gradient range band, wind arrows, and a vertical, themed modebar with config-level buttons.",
+      "tags": ["embedding", "modebar", "config", "scatter", "bar", "date", "period"],
+      "category": "embedding",
+      "traceTypes": ["bar", "scatter"],
+      "size": { "width": 760, "height": 480 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/embedding/station-widget.webp",
+      "thumbnailSize": { "width": 640, "height": 404 }
+    },
+    {
       "id": "gantt/dependencies",
       "title": "Gantt: task dependencies",
       "description": "Finish-to-start dependencies drawn as annotation arrows from one task’s end to the next task’s start.",
@@ -925,6 +1045,54 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/gantt/today-line.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "layout/climate-grid",
+      "title": "Layout: climate small multiples",
+      "description": "A coupled 2×3 grid (xaxes/yaxes) with top month axes, shared row scales, autorange include/clip and zoom limits.",
+      "tags": ["layout", "grid", "subplots", "axes", "climate", "bar", "line"],
+      "category": "layout",
+      "traceTypes": ["bar", "scatter"],
+      "size": { "width": 820, "height": 480 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/layout/climate-grid.webp",
+      "thumbnailSize": { "width": 640, "height": 375 }
+    },
+    {
+      "id": "layout/service-health-grid",
+      "title": "Layout: service health grid",
+      "description": "A 2×2 grid with explicit subplots and bottom-to-top row order: inside y labels, SI byte units, strict numeric categories, multicategory dividers.",
+      "tags": ["layout", "grid", "subplots", "axes", "monitoring", "bar", "line"],
+      "category": "layout",
+      "traceTypes": ["bar", "scatter"],
+      "size": { "width": 860, "height": 560 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/layout/service-health-grid.webp",
+      "thumbnailSize": { "width": 640, "height": 417 }
+    },
+    {
+      "id": "legends/grouped-dashboard",
+      "title": "Legend: grouped and ranked across a dashboard",
+      "description": "Lines, stacked bars and a pie in one legend: legendgroup blocks ordered by legendrank, two-line entries, container-anchored placement and a styled heading.",
+      "tags": ["legend", "scatter", "bar", "pie", "subplots"],
+      "category": "legends",
+      "traceTypes": ["bar", "pie", "scatter"],
+      "size": { "width": 860, "height": 460 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/legends/grouped-dashboard.webp",
+      "thumbnailSize": { "width": 640, "height": 342 }
+    },
+    {
+      "id": "legends/overlay-columns",
+      "title": "Legend: fixed-width columns inside the plot",
+      "description": "Eight probe series with a horizontal legend drawn over the plot in four equal columns, with haloed, uppercased entries and an underlined title.",
+      "tags": ["legend", "line", "scatter"],
+      "category": "legends",
+      "traceTypes": ["scatter"],
+      "size": { "width": 720, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/legends/overlay-columns.webp",
+      "thumbnailSize": { "width": 640, "height": 373 }
     },
     {
       "id": "line/basic",
@@ -1177,6 +1345,30 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/recipes/stacked-totals.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "reports/budget-bridge",
+      "title": "Reports: budget bridge and spend vs budget",
+      "description": "A floating-bar budget bridge (base, inside/outside label fonts) next to half-year spend against a full-slot budget (alignmentgroup, zorder, selectedpoints).",
+      "tags": ["reports", "bar", "waterfall", "finance", "text", "selection"],
+      "category": "reports",
+      "traceTypes": ["bar"],
+      "size": { "width": 820, "height": 440 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/reports/budget-bridge.webp",
+      "thumbnailSize": { "width": 640, "height": 343 }
+    },
+    {
+      "id": "reports/regional-revenue",
+      "title": "Reports: regional revenue table and donut",
+      "description": "A formatted revenue table (numeric headers with prefix/format/suffix, columnorder, row heights, rules, a bold total row) beside a donut with inside/outside label fonts, placed with layout.grid.",
+      "tags": ["reports", "table", "pie", "donut", "finance", "grid"],
+      "category": "reports",
+      "traceTypes": ["pie", "table"],
+      "size": { "width": 820, "height": 380 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/reports/regional-revenue.webp",
+      "thumbnailSize": { "width": 640, "height": 297 }
     },
     {
       "id": "scatter/basic",
@@ -1477,6 +1669,42 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/themes/ygridoff.webp",
       "thumbnailSize": { "width": 640, "height": 391 }
+    },
+    {
+      "id": "uncertainty/calibration-curve",
+      "title": "Uncertainty: calibration curve",
+      "description": "Calibration standards with x and y error bars (copy_ystyle), QC samples with asymmetric windows (valueminus), excluded standards dimmed via selectedpoints.",
+      "tags": ["uncertainty", "scatter", "error-bars", "selection", "science"],
+      "category": "uncertainty",
+      "traceTypes": ["scatter"],
+      "size": { "width": 720, "height": 440 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/uncertainty/calibration-curve.webp",
+      "thumbnailSize": { "width": 640, "height": 391 }
+    },
+    {
+      "id": "uncertainty/forecast-ranges",
+      "title": "Uncertainty: forecast and estimate ranges",
+      "description": "Bars with asymmetric error bars: a percent downside-skewed revenue forecast (error_y valueminus) and PERT effort ranges on horizontal bars (error_x arrayminus, constant valueminus).",
+      "tags": ["uncertainty", "bar", "error-bars", "forecast", "finance"],
+      "category": "uncertainty",
+      "traceTypes": ["bar"],
+      "size": { "width": 800, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/uncertainty/forecast-ranges.webp",
+      "thumbnailSize": { "width": 640, "height": 336 }
+    },
+    {
+      "id": "uncertainty/forest-plot",
+      "title": "Uncertainty: forest plot",
+      "description": "Hazard ratios with asymmetric 95 % CIs (error_x arrayminus) on a log axis, a pooled diamond, a no-effect line and aligned summary boxes.",
+      "tags": ["uncertainty", "scatter", "error-bars", "log", "medical", "annotations"],
+      "category": "uncertainty",
+      "traceTypes": ["scatter"],
+      "size": { "width": 760, "height": 540 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/uncertainty/forest-plot.webp",
+      "thumbnailSize": { "width": 640, "height": 455 }
     }
   ]
 }

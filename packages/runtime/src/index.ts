@@ -18,6 +18,7 @@ export type {
   ComponentLayoutContext,
   ComponentModule,
   ComponentPointerEvent,
+  DrawGesture,
   ComponentRenderer,
   ComponentUpdatePlan,
   ComponentView,
@@ -116,8 +117,14 @@ export type { TemplateContext, TemplateOptions } from './fx/template.ts';
 export { pointInPolygon, selectionContains } from './fx/geometry.ts';
 export { createLatestQueue } from './fx/queue.ts';
 export type { LatestQueue } from './fx/queue.ts';
-export { fxComponent, fxLayoutAttributes } from './fx/settings.ts';
-export type { DoubleClickAction, Dragmode, FxSettings, Hovermode } from './fx/settings.ts';
+export { DRAW_DRAGMODES, fxComponent, fxLayoutAttributes, isDrawDragmode } from './fx/settings.ts';
+export type {
+  DoubleClickAction,
+  Dragmode,
+  DrawDragmode,
+  FxSettings,
+  Hovermode,
+} from './fx/settings.ts';
 
 // Helpers for trace and component authors
 export { dataTransform, linearExtremes } from './axes.ts';

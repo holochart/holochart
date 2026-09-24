@@ -11,3 +11,4 @@ export * from './category-values.ts';
 export * from './labels.ts';
 export * from './period.ts';
 export * from './format.ts';
+export * from './convert-coords.ts';

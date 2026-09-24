@@ -22,6 +22,12 @@ export default defineConfig({
     ],
     environment: 'node',
     passWithNoTests: true,
+    // fast-check seeding (plan E20.1): FC_SEED / FC_PATH, seeds and replay commands on failure.
+    setupFiles: ['tests/property/setup.ts'],
+    // The schema property suites take ~0.2–1 s each alone, but a full parallel run on a busy
+    // machine stretched them past Vitest's 5 s default (timeouts, not property failures; the
+    // setup file prints their seeds). Hangs are still caught.
+    testTimeout: 30_000,
     coverage: {
       provider: 'v8',
       include: ['packages/*/src/**/*.ts'],

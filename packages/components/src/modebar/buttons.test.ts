@@ -125,6 +125,44 @@ describe('resolveModebarButtons', () => {
     expect(names(groups).at(-1)).toEqual(['a']);
   });
 
+  it('adds the shape-drawing buttons by name to the drag group, in order (Plotly DRAW_MODES)', () => {
+    const groups = cartesian({
+      hasSelectable: true,
+      config: { modeBarButtonsToAdd: ['drawrect', 'eraseShape'] },
+      layoutModebar: { add: ['drawline', 'drawopenpath', 'drawclosedpath', 'drawcircle'] },
+    });
+    expect(names(groups)[1]).toEqual([
+      'zoom2d',
+      'pan2d',
+      'select2d',
+      'lasso2d',
+      'drawrect',
+      'eraseshape',
+      'drawline',
+      'drawopenpath',
+      'drawclosedpath',
+      'drawcircle',
+    ]);
+    const drawline = modebarBuiltinButton('drawline');
+    expect(drawline).toMatchObject({ kind: 'dragmode', dragmode: 'drawline', title: 'Draw line' });
+    expect(modebarBuiltinButton('eraseshape')).toMatchObject({
+      kind: 'action',
+      title: 'Erase active shape',
+    });
+    expect(modebarButtonActive(drawline, { dragmode: 'drawline' })).toBe(true);
+    // Removable like the others; no cartesian axes, no draw buttons.
+    const removed = cartesian({
+      config: { modeBarButtonsToAdd: ['drawrect'], modeBarButtonsToRemove: ['drawRect'] },
+    });
+    expect(names(removed)[1]).toEqual(['zoom2d', 'pan2d']);
+    const pie = resolveModebarButtons({
+      hasCartesian: false,
+      hasSelectable: false,
+      config: { modeBarButtonsToAdd: ['drawrect'] },
+    });
+    expect(names(pie)).toEqual([['toImage']]);
+  });
+
   it('warns once per unknown or unsupported name and ignores it', () => {
     const warn = vi.fn();
     const input: ModebarResolveInput = {

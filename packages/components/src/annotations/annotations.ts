@@ -18,9 +18,9 @@
  * (`ax`/`ay`). The drag previews locally and commits one `relayout` on release.
  */
 import {
-  createFillPrimitive,
+  createLazyFillPrimitive,
   LinePrimitive,
-  type FillPrimitive,
+  type LazyFillPrimitive,
   type RGBA,
 } from '@mk7s/holochart-render';
 import type {
@@ -44,6 +44,7 @@ import {
   pxToRef,
   refCenter,
   refToPx,
+  subplotTitlePush,
   type AnnotationEnv,
   type AnnotationGeometry,
   type DragOffset,
@@ -170,7 +171,7 @@ function envOf(
 class AnnotationsView implements ComponentView {
   #ctx: ComponentDrawContext;
   readonly #text: TextBatch;
-  #fill: FillPrimitive | undefined;
+  #fill: LazyFillPrimitive | undefined;
   #fillKey = '';
   #lines: LinePrimitive | undefined;
   #linesKey = '';
@@ -224,7 +225,7 @@ class AnnotationsView implements ComponentView {
         color: Float32Array.from(b.fill.color),
       };
       if (!this.#fill) {
-        this.#fill = createFillPrimitive(ctx.primitives, data);
+        this.#fill = createLazyFillPrimitive(ctx.primitives, data);
         this.#fill.object.renderOrder = ORDER.fill;
         ctx.add(this.#fill);
       } else {
@@ -397,6 +398,8 @@ export const annotationsComponent: ComponentModule = {
   supplyLayoutDefaults(_layoutIn, layoutOut, ctx) {
     supplyAnnotationDefaults(layoutOut, ctx);
   },
+  // Only `makeSubplots` titles on the top row push (see `subplotTitlePush`).
+  pushMargin: (ctx) => subplotTitlePush(ctx.fullLayout, oracleMeasure),
   draw: {
     create: (ctx) => new AnnotationsView(ctx),
   },

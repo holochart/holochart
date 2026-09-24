@@ -7,6 +7,7 @@ export * from './line-dash.ts';
 export * from './line-join.ts';
 export * from './line.glsl.ts';
 export * from './fill.ts';
+export * from './fill-loader.ts';
 export * from './rect.ts';
 export * from './arc.ts';
 export * from './text.ts';

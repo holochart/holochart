@@ -113,7 +113,12 @@ export class FillPrimitive implements Primitive<FillData> {
   private lut: ColorscaleTextureHandle | undefined;
   private disposed = false;
 
-  constructor(context: PrimitiveContext, data: FillData) {
+  /**
+   * @param mesh - Draw into this mesh (its geometry and material are replaced) instead of a new
+   *   one: `LazyFillPrimitive` (`fill-loader.ts`) hands over the placeholder it gave its caller
+   *   before the fill code loaded, so the object callers hold (and its `renderOrder`) stays.
+   */
+  constructor(context: PrimitiveContext, data: FillData, mesh?: Mesh) {
     this.context = context;
     this.data = { ...data };
     this.uniforms = {
@@ -142,7 +147,13 @@ export class FillPrimitive implements Primitive<FillData> {
     this.colorAttr = color;
     this.gradAttr = grad;
     this.indexAttr = index;
-    this.object = new Mesh(geometry, this.material);
+    if (mesh) {
+      mesh.geometry = geometry;
+      mesh.material = this.material;
+      this.object = mesh as Mesh<BufferGeometry, ShaderMaterial>;
+    } else {
+      this.object = new Mesh(geometry, this.material);
+    }
     // Buffers are RTC-encoded and transformed in the shader, so three's bounds are meaningless.
     this.object.frustumCulled = false;
     this.writeGeometry();
@@ -256,9 +267,13 @@ export class FillPrimitive implements Primitive<FillData> {
   }
 }
 
-/** Create a {@link FillPrimitive}. */
-export function createFillPrimitive(context: PrimitiveContext, data: FillData): FillPrimitive {
-  return new FillPrimitive(context, data);
+/** Create a {@link FillPrimitive} (optionally drawing into `mesh`, see its constructor). */
+export function createFillPrimitive(
+  context: PrimitiveContext,
+  data: FillData,
+  mesh?: Mesh,
+): FillPrimitive {
+  return new FillPrimitive(context, data, mesh);
 }
 
 function allocateGeometry(

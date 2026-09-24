@@ -47,8 +47,9 @@ const TITLE = '#eceef4';
 /**
  * Holochart's default look (ADR-021): a dark, dense chart. `#0a0a0f` paper and plot area, a faint
  * `#1a1a22` grid, `#2c2c38` axis lines with short outside ticks, 9 px text (8 px tick labels, an
- * 11 px left-aligned title) in Helvetica Neue, tight margins that axes grow as needed
- * (`automargin`), a transparent horizontal legend above the plot area, dark hover labels, thin
+ * 11 px left-aligned title) in Helvetica Neue, tight margins that axes, the title and the legend
+ * grow as needed (`automargin`; the title and a top legend stack, and a 4 px `gutter` keeps grown
+ * margins' content off the edge), a transparent horizontal legend above the plot area, dark hover labels, thin
  * lines and small markers, borderless bars, slim colorbars, tables with a raised header and faint
  * rules.
  *
@@ -96,10 +97,12 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
         // Left-aligned: `xanchor: 'auto'` resolves to `left` at this `x`, and still centers a
         // figure's own `title.x: 0.5` (a common Plotly setting) instead of left-anchoring it.
         x: 0.01,
-        // Top-left, above the legend row; `margin.t` leaves room for both.
+        // Top-left. `automargin` reserves the title's room on top of what the legend pushes, so
+        // a top legend (even one wrapping to several rows) stacks under it instead of overlapping.
         y: 1,
         yanchor: 'top',
-        pad: { t: 6 },
+        pad: { t: 6, b: 4 },
+        automargin: true,
       },
       colorway: [...HOLOCHART_COLORWAY],
       colorscale: {
@@ -127,7 +130,9 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
           [1, '#ff9e00'],
         ],
       },
-      margin: { l: 40, r: 16, t: 42, b: 32, pad: 0 },
+      // A thin top band: the title and the legend push the top margin when there is one.
+      // `gutter` keeps what grows a margin (automargin tick labels, the legend) off the edge.
+      margin: { l: 40, r: 16, t: 16, b: 32, pad: 0, gutter: 4 },
       xaxis: axis,
       yaxis: axis,
       legend: {

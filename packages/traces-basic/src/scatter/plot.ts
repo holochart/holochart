@@ -14,11 +14,11 @@ import {
   type FullTrace,
 } from '@mk7s/holochart-core';
 import {
-  createFillPrimitive,
+  createLazyFillPrimitive,
   createMarkers,
   createTextPrimitive,
   LinePrimitive,
-  type FillPrimitive,
+  type LazyFillPrimitive,
   type DataTransform,
   type MarkerData,
   type MarkerPatch,
@@ -365,7 +365,7 @@ function padFront(data: Partial<MarkerData>, front: number): Partial<MarkerData>
 // ---- View -------------------------------------------------------------------------------------
 
 class ScatterView implements TraceView<ScatterCalc> {
-  #fill: FillPrimitive | undefined;
+  #fill: LazyFillPrimitive | undefined;
   /** The fill geometry the primitive holds (the memo returns the same object when unchanged). */
   #fillBuilt: TraceFill | undefined;
   /** The calc last drawn: a streamed calc (`appendOf`) of it can take the streaming path. */
@@ -439,7 +439,10 @@ class ScatterView implements TraceView<ScatterCalc> {
     }
     const style = fillStyle(trace, axes);
     if (!this.#fill) {
-      this.#fill = this.#add(ctx, createFillPrimitive(ctx.primitives, { ...geometry, ...style }));
+      this.#fill = this.#add(
+        ctx,
+        createLazyFillPrimitive(ctx.primitives, { ...geometry, ...style }),
+      );
     } else if (this.#fillBuilt !== fill) {
       this.#fill.update({ ...geometry, ...style });
     } else {

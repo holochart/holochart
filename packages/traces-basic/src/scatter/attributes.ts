@@ -147,7 +147,10 @@ const selectionStyle = (which: 'selected' | 'unselected') =>
             description: `Marker size (px) of ${which} points.`,
           }),
         },
-        { editType: 'style' },
+        {
+          editType: 'style',
+          description: `Marker style of ${which} points.`,
+        },
       ),
       textfont: attr.object(
         {
@@ -156,7 +159,10 @@ const selectionStyle = (which: 'selected' | 'unselected') =>
             description: `Text color of ${which} points.`,
           }),
         },
-        { editType: 'style' },
+        {
+          editType: 'style',
+          description: `Text style of ${which} points.`,
+        },
       ),
     },
     {
@@ -331,7 +337,7 @@ export const scatterAttributes = attr.object(
       flags: ['points', 'fills'],
       editType: 'style',
       description:
-        "What hover reacts to: points (markers, line vertices) and/or the filled area, which reports the trace. Default `'fills'` for `'toself'` / `'tonext'` fills without markers or text, else `'points'`. Fills hover only in the `closest` hovermode, when no point is under the pointer.",
+        "What hover reacts to: points (markers, line vertices) and/or the filled area, which reports the trace. Default `'fills'` for `'toself'` / `'tonext'` fills without markers or text, else `'points'`. Fills hover (in every hovermode) only when no point is under the pointer.",
     }),
     marker: attr.object(
       {

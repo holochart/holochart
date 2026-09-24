@@ -16,7 +16,15 @@ describe('supplyDefaults: layout', () => {
     const { fullLayout } = run({});
     expect(fullLayout.width).toBe(700);
     expect(fullLayout.height).toBe(450);
-    expect(fullLayout.margin).toEqual({ l: 80, r: 80, t: 100, b: 80, pad: 0, autoexpand: true });
+    expect(fullLayout.margin).toEqual({
+      l: 80,
+      r: 80,
+      t: 100,
+      b: 80,
+      pad: 0,
+      autoexpand: true,
+      gutter: 0,
+    });
     expect(fullLayout.paper_bgcolor).toBe('rgb(255, 255, 255)');
     expect(fullLayout.font.color).toBe('rgb(68, 68, 68)');
     expect(fullLayout.colorway).toHaveLength(10);

@@ -81,6 +81,21 @@ describe('titleLayout', () => {
     const off = defaults({ title: { text: 'T' } }, [], registry).fullLayout;
     expect(titleComponent.pushMargin?.({ ...base, fullLayout: off })).toBeUndefined();
     const on = defaults({ title: { text: 'T', automargin: true } }, [], registry).fullLayout;
-    expect(titleComponent.pushMargin?.({ ...base, fullLayout: on })).toEqual({ t: 23 });
+    // Container-referenced (the default): reserved room, which stacks with a top legend.
+    expect(titleComponent.pushMargin?.({ ...base, fullLayout: on })).toEqual({
+      t: 23,
+      reserved: true,
+    });
+  });
+
+  it('puts an automargin container title at the top, reserving its side', () => {
+    // `y: 'auto'` becomes 1 (top of the figure, below pad.t) instead of the margin's middle.
+    const top = layoutFor({ text: 'T', automargin: true, pad: { t: 6, b: 4 } });
+    expect(top.labels[0]?.y).toBeCloseTo(6);
+    expect(top.push).toEqual({ t: Math.ceil(17 * 1.3 + 10), reserved: true });
+    // A title in the lower half reserves the bottom.
+    const bottom = layoutFor({ text: 'B', automargin: true, y: 0, yanchor: 'bottom' });
+    expect(bottom.push).toEqual({ b: Math.ceil(17 * 1.3), reserved: true });
+    expect(bottom.labels[0]?.y).toBeCloseTo(400 - 17 * 1.3);
   });
 });

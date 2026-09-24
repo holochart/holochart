@@ -9,7 +9,10 @@ export interface ToggleTrace {
   index: number;
   visible: boolean | 'legendonly';
   legendgroup: string;
-  /** Has a legend item (traces without one are never hidden by "toggle others"). */
+  /**
+   * Has a legend item (Plotly's `showlegend === true`). Traces without one still toggle with their
+   * `legendgroup`; without a group they stay shown when another item is isolated.
+   */
   inLegend: boolean;
 }
 
@@ -17,12 +20,15 @@ export interface ToggleTrace {
 export type VisibilityChanges = Map<number, true | 'legendonly'>;
 
 /**
- * Visibility changes for a legend click on trace `target`:
+ * Visibility changes for a legend click on trace `target`, as plotly.js `legend/handle_click.js`:
  *
- * - `toggle`: a shown item (and, with `groupclick: 'togglegroup'`, its whole `legendgroup`) goes
- *   to `legendonly`; a hidden one comes back.
- * - `toggleothers` (default double-click): isolate the item (and its group) — unless it is
- *   already the only one shown, in which case everything comes back.
+ * - `toggle`: a shown item goes to `legendonly`, a hidden one comes back. With
+ *   `groupclick: 'togglegroup'` (the default) every trace of its `legendgroup` follows — including
+ *   traces with `showlegend: false`, which have no item of their own.
+ * - `toggleothers` (default double-click): isolate the item and its `legendgroup` (whatever
+ *   `groupclick` says, as in Plotly) — unless it is already the only one shown, in which case
+ *   everything comes back. A hidden item brings everything back. Traces without a legend item
+ *   and without a group are always shown; grouped ones follow their group.
  *
  * Traces with `visible: false` are never touched.
  */
@@ -35,28 +41,30 @@ export function legendToggle(
   const changes: VisibilityChanges = new Map();
   const clicked = traces.find((t) => t.index === target);
   if (!clicked || clicked.visible === false) return changes;
-  const togglable = traces.filter((t) => t.visible !== false && t.inLegend);
-  const sameGroup = (t: ToggleTrace): boolean =>
-    t.index === target ||
-    (groupclick === 'togglegroup' &&
-      clicked.legendgroup !== '' &&
-      t.legendgroup === clicked.legendgroup);
+  const group = clicked.legendgroup;
+  const inGroup = (t: ToggleTrace): boolean =>
+    t === clicked || (group !== '' && t.legendgroup === group);
   const set = (t: ToggleTrace, v: true | 'legendonly'): void => {
-    if (t.visible !== v) changes.set(t.index, v);
+    if (t.visible !== false && t.visible !== v) changes.set(t.index, v);
   };
 
   if (mode === 'toggle') {
     const next = clicked.visible === true ? 'legendonly' : true;
-    for (const t of togglable) if (sameGroup(t)) set(t, next);
+    if (groupclick === 'toggleitem') set(clicked, next);
+    else for (const t of traces) if (inGroup(t)) set(t, next);
     return changes;
   }
-  const others = togglable.filter((t) => !sameGroup(t));
-  const isolated =
-    togglable.filter(sameGroup).every((t) => t.visible === true) &&
-    others.every((t) => t.visible === 'legendonly');
-  for (const t of togglable) {
-    if (isolated) set(t, true);
-    else set(t, sameGroup(t) ? true : 'legendonly');
+  if (clicked.visible === 'legendonly') {
+    for (const t of traces) set(t, true);
+    return changes;
+  }
+  // Isolated already: no other shown item outside the group.
+  const isolated = !traces.some(
+    (t) => t !== clicked && t.inLegend && !inGroup(t) && t.visible === true,
+  );
+  for (const t of traces) {
+    const free = !t.inLegend && t.legendgroup === '';
+    set(t, isolated || free || inGroup(t) ? true : 'legendonly');
   }
   return changes;
 }

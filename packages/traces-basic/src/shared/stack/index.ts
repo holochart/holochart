@@ -5,6 +5,7 @@
 export { distinctValues, layoutBars } from './stack.ts';
 export type { BarMode, BarNorm, StackInput, StackOptions, StackOutput } from './stack.ts';
 export { stackAreas } from './area.ts';
+export { sameValues } from './compare.ts';
 export type {
   AreaGroupNorm,
   AreaStackGaps,

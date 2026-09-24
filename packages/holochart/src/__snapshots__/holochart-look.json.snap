@@ -17,10 +17,11 @@
   "margin": {
    "l": 40,
    "r": 16,
-   "t": 42,
+   "t": 16,
    "b": 32,
    "pad": 0,
-   "autoexpand": true
+   "autoexpand": true,
+   "gutter": 4
   },
   "paper_bgcolor": "rgb(10, 10, 15)",
   "plot_bgcolor": "rgb(10, 10, 15)",
@@ -60,10 +61,10 @@
    "pad": {
     "t": 6,
     "r": 0,
-    "b": 0,
+    "b": 4,
     "l": 0
    },
-   "automargin": false
+   "automargin": true
   },
   "uniformtext": {
    "mode": false,
@@ -267,6 +268,44 @@
     }
    }
   ],
+  "newshape": {
+   "visible": true,
+   "showlegend": false,
+   "legendgroup": "",
+   "line": {
+    "width": 4,
+    "dash": "solid",
+    "color": "rgb(255, 255, 255)"
+   },
+   "fillcolor": "rgba(0, 0, 0, 0)",
+   "fillrule": "evenodd",
+   "opacity": 1,
+   "layer": "above",
+   "drawdirection": "diagonal",
+   "label": {
+    "text": "",
+    "texttemplate": "",
+    "font": {
+     "family": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+     "size": 9,
+     "color": "rgb(164, 167, 181)",
+     "weight": "normal",
+     "style": "normal",
+     "variant": "normal",
+     "textcase": "normal",
+     "lineposition": "none",
+     "shadow": "none"
+    },
+    "textangle": "auto",
+    "xanchor": "auto",
+    "padding": 3,
+    "textposition": "middle center"
+   }
+  },
+  "activeshape": {
+   "fillcolor": "rgb(255, 0, 255)",
+   "opacity": 0.5
+  },
   "annotations": [
    {
     "visible": true,
@@ -380,6 +419,7 @@
    "ticklabelposition": "outside",
    "ticklabeloverflow": "hide past div",
    "ticklabelstep": 1,
+   "minorloglabels": "small digits",
    "ticklabelshift": 0,
    "ticklabelstandoff": 0,
    "categoryorder": "trace",
@@ -482,6 +522,7 @@
    "ticklabelposition": "outside",
    "ticklabeloverflow": "hide past div",
    "ticklabelstep": 1,
+   "minorloglabels": "small digits",
    "ticklabelshift": 0,
    "ticklabelstandoff": 0,
    "categoryorder": "trace",
@@ -584,6 +625,7 @@
    "ticklabelposition": "outside",
    "ticklabeloverflow": "hide past div",
    "ticklabelstep": 1,
+   "minorloglabels": "small digits",
    "ticklabelshift": 0,
    "ticklabelstandoff": 0,
    "categoryorder": "trace",
@@ -686,6 +728,7 @@
    "ticklabelposition": "outside",
    "ticklabeloverflow": "hide past div",
    "ticklabelstep": 1,
+   "minorloglabels": "small digits",
    "ticklabelshift": 0,
    "ticklabelstandoff": 0,
    "categoryorder": "trace",

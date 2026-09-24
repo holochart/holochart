@@ -25,7 +25,9 @@ export const bar: TraceModule<BarCalc, typeof barAttributes.children> = {
   type: 'bar',
   categories: ['cartesian', 'bar-like', 'showLegend', 'errorBarsOK'],
   schema: barAttributes,
-  layoutSchema: { ...barLayoutAttributes, ...coloraxisLayoutSchema },
+  // An object spread at the top level looks side-effectful to bundlers (getters): wrapped so the
+  // bar schema tree-shakes out of bundles without bar (E21.6).
+  layoutSchema: /* @__PURE__ */ (() => ({ ...barLayoutAttributes, ...coloraxisLayoutSchema }))(),
   meta: {
     description:
       'Bars from a base to a value, vertical or horizontal, grouped, stacked or overlaid (`layout.barmode`), drawn as one instanced GPU rect set with batched SDF labels.',

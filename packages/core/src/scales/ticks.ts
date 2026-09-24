@@ -457,8 +457,12 @@ export const computeTicks: ComputeTicks = (scale, axis) => {
         // The extra period tick comes before x0.
         if (isPeriod) majorId--;
       }
+      // In-between D1/D2 digits go without prefix/suffix (Plotly), unless labelled in full.
       const isDLog =
-        type === 'log' && typeof spec.dtick === 'string' && spec.dtick.charAt(0) === 'D';
+        type === 'log' &&
+        typeof spec.dtick === 'string' &&
+        spec.dtick.charAt(0) === 'D' &&
+        o.minorloglabels !== 'complete';
       for (const l of tickSequence(spec, x0, end, axrev, maxTicks, isPeriod ? -1 : 0)) {
         const m: MajorValue = { l };
         if (isDLog && !Number.isInteger(l)) m.simpleLabel = true;

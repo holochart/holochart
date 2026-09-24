@@ -12,9 +12,10 @@ import path from 'node:path';
  *
  * An ESM entry's size is its **initial** chunk (what loads before the page runs); code behind a
  * dynamic `import()` (the SDF text engine, E21.5) is measured separately as that entry's lazy
- * chunks (see bundle.ts), reported per entry and gated by a `lazyOf` row. The built-in default
- * font's faces (E2.18) are lazy chunks too, but each is measured on its own ({@link LAZY_PARTS}):
- * a page loads one face at a time, and only the faces its text uses.
+ * chunks (see bundle.ts), reported per entry and gated by a `lazyOf` row. Some lazy chunks are
+ * measured on their own ({@link LAZY_PARTS}): the fill primitive (E21.6), loaded the first time a
+ * chart draws a fill, and the built-in default font's faces (E2.18), of which a page loads one at a
+ * time, and only the faces its text uses.
  */
 
 export const ROOT = path.resolve(import.meta.dirname, '../../..');
@@ -51,17 +52,24 @@ export interface SizeEntry {
   lazyPart?: string;
 }
 
+/** The built-in default font's faces (TeX Gyre Heros as `data:` URL modules, one chunk each). */
+export const FONT_PARTS = ['font-regular', 'font-bold', 'font-italic', 'font-bolditalic'] as const;
+
 /**
- * Lazy chunks measured separately from the rest of an entry's lazy code: the built-in default
- * font's faces (TeX Gyre Heros as `data:` URL modules, one chunk each). `lazyPart` of a chunk
- * whose modules are one font face, else `undefined`.
+ * Lazy chunks measured separately from the rest of an entry's lazy code (a chunk belongs to a part
+ * when all its modules do, see {@link lazyPartOf}): the fill primitive (plan E21.6: render's
+ * `dist/fill-lazy.js` and earcut, which only it uses) and the {@link FONT_PARTS}.
  */
-export const LAZY_PARTS = ['font-regular', 'font-bold', 'font-italic', 'font-bolditalic'] as const;
+export const LAZY_PARTS = ['fill', ...FONT_PARTS] as const;
 
 const FONT_MODULE = /[\\/]texgyreheros-(regular|bold|italic|bolditalic)(?:-[\w-]+)?\.(?:js|ts)$/;
+/** render's lazily loaded fill chunk (built or from sources), and earcut. */
+const FILL_MODULE =
+  /[\\/](?:render[\\/](?:dist[\\/]fill-lazy\.js|src[\\/]primitives[\\/]fill(?:-lazy|-triangulate|-arrangement|\.glsl)?\.ts)|node_modules[\\/]earcut[\\/].*)$/;
 
 /** The {@link LAZY_PARTS} entry a module belongs to, if any. */
 export function lazyPartOf(moduleId: string): string | undefined {
+  if (FILL_MODULE.test(moduleId)) return 'fill';
   const face = FONT_MODULE.exec(moduleId)?.[1];
   return face ? `font-${face}` : undefined;
 }
@@ -107,6 +115,17 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     name: 'text engine (lazy chunk of core + scatter)',
     limit: '49 kB',
     lazyOf: 'partial-core-scatter',
+  },
+  {
+    // Plan E21.6: the fill primitive, earcut and the exact fill-rule code, loaded with a dynamic
+    // import() the first time a chart draws a fill (scatter `fill`, stacked areas, shapes,
+    // annotation boxes); the same chunk for every entry that draws fills. Measured 8.55 kB when
+    // split out (2026-09-24); budget = measured + ~10%.
+    id: 'fill-lazy',
+    name: 'fill primitive (lazy chunk of core + scatter)',
+    limit: '9.4 kB',
+    lazyOf: 'partial-core-scatter',
+    lazyPart: 'fill',
   },
   ...fontRows(),
   {

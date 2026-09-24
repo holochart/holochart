@@ -12,10 +12,12 @@
  * Code splitting is on, like in an app: dynamic `import()`s (the SDF text engine, plan E21.5)
  * become separate chunks. `<id>.js` holds the entry's **initial** chunks (the entry chunk and every
  * chunk it imports statically), what a page downloads before it runs; `<id>.lazy.js` holds the
- * other chunks, loaded on demand, except the built-in default font's faces (plan E2.18), which go
- * to `<id>.lazy.<part>.js`, one file per face (`LAZY_PARTS` in entries.ts): a page loads them one
- * at a time, only the faces its text uses. Every output chunk lands in exactly one file, so no
- * code drops out of the numbers; the manifest lists what the lazy chunks contain.
+ * other chunks, loaded on demand, except the parts measured on their own (`LAZY_PARTS` in
+ * entries.ts), which go to `<id>.lazy.<part>.js`: the fill primitive (plan E21.6), loaded when a
+ * chart first draws a fill, and the built-in default font's faces (plan E2.18), one file per face
+ * (a page loads them one at a time, only the faces its text uses). Every output chunk lands in
+ * exactly one file, so no code drops out of the numbers; the manifest lists what the lazy chunks
+ * contain.
  */
 import { existsSync, mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';

@@ -10,3 +10,6 @@ apps/docs/.vitepress/.temp
 apps/docs/reference/attributes
 apps/docs/reference/api
 apps/docs/public/plot-schema.json
+
+# Upstream plotly.py templates, kept byte-identical (see its README)
+packages/themes/src/__fixtures__/plotly-py/*.json

@@ -24,8 +24,8 @@ export interface ClipRect {
 
 type Hook = NonNullable<Object3D['onBeforeRender']>;
 
-const saved = new Vector4();
-const viewport = new Vector4();
+const saved = /* @__PURE__ */ new Vector4();
+const viewport = /* @__PURE__ */ new Vector4();
 
 /** Intersection of two rects (`[x, y, w, h]`, any origin), empty when they don't overlap. */
 export function intersect(

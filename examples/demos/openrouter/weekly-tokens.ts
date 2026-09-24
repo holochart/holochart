@@ -259,11 +259,10 @@ export function mount(el: HTMLElement, options: Options = {}): ExampleHandle {
 
   const visibility = (index: number): unknown =>
     (chart.data[index] as { visible?: unknown } | undefined)?.visible ?? true;
-  // The legend toggles traces with a restyle. Keep the projection (not in the legend, so the
-  // legend's group toggle skips it) and the end-of-line labels in step with their fits.
+  // The legend toggles traces with a restyle (the projection follows its fit: same
+  // `legendgroup`). Keep the end-of-line labels in step with their fits.
   const offRestyle = chart.on('restyle', () => {
     const exp = visibility(expIndex);
-    if (visibility(expIndex + 1) !== exp) void chart.restyle({ visible: exp }, [expIndex + 1]);
     void chart.relayout({
       'annotations[0].visible': exp === true,
       'annotations[1].visible': visibility(linIndex) === true,

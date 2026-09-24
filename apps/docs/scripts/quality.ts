@@ -3,7 +3,8 @@
  * Offline and static: nothing is fetched, no example is executed.
  *
  * Hard gates (exit 1 when they fail):
- * 1. Every leaf attribute of the trace/layout/config schema has a description.
+ * 1. Every attribute of the trace/layout/config schema has a description: leaves (`valType`) and
+ *    containers (`role: object` / `items`) alike.
  * 3. Every released trace type (named by `chart:` of a `status: complete` chart page) has at least
  *    5 examples.
  * 4. Every ```ts / ```typescript block of the hand-written pages type-checks
@@ -11,7 +12,7 @@
  * 5. Internal Markdown links resolve to a page.
  *
  * Report only: attribute usage in examples (target ≥ 70%), draft chart pages' example counts,
- * container descriptions, link anchors, external links per host, and spelling (common
+ * link anchors, external links per host, and spelling (common
  * misspellings and doubled words; full dictionary spell checking is deferred).
  *
  * Options: `--json <file>` writes the numbers as JSON. When `GITHUB_STEP_SUMMARY` is set, a
@@ -81,8 +82,10 @@ export function hardGates(r: QualityReport): GateResult[] {
   return [
     {
       name: 'Attribute descriptions',
-      ok: r.descriptions.missing.length === 0,
-      summary: `${pct(r.descriptions.described, r.descriptions.attributes)} of ${r.descriptions.attributes} attributes described`,
+      ok: r.descriptions.missing.length === 0 && r.descriptions.containersMissing.length === 0,
+      summary:
+        `${pct(r.descriptions.described, r.descriptions.attributes)} of ${r.descriptions.attributes} attributes, ` +
+        `${r.descriptions.containers - r.descriptions.containersMissing.length}/${r.descriptions.containers} containers described`,
     },
     {
       name: `Released trace types with ≥ ${MIN_TRACE_EXAMPLES} examples`,
@@ -161,10 +164,7 @@ export function formatReport(r: QualityReport, gates: readonly GateResult[]): st
   out.push(`1. [${mark(g1.ok)}] Attribute descriptions (hard, 100%): ${g1.summary}`);
   out.push(...list(r.descriptions.missing));
   const cm = r.descriptions.containersMissing;
-  out.push(
-    `   Containers (object/items, report only): ${r.descriptions.containers - cm.length}/${r.descriptions.containers} described`,
-    ...list(cm),
-  );
+  if (cm.length > 0) out.push('   Containers (object/items) without a description:', ...list(cm));
 
   const u = r.usage;
   const onTarget = u.overall.total > 0 && u.overall.used / u.overall.total >= USAGE_TARGET;

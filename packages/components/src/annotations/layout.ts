@@ -9,7 +9,8 @@
  */
 import type { TextAnchorX, TextAnchorY } from '@mk7s/holochart-render';
 import type { RGBA } from '@mk7s/holochart-render';
-import type { AxisInfo } from '@mk7s/holochart-runtime';
+import { SUBPLOT_TITLE_NAME, type FullLayout } from '@mk7s/holochart-core';
+import type { AxisInfo, MarginPush } from '@mk7s/holochart-runtime';
 import type { LabelItem } from '../axes/geometry.ts';
 import {
   fadeRuns,
@@ -539,4 +540,32 @@ export function hitAnnotation(
     return 'head';
   }
   return inBox(g.box, x, y, 1) ? 'box' : undefined;
+}
+
+/**
+ * Top-margin push of the subplot titles `makeSubplots` adds (named `SUBPLOT_TITLE_NAME`): those
+ * on the top row sit above the plot area, in the top margin, and need their box height there.
+ * A Holochart extension: Plotly annotations never push margins (plotly.py relies on its 100 px
+ * top margin), but the default look's thin top band would clip them. Like a top legend, the push
+ * stacks under a reserved (container-referenced, `automargin`) figure title.
+ */
+export function subplotTitlePush(
+  fullLayout: FullLayout,
+  measure: MeasureLine,
+): MarginPush | undefined {
+  const list = fullLayout['annotations'];
+  if (!Array.isArray(list)) return undefined;
+  let t = 0;
+  for (const a of list as FullAnnotation[]) {
+    if ((a as { name?: unknown }).name !== SUBPLOT_TITLE_NAME || a.visible === false) continue;
+    // makeSubplots puts them at the top of their cell: only the top row (y = 1) is in the margin.
+    if (a.yref !== 'paper' || typeof a.y !== 'number' || Math.abs(a.y - 1) > 1e-9) continue;
+    // Only boxes that rise from their anchor (bottom-anchored, unrotated) take room above it.
+    if (a.yanchor !== 'bottom' || a.textangle !== 0 || a.showarrow) continue;
+    const box = measureStyled(styledText(a.text, textFont(a.font)), measure);
+    const pad = a.borderwidth + a.borderpad;
+    const above = Math.round((a.height ?? box.height) + 2 * pad) + a.yshift;
+    if (box.height > 0 && above > t) t = above;
+  }
+  return t > 0 ? { t: Math.ceil(t) } : undefined;
 }

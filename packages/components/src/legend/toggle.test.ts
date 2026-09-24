@@ -41,6 +41,50 @@ describe('legendToggle', () => {
     ]);
   });
 
+  it('toggles same-group traces without a legend item (showlegend: false)', () => {
+    // 0: fit (in legend), 1: its projection (showlegend: false, same group), 2: other.
+    const t = traces([[true, 'exp'], [true, 'exp', false], [true]]);
+    expect(entries(legendToggle(t, 0, 'toggle', 'togglegroup'))).toEqual([
+      [0, 'legendonly'],
+      [1, 'legendonly'],
+    ]);
+    expect(entries(legendToggle(t, 0, 'toggle', 'toggleitem'))).toEqual([[0, 'legendonly']]);
+    const hidden = traces([['legendonly', 'exp'], ['legendonly', 'exp', false], [true]]);
+    expect(entries(legendToggle(hidden, 0, 'toggle', 'togglegroup'))).toEqual([
+      [0, true],
+      [1, true],
+    ]);
+  });
+
+  it('isolates a group with its hidden-legend members, whatever groupclick says', () => {
+    const t = traces([[true, 'exp'], [true, 'exp', false], [true], [true, 'lin', false]]);
+    const expected = [
+      [2, 'legendonly'],
+      [3, 'legendonly'],
+    ];
+    expect(entries(legendToggle(t, 0, 'toggleothers', 'togglegroup'))).toEqual(expected);
+    expect(entries(legendToggle(t, 0, 'toggleothers', 'toggleitem'))).toEqual(expected);
+    // Isolated already (trace 3 has no item, so it does not count): everything comes back.
+    const isolated = traces([
+      [true, 'exp'],
+      [true, 'exp', false],
+      ['legendonly'],
+      ['legendonly', 'lin', false],
+    ]);
+    expect(entries(legendToggle(isolated, 0, 'toggleothers', 'togglegroup'))).toEqual([
+      [2, true],
+      [3, true],
+    ]);
+  });
+
+  it('double-clicking a hidden item shows everything', () => {
+    const t = traces([['legendonly'], [true], ['legendonly', 'g', false], [false]]);
+    expect(entries(legendToggle(t, 0, 'toggleothers', 'togglegroup'))).toEqual([
+      [0, true],
+      [2, true],
+    ]);
+  });
+
   it('never touches visible:false traces or traces without a legend item', () => {
     const t = traces([[true], [true, '', false], [false]]);
     expect(entries(legendToggle(t, 0, 'toggleothers', 'togglegroup'))).toEqual([]);

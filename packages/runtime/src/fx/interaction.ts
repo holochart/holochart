@@ -13,7 +13,7 @@
  *   frame at the latest position, so a slow frame never builds a backlog and the last position
  *   always resolves (E2.17). Unchanged results emit nothing and touch no DOM.
  * - **down → move → up** in a subplot: the gesture `dragmode` asks for (zoom box, pan, select,
- *   lasso); on the axis strips beside a subplot, axis-end drags scale one end and axis-middle drags
+ *   lasso, or a shape-drawing gesture offered to `ComponentView.drawShape`); on the axis strips beside a subplot, axis-end drags scale one end and axis-middle drags
  *   pan that axis. Range changes during a drag are previews (transform-only updates, `relayouting`
  *   once per frame); the gesture's end commits them with one `relayout`.
  * - **down → up** without moving: `click` (and `doubleclick` within `config.doubleClickDelay`).
@@ -22,7 +22,13 @@
  */
 import type { FullLayout } from '@mk7s/holochart-core';
 import type { FrameScheduler } from '@mk7s/holochart-render';
-import type { AxisInfo, ComponentPointerEvent, SelectionQuery, SubplotInfo } from '../contracts.ts';
+import type {
+  AxisInfo,
+  ComponentPointerEvent,
+  DrawGesture,
+  SelectionQuery,
+  SubplotInfo,
+} from '../contracts.ts';
 import type { ChartEmitter, ChartPoint } from '../events.ts';
 import type { AttributeUpdate } from '../plan.ts';
 import {
@@ -50,7 +56,7 @@ import {
   type LabelSpec,
 } from './hover.ts';
 import type { HoverLayer } from './labels.ts';
-import type { FxSettings, Hovermode } from './settings.ts';
+import { isDrawDragmode, type FxSettings, type Hovermode } from './settings.ts';
 
 /** What the interaction layer needs from its chart. */
 export interface InteractionHost {
@@ -89,11 +95,13 @@ export interface InteractionHost {
   select(selection: ReadonlyMap<number, readonly number[]>): void;
   /** Clear every selection; returns whether there was one. */
   clearSelection(): boolean;
+  /** Offer a shape-drawing gesture to component views (draw `dragmode`s, E5.5). */
+  drawShape?(gesture: DrawGesture): void;
   /** `config.renderHover(points)`: a custom label element, if configured. */
   renderHover?(points: readonly ChartPoint[]): HTMLElement | null | undefined;
 }
 
-type Action = 'none' | 'zoom' | 'pan' | 'select' | 'lasso' | 'axis-pan' | 'axis-end';
+type Action = 'none' | 'zoom' | 'pan' | 'select' | 'lasso' | 'draw' | 'axis-pan' | 'axis-end';
 
 interface Drag {
   action: Action;
@@ -109,8 +117,10 @@ interface Drag {
   /** Linear ranges of the subplot's axes at the start. */
   rx: LinearRange;
   ry: LinearRange;
-  /** Lasso outline, flat container px. */
+  /** Lasso outline (and freeform draw vertices), flat container px. */
   lasso: number[];
+  /** The draw `dragmode` of a `draw` gesture. */
+  draw: DrawGesture['mode'] | undefined;
   /** Ranges last previewed (pan / axis drags). */
   last: Map<string, LinearRange>;
   /** The component view that owns this gesture. */
@@ -314,7 +324,10 @@ export class Interaction {
     if (!zone || s.dragmode === false) return '';
     if (zone === 'plot') {
       if (s.dragmode === 'pan') return 'move';
-      return s.dragmode === 'zoom' || s.dragmode === 'select' || s.dragmode === 'lasso'
+      return s.dragmode === 'zoom' ||
+        s.dragmode === 'select' ||
+        s.dragmode === 'lasso' ||
+        isDrawDragmode(s.dragmode)
         ? 'crosshair'
         : '';
     }
@@ -350,6 +363,7 @@ export class Interaction {
       rx: [0, 1],
       ry: [0, 1],
       lasso: [],
+      draw: undefined,
       last: new Map(),
       component: undefined,
     };
@@ -371,6 +385,10 @@ export class Interaction {
       drag.ry = range(sp.yaxis);
       drag.action = this.#actionFor(zone, sp, s);
       if (drag.action === 'lasso') drag.lasso.push(this.#px, this.#py);
+      if (drag.action === 'draw' && isDrawDragmode(s.dragmode)) {
+        drag.draw = s.dragmode;
+        drag.lasso.push(this.#px, this.#py);
+      }
     }
     this.#drag = drag;
     this.#capture(pointerId);
@@ -390,6 +408,7 @@ export class Interaction {
       if (s.dragmode === 'pan') {
         return this.#host.isFixed(sp.xaxis) && this.#host.isFixed(sp.yaxis) ? 'none' : 'pan';
       }
+      if (isDrawDragmode(s.dragmode)) return this.#host.drawShape ? 'draw' : 'none';
       return s.dragmode;
     }
     const axis = zone.startsWith('x') ? sp.xaxis : sp.yaxis;
@@ -424,7 +443,7 @@ export class Interaction {
         this.#component('move', e, drag.component);
         return;
       }
-      if (drag.action === 'lasso' && drag.moved) {
+      if ((drag.action === 'lasso' || drag.action === 'draw') && drag.moved) {
         const n = drag.lasso.length;
         const lx = drag.lasso[n - 2] as number;
         const ly = drag.lasso[n - 1] as number;
@@ -500,6 +519,7 @@ export class Interaction {
       return;
     }
     this.#host.layer.hideOverlay();
+    if (drag.action === 'draw' && drag.moved) this.#drawGesture(drag, 'cancel');
     // Undo previews: back to the ranges the gesture started from.
     if (drag.last.size > 0 && drag.subplot) {
       const back = new Map<string, LinearRange>([
@@ -934,6 +954,9 @@ export class Interaction {
         this.#preview(drag.last);
         return;
       }
+      case 'draw':
+        this.#drawGesture(drag, 'move');
+        return;
       case 'select':
       case 'lasso': {
         const query = this.#selectionQuery(drag);
@@ -1021,6 +1044,9 @@ export class Interaction {
         this.#dragFrame();
         if (drag.last.size > 0) host.commit(new Map(drag.last));
         return;
+      case 'draw':
+        this.#drawGesture(drag, 'end');
+        return;
       case 'select':
       case 'lasso': {
         const query = this.#selectionQuery(drag);
@@ -1047,6 +1073,33 @@ export class Interaction {
       }
       default:
     }
+  }
+
+  /**
+   * Offer the draw gesture (E5.5) to component views: positions clamped to the plot area; the
+   * start and current position for line / circle / rect, every vertex for the freeform modes.
+   */
+  #drawGesture(drag: Drag, phase: DrawGesture['phase']): void {
+    const sp = drag.subplot;
+    const mode = drag.draw;
+    if (!sp || !mode || !this.#host.drawShape) return;
+    const r = sp.rect;
+    const cx = (x: number): number => Math.min(Math.max(x, r.x), r.x + r.width);
+    const cy = (y: number): number => Math.min(Math.max(y, r.y), r.y + r.height);
+    const freeform = mode === 'drawopenpath' || mode === 'drawclosedpath';
+    const raw = freeform ? drag.lasso : [drag.x0, drag.y0, drag.x, drag.y];
+    const points: number[] = [];
+    for (let i = 0; i + 1 < raw.length; i += 2) {
+      points.push(cx(raw[i] as number), cy(raw[i + 1] as number));
+    }
+    if (freeform && phase !== 'cancel') {
+      // The released position closes the stroke.
+      const n = points.length;
+      const x = cx(drag.x);
+      const y = cy(drag.y);
+      if (points[n - 2] !== x || points[n - 1] !== y) points.push(x, y);
+    }
+    this.#host.drawShape({ mode, subplot: sp, points, phase });
   }
 
   // ---- selection -----------------------------------------------------------------------------------

@@ -9,9 +9,11 @@
  * ```
  *
  * `select2d`/`lasso2d` appear only when a visible trace can select points; the hover and spike
- * buttons only when asked for by name (`config.modeBarButtonsToAdd`, `layout.modebar.add`).
+ * buttons only when asked for by name (`config.modeBarButtonsToAdd`, `layout.modebar.add`), and
+ * so do the shape-drawing buttons (`drawline`, `drawopenpath`, `drawclosedpath`, `drawcircle`,
+ * `drawrect`, `eraseshape`), which join the drag group in the order they were added (Plotly).
  */
-import type { Chart } from '@mk7s/holochart-runtime';
+import type { Chart, DrawDragmode } from '@mk7s/holochart-runtime';
 import { isModebarIcon, modebarIcons, type ModebarIcon } from './icons.ts';
 
 /** Built-in button names this modebar implements (Plotly names). */
@@ -28,6 +30,12 @@ export const MODEBAR_BUILTIN_BUTTONS = [
   'hoverClosestCartesian',
   'hoverCompareCartesian',
   'toggleSpikelines',
+  'drawline',
+  'drawopenpath',
+  'drawclosedpath',
+  'drawcircle',
+  'drawrect',
+  'eraseshape',
 ] as const;
 
 /** A built-in modebar button name. */
@@ -76,7 +84,7 @@ export interface ModebarButton {
   /** Set for custom buttons. */
   readonly custom?: ModebarCustomButton;
   /** The `dragmode` a `dragmode` button selects. */
-  readonly dragmode?: 'zoom' | 'pan' | 'select' | 'lasso';
+  readonly dragmode?: 'zoom' | 'pan' | 'select' | 'lasso' | DrawDragmode;
   /** The `hovermode` a `hovermode` button selects. */
   readonly hovermode?: 'closest' | 'x';
 }
@@ -138,6 +146,37 @@ const BUILTINS: Readonly<Record<ModebarBuiltinName, BuiltinSpec>> = {
     hovermode: 'x',
   },
   toggleSpikelines: { title: 'Toggle Spike Lines', icon: modebarIcons.spikelines, kind: 'toggle' },
+  drawline: {
+    title: 'Draw line',
+    icon: modebarIcons.drawLine,
+    kind: 'dragmode',
+    dragmode: 'drawline',
+  },
+  drawopenpath: {
+    title: 'Draw open freeform',
+    icon: modebarIcons.drawOpenPath,
+    kind: 'dragmode',
+    dragmode: 'drawopenpath',
+  },
+  drawclosedpath: {
+    title: 'Draw closed freeform',
+    icon: modebarIcons.drawClosedPath,
+    kind: 'dragmode',
+    dragmode: 'drawclosedpath',
+  },
+  drawcircle: {
+    title: 'Draw circle',
+    icon: modebarIcons.drawCircle,
+    kind: 'dragmode',
+    dragmode: 'drawcircle',
+  },
+  drawrect: {
+    title: 'Draw rectangle',
+    icon: modebarIcons.drawRect,
+    kind: 'dragmode',
+    dragmode: 'drawrect',
+  },
+  eraseshape: { title: 'Erase active shape', icon: modebarIcons.eraseShape, kind: 'action' },
 };
 
 /** Build the descriptor of a built-in button. */
@@ -199,17 +238,21 @@ const UNSUPPORTED = new Set(
     'zoomInMap',
     'zoomOutMap',
     'resetSankeyGroup',
-    'drawline',
-    'drawopenpath',
-    'drawclosedpath',
-    'drawcircle',
-    'drawrect',
-    'eraseshape',
     'togglehover',
     'resetview',
     'resetviews',
   ].map((n) => n.toLowerCase()),
 );
+
+/** Shape-drawing buttons: added by name only, into the drag group (Plotly's `DRAW_MODES`). */
+const DRAW_BUTTONS: ReadonlySet<ModebarBuiltinName> = new Set([
+  'drawline',
+  'drawopenpath',
+  'drawclosedpath',
+  'drawcircle',
+  'drawrect',
+  'eraseshape',
+]);
 
 /** Buttons that may only be added by name, in the order of their trailing group. */
 const OPT_IN: readonly ModebarBuiltinName[] = [
@@ -324,12 +367,13 @@ export function resolveModebarButtons(input: ModebarResolveInput): ModebarButton
   if (input.hasCartesian) {
     const fixed = input.allAxesFixed === true;
     groups.push(
-      keep(
-        DRAG_GROUP.filter((n) => {
+      keep([
+        ...DRAG_GROUP.filter((n) => {
           if (n === 'select2d' || n === 'lasso2d') return input.hasSelectable || added.has(n);
           return !fixed;
         }),
-      ),
+        ...[...added].filter((n) => DRAW_BUTTONS.has(n)),
+      ]),
       keep(fixed ? [] : ZOOM_GROUP),
       keep(OPT_IN.filter((n) => added.has(n))),
     );

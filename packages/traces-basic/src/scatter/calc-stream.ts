@@ -241,8 +241,8 @@ const EXTREMES = new WeakMap<ScatterCalc, TraceExtremes>();
 /**
  * Scatter `extremes`: the incremental {@link scatterExtremesAppend} when `calc` is a streamed
  * calc (`appendOf`) whose previous calc's extremes are known — the runtime drops `plan.append`
- * once `crossTraceCalc` ran on the subplot, so this keeps streaming autorange O(added) — else a
- * full {@link scatterExtremes}.
+ * for traces `crossTraceCalc` reports as changed, so this keeps streaming autorange O(added) for
+ * them too — else a full {@link scatterExtremes}.
  */
 export function scatterExtremesCached(
   calc: ScatterCalc,

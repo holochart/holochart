@@ -143,7 +143,11 @@ export type {
 } from './defaults/types.ts';
 
 // Subplot grids (E4.4)
-export { makeSubplots } from './subplots/make-subplots.ts';
+export {
+  makeSubplots,
+  SUBPLOT_TITLE_FONT_SCALE,
+  SUBPLOT_TITLE_NAME,
+} from './subplots/make-subplots.ts';
 export type {
   Extent,
   MakeSubplotsOptions,

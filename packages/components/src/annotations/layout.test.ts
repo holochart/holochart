@@ -1,4 +1,4 @@
-import { createScale, type FullAxis } from '@mk7s/holochart-core';
+import { createScale, makeSubplots, type FullAxis } from '@mk7s/holochart-core';
 import { describe, expect, it } from 'vitest';
 import { defaults, measure, testRegistry } from '../__testing__/fixtures.ts';
 import { annotationBatches, annotationsComponent, annotationsOf } from './annotations.ts';
@@ -11,6 +11,7 @@ import {
   pxToRef,
   refToPx,
   resolveAnchors,
+  subplotTitlePush,
   type AnnotationEnv,
   type AxisRef,
 } from './layout.ts';
@@ -69,6 +70,44 @@ describe('annotation defaults', () => {
     expect(b.arrowwidth).toBe(6);
     expect(b.captureevents).toBe(true);
     expect(b.arrowcolor).toMatch(/255, 0, 0|red/);
+  });
+
+  it('sizes makeSubplots titles at 4/3 of the layout font unless a size is set', () => {
+    const sp = makeSubplots({ rows: 1, cols: 2, subplotTitles: ['A', 'B'] });
+    const [title] = sp.layout['annotations'] as Record<string, unknown>[];
+    // plotly.py: 16 px over a 12 px base; a 9 px base (the default look) gets 12 px.
+    expect(full(title as Record<string, unknown>, { font: { size: 12 } }).font.size).toBe(16);
+    expect(full(title as Record<string, unknown>, { font: { size: 9 } }).font.size).toBe(12);
+    expect(full({ ...title, font: { size: 20 } }).font.size).toBe(20);
+    // Other annotations keep the layout font size.
+    expect(full({ text: 'x', name: 'other' }, { font: { size: 9 } }).font.size).toBe(9);
+  });
+
+  it('pushes the top margin for top-row subplot titles only', () => {
+    const sp = makeSubplots({ rows: 2, cols: 1, subplotTitles: ['Top', 'Bottom'] });
+    const { fullLayout } = defaults({ font: { size: 9 }, ...sp.layout }, [], registry);
+    // 12 px title: 12 × 1.3 line box + 2 × (borderwidth 1 + borderpad 1).
+    expect(subplotTitlePush(fullLayout, measure)).toEqual({ t: Math.round(12 * 1.3 + 4) });
+    expect(annotationsComponent.pushMargin).toBeTypeOf('function');
+    // Ordinary paper annotations above the plot don't push (Plotly).
+    const plain = defaults(
+      {
+        annotations: [
+          {
+            text: 'note',
+            xref: 'paper',
+            yref: 'paper',
+            x: 0,
+            y: 1,
+            yanchor: 'bottom',
+            showarrow: false,
+          },
+        ],
+      },
+      [],
+      registry,
+    ).fullLayout;
+    expect(subplotTitlePush(plain, measure)).toBeUndefined();
   });
 });
 

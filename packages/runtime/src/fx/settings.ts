@@ -25,8 +25,30 @@ import type { ChartRegistry } from '../registry.ts';
 /** `hovermode` values (Plotly semantics). */
 export type Hovermode = false | 'closest' | 'x' | 'y' | 'x unified' | 'y unified';
 
-/** `dragmode` values. `orbit` / `turntable` are for 3D scenes and act like `false` in 2D. */
-export type Dragmode = false | 'zoom' | 'pan' | 'select' | 'lasso' | 'orbit' | 'turntable';
+/** The shape-drawing `dragmode`s (E5.5): a drag on a cartesian subplot draws a new shape. */
+export type DrawDragmode =
+  'drawline' | 'drawopenpath' | 'drawclosedpath' | 'drawcircle' | 'drawrect';
+
+/**
+ * `dragmode` values. `orbit` / `turntable` are for 3D scenes and act like `false` in 2D. The draw
+ * modes ({@link DrawDragmode}) hand the gesture to component views (`ComponentView.drawShape`).
+ */
+export type Dragmode =
+  false | 'zoom' | 'pan' | 'select' | 'lasso' | 'orbit' | 'turntable' | DrawDragmode;
+
+/** The shape-drawing `dragmode`s, in Plotly's modebar order. */
+export const DRAW_DRAGMODES: readonly DrawDragmode[] = [
+  'drawline',
+  'drawopenpath',
+  'drawclosedpath',
+  'drawcircle',
+  'drawrect',
+];
+
+/** Whether `mode` is a shape-drawing `dragmode`. */
+export function isDrawDragmode(mode: unknown): mode is DrawDragmode {
+  return DRAW_DRAGMODES.includes(mode as DrawDragmode);
+}
 
 /** What `config.doubleClick` does on the plot area. */
 export type DoubleClickAction = false | 'reset' | 'autosize' | 'reset+autosize';
@@ -137,6 +159,7 @@ const DRAGMODES: readonly Dragmode[] = [
   'lasso',
   'orbit',
   'turntable',
+  ...DRAW_DRAGMODES,
 ];
 
 /** Whether a `scrollZoom` config value enables wheel zoom on cartesian subplots. */

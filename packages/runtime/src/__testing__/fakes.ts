@@ -140,7 +140,14 @@ const dotsSchema = attr.object({
  */
 export function createDotsModule(
   log: CallLog,
-  options: { cross?: boolean } = {},
+  options: {
+    cross?: boolean;
+    /**
+     * What the recorded `crossTraceCalc` returns (its changed report), from the indices of its
+     * entries; absent: it returns nothing (every entry changed).
+     */
+    crossReport?: (indices: readonly number[]) => Iterable<number> | undefined;
+  } = {},
 ): TraceModule<DotsCalc> {
   const module: TraceModule<DotsCalc> = {
     type: 'dots',
@@ -222,8 +229,11 @@ export function createDotsModule(
     },
   };
   if (options.cross) {
+    const report = options.crossReport;
     module.crossTraceCalc = (entries) => {
-      log.cross.push(entries.map((e) => e.index));
+      const indices = entries.map((e) => e.index);
+      log.cross.push(indices);
+      return report?.(indices);
     };
   }
   return module;
@@ -252,11 +262,16 @@ export function setup(
     components?: ComponentModule[];
     /** Give the dots module a `crossTraceCalc` (recorded in `log.cross`). */
     cross?: boolean;
+    /** The changed report of that `crossTraceCalc` (see {@link createDotsModule}). */
+    crossReport?: (indices: readonly number[]) => Iterable<number> | undefined;
   } = {},
 ): TestSetup {
   const log = createLog();
   const registry = createChartRegistry().register(
-    createDotsModule(log, { cross: options.cross === true }),
+    createDotsModule(log, {
+      cross: options.cross === true,
+      ...(options.crossReport ? { crossReport: options.crossReport } : {}),
+    }),
   );
   if (options.components) registry.register(...options.components);
   const renderers: FakeRenderer[] = [];

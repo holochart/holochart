@@ -89,6 +89,11 @@ export interface TickOptions {
   separatethousands: boolean;
   ticklabelmode: 'instant' | 'period';
   ticklabelstep: number;
+  /**
+   * Log axes with `D1`/`D2` steps: how the ticks between powers of ten are labelled (`small
+   * digits`, `complete` or `none`).
+   */
+  minorloglabels: MinorLogLabels;
   /** `tickfont.size`, default 12. */
   tickfontSize: number;
   ticklabelposition: string;
@@ -138,7 +143,11 @@ export interface TickLabel {
   fontScale?: number;
 }
 
+/** Values of `minorloglabels`. */
+export type MinorLogLabels = 'small digits' | 'complete' | 'none';
+
 const SHOW_MODES: readonly ShowMode[] = ['all', 'first', 'last', 'none'];
+const MINOR_LOG_LABELS: readonly MinorLogLabels[] = ['small digits', 'complete', 'none'];
 const EXPONENT_FORMATS: readonly ExponentFormat[] = ['none', 'e', 'E', 'power', 'SI', 'B'];
 const SI_PREFIXES = ['f', 'p', 'n', 'μ', 'm', '', 'k', 'M', 'G', 'T'];
 
@@ -226,6 +235,7 @@ export function tickOptions(axis: FullAxis): TickOptions {
     separatethousands: a['separatethousands'] === true,
     ticklabelmode: a['ticklabelmode'] === 'period' ? 'period' : 'instant',
     ticklabelstep: Math.max(1, Math.round(num(a['ticklabelstep'], 1, 1))),
+    minorloglabels: oneOf(a['minorloglabels'], MINOR_LOG_LABELS, 'small digits'),
     tickfontSize: num(asRecord(a['tickfont'])['size'], 12, 1),
     ticklabelposition: str(a['ticklabelposition'], 'outside'),
     side: str(a['side'], ''),
@@ -976,7 +986,24 @@ export function createTickFormatter(
       }
       return { text: numFormat(Math.pow(10, x), '', true, false) };
     }
-    // D1/D2 in-between ticks: a small digit.
+    // D1/D2 in-between ticks (`minorloglabels`): a small digit (Plotly's default), the full
+    // value like the powers of ten, or nothing.
+    if (o.minorloglabels === 'none') return { text: '' };
+    if (o.minorloglabels === 'complete') {
+      // Written like the powers of ten around it: 2×10³ next to 10³, 2e+3 next to 1e+3.
+      const p = Math.floor(x + 0.01);
+      const digit = Math.round(Math.pow(10, mod(x, 1)));
+      const absP = Math.abs(p);
+      const ef = o.exponentformat;
+      const sign = p > 0 ? '' : MINUS_SIGN;
+      if ((ef === 'power' || (isSIFormat(ef) && beyondSI(p))) && absP > 1) {
+        return { text: `${digit}×10<sup>${sign}${absP}</sup>` };
+      }
+      if ((ef === 'e' || ef === 'E') && absP > 2) {
+        return { text: `${digit}${ef}${p > 0 ? '+' : MINUS_SIGN}${absP}` };
+      }
+      return { text: numFormat(Math.pow(10, x), '', true, false) };
+    }
     return { text: String(Math.round(Math.pow(10, mod(x, 1)))), fontScale: 0.75 };
   };
 
