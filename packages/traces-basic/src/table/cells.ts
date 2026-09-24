@@ -7,12 +7,31 @@
  * Pure: text sizes come from the render layer's synchronous metrics oracle, so layout is unit
  * tested without a GPU.
  *
- * Rich text: tags are stripped the way scatter text does (`<br>` breaks lines, entities are
- * decoded) until the styled-run rich text engine (E2.10) is integrated; `<b>` etc. then style runs.
+ * Rich text (E2.10): values with markup (`<b>`, `<i>`, `<sup>`, `<span style>`, `<a href>`, `<br>`,
+ * entities) are resolved like scatter, bar and pie text (`shared/rich-text.ts`, raw newlines as
+ * spaces as in Plotly's SVG text) and drawn as styled runs; wrapping cells wrap their runs at
+ * spaces (render's `wrapTextRuns`, Plotly's `wrapText` made run-aware). Plain values never reach
+ * the parser and keep the plain-text layout.
  */
-import { formatNumber, isArrayLike, toRGBA, type FullTrace, type RGBA } from '@mk7s/holochart-core';
-import { measureText, type TextFont, type TextFontWeight } from '@mk7s/holochart-render';
+import {
+  formatNumber,
+  isArrayLike,
+  mayContainRichText,
+  richTextToPlain,
+  toRGBA,
+  type FullTrace,
+  type RGBA,
+} from '@mk7s/holochart-core';
+import {
+  measureText,
+  wrapTextRuns,
+  type TextFont,
+  type TextFontWeight,
+  type TextRun,
+  type TextRunLines,
+} from '@mk7s/holochart-render';
 import { plainText } from '../scatter/text-position.ts';
+import { richLabel } from '../shared/rich-text.ts';
 
 /** Plotly's `cellPad`: px between the text and the cell's left/right and top/bottom edges. */
 export const CELL_PAD = 8;
@@ -41,8 +60,13 @@ export function gridPick(spec: unknown, col: number, row: number): unknown {
 
 /** Resolved text and flags of one cell (Plotly's `populateCellText`). */
 export interface CellText {
-  /** Plain text to draw (tags stripped, `<br>` as `\n`). */
+  /** Plain text (tags removed, entities decoded, `<br>` as `\n`): what a plain cell draws. */
   readonly text: string;
+  /**
+   * The text with its markup (prefix, formatted value and suffix), set when it has tags or
+   * entities: the cell is then laid out and drawn from it as rich text.
+   */
+  readonly markup?: string;
   /** Wrap at spaces to the column width (string values without `<br>`). */
   readonly wrap: boolean;
   /**
@@ -95,11 +119,14 @@ export function cellText(
       (suffix == null ? '' : String(suffix));
   }
   const space = raw.includes(' ');
-  return {
-    text: markup || hasBreaks ? plainText(raw) : raw,
-    wrap: isString && !hasBreaks && !latex && space,
-    grow: hasBreaks || latex || markup || space,
-  };
+  const wrap = isString && !hasBreaks && !latex && space;
+  const grow = hasBreaks || latex || markup || space;
+  // LaTeX is shown as given (tags stripped, as before rich text); a prefix or suffix may bring
+  // markup to a plain value.
+  if (!latex && mayContainRichText(raw)) {
+    return { text: richTextToPlain(raw, { newlines: 'space' }), markup: raw, wrap, grow };
+  }
+  return { text: markup || hasBreaks ? plainText(raw) : raw, wrap, grow };
 }
 
 /** Resolved style of one cell. */
@@ -191,7 +218,15 @@ export function wrapWords(text: string, font: TextFont, limit: number, measure: 
 
 /** One laid-out cell: its lines and the row height it needs. */
 export interface CellLayout {
+  /** Plain text of each drawn line. */
   readonly lines: readonly string[];
+  /** Styled runs per line (as wrapped) when the cell's rich text mixes styles. */
+  readonly runs?: TextRunLines;
+  /**
+   * The font the text is drawn with when markup styles the whole cell (e.g. a value in
+   * `<b>…</b>`); unset: the cell style's font.
+   */
+  readonly font?: TextFont;
   /** Height the row needs for this cell (0 when it keeps the declared row height). */
   readonly height: number;
   /** Baseline of the first line below the cell top, px. */
@@ -219,10 +254,31 @@ export function layoutCell(
   width: number,
   measure: Measure = measureWidth,
 ): CellLayout {
-  const text = content.text;
-  const lines = content.wrap
-    ? wrapWords(text, font, width - 2 * CELL_PAD, measure)
-    : text.split('\n');
+  const limit = width - 2 * CELL_PAD;
+  const rich = content.markup !== undefined ? richLabel(content.markup, font, 'space') : undefined;
+  if (!rich) {
+    const text = content.text;
+    const lines = content.wrap ? wrapWords(text, font, limit, measure) : text.split('\n');
+    return cellBlock(content, font, lines);
+  }
+  // A label-wide style (the whole value in `<b>…</b>`) is a plain label with that font.
+  const f = rich.font;
+  const extra = f !== font ? { font: f } : {};
+  if (!rich.runs) {
+    const lines = content.wrap ? wrapWords(rich.text, f, limit, measure) : rich.text.split('\n');
+    return { ...cellBlock(content, f, lines), ...extra };
+  }
+  const runs = content.wrap ? wrapTextRuns(rich.runs, f, limit, { measure }) : rich.runs;
+  const lines = runs.map((line) => line.map((r: TextRun) => r.text).join(''));
+  return { ...cellBlock(content, f, lines), runs, ...extra };
+}
+
+/**
+ * Height and baselines of a cell's text block of `lines` in `font`. Lines are spaced by the cell
+ * font whatever their runs' sizes, and `<sup>` / `<sub>` shifts stay inside the line (like the
+ * text primitive's run layout), so rich cells share the plain cells' baseline in a row.
+ */
+function cellBlock(content: CellText, font: TextFont, lines: readonly string[]): CellLayout {
   const { ascent, descent } = verticalMetrics(font);
   const grownBaseline = CELL_PAD + ascent;
   if (!content.grow) {

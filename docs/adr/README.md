@@ -20,7 +20,7 @@ them and the old one is marked **Superseded by ADR-XXX**.
 | 009 | [GLSL3 shaders for v1, TSL for prototyping](009-glsl3-shaders-tsl-prototyping.md)                       | Accepted      |
 | 010 | [CPU spatial indexes for 2D hover, GPU ID picking for 3D](010-cpu-spatial-hover-gpu-picking-3d.md)      | Accepted      |
 | 011 | [Calc can run in a Web Worker](011-calc-in-web-worker.md)                                               | Proposed (P2) |
-| 012 | [Functional accessors are non-serializable; `styleRules`](012-functional-accessors-non-serializable.md) | Proposed      |
+| 012 | [Functional accessors are non-serializable; `styleRules`](012-functional-accessors-non-serializable.md) | Accepted      |
 | 013 | [`.ts` import extensions and native type stripping](013-ts-import-extensions-native-type-stripping.md)  | Accepted      |
 | 014 | [GLSL as TypeScript template-string modules](014-glsl-as-typescript-template-modules.md)                | Accepted      |
 | 015 | [Package builds with tsdown (JS, bundled declarations, IIFE)](015-tsup-js-tsc-declarations.md)          | Accepted      |
@@ -28,5 +28,5 @@ them and the old one is marked **Superseded by ADR-XXX**.
 | 017 | [Publish under the `@mk7s` npm scope](017-mk7s-npm-scope.md)                                            | Accepted      |
 | 018 | [Visual regression harness](018-visual-regression-harness.md)                                           | Accepted      |
 | 019 | [A runtime package owns charts, the pipeline and the plugin contracts](019-runtime-package.md)          | Accepted      |
-| 020 | [Strip schema descriptions from production builds](020-strip-schema-descriptions.md)                    | Proposed      |
+| 020 | [Strip schema descriptions from production builds](020-strip-schema-descriptions.md)                    | Accepted      |
 | 021 | [A dark, dense default look, applied by the runtime](021-default-look.md)                               | Accepted      |

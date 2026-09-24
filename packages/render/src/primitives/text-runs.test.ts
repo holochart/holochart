@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { resolveTextLabelMembers, type ResolvedTextLabel } from './text-layout.ts';
 import { createFallbackTextMeasurer, createFontMetricsOracle } from './text-metrics.ts';
-import { layoutTextRuns, textLinkAt, textRunFont, type TextRunLines } from './text-runs.ts';
+import {
+  layoutTextRuns,
+  textLinkAt,
+  textRunFont,
+  wrapTextRuns,
+  type TextRun,
+  type TextRunLines,
+} from './text-runs.ts';
 
 const oracle = createFontMetricsOracle({ measurer: createFallbackTextMeasurer() });
 const font = { family: 'sans-serif', size: 10 };
@@ -144,5 +151,98 @@ describe('resolveTextLabelMembers', () => {
     expect(a.rotation).toBeCloseTo((-30 * Math.PI) / 180);
     expect(b.localX).toBeCloseTo(a.localX + w('a '));
     expect(a.localY).toBe(b.localY);
+  });
+});
+
+describe('wrapTextRuns', () => {
+  /** 1 px per character (a space too): wrapping becomes character arithmetic. */
+  const mono = { measure: (text: string) => text.length };
+  const bold = { weight: 'bold' } as const;
+  const texts = (lines: readonly (readonly TextRun[])[]) =>
+    lines.map((line) => line.map((r) => r.text).join(''));
+
+  it('fills lines greedily across run boundaries, like the plain wrap', () => {
+    // Plain: 'aaa bb c dddd' in 8 px wraps to ['aaa bb', 'c dddd'] (each word + one space).
+    const lines: TextRunLines = [
+      [{ text: 'aaa ' }, { text: 'bb c', font: bold }, { text: ' dddd' }],
+    ];
+    const out = wrapTextRuns(lines, font, 8, mono);
+    expect(texts(out)).toEqual(['aaa bb', 'c dddd']);
+    // Pieces keep their run's style; the space before a word keeps the style it had.
+    expect(out).toEqual([
+      [{ text: 'aaa ' }, { text: 'bb', font: bold }],
+      [{ text: 'c', font: bold }, { text: ' dddd' }],
+    ]);
+  });
+
+  it('keeps a word that spans runs together', () => {
+    const lines: TextRunLines = [[{ text: 'ab' }, { text: 'cd', font: bold }, { text: ' ef' }]];
+    expect(wrapTextRuns(lines, font, 4, mono)).toEqual([
+      [{ text: 'ab' }, { text: 'cd', font: bold }],
+      [{ text: 'ef' }],
+    ]);
+  });
+
+  it('wraps each <br> line on its own and keeps empty lines', () => {
+    const lines: TextRunLines = [[{ text: 'one two' }], [], [{ text: 'three four', font: bold }]];
+    expect(texts(wrapTextRuns(lines, font, 5, mono))).toEqual(['one', 'two', '', 'three', 'four']);
+  });
+
+  it('gives a word wider than the limit a line of its own, unbroken', () => {
+    const lines: TextRunLines = [
+      [{ text: 'x ' }, { text: 'longerthanlimit', font: bold }, { text: ' y' }],
+    ];
+    expect(texts(wrapTextRuns(lines, font, 5, mono))).toEqual(['x', 'longerthanlimit', 'y']);
+  });
+
+  it('returns lines that need no break as they are, and keeps links, colors and shifts', () => {
+    const link = { href: 'https://x.org' };
+    const fits: TextRunLines = [[{ text: 'a ' }, { text: 'b', link }]];
+    expect(wrapTextRuns(fits, font, 100, mono)[0]).toBe(fits[0]);
+    const styled: TextRunLines = [
+      [
+        { text: 'go ', color: [1, 0, 0, 1] },
+        { text: 'x', shift: 4 },
+        { text: ' there now', link },
+      ],
+    ];
+    // 'go x there' is 3 + 2 + 6 px with a space per word; 'now' would make it 15.
+    expect(wrapTextRuns(styled, font, 11, mono)).toEqual([
+      [
+        { text: 'go ', color: [1, 0, 0, 1] },
+        { text: 'x', shift: 4 },
+        { text: ' there', link },
+      ],
+      [{ text: 'now', link }],
+    ]);
+  });
+
+  it('measures words per run face, and the laid-out widths add up within the limit', () => {
+    const lines: TextRunLines = [
+      [
+        { text: 'The quick ' },
+        { text: 'brown fox', font: bold },
+        { text: ' jumps over the ' },
+        { text: 'lazy', font: { style: 'italic' } },
+        { text: ' dog' },
+      ],
+    ];
+    const limit = 60;
+    const out = wrapTextRuns(lines, font, limit, { oracle });
+    expect(out.length).toBeGreaterThan(2);
+    // Nothing lost: the lines joined by spaces give the text back.
+    expect(texts(out).join(' ')).toBe('The quick brown fox jumps over the lazy dog');
+    for (const line of out) {
+      const layout = layoutTextRuns([line], { font }, oracle);
+      expect(layout.width).toBeLessThanOrEqual(limit);
+      // Runs sit end to end.
+      layout.items.forEach((item, k) => {
+        const next = layout.items[k + 1];
+        if (next) expect(next.x).toBeCloseTo(item.x + item.width);
+      });
+    }
+    // One plain run wraps like the plain wrap: each word plus one space, measured between letters.
+    const plain = wrapTextRuns([[{ text: 'aa bb cc' }]], font, w('aa bb') + w(' '), { oracle });
+    expect(texts(plain)).toEqual(['aa bb', 'cc']);
   });
 });

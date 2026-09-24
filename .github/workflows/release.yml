@@ -11,6 +11,12 @@ name: Release
 #
 # The publish job fails fast unless the NPM_TOKEN secret exists, and cannot start without the
 # `npm` environment's approval. Maintainer setup: docs/release/releasing.md.
+#
+# Nothing runs until releases are switched on: set the repository variable RELEASE_ENABLED to
+# `true` (Settings → Secrets and variables → Actions → Variables). Opening the Version Packages PR
+# also needs either "Allow GitHub Actions to create and approve pull requests" (Settings → Actions →
+# General → Workflow permissions) or a RELEASE_PR_TOKEN secret. Until then the workflow is skipped
+# instead of failing on every push; `pack` and `publish` follow `version` through `needs`.
 
 on:
   push:
@@ -30,7 +36,7 @@ env:
 jobs:
   version:
     name: version PR
-    if: ${{ github.repository == 'holochart/holochart' }}
+    if: ${{ github.repository == 'holochart/holochart' && vars.RELEASE_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

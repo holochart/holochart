@@ -1251,6 +1251,18 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "table/rich-text",
+      "title": "Table: rich text in cells",
+      "description": "Bold, italic and colored spans, superscripts and subscripts, line breaks, a link and a long rich description that wraps to its column.",
+      "tags": ["table", "chart", "rich-text", "wrap", "link"],
+      "category": "table",
+      "traceTypes": ["table"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/table/rich-text.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "table/styled",
       "title": "Table: styled columns and rows",
       "description": "Per-column formats, prefixes and suffixes, alignment, alternating row fills, a highlighted column and per-cell font colors.",

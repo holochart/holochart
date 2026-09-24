@@ -54,7 +54,11 @@ packages (`apps/*`, `examples`, `tools/*`) are never versioned or tagged
 
 ## Maintainer setup (one-time)
 
-None of this exists yet; the workflows skip or fail safely until it does.
+None of this exists yet. The Release workflow is **skipped** until the repository variable
+`RELEASE_ENABLED` is `true` (step 0), so pushes to `main` don't show a failing run in the meantime.
+
+0. **Switch releases on** once steps 1–5 are done: Settings → Secrets and variables → Actions →
+   Variables → `RELEASE_ENABLED` = `true`. Delete it (or set anything else) to pause releases.
 
 1. **npm.** Make sure the `mk7s` org owns the `@mk7s` scope and you are an owner. Create a
    **granular access token** with read and write access to the `@mk7s` scope (packages and org),

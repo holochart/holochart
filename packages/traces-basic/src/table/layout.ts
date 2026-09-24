@@ -5,13 +5,16 @@
  * body rows scroll below them. Pure: text sizes come from the metrics oracle.
  */
 import type { FullTrace } from '@mk7s/holochart-core';
+import type { TextLabel } from '@mk7s/holochart-render';
 import type { TableCalc } from './calc.ts';
 import {
   blockOf,
+  CELL_PAD,
   cellStyle,
   cellText,
   EMPTY_HEADER_HEIGHT,
   layoutCell,
+  LINE_SPACING,
   measureWidth,
   type CellLayout,
   type CellStyle,
@@ -101,6 +104,38 @@ export function layoutRow(
     }
   }
   return { cells, height };
+}
+
+/**
+ * The text label of a laid-out cell whose box starts at `(x, top)` and is `width` px wide, in
+ * container px (top-left origin, +y down): Plotly's `xPosition` (the padding from the aligned
+ * edge) and the cell's baseline. `undefined` for a blank cell. Link hit-testing uses the same
+ * label the renderer draws (after flipping `y` to world units).
+ */
+export function cellLabel(
+  cell: LaidOutCell,
+  x: number,
+  top: number,
+  width: number,
+): TextLabel | undefined {
+  const { style, layout } = cell;
+  const text = layout.lines.join('\n');
+  if (text.trim() === '') return undefined;
+  const align = style.align;
+  const label: TextLabel = {
+    text,
+    x: align === 'left' ? x + CELL_PAD : align === 'right' ? x + width - CELL_PAD : x + width / 2,
+    y: top + layout.baseline,
+    font: layout.font ?? style.font,
+    color: style.color,
+    anchorX: align,
+    anchorY: 'baseline',
+    // Plotly positions a multi-line block by its alignment; its lines stay left-aligned.
+    align: layout.lines.length > 1 ? 'left' : align,
+    lineHeight: LINE_SPACING,
+  };
+  if (layout.runs) label.runs = layout.runs;
+  return label;
 }
 
 /** The header rows, laid out: every cell and each row's height. */

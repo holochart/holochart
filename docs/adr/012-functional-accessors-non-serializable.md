@@ -1,7 +1,10 @@
 # ADR-012: Functional accessors allowed but non-serializable; `styleRules` as the serializable alternative
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-09-24, M2 exit review)
 - **Date:** 2026-09-23
+- **Implementation:** the serialization side is done (E18.3: per-point functions of registered traces are
+  evaluated into arrays, other functions dropped with one warning per path). `styleRules` (E8.5) and
+  functional accessors on every `arrayOk` attribute (E8.6) arrive in M4.
 - **Related stories:** E1.1 (`function` value type), E8.5, E8.6, E18.3, E16.5; plan §8 layers 6–7
 
 ## Context

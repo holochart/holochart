@@ -1,4 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
+import { TEST_CONTAINER_ID } from '../../apps/sandbox/src/test-protocol.ts';
+import { openExample } from '../visual/harness.ts';
 import { dragBetween, events, openInteraction, waitForEvent } from './helpers.ts';
 
 /**
@@ -135,5 +137,71 @@ test.describe('table interaction', () => {
     expect(order).toEqual([1, 0, 2]);
     expect((await region(page, box, HEADER)).equals(header)).toBe(false);
     expect((await events(page)).filter((e) => e.name === 'relayout')).toEqual([]);
+  });
+});
+
+/**
+ * Rich-text links in cells (plan E9.13, E2.10) on `table/rich-text`, opened in the sandbox's test
+ * mode (the gallery example has no event hook): the "Wikipedia" link in the first row of the last
+ * column shows a pointer and opens in a new browsing context without an opener; a drag that
+ * starts on it opens nothing. `window.open` is stubbed so nothing navigates.
+ */
+test.describe('table rich-text links', () => {
+  test.beforeEach(async ({ page }) => {
+    await openExample(page, 'table/rich-text');
+    await page.evaluate(() => {
+      const w = window as unknown as { __opened: unknown[][] };
+      w.__opened = [];
+      window.open = ((...args: unknown[]) => {
+        w.__opened.push(args);
+        return null;
+      }) as typeof window.open;
+    });
+  });
+
+  const opened = (page: Page) =>
+    page.evaluate(() => (window as unknown as { __opened: unknown[][] }).__opened);
+
+  /** The cursor at a page point, after the pointer moved there and the chart handled it. */
+  async function cursorAt(page: Page, x: number, y: number): Promise<string> {
+    await page.mouse.move(x, y);
+    await page.evaluate(
+      () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+    );
+    return page.evaluate(
+      ([px, py]) => {
+        const el = document.elementFromPoint(px, py);
+        return el ? getComputedStyle(el).cursor : '';
+      },
+      [x, y] as const,
+    );
+  }
+
+  test('a link in a cell shows a pointer and opens on click, not on a drag', async ({ page }) => {
+    const box = (await page.locator(`#${TEST_CONTAINER_ID}`).boundingBox())!;
+    // The link's cell: the last column (x ≈ 525–625) of the first body row (y ≈ 72–122) of the
+    // 640×400 example; find the text by its cursor rather than by exact font metrics.
+    let link: { x: number; y: number } | undefined;
+    for (let y = 80; y <= 94 && !link; y += 3) {
+      for (let x = 530; x <= 600 && !link; x += 5) {
+        if ((await cursorAt(page, box.x + x, box.y + y)) === 'pointer') {
+          link = { x: box.x + x, y: box.y + y };
+        }
+      }
+    }
+    expect(link, 'no pointer cursor over the link').toBeDefined();
+    const at = link!;
+    // Plain text in the same row is not a link.
+    expect(await cursorAt(page, box.x + 300, at.y)).not.toBe('pointer');
+
+    // A drag that starts on the link opens nothing.
+    await dragBetween(page, at, { x: at.x, y: at.y + 40 });
+    await page.waitForTimeout(100);
+    expect(await opened(page)).toEqual([]);
+
+    await page.mouse.click(at.x, at.y);
+    await expect
+      .poll(() => opened(page))
+      .toEqual([['https://en.wikipedia.org/wiki/Water', '_blank', 'noopener']]);
   });
 });

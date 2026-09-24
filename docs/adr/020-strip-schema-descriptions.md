@@ -1,6 +1,6 @@
 # ADR-020: Strip schema descriptions from production builds
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-09-24, M2 exit review)
 - **Date:** 2026-09-23
 - **Deciders:** maintainers
 - **Related stories:** E21.5 (bundle diet), E1.1, E1.2, E19.3, E21.1

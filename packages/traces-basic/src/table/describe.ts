@@ -14,12 +14,15 @@ import {
   type TraceDescription,
 } from '@mk7s/holochart-runtime';
 import type { TableCalc } from './calc.ts';
-import { blockOf, cellText } from './cells.ts';
+import { blockOf, cellText, type CellText } from './cells.ts';
 import { cellValue } from './layout.ts';
 
-/** Plain text of a cell on one line (line breaks become spaces). */
-function plain(text: string): string {
-  return accessibleText(text)
+/**
+ * Plain text of a cell on one line: rich cells from their markup (tags stripped and entities
+ * decoded in one pass, so `&lt;b&gt;` stays the text `<b>`), line breaks as spaces.
+ */
+function plain(content: CellText): string {
+  return accessibleText(content.markup ?? content.text)
     .replace(/\s*\n\s*/g, ' ')
     .trim();
 }
@@ -32,7 +35,7 @@ export function describeTable(ctx: DescribeContext<TableCalc>): TraceDescription
   const columns = calc.order.map((col) => {
     const parts: string[] = [];
     for (let r = 0; r < calc.headerRows; r++) {
-      const text = plain(cellText(header, cellValue(calc, 'header', col, r), col, r).text);
+      const text = plain(cellText(header, cellValue(calc, 'header', col, r), col, r));
       if (text) parts.push(text);
     }
     return parts.join(' ') || `Column ${col + 1}`;
@@ -41,9 +44,7 @@ export function describeTable(ctx: DescribeContext<TableCalc>): TraceDescription
   const rows: string[][] = [];
   for (let r = 0; r < shown; r++) {
     rows.push(
-      calc.order.map((col) =>
-        plain(cellText(cells, cellValue(calc, 'cells', col, r), col, r).text),
-      ),
+      calc.order.map((col) => plain(cellText(cells, cellValue(calc, 'cells', col, r), col, r))),
     );
   }
   const name = traceNameText(trace.name, ctx.index);

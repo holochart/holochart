@@ -15,7 +15,7 @@ import {
   type Measure,
 } from './cells.ts';
 import { table } from './index.ts';
-import { columnWidths, layoutHeader, layoutRow, placeColumns } from './layout.ts';
+import { cellLabel, columnWidths, layoutHeader, layoutRow, placeColumns } from './layout.ts';
 
 const registry = createChartRegistry().register(table);
 
@@ -60,8 +60,18 @@ describe('cell text', () => {
   it('flags wrapping (strings with spaces) and row growth (spaces, <br>, markup) like Plotly', () => {
     expect(cellText({}, 'two words', 0, 0)).toEqual({ text: 'two words', wrap: true, grow: true });
     expect(cellText({}, 'single', 0, 0)).toEqual({ text: 'single', wrap: false, grow: false });
-    expect(cellText({}, 'a<br>b', 0, 0)).toEqual({ text: 'a\nb', wrap: false, grow: true });
-    expect(cellText({}, '<b>bold</b>', 0, 0)).toEqual({ text: 'bold', wrap: false, grow: true });
+    expect(cellText({}, 'a<br>b', 0, 0)).toEqual({
+      text: 'a\nb',
+      markup: 'a<br>b',
+      wrap: false,
+      grow: true,
+    });
+    expect(cellText({}, '<b>bold</b>', 0, 0)).toEqual({
+      text: 'bold',
+      markup: '<b>bold</b>',
+      wrap: false,
+      grow: true,
+    });
     // Numbers never wrap, but a suffix with a space still grows the row.
     expect(cellText({ suffix: [' ms'] }, 12, 0, 0)).toEqual({
       text: '12 ms',
@@ -154,5 +164,85 @@ describe('table layout', () => {
     expect(header.height).toBe(56);
     const none = traceOf({ cells: { values: [[1]] } });
     expect(layoutHeader(none, calcTable(none), [50], mono).height).toBe(16);
+  });
+});
+
+describe('rich text in cells', () => {
+  it('keeps the markup of values, prefixes and suffixes; plain values keep the plain path', () => {
+    expect(cellText({}, 'plain words', 0, 0).markup).toBeUndefined();
+    const c = cellText({ prefix: ['<b>$</b>'] }, 'x<sup>2</sup>\nand &amp; more', 0, 0);
+    // Raw newlines are spaces (Plotly's SVG text); entities are decoded in the plain text.
+    expect(c).toEqual({
+      text: '$x2 and & more',
+      markup: '<b>$</b>x<sup>2</sup>\nand &amp; more',
+      wrap: true,
+      grow: true,
+    });
+    // LaTeX stays as given (not parsed as markup).
+    expect(cellText({}, '$a<b$', 0, 0).markup).toBeUndefined();
+  });
+
+  it('draws a cell styled as a whole as one plain label with the merged font', () => {
+    const layout = layoutCell(cellText({}, '<b>all bold</b>', 0, 0), FONT, 100, mono);
+    expect(layout.runs).toBeUndefined();
+    expect(layout.font).toEqual({ ...FONT, weight: 'bold' });
+    expect(layout.lines).toEqual(['all bold']);
+    // Only <br> and entities: plain lines in the cell font, exactly like before.
+    const br = layoutCell(cellText({}, 'a &amp; b<br>c', 0, 0), FONT, 100, mono);
+    expect(br.font).toBeUndefined();
+    expect(br.runs).toBeUndefined();
+    expect(br.lines).toEqual(['a & b', 'c']);
+  });
+
+  it('wraps mixed runs to the column width, keeping each run style, and grows the row', () => {
+    const content = cellText({}, 'aaa <b>bb c</b> <i>dddd</i>', 0, 0);
+    const layout = layoutCell(content, FONT, 8 + 2 * CELL_PAD, mono);
+    // Same breaks as the plain text 'aaa bb c dddd' (see the plain wrap test).
+    expect(layout.lines).toEqual(['aaa bb', 'c dddd']);
+    expect(layout.runs).toEqual([
+      [{ text: 'aaa ' }, { text: 'bb', font: { weight: 'bold' } }],
+      [
+        { text: 'c', font: { weight: 'bold' } },
+        { text: ' ' },
+        { text: 'dddd', font: { style: 'italic' } },
+      ],
+    ]);
+    const plain = layoutCell(cellText({}, 'aaa bb c dddd', 0, 0), FONT, 8 + 2 * CELL_PAD, mono);
+    expect(layout.height).toBe(plain.height);
+    expect(layout.baseline).toBe(plain.baseline);
+  });
+
+  it("doesn't wrap cells with <br> (Plotly), and lines keep their runs", () => {
+    const layout = layoutCell(cellText({}, 'one <b>two</b><br>three four', 0, 0), FONT, 10, mono);
+    expect(layout.lines).toEqual(['one two', 'three four']);
+    expect(layout.runs?.[0]).toEqual([{ text: 'one ' }, { text: 'two', font: { weight: 'bold' } }]);
+  });
+
+  it('lays out rows with rich values and labels them with their runs and link', () => {
+    const trace = traceOf({
+      cells: {
+        values: [['x'], ['see <a href="https://example.com">the docs</a> for more details']],
+        height: 20,
+        align: 'left',
+      },
+    });
+    const calc = calcTable(trace);
+    const row = layoutRow(trace, calc, 'cells', 0, [40, 40], mono);
+    const rich = row.cells[1]!;
+    expect(rich.layout.lines.length).toBeGreaterThan(1);
+    expect(row.height).toBe(rich.layout.height);
+    expect(row.cells[0]?.layout.baseline).toBe(rich.layout.baseline);
+    const label = cellLabel(rich, 100, 50, 40)!;
+    expect(label.x).toBe(100 + CELL_PAD);
+    expect(label.y).toBe(50 + rich.layout.baseline);
+    expect(label.runs).toBe(rich.layout.runs);
+    expect(label.text).toBe(rich.layout.lines.join('\n'));
+    const links = label.runs!.flat().filter((r) => r.link);
+    expect(links.map((r) => r.text).join(' ')).toBe('the docs');
+    expect(links[0]?.link).toEqual({ href: 'https://example.com', target: '_blank' });
+    // Blank cells have no label.
+    expect(cellLabel(layoutRow(trace, calc, 'cells', 3, [40, 40], mono).cells[0]!, 0, 0, 40)).toBe(
+      undefined,
+    );
   });
 });

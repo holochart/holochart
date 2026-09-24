@@ -210,6 +210,127 @@ export function layoutTextRuns(
   return { items, width, height, lineCount };
 }
 
+/** Options of {@link wrapTextRuns}. */
+export interface TextRunWrapOptions {
+  /**
+   * Width of `text` (no line breaks) drawn in `font`, px, trailing whitespace excluded. Default:
+   * the oracle's `measureWidth`, the measure plain labels wrap with.
+   */
+  measure?: (text: string, font: TextFont) => number;
+  /** Default: the shared metrics oracle. */
+  oracle?: FontMetricsOracle;
+}
+
+/** A word of a rich line: its pieces (one per run it spans) and the run of the space before it. */
+interface WrapWord {
+  readonly pieces: { run: TextRun; text: string }[];
+  /** The run whose space separates this word from the previous one (unset for a line's first). */
+  readonly separator: TextRun | undefined;
+  width: number;
+}
+
+/**
+ * Word-wrap rich lines to `maxWidth` px: Plotly's `wrapText` (table cells) made run-aware, so rich
+ * labels can wrap like plain ones.
+ *
+ * Every line (a `<br>` already ends one) is split at spaces, whichever run holds them; a word may
+ * span runs (`<b>bold</b>face` is one word). Lines are filled greedily, each word counting its
+ * width plus one space (measured between two letters in the font of the run the word ends in,
+ * since widths exclude trailing whitespace), and break before a word that would pass `maxWidth`.
+ * A word wider than `maxWidth` gets a line of its own and is not broken. Each piece keeps its
+ * run's style (font, color, shift, link); the space between two words on one line keeps the style
+ * of the run it came from, and the space at a break is dropped. A line that needs no break is
+ * returned as it is (same run objects).
+ *
+ * With one plain run per line, the result's text is exactly what the plain-text wrap gives.
+ */
+export function wrapTextRuns(
+  lines: TextRunLines,
+  font: TextFont,
+  maxWidth: number,
+  options: TextRunWrapOptions = {},
+): (readonly TextRun[])[] {
+  const oracle = options.oracle ?? getDefaultFontMetricsOracle();
+  const measure = options.measure ?? ((text, f) => oracle.measureWidth(text, f));
+  const fonts = new Map<TextRun, TextFont>();
+  const fontOf = (run: TextRun | undefined): TextFont => {
+    if (!run) return font;
+    let f = fonts.get(run);
+    if (!f) {
+      f = textRunFont(font, run);
+      fonts.set(run, f);
+    }
+    return f;
+  };
+  const spaces = new Map<TextFont, number>();
+  const spaceOf = (f: TextFont): number => {
+    let s = spaces.get(f);
+    if (s === undefined) {
+      s = Math.max(0, measure('n n', f) - measure('nn', f));
+      spaces.set(f, s);
+    }
+    return s;
+  };
+
+  const out: (readonly TextRun[])[] = [];
+  for (const line of lines) {
+    const words: WrapWord[] = [{ pieces: [], separator: undefined, width: 0 }];
+    for (const run of line) {
+      const parts = run.text.split(' ');
+      for (let k = 0; k < parts.length; k++) {
+        if (k > 0) words.push({ pieces: [], separator: run, width: 0 });
+        const text = parts[k] as string;
+        if (text === '') continue;
+        const word = words[words.length - 1] as WrapWord;
+        word.pieces.push({ run, text });
+        word.width += measure(text, fontOf(run));
+      }
+    }
+    // Greedy fill, exactly like the plain wrap: a break before a word that would pass the limit.
+    const breaks: number[] = [];
+    let length = 0;
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i] as WrapWord;
+      const end = word.pieces[word.pieces.length - 1]?.run ?? word.separator;
+      const add = word.width + spaceOf(fontOf(end));
+      if (i > (breaks[breaks.length - 1] ?? 0) && length + add > maxWidth) {
+        breaks.push(i);
+        length = 0;
+      }
+      length += add;
+    }
+    if (breaks.length === 0) {
+      out.push(line);
+      continue;
+    }
+    breaks.push(words.length);
+    let start = 0;
+    for (const stop of breaks) {
+      out.push(joinWords(words, start, stop));
+      start = stop;
+    }
+  }
+  return out;
+}
+
+/** Runs of `words[start..stop)` on one line: pieces of one run merge, spaces keep their run. */
+function joinWords(words: readonly WrapWord[], start: number, stop: number): TextRun[] {
+  const runs: TextRun[] = [];
+  let last: TextRun | undefined;
+  const append = (run: TextRun, text: string): void => {
+    const prev = runs[runs.length - 1];
+    if (prev && last === run) runs[runs.length - 1] = { ...prev, text: prev.text + text };
+    else runs.push({ ...run, text });
+    last = run;
+  };
+  for (let i = start; i < stop; i++) {
+    const word = words[i] as WrapWord;
+    if (i > start && word.separator) append(word.separator, ' ');
+    for (const piece of word.pieces) append(piece.run, piece.text);
+  }
+  return runs;
+}
+
 /**
  * The link under a point, for pointer handling: `dx`, `dy` are the point's offset from the label
  * anchor in screen px (+y down), before the label's `offset` and rotation (`angle`, degrees
