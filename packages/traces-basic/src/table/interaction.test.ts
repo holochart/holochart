@@ -5,10 +5,11 @@ import {
   type ComponentPointerEvent,
   type TracePlotContext,
 } from '@mk7s/holochart-runtime';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { calcTable, type TableCalc } from './calc.ts';
 import { intersect, scissorFor } from './clip.ts';
 import { table } from './index.ts';
+import { cellLabel, columnWidths, layoutHeader, layoutRow } from './layout.ts';
 import {
   dragOrder,
   scrollbarState,
@@ -234,6 +235,88 @@ describe('table zones and pointer handling', () => {
   });
 });
 
+describe('links in cells', () => {
+  const link = { href: 'https://example.com/a', target: '_blank' };
+  /** A link over x 110–150 in the first body row (y 80–100) and in the first header cell. */
+  function linkHost() {
+    const { host } = fakeHost();
+    const linkAt = vi.fn((x: number, y: number) =>
+      x >= 110 && x <= 150 && ((y >= 80 && y <= 100) || (y >= 55 && y <= 70)) ? link : null,
+    );
+    return { host: { ...host, linkAt } satisfies TableInteractionHost, linkAt };
+  }
+  const open = vi.fn();
+  afterEach(() => {
+    open.mockClear();
+    vi.unstubAllGlobals();
+  });
+
+  it('shows a pointer over a link and opens it on click, without an opener', () => {
+    vi.stubGlobal('window', { open });
+    const { host } = linkHost();
+    const interaction = new TableInteraction(host);
+    const over = pointer('move', 120, 90);
+    interaction.handle(over);
+    expect(over.cursor).toBe('pointer');
+    const beside = pointer('move', 180, 90);
+    interaction.handle(beside);
+    expect(beside.cursor).toBe('ns-resize');
+    interaction.handle(pointer('down', 120, 90));
+    interaction.handle(pointer('move', 121, 90));
+    interaction.handle(pointer('up', 121, 90));
+    expect(interaction.handle(pointer('click', 121, 90))).toBe(true);
+    expect(open).toHaveBeenCalledExactlyOnceWith('https://example.com/a', '_blank', 'noopener');
+    // A click elsewhere in the table opens nothing.
+    interaction.handle(pointer('down', 180, 90));
+    interaction.handle(pointer('up', 180, 90));
+    interaction.handle(pointer('click', 180, 90));
+    expect(open).toHaveBeenCalledOnce();
+  });
+
+  it('scrolls on a drag that starts on a link, and opens nothing', () => {
+    vi.stubGlobal('window', { open });
+    const { host } = linkHost();
+    const interaction = new TableInteraction(host);
+    interaction.handle(pointer('down', 120, 90));
+    interaction.handle(pointer('move', 120, 60));
+    expect(host.scrollTo).toHaveBeenCalled();
+    interaction.handle(pointer('move', 120, 89));
+    interaction.handle(pointer('up', 120, 89));
+    interaction.handle(pointer('click', 120, 89));
+    expect(open).not.toHaveBeenCalled();
+  });
+
+  it('opens a header link on click without moving the column; a drag moves it instead', () => {
+    vi.stubGlobal('window', { open });
+    const { host } = linkHost();
+    const interaction = new TableInteraction(host);
+    const over = pointer('move', 120, 60);
+    interaction.handle(over);
+    expect(over.cursor).toBe('pointer');
+    interaction.handle(pointer('down', 120, 60));
+    interaction.handle(pointer('up', 120, 60));
+    interaction.handle(pointer('click', 120, 60));
+    expect(open).toHaveBeenCalledOnce();
+    expect(host.dragColumn).not.toHaveBeenCalled();
+    interaction.handle(pointer('down', 120, 60));
+    interaction.handle(pointer('move', 240, 60));
+    interaction.handle(pointer('up', 240, 60));
+    interaction.handle(pointer('click', 240, 60));
+    expect(host.reorder).toHaveBeenCalledOnce();
+    expect(open).toHaveBeenCalledOnce();
+  });
+
+  it('ignores secondary buttons', () => {
+    vi.stubGlobal('window', { open });
+    const { host } = linkHost();
+    const interaction = new TableInteraction(host);
+    interaction.handle({ ...pointer('down', 120, 90), button: 2 });
+    interaction.handle({ ...pointer('up', 120, 90), button: 2 });
+    interaction.handle({ ...pointer('click', 120, 90), button: 2 });
+    expect(open).not.toHaveBeenCalled();
+  });
+});
+
 describe('clip rects', () => {
   it('maps container px to a GL scissor through the drawn viewport', () => {
     const size = { width: 400, height: 300 };
@@ -253,18 +336,14 @@ describe('table view', () => {
   const registry = createChartRegistry().register(table);
   const rows = Array.from({ length: 5000 }, (_, i) => i);
 
-  function createView() {
+  function createView(
+    data: Record<string, unknown> = {
+      header: { values: ['n', 'n²'] },
+      cells: { values: [rows, rows.map((v) => v * v)] },
+    },
+  ) {
     const { fullData, fullLayout } = supplyDefaults(
-      {
-        data: [
-          {
-            type: 'table',
-            header: { values: ['n', 'n²'] },
-            cells: { values: [rows, rows.map((v) => v * v)] },
-          },
-        ],
-        layout: {},
-      },
+      { data: [{ type: 'table', ...data }], layout: {} },
       registry.core,
     );
     const trace = fullData[0]!;
@@ -308,6 +387,47 @@ describe('table view', () => {
     const inside = wheel(300, 200, 120);
     expect(view.handlePointer!(inside.event)).toBe(true);
     expect(inside.preventDefault).toHaveBeenCalledOnce();
+    view.dispose?.();
+  });
+
+  it('opens a link in a cell drawn by the view, and shows a pointer over it', () => {
+    const open = vi.fn();
+    vi.stubGlobal('window', { open });
+    const { view, ctx } = createView({
+      header: { values: ['Name', '<a href="https://example.com/h" target="_self">Docs</a>'] },
+      cells: {
+        values: [
+          ['first', 'second'],
+          ['<a href="https://example.com/1">one</a> link', 'plain'],
+        ],
+        align: 'left',
+      },
+    });
+    // Where the renderer draws the first body cell of column 1: the same layout and label.
+    const widths = columnWidths(ctx.calc, 500);
+    const header = layoutHeader(ctx.trace, ctx.calc, widths);
+    const row = layoutRow(ctx.trace, ctx.calc, 'cells', 0, widths);
+    const label = cellLabel(row.cells[1]!, 50 + widths[0]!, 40 + header.height, widths[1]!)!;
+    const x = label.x + 3;
+    const y = label.y - 3;
+    const move = pointer('move', x, y);
+    expect(view.handlePointer!(move)).toBe(true);
+    expect(move.cursor).toBe('pointer');
+    view.handlePointer!(pointer('down', x, y));
+    view.handlePointer!(pointer('up', x, y));
+    view.handlePointer!(pointer('click', x, y));
+    expect(open).toHaveBeenCalledExactlyOnceWith('https://example.com/1', '_blank', 'noopener');
+    // The header link, with its target.
+    const head = cellLabel(header.rows[0]!.cells[1]!, 50 + widths[0]!, 40, widths[1]!)!;
+    view.handlePointer!(pointer('down', head.x + 2, head.y - 3));
+    view.handlePointer!(pointer('up', head.x + 2, head.y - 3));
+    view.handlePointer!(pointer('click', head.x + 2, head.y - 3));
+    expect(open).toHaveBeenLastCalledWith('https://example.com/h', '_self', 'noopener');
+    // Plain cells have none.
+    const plain = pointer('move', 50 + 10, 40 + header.height + 10);
+    view.handlePointer!(plain);
+    expect(plain.cursor).not.toBe('pointer');
+    vi.unstubAllGlobals();
     view.dispose?.();
   });
 });

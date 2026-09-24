@@ -66,9 +66,8 @@ text with spaces wraps to the column width and makes its row taller:
   Plotly does.
 - Values are shown as they are: strings as text, numbers with `String(value)` unless a `format`
   applies. `null` and `undefined` render as empty cells.
-- Text accepts Plotly's pseudo-HTML: `<br>` breaks a line and entities are decoded. Other tags
-  (`<b>`, `<i>`, `<span style>`) are stripped for now; styled runs arrive with the rich-text
-  work (plan E2.10).
+- Text accepts Plotly's pseudo-HTML, in the header and the cells: see
+  [rich text in cells](#rich-text-in-cells).
 - A value written `$…$` (LaTeX) is shown as given, without prefix, suffix or format; it is not
   typeset.
 
@@ -120,6 +119,39 @@ doesn't fit and can't wrap (a long word, a number) is clipped at the column edge
 
 <Example id="table/wide" :height="400" />
 
+### Rich text in cells
+
+Header and cell values take Plotly's pseudo-HTML, as titles and labels do: `<b>`, `<i>`, `<u>`,
+`<s>`, `<sup>`, `<sub>`, `<span style="color:…; font-size:…">`, `<a href="…">` links and `<br>`
+line breaks, plus entities such as `&amp;` and `&deg;`. The same tag subset and sanitizing apply
+as everywhere else in the figure (unknown tags are shown as text; links accept only `http:`,
+`https:`, `mailto:` and relative URLs). A `prefix` or `suffix` may carry markup too.
+
+```ts
+createChart(el, {
+  data: [
+    {
+      type: 'table',
+      header: { values: ['<b>Compound</b>', '<b>Formula</b>', 'Source'] },
+      cells: {
+        values: [
+          ['<b>Water</b>', '<i>Ethanol</i>'],
+          ['H<sub>2</sub>O', 'C<sub>2</sub>H<sub>5</sub>OH'],
+          ['<a href="https://en.wikipedia.org/wiki/Water">Wikipedia</a>', 'CRC <i>Handbook</i>'],
+        ],
+      },
+    },
+  ],
+});
+```
+
+Styled text wraps like plain text: a value with spaces and no `<br>` wraps to the column width at
+spaces, across its styled runs, and the row grows to fit. Values with `<br>` break only there.
+Links show a pointer cursor and open on click, in their `target` (`_blank` by default) and
+without an opener; a press that turns into a scroll or a column drag opens nothing.
+
+<Example id="table/rich-text" />
+
 ### A table next to a chart
 
 `domain.x` and `domain.y` (fractions of the plot area) place the table; give the chart's axes the
@@ -162,7 +194,8 @@ Each of them takes one value, one per column, or one per column and row (see
   [Themes & templates](/customization/themes-templates#the-default-look).
 - **Row heights.** A row grows to fit text that has a space, a `<br>`, or markup (including a
   prefix or suffix with a space): the text's height plus 8 px of padding above and below (Plotly's
-  `cellPad`). Other cells never grow a row. Text is 8 px from the left and right edges.
+  `cellPad`). Other cells never grow a row. Text is 8 px from the left and right edges. Lines are
+  spaced by the cell's `font.size`, also in rich text with larger spans.
 - **Zebra rows and highlights.** Use nested `fill.color` arrays with one color per row:
   `[zebra]` alternates rows in every column, `[zebra, highlight, zebra]` highlights the second
   column. A row array shorter than the table repeats its last color, so `[['#111', '#222']]` does
@@ -192,6 +225,8 @@ Each of them takes one value, one per column, or one per column and row (see
 
 - **The chart around it.** A wheel or drag over a table never zooms or pans the chart. At the top
   or bottom of the rows the wheel lets the page scroll on.
+- **Links.** `<a href>` links in header and cell text show a pointer cursor and open on click
+  (see [rich text in cells](#rich-text-in-cells)).
 - Like in Plotly, tables have no hover labels, no legend entries, and no click or selection
   events.
 
@@ -214,8 +249,9 @@ Each of them takes one value, one per column, or one per column and row (see
 - **Screen readers:** the chart's hidden description (see the
   [accessibility guide](/guides/accessibility#the-hidden-description)) includes the table itself:
   a summary with the column names and row count, and a hidden `<table>` with the header and the
-  cells, in display order and formatted as drawn (prefix, format, suffix). Large tables list the
-  first rows only (as many as the description shows for any trace) and say how many there are.
+  cells, in display order and formatted as drawn (prefix, format, suffix), as plain text (tags
+  stripped, entities decoded). Large tables list the first rows only (as many as the description
+  shows for any trace) and say how many there are.
 - **Keyboard:** there is no keyboard scrolling or column reordering yet; the description table is
   the keyboard-accessible way to read the values.
 - **Color:** don't rely on cell colors alone (red and green changes): keep the sign in the text
@@ -252,10 +288,14 @@ default. `layout.grid` for placing tables by row and column is in the
     and the new `columnorder` is kept in the figure.
   - `null` and `undefined` values render as empty cells.
   - A header drag starts after 3 px of movement.
+  - Rich text: cells whose runs mix sizes keep the line spacing and baseline of the cell font
+    (Plotly measures the drawn text's box), so rich and plain cells in a row share a baseline.
+    Wrapping breaks only at spaces of the drawn text; Plotly splits the source at every space,
+    so a wrapping value with a tag attribute other than `<a href` (`<span style="…">`) can come
+    out garbled there.
   - The scrollbar is white at 40% on dark paper (Plotly: black at 40%, drawn the same on any
     paper); on light paper it is Plotly's black.
 - Not supported yet:
-  - Styled rich text in cells: tags are stripped (plan E2.10).
   - LaTeX: `$…$` values are shown as given.
   - The animated column-move and scrollbar fade transitions.
   - The font fields `variant`, `textcase`, `lineposition` and `shadow`.

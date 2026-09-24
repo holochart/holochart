@@ -31,6 +31,7 @@ import {
   type RectPrimitive,
   type RGBA,
   type TextLabel,
+  type TextLink,
   type TextPrimitive,
   subscribeFontChanges,
 } from '@mk7s/holochart-render';
@@ -42,7 +43,7 @@ import {
   type TraceView,
 } from '@mk7s/holochart-runtime';
 import type { TableCalc } from './calc.ts';
-import { CELL_PAD, LINE_SPACING } from './cells.ts';
+import { labelLinkAt } from '../shared/rich-text.ts';
 import { ScissorClip, type ClipRect } from './clip.ts';
 import {
   scrollbarState,
@@ -51,9 +52,11 @@ import {
   TableInteraction,
   UPLIFT,
   OVERDRAG,
+  zoneAt,
   type TableHitGeometry,
 } from './interaction.ts';
 import {
+  cellLabel,
   columnWidths,
   layoutHeader,
   layoutRow,
@@ -215,6 +218,7 @@ class TableView implements TraceView<TableCalc> {
     },
     reorder: (order, event) => this.#reorder(order, event),
     activity: () => this.#activity(),
+    linkAt: (x, y) => this.#linkAt(x, y),
   });
 
   constructor(ctx: TracePlotContext<TableCalc>) {
@@ -329,6 +333,40 @@ class TableView implements TraceView<TableCalc> {
     chartOf(event)
       ?.restyle({ columnorder: [ranks] }, [ctx.index], { gui: true })
       .catch(() => undefined);
+  }
+
+  /**
+   * The link of the cell text drawn at `(px, py)` (container px), found by laying out the same
+   * label the renderer draws. Only cells with rich runs can hold one; none while a column drags.
+   */
+  #linkAt(px: number, py: number): TextLink | null {
+    const g = this.#geometry;
+    if (!g || this.#drag) return null;
+    const zone = zoneAt(g, px, py);
+    if (zone !== 'header' && zone !== 'cells') return null;
+    const column = g.columns.find((c) => px >= g.x + c.x && px <= g.x + c.x + c.width);
+    if (!column) return null;
+    let row: { cells: LaidOutCell[]; height: number } | undefined;
+    let top = g.y;
+    if (zone === 'header') {
+      for (const r of this.#header.rows) {
+        if (py < top + r.height) {
+          row = r;
+          break;
+        }
+        top += r.height;
+      }
+    } else {
+      const local = py - (g.y + g.headerHeight) + g.scrollY;
+      if (local < 0 || local >= this.#rows.total || this.#rows.count === 0) return null;
+      const i = this.#rows.rowAt(local);
+      row = this.#rowCells(i);
+      top = g.y + g.headerHeight + this.#rows.top(i) - g.scrollY;
+    }
+    const cell = row?.cells[column.index];
+    if (!cell?.layout.runs) return null;
+    const label = cellLabel(cell, g.x + column.x, top, column.width);
+    return label ? labelLinkAt(label, label.x, label.y, px, py) : null;
   }
 
   // ---- drawing ---------------------------------------------------------------------------------
@@ -463,7 +501,7 @@ class TableView implements TraceView<TableCalc> {
     height: number,
     canvasHeight: number,
   ): void {
-    const { style, layout } = cell;
+    const { style } = cell;
     batch.push(
       x,
       canvasHeight - (y + height),
@@ -473,23 +511,10 @@ class TableView implements TraceView<TableCalc> {
       style.lineColor,
       style.lineWidth,
     );
-    const text = layout.lines.join('\n');
-    if (text.trim() === '') return;
-    const align = style.align;
-    const lx =
-      align === 'left' ? x + CELL_PAD : align === 'right' ? x + width - CELL_PAD : x + width / 2;
-    labels.get(cell.column)?.push({
-      text,
-      x: lx,
-      y: canvasHeight - (y + layout.baseline),
-      font: style.font,
-      color: style.color,
-      anchorX: align,
-      anchorY: 'baseline',
-      // Plotly positions a multi-line block by its alignment; its lines stay left-aligned.
-      align: layout.lines.length > 1 ? 'left' : align,
-      lineHeight: LINE_SPACING,
-    });
+    const label = cellLabel(cell, x, y, width);
+    if (!label) return;
+    label.y = canvasHeight - label.y;
+    labels.get(cell.column)?.push(label);
   }
 
   #rects(

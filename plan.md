@@ -1043,7 +1043,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `text` (arrayOk), `texttemplate` (same syntax as `hovertemplate`), `textposition: 'top left' | 'top center' | ... | 'bottom right'` (arrayOk), `textfont` (arrayOk)
 - [ ] Label collision culling option (`textoverlap: 'hide' | 'show'`, a holochart extension, `P2`) — *deferred: P2, not started*
 
-#### E9.4 — Filled area & stacked area   `P0` `L`   deps: E9.2, E2.6   · 🟡 Partial (M2 wave 1)
+#### E9.4 — Filled area & stacked area   `P0` `L`   deps: E9.2, E2.6   · ✅ Done (M2 wave 1; `fillpattern` with E8.10)
 > As a developer, I want fills to zero, to the next trace, or to self, and stacked areas, so that I can build area charts.
 - [x] `fill: 'none' | 'tozeroy' | 'tozerox' | 'tonexty' | 'tonextx' | 'toself' | 'tonext'`, `fillcolor`, `fillgradient.{type, colorscale, start, stop}`, `fillpattern` — all modes; `fillgradient` horizontal/vertical/radial; *deferred: `fillpattern` (E8.10)*
 - [x] `stackgroup`, `stackgaps: 'infer zero' | 'interpolate'`, `groupnorm: '' | 'fraction' | 'percent'`, `orientation` for stacking direction
@@ -1087,7 +1087,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] `depth`, `bevel.{size, segments}`, `material`
 - [ ] Hover and selection still exact in 2.5D view (ray-cast against extruded geometry)
 
-#### E9.11 — `pie` & donut   `P0` `L`   deps: E2.8, E4.5, E5.2   · 🟡 Partial (M2 wave 1)
+#### E9.11 — `pie` & donut   `P0` `L`   deps: E2.8, E4.5, E5.2   · ✅ Done (M2 wave 1; transitions with E7.3, patterns with E8.10)
 > As a developer, I want pie and donut charts, so that I can show parts of a whole.
 - [x] `values`, `labels`, `label0`/`dlabel`, `hole`, `pull` (arrayOk), `rotation`, `direction: 'clockwise' | 'counterclockwise'`, `sort`
 - [x] `marker.{colors, line.{color, width}, pattern}`, `layout.piecolorway`, `extendpiecolors`, `hiddenlabels` — *deferred: `marker.pattern` (E8.10)*
@@ -1101,12 +1101,12 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] `depth`, `tilt`, `bevel`, per-slice `depth` (arrayOk for "height-encoded" pies)
 - [ ] Docs includes a data-viz caveat on 3D pie perception
 
-#### E9.13 — `table`   `P1` `L`   deps: E2.7, E2.9   · 🟡 Partial (M2 wave 2)
+#### E9.13 — `table`   `P1` `L`   deps: E2.7, E2.9   · ✅ Done (M2)
 > As a developer, I want data tables inside figures, so that I can show exact values next to charts.
 - [x] `header` and `cells` with `values`, `format`, `prefix`, `suffix`, `align`, `line.{color, width}`, `fill.color`, `font`, `height` (all arrayOk per column/row) — per-column/per-row styling as Plotly; dark defaults in the `holochart` template
 - [x] `columnwidth`, `columnorder` (drag to reorder), `domain` — header drag emits `restyle({ columnorder })`
 - [x] Virtualized scrolling (only visible rows are laid out) for 100k rows — wheel, drag and scrollbar; the chart never zooms under a table
-- [ ] Rich text in cells. Hidden DOM `<table>` mirror for accessibility and copy-paste. — accessible table via `describe()` done; rich text in cells not wired yet (cells strip tags)
+- [x] Rich text in cells. Hidden DOM `<table>` mirror for accessibility and copy-paste. — rich text in header and cells with run-aware wrapping and clickable links (M2 exit review); the accessible table comes from `describe()`; copying cell text from the canvas isn't supported
 
 #### E9.14 — Gantt / timeline   `P1` `M`   deps: E9.8, E3.5   · ✅ Done (M2 wave 2)
 > As a project manager, I want Gantt charts, so that I can visualize schedules.
@@ -1952,6 +1952,48 @@ gantt
   - Attribute reference generated: ✅ (now includes `marker.colorbar`, `zorder` on bar, annotations).
 - Budget: the `basic` partial bundle grew to 209.6 kB gzipped with colorbar, annotations and streaming; its budget was raised to 215 kB by decision (core + scatter stays 165 kB, ~3 % headroom). E21.5 (diet) is due before M2.
 - Carry-forward (not blocking the alpha): ~~an interaction test for annotation drag, `clickannotation` and `clicktoshow`~~ and ~~value-based `categoryorder`~~ (both done in M2 wave 0); `<b>`/`<i>` in scatter `text` are stripped rather than drawn bold/italic (moved to E2.10, M2); E18.3 round trip over every example; E7.2 GPU benchmark (M7); Playwright runs started in parallel must use separate `--output` folders (they share `test-results/` by default).
+
+**M2 — Basic Charts Complete: exit review 2026-09-24** (PRs #10, #11, #14; default look #12; demo #13).
+
+- Stories: E9.4, E9.11, E9.13, E9.14, E4.5, E5.6, E8.1–E8.3, E17.1, E18.1, E19.5 done (plus E21.5 and the
+  M1 carry-forward in wave 0). Partial, with the rest scheduled or optional: E9.5 (size legend, P2),
+  E9.6 (optional `recipes.dumbbell` helper), E2.10 (LaTeX, P3), E4.4
+  (`scene`/`polar`/`ternary` specs arrive with their milestones), E4.6 (funnel/treemap/sunburst/icicle
+  with those traces), E5.5 (shape drawing tools), E19.10 (spell check, external links).
+- Also shipped by owner decision: the dark, dense default look with the bundled TeX Gyre Heros font
+  (ADR-021), and the OpenRouter token-growth demo (`/holochart/demos/openrouter`).
+- Exit criteria:
+  - Parity matrix "Basic" rows 100%: ✅ every row is implemented. The last gap, rich text inside
+    `table` cells, was closed at this review (styled runs with run-aware word wrapping, clickable
+    links). The ➕ items in those rows (bar/area extrusion, 3D pie, bubble size legend) are Holochart
+    extensions scheduled later, not parity.
+  - 8 themes: ✅ 15 built-in themes.
+  - Gallery live: ✅ https://mk7s.dev/holochart/gallery/ (122 thumbnails, checked in CI).
+  - Docs coverage gate on: ✅ in the CI docs job — hard: attribute descriptions 100%, ≥ 5 examples
+    per released trace type, markdown snippets type-checked, internal links; report-only: attributes
+    used in examples (34.8% against a 70% target) and a typo list.
+- Release `0.2.0`: ⏳ not published; npm publishing still needs the token set up. The Release
+  workflow's "Version Packages" step was failing on every merge (the repository doesn't allow GitHub
+  Actions to create pull requests); it is now skipped until the `RELEASE_ENABLED` repository
+  variable is `true` (docs/release/releasing.md).
+- Health: CI and Docs green on `main`. Bundle budgets were raised twice by decision (now 153 / 234 kB
+  initial, fonts and text engine lazy). ADR-012 and ADR-020 were accepted at this review.
+- Carry-forward to M3, in priority order:
+  1. Release setup: npm token and the `npm` environment, then `RELEASE_ENABLED=true` (the Release
+     workflow is now skipped until then instead of failing), and `0.2.0`.
+  2. E21.6 bundle trims (split the fill code, keep the bar schema out of the scatter partial).
+  3. Gaps found by the OpenRouter demo (log-axis annotation coordinates, log tick labels and
+     `ticksuffix`, legend-group toggling, `makeSubplots` title size, touch modebar over the legend).
+  4. ADR-021 follow-ups: heavy fills on dark, title vs multi-row legend, empty top band, tick labels
+     touching the edge.
+  5. Property-test seeding in CI (E20.1) and the unreproduced `schema-properties` failure.
+  6. Verify the plotly.py theme values (written from memory) against plotly.py.
+  7. Docs: attribute coverage in examples toward 70%; the 4 undescribed scatter containers.
+  8. Shape drawing tools (draw `dragmode`s), `crossTraceCalc` changed-trace reporting, fill hover in
+     non-`closest` modes.
+
+**Verdict:** M2's exit criteria are met, and M2 is closed. Publishing `0.2.0` waits on the npm
+setup (carry-forward 1).
 
 ### 11.2 M1 execution plan
 

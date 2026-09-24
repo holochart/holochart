@@ -136,6 +136,7 @@ export type {
   TextRunLayoutItem,
   TextLinkPointerEvent,
   TextRunLines,
+  TextRunWrapOptions,
 } from './text-runs.ts';
 export {
   fadeTextRuns,
@@ -145,6 +146,7 @@ export {
   scaleTextRuns,
   textLinkAt,
   textRunFont,
+  wrapTextRuns,
 } from './text-runs.ts';
 
 /** Data for {@link TextPrimitive}. */

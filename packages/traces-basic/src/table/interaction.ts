@@ -8,10 +8,17 @@
  * does, so a wheel or drag over a table never zooms or pans the plot. At the ends of the scroll
  * range a wheel event is still taken but not `preventDefault`ed, so the page scrolls on (Plotly).
  *
+ * Rich-text links in cells and header cells (E2.10): hovering one shows a pointer cursor, and a
+ * primary click on it opens it (in its `target`, default `_blank`, without an opener). A press on
+ * a link still starts the usual gesture, so the rows scroll or the column moves; a press that
+ * moved more than {@link DRAG_THRESHOLD} px before its release opens nothing.
+ *
  * The state machine is pure: it works on the geometry the view last drew and calls back into it
  * ({@link TableInteractionHost}), so it is unit tested without a renderer.
  */
+import type { TextLink } from '@mk7s/holochart-render';
 import type { ComponentPointerEvent } from '@mk7s/holochart-runtime';
+import { openTextLink } from '../shared/rich-text.ts';
 
 /** Plotly's `overdrag`: how far (px) a dragged column may leave the table on either side. */
 export const OVERDRAG = 45;
@@ -23,8 +30,8 @@ export const SCROLLBAR_OFFSET = 5;
 export const SCROLLBAR_CAPTURE_WIDTH = 18;
 /** Shortest scrollbar glyph (Plotly: golden ratio × width). */
 const MIN_BAR_LENGTH = 1.618 * SCROLLBAR_WIDTH;
-/** Pointer travel (px) before a header press becomes a column drag. */
-const DRAG_THRESHOLD = 3;
+/** Pointer travel (px) before a header press becomes a column drag, or a press stops being a click. */
+export const DRAG_THRESHOLD = 3;
 
 /** Scrollbar state (Plotly's `renderScrollbarKit` / `scrollbarState`). */
 export interface ScrollbarState {
@@ -99,6 +106,8 @@ export interface TableInteractionHost {
   reorder(order: readonly number[], event: ComponentPointerEvent): void;
   /** Pointer activity over the table: show the scrollbar for a while (Plotly). */
   activity(): void;
+  /** The rich-text link drawn at `(x, y)` (container px), if any. */
+  linkAt?(x: number, y: number): TextLink | null;
 }
 
 type Gesture =
@@ -165,6 +174,11 @@ export function dragOrder(
 export class TableInteraction {
   readonly #host: TableInteractionHost;
   #gesture: Gesture | undefined;
+  /**
+   * The last primary press: where it was, the link under it, and whether the pointer then moved
+   * past the drag threshold. Kept after the release for the `click` the runtime sends next.
+   */
+  #press: { x: number; y: number; link: TextLink | null; moved: boolean } | undefined;
 
   constructor(host: TableInteractionHost) {
     this.#host = host;
@@ -179,6 +193,7 @@ export class TableInteraction {
   handle(event: ComponentPointerEvent): boolean {
     const g = this.#host.geometry();
     if (this.#gesture) return this.#continue(event, g);
+    if (event.type === 'click' && this.#press) return this.#click(event);
     if (!g) return false;
     const zone = zoneAt(g, event.x, event.y);
     if (!zone) return false;
@@ -191,18 +206,30 @@ export class TableInteraction {
         return true;
       }
       case 'down':
+        this.#press =
+          event.button === 0 && zone !== 'scrollbar'
+            ? {
+                x: event.x,
+                y: event.y,
+                link: this.#host.linkAt?.(event.x, event.y) ?? null,
+                moved: false,
+              }
+            : undefined;
         this.#start(event, g, zone);
         return true;
       case 'move':
         event.cursor =
-          zone === 'header'
-            ? 'ew-resize'
-            : zone === 'cells' && g.scrollbar.wiggleRoom > 0
-              ? 'ns-resize'
-              : 'default';
+          zone !== 'scrollbar' && this.#host.linkAt?.(event.x, event.y)
+            ? 'pointer'
+            : zone === 'header'
+              ? 'ew-resize'
+              : zone === 'cells' && g.scrollbar.wiggleRoom > 0
+                ? 'ns-resize'
+                : 'default';
         this.#host.activity();
         return true;
       case 'leave':
+        this.#press = undefined;
         return false;
       default:
         // up / click / dblclick over the table: nothing for the chart to do (no autoscale).
@@ -250,9 +277,25 @@ export class TableInteraction {
     this.#gesture = { kind: 'rows', startY: event.y, startScroll: g.scrollY };
   }
 
+  /** A click after a press on a link that didn't turn into a drag opens that link. */
+  #click(event: ComponentPointerEvent): boolean {
+    const press = this.#press!;
+    this.#press = undefined;
+    if (event.button === 0 && press.link && !press.moved) openTextLink(press.link);
+    return true;
+  }
+
   #continue(event: ComponentPointerEvent, g: TableHitGeometry | undefined): boolean {
     const gesture = this.#gesture!;
     if (event.type === 'wheel') return true;
+    const press = this.#press;
+    if (
+      press &&
+      event.type === 'move' &&
+      Math.max(Math.abs(event.x - press.x), Math.abs(event.y - press.y)) >= DRAG_THRESHOLD
+    ) {
+      press.moved = true;
+    }
     if (event.type === 'move') {
       if (gesture.kind === 'rows') {
         // Plotly's `makeDragRow(…, -1)`: the rows follow the pointer.
@@ -275,6 +318,7 @@ export class TableInteraction {
     }
     if (event.type === 'up' || event.type === 'leave') {
       this.#gesture = undefined;
+      if (event.type === 'leave') this.#press = undefined;
       if (gesture.kind === 'column' && gesture.moved) {
         this.#host.dragColumn(undefined);
         const changed = gesture.order.some((v, i) => v !== gesture.initial[i]);

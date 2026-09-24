@@ -205,6 +205,26 @@ describe('table describe', () => {
     expect(d.summary).toBe('Table "Prices": 2 columns (Item and Price USD), 2 rows.');
   });
 
+  it('describes rich cells as plain text: tags stripped, entities decoded once', () => {
+    const d = describeOf(
+      traceOf({
+        header: { values: ['<b>Name</b> <sup>1</sup>', 'Link'] },
+        cells: {
+          values: [
+            ['<i>x</i><sup>2</sup> &amp; y', 'R&amp;D<br><span style="color:red">team</span>'],
+            ['<a href="https://example.com">site</a>', '&lt;b&gt; is literal'],
+          ],
+          prefix: ['', '<b>→</b> '],
+        },
+      }),
+    );
+    expect(d.table?.columns).toEqual(['Name 1', 'Link']);
+    expect(d.table?.rows).toEqual([
+      ['x2 & y', '→ site'],
+      ['R&D team', '→ <b> is literal'],
+    ]);
+  });
+
   it('builds at most maxRows rows and reports the total', () => {
     const d = describeOf(
       traceOf({ cells: { values: [Array.from({ length: 1500 }, (_, i) => i)] } }),
