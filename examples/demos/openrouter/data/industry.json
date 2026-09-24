@@ -1,0 +1,335 @@
+{
+  "retrieved": "2026-09-23",
+  "note": "Published token-volume figures, one series per provider, each in its own unit (see unit). perDayT converts every point to trillion tokens per day (month = 30.4375 days) so series can share a log axis. date = the period the figure refers to when stated (month-only figures use the 1st), otherwise the announcement date; see each note. Figures are 'over/about' values as announced, not audited. Scopes differ (Google all products vs API; China is a national total), so compare growth, not levels.",
+  "series": [
+    {
+      "name": "Google (all products)",
+      "unit": "trillion tokens per month",
+      "perDayConversion": "perDayT = value / 30.4375",
+      "points": [
+        {
+          "date": "2024-05-01",
+          "value": 9.7,
+          "source": "https://blog.google/innovation-and-ai/sundar-pichai-io-2026/",
+          "note": "Stated '9.7 trillion tokens a month' for May 2024 (month-only date, first of month). Retrospective figure quoted at I/O 2026 (2026-05-19); also in gigazine.net 2026-05-20.",
+          "perDayT": 0.3187
+        },
+        {
+          "date": "2025-05-01",
+          "value": 480,
+          "source": "https://blog.google/innovation-and-ai/sundar-pichai-io-2026/",
+          "note": "Stated 'roughly 480 trillion tokens' for May 2025 (month-only, first of month; originally announced at I/O 2025). Also confirmed in Q2 2025 remarks (blog.google alphabet-earnings-q2-2025).",
+          "perDayT": 15.77
+        },
+        {
+          "date": "2025-07-23",
+          "value": 980,
+          "source": "https://blog.google/company-news/inside-google/message-ceo/alphabet-earnings-q2-2025/",
+          "note": "'over 980 trillion monthly tokens'; date = Q2 2025 earnings call (announcement date).",
+          "perDayT": 32.1971
+        },
+        {
+          "date": "2025-10-09",
+          "value": 1300,
+          "source": "https://blog.google/innovation-and-ai/infrastructure-and-cloud/google-cloud/gemini-enterprise-sundar-pichai/",
+          "note": "'1.3 quadrillion monthly tokens' = 1300T; announced 2025-10-09, milestone said to be reached 'this summer'. Repeated as 'over 1.3 quadrillion' in Q3 2025 remarks 2025-10-29 (alphabet-earnings-q3-2025).",
+          "perDayT": 42.7105
+        },
+        {
+          "date": "2026-05-19",
+          "value": 3200,
+          "source": "https://blog.google/innovation-and-ai/sundar-pichai-io-2026/",
+          "note": "'over 3.2 quadrillion per month' (=3200T), 7x Y/Y; date = I/O 2026 keynote (announcement date). No later monthly figure found; Q2 2026 call gave only per-minute API figure.",
+          "perDayT": 105.1335
+        }
+      ]
+    },
+    {
+      "name": "Google (customer API)",
+      "unit": "billion tokens per minute",
+      "perDayConversion": "perDayT = value x 1440 / 1000",
+      "points": [
+        {
+          "date": "2025-10-29",
+          "value": 7,
+          "source": "https://blog.google/company-news/inside-google/message-ceo/alphabet-earnings-q3-2025/",
+          "note": "'7 billion tokens per minute, via direct API use by our customers'; Q3 2025 earnings call date.",
+          "perDayT": 10.08
+        },
+        {
+          "date": "2026-02-04",
+          "value": 10,
+          "source": "https://blog.google/company-news/inside-google/message-ceo/alphabet-earnings-q4-2025/",
+          "note": "'over 10 billion tokens per minute ... up from 7 billion last quarter'; Q4 2025 earnings call date.",
+          "perDayT": 14.4
+        },
+        {
+          "date": "2026-04-22",
+          "value": 16,
+          "source": "https://blog.google/innovation-and-ai/infrastructure-and-cloud/google-cloud/cloud-next-2026-sundar-pichai/",
+          "note": "'16 billion tokens per minute ... up from 10 billion last quarter'; Cloud Next 2026 post. Repeated as 'more than 16 billion' in Q1 2026 earnings remarks 2026-04-29 (alphabet-earnings-q1-2026).",
+          "perDayT": 23.04
+        },
+        {
+          "date": "2026-05-19",
+          "value": 19,
+          "source": "https://blog.google/innovation-and-ai/sundar-pichai-io-2026/",
+          "note": "'roughly 19 billion tokens per minute' (model APIs); I/O 2026 keynote date.",
+          "perDayT": 27.36
+        },
+        {
+          "date": "2026-07-22",
+          "value": 22,
+          "source": "https://blog.google/company-news/inside-google/message-ceo/alphabet-earnings-q2-2026/",
+          "note": "'approximately 22 billion tokens per minute ... up from 16 billion just a quarter ago'; Q2 2026 earnings call date.",
+          "perDayT": 31.68
+        }
+      ]
+    },
+    {
+      "name": "OpenAI (API)",
+      "unit": "billion tokens per minute",
+      "perDayConversion": "perDayT = value x 1440 / 1000",
+      "points": [
+        {
+          "date": "2025-10-06",
+          "value": 6,
+          "source": "https://techcrunch.com/2025/10/06/sam-altman-says-chatgpt-has-hit-800m-weekly-active-users/",
+          "note": "'over 6 billion tokens per minute on the API' (Altman, DevDay 2025). theneuron.ai says 'up from 300 million' (earlier baseline, likely DevDay 2023; not dated, not included). a16z cites OpenAI API ~8.6T tokens/day in Oct 2025 (~6.0B/min), consistent.",
+          "perDayT": 8.64
+        },
+        {
+          "date": "2026-03-31",
+          "value": 15,
+          "source": "https://www.constellationr.com/insights/news/openai-raises-122-billion-touts-2-billion-revenue-month",
+          "note": "'more than 15 billion tokens per minute' from OpenAI's $122B funding post (openai.com/index/accelerating-the-next-phase-ai/ returned 403). Article dated 2026-03-31; aidailypost (citing WSJ) says 'by the end of March'. No later OpenAI figure found through Sep 2026.",
+          "perDayT": 21.6
+        }
+      ]
+    },
+    {
+      "name": "Microsoft (Azure AI Foundry)",
+      "unit": "trillion tokens per month",
+      "perDayConversion": "perDayT = value / 30.4375",
+      "points": [
+        {
+          "date": "2025-01-01",
+          "value": 41.67,
+          "source": "https://www.microsoft.com/en-us/investor/events/fy-2025/earnings-fy-2025-q4",
+          "note": "CONVERTED: 'over 500 trillion' tokens via Foundry APIs in FY25 (Jul 2024-Jun 2025, call 2025-07-30) / 12 = monthly average; dated at the fiscal-year midpoint.",
+          "perDayT": 1.369
+        },
+        {
+          "date": "2025-02-14",
+          "value": 33.33,
+          "source": "https://www.microsoft.com/en-us/investor/events/fy-2025/earnings-fy-2025-q3",
+          "note": "CONVERTED: 'over 100 trillion tokens this quarter' (Jan-Mar 2025, call 2025-04-30) / 3 = monthly average; dated at the quarter midpoint.",
+          "perDayT": 1.095
+        },
+        {
+          "date": "2025-03-01",
+          "value": 50,
+          "source": "https://www.microsoft.com/en-us/investor/events/fy-2025/earnings-fy-2025-q3",
+          "note": "'a record 50 trillion tokens last month alone' = March 2025 (month-only date, first of month).",
+          "perDayT": 1.6427
+        }
+      ]
+    },
+    {
+      "name": "OpenRouter (platform)",
+      "unit": "trillion tokens per week",
+      "perDayConversion": "perDayT = value / 7",
+      "points": [
+        {
+          "date": "2024-01-01",
+          "value": 0.01,
+          "source": "https://cryptobriefing.com/openrouter-9000x-token-usage-growth/",
+          "note": "'10 billion tokens' weekly in January 2024 (month-only, first of month). Secondary source (article 2026-08-24), no primary link given.",
+          "perDayT": 0.0014
+        },
+        {
+          "date": "2025-01-01",
+          "value": 0.5,
+          "source": "https://the-decoder.com/openrouters-staggering-token-chart-is-the-ai-bubble-debate-in-a-single-image/",
+          "note": "0.5T per week in January 2025 (month-only, first of month). Secondary (article 2026-09-17).",
+          "perDayT": 0.0714
+        },
+        {
+          "date": "2025-07-01",
+          "value": 1.92,
+          "source": "https://a16z.com/state-of-ai/",
+          "note": "CONVERTED: 'more than 100 trillion' tokens per year (annualized) 'as of mid-2025' / 52.14 weeks = ~1.92T/week. 'mid-2025' dated 2025-07-01 (approximate).",
+          "perDayT": 0.2743
+        },
+        {
+          "date": "2025-11-26",
+          "value": 5,
+          "source": "https://siliconangle.com/2026/05/26/openrouter-raises-113m-bring-order-enterprise-ai-inference-routing/",
+          "note": "'5 trillion tokens per week six months ago' relative to 2026-05-26; date approximate (6 months prior). Same in TechCrunch 2026-05-26.",
+          "perDayT": 0.7143
+        },
+        {
+          "date": "2025-11-27",
+          "value": 7,
+          "source": "https://a16z.com/state-of-ai/",
+          "note": "CONVERTED: 'more than 1 trillion tokens every single day' in the week before 2025-12-04 publication, x7 = ~7T/week (lower bound). Date approximate. Slightly conflicts with the 5T/week figure above for ~same time.",
+          "perDayT": 1.0
+        },
+        {
+          "date": "2026-05-26",
+          "value": 25,
+          "source": "https://techcrunch.com/2026/05/26/openrouter-more-than-doubles-valuation-to-1-3b-in-a-year/",
+          "note": "'100 trillion tokens processed per month, or about 25 trillion per week' (Series B announcement date). Also siliconangle same day; BusinessWire press release headline '25T Tokens' (403 on fetch). For comparison, the rankings chart (weekly-models.json) shows 31.8T for the week of 2026-05-25.",
+          "perDayT": 3.5714
+        },
+        {
+          "date": "2026-09-17",
+          "value": 126.2,
+          "source": "https://the-decoder.com/openrouters-staggering-token-chart-is-the-ai-bubble-debate-in-a-single-image/",
+          "note": "'126.2 trillion' tokens per week, current as of article date 2026-09-17 (exact week not stated). Secondary.",
+          "perDayT": 18.0286
+        }
+      ]
+    },
+    {
+      "name": "ByteDance (Doubao / Volcano Engine)",
+      "unit": "trillion tokens per day",
+      "perDayConversion": "perDayT = value",
+      "points": [
+        {
+          "date": "2024-05-15",
+          "value": 0.12,
+          "source": "https://www.caixinglobal.com/2024-05-16/bytedance-enters-ai-arena-with-doubao-offering-ultra-low-cost-and-versatile-applications-102196732.html",
+          "note": "'handles 120 billion tokens' at launch (article 2024-05-16); daily basis implied not explicit. Consistent with later '137-fold since May 2024' to 16.4T.",
+          "perDayT": 0.12
+        },
+        {
+          "date": "2024-12-01",
+          "value": 4,
+          "source": "https://www.silicon.co.uk/e-innovation/artificial-intelligence/doubao-bytedance-ai-628108",
+          "note": "'4 trillion a year earlier' vs Dec 2025 (article 2025-12-22) -> Dec 2024 (month-only, first of month).",
+          "perDayT": 4
+        },
+        {
+          "date": "2025-03-01",
+          "value": 12.7,
+          "source": "https://finance.yahoo.com/news/bytedances-doubao-doubles-token-6-093000023.html",
+          "note": "'12.7 trillion tokens in March' 2025 (Tan Dai; SCMP via Yahoo, 2025-10-17). Month-only.",
+          "perDayT": 12.7
+        },
+        {
+          "date": "2025-05-01",
+          "value": 16.4,
+          "source": "https://en.tmtpost.com/post/7645516",
+          "note": "'16.4 trillion as of May' 2025, 137x since May 2024 launch (article 2025-08-01). Month-only.",
+          "perDayT": 16.4
+        },
+        {
+          "date": "2025-09-01",
+          "value": 30,
+          "source": "https://finance.yahoo.com/news/bytedances-doubao-doubles-token-6-093000023.html",
+          "note": "'over 30 trillion tokens in September' 2025. Month-only.",
+          "perDayT": 30
+        },
+        {
+          "date": "2025-12-01",
+          "value": 50,
+          "source": "https://news.aibase.com/news/23814",
+          "note": "'exceeded 50 trillion' daily average in December 2025, announced at FORCE conference 2025-12-18. Month-only. (robonomics.substack lists Volcano Engine 63T/day for Jan 2026 - secondary, not included.)",
+          "perDayT": 50
+        },
+        {
+          "date": "2026-03-01",
+          "value": 120,
+          "source": "https://global.chinadaily.com.cn/a/202604/02/WS69ce3326a310d6866eb41733.html",
+          "note": "'surged past 120 trillion per day', doubled in 3 months, ~1000x since May 2024 launch (China Daily 2026-04-02; TechNode 2026-04-07 says 'as of March'). Month-only.",
+          "perDayT": 120
+        },
+        {
+          "date": "2026-06-01",
+          "value": 180,
+          "source": "https://finance.biggo.com/news/f7f43ea9-735a-4fe2-81b7-ca5758ef3dad",
+          "note": "'daily token call volume has surpassed 180 trillion' as of June 2026, >10x Y/Y, >1500x vs 2 years ago; FORCE conference 2026-06-23 (also KuCoin flash 2026-06-23). Month-only.",
+          "perDayT": 180
+        }
+      ]
+    },
+    {
+      "name": "China (national total)",
+      "unit": "trillion tokens per day",
+      "perDayConversion": "perDayT = value",
+      "points": [
+        {
+          "date": "2024-01-01",
+          "value": 0.1,
+          "source": "https://www.ecns.cn/cns-wire/2026-03-24/detail-ihfaytev9463369.shtml",
+          "note": "'100 billion' daily in early 2024 (Liu Liehong). Approximate date.",
+          "perDayT": 0.1
+        },
+        {
+          "date": "2025-01-01",
+          "value": 1,
+          "source": "https://www.globaltimes.cn/page/202604/1360106.shtml",
+          "note": "~1 trillion/day at beginning of 2025 (Digital China Summit report, article 2026-04-29). Approximate date.",
+          "perDayT": 1
+        },
+        {
+          "date": "2025-06-30",
+          "value": 30,
+          "source": "https://technode.com/2025/08/19/china-reports-surge-in-token-consumption-as-ai-applications-expand/",
+          "note": "'more than 30 trillion' daily by end of June 2025 (Liu Liehong, State Council press conference).",
+          "perDayT": 30
+        },
+        {
+          "date": "2025-12-31",
+          "value": 100,
+          "source": "https://www.ecns.cn/cns-wire/2026-03-24/detail-ihfaytev9463369.shtml",
+          "note": "100 trillion daily at end of 2025. Full-year 2025 cumulative ~21,100 trillion (Global Times).",
+          "perDayT": 100
+        },
+        {
+          "date": "2026-03-01",
+          "value": 140,
+          "source": "https://www.ecns.cn/cns-wire/2026-03-24/detail-ihfaytev9463369.shtml",
+          "note": "'exceed 140 trillion in March 2026' (Liu Liehong, China Development Forum 2026-03-24). Month-only.",
+          "perDayT": 140
+        },
+        {
+          "date": "2026-06-01",
+          "value": 500,
+          "source": "https://technode.com/2026/08/28/chinas-daily-ai-token-usage-tops-500-trillion-as-compute-demand-grows/",
+          "note": "'exceeded 500 trillion as of June 2026' attributed to industry representatives, not NDA directly (article 2026-08-28). Month-only. Uncertain: 3.5x in ~3 months.",
+          "perDayT": 500
+        }
+      ]
+    },
+    {
+      "name": "Fireworks AI",
+      "unit": "trillion tokens per day",
+      "perDayConversion": "perDayT = value",
+      "points": [
+        {
+          "date": "2025-10-28",
+          "value": 10,
+          "source": "https://fireworks.ai/blog/series-c",
+          "note": "'more than 10 trillion tokens per day' (Series C post date).",
+          "perDayT": 10
+        },
+        {
+          "date": "2026-04-01",
+          "value": 15,
+          "source": "https://io-fund.com/ai-stocks/ai-token-demand-shattering-forecasts",
+          "note": "15T/day in April 2026 per I/O Fund (article 2026-07-30); secondary, month-only.",
+          "perDayT": 15
+        },
+        {
+          "date": "2026-07-15",
+          "value": 40,
+          "source": "https://fireworks.ai/blog/series-d-announcement",
+          "note": "'more than 40 trillion tokens every day' (Series D post date).",
+          "perDayT": 40
+        }
+      ]
+    }
+  ]
+}

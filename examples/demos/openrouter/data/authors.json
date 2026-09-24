@@ -1,0 +1,1512 @@
+{
+  "source": "Derived from weekly-models.json (https://openrouter.ai/api/frontend/v1/rankings/model-rankings-chart)",
+  "retrieved": "2026-09-23",
+  "metric": "tokens",
+  "note": "Tokens per week grouped by model author (id prefix before \"/\"). Only the top 9 models of each week are attributed to an author; the rest of the platform (the chart's \"Others\" series, roughly 35-45% of tokens) and authors outside the top 8 by 53-week total fall into \"others\". \"openrouter\" = OpenRouter-hosted stealth/cloaked models. OpenRouter's own market-share-by-author chart is by REQUESTS, not tokens; it is included under requestShare (billions of requests per week, every request attributed).",
+  "authors": [
+    "deepseek",
+    "tencent",
+    "xiaomi",
+    "z-ai",
+    "anthropic",
+    "openai",
+    "minimax",
+    "google",
+    "others"
+  ],
+  "weeks": [
+    {
+      "week": "2025-09-22",
+      "tokensT": {
+        "deepseek": 0.207,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 0.312,
+        "openai": 0.067,
+        "minimax": 0.0,
+        "google": 0.336,
+        "others": 2.109
+      },
+      "truncated": true
+    },
+    {
+      "week": "2025-09-29",
+      "tokensT": {
+        "deepseek": 0.223,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 0.614,
+        "openai": 0.172,
+        "minimax": 0.0,
+        "google": 0.647,
+        "others": 3.724
+      }
+    },
+    {
+      "week": "2025-10-06",
+      "tokensT": {
+        "deepseek": 0.0,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 0.732,
+        "openai": 0.146,
+        "minimax": 0.0,
+        "google": 0.618,
+        "others": 3.523
+      }
+    },
+    {
+      "week": "2025-10-13",
+      "tokensT": {
+        "deepseek": 0.114,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 0.672,
+        "openai": 0.0,
+        "minimax": 0.0,
+        "google": 0.616,
+        "others": 3.242
+      }
+    },
+    {
+      "week": "2025-10-20",
+      "tokensT": {
+        "deepseek": 0.111,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 0.679,
+        "openai": 0.0,
+        "minimax": 0.0,
+        "google": 0.716,
+        "others": 3.381
+      }
+    },
+    {
+      "week": "2025-10-27",
+      "tokensT": {
+        "deepseek": 0.0,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 0.795,
+        "openai": 0.0,
+        "minimax": 0.242,
+        "google": 0.796,
+        "others": 3.678
+      }
+    },
+    {
+      "week": "2025-11-03",
+      "tokensT": {
+        "deepseek": 0.0,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 0.806,
+        "openai": 0.0,
+        "minimax": 0.338,
+        "google": 0.853,
+        "others": 3.833
+      }
+    },
+    {
+      "week": "2025-11-10",
+      "tokensT": {
+        "deepseek": 0.0,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 0.604,
+        "openai": 0.0,
+        "minimax": 0.232,
+        "google": 0.865,
+        "others": 4.227
+      }
+    },
+    {
+      "week": "2025-11-17",
+      "tokensT": {
+        "deepseek": 0.0,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 0.497,
+        "openai": 0.0,
+        "minimax": 0.201,
+        "google": 0.711,
+        "others": 4.862
+      }
+    },
+    {
+      "week": "2025-11-24",
+      "tokensT": {
+        "deepseek": 0.0,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 0.428,
+        "openai": 0.0,
+        "minimax": 0.175,
+        "google": 0.852,
+        "others": 5.73
+      }
+    },
+    {
+      "week": "2025-12-01",
+      "tokensT": {
+        "deepseek": 0.0,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 0.638,
+        "openai": 0.0,
+        "minimax": 0.0,
+        "google": 0.897,
+        "others": 4.649
+      }
+    },
+    {
+      "week": "2025-12-08",
+      "tokensT": {
+        "deepseek": 0.0,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 0.643,
+        "openai": 0.323,
+        "minimax": 0.0,
+        "google": 0.966,
+        "others": 3.841
+      }
+    },
+    {
+      "week": "2025-12-15",
+      "tokensT": {
+        "deepseek": 0.205,
+        "tencent": 0.0,
+        "xiaomi": 0.171,
+        "z-ai": 0.0,
+        "anthropic": 0.626,
+        "openai": 0.22,
+        "minimax": 0.0,
+        "google": 0.806,
+        "others": 3.813
+      }
+    },
+    {
+      "week": "2025-12-22",
+      "tokensT": {
+        "deepseek": 0.327,
+        "tencent": 0.0,
+        "xiaomi": 0.379,
+        "z-ai": 0.0,
+        "anthropic": 0.544,
+        "openai": 0.0,
+        "minimax": 0.0,
+        "google": 0.765,
+        "others": 3.65
+      }
+    },
+    {
+      "week": "2025-12-29",
+      "tokensT": {
+        "deepseek": 0.352,
+        "tencent": 0.0,
+        "xiaomi": 0.351,
+        "z-ai": 0.0,
+        "anthropic": 0.529,
+        "openai": 0.0,
+        "minimax": 0.0,
+        "google": 0.809,
+        "others": 3.525
+      }
+    },
+    {
+      "week": "2026-01-05",
+      "tokensT": {
+        "deepseek": 0.311,
+        "tencent": 0.0,
+        "xiaomi": 0.397,
+        "z-ai": 0.0,
+        "anthropic": 0.901,
+        "openai": 0.0,
+        "minimax": 0.0,
+        "google": 1.004,
+        "others": 3.806
+      }
+    },
+    {
+      "week": "2026-01-12",
+      "tokensT": {
+        "deepseek": 0.355,
+        "tencent": 0.0,
+        "xiaomi": 0.546,
+        "z-ai": 0.0,
+        "anthropic": 1.238,
+        "openai": 0.0,
+        "minimax": 0.0,
+        "google": 1.213,
+        "others": 4.291
+      }
+    },
+    {
+      "week": "2026-01-19",
+      "tokensT": {
+        "deepseek": 0.396,
+        "tencent": 0.0,
+        "xiaomi": 0.575,
+        "z-ai": 0.0,
+        "anthropic": 1.077,
+        "openai": 0.0,
+        "minimax": 0.0,
+        "google": 1.169,
+        "others": 4.277
+      }
+    },
+    {
+      "week": "2026-01-26",
+      "tokensT": {
+        "deepseek": 0.507,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 1.152,
+        "openai": 0.304,
+        "minimax": 0.0,
+        "google": 1.095,
+        "others": 5.191
+      }
+    },
+    {
+      "week": "2026-02-02",
+      "tokensT": {
+        "deepseek": 0.665,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 1.075,
+        "openai": 0.0,
+        "minimax": 0.442,
+        "google": 1.537,
+        "others": 6.086
+      }
+    },
+    {
+      "week": "2026-02-09",
+      "tokensT": {
+        "deepseek": 0.756,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.628,
+        "anthropic": 1.15,
+        "openai": 0.0,
+        "minimax": 1.438,
+        "google": 1.226,
+        "others": 7.815
+      }
+    },
+    {
+      "week": "2026-02-16",
+      "tokensT": {
+        "deepseek": 0.745,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.803,
+        "anthropic": 1.177,
+        "openai": 0.0,
+        "minimax": 2.57,
+        "google": 0.859,
+        "others": 7.794
+      }
+    },
+    {
+      "week": "2026-02-23",
+      "tokensT": {
+        "deepseek": 0.8,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 1.799,
+        "openai": 0.0,
+        "minimax": 1.625,
+        "google": 1.027,
+        "others": 8.365
+      }
+    },
+    {
+      "week": "2026-03-02",
+      "tokensT": {
+        "deepseek": 0.831,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 1.45,
+        "openai": 0.0,
+        "minimax": 1.864,
+        "google": 1.043,
+        "others": 9.6
+      }
+    },
+    {
+      "week": "2026-03-09",
+      "tokensT": {
+        "deepseek": 1.036,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 1.71,
+        "openai": 0.0,
+        "minimax": 1.747,
+        "google": 1.577,
+        "others": 10.804
+      }
+    },
+    {
+      "week": "2026-03-16",
+      "tokensT": {
+        "deepseek": 1.134,
+        "tencent": 0.0,
+        "xiaomi": 1.491,
+        "z-ai": 1.028,
+        "anthropic": 2.01,
+        "openai": 0.0,
+        "minimax": 1.298,
+        "google": 0.937,
+        "others": 12.399
+      }
+    },
+    {
+      "week": "2026-03-23",
+      "tokensT": {
+        "deepseek": 1.238,
+        "tencent": 0.0,
+        "xiaomi": 3.947,
+        "z-ai": 0.965,
+        "anthropic": 2.026,
+        "openai": 0.0,
+        "minimax": 2.19,
+        "google": 0.968,
+        "others": 11.306
+      }
+    },
+    {
+      "week": "2026-03-30",
+      "tokensT": {
+        "deepseek": 1.188,
+        "tencent": 0.0,
+        "xiaomi": 3.076,
+        "z-ai": 0.0,
+        "anthropic": 2.049,
+        "openai": 0.0,
+        "minimax": 1.193,
+        "google": 0.98,
+        "others": 18.521
+      }
+    },
+    {
+      "week": "2026-04-06",
+      "tokensT": {
+        "deepseek": 1.267,
+        "tencent": 0.0,
+        "xiaomi": 0.606,
+        "z-ai": 0.0,
+        "anthropic": 2.355,
+        "openai": 0.0,
+        "minimax": 2.288,
+        "google": 1.063,
+        "others": 13.412
+      }
+    },
+    {
+      "week": "2026-04-13",
+      "tokensT": {
+        "deepseek": 1.28,
+        "tencent": 0.0,
+        "xiaomi": 1.148,
+        "z-ai": 0.0,
+        "anthropic": 2.6,
+        "openai": 0.0,
+        "minimax": 2.009,
+        "google": 1.736,
+        "others": 11.697
+      }
+    },
+    {
+      "week": "2026-04-20",
+      "tokensT": {
+        "deepseek": 1.275,
+        "tencent": 0.0,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 3.19,
+        "openai": 0.0,
+        "minimax": 0.789,
+        "google": 1.038,
+        "others": 15.592
+      }
+    },
+    {
+      "week": "2026-04-27",
+      "tokensT": {
+        "deepseek": 1.609,
+        "tencent": 3.031,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 2.277,
+        "openai": 0.0,
+        "minimax": 0.728,
+        "google": 0.971,
+        "others": 15.181
+      }
+    },
+    {
+      "week": "2026-05-04",
+      "tokensT": {
+        "deepseek": 2.794,
+        "tencent": 3.533,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 2.686,
+        "openai": 0.0,
+        "minimax": 0.0,
+        "google": 1.074,
+        "others": 15.644
+      }
+    },
+    {
+      "week": "2026-05-11",
+      "tokensT": {
+        "deepseek": 3.98,
+        "tencent": 2.656,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 3.081,
+        "openai": 0.0,
+        "minimax": 0.0,
+        "google": 1.151,
+        "others": 16.037
+      }
+    },
+    {
+      "week": "2026-05-18",
+      "tokensT": {
+        "deepseek": 5.481,
+        "tencent": 3.071,
+        "xiaomi": 0.0,
+        "z-ai": 0.0,
+        "anthropic": 3.823,
+        "openai": 0.0,
+        "minimax": 0.0,
+        "google": 1.101,
+        "others": 15.445
+      }
+    },
+    {
+      "week": "2026-05-25",
+      "tokensT": {
+        "deepseek": 5.402,
+        "tencent": 3.027,
+        "xiaomi": 2.706,
+        "z-ai": 0.0,
+        "anthropic": 4.248,
+        "openai": 0.0,
+        "minimax": 0.0,
+        "google": 0.0,
+        "others": 16.425
+      }
+    },
+    {
+      "week": "2026-06-01",
+      "tokensT": {
+        "deepseek": 6.549,
+        "tencent": 2.942,
+        "xiaomi": 2.188,
+        "z-ai": 0.0,
+        "anthropic": 3.196,
+        "openai": 0.0,
+        "minimax": 2.499,
+        "google": 0.0,
+        "others": 18.751
+      }
+    },
+    {
+      "week": "2026-06-08",
+      "tokensT": {
+        "deepseek": 6.369,
+        "tencent": 4.136,
+        "xiaomi": 3.59,
+        "z-ai": 0.0,
+        "anthropic": 5.709,
+        "openai": 0.0,
+        "minimax": 4.323,
+        "google": 0.0,
+        "others": 20.478
+      }
+    },
+    {
+      "week": "2026-06-15",
+      "tokensT": {
+        "deepseek": 7.468,
+        "tencent": 3.627,
+        "xiaomi": 3.941,
+        "z-ai": 0.0,
+        "anthropic": 5.753,
+        "openai": 0.0,
+        "minimax": 3.771,
+        "google": 0.0,
+        "others": 22.087
+      }
+    },
+    {
+      "week": "2026-06-22",
+      "tokensT": {
+        "deepseek": 6.699,
+        "tencent": 3.361,
+        "xiaomi": 4.482,
+        "z-ai": 2.108,
+        "anthropic": 4.243,
+        "openai": 0.0,
+        "minimax": 3.744,
+        "google": 0.0,
+        "others": 22.083
+      }
+    },
+    {
+      "week": "2026-06-29",
+      "tokensT": {
+        "deepseek": 7.7,
+        "tencent": 3.127,
+        "xiaomi": 4.381,
+        "z-ai": 2.578,
+        "anthropic": 4.283,
+        "openai": 0.0,
+        "minimax": 4.112,
+        "google": 0.0,
+        "others": 20.538
+      }
+    },
+    {
+      "week": "2026-07-06",
+      "tokensT": {
+        "deepseek": 8.049,
+        "tencent": 6.134,
+        "xiaomi": 5.947,
+        "z-ai": 3.192,
+        "anthropic": 4.287,
+        "openai": 0.0,
+        "minimax": 4.259,
+        "google": 0.0,
+        "others": 20.753
+      }
+    },
+    {
+      "week": "2026-07-13",
+      "tokensT": {
+        "deepseek": 8.095,
+        "tencent": 11.517,
+        "xiaomi": 9.32,
+        "z-ai": 3.672,
+        "anthropic": 4.242,
+        "openai": 0.0,
+        "minimax": 3.814,
+        "google": 0.0,
+        "others": 22.115
+      }
+    },
+    {
+      "week": "2026-07-20",
+      "tokensT": {
+        "deepseek": 9.543,
+        "tencent": 5.704,
+        "xiaomi": 10.463,
+        "z-ai": 3.288,
+        "anthropic": 0.0,
+        "openai": 0.0,
+        "minimax": 2.048,
+        "google": 0.0,
+        "others": 26.995
+      }
+    },
+    {
+      "week": "2026-07-27",
+      "tokensT": {
+        "deepseek": 10.499,
+        "tencent": 4.825,
+        "xiaomi": 6.305,
+        "z-ai": 2.89,
+        "anthropic": 0.0,
+        "openai": 1.945,
+        "minimax": 1.957,
+        "google": 0.0,
+        "others": 28.368
+      }
+    },
+    {
+      "week": "2026-08-03",
+      "tokensT": {
+        "deepseek": 17.318,
+        "tencent": 8.05,
+        "xiaomi": 5.393,
+        "z-ai": 3.487,
+        "anthropic": 0.0,
+        "openai": 4.435,
+        "minimax": 0.0,
+        "google": 2.329,
+        "others": 28.035
+      }
+    },
+    {
+      "week": "2026-08-10",
+      "tokensT": {
+        "deepseek": 18.746,
+        "tencent": 9.953,
+        "xiaomi": 3.792,
+        "z-ai": 4.329,
+        "anthropic": 2.666,
+        "openai": 5.311,
+        "minimax": 0.0,
+        "google": 2.284,
+        "others": 28.259
+      }
+    },
+    {
+      "week": "2026-08-17",
+      "tokensT": {
+        "deepseek": 18.885,
+        "tencent": 8.206,
+        "xiaomi": 9.939,
+        "z-ai": 3.417,
+        "anthropic": 0.0,
+        "openai": 4.909,
+        "minimax": 0.0,
+        "google": 0.0,
+        "others": 48.02
+      }
+    },
+    {
+      "week": "2026-08-24",
+      "tokensT": {
+        "deepseek": 17.51,
+        "tencent": 6.656,
+        "xiaomi": 9.137,
+        "z-ai": 6.158,
+        "anthropic": 0.0,
+        "openai": 7.792,
+        "minimax": 0.0,
+        "google": 3.948,
+        "others": 61.796
+      }
+    },
+    {
+      "week": "2026-08-31",
+      "tokensT": {
+        "deepseek": 17.548,
+        "tencent": 18.665,
+        "xiaomi": 0.0,
+        "z-ai": 15.417,
+        "anthropic": 0.0,
+        "openai": 12.938,
+        "minimax": 5.016,
+        "google": 0.0,
+        "others": 45.879
+      }
+    },
+    {
+      "week": "2026-09-07",
+      "tokensT": {
+        "deepseek": 20.858,
+        "tencent": 20.614,
+        "xiaomi": 7.772,
+        "z-ai": 11.89,
+        "anthropic": 0.0,
+        "openai": 18.18,
+        "minimax": 0.0,
+        "google": 0.0,
+        "others": 47.45
+      }
+    },
+    {
+      "week": "2026-09-14",
+      "tokensT": {
+        "deepseek": 28.982,
+        "tencent": 17.298,
+        "xiaomi": 7.066,
+        "z-ai": 14.071,
+        "anthropic": 0.0,
+        "openai": 9.719,
+        "minimax": 0.0,
+        "google": 0.0,
+        "others": 51.758
+      }
+    },
+    {
+      "week": "2026-09-21",
+      "tokensT": {
+        "deepseek": 13.811,
+        "tencent": 7.475,
+        "xiaomi": 2.066,
+        "z-ai": 10.167,
+        "anthropic": 0.0,
+        "openai": 4.165,
+        "minimax": 0.0,
+        "google": 0.0,
+        "others": 26.541
+      },
+      "partial": true
+    }
+  ],
+  "requestShare": {
+    "source": "https://openrouter.ai/rankings#market-share (data from https://openrouter.ai/api/frontend/v1/rankings/modality-chart?routeSegment=text, marketShareData)",
+    "cachedAt": "2026-09-24T04:05:46Z",
+    "metric": "requests",
+    "unit": "billions of text requests per week",
+    "note": "OpenRouter lists the top 9 authors per week plus Others; here the top 8 by 52-week total are kept and the rest summed into \"others\".",
+    "authors": [
+      "google",
+      "openai",
+      "deepseek",
+      "qwen",
+      "meta-llama",
+      "anthropic",
+      "mistralai",
+      "z-ai",
+      "others"
+    ],
+    "weeks": [
+      {
+        "week": "2025-09-29",
+        "requestsB": {
+          "google": 0.382,
+          "openai": 0.161,
+          "deepseek": 0.087,
+          "qwen": 0.052,
+          "meta-llama": 0.078,
+          "anthropic": 0.031,
+          "mistralai": 0.043,
+          "z-ai": 0.009,
+          "others": 0.169
+        }
+      },
+      {
+        "week": "2025-10-06",
+        "requestsB": {
+          "google": 0.368,
+          "openai": 0.172,
+          "deepseek": 0.072,
+          "qwen": 0.101,
+          "meta-llama": 0.062,
+          "anthropic": 0.035,
+          "mistralai": 0.048,
+          "z-ai": 0.009,
+          "others": 0.087
+        }
+      },
+      {
+        "week": "2025-10-13",
+        "requestsB": {
+          "google": 0.28,
+          "openai": 0.146,
+          "deepseek": 0.068,
+          "qwen": 0.056,
+          "meta-llama": 0.061,
+          "anthropic": 0.04,
+          "mistralai": 0.048,
+          "z-ai": 0.011,
+          "others": 0.101
+        }
+      },
+      {
+        "week": "2025-10-20",
+        "requestsB": {
+          "google": 0.325,
+          "openai": 0.138,
+          "deepseek": 0.068,
+          "qwen": 0.065,
+          "meta-llama": 0.07,
+          "anthropic": 0.04,
+          "mistralai": 0.049,
+          "z-ai": 0.013,
+          "others": 0.102
+        }
+      },
+      {
+        "week": "2025-10-27",
+        "requestsB": {
+          "google": 0.4,
+          "openai": 0.141,
+          "deepseek": 0.072,
+          "qwen": 0.08,
+          "meta-llama": 0.07,
+          "anthropic": 0.043,
+          "mistralai": 0.049,
+          "z-ai": 0.013,
+          "others": 0.112
+        }
+      },
+      {
+        "week": "2025-11-03",
+        "requestsB": {
+          "google": 0.376,
+          "openai": 0.144,
+          "deepseek": 0.08,
+          "qwen": 0.058,
+          "meta-llama": 0.066,
+          "anthropic": 0.043,
+          "mistralai": 0.05,
+          "z-ai": 0.016,
+          "others": 0.135
+        }
+      },
+      {
+        "week": "2025-11-10",
+        "requestsB": {
+          "google": 0.35,
+          "openai": 0.146,
+          "deepseek": 0.067,
+          "qwen": 0.061,
+          "meta-llama": 0.059,
+          "anthropic": 0.042,
+          "mistralai": 0.05,
+          "z-ai": 0.0,
+          "others": 0.171
+        }
+      },
+      {
+        "week": "2025-11-17",
+        "requestsB": {
+          "google": 0.369,
+          "openai": 0.161,
+          "deepseek": 0.066,
+          "qwen": 0.086,
+          "meta-llama": 0.063,
+          "anthropic": 0.036,
+          "mistralai": 0.054,
+          "z-ai": 0.0,
+          "others": 0.245
+        }
+      },
+      {
+        "week": "2025-11-24",
+        "requestsB": {
+          "google": 0.383,
+          "openai": 0.156,
+          "deepseek": 0.071,
+          "qwen": 0.06,
+          "meta-llama": 0.057,
+          "anthropic": 0.034,
+          "mistralai": 0.056,
+          "z-ai": 0.0,
+          "others": 0.418
+        }
+      },
+      {
+        "week": "2025-12-01",
+        "requestsB": {
+          "google": 0.394,
+          "openai": 0.186,
+          "deepseek": 0.081,
+          "qwen": 0.075,
+          "meta-llama": 0.057,
+          "anthropic": 0.039,
+          "mistralai": 0.069,
+          "z-ai": 0.0,
+          "others": 0.332
+        }
+      },
+      {
+        "week": "2025-12-08",
+        "requestsB": {
+          "google": 0.399,
+          "openai": 0.231,
+          "deepseek": 0.073,
+          "qwen": 0.086,
+          "meta-llama": 0.072,
+          "anthropic": 0.04,
+          "mistralai": 0.067,
+          "z-ai": 0.026,
+          "others": 0.147
+        }
+      },
+      {
+        "week": "2025-12-15",
+        "requestsB": {
+          "google": 0.416,
+          "openai": 0.207,
+          "deepseek": 0.09,
+          "qwen": 0.097,
+          "meta-llama": 0.08,
+          "anthropic": 0.04,
+          "mistralai": 0.072,
+          "z-ai": 0.03,
+          "others": 0.182
+        }
+      },
+      {
+        "week": "2025-12-22",
+        "requestsB": {
+          "google": 0.412,
+          "openai": 0.154,
+          "deepseek": 0.1,
+          "qwen": 0.061,
+          "meta-llama": 0.074,
+          "anthropic": 0.035,
+          "mistralai": 0.067,
+          "z-ai": 0.0,
+          "others": 0.231
+        }
+      },
+      {
+        "week": "2025-12-29",
+        "requestsB": {
+          "google": 0.401,
+          "openai": 0.142,
+          "deepseek": 0.106,
+          "qwen": 0.072,
+          "meta-llama": 0.09,
+          "anthropic": 0.0,
+          "mistralai": 0.072,
+          "z-ai": 0.035,
+          "others": 0.211
+        }
+      },
+      {
+        "week": "2026-01-05",
+        "requestsB": {
+          "google": 0.448,
+          "openai": 0.169,
+          "deepseek": 0.102,
+          "qwen": 0.059,
+          "meta-llama": 0.071,
+          "anthropic": 0.049,
+          "mistralai": 0.078,
+          "z-ai": 0.038,
+          "others": 0.171
+        }
+      },
+      {
+        "week": "2026-01-12",
+        "requestsB": {
+          "google": 0.483,
+          "openai": 0.224,
+          "deepseek": 0.112,
+          "qwen": 0.069,
+          "meta-llama": 0.077,
+          "anthropic": 0.061,
+          "mistralai": 0.077,
+          "z-ai": 0.0,
+          "others": 0.235
+        }
+      },
+      {
+        "week": "2026-01-19",
+        "requestsB": {
+          "google": 0.499,
+          "openai": 0.226,
+          "deepseek": 0.113,
+          "qwen": 0.079,
+          "meta-llama": 0.087,
+          "anthropic": 0.054,
+          "mistralai": 0.071,
+          "z-ai": 0.0,
+          "others": 0.254
+        }
+      },
+      {
+        "week": "2026-01-26",
+        "requestsB": {
+          "google": 0.514,
+          "openai": 0.23,
+          "deepseek": 0.129,
+          "qwen": 0.086,
+          "meta-llama": 0.086,
+          "anthropic": 0.057,
+          "mistralai": 0.065,
+          "z-ai": 0.031,
+          "others": 0.199
+        }
+      },
+      {
+        "week": "2026-02-02",
+        "requestsB": {
+          "google": 0.505,
+          "openai": 0.245,
+          "deepseek": 0.128,
+          "qwen": 0.079,
+          "meta-llama": 0.086,
+          "anthropic": 0.059,
+          "mistralai": 0.061,
+          "z-ai": 0.0,
+          "others": 0.246
+        }
+      },
+      {
+        "week": "2026-02-09",
+        "requestsB": {
+          "google": 0.526,
+          "openai": 0.267,
+          "deepseek": 0.141,
+          "qwen": 0.085,
+          "meta-llama": 0.102,
+          "anthropic": 0.059,
+          "mistralai": 0.058,
+          "z-ai": 0.05,
+          "others": 0.263
+        }
+      },
+      {
+        "week": "2026-02-16",
+        "requestsB": {
+          "google": 0.53,
+          "openai": 0.249,
+          "deepseek": 0.136,
+          "qwen": 0.076,
+          "meta-llama": 0.144,
+          "anthropic": 0.064,
+          "mistralai": 0.065,
+          "z-ai": 0.056,
+          "others": 0.305
+        }
+      },
+      {
+        "week": "2026-02-23",
+        "requestsB": {
+          "google": 0.576,
+          "openai": 0.283,
+          "deepseek": 0.147,
+          "qwen": 0.096,
+          "meta-llama": 0.121,
+          "anthropic": 0.08,
+          "mistralai": 0.082,
+          "z-ai": 0.0,
+          "others": 0.361
+        }
+      },
+      {
+        "week": "2026-03-02",
+        "requestsB": {
+          "google": 0.645,
+          "openai": 0.371,
+          "deepseek": 0.145,
+          "qwen": 0.122,
+          "meta-llama": 0.139,
+          "anthropic": 0.083,
+          "mistralai": 0.066,
+          "z-ai": 0.0,
+          "others": 0.352
+        }
+      },
+      {
+        "week": "2026-03-09",
+        "requestsB": {
+          "google": 0.627,
+          "openai": 0.334,
+          "deepseek": 0.158,
+          "qwen": 0.125,
+          "meta-llama": 0.123,
+          "anthropic": 0.092,
+          "mistralai": 0.068,
+          "z-ai": 0.046,
+          "others": 0.33
+        }
+      },
+      {
+        "week": "2026-03-16",
+        "requestsB": {
+          "google": 0.597,
+          "openai": 0.338,
+          "deepseek": 0.165,
+          "qwen": 0.117,
+          "meta-llama": 0.116,
+          "anthropic": 0.092,
+          "mistralai": 0.071,
+          "z-ai": 0.056,
+          "others": 0.341
+        }
+      },
+      {
+        "week": "2026-03-23",
+        "requestsB": {
+          "google": 0.611,
+          "openai": 0.393,
+          "deepseek": 0.182,
+          "qwen": 0.132,
+          "meta-llama": 0.127,
+          "anthropic": 0.096,
+          "mistralai": 0.072,
+          "z-ai": 0.0,
+          "others": 0.437
+        }
+      },
+      {
+        "week": "2026-03-30",
+        "requestsB": {
+          "google": 0.58,
+          "openai": 0.347,
+          "deepseek": 0.178,
+          "qwen": 0.192,
+          "meta-llama": 0.121,
+          "anthropic": 0.087,
+          "mistralai": 0.079,
+          "z-ai": 0.0,
+          "others": 0.468
+        }
+      },
+      {
+        "week": "2026-04-06",
+        "requestsB": {
+          "google": 0.64,
+          "openai": 0.374,
+          "deepseek": 0.199,
+          "qwen": 0.16,
+          "meta-llama": 0.145,
+          "anthropic": 0.105,
+          "mistralai": 0.089,
+          "z-ai": 0.095,
+          "others": 0.286
+        }
+      },
+      {
+        "week": "2026-04-13",
+        "requestsB": {
+          "google": 0.755,
+          "openai": 0.412,
+          "deepseek": 0.183,
+          "qwen": 0.151,
+          "meta-llama": 0.218,
+          "anthropic": 0.114,
+          "mistralai": 0.093,
+          "z-ai": 0.102,
+          "others": 0.379
+        }
+      },
+      {
+        "week": "2026-04-20",
+        "requestsB": {
+          "google": 0.782,
+          "openai": 0.421,
+          "deepseek": 0.193,
+          "qwen": 0.173,
+          "meta-llama": 0.233,
+          "anthropic": 0.111,
+          "mistralai": 0.089,
+          "z-ai": 0.091,
+          "others": 0.41
+        }
+      },
+      {
+        "week": "2026-04-27",
+        "requestsB": {
+          "google": 0.755,
+          "openai": 0.406,
+          "deepseek": 0.216,
+          "qwen": 0.192,
+          "meta-llama": 0.149,
+          "anthropic": 0.112,
+          "mistralai": 0.086,
+          "z-ai": 0.083,
+          "others": 0.378
+        }
+      },
+      {
+        "week": "2026-05-04",
+        "requestsB": {
+          "google": 0.809,
+          "openai": 0.428,
+          "deepseek": 0.245,
+          "qwen": 0.163,
+          "meta-llama": 0.154,
+          "anthropic": 0.12,
+          "mistralai": 0.087,
+          "z-ai": 0.092,
+          "others": 0.395
+        }
+      },
+      {
+        "week": "2026-05-11",
+        "requestsB": {
+          "google": 0.838,
+          "openai": 0.448,
+          "deepseek": 0.32,
+          "qwen": 0.187,
+          "meta-llama": 0.178,
+          "anthropic": 0.133,
+          "mistralai": 0.102,
+          "z-ai": 0.1,
+          "others": 0.333
+        }
+      },
+      {
+        "week": "2026-05-18",
+        "requestsB": {
+          "google": 0.925,
+          "openai": 0.468,
+          "deepseek": 0.37,
+          "qwen": 0.177,
+          "meta-llama": 0.153,
+          "anthropic": 0.152,
+          "mistralai": 0.118,
+          "z-ai": 0.1,
+          "others": 0.301
+        }
+      },
+      {
+        "week": "2026-05-25",
+        "requestsB": {
+          "google": 0.828,
+          "openai": 0.465,
+          "deepseek": 0.388,
+          "qwen": 0.167,
+          "meta-llama": 0.131,
+          "anthropic": 0.173,
+          "mistralai": 0.121,
+          "z-ai": 0.104,
+          "others": 0.327
+        }
+      },
+      {
+        "week": "2026-06-01",
+        "requestsB": {
+          "google": 0.843,
+          "openai": 0.506,
+          "deepseek": 0.436,
+          "qwen": 0.205,
+          "meta-llama": 0.173,
+          "anthropic": 0.158,
+          "mistralai": 0.123,
+          "z-ai": 0.102,
+          "others": 0.394
+        }
+      },
+      {
+        "week": "2026-06-08",
+        "requestsB": {
+          "google": 0.889,
+          "openai": 0.544,
+          "deepseek": 0.553,
+          "qwen": 0.179,
+          "meta-llama": 0.133,
+          "anthropic": 0.174,
+          "mistralai": 0.116,
+          "z-ai": 0.094,
+          "others": 0.498
+        }
+      },
+      {
+        "week": "2026-06-15",
+        "requestsB": {
+          "google": 0.887,
+          "openai": 0.534,
+          "deepseek": 0.659,
+          "qwen": 0.154,
+          "meta-llama": 0.122,
+          "anthropic": 0.145,
+          "mistralai": 0.112,
+          "z-ai": 0.085,
+          "others": 0.458
+        }
+      },
+      {
+        "week": "2026-06-22",
+        "requestsB": {
+          "google": 0.867,
+          "openai": 0.489,
+          "deepseek": 0.65,
+          "qwen": 0.18,
+          "meta-llama": 0.114,
+          "anthropic": 0.141,
+          "mistralai": 0.118,
+          "z-ai": 0.078,
+          "others": 0.466
+        }
+      },
+      {
+        "week": "2026-06-29",
+        "requestsB": {
+          "google": 0.897,
+          "openai": 0.516,
+          "deepseek": 0.652,
+          "qwen": 0.185,
+          "meta-llama": 0.119,
+          "anthropic": 0.167,
+          "mistralai": 0.133,
+          "z-ai": 0.095,
+          "others": 0.418
+        }
+      },
+      {
+        "week": "2026-07-06",
+        "requestsB": {
+          "google": 0.882,
+          "openai": 0.542,
+          "deepseek": 0.661,
+          "qwen": 0.169,
+          "meta-llama": 0.12,
+          "anthropic": 0.166,
+          "mistralai": 0.139,
+          "z-ai": 0.0,
+          "others": 0.585
+        }
+      },
+      {
+        "week": "2026-07-13",
+        "requestsB": {
+          "google": 0.891,
+          "openai": 0.54,
+          "deepseek": 0.72,
+          "qwen": 0.18,
+          "meta-llama": 0.123,
+          "anthropic": 0.178,
+          "mistralai": 0.138,
+          "z-ai": 0.0,
+          "others": 0.727
+        }
+      },
+      {
+        "week": "2026-07-20",
+        "requestsB": {
+          "google": 0.975,
+          "openai": 0.526,
+          "deepseek": 0.816,
+          "qwen": 0.181,
+          "meta-llama": 0.114,
+          "anthropic": 0.143,
+          "mistralai": 0.135,
+          "z-ai": 0.107,
+          "others": 0.547
+        }
+      },
+      {
+        "week": "2026-07-27",
+        "requestsB": {
+          "google": 0.967,
+          "openai": 0.656,
+          "deepseek": 0.923,
+          "qwen": 0.19,
+          "meta-llama": 0.118,
+          "anthropic": 0.148,
+          "mistralai": 0.101,
+          "z-ai": 0.097,
+          "others": 0.5
+        }
+      },
+      {
+        "week": "2026-08-03",
+        "requestsB": {
+          "google": 0.925,
+          "openai": 0.602,
+          "deepseek": 1.011,
+          "qwen": 0.19,
+          "meta-llama": 0.111,
+          "anthropic": 0.138,
+          "mistralai": 0.0,
+          "z-ai": 0.098,
+          "others": 0.591
+        }
+      },
+      {
+        "week": "2026-08-10",
+        "requestsB": {
+          "google": 0.956,
+          "openai": 0.736,
+          "deepseek": 1.089,
+          "qwen": 0.216,
+          "meta-llama": 0.141,
+          "anthropic": 0.155,
+          "mistralai": 0.094,
+          "z-ai": 0.101,
+          "others": 0.532
+        }
+      },
+      {
+        "week": "2026-08-17",
+        "requestsB": {
+          "google": 0.932,
+          "openai": 0.814,
+          "deepseek": 1.126,
+          "qwen": 0.223,
+          "meta-llama": 0.0,
+          "anthropic": 0.136,
+          "mistralai": 0.107,
+          "z-ai": 0.0,
+          "others": 0.938
+        }
+      },
+      {
+        "week": "2026-08-24",
+        "requestsB": {
+          "google": 1.014,
+          "openai": 0.927,
+          "deepseek": 1.107,
+          "qwen": 0.239,
+          "meta-llama": 0.129,
+          "anthropic": 0.134,
+          "mistralai": 0.0,
+          "z-ai": 0.295,
+          "others": 0.867
+        }
+      },
+      {
+        "week": "2026-08-31",
+        "requestsB": {
+          "google": 1.008,
+          "openai": 1.02,
+          "deepseek": 1.213,
+          "qwen": 0.287,
+          "meta-llama": 0.116,
+          "anthropic": 0.148,
+          "mistralai": 0.0,
+          "z-ai": 0.494,
+          "others": 0.812
+        }
+      },
+      {
+        "week": "2026-09-07",
+        "requestsB": {
+          "google": 1.031,
+          "openai": 1.309,
+          "deepseek": 1.254,
+          "qwen": 0.29,
+          "meta-llama": 0.122,
+          "anthropic": 0.141,
+          "mistralai": 0.126,
+          "z-ai": 0.386,
+          "others": 0.888
+        }
+      },
+      {
+        "week": "2026-09-14",
+        "requestsB": {
+          "google": 1.002,
+          "openai": 0.917,
+          "deepseek": 1.367,
+          "qwen": 0.361,
+          "meta-llama": 0.0,
+          "anthropic": 0.146,
+          "mistralai": 0.141,
+          "z-ai": 0.505,
+          "others": 0.952
+        }
+      },
+      {
+        "week": "2026-09-21",
+        "requestsB": {
+          "google": 0.504,
+          "openai": 0.467,
+          "deepseek": 0.623,
+          "qwen": 0.162,
+          "meta-llama": 0.0,
+          "anthropic": 0.072,
+          "mistralai": 0.057,
+          "z-ai": 0.23,
+          "others": 0.359
+        },
+        "partial": true
+      }
+    ]
+  }
+}

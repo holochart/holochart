@@ -1,0 +1,168 @@
+{
+  "source": "https://openrouter.ai/rankings#apps (data from https://openrouter.ai/api/frontend/v1/rankings/apps, \"week\" view)",
+  "retrieved": "2026-09-23",
+  "week": "2026-09-17",
+  "note": "Trailing 7 days ending with the most recent complete daily bucket (about 2026-09-17..2026-09-23 UTC), not a Monday week. OpenRouter publishes the top 20 public apps; ranks missing from the response (e.g. 1, 2, 5) are not listed publicly, so do not re-rank. requestsM = millions of requests.",
+  "apps": [
+    {
+      "name": "Hermes Agent",
+      "rank": 3,
+      "tokensT": 11.461,
+      "requestsM": 116.732,
+      "categories": ["personal-agent", "cli-agent"],
+      "url": "https://hermes-agent.nousresearch.com/"
+    },
+    {
+      "name": "Claude Code",
+      "rank": 4,
+      "tokensT": 6.201,
+      "requestsM": 68.032,
+      "categories": ["cli-agent"],
+      "url": "https://claude.ai/code"
+    },
+    {
+      "name": "Kilo Code",
+      "rank": 6,
+      "tokensT": 3.924,
+      "requestsM": 52.802,
+      "categories": ["cli-agent", "ide-extension"],
+      "url": "https://kilocode.ai/"
+    },
+    {
+      "name": "Cline",
+      "rank": 7,
+      "tokensT": 3.026,
+      "requestsM": 29.618,
+      "categories": ["ide-extension", "cli-agent"],
+      "url": "https://cline.bot/"
+    },
+    {
+      "name": "pi",
+      "rank": 8,
+      "tokensT": 2.601,
+      "requestsM": 25.208,
+      "categories": ["cli-agent"],
+      "url": "https://pi.dev/"
+    },
+    {
+      "name": "omp",
+      "rank": 9,
+      "tokensT": 2.015,
+      "requestsM": 11.734,
+      "categories": ["cli-agent"],
+      "url": "https://omp.sh/"
+    },
+    {
+      "name": "Codex",
+      "rank": 10,
+      "tokensT": 1.393,
+      "requestsM": 16.372,
+      "categories": ["cli-agent"],
+      "url": "https://openai.com/codex/"
+    },
+    {
+      "name": "OpenClaw",
+      "rank": 11,
+      "tokensT": 1.311,
+      "requestsM": 18.11,
+      "categories": ["personal-agent", "cli-agent"],
+      "url": "https://openclaw.ai/"
+    },
+    {
+      "name": "DeepSeek Harness",
+      "rank": 12,
+      "tokensT": 1.132,
+      "requestsM": 8.854,
+      "categories": [],
+      "url": "https://github.com/deepseek-ai/deepseek-harness"
+    },
+    {
+      "name": "draco-cascade-bench",
+      "rank": 13,
+      "tokensT": 0.866,
+      "requestsM": 11.662,
+      "categories": [],
+      "url": "https://github.com/circuitandchisel/draco-cascade-bench"
+    },
+    {
+      "name": "OpenHands",
+      "rank": 14,
+      "tokensT": 0.795,
+      "requestsM": 6.677,
+      "categories": ["cli-agent"],
+      "url": "https://docs.all-hands.dev/"
+    },
+    {
+      "name": "Freebuff",
+      "rank": 17,
+      "tokensT": 0.474,
+      "requestsM": 7.076,
+      "categories": [],
+      "url": "https://freebuff.com/"
+    },
+    {
+      "name": "ISEKAI ZERO",
+      "rank": 18,
+      "tokensT": 0.459,
+      "requestsM": 9.057,
+      "categories": ["game"],
+      "url": "https://www.isekai.world/"
+    },
+    {
+      "name": "Hello Minds, powered by Ethoswarm",
+      "rank": 19,
+      "tokensT": 0.417,
+      "requestsM": 5.274,
+      "categories": ["roleplay", "personal-agent", "creative-writing"],
+      "url": "https://www.hellominds.ai/"
+    },
+    {
+      "name": "CodeGPT",
+      "rank": 20,
+      "tokensT": 0.379,
+      "requestsM": 2.612,
+      "categories": ["ide-extension", "cli-agent", "cloud-agent"],
+      "url": "https://codegpt.co/"
+    },
+    {
+      "name": "HighLevel",
+      "rank": 21,
+      "tokensT": 0.365,
+      "requestsM": 6.378,
+      "categories": [],
+      "url": "https://www.gohighlevel.com/"
+    },
+    {
+      "name": "ZCode",
+      "rank": 22,
+      "tokensT": 0.315,
+      "requestsM": 2.078,
+      "categories": ["programming-app"],
+      "url": "https://zcode.z.ai/"
+    },
+    {
+      "name": "Lemonade",
+      "rank": 23,
+      "tokensT": 0.31,
+      "requestsM": 7.56,
+      "categories": ["programming-app"],
+      "url": "https://lemonade.gg/"
+    },
+    {
+      "name": "Framer",
+      "rank": 24,
+      "tokensT": 0.3,
+      "requestsM": 2.77,
+      "categories": [],
+      "url": "https://www.framer.com/"
+    },
+    {
+      "name": "Cursor",
+      "rank": 26,
+      "tokensT": 0.276,
+      "requestsM": 2.083,
+      "categories": ["programming-app", "cli-agent"],
+      "url": "https://cursor.com/"
+    }
+  ]
+}

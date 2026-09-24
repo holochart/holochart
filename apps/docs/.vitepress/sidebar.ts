@@ -127,6 +127,8 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
     },
   ];
 
+  const demos: Item[] = [{ text: 'Demos', items: pages('demos/', ['openrouter']) }];
+
   const manifest = readJson<ReferenceManifest>(
     path.join(srcDir, 'reference/attributes/manifest.json'),
     { pages: [] },
@@ -176,6 +178,7 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
     '/changelog': guide,
     '/migration': guide,
     '/charts/': charts,
+    '/demos/': demos,
     '/reference/': reference,
   };
 }
@@ -188,6 +191,7 @@ export const nav: DefaultTheme.NavItem[] = [
   },
   { text: 'Charts', link: '/charts/', activeMatch: '^/charts/' },
   { text: 'Reference', link: '/reference/', activeMatch: '^/reference/' },
+  { text: 'Demos', link: '/demos/openrouter', activeMatch: '^/demos/' },
   { text: 'Gallery', link: '/gallery/' },
   { text: 'Playground', link: '/playground/' },
   {

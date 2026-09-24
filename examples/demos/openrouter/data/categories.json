@@ -1,0 +1,230 @@
+{
+  "source": "https://openrouter.ai/rankings#task-spend (data from https://openrouter.ai/api/frontend/v1/rankings/task-spend, \"tokens\" view)",
+  "retrieved": "2026-09-23",
+  "week": "2026-08-24",
+  "windowDays": 30,
+  "note": "OpenRouter gives each task's SHARE of tokens over a trailing 30-day window (field share, sums to 1). tokensT is an ESTIMATE: share x 518.7T, the platform total for the 4 complete weeks starting 2026-08-24..2026-09-14 (28 days) scaled to 30 days. \"week\" is the first of those weeks. groups: Code 37.0%, Data 6.1%, Agent 34.9%, General 22.0%.",
+  "groups": [
+    {
+      "name": "Code",
+      "share": 0.37037
+    },
+    {
+      "name": "Data",
+      "share": 0.0611
+    },
+    {
+      "name": "Agent",
+      "share": 0.34885
+    },
+    {
+      "name": "General",
+      "share": 0.21968
+    }
+  ],
+  "categories": [
+    {
+      "name": "Workflow Execution",
+      "tag": "agent:workflow_execution",
+      "group": "Agent",
+      "share": 0.24228,
+      "tokensT": 125.669
+    },
+    {
+      "name": "Code Generation",
+      "tag": "code:general_impl",
+      "group": "Code",
+      "share": 0.12623,
+      "tokensT": 65.473
+    },
+    {
+      "name": "Debugging",
+      "tag": "code:debugging",
+      "group": "Code",
+      "share": 0.07227,
+      "tokensT": 37.485
+    },
+    {
+      "name": "Multi-step Planning",
+      "tag": "agent:multi_step_planning",
+      "group": "Agent",
+      "share": 0.07089,
+      "tokensT": 36.77
+    },
+    {
+      "name": "File I/O",
+      "tag": "code:file_read_write",
+      "group": "Code",
+      "share": 0.05732,
+      "tokensT": 29.734
+    },
+    {
+      "name": "Classification",
+      "tag": "classification_tagging",
+      "group": "General",
+      "share": 0.05728,
+      "tokensT": 29.712
+    },
+    {
+      "name": "Data Extraction",
+      "tag": "data:extraction",
+      "group": "Data",
+      "share": 0.04449,
+      "tokensT": 23.078
+    },
+    {
+      "name": "Roleplay & Fiction",
+      "tag": "roleplay_fiction",
+      "group": "General",
+      "share": 0.03166,
+      "tokensT": 16.424
+    },
+    {
+      "name": "Conversation",
+      "tag": "conversational_reply",
+      "group": "General",
+      "share": 0.03008,
+      "tokensT": 15.604
+    },
+    {
+      "name": "Frontend & UI",
+      "tag": "code:frontend_ui",
+      "group": "Code",
+      "share": 0.02896,
+      "tokensT": 15.019
+    },
+    {
+      "name": "Shell Execution",
+      "tag": "code:shell_execution",
+      "group": "Code",
+      "share": 0.02883,
+      "tokensT": 14.955
+    },
+    {
+      "name": "Code Review",
+      "tag": "code:review_security",
+      "group": "Code",
+      "share": 0.02868,
+      "tokensT": 14.878
+    },
+    {
+      "name": "Q&A & Knowledge",
+      "tag": "qa_knowledge",
+      "group": "General",
+      "share": 0.02335,
+      "tokensT": 12.114
+    },
+    {
+      "name": "Content Writing",
+      "tag": "content_writing",
+      "group": "General",
+      "share": 0.02297,
+      "tokensT": 11.913
+    },
+    {
+      "name": "Data Transformation",
+      "tag": "data:transformation",
+      "group": "Data",
+      "share": 0.01661,
+      "tokensT": 8.615
+    },
+    {
+      "name": "Memory Extraction",
+      "tag": "agent:memory_extraction",
+      "group": "Agent",
+      "share": 0.01548,
+      "tokensT": 8.031
+    },
+    {
+      "name": "Repo Scanning",
+      "tag": "code:repo_scan",
+      "group": "Code",
+      "share": 0.01484,
+      "tokensT": 7.696
+    },
+    {
+      "name": "Tool Dispatch",
+      "tag": "agent:tool_dispatch",
+      "group": "Agent",
+      "share": 0.01185,
+      "tokensT": 6.144
+    },
+    {
+      "name": "Summarization",
+      "tag": "summarization",
+      "group": "General",
+      "share": 0.01098,
+      "tokensT": 5.694
+    },
+    {
+      "name": "Research & Reports",
+      "tag": "research_report",
+      "group": "General",
+      "share": 0.01057,
+      "tokensT": 5.484
+    },
+    {
+      "name": "Customer Support",
+      "tag": "customer_support",
+      "group": "General",
+      "share": 0.01031,
+      "tokensT": 5.345
+    },
+    {
+      "name": "Security Audit",
+      "tag": "security_audit",
+      "group": "General",
+      "share": 0.0085,
+      "tokensT": 4.407
+    },
+    {
+      "name": "DevOps & Config",
+      "tag": "code:devops_config",
+      "group": "Code",
+      "share": 0.00836,
+      "tokensT": 4.335
+    },
+    {
+      "name": "Web Search",
+      "tag": "agent:web_search",
+      "group": "Agent",
+      "share": 0.00836,
+      "tokensT": 4.334
+    },
+    {
+      "name": "DevOps",
+      "tag": "devops",
+      "group": "General",
+      "share": 0.00513,
+      "tokensT": 2.661
+    },
+    {
+      "name": "SQL & Database",
+      "tag": "code:sql_database",
+      "group": "Code",
+      "share": 0.00489,
+      "tokensT": 2.535
+    },
+    {
+      "name": "Finance & Trading",
+      "tag": "finance_trading",
+      "group": "General",
+      "share": 0.00445,
+      "tokensT": 2.31
+    },
+    {
+      "name": "Translation",
+      "tag": "translation",
+      "group": "General",
+      "share": 0.00272,
+      "tokensT": 1.41
+    },
+    {
+      "name": "Math",
+      "tag": "math",
+      "group": "General",
+      "share": 0.00167,
+      "tokensT": 0.869
+    }
+  ]
+}
