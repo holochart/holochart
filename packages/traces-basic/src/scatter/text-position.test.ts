@@ -1,4 +1,20 @@
-import { describe, expect, it } from 'vitest';
+import { createScale, supplyDefaults, type FullTrace } from '@mk7s/holochart-core';
+import {
+  createResourceManager,
+  IDENTITY_TRANSFORM,
+  type Primitive,
+  type Viewport,
+} from '@mk7s/holochart-render';
+import {
+  createChartRegistry,
+  type AxisInfo,
+  type ComponentPointerEvent,
+  type SubplotInfo,
+  type TracePlotContext,
+} from '@mk7s/holochart-runtime';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { scatter, type ScatterCalc } from './index.ts';
+import { textLabels } from './plot.ts';
 import {
   lineCount,
   plainText,
@@ -6,6 +22,39 @@ import {
   TEXT_POSITIONS,
   textPlacement,
 } from './text-position.ts';
+
+// troika typesets in a worker with browser globals; the view test only needs its object graph.
+// Mocked by path, like the scatter tests: traces-basic does not depend on troika, render does.
+vi.mock('../../../render/node_modules/troika-three-text', async () => {
+  const { Object3D } = await import('three');
+  type Node = InstanceType<typeof Object3D>;
+  const noopDispose = (o: object): void => {
+    Object.assign(o, { dispose: (): void => {} });
+  };
+  class Text extends Object3D {
+    constructor() {
+      super();
+      noopDispose(this);
+    }
+  }
+  class BatchedText extends Object3D {
+    material: unknown = null;
+    addText(text: Node): void {
+      this.add(text);
+    }
+    removeText(text: Node): void {
+      this.remove(text);
+    }
+    constructor() {
+      super();
+      noopDispose(this);
+    }
+    sync(callback?: () => void): void {
+      callback?.();
+    }
+  }
+  return { Text, BatchedText, configureTextBuilder: () => {}, preloadFont: () => {} };
+});
 
 describe('textPlacement', () => {
   const fs = 12;
@@ -109,5 +158,116 @@ describe('lineCount', () => {
     expect(lineCount('')).toBe(1);
     expect(lineCount('a')).toBe(1);
     expect(lineCount(plainText('a<br>b<br>c'))).toBe(3);
+  });
+});
+
+// ---- Rich text labels (E2.10) -------------------------------------------------------------------
+
+const registry = createChartRegistry().register(scatter);
+const linearAxis = (): AxisInfo =>
+  ({ scale: createScale({ type: 'linear' }), type: 'linear', full: {} }) as unknown as AxisInfo;
+
+function scatterTrace(trace: Record<string, unknown>): { trace: FullTrace; calc: ScatterCalc } {
+  const { fullData } = supplyDefaults(
+    { data: [{ mode: 'text', x: [1, 2, 3], y: [1, 2, 3], ...trace }], layout: {} },
+    registry.core,
+  );
+  const t = fullData[0]!;
+  const calc = scatter.calc!(t, {
+    fullLayout: {} as never,
+    index: 0,
+    xaxis: linearAxis(),
+    yaxis: linearAxis(),
+  }) as ScatterCalc;
+  return { trace: t, calc };
+}
+
+describe('scatter rich-text labels', () => {
+  it('keeps plain and break-only labels exactly as before', () => {
+    const { trace, calc } = scatterTrace({
+      text: ['plain', 'a<br>b', 'a\nb'],
+      textfont: { size: 10 },
+    });
+    const labels = textLabels(trace, calc, {});
+    expect(labels.map((l) => l.text)).toEqual(['plain', 'a\nb', 'a b']);
+    expect(labels[1]!.font).toEqual(labels[0]!.font);
+    expect(labels.every((l) => l.runs === undefined)).toBe(true);
+    // Placement still counts lines.
+    expect(labels[1]!.offset).toEqual(textPlacement('middle center', 10, 0, 2).offset);
+  });
+
+  it('merges label-wide styles into the font and draws mixed ones as runs', () => {
+    const { trace, calc } = scatterTrace({
+      text: ['<b>bold</b>', 'x<sup>2</sup>', '<span style="color:#ff0000">r</span>ed\nx'],
+      opacity: 0.5,
+      textfont: { size: 10 },
+    });
+    const [bold, sup, red] = textLabels(trace, calc, {});
+    expect(bold!.runs).toBeUndefined();
+    expect(bold!.font).toMatchObject({ size: 10, weight: 'bold' });
+    expect(sup!.text).toBe('x2');
+    expect(sup!.runs).toEqual([[{ text: 'x' }, { text: '2', font: { size: 7 }, shift: 4.2 }]]);
+    // Raw newlines are spaces (Plotly); explicit run colors take the trace opacity.
+    expect(red!.text).toBe('red x');
+    expect(red!.runs![0]![0]!.color).toEqual([1, 0, 0, 0.5]);
+  });
+});
+
+describe('scatter view links', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('opens a label link on click and ignores pointers elsewhere', () => {
+    const open = vi.fn();
+    vi.stubGlobal('window', { open });
+    const { trace, calc } = scatterTrace({
+      x: [1],
+      y: [1],
+      text: ['<a href="https://example.com/">go</a>'],
+      textposition: 'middle right',
+    });
+    const subplot = { rect: { x: 10, y: 20, width: 200, height: 100 } } as unknown as SubplotInfo;
+    const added: Primitive<unknown>[] = [];
+    const ctx: TracePlotContext<ScatterCalc> = {
+      trace,
+      calc,
+      index: 0,
+      fullLayout: {} as never,
+      subplot,
+      xaxis: undefined,
+      yaxis: undefined,
+      // Point (1, 1) → viewport (50, 50) → container (60, 70).
+      transform: { ...IDENTITY_TRANSFORM, scaleX: 50, scaleY: 50 },
+      viewport: {} as Viewport,
+      primitives: { resources: createResourceManager(), invalidate: vi.fn() },
+      add: (p) => {
+        added.push(p as Primitive<unknown>);
+        return p;
+      },
+      remove: (p) => {
+        added.splice(added.indexOf(p as Primitive<unknown>), 1);
+        p.dispose();
+      },
+      invalidate: vi.fn(),
+    };
+    const view = scatter.plot!.create(ctx);
+    const event = (type: ComponentPointerEvent['type'], x: number, y: number) =>
+      ({ type, x, y, button: 0, cursor: undefined }) as ComponentPointerEvent;
+    // `middle right` without markers: text starts at the point, its baseline 12 · 0.75 − 6 px
+    // below it (one line centered on the point); aim 3 px above the baseline.
+    const move = event('move', 60 + 3, 70 + 3 - 3);
+    expect(view.handlePointer!(move)).toBe(true);
+    expect(move.cursor).toBe('pointer');
+    view.handlePointer!(event('click', 63, 70));
+    expect(open).toHaveBeenCalledWith('https://example.com/', '_blank', 'noopener');
+    expect(view.handlePointer!(event('move', 40, 70))).toBe(false);
+    // After a zoom the link follows the point.
+    view.update(
+      { ...ctx, transform: { ...ctx.transform, offsetX: 20 } },
+      { calc: false, plot: false, style: false, transform: true },
+    );
+    expect(view.handlePointer!(event('move', 63, 70))).toBe(false);
+    expect(view.handlePointer!(event('move', 83, 70))).toBe(true);
   });
 });

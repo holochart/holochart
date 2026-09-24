@@ -5,13 +5,22 @@
  *
  * Placement is a pure function of the bar's screen box and the measured label, so it is unit
  * tested without a GPU and recomputed when zooming changes the bars' pixel sizes.
+ *
+ * Labels may be Plotly pseudo-HTML (E2.10): they are measured and drawn as styled runs (see
+ * `shared/rich-text.ts`). With `layout.uniformtext` (E4.6), {@link planBarText} reports each
+ * label's size so the view can negotiate one size for every bar trace of the chart.
  */
 import {
   createTickFormatter,
   isArrayLike,
   toRGBA,
+  uniformFontSize,
+  uniformTextScale,
+  uniformTextSize,
   type FullTrace,
   type RGBA,
+  type UniformText,
+  type UniformTextItem,
 } from '@mk7s/holochart-core';
 import {
   measureText,
@@ -21,6 +30,14 @@ import {
   type TextLabel,
 } from '@mk7s/holochart-render';
 import type { AxisInfo } from '@mk7s/holochart-runtime';
+import {
+  fadeRuns,
+  labelContent,
+  measureLabel,
+  richLabel,
+  scaleRuns,
+  type RichLabel,
+} from '../shared/rich-text.ts';
 import type { BarCalc } from './calc.ts';
 import { contrastColor, numberAt } from './style.ts';
 import { formatTemplate } from './template.ts';
@@ -57,6 +74,11 @@ export interface TextPlacementOptions {
   readonly inside: { readonly width: number; readonly height: number };
   /** Label size with the outside font. */
   readonly outside: { readonly width: number; readonly height: number };
+  /**
+   * Font scale to use instead of the fit scale (`uniformtext` resizing, Plotly's `resizeText`):
+   * the label keeps its anchored end (bar end, start or outside edge) and grows or shrinks from it.
+   */
+  readonly scale?: number;
 }
 
 /** Where a label goes: its center in px (y up), rotation and scale. */
@@ -128,7 +150,7 @@ function moveInside(
     rotate += 90;
   }
   const t = rotatedSize(w, h, rotate);
-  const scale = o.constrainInside ? Math.max(0, Math.min(1, lx / t.x, ly / t.y)) : 1;
+  const scale = o.scale ?? (o.constrainInside ? Math.max(0, Math.min(1, lx / t.x, ly / t.y)) : 1);
   let cx = (box.x0 + box.x1) / 2;
   let cy = (box.y0 + box.y1) / 2;
   if (o.anchor !== 'middle') {
@@ -156,9 +178,9 @@ function moveOutside(
   const rotate = o.angle === 'auto' ? 0 : o.angle;
   const t = rotatedSize(w, h, rotate);
   // Constrained outside labels are no wider (across the bar) than the bar.
-  const scale = o.constrainOutside
-    ? Math.max(0, Math.min(1, o.horizontal ? ly / t.y : lx / t.x))
-    : 1;
+  const scale =
+    o.scale ??
+    (o.constrainOutside ? Math.max(0, Math.min(1, o.horizontal ? ly / t.y : lx / t.x)) : 1);
   let cx = (box.x0 + box.x1) / 2;
   let cy = (box.y0 + box.y1) / 2;
   if (o.horizontal) {
@@ -308,8 +330,13 @@ export function barLabel(
   return formatTemplate(template, { values, labels });
 }
 
-/** Label block size of `text` in `font`, in px (unrotated). */
+/**
+ * Label block size of `text` in `font`, in px (unrotated). Pseudo-HTML is measured as drawn (tags
+ * removed, styled runs laid out); plain text as before.
+ */
 export function labelSize(text: string, font: TextFont): { width: number; height: number } {
+  const rich = richLabel(text, font);
+  if (rich) return measureLabel(rich, LINE_HEIGHT);
   const m = measureText(text, font, LINE_HEIGHT);
   return { width: m.width, height: m.height };
 }
@@ -353,6 +380,11 @@ export interface BarTextContext {
   readonly floor: number;
   /** Active selection, for selected / unselected text colors. */
   readonly selected: ReadonlySet<number> | null;
+  /**
+   * `layout.uniformtext` (E4.6); off when unset. With a mode, fonts are raised to `minsize`
+   * before the fit tests and labels are drawn at the negotiated uniform size.
+   */
+  readonly uniformText?: UniformText;
 }
 
 function clip(v: number, range: readonly [number, number] | undefined): number {
@@ -369,14 +401,62 @@ function selectionTextColor(trace: FullTrace, selected: boolean): RGBA | null {
   return typeof c === 'string' ? toRGBA(c) : null;
 }
 
+/** One bar's label after placement, before its final size is known. */
+interface PlannedLabel {
+  readonly box: BarBox;
+  readonly options: TextPlacementOptions;
+  readonly placed: PlacedText;
+  readonly content: RichLabel;
+  readonly color: RGBA;
+  /** Explicit run colors are multiplied by this (selection dimming). */
+  readonly fade: number;
+}
+
+/** Bar labels placed at their fit scale; sizes are settled by {@link BarTextPlan.labels}. */
+export interface BarTextPlan {
+  /**
+   * `{ fontSize, scale }` of every placed label, for the cross-trace uniform size (Plotly's
+   * `recordMinTextSize`); empty when `uniformtext` is off.
+   */
+  readonly items: readonly UniformTextItem[];
+  /**
+   * The labels for the text primitive. `uniform` is the negotiated size of all bar traces
+   * (`uniformTextSize` over every trace's {@link BarTextPlan.items}); it defaults to this trace's
+   * own and is ignored when `uniformtext` is off.
+   */
+  labels(uniform?: number): TextLabel[];
+}
+
+const QUANTUM = 4;
+
 /**
- * Text labels of every bar, positioned in linear coordinates (the label center) so the text
- * primitive maps them through the same transform as the bars. Empty labels are skipped.
+ * Place every bar's label (Plotly's `appendBarText`) at its fit scale. Labels are positioned in
+ * linear coordinates (the label center) so the text primitive maps them through the same
+ * transform as the bars. Empty labels are skipped.
  */
-export function barTextLabels(trace: FullTrace, calc: BarCalc, ctx: BarTextContext): TextLabel[] {
-  const labels: TextLabel[] = [];
+export function planBarText(trace: FullTrace, calc: BarCalc, ctx: BarTextContext): BarTextPlan {
+  const planned: PlannedLabel[] = [];
+  const items: UniformTextItem[] = [];
   const t = ctx.transform;
-  if (!(t.scaleX !== 0 && t.scaleY !== 0)) return labels;
+  const uniformText = ctx.uniformText;
+  const uniformOn = uniformText !== undefined && uniformText.mode !== false;
+  const labels = (uniform?: number): TextLabel[] => {
+    const size = uniformOn ? (uniform ?? uniformTextSize(items, uniformText)) : undefined;
+    const out: TextLabel[] = [];
+    planned.forEach((p, k) => {
+      let placed = p.placed;
+      if (uniformOn) {
+        // Plotly's `resizeText`; its text transform never scales up (`scale < 1` only).
+        const scale = Math.min(1, uniformTextScale(items[k]!, size, uniformText));
+        // The label keeps its anchored end (bar end, start or outside edge) at the new size.
+        if (scale !== placed.scale) placed = placeBarText(p.box, { ...p.options, scale })!;
+      }
+      if (!(placed.scale > 0)) return;
+      out.push(drawnLabel(p, placed, t));
+    });
+    return out;
+  };
+  if (!(t.scaleX !== 0 && t.scaleY !== 0)) return { items, labels };
   const horizontal = calc.orientation === 'h';
   const angleIn = trace['textangle'];
   const angle = typeof angleIn === 'number' ? angleIn : 'auto';
@@ -420,7 +500,17 @@ export function barTextLabels(trace: FullTrace, calc: BarCalc, ctx: BarTextConte
         };
     const inside = fontAt(trace['insidetextfont'], i);
     const outside = fontAt(trace['outsidetextfont'], i);
-    const placed = placeBarText(box, {
+    if (uniformOn) {
+      // Plotly's `ensureUniformFontSize`, before the fit tests.
+      inside.font = { ...inside.font, size: uniformFontSize(inside.font.size, uniformText) };
+      outside.font = { ...outside.font, size: uniformFontSize(outside.font.size, uniformText) };
+    }
+    const insideContent = labelContent(text, inside.font);
+    const outsideContent =
+      outside.font.size === inside.font.size && sameFace(outside.font, inside.font)
+        ? insideContent
+        : labelContent(text, outside.font);
+    const options: TextPlacementOptions = {
       position,
       horizontal,
       outmost: bars.outmost[i] === 1,
@@ -428,33 +518,70 @@ export function barTextLabels(trace: FullTrace, calc: BarCalc, ctx: BarTextConte
       anchor,
       constrainInside,
       constrainOutside,
-      inside: labelSize(text, inside.font),
-      outside: labelSize(text, outside.font),
-    });
-    if (!placed || placed.scale <= 0) continue;
-    const { font, color } = placed.inside ? inside : outside;
+      inside: measureLabel(insideContent, LINE_HEIGHT),
+      outside: measureLabel(outsideContent, LINE_HEIGHT),
+    };
+    const placed = placeBarText(box, options);
+    if (!placed) continue;
+    // Plotly records squeezed-out labels too (hidden candidates); without a mode they're dropped.
+    if (!uniformOn && placed.scale <= 0) continue;
+    const { color } = placed.inside ? inside : outside;
+    const content = placed.inside ? insideContent : outsideContent;
     let rgba = color ?? (placed.inside ? contrastColor(ctx.fill, i, ctx.background) : null);
     rgba ??= [68 / 255, 68 / 255, 68 / 255, 1];
+    let fade = 1;
     if (ctx.selected) {
       const isSelected = ctx.selected.has(i);
       const override = selectionTextColor(trace, isSelected);
       if (override) rgba = override;
-      else if (!isSelected) rgba = [rgba[0], rgba[1], rgba[2], rgba[3] * 0.2];
+      else if (!isSelected) {
+        rgba = [rgba[0], rgba[1], rgba[2], rgba[3] * 0.2];
+        fade = 0.2;
+      }
     }
-    // Quantize the scaled size so zooming re-typesets labels rarely.
-    const size = Math.max(1, Math.floor(font.size * placed.scale * 4) / 4);
-    labels.push({
-      text,
-      x: (placed.cx - t.offsetX) / t.scaleX,
-      y: (placed.cy - t.offsetY) / t.scaleY,
-      font: { ...font, size },
+    planned.push({
+      box,
+      options: { ...options, position: placed.inside ? 'inside' : 'outside' },
+      placed,
+      content,
       color: rgba,
-      anchorX: 'center',
-      anchorY: 'middle',
-      align: 'center',
-      angle: placed.rotate,
-      lineHeight: LINE_HEIGHT,
+      fade,
     });
+    if (uniformOn) items.push({ fontSize: content.font.size, scale: placed.scale });
   }
-  return labels;
+  return { items, labels };
+}
+
+function sameFace(a: TextFont, b: TextFont): boolean {
+  return a.family === b.family && a.weight === b.weight && a.style === b.style;
+}
+
+/** A planned label at its final placement, for the text primitive. */
+function drawnLabel(p: PlannedLabel, placed: PlacedText, t: Readonly<DataTransform>): TextLabel {
+  const { font, runs } = p.content;
+  // Quantize the scaled size so zooming re-typesets labels rarely.
+  const size = Math.max(1, Math.floor(font.size * placed.scale * QUANTUM) / QUANTUM);
+  const label: TextLabel = {
+    text: p.content.text,
+    x: (placed.cx - t.offsetX) / t.scaleX,
+    y: (placed.cy - t.offsetY) / t.scaleY,
+    font: { ...font, size },
+    color: p.color,
+    anchorX: 'center',
+    anchorY: 'middle',
+    align: 'center',
+    angle: placed.rotate,
+    lineHeight: LINE_HEIGHT,
+  };
+  // Run sizes and shifts are absolute px: scale them with the label (as Plotly scales the element).
+  if (runs) label.runs = fadeRuns(scaleRuns(runs, size / font.size), p.fade);
+  return label;
+}
+
+/**
+ * Text labels of every bar at their fit scale (and, with `uniformtext`, this trace's own uniform
+ * size), positioned in linear coordinates (see {@link planBarText}).
+ */
+export function barTextLabels(trace: FullTrace, calc: BarCalc, ctx: BarTextContext): TextLabel[] {
+  return planBarText(trace, calc, ctx).labels();
 }

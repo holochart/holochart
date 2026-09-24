@@ -81,6 +81,12 @@ export interface Config {
    */
   locale?: string;
   /**
+   * The chart's accessible name (`aria-label`), read by screen readers. Empty: `layout.meta.description` when set, else the figure title followed by an automatic summary ("Line chart with 3 traces"). Holochart only (plan E17.1).
+   *
+   * @defaultValue `""`
+   */
+  ariaLabel?: string;
+  /**
    * Options for the modebar "download image" button.
    */
   toImageButtonOptions?: ConfigToImageButtonOptions;

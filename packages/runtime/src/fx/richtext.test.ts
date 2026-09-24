@@ -38,10 +38,27 @@ describe('appendRichText', () => {
   });
 
   it('keeps unknown tags as literal text and never creates script or img elements', () => {
-    const text = '<script>alert(1)</script><img src=x onerror=alert(1)><a href="#">l</a>';
+    const text = '<script>alert(1)</script><img src=x onerror=alert(1)>';
     const div = render(text);
     expect(div.children).toHaveLength(0);
     expect(div.textContent).toBe(text);
+  });
+
+  it('builds safe links and drops unsafe hrefs', () => {
+    const div = render('<a href="https://x.org">l</a><a href="javascript:alert(1)">bad</a>');
+    const links = div.querySelectorAll('a');
+    expect(links).toHaveLength(2);
+    expect(links[0]?.getAttribute('href')).toBe('https://x.org');
+    expect(links[0]?.getAttribute('target')).toBe('_blank');
+    expect(links[0]?.getAttribute('rel')).toBe('noopener noreferrer');
+    expect(links[1]?.hasAttribute('href')).toBe(false);
+  });
+
+  it('draws <u>, <em> (bold italic, like Plotly) and turns raw newlines into spaces', () => {
+    const div = render('<u>u</u><em>e</em>\nx');
+    expect(div.querySelector('u')?.textContent).toBe('u');
+    expect(div.querySelector('i')?.getAttribute('style')).toBe('font-weight:bold');
+    expect(div.textContent).toBe('ue x');
   });
 
   it('drops attributes other than a filtered style', () => {
@@ -64,11 +81,13 @@ describe('appendRichText', () => {
     expect(spans[1]?.getAttribute('style')).toBe('font-weight:bold');
   });
 
-  it('keeps unbalanced closing tags as literal text', () => {
-    expect(render('</b>x').textContent).toBe('</b>x');
+  it('handles unbalanced closing tags like Plotly', () => {
+    // A stray closing tag is dropped; a mismatched one closes the innermost open tag.
+    expect(render('</b>x').textContent).toBe('x');
     const div = render('<b>a</i>b</b>');
     expect(div.children).toHaveLength(1);
-    expect(div.querySelector('b')?.textContent).toBe('a</i>b');
+    expect(div.querySelector('b')?.textContent).toBe('a');
+    expect(div.textContent).toBe('ab');
   });
 
   it('decodes entities without turning them into tags', () => {

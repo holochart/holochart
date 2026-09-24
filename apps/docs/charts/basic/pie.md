@@ -159,7 +159,7 @@ label once, and a legend click hides that label in every pie.
   `label`; return `false` from a listener to cancel the default hide or isolate:
 
   ```ts
-  chart.on('click', (e) => showDetails(e.points[0].label));
+  chart.on('click', (e) => console.log(e.points[0]?.label));
   chart.on('legendclick', (e) => e.label !== 'Other'); // "Other" can't be hidden
   ```
 

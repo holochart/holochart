@@ -342,6 +342,7 @@ function shapeLabel(
     angle: place.angle,
     font: styled.font,
     color: rgba(l.font.color, [0, 0, 0, 1]),
+    ...(styled.runs ? { runs: styled.runs } : {}),
   };
 }
 

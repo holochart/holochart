@@ -8,6 +8,7 @@ export {
   modebarAutoscaleUpdate,
   modebarAxisFixed,
   modebarDownloadImage,
+  modebarImageRequest,
   modebarResetUpdate,
   modebarSpikelinesState,
   modebarSpikelinesUpdate,
@@ -18,6 +19,8 @@ export {
 export type {
   ModebarAxisLike,
   ModebarAxisResetEntry,
+  ModebarDownloadRequest,
+  ModebarImageOptions,
   ModebarImageSource,
   ModebarLayoutUpdate,
   ModebarResetState,

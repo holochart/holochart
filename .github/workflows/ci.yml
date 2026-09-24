@@ -256,4 +256,14 @@ jobs:
       - run: pnpm build:packages
       - run: pnpm --filter @mk7s/holochart-docs lint:pages
       - run: pnpm --filter @mk7s/holochart-docs typecheck
+      # Gallery thumbnails are committed (apps/docs/README.md#gallery); this checks, without a
+      # browser, that they match examples/. Regenerate with `pnpm gallery` when it fails.
+      - name: Gallery in sync with examples (E19.5)
+        run: pnpm gallery:check
+      # VitePress fails the build on dead internal links (no ignoreDeadLinks in the config).
       - run: pnpm --filter @mk7s/holochart-docs build
+      # After the build, so links to the generated reference pages are checked too. Hard gates:
+      # attribute descriptions, >= 5 examples per released trace type, snippet type-check,
+      # internal links; the rest is reported in the job summary (apps/docs/README.md).
+      - name: Docs quality gates (E19.10)
+        run: pnpm --filter @mk7s/holochart-docs quality

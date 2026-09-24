@@ -1,0 +1,8 @@
+# Project dictionary for the docs spelling check (scripts/quality/spelling.ts).
+#
+# One entry per line, case-insensitive, `#` starts a comment:
+# - a word from the common-misspellings list that is correct here (e.g. a Plotly attribute name);
+# - a doubled-word phrase that is intentional, written with one space: `that that`.
+#
+# Full dictionary spell checking is deferred (no English word list in CI), so words that are not
+# in the misspellings list never need an entry.

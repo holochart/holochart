@@ -14,6 +14,7 @@ export type {
   ColorbarSpec,
   ComponentDrawContext,
   ComponentExtremesContext,
+  DescribeContext,
   ComponentLayoutContext,
   ComponentModule,
   ComponentPointerEvent,
@@ -31,6 +32,7 @@ export type {
   LegendGlyph,
   LegendIconContext,
   LegendItem,
+  TraceDescription,
   MarginPush,
   Registrable,
   SelectionQuery,
@@ -61,6 +63,7 @@ export type { ChartOptions, ChartThree, FigurePatch } from './chart.ts';
 export {
   addTraces,
   deleteTraces,
+  downloadImage,
   extendTraces,
   Fx,
   hover,
@@ -71,6 +74,7 @@ export {
   react,
   relayout,
   restyle,
+  toImage,
   unhover,
   update,
 } from './api.ts';
@@ -86,6 +90,21 @@ export type {
   PointerEventData,
   SelectionEventData,
 } from './events.ts';
+
+// Raster export (E18.1)
+export type { DownloadImageOptions, ImageFormat, ToImageOptions } from './export/types.ts';
+
+// Accessibility (E17.1)
+export {
+  countText,
+  formatAxisValue,
+  formatPlainNumber,
+  listText,
+  accessibleText,
+  traceNameText,
+} from './a11y/text.ts';
+export { MAX_TABLE_ROWS } from './a11y/describe.ts';
+export type { ChartDescription, DescribedTable } from './a11y/describe.ts';
 
 // JSON (E18.3)
 export { chartToJSON, figureFromJSON, fromJSON } from './json.ts';

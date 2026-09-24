@@ -179,37 +179,60 @@ export function modebarSpikelinesUpdate(axes: Iterable<ModebarAxisLike>): Modeba
   return out;
 }
 
+/** `config.toImageButtonOptions` as the modebar reads it (Plotly's). */
+export interface ModebarImageOptions {
+  readonly format?: unknown;
+  readonly filename?: unknown;
+  readonly width?: unknown;
+  readonly height?: unknown;
+  readonly scale?: unknown;
+}
+
+/** What {@link modebarDownloadImage} passes to `chart.downloadImage`. */
+export interface ModebarDownloadRequest {
+  format?: 'png' | 'jpeg' | 'webp';
+  filename?: string;
+  width?: number;
+  height?: number;
+  scale?: number;
+}
+
 /** The parts of a chart {@link modebarDownloadImage} uses. */
 export interface ModebarImageSource {
-  readonly element: HTMLElement;
-  readonly fullConfig:
-    { readonly toImageButtonOptions?: { readonly filename?: unknown } } | undefined;
-  readonly three: {
-    readonly renderer: { readonly domElement: HTMLCanvasElement };
-    readonly root: { renderNow(): void };
-  };
+  readonly fullConfig: { readonly toImageButtonOptions?: ModebarImageOptions } | undefined;
+  /** The chart's raster export (E18.1): renders offscreen and saves the file. */
+  downloadImage(options: ModebarDownloadRequest): Promise<unknown>;
+}
+
+/** The download request of `config.toImageButtonOptions` (unset fields: the export defaults). */
+export function modebarImageRequest(
+  options: ModebarImageOptions | undefined,
+): ModebarDownloadRequest {
+  const out: ModebarDownloadRequest = {};
+  const o = options ?? {};
+  if (o.format === 'png' || o.format === 'jpeg' || o.format === 'webp') out.format = o.format;
+  if (typeof o.filename === 'string' && o.filename !== '') out.filename = o.filename;
+  const positive = (v: unknown): v is number =>
+    typeof v === 'number' && Number.isFinite(v) && v > 0;
+  if (positive(o.width)) out.width = o.width;
+  if (positive(o.height)) out.height = o.height;
+  if (positive(o.scale)) out.scale = o.scale;
+  return out;
 }
 
 /**
- * Download the chart as a PNG (`<toImageButtonOptions.filename>.png`, default `newplot.png`).
- *
- * The frame is rendered synchronously right before `toDataURL`, in the same task, which reads a
- * valid drawing buffer even without `preserveDrawingBuffer`. This is the minimal version: the
- * canvas at its current size and pixel ratio, PNG only, WebGL content only (DOM overlays such as
- * the modebar are not captured). Proper export (`scale`, `width`/`height`, formats) is E18.1.
+ * The camera button: export the chart with `chart.downloadImage` (plan E18.1) as
+ * `config.toImageButtonOptions` says — `format` (default png), `filename` (default `newplot`),
+ * `width` / `height` (default: the chart's size) and `scale` (default 1). The image is drawn
+ * offscreen at that size, so it never contains the modebar or hover labels. Failures are logged,
+ * not thrown (a click handler has no one to report to).
  */
-export function modebarDownloadImage(chart: ModebarImageSource): void {
-  const filename = chart.fullConfig?.toImageButtonOptions?.filename;
-  const name = typeof filename === 'string' && filename !== '' ? filename : 'newplot';
-  const three = chart.three;
-  three.root.renderNow();
-  const url = three.renderer.domElement.toDataURL('image/png');
-  const doc = chart.element.ownerDocument;
-  const link = doc.createElement('a');
-  link.href = url;
-  link.download = `${name}.png`;
-  link.style.display = 'none';
-  (doc.body ?? doc.documentElement).appendChild(link);
-  link.click();
-  link.remove();
+export function modebarDownloadImage(chart: ModebarImageSource): Promise<void> {
+  const request = modebarImageRequest(chart.fullConfig?.toImageButtonOptions);
+  return chart.downloadImage(request).then(
+    () => undefined,
+    (error: unknown) => {
+      console.error('holochart: image export failed', error);
+    },
+  );
 }

@@ -36,7 +36,7 @@ import type {
 import type { LabelItem } from '../axes/geometry.ts';
 import { TextBatch } from '../shared/batches.ts';
 import { findChart, fireAndForget, overlayTransform } from '../shared/host.ts';
-import { oracleMeasure, type MeasureLine } from '../shared/text.ts';
+import { handleLinkPointer, oracleMeasure, type MeasureLine } from '../shared/text.ts';
 import {
   annotationGeometry,
   boxCorners,
@@ -290,6 +290,8 @@ class AnnotationsView implements ComponentView {
       return event.type !== 'leave';
     }
     if (event.type === 'leave') return false;
+    // Links in annotation text (E2.10) take the event before click / drag handling.
+    if (handleLinkPointer(event, this.#text.linkAt(event.x, event.y))) return true;
     const hit = this.#hit(event.x, event.y);
     if (!hit) return false;
     const a = this.#full(hit.g.index);

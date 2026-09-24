@@ -12,6 +12,7 @@ import type {
   ComponentDrawContext,
   ComponentLayoutContext,
   ComponentModule,
+  ComponentPointerEvent,
   ComponentUpdatePlan,
   ComponentView,
   MarginPush,
@@ -20,7 +21,7 @@ import type {
 import type { LabelItem, RectItem } from '../axes/geometry.ts';
 import { RectBatch, TextBatch } from '../shared/batches.ts';
 import { overlayTransform } from '../shared/host.ts';
-import { oracleMeasure, type MeasureLine } from '../shared/text.ts';
+import { handleLinkPointer, oracleMeasure, type MeasureLine } from '../shared/text.ts';
 import type { RGBA } from '@mk7s/holochart-render';
 import {
   colorbarEntries,
@@ -99,6 +100,11 @@ class ColorbarView implements ComponentView {
     this.#rects.set(rects, borders);
     this.#text.setTransform(t);
     this.#text.set(labels);
+  }
+
+  /** Links in colorbar titles and tick labels (E2.10). */
+  handlePointer(event: ComponentPointerEvent): boolean {
+    return handleLinkPointer(event, this.#text.linkAt(event.x, event.y));
   }
 }
 

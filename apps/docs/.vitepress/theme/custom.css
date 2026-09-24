@@ -750,6 +750,8 @@ html.dark {
   border-radius: 4px;
   overflow: hidden;
   background: var(--hc-surface-1);
+  /* Deep links to an embed (`#example-<id>`, from the gallery) clear the fixed nav bar. */
+  scroll-margin-top: calc(var(--vp-nav-height) + 24px);
 }
 
 .hc-example-bar {

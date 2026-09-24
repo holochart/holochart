@@ -1,18 +1,65 @@
-import { describe, expect, it } from 'vitest';
-import { build } from './__testing__/build.ts';
+import { uniformTextSize, type UniformText } from '@mk7s/holochart-core';
+import {
+  createResourceManager,
+  IDENTITY_TRANSFORM,
+  TextPrimitive,
+  type Primitive,
+  type PrimitiveContext,
+  type TextLabel,
+  type Viewport,
+} from '@mk7s/holochart-render';
+import type { ComponentPointerEvent, TracePlotContext } from '@mk7s/holochart-runtime';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { build, type Built } from './__testing__/build.ts';
+import type { PieCalc } from './calc.ts';
 import { formatPiePercent, formatPieValue, numSeparate, plainText } from './helpers.ts';
+import { pie } from './index.ts';
 import {
   fitOutsideLabels,
   layoutPieText,
   leaderLine,
   sliceText,
   textBox,
+  titleBlockSize,
   transformInsideText,
   transformOutsideText,
   type LabelPoint,
   type PieLabel,
   type SliceShape,
 } from './text.ts';
+
+// troika typesets in a worker with browser globals; the view tests only need its object graph.
+// Mocked by path, like the scatter tests: traces-basic does not depend on troika, render does.
+vi.mock('../../../render/node_modules/troika-three-text', async () => {
+  const { Object3D } = await import('three');
+  type Node = InstanceType<typeof Object3D>;
+  const noopDispose = (o: object): void => {
+    Object.assign(o, { dispose: (): void => {} });
+  };
+  class Text extends Object3D {
+    constructor() {
+      super();
+      noopDispose(this);
+    }
+  }
+  class BatchedText extends Object3D {
+    material: unknown = null;
+    addText(text: Node): void {
+      this.add(text);
+    }
+    removeText(text: Node): void {
+      this.remove(text);
+    }
+    constructor() {
+      super();
+      noopDispose(this);
+    }
+    sync(callback?: () => void): void {
+      callback?.();
+    }
+  }
+  return { Text, BatchedText, configureTextBuilder: () => {}, preloadFont: () => {} };
+});
 
 describe('pie number formatting', () => {
   it('formats percents with 3 significant digits like Plotly', () => {
@@ -290,5 +337,205 @@ describe('pie label layout', () => {
       anchorY: 'top',
     });
     expect(title(1).font.size).toBe(12);
+  });
+});
+
+describe('pie rich text', () => {
+  it('draws mixed styles as runs and label-wide styles as one plain label', () => {
+    const b = build([
+      {
+        labels: ['a', 'b'],
+        values: [1, 1],
+        texttemplate: ['<b>%{label}</b>', '%{label}<sup>2</sup>'],
+      },
+    ]);
+    const [bold, sup] = layoutPieText(b.traces[0]!, b.calcs[0]!, b.fullLayout).labels;
+    expect(bold!.text).toBe('a');
+    expect(bold!.runs).toBeUndefined();
+    expect(bold!.font.weight).toBe('bold');
+    expect(sup!.text).toBe('b2');
+    expect(sup!.runs?.[0]).toHaveLength(2);
+    expect(sup!.runs![0]![1]!.font?.size).toBeCloseTo(sup!.font.size * 0.7);
+  });
+
+  it('keeps the default textinfo labels plain', () => {
+    const b = build([{ labels: ['a', 'b'], values: [3, 1], textinfo: 'label+percent' }]);
+    const labels = layoutPieText(b.traces[0]!, b.calcs[0]!, b.fullLayout).labels;
+    expect(labels.map((l) => [l.text, l.runs])).toEqual([
+      ['a\n75%', undefined],
+      ['b\n25%', undefined],
+    ]);
+  });
+
+  it('measures and draws rich titles', () => {
+    const b = build([{ values: [1], title: { text: '<i>Sales</i> 2026<br>by region' } }]);
+    const trace = b.traces[0]!;
+    const title = layoutPieText(trace, b.calcs[0]!, b.fullLayout).labels.find((l) => l.slice < 0)!;
+    expect(title.text).toBe('Sales 2026\nby region');
+    expect(title.runs).toHaveLength(2);
+    expect(titleBlockSize(trace, '<i>Sales</i> 2026<br>by region').height).toBeCloseTo(
+      2 * 12 * 1.2,
+    );
+    expect(plainText('<i>Sales</i> &lt;2&gt;')).toBe('Sales <2>');
+  });
+});
+
+describe('pie uniformtext', () => {
+  // Pie 0: two short labels that fit. Pie 1: a long label squeezed into a thin slice.
+  const data = [
+    { labels: ['a', 'b'], values: [1, 1], textinfo: 'label', domain: { x: [0, 0.5] } },
+    {
+      labels: ['x', 'a much longer label'],
+      values: [95, 5],
+      textinfo: 'label',
+      textposition: 'inside',
+      domain: { x: [0.5, 1] },
+    },
+  ];
+  const SIZE = { width: 600, height: 200 };
+  const texts = (b: Built, u: UniformText, size?: number) =>
+    b.traces.map((t, k) =>
+      layoutPieText(t, b.calcs[k]!, b.fullLayout, {
+        uniformText: u,
+        ...(size !== undefined ? { uniformSize: size } : {}),
+      }),
+    );
+
+  it('shrinks every pie to the smallest label size (show)', () => {
+    const u: UniformText = { mode: 'show', minsize: 2 };
+    const b = build(data, { uniformtext: u }, SIZE);
+    const own = texts(b, u);
+    const size = uniformTextSize([...own[0]!.items, ...own[1]!.items], u)!;
+    expect(size).toBeLessThan(12);
+    expect(size).toBeGreaterThanOrEqual(2);
+    const sized = texts(b, u, size);
+    const sizes = sized.flatMap((t) => t.labels.map((l) => l.font.size));
+    expect(sizes).toHaveLength(4);
+    for (const s of sizes) expect(s).toBe(Math.floor(size * 4) / 4);
+  });
+
+  it('hides labels below minsize and leaves the rest alone (hide)', () => {
+    const u: UniformText = { mode: 'hide', minsize: 11 };
+    const b = build(data, { uniformtext: u }, SIZE);
+    const own = texts(b, u);
+    const size = uniformTextSize([...own[0]!.items, ...own[1]!.items], u);
+    const sized = texts(b, u, size);
+    expect(sized[1]!.labels.map((l) => l.text)).toEqual(['x']);
+    expect(sized[0]!.labels.map((l) => l.font.size)).toEqual([12, 12]);
+  });
+
+  it('raises fonts to minsize', () => {
+    const u: UniformText = { mode: 'hide', minsize: 14 };
+    const b = build([data[0]], { uniformtext: u });
+    const text = layoutPieText(b.traces[0]!, b.calcs[0]!, b.fullLayout);
+    expect(text.items.map((i) => i.fontSize)).toEqual([14, 14]);
+    expect(text.labels.map((l) => l.font.size)).toEqual([14, 14]);
+  });
+
+  it('is off without a mode', () => {
+    const b = build(data);
+    const text = layoutPieText(b.traces[1]!, b.calcs[1]!, b.fullLayout);
+    expect(text.items).toEqual([]);
+    expect(text.uniformSize).toBeUndefined();
+    expect(text.labels).toHaveLength(2);
+  });
+});
+
+describe('pie view text', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function viewContext(b: Built, index: number, primitives: PrimitiveContext) {
+    const added: Primitive<unknown>[] = [];
+    const ctx: TracePlotContext<PieCalc> = {
+      trace: b.traces[index]!,
+      calc: b.calcs[index]!,
+      index,
+      fullLayout: b.fullLayout,
+      subplot: undefined,
+      xaxis: undefined,
+      yaxis: undefined,
+      transform: IDENTITY_TRANSFORM,
+      viewport: { size: { width: 600, height: 400, pixelRatio: 1 } } as unknown as Viewport,
+      domain: b.entries[index]!.domain,
+      primitives,
+      add: (p) => {
+        added.push(p as Primitive<unknown>);
+        return p;
+      },
+      remove: (p) => {
+        added.splice(added.indexOf(p as Primitive<unknown>), 1);
+        p.dispose();
+      },
+      invalidate: vi.fn(),
+    };
+    return { ctx, added };
+  }
+
+  const labelsOf = (added: Primitive<unknown>[]): TextLabel[] => {
+    const text = added.find((p) => p instanceof TextPrimitive);
+    return (text as unknown as { data: { labels: TextLabel[] } } | undefined)?.data.labels ?? [];
+  };
+
+  it('negotiates uniformtext across pies, refreshing pies drawn earlier', () => {
+    const b = build(
+      [
+        { labels: ['a', 'b'], values: [1, 1], textinfo: 'label', domain: { x: [0, 0.5] } },
+        {
+          labels: ['x', 'a much longer label'],
+          values: [95, 5],
+          textinfo: 'label',
+          textposition: 'inside',
+          domain: { x: [0.5, 1] },
+        },
+      ],
+      { uniformtext: { mode: 'show', minsize: 2 } },
+      { width: 600, height: 200 },
+    );
+    const primitives: PrimitiveContext = {
+      resources: createResourceManager(),
+      invalidate: vi.fn(),
+    };
+    const first = viewContext(b, 0, primitives);
+    const view0 = pie.plot!.create(first.ctx);
+    expect(labelsOf(first.added).map((l) => l.font?.size)).toEqual([12, 12]);
+    const second = viewContext(b, 1, primitives);
+    const view1 = pie.plot!.create(second.ctx);
+    const size = labelsOf(second.added)[0]!.font!.size!;
+    expect(size).toBeLessThan(12);
+    expect(labelsOf(second.added).map((l) => l.font?.size)).toEqual([size, size]);
+    expect(labelsOf(first.added).map((l) => l.font?.size)).toEqual([size, size]);
+    view0.dispose?.();
+    view1.dispose?.();
+  });
+
+  it('opens slice label links on click', () => {
+    const open = vi.fn();
+    vi.stubGlobal('window', { open });
+    const b = build([
+      {
+        labels: ['a', 'b'],
+        values: [1, 1],
+        texttemplate: '<a href="https://example.com/%{label}">%{label} link</a>',
+        insidetextorientation: 'horizontal',
+      },
+    ]);
+    const primitives: PrimitiveContext = {
+      resources: createResourceManager(),
+      invalidate: vi.fn(),
+    };
+    const { ctx } = viewContext(b, 0, primitives);
+    const view = pie.plot!.create(ctx);
+    const [label] = layoutPieText(b.traces[0]!, b.calcs[0]!, b.fullLayout).labels;
+    const event = (type: ComponentPointerEvent['type'], x: number, y: number) =>
+      ({ type, x, y, button: 0, cursor: undefined }) as ComponentPointerEvent;
+    // Labels are in container px: the label's center is on its link.
+    const move = event('move', label!.x, label!.y);
+    expect(view.handlePointer!(move)).toBe(true);
+    expect(move.cursor).toBe('pointer');
+    view.handlePointer!(event('click', label!.x, label!.y));
+    expect(open).toHaveBeenCalledWith('https://example.com/a', '_blank', 'noopener');
+    expect(view.handlePointer!(event('move', 1, 1))).toBe(false);
   });
 });

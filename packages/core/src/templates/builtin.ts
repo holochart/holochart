@@ -49,7 +49,8 @@ const TITLE = '#eceef4';
  * `#1a1a22` grid, `#2c2c38` axis lines with short outside ticks, 9 px text (8 px tick labels, an
  * 11 px left-aligned title) in Helvetica Neue, tight margins that axes grow as needed
  * (`automargin`), a transparent horizontal legend above the plot area, dark hover labels, thin
- * lines and small markers, borderless bars, slim colorbars.
+ * lines and small markers, borderless bars, slim colorbars, tables with a raised header and faint
+ * rules.
  *
  * Colorscales follow one rule on a dark background: **brighter means further from zero**.
  * - `sequential` is the "neon plasma" ramp: deep violet → violet → magenta → orange → pale yellow.
@@ -169,6 +170,22 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
       ],
       // A background-colored rim separates the slices.
       pie: [{ marker: { line: { color: BG, width: 1 } } }],
+      // A raised header (the hover-label background) over background-colored cells, both with
+      // faint 1 px rules; bright header text, 9 px throughout.
+      table: [
+        {
+          header: {
+            fill: { color: '#15151d' },
+            line: { color: AXIS, width: 1 },
+            font: { size: 9, color: TITLE },
+          },
+          cells: {
+            fill: { color: BG },
+            line: { color: GRID, width: 1 },
+            font: { size: 9, color: TEXT },
+          },
+        },
+      ],
     },
   };
 })();

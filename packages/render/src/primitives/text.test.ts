@@ -559,3 +559,64 @@ describe('TextPrimitive: decoration lines (E8.3)', () => {
     expect(quadRefs()).toBe(0);
   });
 });
+
+describe('TextPrimitive: rich text runs (E2.10)', () => {
+  interface MemberView {
+    text: string;
+    font: string | null;
+    position: { x: number; y: number };
+    fontSize?: number;
+    anchorY?: string;
+  }
+  const membersOf = (primitive: { object: { children: unknown[] } }) =>
+    [...(batchOf(primitive)?.members ?? [])] as unknown as MemberView[];
+
+  it('draws one member per run, loading only the faces the runs use', async () => {
+    open();
+    const text = mod.createTextPrimitive(context(), {
+      labels: [
+        {
+          text: 'a bold x2',
+          x: 100,
+          y: 50,
+          font: { family: 'sans-serif', size: 10 },
+          runs: [
+            [
+              { text: 'a ' },
+              { text: 'bold', font: { weight: 'bold' } },
+              { text: ' ' },
+              { text: 'x' },
+              { text: '2', font: { size: 7 }, shift: 4.2 },
+            ],
+          ],
+        },
+        { text: 'plain', x: 0, y: 0 },
+      ],
+      mode: 'fixed',
+      sizing: 'world',
+    });
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(1));
+    finishSyncs();
+    await text.ready;
+    expect([...troika.fontLoads].sort()).toEqual(['bold.otf', 'regular.otf']);
+    const members = membersOf(text);
+    // Blank runs draw nothing: 4 run members + the plain label.
+    expect(members.map((m) => [m.text, m.font])).toEqual([
+      ['a ', '/fonts/regular.otf'],
+      ['bold', '/fonts/bold.otf'],
+      ['x', '/fonts/regular.otf'],
+      ['2', '/fonts/regular.otf'],
+      ['plain', '/fonts/regular.otf'],
+    ]);
+    // Runs sit on the label's baseline, left to right; the superscript is raised.
+    const [a, bold, x, two] = members as [MemberView, MemberView, MemberView, MemberView];
+    expect(a.position.x).toBe(100);
+    expect(a.position.y).toBe(50);
+    expect(bold.position.x).toBeGreaterThan(a.position.x);
+    expect(x.position.x).toBeGreaterThan(bold.position.x);
+    expect(two.position.x).toBeGreaterThan(x.position.x);
+    expect(two.position.y).toBeCloseTo(54.2);
+    expect(two.fontSize).toBe(7);
+    expect(a.anchorY).toBe('top-baseline');
+  });
+});

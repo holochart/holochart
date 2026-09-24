@@ -26,11 +26,16 @@ import {
   type Scale,
   type Tick,
 } from '@mk7s/holochart-core';
-import type { RGBA, TextAnchorX, TextAnchorY, TextFont } from '@mk7s/holochart-render';
+import type {
+  RGBA,
+  TextAnchorX,
+  TextAnchorY,
+  TextFont,
+  TextRunLines,
+} from '@mk7s/holochart-render';
 import {
   LINE_HEIGHT,
-  measureBlock,
-  plainText,
+  measureStyled,
   rgba,
   styledText,
   textFont,
@@ -84,6 +89,8 @@ export interface LabelItem {
   color: RGBA;
   /** Alignment of the lines of a multi-line label (default: follows `anchorX`). */
   align?: 'left' | 'center' | 'right';
+  /** Rich text runs (E2.10; see `styledText`); `text` is then the plain equivalent. */
+  runs?: TextRunLines;
 }
 
 /** Where an axis (or a mirror of it) is drawn. */
@@ -389,9 +396,9 @@ export function axisGeometry(
   let labelOuter = cross + sgn * (lw + outsideTicks);
   if (f.showticklabels) {
     const shown = major.filter((t) => t.text !== '');
-    const texts = shown.map((t) => plainText(t.text));
-    const positions = shown.map((t) => axis.l2c(t.labelL ?? t.l) + f.ticklabelshift);
     const baseFont = textFont(tickfont);
+    const texts = shown.map((t) => styledText(t.text, baseFont).text);
+    const positions = shown.map((t) => axis.l2c(t.labelL ?? t.l) + f.ticklabelshift);
     const lineMeasure = (line: string): number => options.measure(line, baseFont);
     const tickangle = f.tickangle as number | 'auto';
     const lay = layoutTickLabels({
@@ -418,11 +425,11 @@ export function axisGeometry(
     let row1Reach = 0;
     shown.forEach((t, i) => {
       if (lay.visible[i] !== true) return;
-      const text = texts[i] as string;
       const p = positions[i] as number;
       if (!Number.isFinite(p) || !inRange(axis, axis.l2c(t.labelL ?? t.l))) return;
-      const font = textFont(tickfont, t.fontScale ?? 1);
-      const box = measureBlock(text, font, options.measure);
+      const styled = styledText(t.text, textFont(tickfont, t.fontScale ?? 1));
+      const { text, font } = styled;
+      const box = measureStyled(styled, options.measure);
       const anchor = tickLabelAnchor(letter, labelSgn, angle, box.width, box.height);
       let { anchorX, anchorY } = anchor;
       // `ticklabelposition: '… left' | '… right' | '… top' | '… bottom'` moves labels beside the
@@ -443,6 +450,7 @@ export function axisGeometry(
         angle,
         font,
         color,
+        ...(styled.runs ? { runs: styled.runs } : {}),
       };
       const bounds = labelBounds(box.width, box.height, anchorX, anchorY, angle);
       const candidate = { item, bounds };
@@ -461,9 +469,9 @@ export function axisGeometry(
       for (const g of levels.groups) {
         const p = axis.l2c(g.l);
         if (g.text === '' || !inRange(axis, p)) continue;
-        const text = plainText(g.text);
-        const font = textFont(tickfont);
-        const box = measureBlock(text, font, options.measure);
+        const styled = styledText(g.text, textFont(tickfont));
+        const { text, font } = styled;
+        const box = measureStyled(styled, options.measure);
         const anchor = tickLabelAnchor(letter, labelSgn, 0, box.width, box.height);
         const item: LabelItem = {
           text,
@@ -474,6 +482,7 @@ export function axisGeometry(
           angle: 0,
           font,
           color,
+          ...(styled.runs ? { runs: styled.runs } : {}),
         };
         const pl = place(item, box.width, box.height, placed, labels);
         row2Reach = Math.max(row2Reach, reach(pl, letter, row2, labelSgn));
@@ -499,7 +508,8 @@ export function axisGeometry(
   const titleText = styled?.text ?? '';
   if (styled && titleText !== '' && title.font) {
     const font = styled.font;
-    const box = measureBlock(titleText, font, options.measure);
+    const runs = styled.runs ? { runs: styled.runs } : {};
+    const box = measureStyled(styled, options.measure);
     const standoff = title.standoff ?? TITLE_STANDOFF;
     const outer = sgn * Math.max(sgn * labelOuter, sgn * (cross + sgn * (lw + outsideTicks)));
     const c = outer + sgn * standoff;
@@ -515,6 +525,7 @@ export function axisGeometry(
             angle: 0,
             font,
             color: rgba(title.font.color),
+            ...runs,
           }
         : {
             text: titleText,
@@ -526,6 +537,7 @@ export function axisGeometry(
             angle: -90,
             font,
             color: rgba(title.font.color),
+            ...runs,
           };
     const pl = place(item, box.width, box.height, placed, labels);
     bump(reach(pl, letter, cross, sgn));

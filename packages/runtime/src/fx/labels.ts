@@ -88,6 +88,9 @@ export class HoverLayer {
     this.#doc = container.ownerDocument;
     const layer = this.#doc.createElement('div');
     layer.className = 'holochart-fx';
+    // Pointer feedback only: the same values are in the chart's accessible description (E17.1),
+    // and labels that come and go with the mouse would be noise to a screen reader.
+    layer.setAttribute('aria-hidden', 'true');
     layer.style.cssText =
       'position:absolute;left:0;top:0;width:0;height:0;overflow:visible;pointer-events:none;z-index:2;';
     // Hover labels are positioned against the container.

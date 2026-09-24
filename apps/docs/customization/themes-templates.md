@@ -170,6 +170,8 @@ dark background stand in for it. The theme will turn bloom on once it lands.
 A template has two parts:
 
 ```ts
+import type { Template } from '@mk7s/holochart';
+
 const brand: Template = {
   layout: {
     font: { family: 'Inter, sans-serif', color: '#1f2937' },

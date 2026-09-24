@@ -4,15 +4,16 @@
  * horizontal legends, the legend's position (`x`/`y`, anchors, refs) and the margin it pushes.
  */
 import type { FullLayout, FullTrace } from '@mk7s/holochart-core';
-import type { TextFont, ViewportRect } from '@mk7s/holochart-render';
+import type { TextFont, TextRunLines, ViewportRect } from '@mk7s/holochart-render';
 import type { LegendGlyph, LegendItem, MarginPush } from '@mk7s/holochart-runtime';
 import {
   LINE_HEIGHT,
-  measureBlock,
+  measureStyled,
   plainText,
   styledText,
   textFont,
   type MeasureLine,
+  type StyledText,
   type TextBox,
 } from '../shared/text.ts';
 import { anchorFraction, anchoredMarginPush, type AnchoredBox } from '../shared/placement.ts';
@@ -36,6 +37,8 @@ export interface LegendEntry {
   key?: string;
   /** Item text (plain text, lines split on `\n`). */
   name: string;
+  /** The name as given, when it has rich-text markup (E2.10): drawn with its styles. */
+  markup?: string;
   group: string;
   rank: number;
   visible: boolean | 'legendonly';
@@ -87,6 +90,7 @@ export function legendEntries(
           index: trace._index,
           key: item.key,
           name: plainText(item.name),
+          ...markupOf(item.name),
           group,
           rank: rankOf(trace),
           visible: item.hidden ? 'legendonly' : true,
@@ -98,6 +102,7 @@ export function legendEntries(
     entries.push({
       index: trace._index,
       name: plainText(String(trace.name ?? '')),
+      ...markupOf(String(trace.name ?? '')),
       group: typeof trace['legendgroup'] === 'string' ? trace['legendgroup'] : '',
       rank: rankOf(trace),
       visible: trace.visible,
@@ -121,9 +126,16 @@ export function legendEntries(
   return ordered;
 }
 
+/** `{ markup }` for a name with tags or entities, else nothing (plain names stay plain). */
+function markupOf(name: string): { markup?: string } {
+  return /[<&]/.test(name) ? { markup: name } : {};
+}
+
 /** A laid-out item, relative to the legend's top-left corner. */
 export interface LegendItemBox {
   entry: LegendEntry;
+  /** The item's text as drawn (plain, or rich runs). */
+  text: StyledText;
   x: number;
   y: number;
   width: number;
@@ -141,7 +153,7 @@ export interface LegendBoxes {
   width: number;
   height: number;
   items: LegendItemBox[];
-  title: { text: string; font: TextFont; x: number; y: number } | undefined;
+  title: { text: string; font: TextFont; runs?: TextRunLines; x: number; y: number } | undefined;
 }
 
 /** Options for {@link layoutLegend}. */
@@ -179,13 +191,14 @@ export function layoutLegend(
   const grouped = legend.traceorder.includes('grouped');
   const glyphW = legend.itemwidth;
   const textOffset = legend.indentation + ITEM_GAP + glyphW + ITEM_GAP;
-  const measured = entries.map((e) => measureBlock(e.name, font, options.measure));
-
-  const { text: titleText, font: titleFont } = styledText(
-    legend.title.text,
-    textFont(legend.title.font),
+  const texts = entries.map((e) =>
+    e.markup !== undefined ? styledText(e.markup, font) : { text: e.name, font },
   );
-  const titleBox = measureBlock(titleText, titleFont, options.measure);
+  const measured = texts.map((t) => measureStyled(t, options.measure));
+
+  const titleStyled = styledText(legend.title.text, textFont(legend.title.font));
+  const { text: titleText, font: titleFont } = titleStyled;
+  const titleBox = measureStyled(titleStyled, options.measure);
   const hasTitle = titleText !== '';
   const titleSide = legend.title.side;
   const titleOnTop = hasTitle && titleSide.startsWith('top');
@@ -196,9 +209,18 @@ export function layoutLegend(
   let y = bw + ITEM_GAP + (titleOnTop ? titleBox.height + ITEM_GAP : 0);
   let width = 0;
 
-  const place = (e: LegendEntry, box: TextBox, x: number, yTop: number, w: number, h: number) => {
+  const place = (
+    e: LegendEntry,
+    text: StyledText,
+    box: TextBox,
+    x: number,
+    yTop: number,
+    w: number,
+    h: number,
+  ) => {
     const item: LegendItemBox = {
       entry: e,
+      text,
       x,
       y: yTop,
       width: w,
@@ -224,7 +246,7 @@ export function layoutLegend(
       if (grouped && prev && newGroup(prev, e)) y += legend.tracegroupgap;
       const h = itemHeight(box, legend.font.size);
       const w = textOffset + box.width + ITEM_GAP;
-      place(e, box, x0, y, w, h);
+      place(e, texts[i] as StyledText, box, x0, y, w, h);
       width = Math.max(width, x0 + w);
       y += h;
     });
@@ -252,7 +274,7 @@ export function layoutLegend(
       } else {
         x += gap;
       }
-      place(e, box, x, y, w, h);
+      place(e, texts[i] as StyledText, box, x, y, w, h);
       x += w;
       width = Math.max(width, x);
       rowH = Math.max(rowH, h);
@@ -262,7 +284,13 @@ export function layoutLegend(
 
   let title: LegendBoxes['title'];
   if (hasTitle) {
-    title = { text: titleText, font: titleFont, x: bw + ITEM_GAP, y: bw + ITEM_GAP };
+    title = {
+      text: titleText,
+      font: titleFont,
+      ...(titleStyled.runs ? { runs: titleStyled.runs } : {}),
+      x: bw + ITEM_GAP,
+      y: bw + ITEM_GAP,
+    };
     width = Math.max(width, bw + ITEM_GAP + titleBox.width + ITEM_GAP);
     if (titleLeft) y = Math.max(y, bw + ITEM_GAP + titleBox.height + ITEM_GAP);
   }

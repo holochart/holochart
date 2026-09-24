@@ -1,9 +1,10 @@
 import { mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
-import { expect, test, type Page, type TestInfo } from '@playwright/test';
-import { TEST_CONTAINER_ID, type ExampleTestResult } from '../../apps/sandbox/src/test-protocol.ts';
+import { expect, test, type TestInfo } from '@playwright/test';
+import type { ExampleTestResult } from '../../apps/sandbox/src/test-protocol.ts';
 import { comparePng, DEFAULT_TOLERANCE, type CompareResult } from './compare.ts';
 import { listExampleIds } from './examples.ts';
+import { BOOT_TIMEOUT_MS, openExample, parkPointer, screenshotExample } from './harness.ts';
 import { DIFF_REPORT_DIR, reportFileFor, type DiffRecord } from './report-data.ts';
 
 /**
@@ -11,8 +12,9 @@ import { DIFF_REPORT_DIR, reportFileFor, type DiffRecord } from './report-data.t
  *
  * Example ids come from the filesystem (Node can't evaluate the Vite registry). Each example is
  * its own test: open `?example=<id>&test=1` in the sandbox, await `window.__exampleReady`, and
- * screenshot the container. Meta (tolerance, `no-visual-test` tag) is read in the page, where the
- * sandbox has imported the module, so example code never runs in Node.
+ * screenshot the container (steps shared with the gallery generator in `harness.ts`). Meta
+ * (tolerance, `no-visual-test` tag) is read in the page, where the sandbox has imported the
+ * module, so example code never runs in Node.
  */
 const ROOT = path.resolve(import.meta.dirname, '../..');
 const EXAMPLES_DIR = path.join(ROOT, 'examples');
@@ -20,9 +22,6 @@ const VISUAL_DIR = path.join(ROOT, 'tests/visual');
 const BASELINES_DIR = path.join(VISUAL_DIR, '__baselines__');
 const ACTUAL_DIR = path.join(VISUAL_DIR, '__actual__');
 const DIFF_DIR = path.join(VISUAL_DIR, '__diff__');
-
-/** Time to wait for the sandbox to install `window.__exampleReady` (module graph compile). */
-const BOOT_TIMEOUT_MS = 30_000;
 
 const exampleIds = listExampleIds(EXAMPLES_DIR);
 
@@ -61,25 +60,6 @@ function recordDiff(testInfo: TestInfo, id: string, tolerance: number, c: Compar
   writeFile(reportFileFor(path.join(ROOT, DIFF_REPORT_DIR), id), JSON.stringify(record));
 }
 
-/** Opens the example in test mode and waits for it to render; retries once if Vite reloads. */
-async function openExample(page: Page, id: string): Promise<ExampleTestResult> {
-  const url = `/?example=${encodeURIComponent(id)}&test=1`;
-  for (let attempt = 1; ; attempt++) {
-    await page.goto(url, { waitUntil: 'load' });
-    try {
-      await page.waitForFunction(() => window.__exampleReady !== undefined, undefined, {
-        timeout: BOOT_TIMEOUT_MS,
-      });
-      return await page.evaluate(() => window.__exampleReady as Promise<ExampleTestResult>);
-    } catch (error) {
-      // Vite may reload the page once after optimizing a newly discovered dependency.
-      const message = error instanceof Error ? error.message : String(error);
-      const reloaded = /Execution context was destroyed|navigation/i.test(message);
-      if (!reloaded || attempt >= 2) throw error;
-    }
-  }
-}
-
 test('example registry matches the filesystem', async ({ page }) => {
   await page.goto('/?test=1');
   await page.waitForFunction(() => Array.isArray(window.__exampleIds), undefined, {
@@ -109,17 +89,10 @@ for (const id of exampleIds) {
     }
     test.skip(result.skipped, `"${id}" is tagged no-visual-test`);
 
-    // Park the pointer outside the example so hover-only UI (the modebar, hover labels) stays
-    // hidden. Headless Chromium's initial pointer position differs by platform: on Linux CI it
-    // starts over the page, so the modebar showed up in CI screenshots but not in macOS baselines.
-    const viewport = page.viewportSize();
-    if (viewport) await page.mouse.move(viewport.width - 1, viewport.height - 1);
-
-    const screenshot = await page.locator(`#${TEST_CONTAINER_ID}`).screenshot({
-      animations: 'disabled',
-      caret: 'hide',
-      scale: 'css',
-    });
+    // Shared with the gallery generator (tools/gallery-gen): pointer off the example, then the
+    // container screenshot at CSS size.
+    await parkPointer(page);
+    const screenshot = await screenshotExample(page);
 
     const baselinePath = path.join(BASELINES_DIR, `${id}.png`);
     const actualPath = path.join(ACTUAL_DIR, `${id}.png`);

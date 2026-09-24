@@ -13,6 +13,7 @@
     "build": "vitepress build",
     "preview": "vitepress preview",
     "lint:pages": "node scripts/lint-pages.ts",
+    "quality": "node --conditions=source scripts/quality.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {

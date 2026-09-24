@@ -20,6 +20,8 @@ describe('@mk7s/holochart bundle', () => {
       Holochart.prependTraces,
       Holochart.fromJSON,
       Holochart.chartToJSON,
+      Holochart.toImage,
+      Holochart.downloadImage,
       Holochart.purge,
       Holochart.supplyDefaults,
     ]) {

@@ -12,15 +12,31 @@
  * Everything here is pure and works in container px (top-left origin, y down, like Plotly's SVG),
  * with angles in Plotly's convention (see `calc.ts`). Text sizes come from the render layer's
  * synchronous metrics oracle, so placement is unit tested without a GPU.
+ *
+ * Labels and titles may be Plotly pseudo-HTML (E2.10): mixed styles become styled runs (see
+ * `shared/rich-text.ts`). With `layout.uniformtext` (E4.6), slice fonts are raised to `minsize`
+ * and every label is drawn at the size negotiated across the chart's pies ({@link PieTextLayout}).
  */
 import {
   isArrayLike,
   toRGBA,
+  uniformFontSize,
+  uniformTextOf,
+  uniformTextScale,
+  uniformTextSize,
   type FullLayout,
   type FullTrace,
   type RGBA,
+  type UniformText,
+  type UniformTextItem,
 } from '@mk7s/holochart-core';
-import { measureText, type TextFont, type TextFontWeight } from '@mk7s/holochart-render';
+import {
+  measureText,
+  type TextFont,
+  type TextFontWeight,
+  type TextRunLines,
+} from '@mk7s/holochart-render';
+import { labelContent, measureLabel, scaleRuns, type RichLabel } from '../shared/rich-text.ts';
 import { formatTemplate } from '../bar/template.ts';
 import { polar, sliceCenter, type PieCalc, type PieLayout, type PieSlice } from './calc.ts';
 import {
@@ -31,7 +47,6 @@ import {
   formatPieValue,
   getFirstFilled,
   isValidTextValue,
-  plainText,
 } from './helpers.ts';
 
 /** Plotly's `TEXTPAD` (bar constants): px kept between inside labels and the slice edge. */
@@ -200,9 +215,14 @@ export function textBox(text: string, font: TextFont): TextBox {
   return { width: m.width, height: m.height };
 }
 
-/** Size of the title block (Plotly's `prerenderTitles`). */
+/** Block size of a label (plain, or rich runs laid out as drawn), px (unrotated). */
+export function labelBox(label: Pick<RichLabel, 'text' | 'font' | 'runs'>): TextBox {
+  return measureLabel(label, LINE_HEIGHT);
+}
+
+/** Size of the title block (Plotly's `prerenderTitles`), pseudo-HTML resolved. */
 export function titleBlockSize(trace: FullTrace, text: string): TextBox {
-  return textBox(plainText(text), titleFont(trace).font);
+  return labelBox(labelContent(text, titleFont(trace).font));
 }
 
 // ---- Inside text (Plotly's transformInsideText) -------------------------------------------------
@@ -587,6 +607,8 @@ export interface PieLabel {
   readonly angle: number;
   /** Font with the fitted size. */
   readonly font: TextFont;
+  /** Styled runs at the fitted size (E2.10), when the label mixes styles. */
+  readonly runs?: TextRunLines;
   readonly color: RGBA;
   /** Index in `calc.slices`, or -1 for the title. */
   readonly slice: number;
@@ -604,6 +626,21 @@ export interface PieLeaderLine {
 export interface PieTextLayout {
   readonly labels: PieLabel[];
   readonly lines: PieLeaderLine[];
+  /**
+   * `uniformtext` (E4.6): `{ fontSize, scale }` of every slice label, hidden candidates included,
+   * for the size negotiated across pies (Plotly's `recordMinTextSize`); empty when off.
+   */
+  readonly items: readonly UniformTextItem[];
+  /** The uniform size the slice labels were drawn with (`undefined` when off). */
+  readonly uniformSize: number | undefined;
+}
+
+/** Options of {@link layoutPieText}. */
+export interface PieTextOptions {
+  /** `layout.uniformtext` to apply; default: the one of `fullLayout`. */
+  readonly uniformText?: UniformText;
+  /** The size negotiated across pies; default: this trace's own ({@link PieTextLayout.items}). */
+  readonly uniformSize?: number;
 }
 
 function orientationOf(trace: FullTrace): InsideOrientation {
@@ -618,6 +655,21 @@ function scaledFont(font: TextFont, scale: number): TextFont {
 }
 
 /**
+ * A label's content drawn at `scale` (≤ 1, as Plotly only ever scales text down): the scaled font
+ * and, for rich labels, runs scaled alike (their sizes and shifts are absolute px).
+ */
+function scaledContent(content: RichLabel, scale: number): { font: TextFont; runs?: TextRunLines } {
+  const font = scaledFont(content.font, scale);
+  if (!content.runs) return { font };
+  return { font, runs: scaleRuns(content.runs, font.size / content.font.size) };
+}
+
+function ensureFont(font: LabelFont, u: UniformText): LabelFont {
+  if (!u.mode) return font;
+  return { ...font, font: { ...font.font, size: uniformFontSize(font.font.size, u) } };
+}
+
+/**
  * Place every slice label and the title of a laid-out pie (Plotly's pie `plot` text part), in
  * container px. Hidden slices and slices without text get no label.
  */
@@ -625,11 +677,14 @@ export function layoutPieText(
   trace: FullTrace,
   calc: PieCalc,
   fullLayout: FullLayout,
+  options: PieTextOptions = {},
 ): PieTextLayout {
   const layout = calc.layout;
   const labels: PieLabel[] = [];
   const lines: PieLeaderLine[] = [];
-  if (!layout) return { labels, lines };
+  const items: UniformTextItem[] = [];
+  const u = options.uniformText ?? uniformTextOf(fullLayout);
+  if (!layout) return { labels, lines, items, uniformSize: undefined };
   const { r } = layout;
   const orientation = orientationOf(trace);
   const quadrants: LabelPoint[][][] = [
@@ -639,7 +694,7 @@ export function layoutPieText(
   const points: LabelPoint[] = [];
   const pending: {
     point: LabelPoint;
-    text: string;
+    content: RichLabel;
     box: TextBox;
     font: LabelFont;
     t: SliceTextTransform;
@@ -669,20 +724,26 @@ export function layoutPieText(
 
     const position = slicePosition(trace, slice);
     if (position === 'none') return;
-    const text = plainText(sliceText(trace, calc, slice));
-    if (!text) return;
-    let font =
+    const raw = sliceText(trace, calc, slice);
+    if (!raw) return;
+    // Plotly's `ensureUniformFontSize` (no-op without `uniformtext`), before the fit tests.
+    let font = ensureFont(
       position === 'outside'
         ? outsideFont(trace, slice, fullLayout)
-        : insideFont(trace, slice, fullLayout);
-    let box = textBox(text, font.font);
+        : insideFont(trace, slice, fullLayout),
+      u,
+    );
+    let content = labelContent(raw, font.font);
+    if (!content.text) return;
+    let box = labelBox(content);
     let t: SliceTextTransform;
     if (position === 'outside') t = transformOutsideText(box, point.pxmid);
     else {
       t = transformInsideText(box, { ...slice, ring: calc.ring }, r, orientation);
       if (position === 'auto' && t.scale < 1) {
-        font = outsideFont(trace, slice, fullLayout);
-        box = textBox(text, font.font);
+        font = ensureFont(outsideFont(trace, slice, fullLayout), u);
+        content = labelContent(raw, font.font);
+        box = labelBox(content);
         t = transformOutsideText(box, point.pxmid);
       }
     }
@@ -699,7 +760,9 @@ export function layoutPieText(
       point.xLabelMin = targetX - box.width / 2;
       point.xLabelMax = targetX + box.width / 2;
     }
-    pending.push({ point, text, box, font, t: { ...t, x: targetX, y: targetY }, slice });
+    pending.push({ point, content, box, font, t: { ...t, x: targetX, y: targetY }, slice });
+    // Plotly records every slice label, squeezed-out ones included (hidden candidates).
+    if (u.mode) items.push({ fontSize: content.font.size, scale: t.scale });
   });
 
   if (pending.some((p) => p.t.outside)) {
@@ -707,30 +770,35 @@ export function layoutPieText(
     fitOutsideLabels(points, layout);
   }
 
-  for (const { point, text, font, t, slice } of pending) {
-    if (!(t.scale > 0)) continue;
+  const uniformSize = u.mode ? (options.uniformSize ?? uniformTextSize(items, u)) : undefined;
+  pending.forEach(({ point, content, font, t, slice }, k) => {
+    // Plotly's `resizeText`: every label at the uniform size, hidden candidates dropped in `hide`.
+    const scale = u.mode ? uniformTextScale(items[k]!, uniformSize, u) : t.scale;
+    if (!(scale > 0)) return;
+    const drawn = scaledContent(content, scale);
     labels.push({
-      text,
+      text: content.text,
       x: t.x! + (t.outside ? point.labelExtraX : 0),
       y: t.y! + (t.outside ? point.labelExtraY : 0),
       anchorX: 'center',
       anchorY: 'middle',
       angle: t.rotate,
-      font: scaledFont(font.font, t.scale),
+      font: drawn.font,
+      ...(drawn.runs ? { runs: drawn.runs } : {}),
       color: font.color,
       slice: point.index,
       outside: t.outside === true,
     });
-    if (!t.outside) continue;
+    if (!t.outside) return;
     const line = leaderLine(point);
-    if (!line) continue;
+    if (!line) return;
     const lineFont = outsideFont(trace, slice, fullLayout);
     lines.push({ points: line, color: lineFont.color, width: Math.min(2, lineFont.font.size / 8) });
-  }
+  });
 
   const title = titleLabel(trace, calc, layout);
   if (title) labels.push(title);
-  return { labels, lines };
+  return { labels, lines, items, uniformSize };
 }
 
 /**
@@ -744,8 +812,8 @@ export function titleLabel(trace: FullTrace, calc: PieCalc, layout: PieLayout): 
   if (!text) return null;
   const position = typeof title?.['position'] === 'string' ? title['position'] : 'top center';
   const { font, color } = titleFont(trace);
-  const plain = plainText(text);
-  const box = calc.titleBox ?? textBox(plain, font);
+  const content = labelContent(text, font);
+  const box = calc.titleBox ?? labelBox(content);
   if (!(box.width > 0 && box.height > 0)) return null;
   const { cx, cy, r } = layout;
   const hole = 1 - calc.ring;
@@ -753,13 +821,13 @@ export function titleLabel(trace: FullTrace, calc: PieCalc, layout: PieLayout): 
     const scale = (hole * r * 2) / Math.hypot(box.width, box.height);
     if (!(scale > 0)) return null;
     return {
-      text: plain,
+      text: content.text,
       x: cx,
       y: cy,
       anchorX: 'center',
       anchorY: 'middle',
       angle: 0,
-      font: scaledFont(font, scale),
+      ...scaledContent(content, scale),
       color,
       slice: -1,
       outside: false,
@@ -791,13 +859,13 @@ export function titleLabel(trace: FullTrace, calc: PieCalc, layout: PieLayout): 
   const scale = Math.min(maxWidth / box.width, space / box.height);
   if (!(scale > 0)) return null;
   return {
-    text: plain,
+    text: content.text,
     x,
     y,
     anchorX,
     anchorY,
     angle: 0,
-    font: scaledFont(font, scale),
+    ...scaledContent(content, scale),
     color,
     slice: -1,
     outside: true,

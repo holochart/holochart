@@ -47,6 +47,14 @@
  * label is decorated. That module is loaded on demand like the engine (few charts underline text,
  * and it would otherwise add to every page's initial chunk).
  *
+ * ## Rich text (E2.10)
+ *
+ * A label with `runs` (lines of styled runs, e.g. from core's `richTextLines`) is drawn as one
+ * member per non-blank run, typeset with its origin on its baseline and placed relative to the
+ * label anchor by text-runs.ts (measured with the metrics oracle, per face), rotating with the
+ * label. Members stay pooled and keyed like plain labels, and each run's face (bold, italic) is
+ * loaded only when some run uses it. Plain labels keep the single-member path unchanged.
+ *
  * ## Lazy engine (plan E21.5)
  *
  * troika is loaded on demand (text-engine.ts): a primitive loads it when it first gets labels, so
@@ -87,8 +95,8 @@ import {
   batchedColorChannel,
   clampAlpha,
   computeLabelPlacement,
-  labelFontRequest,
-  resolveTextLabel,
+  labelFontRequests,
+  resolveTextLabelMembers,
   TEXT_DEFAULT_FONT,
   worldPerPixel,
   type FontURLResolver,
@@ -120,6 +128,24 @@ export type {
 } from './text-layout.ts';
 export { TEXT_DEFAULT_FONT } from './text-layout.ts';
 export { preloadTextEngine } from './text-engine.ts';
+export type {
+  TextLink,
+  TextRun,
+  TextRunBase,
+  TextRunLayout,
+  TextRunLayoutItem,
+  TextLinkPointerEvent,
+  TextRunLines,
+} from './text-runs.ts';
+export {
+  fadeTextRuns,
+  handleTextLinkPointer,
+  layoutTextRuns,
+  openTextLink,
+  scaleTextRuns,
+  textLinkAt,
+  textRunFont,
+} from './text-runs.ts';
 
 /** Data for {@link TextPrimitive}. */
 export interface TextData {
@@ -461,9 +487,9 @@ export class TextPrimitive implements Primitive<TextData> {
     if (!this.usesDefaultFont || !defaultFontFacesPending(retryFailed)) return null;
     const requests = new Map<string, TextFontRequest>();
     for (const label of data.labels) {
-      if (label.text == null || label.text === '') continue;
-      const r = labelFontRequest(label, data.style);
-      requests.set(`${r.style}|${r.weight}|${r.family}`, r);
+      for (const r of labelFontRequests(label, data.style)) {
+        requests.set(`${r.style}|${r.weight}|${r.family}`, r);
+      }
     }
     return requests.size > 0 ? loadDefaultFontFaces(requests.values(), { retryFailed }) : null;
   }
@@ -510,9 +536,11 @@ export class TextPrimitive implements Primitive<TextData> {
   /** Resolve labels, reuse/pool members, and apply layout + paint. Returns true if a sync is due. */
   private syncLabels(batch: BatchedText, data: TextData): boolean {
     const labels = data.labels;
-    const resolved = labels.map((label) =>
-      resolveTextLabel(label, data.style, this.metrics, this.resolveFont),
-    );
+    // One member per plain label, one per run of a rich label (E2.10).
+    const resolved: ResolvedTextLabel[] = [];
+    for (let i = 0; i < labels.length; i++) {
+      resolveTextLabelMembers(labels[i]!, data.style, this.metrics, this.resolveFont, i, resolved);
+    }
     const candidates = this.members.concat(this.pool);
     const { slot, resync } = assignLabelSlots(
       candidates.map((m) => m.key),
@@ -635,7 +663,8 @@ export class TextPrimitive implements Primitive<TextData> {
     for (let i = 0; i < members.length; i++) {
       const text = members[i]!.text;
       const r = resolved[i]!;
-      tmpBase.set(world[i * 3]!, world[i * 3 + 1]!, world[i * 3 + 2]!);
+      const w = r.owner * 3;
+      tmpBase.set(world[w]!, world[w + 1]!, world[w + 2]!);
       let s = unitScale;
       if (perspective) {
         const viewZ = tmpView.copy(tmpBase).applyMatrix4(perspective.view).z;
@@ -646,7 +675,17 @@ export class TextPrimitive implements Primitive<TextData> {
         text.position.copy(tmpBase);
         text.scale.setScalar(0);
       } else {
-        computeLabelPlacement(placement, tmpBase, r.offsetX, r.offsetY, r.rotation, orientation, s);
+        computeLabelPlacement(
+          placement,
+          tmpBase,
+          r.offsetX,
+          r.offsetY,
+          r.rotation,
+          orientation,
+          s,
+          r.localX,
+          r.localY,
+        );
         text.position.copy(placement.position);
         text.quaternion.copy(placement.quaternion);
         text.scale.copy(placement.scale);

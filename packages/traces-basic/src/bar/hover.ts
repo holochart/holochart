@@ -93,12 +93,15 @@ export function barHoverPoints(
   if (hits.length === 0) return [];
 
   const style = barStyle(trace, calc.length, null, ctx.fullLayout);
+  // With a `base`, the size-axis value is where the bar ends, not its length (Plotly's
+  // `trace.base ? di.b + di.s : di.s`): a Gantt bar on a date axis reports its finish date.
+  const withBase = Boolean(trace['base']);
   return hits.map(({ i, distance }) => {
     const c = bars.center[i]! * pm + pb;
     const end = calc.s1[i]! * sm + sb;
     const { values, posLetter } = barValues(trace, calc, i);
     const position = coordinateAt(trace, posLetter, i);
-    const size = bars.value[i];
+    const size = withBase ? bars.base[i]! + bars.value[i]! : bars.value[i];
     const hovertext = stringAt(trace['hovertext'], i) || stringAt(trace['text'], i);
     const point: HoverPoint = {
       pointIndex: i,

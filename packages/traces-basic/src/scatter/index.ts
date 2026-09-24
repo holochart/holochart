@@ -17,6 +17,7 @@ import { scatterCrossTraceCalc } from './cross-trace.ts';
 import { supplyScatterDefaults } from './defaults.ts';
 import { scatterHoverPoints, scatterLegendIcon, scatterSelectPoints } from './interaction.ts';
 import { scatterRenderer } from './plot.ts';
+import { describeScatter } from './describe.ts';
 
 export const scatter: TraceModule<ScatterCalc, typeof scatterAttributes.children> = {
   type: 'scatter',
@@ -43,6 +44,7 @@ export const scatter: TraceModule<ScatterCalc, typeof scatterAttributes.children
   selectPoints: (calc, trace, query) => scatterSelectPoints(calc, trace, query),
   legendIcon: scatterLegendIcon,
   colorbar: scatterColorbar,
+  describe: describeScatter,
 };
 
 export { scatterAttributes, SCATTER_SYMBOLS, LINE_SHAPES, FILL_MODES } from './attributes.ts';

@@ -202,6 +202,7 @@ exports[`built-in themes (E8.1) > holochart: layout values snapshot 1`] = `
     "bar",
     "pie",
     "scatter",
+    "table",
   ],
   "font": {
     "color": "#a4a7b5",
@@ -265,6 +266,7 @@ exports[`built-in themes (E8.1) > holochart-dark: layout values snapshot 1`] = `
     "bar",
     "pie",
     "scatter",
+    "table",
   ],
   "font": {
     "color": "#a4a7b5",

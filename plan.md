@@ -592,12 +592,12 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] **Font metrics oracle:** synchronous text measurement for the layout stage (cached per font/size)
 - [x] Billboard mode for 3D (always faces the camera) and fixed-orientation mode
 
-#### E2.10 — Rich text (Plotly pseudo-HTML)   `P1` `M`   deps: E2.9
+#### E2.10 — Rich text (Plotly pseudo-HTML)   `P1` `M`   deps: E2.9   · 🟡 Partial (M2 wave 2)
 > As a developer, I want `<b>`, `<i>`, `<br>`, `<sup>`, `<sub>`, `<span style="...">`, and `<a href>` in titles, labels, and hover text, so that my existing Plotly strings render correctly.
-- [ ] Parser for the Plotly tag subset → styled runs → multi-run layout
-- [ ] Links are clickable and open with `target` honored. Sanitized (no `javascript:` URLs).
-- [ ] Optional MathJax/KaTeX-rendered LaTeX via texture (`$...$`), `P3`
-- [ ] Scatter/bar `text` labels: today `<b>`/`<i>` are stripped (plain text); render them per run like titles and annotations (found in M1 wave 3)
+- [x] Parser for the Plotly tag subset → styled runs → multi-run layout — core `text/richtext.ts` (follows plotly.js `svg_text_utils`), runs measured per face and drawn as batch members; titles, legend, ticks, annotations, shape labels, scatter/bar/pie text and DOM hover
+- [x] Links are clickable and open with `target` honored. Sanitized (no `javascript:` URLs). — http(s)/mailto/relative only; a link click doesn't zoom or toggle the legend
+- [ ] Optional MathJax/KaTeX-rendered LaTeX via texture (`$...$`), `P3` — *deferred (P3)*
+- [x] Scatter/bar `text` labels: today `<b>`/`<i>` are stripped (plain text); render them per run like titles and annotations (found in M1 wave 3)
 
 #### E2.11 — Mesh primitive & lit materials   `P0` `M`   deps: E2.3
 > As a contributor, I want an indexed mesh primitive with per-vertex color/intensity and configurable lighting, so that surface, mesh3d, isosurface, and extruded 2D shapes share it.
@@ -746,9 +746,9 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] Domain resolution from `grid` row/column
 - [x] Aspect-preserving fit (pies stay circular) — `domainRect`, `fitAspect`, `inscribedCircle`; domain traces get a hover path and per-label legend items (runtime contract)
 
-#### E4.6 — Uniform text sizing   `P1` `S`   deps: E2.9
+#### E4.6 — Uniform text sizing   `P1` `S`   deps: E2.9   · 🟡 Partial (M2 wave 2)
 > As a designer, I want `uniformtext.{minsize, mode: 'hide' | 'show'}`, so that labels inside bars and pie slices have a consistent size.
-- [ ] Cross-trace text size negotiation for bar, pie, funnel, treemap, sunburst, and icicle
+- [ ] Cross-trace text size negotiation for bar, pie, funnel, treemap, sunburst, and icicle — bar and pie done (`layout.uniformtext`, shared per chart); funnel, treemap, sunburst, icicle with their traces
 
 ---
 
@@ -1101,18 +1101,18 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] `depth`, `tilt`, `bevel`, per-slice `depth` (arrayOk for "height-encoded" pies)
 - [ ] Docs includes a data-viz caveat on 3D pie perception
 
-#### E9.13 — `table`   `P1` `L`   deps: E2.7, E2.9
+#### E9.13 — `table`   `P1` `L`   deps: E2.7, E2.9   · 🟡 Partial (M2 wave 2)
 > As a developer, I want data tables inside figures, so that I can show exact values next to charts.
-- [ ] `header` and `cells` with `values`, `format`, `prefix`, `suffix`, `align`, `line.{color, width}`, `fill.color`, `font`, `height` (all arrayOk per column/row)
-- [ ] `columnwidth`, `columnorder` (drag to reorder), `domain`
-- [ ] Virtualized scrolling (only visible rows are laid out) for 100k rows
-- [ ] Rich text in cells. Hidden DOM `<table>` mirror for accessibility and copy-paste.
+- [x] `header` and `cells` with `values`, `format`, `prefix`, `suffix`, `align`, `line.{color, width}`, `fill.color`, `font`, `height` (all arrayOk per column/row) — per-column/per-row styling as Plotly; dark defaults in the `holochart` template
+- [x] `columnwidth`, `columnorder` (drag to reorder), `domain` — header drag emits `restyle({ columnorder })`
+- [x] Virtualized scrolling (only visible rows are laid out) for 100k rows — wheel, drag and scrollbar; the chart never zooms under a table
+- [ ] Rich text in cells. Hidden DOM `<table>` mirror for accessibility and copy-paste. — accessible table via `describe()` done; rich text in cells not wired yet (cells strip tags)
 
-#### E9.14 — Gantt / timeline   `P1` `M`   deps: E9.8, E3.5
+#### E9.14 — Gantt / timeline   `P1` `M`   deps: E9.8, E3.5   · ✅ Done (M2 wave 2)
 > As a project manager, I want Gantt charts, so that I can visualize schedules.
-- [ ] Horizontal `bar` with `base` = start date and length = duration in ms (date-axis-aware widths)
-- [ ] Helper `Holochart.timeline({ tasks: [{ task, start, end, resource }] , colorBy })` (like `px.timeline`)
-- [ ] Recipes: milestones (diamond markers), dependencies (annotations with arrows), today line (vline)
+- [x] Horizontal `bar` with `base` = start date and length = duration in ms (date-axis-aware widths) — hover now shows base + length like Plotly
+- [x] Helper `Holochart.timeline({ tasks: [{ task, start, end, resource }] , colorBy })` (like `px.timeline`) — `timeline({ data, xStart, xEnd, y, color })` like `px.timeline`
+- [x] Recipes: milestones (diamond markers), dependencies (annotations with arrows), today line (vline) — `examples/gantt/`
 
 ---
 
@@ -1544,11 +1544,11 @@ Customization is a **cascade**. Each layer overrides the one above it:
 **Goal:** Charts that people using assistive technology can use, and that work in any locale.
 **Milestone:** M2 baseline, M7 complete
 
-#### E17.1 — Accessible DOM mirror   `P0` `M`   deps: E2.1
+#### E17.1 — Accessible DOM mirror   `P0` `M`   deps: E2.1   · ✅ Done (M2 wave 2)
 > As a screen-reader user, I want the chart described in the DOM, so that I can understand it.
-- [ ] Container `role="img"` (static) or `role="application"` (interactive), with `aria-label` from `layout.title` + an auto summary
-- [ ] Visually-hidden structured description: chart type, axes and ranges, trace names, point counts
-- [ ] `layout.meta.description` / `config.ariaLabel` overrides
+- [x] Container `role="img"` (static) or `role="application"` (interactive), with `aria-label` from `layout.title` + an auto summary — `role="figure"` for interactive charts instead of `application` (keeps screen-reader browse mode until keyboard navigation lands, E6.5/E17.4); `img` for static
+- [x] Visually-hidden structured description: chart type, axes and ranges, trace names, point counts — per-trace `describe()` summaries and hidden tables (≤ 100 rows); range changes debounced
+- [x] `layout.meta.description` / `config.ariaLabel` overrides
 
 #### E17.2 — Auto-generated chart summaries   `P1` `M`   deps: E17.1
 > As a screen-reader user, I want an automatic summary of trends and extremes, so that I get the gist without exploring every point.
@@ -1581,11 +1581,11 @@ Customization is a **cascade**. Each layer overrides the one above it:
 **Goal:** Get charts out (images, vectors, JSON) and in (Plotly figures, frameworks, notebooks).
 **Milestone:** M2 (image, JSON), M7 (rest)
 
-#### E18.1 — Raster export   `P0` `M`   deps: E2.2
+#### E18.1 — Raster export   `P0` `M`   deps: E2.2   · ✅ Done (M2 wave 2)
 > As a developer, I want `toImage` and `downloadImage`, so that users can save charts.
-- [ ] `toImage({ format: 'png' | 'jpeg' | 'webp', width, height, scale, transparent })` renders to an offscreen target at the requested size (not a screenshot of the canvas)
-- [ ] Includes DOM-rendered parts (modebar excluded, DOM tooltips excluded, updatemenus optional)
-- [ ] Modebar camera button uses `config.toImageButtonOptions`
+- [x] `toImage({ format: 'png' | 'jpeg' | 'webp', width, height, scale, transparent })` renders to an offscreen target at the requested size (not a screenshot of the canvas) — renders a detached static copy at the requested size and scale; lazy-loaded
+- [x] Includes DOM-rendered parts (modebar excluded, DOM tooltips excluded, updatemenus optional) — modebar and hover labels excluded
+- [x] Modebar camera button uses `config.toImageButtonOptions`
 
 #### E18.2 — Vector export (SVG/PDF)   `P2` `XL` → split before starting   deps: E2.4–E2.9
 > As a publisher, I want SVG/PDF export of 2D charts, so that I can use them in print.
@@ -1720,11 +1720,11 @@ docs/
 - [x] Sections: **Overview** (what and when to use) → **Minimal example** → **Data format** → **Variations** (≥ 4 examples) → **Styling** → **Interactivity** → **3D-native options** (where applicable) → **Performance notes** → **Accessibility notes** → **Attribute reference link** → **Related charts** → **Plotly migration notes**
 - [ ] Page lint in CI: required sections present, ≥ 5 examples, every example renders without console errors — *deferred: sections and ≥ 5 examples enforced for `complete` pages; the render-without-console-errors check is not written*
 
-#### E19.5 — Gallery generation   `P0` `M`   deps: E19.2, E20.3
+#### E19.5 — Gallery generation   `P0` `M`   deps: E19.2, E20.3   · ✅ Done (M2 wave 2)
 > As a user, I want a visual gallery of every example, so that I can browse by looks.
-- [ ] `tools/gallery-gen` uses Playwright to render every example → `thumbnails/*.webp` (light and dark)
-- [ ] The same run produces visual regression baselines (E20.3). One pipeline, two outputs.
-- [ ] Gallery page filterable by category, tag, trace type, and "3D-native"
+- [x] `tools/gallery-gen` uses Playwright to render every example → `thumbnails/*.webp` (light and dark) — WebP via canvas re-encode (no new deps); thumbnails committed (`pnpm gallery`, checked in CI by `gallery:check`)
+- [x] The same run produces visual regression baselines (E20.3). One pipeline, two outputs. — shared harness (`tests/visual/harness.ts`); thumbnails and baselines come from the same rendering code
+- [x] Gallery page filterable by category, tag, trace type, and "3D-native" — `/gallery/` with search, filters and a live example dialog
 
 #### E19.6 — Playground   `P1` `L`   deps: E19.2
 > As a developer, I want a live editor, so that I can experiment and share.
@@ -1747,11 +1747,11 @@ docs/
 - [ ] "Your first chart", "Build a dashboard", "Real-time streaming chart", "From Plotly to Holochart", "Your first 3D surface", "Theming for your brand", "Write a custom trace"
 - [ ] Each tutorial is tested end to end (code blocks extracted and executed in CI)
 
-#### E19.10 — Docs quality gates   `P0` `M`   deps: E19.3
+#### E19.10 — Docs quality gates   `P0` `M`   deps: E19.3   · 🟡 Partial (M2 wave 2)
 > As a maintainer, I want CI to enforce docs completeness, so that docs never lag behind code.
-- [ ] **Docs coverage report:** % of attributes with non-empty descriptions (must be 100%), % of attributes used in at least one example (target ≥ 70%), trace types with ≥ 5 examples (must be 100%)
-- [ ] Code snippets in markdown are type-checked (`twoslash`) and executed headlessly
-- [ ] Link checker. Spell checker with a project dictionary.
+- [x] **Docs coverage report:** % of attributes with non-empty descriptions (must be 100%), % of attributes used in at least one example (target ≥ 70%), trace types with ≥ 5 examples (must be 100%) — descriptions 100% (hard), examples per released type (hard), attributes used in examples 34.8% (report only; target 70%)
+- [x] Code snippets in markdown are type-checked (`twoslash`) and executed headlessly — extracted and type-checked with `tsc` (no twoslash); not executed yet
+- [ ] Link checker. Spell checker with a project dictionary. — internal links checked (hard); spell check is a typo list only; external links reported, not fetched
 
 #### E19.11 — LLM-friendly docs   `P2` `S`   deps: E19.3
 > As a developer using AI assistants, I want `llms.txt` and a single-file markdown export of the reference, so that coding assistants give accurate answers about Holochart.
@@ -1839,7 +1839,7 @@ docs/
 - [ ] Keep the bar schema out of the scatter partial (`/* @__PURE__ */` on top-level schema objects, or per-module output — ADR-015 impact)
 - [ ] Decide whether `Chart#toJSON` should stay a method (always bundles the 2.3 kB serializer) or delegate to a lazily imported module
 - [ ] Draw annotation boxes and arrowheads without the general fill path (earcut + self-intersection, 7.4 kB in `basic`)
-- [ ] Code-split render's ESM build so the fill primitive and exact-fill code (~8 kB) load only for traces with `fill` (decided after M2 wave 1, when budgets were raised to 142 / 212 kB)
+- [ ] Code-split render's ESM build so the fill primitive and exact-fill code (~8 kB) load only for traces with `fill` (decided after M2 wave 1, when budgets were raised to 142 / 212 kB; raised again to 153 / 234 kB after M2 wave 2)
 
 ---
 
@@ -1987,7 +1987,7 @@ parallel workstreams with separate files, shared contracts first).
 | 1 | Shapes, layout images (components, image primitive) | E5.5, E5.6 ✅ |
 | 1 | Themes, color system, fonts (themes package, core palettes, text) | E8.1, E8.2, E8.3 ✅ |
 | 1b | Default look: dark dense `holochart` template, shipped TeX Gyre Heros font, examples and docs restyled (owner decision) | E8.1, E2.18, ADR-021 |
-| 2 | Rich text, uniform text; table, Gantt; accessibility, raster export; gallery, docs gates, new chart pages | E2.10, E4.6, E9.13, E9.14, E17.1, E18.1, E19.5, E19.10 |
+| 2 | Rich text, uniform text; table, Gantt; accessibility, raster export; gallery, docs gates, new chart pages | E2.10, E4.6, E9.13, E9.14, E17.1, E18.1, E19.5, E19.10 ✅ |
 
 Open after wave 0: one full-suite run failed `schema-properties` › "produces full output that is
 itself valid input" (supplyDefaults on invalid figures). It did not reproduce in 12 further full
@@ -2008,6 +2008,11 @@ log ticks label only powers of ten and drop `ticksuffix`; `makeSubplots` subplot
 16 px; on touch devices the modebar stays visible over the top-left legend; title vs multi-row
 legend overlap (ADR-021); `<b>` in annotations styles only the whole string (E2.10); the example
 registry treats every `.ts` file as an example (shared demo code lives in `.mts` files).
+
+Open after wave 2: rich text inside table cells; check that table clipping (a GL scissor per
+primitive, since overlay viewports don't clip) is right in raster export; four scatter containers
+(`selected`/`unselected` `.marker`/`.textfont`) have no descriptions; attributes used in examples
+are at 34.8% (target 70%); markdown snippets are type-checked but not executed.
 
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 

@@ -159,7 +159,9 @@ All line shapes, dash styles, and `connectgaps` on the same eight points:
 
   ```ts
   // Append one point to traces 0 and 1, keeping the last 10,000 of each.
-  await chart.extendTraces({ x: [[t], [t]], y: [[a], [b]] }, [0, 1], 10_000);
+  function onSample(t: number, a: number, b: number) {
+    return chart.extendTraces({ x: [[t], [t]], y: [[a], [b]] }, [0, 1], 10_000);
+  }
   ```
 
   `prependTraces` adds points at the start. Both emit a `redraw` event once drawn.

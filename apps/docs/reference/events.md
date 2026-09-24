@@ -9,7 +9,9 @@ status: draft
 Subscribe to chart events with `chart.on` and unsubscribe with `chart.off`:
 
 ```ts
-function onClick(event: ClickEvent) {
+import type { PointerEventData } from '@mk7s/holochart';
+
+function onClick(event: PointerEventData) {
   for (const point of event.points) {
     console.log(point.curveNumber, point.pointNumber, point.x, point.y);
   }

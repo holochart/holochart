@@ -11,7 +11,14 @@ import type { TextAnchorX, TextAnchorY } from '@mk7s/holochart-render';
 import type { RGBA } from '@mk7s/holochart-render';
 import type { AxisInfo } from '@mk7s/holochart-runtime';
 import type { LabelItem } from '../axes/geometry.ts';
-import { measureBlock, rgba, styledText, textFont, type MeasureLine } from '../shared/text.ts';
+import {
+  fadeRuns,
+  measureStyled,
+  rgba,
+  styledText,
+  textFont,
+  type MeasureLine,
+} from '../shared/text.ts';
 import type { FullAnnotation } from './schema.ts';
 
 const DEG = Math.PI / 180;
@@ -447,8 +454,9 @@ export function annotationGeometry(
   const tail = { x: tx + sx, y: ty + sy };
 
   // Text box.
-  const { text, font } = styledText(a.text, textFont(a.font));
-  const tb = measureBlock(text, font, env.measure);
+  const styled = styledText(a.text, textFont(a.font));
+  const { text, font } = styled;
+  const tb = measureStyled(styled, env.measure);
   const innerW = a.width ?? tb.width;
   const innerH = a.height ?? tb.height;
   const pad = a.borderwidth + a.borderpad;
@@ -491,6 +499,7 @@ export function annotationGeometry(
       font,
       color: faded(rgba(a.font.color, [0, 0, 0, 1]), opacity),
       align: a.align,
+      ...(styled.runs ? { runs: fadeRuns(styled.runs, opacity) } : {}),
     };
   }
   const arrowGeo = arrow

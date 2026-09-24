@@ -27,13 +27,14 @@ import type {
   ComponentDrawContext,
   ComponentLayoutContext,
   ComponentModule,
+  ComponentPointerEvent,
   ComponentUpdatePlan,
   ComponentView,
   SubplotInfo,
 } from '@mk7s/holochart-runtime';
 import { overlayTransform, rectTransform } from '../shared/host.ts';
 import { BELOW_TRACES_ORDER, DashBatch, RectBatch, TextBatch } from '../shared/batches.ts';
-import { oracleMeasure, type MeasureLine } from '../shared/text.ts';
+import { handleLinkPointer, oracleMeasure, type MeasureLine } from '../shared/text.ts';
 import {
   axisGeometry,
   axisTicks,
@@ -230,6 +231,11 @@ class AxesView implements ComponentView {
         batch.set(items, sp.viewport.size.pixelRatio);
       }
     }
+  }
+
+  /** Links in tick labels and axis titles (E2.10). */
+  handlePointer(event: ComponentPointerEvent): boolean {
+    return handleLinkPointer(event, this.#text.linkAt(event.x, event.y));
   }
 
   dispose(): void {

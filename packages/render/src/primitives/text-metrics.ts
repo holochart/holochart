@@ -98,6 +98,11 @@ export interface FontMetricsOracle {
   readonly measurer: TextMeasurer;
   /** Width in px of the widest line of `text` (trailing whitespace excluded). */
   measureWidth(text: string, font: TextFont): number;
+  /**
+   * Advance width in px of one line of `text`, trailing whitespace included: where the next run
+   * of a rich-text line starts (E2.10). `text` must not contain `\n`.
+   */
+  measureAdvance(text: string, font: TextFont): number;
   /** Width, vertical metrics, and block height. `lineHeight` is a multiple of the font size. */
   measureText(text: string, font: TextFont, lineHeight?: number): MeasuredText;
   /**
@@ -371,9 +376,16 @@ export function createFontMetricsOracle(options: FontMetricsOracleOptions = {}):
     return parts.slice(0, lo).join('').trimEnd() + ellipsis;
   };
 
+  const measureAdvance = (text: string, font: TextFont): number => {
+    const [face, faceKey] = resolve(font);
+    const [drawnText, size] = drawn(text, font);
+    return unitWidth(drawnText, face, faceKey) * size;
+  };
+
   return {
     measurer,
     measureWidth,
+    measureAdvance,
     measureText(text, font, lineHeight = TEXT_DEFAULT_LINE_HEIGHT) {
       const v = vertical(font);
       // The size scale of a variant applies to everything troika draws, line advance included.

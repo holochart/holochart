@@ -114,9 +114,9 @@ React:
 
 ```tsx
 import { useEffect, useRef } from 'react';
-import { createChart, type Figure } from '@mk7s/holochart';
+import { createChart, type FigureInput } from '@mk7s/holochart';
 
-export function Chart({ figure }: { figure: Figure }) {
+export function Chart({ figure }: { figure: FigureInput }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

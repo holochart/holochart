@@ -11,6 +11,8 @@ The Express API (`@mk7s/holochart-express`) is a high-level layer modeled on `pl
 takes tabular data and column mappings and builds a full figure in one call. This page will be its
 reference and tutorial.
 
+<!-- docs-gates: no-typecheck (the package does not exist yet) -->
+
 ```ts
 import hx from '@mk7s/holochart-express';
 

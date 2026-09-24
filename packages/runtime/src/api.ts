@@ -3,7 +3,14 @@
  * living in `el` (see `getChart`). All of them return a promise that resolves after render.
  */
 import { isPlainObject, type FigureInput } from '@mk7s/holochart-core';
-import { createChart, getChart, type Chart, type ChartOptions } from './chart.ts';
+import {
+  createChart,
+  figureExportSource,
+  getChart,
+  type Chart,
+  type ChartOptions,
+} from './chart.ts';
+import type { DownloadImageOptions, ToImageOptions } from './export/types.ts';
 import type { AttributeUpdate, MaxPoints, StreamUpdate } from './plan.ts';
 
 type TraceIndices = number | readonly number[];
@@ -148,4 +155,49 @@ export const Fx = { hover, unhover } as const;
 /** Destroy the chart in `el` (if any) and free everything it holds. */
 export function purge(el: HTMLElement): void {
   getChart(el)?.destroy();
+}
+
+function isElement(value: unknown): value is HTMLElement {
+  return (
+    typeof value === 'object' && value !== null && (value as { nodeType?: unknown }).nodeType === 1
+  );
+}
+
+/**
+ * Plotly's `toImage`: render the chart in `el` — or a figure object (`{ data, layout, config }`),
+ * drawn offscreen without a chart on the page — to an image. Resolves to a data URL. See
+ * {@link Chart.toImage} for the options (`format`, `width`, `height`, `scale`, `transparent`).
+ *
+ * @example
+ * ```ts
+ * const url = await toImage(el, { format: 'jpeg', width: 800, height: 400 });
+ * const url2 = await toImage({ data, layout }, { scale: 2 }); // no chart needed
+ * ```
+ */
+export function toImage(
+  target: HTMLElement | FigureInput,
+  options: ToImageOptions = {},
+  chartOptions?: ChartOptions,
+): Promise<string> {
+  return call(() => {
+    if (isElement(target)) return chartIn(target, 'toImage').toImage(options);
+    const source = figureExportSource(target, document, chartOptions);
+    return import('./export/image.ts').then((m) => m.renderImage(source, options));
+  });
+}
+
+/**
+ * Plotly's `downloadImage`: {@link toImage} and save the file as `<filename>.<format>` (default
+ * `newplot.png`). Resolves to the file name.
+ */
+export function downloadImage(
+  target: HTMLElement | FigureInput,
+  options: DownloadImageOptions = {},
+  chartOptions?: ChartOptions,
+): Promise<string> {
+  return call(() => {
+    if (isElement(target)) return chartIn(target, 'downloadImage').downloadImage(options);
+    const source = figureExportSource(target, document, chartOptions);
+    return import('./export/image.ts').then((m) => m.downloadImage(source, options));
+  });
 }

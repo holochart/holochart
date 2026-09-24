@@ -18,6 +18,7 @@ import {
   type TextFontWeight,
 } from './text-fonts.ts';
 import { TEXT_DEFAULT_LINE_HEIGHT, type FontMetricsOracle } from './text-metrics.ts';
+import { layoutTextRuns, textRunFont, type TextRunLines } from './text-runs.ts';
 import {
   hasDecorationLines,
   parseLinePosition,
@@ -102,11 +103,18 @@ export interface TextStyle {
 
 /** One label. Position is in DATA space (see `DataTransform`); JS numbers are float64. */
 export interface TextLabel extends TextStyle {
+  /** The text, or its plain-text equivalent when {@link TextLabel.runs} is set. */
   text: string;
   x: number;
   y: number;
   /** Default 0. */
   z?: number;
+  /**
+   * Rich text (E2.10): lines of styled runs, drawn instead of `text` as one batch member per run
+   * (see text-runs.ts). Leave unset for plain text, which is drawn as one member (the fast path).
+   * Rich labels do not wrap or ellipsize (`maxWidth` is ignored), like Plotly's SVG text.
+   */
+  runs?: TextRunLines;
 }
 
 /** Defaults applied under {@link TextStyle.font}. */
@@ -155,6 +163,14 @@ export interface ResolvedTextLabel {
   offsetY: number;
   /** False when the position is not finite, the font size is not positive, or the text is empty. */
   visible: boolean;
+  /** Index of the label this member draws (a rich label has one member per run). */
+  owner: number;
+  /**
+   * Position of the member's origin relative to the label anchor, px in the text plane (+y up),
+   * rotated with the label: 0 for plain labels, the run's baseline origin for rich ones.
+   */
+  localX: number;
+  localY: number;
 }
 
 /**
@@ -211,6 +227,102 @@ export function labelFontRequest(
     weight: normalizeFontWeight(label.font?.weight ?? style.font?.weight),
     style: normalizeFontStyle(label.font?.style ?? style.font?.style),
   };
+}
+
+/**
+ * Every face a label is drawn with: {@link labelFontRequest}, or one per run of a rich label
+ * (so the default font's bold and italic faces load only when a run needs them).
+ */
+export function labelFontRequests(
+  label: TextLabel,
+  style: TextStyle,
+): (TextFontRequest & { weight: number; style: TextFontStyle })[] {
+  const base = labelFontRequest(label, style);
+  if (!label.runs) return label.text == null || label.text === '' ? [] : [base];
+  const out: (TextFontRequest & { weight: number; style: TextFontStyle })[] = [];
+  for (const line of label.runs) {
+    for (const run of line) {
+      if (run.text.trim() === '') continue;
+      const f = run.font;
+      out.push({
+        family: f?.family ?? base.family,
+        weight: f?.weight !== undefined ? normalizeFontWeight(f.weight) : base.weight,
+        style: f?.style !== undefined ? normalizeFontStyle(f.style) : base.style,
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * Resolve a label into the members that draw it, appended to `out`: one for a plain label
+ * ({@link resolveTextLabel}), one per non-blank run for a rich one, each positioned by
+ * {@link layoutTextRuns} relative to the label anchor. `owner` is the label's index.
+ */
+export function resolveTextLabelMembers(
+  label: TextLabel,
+  style: TextStyle,
+  oracle: FontMetricsOracle,
+  resolveFont: FontURLResolver,
+  owner: number,
+  out: ResolvedTextLabel[],
+): void {
+  const runs = label.runs;
+  if (!runs) {
+    const r = resolveTextLabel(label, style, oracle, resolveFont);
+    r.owner = owner;
+    out.push(r);
+    return;
+  }
+  const base: TextFont = {
+    ...TEXT_DEFAULT_FONT,
+    ...style.font,
+    ...label.font,
+  };
+  const pick = <K extends keyof TextStyle>(k: K): TextStyle[K] =>
+    label[k] !== undefined ? label[k] : style[k];
+  const layout = layoutTextRuns(
+    runs,
+    {
+      font: base,
+      lineHeight: pick('lineHeight'),
+      anchorX: pick('anchorX'),
+      anchorY: pick('anchorY'),
+      align: pick('align'),
+    },
+    oracle,
+  );
+  const color = pick('color');
+  for (const item of layout.items) {
+    const run = item.run;
+    if (run.text.trim() === '') continue;
+    const member: TextLabel = {
+      text: run.text,
+      x: label.x,
+      y: label.y,
+      ...(label.z !== undefined ? { z: label.z } : {}),
+      font: textRunFont(base, run),
+      anchorX: 'left',
+      anchorY: 'baseline',
+      align: 'left',
+      maxWidth: Infinity,
+    };
+    const c = run.color ?? color;
+    if (c !== undefined) member.color = c;
+    const angle = pick('angle');
+    if (angle !== undefined) member.angle = angle;
+    const offset = pick('offset');
+    if (offset !== undefined) member.offset = offset;
+    const outline = pick('outline');
+    if (outline !== undefined) member.outline = outline;
+    const lineHeight = pick('lineHeight');
+    if (lineHeight !== undefined) member.lineHeight = lineHeight;
+    const r = resolveTextLabel(member, style, oracle, resolveFont);
+    r.owner = owner;
+    r.localX = item.x;
+    r.localY = item.y;
+    out.push(r);
+  }
 }
 
 /** Resolve a label against the shared style: fonts, overflow handling, anchors, paint. */
@@ -282,6 +394,9 @@ export function resolveTextLabel(
     rotation: textAngleToRotation(pick('angle') ?? 0),
     offsetX: offset?.[0] ?? 0,
     offsetY: offset?.[1] ?? 0,
+    owner: 0,
+    localX: 0,
+    localY: 0,
     visible:
       sizeOk &&
       text.length > 0 &&
@@ -412,7 +527,8 @@ export interface LabelPlacement {
  * - `unitScale`: local units per CSS px (1 in 2D pixel space or with `sizing: 'world'`).
  *
  * The rotation by `rotation` (radians, +z) is applied inside the text plane; the px offset is
- * applied in the plane but *not* rotated (Plotly semantics), with +y down.
+ * applied in the plane but *not* rotated (Plotly semantics), with +y down. `localX`/`localY` (px,
+ * +y up) move a rich label's run member within the label: they rotate with it.
  */
 export function computeLabelPlacement(
   out: LabelPlacement,
@@ -422,11 +538,17 @@ export function computeLabelPlacement(
   rotation: number,
   orientation: Readonly<Quaternion>,
   unitScale: number,
+  localX = 0,
+  localY = 0,
 ): LabelPlacement {
   tmpRotation.setFromAxisAngle(Z_AXIS, rotation);
   out.quaternion.copy(orientation).multiply(tmpRotation);
   tmpOffset.set(offsetX * unitScale, -offsetY * unitScale, 0).applyQuaternion(orientation);
   out.position.copy(base).add(tmpOffset);
+  if (localX !== 0 || localY !== 0) {
+    tmpOffset.set(localX * unitScale, localY * unitScale, 0).applyQuaternion(out.quaternion);
+    out.position.add(tmpOffset);
+  }
   out.scale.setScalar(unitScale);
   return out;
 }

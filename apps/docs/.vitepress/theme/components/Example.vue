@@ -9,10 +9,12 @@
  * - Disposes the example on unmount (page navigation).
  * - Tabs for the live preview and the TypeScript source (highlighted at build time), a copy
  *   button, and a link that opens the example in the dev sandbox.
+ * - The figure's id is `example-<id>` (`exampleAnchor`), so the gallery can link to the embed.
  * - `bare`: only the live chart, without the tab bar and caption, for showcase pages (demos)
  *   that frame the chart with their own headings and text.
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue';
+import { exampleAnchor } from '../example-anchor.ts';
 
 type Runtime = typeof import('../example-runtime.ts');
 type Handle = import('../example-runtime.ts').ExampleHandle;
@@ -159,7 +161,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <figure ref="root" class="hc-example" :class="{ 'hc-example--bare': bare }" :data-example-id="id">
+  <figure
+    :id="exampleAnchor(id)"
+    ref="root"
+    class="hc-example"
+    :class="{ 'hc-example--bare': bare }"
+    :data-example-id="id"
+  >
     <div v-if="!bare" class="hc-example-bar">
       <div class="hc-example-tabs" role="tablist" :aria-label="`Example ${id}`">
         <button

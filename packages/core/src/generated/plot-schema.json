@@ -282,6 +282,23 @@
         "description": "Show the legend. Defaults to `true` when more than one trace has a legend entry.",
         "valType": "boolean"
       },
+      "uniformtext": {
+        "editType": "plot",
+        "description": "Uniform text sizing for bar and pie labels (E4.6).",
+        "role": "object",
+        "mode": {
+          "values": [false, "hide", "show"],
+          "dflt": false,
+          "description": "Uniform size for the text inside bars and pie slices, per trace type (E4.6): labels are drawn at the smallest fitted size; `hide` drops labels that would be smaller than `minsize`, `show` draws them at the uniform size. `false` lets every label scale on its own.",
+          "valType": "enumerated"
+        },
+        "minsize": {
+          "min": 0,
+          "dflt": 0,
+          "description": "Minimum text size in px for `uniformtext.mode`. Also raises trace fonts smaller than it.",
+          "valType": "number"
+        }
+      },
       "hovermode": {
         "values": ["x", "y", "closest", false, "x unified", "y unified"],
         "dflt": "closest",
@@ -2064,6 +2081,11 @@
         "dflt": "en-US",
         "noBlank": true,
         "description": "BCP 47 locale for number/date formatting and UI strings.",
+        "valType": "string"
+      },
+      "ariaLabel": {
+        "dflt": "",
+        "description": "The chart's accessible name (`aria-label`), read by screen readers. Empty: `layout.meta.description` when set, else the figure title followed by an automatic summary (\"Line chart with 3 traces\"). Holochart only (plan E17.1).",
         "valType": "string"
       },
       "toImageButtonOptions": {
