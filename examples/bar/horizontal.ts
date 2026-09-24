@@ -1,5 +1,4 @@
 import { createChart, type Chart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -38,8 +37,6 @@ function settled(chart: Chart): Promise<void> {
 }
 
 export function run(el: HTMLElement): ExampleHandle {
-  // Vendored Inter for axis labels: offline and deterministic (troika's default is a CDN font).
-  useExampleFonts();
   const values = [3, 12, 45, 180, 720, 2900];
   const chart = createChart(el, {
     data: [
@@ -52,11 +49,8 @@ export function run(el: HTMLElement): ExampleHandle {
       },
     ],
     layout: {
-      font: { family: 'Inter' },
-      margin: { l: 48, r: 24, t: 24, b: 40 },
-      paper_bgcolor: '#ffffff',
-      plot_bgcolor: '#e5ecf6',
-      xaxis: { type: 'log' },
+      // Label 1, 2 and 5 in each decade (`dtick: 'D2'`), which reads well across four decades.
+      xaxis: { type: 'log', dtick: 'D2' },
       bargap: 0.3,
     },
     config: { responsive: true },

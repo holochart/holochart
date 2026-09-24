@@ -8,6 +8,9 @@ hero:
   name: Holochart
   text: Declarative GPU charts on three.js
   tagline: Describe a figure as Plotly-compatible JSON. Holochart renders every trace through one WebGL pipeline.
+  image:
+    src: /hero-chart.svg
+    alt: A line chart in Holochart's default look, four thin colored lines on a near-black background
   actions:
     - theme: brand
       text: Get started
@@ -30,6 +33,6 @@ features:
     details: A figure is data, layout, config, and frames, with Plotly's semantics and attribute names wherever reasonable. Existing knowledge carries over.
   - title: Accessible by default
     details: The canvas renders the chart, and a DOM mirror describes it for screen readers and keyboard users.
-  - title: Deep customization
-    details: Style charts through themes, templates, per-point arrays, style rules, materials, shader hooks, or direct access to the three.js scene.
+  - title: Dark and dense by default
+    details: The default look is built for dashboards, with small crisp text, thin lines and a colorway that reads on near-black. Plotly's look is one setting away, and themes, templates, style rules, materials and shader hooks go further.
 ---

@@ -73,11 +73,8 @@ export function run(el: HTMLElement): ExampleHandle {
       hovertemplate: 'x=%{x} y=%{y:.1f} %{customdata}<extra>%{fullData.name}</extra>',
     })),
     layout: {
-      margin: { l: 60, r: 20, t: 20, b: 50 },
       xaxis: { range: [-1, 10] },
       yaxis: { range: [-10, 100] },
-      paper_bgcolor: '#ffffff',
-      plot_bgcolor: '#e5ecf6',
       showlegend: false,
     },
     config: { scrollZoom: true },

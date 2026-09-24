@@ -1,81 +1,36 @@
 /**
- * Holochart's own themes (plan E8.1): `holochart` (the default look), `holochart-dark`,
- * `high-contrast` and `neon`. Design notes are in the docs (customization/themes-templates.md).
+ * Holochart's own themes (plan E8.1, ADR-021): `holochart` (the default look), `plotly-classic`
+ * (Plotly's look), `high-contrast` and `neon`, plus the deprecated `holochart-dark` alias. Design
+ * notes are in the docs (customization/themes-templates.md).
  */
-import { DEFAULT_COLORWAY, DEFAULT_FONT_FAMILY, type Template } from '@mk7s/holochart-core';
-import { bothAxes, colorbarDefaults, even, RDBU_BREWER, type Stops } from './shared.ts';
+import { holochartTemplate, plotlyClassicTemplate, type Template } from '@mk7s/holochart-core';
+import { bothAxes, colorbarDefaults, even, type Stops } from './shared.ts';
 
 /**
- * The library defaults, spelled out: applying it changes nothing (tested), so it is what a chart
- * without `layout.template` looks like. White paper and plot area, `#444` text in Open Sans 12 px,
- * the D3 category10 colorway, light `#eee` grid, and Plotly's automatic colorscales (Reds, Blues,
- * RdBu). Use it as the base of a custom theme: `composeTemplates(holochart, { layout: … })`.
+ * The default look (ADR-021), applied to every figure without `layout.template`: a dark, dense
+ * chart with a `#0a0a0f` background, 9 px Helvetica Neue text, tight margins, a horizontal legend
+ * above the plot area and the "neon plasma" sequential colorscale. The same object as core's
+ * `holochartTemplate`, which the runtime registers in every bundle.
  */
-export const holochart: Template = {
-  layout: {
-    paper_bgcolor: '#fff',
-    plot_bgcolor: '#fff',
-    font: { family: DEFAULT_FONT_FAMILY, size: 12, color: '#444' },
-    colorway: [...DEFAULT_COLORWAY],
-    colorscale: { sequential: 'Reds', sequentialminus: 'Blues', diverging: 'RdBu' },
-    ...bothAxes({ gridcolor: '#eee', color: '#444' }),
-  },
-};
-
-const DARK_BG = '#111418';
-const DARK_INK = '#c9d1d9';
-const DARK_AXIS = '#7d8590';
+export const holochart: Template = holochartTemplate;
 
 /**
- * The default look for dark UIs: a near-black blue-grey background (`#111418`), soft light text
- * (`#c9d1d9`, 11:1), a subtle `#262c36` grid under grey-blue axis lines, and a category10-ordered
- * colorway re-tuned for dark backgrounds (every color ≥ 6:1 against the background, so thin lines
- * and small markers stay legible). Viridis for sequential data (it stays bright where values are
- * high), ColorBrewer RdBu (blue low, red high) for diverging data.
+ * Plotly's look, spelled out (ADR-021): white paper and plot area, `#444` text in Open Sans 12 px,
+ * the D3 category10 colorway, a light `#eee` grid, and Plotly's automatic colorscales (Reds, Blues,
+ * RdBu). Applying it renders exactly what `none` renders: charts as Plotly draws them and as
+ * Holochart drew them before the default look. `setDefaultTemplate('plotly-classic')` makes it the
+ * default. Use it as the base of a light custom theme: `composeTemplates(plotlyClassic, { … })`.
+ * The same object as core's `plotlyClassicTemplate`.
  */
-export const holochartDark: Template = /* @__PURE__ */ (() => {
-  const colorbar = { outlinewidth: 0, tickcolor: DARK_AXIS };
-  const colorbars = colorbarDefaults(colorbar, undefined);
-  return {
-    layout: {
-      paper_bgcolor: DARK_BG,
-      plot_bgcolor: DARK_BG,
-      font: { color: DARK_INK },
-      colorway: [
-        '#4c9aff',
-        '#ff9f43',
-        '#34d399',
-        '#f87171',
-        '#c084fc',
-        '#d4a373',
-        '#f472b6',
-        '#a1a1aa',
-        '#e0d24a',
-        '#22d3ee',
-      ],
-      colorscale: {
-        sequential: 'Viridis',
-        sequentialminus: 'Viridis',
-        diverging: RDBU_BREWER.map(([p, c]): [number, string] => [1 - p, c]).reverse(),
-      },
-      ...colorbars.layout,
-      ...bothAxes({
-        color: DARK_AXIS,
-        gridcolor: '#262c36',
-        tickfont: { color: DARK_INK },
-        title: { font: { color: DARK_INK } },
-      }),
-      legend: { bordercolor: DARK_AXIS },
-      annotationdefaults: { arrowcolor: DARK_INK, font: { color: DARK_INK } },
-      shapedefaults: { line: { color: DARK_INK } },
-    },
-    data: {
-      ...colorbars.data,
-      scatter: [{ type: 'scatter', marker: { colorbar } }],
-      bar: [{ type: 'bar', marker: { colorbar } }],
-    },
-  };
-})();
+export const plotlyClassic: Template = plotlyClassicTemplate;
+
+/**
+ * Former dark variant of the default look, superseded by `holochart` (which is dark). An alias
+ * of {@link holochart}, kept so figures that name it still resolve.
+ *
+ * @deprecated Use `holochart` (the default); removed before 1.0.
+ */
+export const holochartDark: Template = holochartTemplate;
 
 const HC_INK = '#000000';
 

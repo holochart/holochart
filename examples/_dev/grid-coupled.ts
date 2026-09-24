@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -38,7 +37,6 @@ export function run(el: HTMLElement): ExampleHandle {
   }
 
   const marker = { size: 6, opacity: 0.8 };
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       { type: 'scatter', mode: 'markers', x: temp, y: iceCream, marker },
@@ -55,15 +53,12 @@ export function run(el: HTMLElement): ExampleHandle {
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 12 },
       grid: { rows: 2, columns: 2, pattern: 'coupled' },
       xaxis: { title: { text: 'Temperature (°C)' } },
       xaxis2: { title: { text: 'Humidity (%)' } },
       yaxis: { title: { text: 'Ice creams' } },
       yaxis2: { title: { text: 'Umbrellas' } },
       showlegend: false,
-      margin: { l: 64, r: 24, t: 24, b: 56 },
-      plot_bgcolor: '#e5ecf6',
     },
     config: { responsive: true },
   });

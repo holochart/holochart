@@ -17,10 +17,11 @@
  *
  * - The canvas measures with a *CSS* font, troika renders from a font *file*. The canvas measurer
  *   therefore measures with the face troika will draw ({@link measurementFace}, plan E2.18): the
- *   registered family (`registerFont` adds it as a CSS `FontFace`), else the default font
- *   (`configureText({ defaultFontURL })` registers it as a CSS face), else troika's CDN fallback
- *   font. Until that face has loaded, the browser measures with the requested family list; the
- *   default oracle clears its cache when fonts change, and charts re-run layout then.
+ *   registered family (`registerFont` adds it as a CSS `FontFace`), else the app's default font
+ *   (`configureText({ defaultFontURL })` registers it as a CSS face), else the built-in default
+ *   font's face (TeX Gyre Heros, registered as a CSS face once loaded; measuring starts the load).
+ *   Until that face has loaded, the browser measures with the requested family list; the default
+ *   oracle clears its cache when fonts change, and charts re-run layout then.
  * - Kerning and ligatures are included by canvas but not by the fallback table. Wrapping sums
  *   per-word widths, which ignores kerning across break opportunities (normally spaces).
  * - No bidi reordering, no complex-script shaping in the fallback, and ellipsis truncation works on
@@ -120,9 +121,9 @@ export interface FontMetricsOracleOptions {
   cacheSize?: number;
   /**
    * Maps a requested face to the face the measurer measures with. Default: for the canvas measurer,
-   * the face troika will actually draw ({@link measurementFace}: the registered family, the default
-   * font, or troika's fallback font); identity for other measurers, so the deterministic fallback
-   * (node, tests) is unchanged. `null` forces identity.
+   * the face troika will actually draw ({@link measurementFace}: the registered family, the app's
+   * default font, or the built-in default font); identity for other measurers, so the
+   * deterministic fallback (node, tests) is unchanged. `null` forces identity.
    */
   resolveFace?: ((face: TextFace) => TextFace) | null;
 }

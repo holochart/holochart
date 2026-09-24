@@ -20,9 +20,9 @@ const { PNG } = pngjs;
 const EXAMPLE = '_dev/shapes-interactive';
 
 type RGB = readonly [number, number, number];
-const RED: RGB = [0xd6, 0x27, 0x28];
-const BLUE: RGB = [0x1f, 0x77, 0xb4];
-const PURPLE: RGB = [0x94, 0x67, 0xbd];
+const RED: RGB = [0xea, 0x2a, 0x37];
+const BLUE: RGB = [0x5e, 0x74, 0xd5];
+const PURPLE: RGB = [0x99, 0x62, 0xc0];
 
 /** Whether the pixel at a page position has (nearly) the given color. */
 async function isColor(page: Page, p: { x: number; y: number }, rgb: RGB): Promise<boolean> {

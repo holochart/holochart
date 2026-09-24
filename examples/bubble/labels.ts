@@ -1,5 +1,4 @@
 import { bubbleSizeref, createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -29,7 +28,6 @@ const PROJECTS = [
 export function run(el: HTMLElement): ExampleHandle {
   const team = PROJECTS.map((p) => p.team);
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -40,23 +38,20 @@ export function run(el: HTMLElement): ExampleHandle {
         y: PROJECTS.map((p) => p.value),
         text: PROJECTS.map((p) => p.name),
         textposition: 'middle center',
-        textfont: { color: '#ffffff', size: 11, weight: 'bold' },
+        textfont: { color: '#eceef4', weight: 'bold' },
         marker: {
           size: team,
           sizemode: 'area',
           sizeref: bubbleSizeref(team, 72),
-          color: '#636efa',
+          color: '#5e74d5',
           opacity: 0.85,
         },
         hovertemplate: '%{text}: team of %{marker.size}<extra></extra>',
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 12 },
       xaxis: { title: { text: 'Cost (M$)' }, range: [0, 10.2] },
       yaxis: { title: { text: 'Expected value (M$)' }, range: [-0.4, 10] },
-      margin: { l: 56, r: 24, t: 24, b: 48 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 

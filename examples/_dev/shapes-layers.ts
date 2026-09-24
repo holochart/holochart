@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -17,7 +16,6 @@ export const meta: ExampleMeta = {
 };
 
 export function run(el: HTMLElement): ExampleHandle {
-  useExampleFonts();
   const band = (y0: number, layer: string, color: string) => ({
     type: 'rect',
     layer,
@@ -31,7 +29,7 @@ export function run(el: HTMLElement): ExampleHandle {
     label: {
       text: layer,
       textposition: 'middle left',
-      font: { color: '#ffffff', size: 13, weight: 'bold' },
+      font: { color: '#ffffff', weight: 'bold' },
     },
   });
   const chart = createChart(el, {
@@ -40,21 +38,18 @@ export function run(el: HTMLElement): ExampleHandle {
         type: 'bar',
         x: [1, 2, 3, 4],
         y: [9, 8.5, 9.5, 7.8],
-        marker: { color: '#636efa' },
         width: 0.45,
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 11 },
       showlegend: false,
-      margin: { l: 50, r: 70, t: 24, b: 36 },
-      plot_bgcolor: '#e5ecf6',
-      yaxis: { range: [0, 10], dtick: 0.5, gridcolor: '#1f2937', gridwidth: 2 },
-      xaxis: { range: [-0.7, 4.5], dtick: 1, gridcolor: '#1f2937', gridwidth: 2 },
+      margin: { r: 70 }, // room for the paper band that extends into the right margin
+      yaxis: { range: [0, 10], dtick: 0.5, gridcolor: '#80838f', gridwidth: 2 },
+      xaxis: { range: [-0.7, 4.5], dtick: 1, gridcolor: '#80838f', gridwidth: 2 },
       shapes: [
-        band(1, 'below', '#ef553b'),
-        band(4, 'between', '#00a080'),
-        band(7, 'above', '#ab63fa'),
+        band(1, 'below', '#5e74d5'),
+        band(4, 'between', '#118e36'),
+        band(7, 'above', '#9962c0'),
         // A paper band under everything: visible in the right margin, under the grid inside.
         {
           type: 'rect',
@@ -65,8 +60,8 @@ export function run(el: HTMLElement): ExampleHandle {
           x1: 1.08,
           y0: 0.05,
           y1: 0.95,
-          fillcolor: '#fecb52',
-          line: { color: '#b58900', width: 2 },
+          fillcolor: 'rgba(153, 118, 0, 0.35)',
+          line: { color: '#997600', width: 2 },
         },
       ],
     },

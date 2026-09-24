@@ -9,7 +9,7 @@
  * and widgets (sliders, update menus) are left out; they join these templates with their E-stories.
  * Trace types that are not registered simply ignore their template entries.
  */
-import type { Template } from '@mk7s/holochart-core';
+import { noneTemplate, type Template } from '@mk7s/holochart-core';
 import {
   bothAxes,
   colorbarDefaults,
@@ -326,5 +326,8 @@ export const ygridoff: Template = { layout: { yaxis: { showgrid: false } } };
 /** Grid lines on both axes, e.g. `'simple_white+gridon'`. */
 export const gridon: Template = { layout: /* @__PURE__ */ bothAxes({ showgrid: true }) };
 
-/** The empty template: the library defaults, as with `layout.template: null`. */
-export const none: Template = {};
+/**
+ * The empty template: the library's schema defaults (Plotly's look), as with
+ * `layout.template: null`. The same object as core's `noneTemplate`, which every bundle registers.
+ */
+export const none: Template = noneTemplate;

@@ -134,6 +134,15 @@ function checkObject(
   }
 }
 
+/** The item schema a template's `<itemName>defaults` key applies to, if `key` is one. */
+function itemDefaultsNode(layout: ObjectNode, key: string): ObjectNode | undefined {
+  const itemName = key.slice(0, -'defaults'.length);
+  for (const child of Object.values(layout.children)) {
+    if (child.kind === 'items' && child.itemName === itemName) return child.item;
+  }
+  return undefined;
+}
+
 function checkTemplate(template: unknown, registry: Registry, issues: Issue[]): void {
   const path = 'layout.template';
   if (template === undefined || template === null || template === false) return;
@@ -166,7 +175,20 @@ function checkTemplate(template: unknown, registry: Registry, issues: Issue[]): 
   }
   // Template contents are validated against the same schemas, so typos in themes surface too.
   const layout = template['layout'];
-  if (layout !== undefined) checkNode(registry.getLayoutSchema(), layout, `${path}.layout`, issues);
+  if (isPlainObject(layout)) {
+    // `<itemName>defaults` (e.g. `annotationdefaults`) exists only in templates: it is checked
+    // against the item schema of its array container instead of being an unknown attribute.
+    const schema = registry.getLayoutSchema();
+    const rest: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(layout)) {
+      const item = key.endsWith('defaults') ? itemDefaultsNode(schema, key) : undefined;
+      if (item) checkNode(item, value, `${path}.layout.${key}`, issues);
+      else rest[key] = value;
+    }
+    checkNode(schema, rest, `${path}.layout`, issues);
+  } else if (layout !== undefined) {
+    checkNode(registry.getLayoutSchema(), layout, `${path}.layout`, issues);
+  }
   const data = template['data'];
   if (isPlainObject(data)) {
     for (const [type, list] of Object.entries(data)) {

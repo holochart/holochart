@@ -39,6 +39,7 @@ export const chartToJSON = runtime.chartToJSON;
 export const purge = runtime.purge;
 export const register = runtime.register;
 export const registry = runtime.registry;
+export const setDefaultTemplate = runtime.setDefaultTemplate;
 
 export * from '@mk7s/holochart-traces-basic';
 export * from '@mk7s/holochart-components';

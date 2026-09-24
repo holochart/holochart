@@ -9,11 +9,12 @@ import {
 import {
   createTextPrimitive,
   getDefaultFontMetricsOracle,
+  preloadTextFont,
+  TEXT_DEFAULT_FONT,
   type TextAnchorX,
   type TextAnchorY,
   type TextLabel,
 } from '@mk7s/holochart-render';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import { createDevStage } from '../_lib/stage.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -23,6 +24,9 @@ import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
  * rotations in the Plotly `textangle` convention (clockwise positive). Middle: font sizes 8–32 px,
  * laid out left to right with the synchronous font metrics oracle. Bottom: wrapping (left and
  * centered), ellipsis truncation at a max width, and an outlined label.
+ *
+ * No font is configured: every label is drawn with the renderer's shipped default font (TeX Gyre
+ * Heros), which is loaded before the sizes row is measured so the oracle measures that same font.
  */
 export const meta: ExampleMeta = {
   title: 'Text: anchors, rotation, sizes, wrapping',
@@ -44,8 +48,6 @@ const INK = rgba('#2a3f5f');
 const MUTED = rgba('#7f8fa6');
 
 export function run(el: HTMLElement): ExampleHandle {
-  useExampleFonts();
-
   const stage = createDevStage(el, { background: '#ffffff' });
   const labels: TextLabel[] = [];
   const dots: number[] = [];
@@ -112,16 +114,19 @@ export function run(el: HTMLElement): ExampleHandle {
     dots.push(x, y, 0);
   });
 
-  // --- Sizes, positioned with the synchronous metrics oracle (what the layout stage uses).
+  // --- Sizes, positioned with the synchronous metrics oracle (what the layout stage uses), once
+  // the default font is loaded (below), so the oracle measures the font that is drawn.
   header('sizes 8–32 px (placed with the metrics oracle)', 20, 250);
-  const oracle = getDefaultFontMetricsOracle();
-  let cursor = 20;
-  for (const size of [8, 10, 12, 14, 16, 20, 24, 32]) {
-    const text = `${size}px`;
-    labels.push({ text, x: cursor, y: 206, font: { size } });
-    dots.push(cursor, 206, 0);
-    cursor += oracle.measureWidth(text, { family: 'Inter', size }) + 18;
-  }
+  const placeSizes = (): void => {
+    const oracle = getDefaultFontMetricsOracle();
+    let cursor = 20;
+    for (const size of [8, 10, 12, 14, 16, 20, 24, 32]) {
+      const text = `${size}px`;
+      labels.push({ text, x: cursor, y: 206, font: { size } });
+      dots.push(cursor, 206, 0);
+      cursor += oracle.measureWidth(text, { family: TEXT_DEFAULT_FONT.family, size }) + 18;
+    }
+  };
 
   // --- Wrapping and ellipsis at a max width; the boxes show the max width.
   const para =
@@ -182,15 +187,8 @@ export function run(el: HTMLElement): ExampleHandle {
     outline: { width: 0, blur: 2, offsetX: 1.5, offsetY: 1.5, color: rgba('#000000', 0.35) },
   });
 
-  const text = createTextPrimitive(stage.context, {
-    labels,
-    style: { color: INK, font: { family: 'Inter' } },
-  });
-  stage.add(text);
-
   // Anchor dots and max-width boxes: plain three.js helpers, not primitives.
   const dotGeometry = new BufferGeometry();
-  dotGeometry.setAttribute('position', new Float32BufferAttribute(dots, 3));
   const dotMaterial = new PointsMaterial({ color: '#ef553b', size: 5, sizeAttenuation: false });
   const dotPoints = new Points(dotGeometry, dotMaterial);
   dotPoints.renderOrder = 1;
@@ -201,11 +199,24 @@ export function run(el: HTMLElement): ExampleHandle {
   const boxMaterial = new LineBasicMaterial({ color: '#c8d4e3' });
   stage.scene.add(new LineSegments(boxGeometry, boxMaterial));
 
-  return {
+  let disposed = false;
+  const ready = preloadTextFont({})
+    .then(() => {
+      if (disposed) return;
+      placeSizes();
+      dotGeometry.setAttribute('position', new Float32BufferAttribute(dots, 3));
+      const text = createTextPrimitive(stage.context, { labels, style: { color: INK } });
+      stage.add(text);
+      return text.ready;
+    })
     // Render synchronously once all glyphs are typeset, so the captured frame includes the text.
-    ready: text.ready.then(() => stage.render()),
+    .then(() => stage.render());
+
+  return {
+    ready,
     renderer: stage.renderer,
     dispose() {
+      disposed = true;
       dotGeometry.dispose();
       dotMaterial.dispose();
       boxGeometry.dispose();

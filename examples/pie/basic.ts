@@ -1,5 +1,4 @@
 import { createChart, render, type Chart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -44,14 +43,11 @@ function textReady(chart: Chart, quietMs = 300, maxMs = 15_000): Promise<void> {
 const CHARACTERS = '0123456789.% ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
 export function run(el: HTMLElement): ExampleHandle {
-  useExampleFonts();
   let chart: Chart | undefined;
   let disposed = false;
-  // Inside-label fit decisions depend on text metrics: measure with the vendored font.
-  const ready = Promise.all([
-    document.fonts.load('12px Inter').catch(() => undefined),
-    render.preloadTextFont({ family: 'Inter', characters: CHARACTERS }),
-  ]).then(async () => {
+  // Inside-label fit decisions depend on text metrics: measure with the shipped default font
+  // (loaded before the chart is created, so the first layout already uses it).
+  const ready = render.preloadTextFont({ characters: CHARACTERS }).then(async () => {
     if (disposed) return;
     chart = createChart(el, {
       data: [
@@ -63,11 +59,8 @@ export function run(el: HTMLElement): ExampleHandle {
         },
       ],
       layout: {
-        font: { family: 'Inter' },
         showlegend: true,
         title: { text: 'Monthly budget' },
-        margin: { l: 24, r: 24, t: 56, b: 24 },
-        paper_bgcolor: '#ffffff',
       },
       config: { responsive: true },
     });

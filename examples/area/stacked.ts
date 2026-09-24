@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -28,7 +27,6 @@ export function run(el: HTMLElement): ExampleHandle {
     { name: 'Renewables', y: years.map((y) => 40 + 360 * t(y) ** 1.8) },
   ];
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: sources.map((s) => ({
       type: 'scatter',
@@ -38,12 +36,9 @@ export function run(el: HTMLElement): ExampleHandle {
       stackgroup: 'one',
     })),
     layout: {
-      font: { family: 'Inter', size: 12 },
       hovermode: 'x unified',
       title: { text: 'Electricity generation by source' },
       yaxis: { title: { text: 'TWh' } },
-      margin: { l: 56, r: 24, t: 48, b: 40 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 

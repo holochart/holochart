@@ -1,5 +1,4 @@
-import { componentsReady, createChart, type Chart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
+import { componentsReady, createChart } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -18,11 +17,6 @@ export const meta: ExampleMeta = {
   testTolerance: 0.004,
 };
 
-async function loadFonts(): Promise<void> {
-  useExampleFonts();
-  await Promise.all([document.fonts.load('12px Inter'), document.fonts.load('bold 12px Inter')]);
-}
-
 const SERIES = [
   'Hydro',
   'Wind (onshore)',
@@ -34,50 +28,40 @@ const SERIES = [
 ];
 
 export function run(el: HTMLElement): ExampleHandle {
-  let chart: Chart | undefined;
-  let disposed = false;
-
-  const ready = loadFonts().then(async () => {
-    if (disposed) return;
-    chart = createChart(el, {
-      data: SERIES.map((name, k) => ({
-        mode: 'markers',
-        name,
-        x: [2019, 2020, 2021, 2022, 2023, 2024],
-        y: [0, 1, 2, 3, 4, 5].map((i) => 20 + k * 12 + i * (k + 1) * 1.5),
-        marker: { size: 4 + k * 2 },
-      })),
-      layout: {
-        font: { family: 'Inter', size: 12 },
-        margin: { l: 56, r: 24, t: 24, b: 40 },
-        title: {
-          text: '<b>Capacity additions</b>',
-          xref: 'paper',
-          yref: 'paper',
-          x: 0,
-          automargin: true,
-          pad: { b: 8 },
-        },
-        legend: {
-          orientation: 'h',
-          itemsizing: 'constant',
-          title: { text: 'Source:' },
-        },
-        xaxis: { dtick: 1, showline: true, ticks: 'outside' },
-        yaxis: { title: { text: 'GW' }, automargin: true },
+  const chart = createChart(el, {
+    data: SERIES.map((name, k) => ({
+      mode: 'markers',
+      name,
+      x: [2019, 2020, 2021, 2022, 2023, 2024],
+      y: [0, 1, 2, 3, 4, 5].map((i) => 20 + k * 12 + i * (k + 1) * 1.5),
+      marker: { size: 4 + k * 2 },
+    })),
+    layout: {
+      title: {
+        text: '<b>Capacity additions</b>',
+        xref: 'paper',
+        yref: 'paper',
+        x: 0,
+        y: 1,
+        yanchor: 'bottom',
+        automargin: true,
+        pad: { b: 8 },
       },
-    });
-    await componentsReady(chart);
+      legend: {
+        orientation: 'h',
+        y: -0.1,
+        yanchor: 'top',
+        itemsizing: 'constant',
+        title: { text: 'Source:' },
+      },
+      xaxis: { dtick: 1, showline: true, ticks: 'outside' },
+      yaxis: { title: { text: 'GW' }, automargin: true },
+    },
   });
 
   return {
-    ready,
-    get renderer() {
-      return chart?.three.renderer;
-    },
-    dispose: () => {
-      disposed = true;
-      chart?.destroy();
-    },
+    ready: componentsReady(chart),
+    renderer: chart.three.renderer,
+    dispose: () => chart.destroy(),
   };
 }

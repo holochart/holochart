@@ -21,8 +21,10 @@ one color per point.
 ## Colorways and qualitative palettes
 
 `layout.colorway` is the list of default trace colors, used in trace order and cycled when there
-are more traces than colors. The default is D3's category10, the same as Plotly.js; each
-[theme](/customization/themes-templates) sets its own.
+are more traces than colors. The default look (the `holochart` template) has eight colors: red
+`#ea2a37`, blue `#5e74d5`, indigo `#9962c0`, emerald `#118e36`, orange `#cc540a`, teal `#128b8b`,
+gold `#997600` and magenta `#b8267e`. `plotly-classic` (Plotly's look) uses D3's category10, the
+same as Plotly.js, and every other [theme](/customization/themes-templates) sets its own.
 
 ```ts
 import { colorways, QUALITATIVE } from '@mk7s/holochart';
@@ -68,8 +70,17 @@ symmetric around a value (for diverging data). Traces that set the same `colorax
 
 When `colorscale` is not given (`autocolorscale`), the scale is picked from the sign of the
 domain: `layout.colorscale.sequential` for values ≥ 0, `sequentialminus` for values ≤ 0, and
-`diverging` for domains that cross 0. They default to Plotly's `Reds`, `Blues` and `RdBu`, and
-themes change them (`plotly` uses Plasma, `simple_white` Viridis).
+`diverging` for domains that cross 0. In the default look, brighter means further from zero:
+
+- `sequential` is a "neon plasma" ramp, from a deep violet (which still shows on the background)
+  through violet, magenta and orange to pale yellow;
+- `sequentialminus` mirrors it in cool hues, pale cyan at the most negative value fading to a dark
+  blue at zero;
+- `diverging` has a muted `#4b475c` midpoint, blue to cyan for negative values and magenta to
+  orange for positive ones.
+
+With `plotly-classic` (or `template: 'none'`) they are Plotly's `Reds`, `Blues` and `RdBu`, and
+other themes set their own (`plotly` uses Plasma, `simple_white` Viridis).
 
 <Example id="scatter/colorscale" />
 

@@ -4,6 +4,9 @@ import {
   canonicalColor,
   createRegistry,
   DEFAULT_COLORWAY,
+  holochartTemplate,
+  noneTemplate,
+  plotlyClassicTemplate,
   stripInternal,
   supplyDefaults,
   type FigureInput,
@@ -95,6 +98,7 @@ describe('built-in themes (E8.1)', () => {
   it('registers every theme of the plan', () => {
     expect(THEME_NAMES).toEqual([
       'holochart',
+      'plotly-classic',
       'holochart-dark',
       'plotly',
       'plotly_white',
@@ -161,23 +165,39 @@ describe('built-in themes (E8.1)', () => {
     expect(sea.colorway[0]).toBe('rgb(76, 114, 176)');
   });
 
-  it('holochart is the library default: applying it changes nothing', () => {
+  it("plotly-classic and none are Plotly's look: applying them changes nothing", () => {
     const figure = (template?: unknown): FigureInput => ({
       data: TWO_TRACES,
       layout: { title: { text: 'T' }, ...(template === undefined ? {} : { template }) },
     });
-    const plain = run(figure(null));
-    const themed = run(figure('holochart'));
     const strip = (l: unknown) => {
       const { template: _t, ...rest } = stripInternal(l) as Record<string, unknown>;
       return rest;
     };
-    expect(strip(themed.fullLayout)).toEqual(strip(plain.fullLayout));
-    expect(stripInternal(themed.fullData)).toEqual(stripInternal(plain.fullData));
+    // A core registry has no default template: an unset template is Plotly's look.
+    const plain = run(figure());
+    expect(plain.fullLayout.template).toBeNull();
     expect(plain.fullLayout.colorway).toEqual(DEFAULT_COLORWAY.map(canonicalColor));
-    // `none` is the empty template.
-    const none = run(figure('none'));
-    expect(strip(none.fullLayout)).toEqual(strip(plain.fullLayout));
+    expect(plain.fullLayout.paper_bgcolor).toBe('rgb(255, 255, 255)');
+    // With `holochart` as the registry default (as in the runtime's shared registry), naming
+    // either template still gives exactly Plotly's look.
+    const withDefault = registry().setDefaultTemplate('holochart');
+    for (const name of ['plotly-classic', 'none', null]) {
+      for (const r of [registry(), withDefault]) {
+        const themed = supplyDefaults(figure(name), r, { onIssue: () => undefined });
+        expect(strip(themed.fullLayout)).toEqual(strip(plain.fullLayout));
+        expect(stripInternal(themed.fullData)).toEqual(stripInternal(plain.fullData));
+      }
+    }
+    const dflt = supplyDefaults(figure(), withDefault, { onIssue: () => undefined });
+    expect(dflt.fullLayout.paper_bgcolor).toBe('rgb(10, 10, 15)');
+  });
+
+  it("holochart-dark is a deprecated alias of holochart; the templates are core's objects", () => {
+    expect(THEMES['holochart-dark']).toBe(THEMES.holochart);
+    expect(THEMES.holochart).toBe(holochartTemplate);
+    expect(THEMES['plotly-classic']).toBe(plotlyClassicTemplate);
+    expect(THEMES.none).toBe(noneTemplate);
   });
 });
 
@@ -239,9 +259,13 @@ describe('theme precedence (§8: user > template > library defaults)', () => {
   it('our themes set their documented identity', () => {
     const layoutOf = (name: ThemeName) =>
       run({ data: TWO_TRACES, layout: { template: name } }).fullLayout;
-    const dark = layoutOf('holochart-dark');
-    expect(dark.paper_bgcolor).toBe('rgb(17, 20, 24)');
-    expect(dark.xaxis!.tickfont.color).toBe('rgb(201, 209, 217)');
+    const hc0 = layoutOf('holochart');
+    expect(hc0.paper_bgcolor).toBe('rgb(10, 10, 15)');
+    expect(hc0.font.size).toBe(9);
+    expect(hc0.xaxis!.tickfont.size).toBe(8);
+    expect(hc0.xaxis!.tickfont.color).toBe('rgb(128, 131, 143)');
+    expect(hc0.xaxis!.ticks).toBe('outside');
+    expect(hc0.colorway[0]).toBe('rgb(234, 42, 55)');
     const hc = layoutOf('high-contrast');
     expect(hc.font.size).toBe(14);
     expect(hc.xaxis!.linewidth).toBe(1.5);

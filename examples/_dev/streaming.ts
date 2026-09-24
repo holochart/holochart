@@ -42,10 +42,7 @@ export function run(el: HTMLElement): ExampleHandle {
   const chart = createChart(el, {
     data,
     layout: {
-      margin: { l: 48, r: 16, t: 40, b: 36 },
       showlegend: false,
-      paper_bgcolor: '#ffffff',
-      plot_bgcolor: '#f4f6fa',
     },
     config: { responsive: true },
   });
@@ -70,7 +67,7 @@ export function run(el: HTMLElement): ExampleHandle {
   // Controls (DOM overlay).
   const panel = document.createElement('div');
   panel.style.cssText =
-    'position:absolute;top:6px;left:56px;padding:4px 8px;background:rgba(255,255,255,.9);' +
+    'position:absolute;top:6px;left:48px;padding:4px 8px;background:rgba(21,21,29,.9);color:#a4a7b5;' +
     'font:12px system-ui,sans-serif;border-radius:4px;display:flex;gap:8px;align-items:center';
   const button = document.createElement('button');
   button.textContent = 'Stream';

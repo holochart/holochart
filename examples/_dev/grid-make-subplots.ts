@@ -1,5 +1,4 @@
 import { createChart, makeSubplots } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -40,7 +39,6 @@ export function run(el: HTMLElement): ExampleHandle {
     columnWidths: [2, 3],
   });
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       sp.place(
@@ -65,10 +63,7 @@ export function run(el: HTMLElement): ExampleHandle {
     ],
     layout: {
       ...sp.layout,
-      font: { family: 'Inter', size: 12 },
       showlegend: false,
-      margin: { l: 56, r: 24, t: 40, b: 40 },
-      plot_bgcolor: '#e5ecf6',
     },
     config: { responsive: true },
   });

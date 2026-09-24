@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -7,7 +6,7 @@ import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
  * invisible baseline at −total/2 for every x (`fill: 'none'`, `line.width: 0`, no legend entry, no
  * hover); the series stack on top of it, so the stack is symmetric around zero. `line.shape:
  * 'spline'` smooths the edges, and the fills follow the smoothed lines. The y values carry no
- * meaning here, so the y tick labels are hidden.
+ * meaning here, so the y axis is hidden.
  */
 export const meta: ExampleMeta = {
   title: 'Area: streamgraph',
@@ -34,7 +33,6 @@ export function run(el: HTMLElement): ExampleHandle {
   const ys = shapes.map((f) => x.map(f));
   const baseline = x.map((_, i) => -ys.reduce((sum, y) => sum + y[i]!, 0) / 2);
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -59,12 +57,15 @@ export function run(el: HTMLElement): ExampleHandle {
       })),
     ],
     layout: {
-      font: { family: 'Inter', size: 12 },
       hovermode: 'x unified',
       title: { text: 'Listening by genre' },
-      yaxis: { showticklabels: false, showgrid: false, zeroline: false },
-      margin: { l: 24, r: 24, t: 48, b: 40 },
-      plot_bgcolor: '#ffffff',
+      yaxis: {
+        showticklabels: false,
+        ticks: '',
+        showline: false,
+        showgrid: false,
+        zeroline: false,
+      },
     },
   });
 

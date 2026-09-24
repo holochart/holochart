@@ -34,6 +34,16 @@ from plotly.py's `plotly.colors`, which collects it from the sources below.
 | [Turbo](https://research.google/blog/turbo-an-improved-rainbow-colormap-for-visualization/) by Google | Apache-2.0   | `core/colors/data/sequential.ts`                            |
 | [seaborn](https://github.com/mwaskom/seaborn) IceFire                                                 | BSD-3-Clause | `core/colors/data/cyclical.ts`                              |
 
+## Bundled fonts
+
+Holochart draws text that names no registered font with its built-in default font, TeX Gyre
+Heros, a Helvetica-style family. The unmodified font files ship with the library, each folder
+with a copy of the license:
+
+| Font                                                                                                                                                                                               | License                                               | Where                                                                                                                                                                                                                |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [TeX Gyre Heros](https://www.gust.org.pl/projects/e-foundry/tex-gyre/heros) 2.004 (regular, bold, italic, bold italic), © 2006, 2009 B. Jackowski and J.M. Nowacki (on behalf of TeX users groups) | GUST Font License (LaTeX Project Public License 1.3c) | `@mk7s/holochart-render`: `fonts/*.otf` and, as `data:` URLs, the lazy `dist/texgyreheros-*.js` chunks; `@mk7s/holochart`: `dist/fonts/*.otf` for the IIFE build. License: `GUST-FONT-LICENSE.txt` next to the files |
+
 ## Repository-only assets (not published to npm)
 
 | Asset                                                  | License                   | Where                                                                                   |

@@ -1,5 +1,4 @@
-import { componentsReady, createChart, type Chart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
+import { componentsReady, createChart } from '@mk7s/holochart';
 import { rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -19,15 +18,7 @@ export const meta: ExampleMeta = {
   testTolerance: 0.004,
 };
 
-/** Load the vendored Inter faces before layout measures text (the canvas oracle needs them). */
-async function loadFonts(): Promise<void> {
-  useExampleFonts();
-  await Promise.all([document.fonts.load('12px Inter'), document.fonts.load('bold 12px Inter')]);
-}
-
 export function run(el: HTMLElement): ExampleHandle {
-  let chart: Chart | undefined;
-  let disposed = false;
   const random = rng(7);
 
   const n = 40;
@@ -45,76 +36,64 @@ export function run(el: HTMLElement): ExampleHandle {
   const fruits = ['Apples', 'Bananas', 'Cherries', 'Dates', 'Elderberries', 'Figs'];
   const fruitY = fruits.map(() => Math.round(10 + random() * 90));
 
-  const ready = loadFonts().then(async () => {
-    if (disposed) return;
-    chart = createChart(el, {
-      data: [
-        { mode: 'markers', x, y, name: 'linear' },
-        { mode: 'markers', x: logX, y: logY, xaxis: 'x2', yaxis: 'y2', name: 'log' },
-        { mode: 'markers', x: dates, y: dateY, xaxis: 'x3', yaxis: 'y3', name: 'date' },
-        {
-          mode: 'markers',
-          x: fruits,
-          y: fruitY,
-          xaxis: 'x4',
-          yaxis: 'y4',
-          name: 'category',
-          marker: { size: 10, symbol: 'square' },
-        },
-      ],
-      layout: {
-        font: { family: 'Inter', size: 11 },
-        showlegend: false,
-        margin: { l: 20, r: 20, t: 20, b: 20 },
-        plot_bgcolor: '#f7f9fc',
-        xaxis: {
-          domain: [0, 0.44],
-          anchor: 'y',
-          title: { text: 'x (linear)' },
-          automargin: true,
-          showline: true,
-          ticks: 'outside',
-        },
-        yaxis: {
-          domain: [0.58, 1],
-          anchor: 'x',
-          title: { text: 'f(x)' },
-          automargin: true,
-          showline: true,
-          ticks: 'outside',
-        },
-        xaxis2: { domain: [0.56, 1], anchor: 'y2', title: { text: 'n' }, showline: true },
-        yaxis2: {
-          domain: [0.58, 1],
-          anchor: 'x2',
-          type: 'log',
-          title: { text: 'growth (log)' },
-          showline: true,
-          ticks: 'outside',
-        },
-        xaxis3: {
-          domain: [0, 0.44],
-          anchor: 'y3',
-          automargin: true,
-          showline: true,
-          ticks: 'outside',
-        },
-        yaxis3: { domain: [0, 0.42], anchor: 'x3', automargin: true, title: { text: 'level' } },
-        xaxis4: { domain: [0.56, 1], anchor: 'y4', automargin: true, showline: true },
-        yaxis4: { domain: [0, 0.42], anchor: 'x4', showline: true, ticks: 'outside' },
+  const chart = createChart(el, {
+    data: [
+      { mode: 'markers', x, y, name: 'linear' },
+      { mode: 'markers', x: logX, y: logY, xaxis: 'x2', yaxis: 'y2', name: 'log' },
+      { mode: 'markers', x: dates, y: dateY, xaxis: 'x3', yaxis: 'y3', name: 'date' },
+      {
+        mode: 'markers',
+        x: fruits,
+        y: fruitY,
+        xaxis: 'x4',
+        yaxis: 'y4',
+        name: 'category',
+        marker: { size: 10, symbol: 'square' },
       },
-    });
-    await componentsReady(chart);
+    ],
+    layout: {
+      showlegend: false,
+      xaxis: {
+        domain: [0, 0.44],
+        anchor: 'y',
+        title: { text: 'x (linear)' },
+        automargin: true,
+        showline: true,
+        ticks: 'outside',
+      },
+      yaxis: {
+        domain: [0.58, 1],
+        anchor: 'x',
+        title: { text: 'f(x)' },
+        automargin: true,
+        showline: true,
+        ticks: 'outside',
+      },
+      xaxis2: { domain: [0.56, 1], anchor: 'y2', title: { text: 'n' }, showline: true },
+      yaxis2: {
+        domain: [0.58, 1],
+        anchor: 'x2',
+        type: 'log',
+        title: { text: 'growth (log)' },
+        showline: true,
+        ticks: 'outside',
+      },
+      xaxis3: {
+        domain: [0, 0.44],
+        anchor: 'y3',
+        automargin: true,
+        showline: true,
+        ticks: 'outside',
+      },
+      yaxis3: { domain: [0, 0.42], anchor: 'x3', automargin: true, title: { text: 'level' } },
+      xaxis4: { domain: [0.56, 1], anchor: 'y4', automargin: true, showline: true },
+      yaxis4: { domain: [0, 0.42], anchor: 'x4', showline: true, ticks: 'outside' },
+    },
   });
 
   return {
-    ready,
-    get renderer() {
-      return chart?.three.renderer;
-    },
-    dispose: () => {
-      disposed = true;
-      chart?.destroy();
-    },
+    ready: componentsReady(chart),
+    renderer: chart.three.renderer,
+    dispose: () => chart.destroy(),
   };
 }

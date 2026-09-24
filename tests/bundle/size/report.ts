@@ -9,14 +9,23 @@
  *
  * "Size" is each entry's initial chunk. The "Lazy" column is the same entry's dynamically imported
  * chunks (the SDF text engine, E21.5), gzipped like size-limit does (level 9); the budgeted
- * `lazyOf` row gates them.
+ * `lazyOf` row gates them. The "Fonts" column is the built-in default font's faces (E2.18), each
+ * its own lazy chunk (a page loads only the faces its text uses): the sum over the faces, each
+ * gzipped on its own; per-face `lazyOf` rows gate them.
  */
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { gzipSync } from 'node:zlib';
-import { MANIFEST, ROOT, SIZE_ENTRIES, lazyFile, type ManifestEntry } from './entries.ts';
+import {
+  LAZY_PARTS,
+  MANIFEST,
+  ROOT,
+  SIZE_ENTRIES,
+  lazyFile,
+  type ManifestEntry,
+} from './entries.ts';
 
 /** Marker the CI workflow uses to find and update its PR comment. */
 const COMMENT_MARKER = '<!-- holochart-size-report -->';
@@ -28,6 +37,8 @@ interface SizeResult {
   sizeLimit?: number;
   /** Gzipped size of the entry's lazy chunks (added by this script; absent when none). */
   lazy?: number;
+  /** Gzipped size of the entry's lazy font faces, summed over the faces (absent when none). */
+  fonts?: number;
 }
 
 const { values: args } = parseArgs({
@@ -68,9 +79,19 @@ function delta(size: number, before: number | undefined): string {
 }
 
 /** Gzipped size of an entry's lazy chunks (bundle.ts writes them only when there are any). */
-function lazySize(id: string): number | undefined {
-  const file = lazyFile(id);
+function lazySize(id: string, part?: string): number | undefined {
+  const file = lazyFile(id, part);
   return existsSync(file) ? gzipSync(readFileSync(file), { level: 9 }).length : undefined;
+}
+
+/** Sum of the gzipped sizes of an entry's lazy parts (the font faces), if it has any. */
+function partsSize(item: ManifestEntry | undefined): number | undefined {
+  if (!item?.lazyParts) return undefined;
+  let total = 0;
+  for (const part of LAZY_PARTS) {
+    if (item.lazyParts[part]) total += lazySize(item.id, part) ?? 0;
+  }
+  return total;
 }
 
 const results = runSizeLimit();
@@ -82,6 +103,8 @@ for (const r of results) {
   const id = entryByName.get(r.name)?.id;
   const lazy = id && manifest.get(id)?.lazy ? lazySize(id) : undefined;
   if (lazy !== undefined) r.lazy = lazy;
+  const fonts = id ? partsSize(manifest.get(id)) : undefined;
+  if (fonts !== undefined) r.fonts = fonts;
 }
 
 const rows = results.map((r) => {
@@ -89,9 +112,11 @@ const rows = results.map((r) => {
   const entry = entryByName.get(r.name);
   const note = manifest.get(entry?.id ?? '')?.note;
   const name = note ? `${r.name} ¹` : r.name;
-  // The IIFE is one file: its dynamic imports are inlined, so it has no lazy chunks by design.
+  // The IIFE is one file: its dynamic imports are inlined, so it has no lazy chunks by design; its
+  // fonts are separate .otf files next to it.
   const lazy = r.lazy !== undefined ? kB(r.lazy) : entry?.file ? 'inlined' : '—';
-  const cells = [name, kB(r.size), lazy, r.sizeLimit ? kB(r.sizeLimit) : '—'];
+  const fonts = r.fonts !== undefined ? kB(r.fonts) : entry?.file ? 'files' : '—';
+  const cells = [name, kB(r.size), lazy, fonts, r.sizeLimit ? kB(r.sizeLimit) : '—'];
   if (base) cells.push(delta(r.size, baseByName.get(r.name)));
   cells.push(status);
   return `| ${cells.join(' | ')} |`;
@@ -99,10 +124,13 @@ const rows = results.map((r) => {
 
 const header = base
   ? [
-      '| Entry | Size (min+gz) | Lazy (min+gz) | Budget | Δ vs main | |',
-      '| --- | ---: | ---: | ---: | ---: | --- |',
+      '| Entry | Size (min+gz) | Lazy (min+gz) | Fonts (lazy) | Budget | Δ vs main | |',
+      '| --- | ---: | ---: | ---: | ---: | ---: | --- |',
     ]
-  : ['| Entry | Size (min+gz) | Lazy (min+gz) | Budget | |', '| --- | ---: | ---: | ---: | --- |'];
+  : [
+      '| Entry | Size (min+gz) | Lazy (min+gz) | Fonts (lazy) | Budget | |',
+      '| --- | ---: | ---: | ---: | ---: | --- |',
+    ];
 const notes = [...manifest.values()].map((m) => m.note);
 const footnotes = notes.filter(Boolean);
 const lazyPackages = [...new Set([...manifest.values()].flatMap((m) => m.lazy?.packages ?? []))];
@@ -122,7 +150,8 @@ const markdown = [
   'ESM entries exclude `three` (peer dependency); the IIFE bundles it. 1 kB = 1000 bytes.',
   'Size is what loads up front (the initial chunks); Lazy is what the entry loads on demand' +
     (lazyPackages.length ? ` (${lazyPackages.join(', ')})` : '') +
-    ', gated by its own row.',
+    ', gated by its own row. Fonts is the built-in default font (TeX Gyre Heros): four faces, each' +
+    ' its own lazy chunk, summed; a page loads only the faces its text uses (usually just regular).',
   ...(base ? [] : ['', '_No baseline from `main` was available, so no deltas are shown._']),
   ...(footnotes.length ? ['', ...footnotes.map((n) => `¹ ${n}`)] : []),
   '',

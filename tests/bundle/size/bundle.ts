@@ -11,8 +11,10 @@
  *
  * Code splitting is on, like in an app: dynamic `import()`s (the SDF text engine, plan E21.5)
  * become separate chunks. `<id>.js` holds the entry's **initial** chunks (the entry chunk and every
- * chunk it imports statically), what a page downloads before it runs; `<id>.lazy.js` holds all
- * other chunks, loaded on demand. Every output chunk lands in exactly one of the two files, so no
+ * chunk it imports statically), what a page downloads before it runs; `<id>.lazy.js` holds the
+ * other chunks, loaded on demand, except the built-in default font's faces (plan E2.18), which go
+ * to `<id>.lazy.<part>.js`, one file per face (`LAZY_PARTS` in entries.ts): a page loads them one
+ * at a time, only the faces its text uses. Every output chunk lands in exactly one file, so no
  * code drops out of the numbers; the manifest lists what the lazy chunks contain.
  */
 import { existsSync, mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
@@ -20,12 +22,14 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
+  LAZY_PARTS,
   MANIFEST,
   OUT_DIR,
   ROOT,
   SIZE_ENTRIES,
   packageDist,
   lazyFile,
+  lazyPartOf,
   type EntryImport,
   type ManifestEntry,
 } from './entries.ts';
@@ -106,6 +110,31 @@ function split(chunks: Chunk[]): Split {
 
 const code = (chunks: readonly Chunk[]): string => chunks.map((c) => c.code ?? '').join('\n');
 
+/**
+ * Split lazy chunks into {@link LAZY_PARTS} (a chunk whose modules all belong to one part) and the
+ * rest. A chunk mixing a part's modules with other code fails the build: its size would be
+ * attributed to one row and hide in the other.
+ */
+function splitLazy(lazy: readonly Chunk[]): { rest: Chunk[]; parts: Map<string, Chunk[]> } {
+  const rest: Chunk[] = [];
+  const parts = new Map<string, Chunk[]>();
+  for (const chunk of lazy) {
+    const ids = chunk.moduleIds ?? [];
+    const owners = new Set(ids.map((id) => lazyPartOf(id)));
+    const [only] = owners;
+    if (owners.size === 1 && only !== undefined) {
+      if (!(LAZY_PARTS as readonly string[]).includes(only))
+        throw new Error(`unknown part ${only}`);
+      parts.set(only, [...(parts.get(only) ?? []), chunk]);
+    } else if ([...owners].some((o) => o !== undefined)) {
+      throw new Error(`${chunk.fileName} mixes a lazy part (${[...owners].join(', ')}) with code`);
+    } else {
+      rest.push(chunk);
+    }
+  }
+  return { rest, parts };
+}
+
 /** npm packages (or workspace package dirs) whose modules a chunk contains, for the report. */
 function packagesIn(chunks: readonly Chunk[]): string[] {
   const names = new Set<string>();
@@ -166,17 +195,29 @@ async function main(): Promise<void> {
     writeFileSync(path.join(OUT_DIR, `${entry.id}.js`), code(initial));
     const item: ManifestEntry = { id: entry.id };
     if (notes.length) item.note = notes.join('; ');
-    if (lazy.length) {
-      writeFileSync(lazyFile(entry.id), code(lazy));
-      item.lazy = { chunks: lazy.length, packages: packagesIn(lazy) };
+    const { rest, parts: lazyParts } = splitLazy(lazy);
+    if (rest.length) {
+      writeFileSync(lazyFile(entry.id), code(rest));
+      item.lazy = { chunks: rest.length, packages: packagesIn(rest) };
+    }
+    if (lazyParts.size) {
+      item.lazyParts = {};
+      for (const [part, chunks] of lazyParts) {
+        writeFileSync(lazyFile(entry.id, part), code(chunks));
+        item.lazyParts[part] = chunks.length;
+      }
     }
     manifest.push(item);
     if (notes.length) console.warn(`[size] ${entry.name}: ${notes.join('; ')}`);
   }
   // A lazy row measures another entry's lazy chunks: fail loudly rather than measure nothing.
   for (const entry of SIZE_ENTRIES) {
-    if (entry.lazyOf && !manifest.some((m) => m.id === entry.lazyOf && m.lazy)) {
-      throw new Error(`${entry.name}: entry "${entry.lazyOf}" produced no lazy chunks`);
+    if (!entry.lazyOf) continue;
+    const source = manifest.find((m) => m.id === entry.lazyOf);
+    const found = entry.lazyPart ? source?.lazyParts?.[entry.lazyPart] : source?.lazy;
+    if (!found) {
+      const what = entry.lazyPart ? `no "${entry.lazyPart}" chunk` : 'no lazy chunks';
+      throw new Error(`${entry.name}: entry "${entry.lazyOf}" produced ${what}`);
     }
   }
   writeFileSync(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);

@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -24,7 +23,6 @@ const WOMEN = [4.9, 5.1, 6.0, 6.7, 6.5, 7.0, 6.2, 4.6, 3.1];
 export function run(el: HTMLElement): ExampleHandle {
   const ticks = [-8, -6, -4, -2, 0, 2, 4, 6, 8];
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -34,7 +32,7 @@ export function run(el: HTMLElement): ExampleHandle {
         y: AGES,
         x: MEN.map((v) => -v),
         customdata: MEN,
-        marker: { color: '#3b6ea5' },
+        marker: { color: '#5e74d5' },
         hovertemplate: 'Men %{y}: %{customdata}M<extra></extra>',
       },
       {
@@ -44,12 +42,11 @@ export function run(el: HTMLElement): ExampleHandle {
         y: AGES,
         x: WOMEN,
         customdata: WOMEN,
-        marker: { color: '#e07b5a' },
+        marker: { color: '#cc540a' },
         hovertemplate: 'Women %{y}: %{customdata}M<extra></extra>',
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 12 },
       barmode: 'relative',
       bargap: 0.05,
       xaxis: {
@@ -59,9 +56,6 @@ export function run(el: HTMLElement): ExampleHandle {
         ticktext: ticks.map((t) => String(Math.abs(t))),
       },
       yaxis: { title: { text: 'Age' } },
-      legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: 1.08 },
-      margin: { l: 72, r: 24, t: 40, b: 48 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 

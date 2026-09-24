@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -24,7 +23,6 @@ export function run(el: HTMLElement): ExampleHandle {
   const connectorX = CITIES.flatMap((_, i) => [Y2015[i]!, Y2025[i]!, null]);
   const connectorY = CITIES.flatMap((c) => [c, c, null]);
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -32,7 +30,7 @@ export function run(el: HTMLElement): ExampleHandle {
         mode: 'lines',
         x: connectorX,
         y: connectorY,
-        line: { color: '#a0a8b8', width: 4 },
+        line: { color: '#3e3e4c', width: 3 },
         showlegend: false,
         hoverinfo: 'skip',
       },
@@ -42,7 +40,7 @@ export function run(el: HTMLElement): ExampleHandle {
         name: '2015',
         x: Y2015,
         y: CITIES,
-        marker: { size: 12, color: '#9ecae1' },
+        marker: { size: 10, color: '#80838f' },
       },
       {
         type: 'scatter',
@@ -50,21 +48,12 @@ export function run(el: HTMLElement): ExampleHandle {
         name: '2025',
         x: Y2025,
         y: CITIES,
-        marker: { size: 12, color: '#08519c' },
+        marker: { size: 10, color: '#5e74d5' },
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 12 },
-      title: {
-        text: 'Average commute (minutes), 2015 → 2025',
-        xref: 'paper',
-        x: 0,
-        xanchor: 'left',
-      },
-      legend: { orientation: 'h', x: 1, xanchor: 'right', y: 1.1 },
+      title: { text: 'Average commute (minutes), 2015 → 2025' },
       xaxis: { range: [24, 56], zeroline: false },
-      margin: { l: 72, r: 24, t: 56, b: 40 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 

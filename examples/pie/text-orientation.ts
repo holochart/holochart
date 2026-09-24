@@ -1,5 +1,4 @@
 import { createChart, render, type Chart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -47,14 +46,11 @@ const CHARACTERS = "0123456789.%' ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrst
 const ORIENTATIONS = ['horizontal', 'radial', 'tangential', 'auto'] as const;
 
 export function run(el: HTMLElement): ExampleHandle {
-  useExampleFonts();
   let chart: Chart | undefined;
   let disposed = false;
-  // Which orientation and size fit is decided from text metrics: measure with the vendored font.
-  const ready = Promise.all([
-    document.fonts.load('12px Inter').catch(() => undefined),
-    render.preloadTextFont({ family: 'Inter', characters: CHARACTERS }),
-  ]).then(async () => {
+  // Which orientation and size fit is decided from text metrics: measure with the shipped default font
+  // (loaded before the chart is created, so the first layout already uses it).
+  const ready = render.preloadTextFont({ characters: CHARACTERS }).then(async () => {
     if (disposed) return;
     chart = createChart(el, {
       data: ORIENTATIONS.map((orientation, i) => ({
@@ -67,14 +63,10 @@ export function run(el: HTMLElement): ExampleHandle {
         insidetextorientation: orientation,
         domain: { row: Math.floor(i / 2), column: i % 2 },
         title: { text: `'${orientation}'` },
-        marker: { line: { color: '#ffffff', width: 1 } },
       })),
       layout: {
-        font: { family: 'Inter' },
         grid: { rows: 2, columns: 2 },
         showlegend: false,
-        margin: { l: 24, r: 24, t: 40, b: 24 },
-        paper_bgcolor: '#ffffff',
       },
       config: { responsive: true },
     });

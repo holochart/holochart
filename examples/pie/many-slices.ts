@@ -1,5 +1,4 @@
 import { createChart, render, type Chart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import { rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -75,14 +74,11 @@ export function run(el: HTMLElement): ExampleHandle {
   const random = rng(911);
   const values = CITIES.map((_, i) => Math.round((4000 / (i + 1) ** 1.4) * (0.9 + 0.2 * random())));
 
-  useExampleFonts();
   let chart: Chart | undefined;
   let disposed = false;
-  // Label placement depends on text metrics: measure with the vendored font.
-  const ready = Promise.all([
-    document.fonts.load('11px Inter').catch(() => undefined),
-    render.preloadTextFont({ family: 'Inter', characters: CHARACTERS }),
-  ]).then(async () => {
+  // Label placement depends on text metrics: measure with the shipped default font
+  // (loaded before the chart is created, so the first layout already uses it).
+  const ready = render.preloadTextFont({ characters: CHARACTERS }).then(async () => {
     if (disposed) return;
     chart = createChart(el, {
       data: [
@@ -94,18 +90,14 @@ export function run(el: HTMLElement): ExampleHandle {
           direction: 'clockwise',
           textposition: 'outside',
           texttemplate: '%{label} %{percent}',
-          textfont: { size: 11 },
-          marker: { line: { color: '#ffffff', width: 1 } },
         },
       ],
       layout: {
-        font: { family: 'Inter' },
-        // Left-aligned, so the stacked labels of the tail (top center) stay clear of it.
-        title: { text: 'Visitors by city', x: 0.03, xanchor: 'left' },
+        // Left-aligned (the default), so the stacked labels of the tail (top center) stay clear of it.
+        title: { text: 'Visitors by city' },
         showlegend: false,
         // Outside labels and their leader lines need room on both sides.
-        margin: { l: 120, r: 120, t: 72, b: 48 },
-        paper_bgcolor: '#ffffff',
+        margin: { l: 120, r: 120, t: 72, b: 40 },
       },
       config: { responsive: true },
     });

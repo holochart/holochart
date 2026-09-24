@@ -1,13 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  BUILTIN_FONT_CSS_FAMILY,
   DEFAULT_FONT_CSS_FAMILY,
-  TROIKA_FALLBACK_CSS_FAMILY,
   clearFontRegistry,
   cssFontFamily,
   cssFontString,
+  defaultFontFace,
+  defaultFontFacesPending,
   fontWeightRank,
   fonts,
   getDefaultFontURL,
+  loadDefaultFontFaces,
   measurementFace,
   normalizeFontStyle,
   normalizeFontWeight,
@@ -15,12 +18,14 @@ import {
   registerFont,
   registerFontFamily,
   registeredFontFamilies,
+  resolveDrawnFontURL,
   resolveFontFace,
   resolveFontURL,
+  setDefaultFontFaces,
   setDefaultFontURL,
-  setUnicodeFontsURL,
   subscribeFontChanges,
-  troikaFallbackWeight,
+  type TextFontStyle,
+  type TextFontWeight,
 } from './text-fonts.ts';
 
 /** Plotly's default `font.family` (core's `DEFAULT_FONT_FAMILY`). */
@@ -263,7 +268,7 @@ function stubCSSFonts() {
 describe('measurementFace (E2.18: measure what troika draws)', () => {
   afterEach(() => {
     setDefaultFontURL(null);
-    setUnicodeFontsURL(null);
+    setDefaultFontFaces(null);
     vi.unstubAllGlobals();
   });
 
@@ -294,13 +299,18 @@ describe('measurementFace (E2.18: measure what troika draws)', () => {
     });
   });
 
-  it("falls back to troika's CDN font (nearest weight, requested style) without a default", () => {
+  it('uses the built-in default font face (400/700, requested style) without a default URL', () => {
     expect(getDefaultFontURL()).toBeUndefined();
     expect(measurementFace({ family: 'Open Sans', weight: 650, style: 'italic' })).toEqual({
-      family: `${TROIKA_FALLBACK_CSS_FAMILY}, "Open Sans"`,
-      weight: 600,
+      family: `${BUILTIN_FONT_CSS_FAMILY}, "Open Sans"`,
+      weight: 700,
       style: 'italic',
-      source: 'troika',
+      source: 'builtin',
+    });
+    expect(measurementFace({ family: 'Open Sans', weight: 500 })).toMatchObject({
+      weight: 400,
+      style: 'normal',
+      source: 'builtin',
     });
   });
 
@@ -309,13 +319,6 @@ describe('measurementFace (E2.18: measure what troika draws)', () => {
     expect(measurementFace({ family: 'Inter' }).source).toBe('default');
     registerFont({ family: 'Inter', url: 'inter.woff' }, { cssFontFace: false });
     expect(measurementFace({ family: 'Inter' }).source).toBe('registered');
-  });
-
-  it('troikaFallbackWeight picks the nearest weight, the lighter on ties', () => {
-    expect(troikaFallbackWeight('bold')).toBe(700);
-    expect(troikaFallbackWeight(450)).toBe(400);
-    expect(troikaFallbackWeight(1000)).toBe(900);
-    expect(troikaFallbackWeight(1)).toBe(100);
   });
 
   it('registers the default font as an eagerly loaded CSS face and notifies on load', async () => {
@@ -341,23 +344,122 @@ describe('measurementFace (E2.18: measure what troika draws)', () => {
     off();
   });
 
-  it("registers troika's fallback faces lazily, at troika's URLs, without loading them", () => {
+  it('starts loading the built-in face it measures with, and registers its CSS face once loaded', async () => {
     const { added } = stubCSSFonts();
-    setUnicodeFontsURL('https://fonts.example/data/');
+    setDefaultFontFaces({ regular: 'r.otf', bold: 'b.otf' });
     expect(added).toHaveLength(0);
-    measurementFace({ family: 'Open Sans' });
-    expect(added).toHaveLength(18);
-    const bold = added.find(
-      (f) => f.descriptors.weight === '700' && f.descriptors.style === 'normal',
-    );
-    expect(bold?.family).toBe(TROIKA_FALLBACK_CSS_FAMILY);
-    expect(bold?.source).toBe(
-      'url("https://fonts.example/data/font-files/latin/sans-serif.normal.700.woff")',
-    );
-    expect(bold?.descriptors.unicodeRange).toMatch(/^U\+0-FF,/);
-    expect(added.every((f) => f.loadCalls === 0)).toBe(true);
-    // Registered once, not per request.
+    const listener = vi.fn();
+    const off = subscribeFontChanges(listener);
+    measurementFace({ family: 'Open Sans', weight: 'bold' });
+    await vi.waitFor(() => expect(added).toHaveLength(1));
+    const face = added[0]!;
+    expect(face.family).toBe(BUILTIN_FONT_CSS_FAMILY);
+    expect(face.source).toBe('url("b.otf")');
+    expect(face.descriptors).toEqual({ weight: '700', style: 'normal' });
+    expect(face.loadCalls).toBe(1);
+    // Drawable only once measurable: the URL resolves after the CSS face has loaded.
+    expect(resolveDrawnFontURL('Open Sans', 'bold')).toBeUndefined();
+    face.finish();
+    await vi.waitFor(() => expect(resolveDrawnFontURL('Open Sans', 'bold')).toBe('b.otf'));
+    expect(listener).toHaveBeenCalled();
+    // Measuring again (another request for the same face) does not register it twice.
     measurementFace({ family: 'Roboto', weight: 700 });
-    expect(added).toHaveLength(18);
+    expect(added).toHaveLength(1);
+    off();
+  });
+});
+
+describe('built-in default font: TeX Gyre Heros (E2.18)', () => {
+  const HELVETICA = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+
+  afterEach(() => {
+    setDefaultFontURL(null);
+    setDefaultFontFaces(null);
+    vi.unstubAllGlobals();
+  });
+
+  it('draws unregistered families with the face closest to the weight and style', () => {
+    const face = (weight?: TextFontWeight, style?: TextFontStyle) => {
+      const f = defaultFontFace(HELVETICA, weight, style);
+      return f && `${f.weight} ${f.style}`;
+    };
+    expect(face()).toBe('400 normal');
+    expect(face('bold')).toBe('700 normal');
+    expect(face(600)).toBe('700 normal'); // > 500: heavier first
+    expect(face(500)).toBe('400 normal'); // 400–500: lighter when nothing ≤ 500 is heavier
+    expect(face(300, 'italic')).toBe('400 italic');
+    expect(face(900, 'italic')).toBe('700 italic');
+    expect(defaultFontFace('sans-serif', 'bold', 'italic')).toEqual({
+      weight: 700,
+      style: 'italic',
+      url: undefined, // not loaded
+    });
+  });
+
+  it('gives way to registered families and to the app default font URL', () => {
+    registerFont({ family: 'Helvetica', url: 'h.woff' }, { cssFontFace: false });
+    expect(defaultFontFace(HELVETICA)).toBeUndefined();
+    expect(resolveDrawnFontURL(HELVETICA)).toBe('h.woff');
+    clearFontRegistry();
+    setDefaultFontURL('app.woff');
+    expect(defaultFontFace(HELVETICA)).toBeUndefined();
+    expect(defaultFontFacesPending()).toBe(false);
+    expect(loadDefaultFontFaces([{ family: HELVETICA }])).toBeNull();
+    expect(resolveDrawnFontURL(HELVETICA)).toBeUndefined(); // troika's default: the app's font
+  });
+
+  it('loads only the faces requests need, once', async () => {
+    setDefaultFontFaces({
+      regular: 'r.otf',
+      bold: 'b.otf',
+      italic: 'i.otf',
+      boldItalic: 'bi.otf',
+    });
+    expect(defaultFontFacesPending()).toBe(true);
+    expect(loadDefaultFontFaces([])).toBeNull();
+    const first = loadDefaultFontFaces([{ family: 'A' }, { family: 'B', weight: 400 }]);
+    const again = loadDefaultFontFaces([{ family: 'C' }]);
+    expect(first).not.toBeNull();
+    await Promise.all([first, again]);
+    expect(resolveDrawnFontURL('A')).toBe('r.otf');
+    expect(defaultFontFace('A', 'bold')?.url).toBeUndefined();
+    // Until bold has loaded, bold text stands in with the closest loaded face.
+    expect(resolveDrawnFontURL('A', 'bold')).toBe('r.otf');
+    expect(loadDefaultFontFaces([{ family: 'A' }])).toBeNull(); // loaded
+    await loadDefaultFontFaces([{ family: 'A', weight: 'bold' }]);
+    expect(resolveDrawnFontURL('A', 'bold')).toBe('b.otf');
+    expect(defaultFontFace('A', 'normal', 'italic')?.url).toBeUndefined();
+    expect(defaultFontFacesPending()).toBe(true);
+  });
+
+  it('ships TeX Gyre Heros: faces load from their lazy chunks as blob: URLs of the OTF files', async () => {
+    await loadDefaultFontFaces([{ family: HELVETICA }]);
+    const url = resolveDrawnFontURL(HELVETICA);
+    expect(url).toMatch(/^blob:/);
+    const bytes = new Uint8Array(await (await fetch(url!)).arrayBuffer());
+    // OpenType with CFF outlines ('OTTO'), the size of texgyreheros-regular.otf.
+    expect(String.fromCharCode(...bytes.subarray(0, 4))).toBe('OTTO');
+    expect(bytes.length).toBe(133600);
+    // Only the regular face was loaded.
+    expect(defaultFontFace(HELVETICA, 'bold')?.url).toBeUndefined();
+    expect(defaultFontFace(HELVETICA, 'normal', 'italic')?.url).toBeUndefined();
+  });
+
+  it('registers each loaded face as a CSS face and revokes it when the faces are replaced', async () => {
+    const { added, fonts } = stubCSSFonts();
+    setDefaultFontFaces({ regular: 'r.otf' });
+    const load = loadDefaultFontFaces([{ family: 'A', style: 'italic' }]);
+    await vi.waitFor(() => expect(added).toHaveLength(1));
+    const face = added[0]!;
+    expect([face.family, face.source, face.descriptors]).toEqual([
+      BUILTIN_FONT_CSS_FAMILY,
+      'url("r.otf")',
+      { weight: '400', style: 'normal' },
+    ]);
+    face.finish();
+    await load;
+    setDefaultFontFaces(null);
+    expect(fonts.delete).toHaveBeenCalledWith(face);
+    expect(defaultFontFace('A')?.url).toBeUndefined();
   });
 });

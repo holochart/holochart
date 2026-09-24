@@ -1,7 +1,12 @@
-import { attr, supplyDefaults } from '@mk7s/holochart-core';
+import {
+  attr,
+  holochartTemplate,
+  plotlyClassicTemplate,
+  supplyDefaults,
+} from '@mk7s/holochart-core';
 import { describe, expect, it, vi } from 'vitest';
 import type { ComponentModule, TraceModule } from './contracts.ts';
-import { createChartRegistry, defineTemplate } from './registry.ts';
+import { createChartRegistry, defineTemplate, registry as sharedRegistry } from './registry.ts';
 import { createDotsModule, createLog } from './__testing__/fakes.ts';
 
 const bareTrace: TraceModule = {
@@ -91,5 +96,57 @@ describe('createChartRegistry', () => {
     const b = createChartRegistry();
     expect(b.getTrace('bare')).toBeUndefined();
     expect(a.core.traceTypes()).toEqual(['bare']);
+  });
+});
+
+describe('default template (ADR-021)', () => {
+  it('the shared registry starts with the built-in templates and applies holochart', () => {
+    expect(sharedRegistry.list()).toMatchObject({
+      templates: ['holochart', 'plotly-classic', 'none'],
+      defaultTemplate: 'holochart',
+    });
+    expect(sharedRegistry.core.getTemplate('holochart')).toBe(holochartTemplate);
+    expect(sharedRegistry.core.getTemplate('plotly-classic')).toBe(plotlyClassicTemplate);
+    const { fullLayout } = supplyDefaults({ layout: {} }, sharedRegistry.core);
+    expect(fullLayout.template).toBe(holochartTemplate);
+  });
+
+  it('fresh registries have no templates and apply none', () => {
+    const registry = createChartRegistry();
+    expect(registry.list()).toMatchObject({ templates: [], defaultTemplate: undefined });
+    expect(supplyDefaults({ layout: {} }, registry.core).fullLayout.template).toBeNull();
+  });
+
+  it('setDefaultTemplate sets, clears and warns about unregistered names', () => {
+    const warn = vi.fn();
+    const registry = createChartRegistry({ warn }).register(
+      defineTemplate('dark', { layout: { paper_bgcolor: '#111' } }),
+    );
+    expect(registry.setDefaultTemplate('dark')).toBe(registry);
+    expect(registry.list().defaultTemplate).toBe('dark');
+    expect(supplyDefaults({ layout: {} }, registry.core).fullLayout.paper_bgcolor).toBe(
+      'rgb(17, 17, 17)',
+    );
+    registry.setDefaultTemplate(undefined);
+    expect(registry.core.defaultTemplate).toBeUndefined();
+    expect(warn).not.toHaveBeenCalled();
+    registry.setDefaultTemplate('drak');
+    expect(warn).toHaveBeenCalledWith(expect.stringMatching(/no template 'drak' is registered/));
+    expect(registry.core.defaultTemplate).toBe('drak');
+  });
+
+  it('a module wrapping the same template object is the same registration', () => {
+    const warn = vi.fn();
+    const template = { layout: { paper_bgcolor: '#111' } };
+    const registry = createChartRegistry({ warn }).register(
+      defineTemplate('dark', template, { default: true }),
+    );
+    registry.register(defineTemplate('dark', template));
+    expect(warn).not.toHaveBeenCalled();
+    expect(registry.list().defaultTemplate).toBe('dark');
+    registry.register(defineTemplate('dark', { layout: {} }));
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringMatching(/template 'dark' is already registered/),
+    );
   });
 });

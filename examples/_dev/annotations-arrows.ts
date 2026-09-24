@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -31,12 +30,11 @@ export function run(el: HTMLElement): ExampleHandle {
     arrowsize: s,
     arrowwidth: 1 + i,
     arrowhead: 2,
-    arrowcolor: ['#1f77b4', '#2ca02c', '#ff7f0e', '#9467bd'][i],
+    arrowcolor: ['#5e74d5', '#118e36', '#ff9e00', '#9962c0'][i],
     ax: 30,
     ay: -35,
   }));
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -44,14 +42,11 @@ export function run(el: HTMLElement): ExampleHandle {
         mode: 'markers',
         x: [1, 7],
         y: [0.4, 0.4],
-        marker: { size: 16, color: '#d62728' },
+        marker: { size: 16 },
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 11 },
       showlegend: false,
-      margin: { l: 40, r: 24, t: 24, b: 30 },
-      plot_bgcolor: '#f4f6fa',
       xaxis: { range: [-0.7, 8.7], showgrid: false },
       yaxis: { range: [0, 3.9], showgrid: false, showticklabels: false },
       annotations: [
@@ -71,7 +66,7 @@ export function run(el: HTMLElement): ExampleHandle {
           arrowwidth: 1.5,
           standoff: 10,
           startstandoff: 10,
-          arrowcolor: '#444',
+          arrowcolor: '#eceef4',
         },
         {
           x: 4,

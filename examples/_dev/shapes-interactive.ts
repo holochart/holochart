@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 import type { InteractionHook } from './interaction-scatter.ts';
 
@@ -24,7 +23,6 @@ export const meta: ExampleMeta = {
 const EVENTS = ['relayout', 'relayouting', 'click'] as const;
 
 export function run(el: HTMLElement): ExampleHandle {
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -32,16 +30,12 @@ export function run(el: HTMLElement): ExampleHandle {
         mode: 'markers',
         x: [0, 10],
         y: [0, 100],
-        marker: { size: 6, color: '#444444' },
+        marker: { size: 6, color: '#80838f' },
       },
     ],
     layout: {
-      font: { family: 'Inter' },
-      margin: { l: 60, r: 20, t: 20, b: 50 },
       xaxis: { range: [0, 10] },
       yaxis: { range: [0, 100] },
-      paper_bgcolor: '#ffffff',
-      plot_bgcolor: '#e5ecf6',
       showlegend: false,
       shapes: [
         // 0: rect, move by its inside, resize by its edges.
@@ -51,7 +45,7 @@ export function run(el: HTMLElement): ExampleHandle {
           x1: 3,
           y0: 60,
           y1: 80,
-          fillcolor: '#d62728',
+          fillcolor: '#ea2a37',
           line: { width: 0 },
         },
         // 1: line, move its ends.
@@ -61,7 +55,7 @@ export function run(el: HTMLElement): ExampleHandle {
           y0: 20,
           x1: 8,
           y1: 50,
-          line: { color: '#1f77b4', width: 6 },
+          line: { color: '#5e74d5', width: 6 },
         },
         // 2: ellipse.
         {
@@ -70,14 +64,14 @@ export function run(el: HTMLElement): ExampleHandle {
           x1: 8,
           y0: 70,
           y1: 90,
-          fillcolor: '#2ca02c',
+          fillcolor: '#118e36',
           line: { width: 0 },
         },
         // 3: path, moved as a whole.
         {
           type: 'path',
           path: 'M 1 10 L 3 10 L 2 30 Z',
-          fillcolor: '#9467bd',
+          fillcolor: '#9962c0',
           line: { width: 0 },
         },
       ],

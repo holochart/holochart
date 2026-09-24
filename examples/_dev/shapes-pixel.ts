@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -29,7 +28,6 @@ const POSITIONS = [
 ] as const;
 
 export function run(el: HTMLElement): ExampleHandle {
-  useExampleFonts();
   const pts = [
     [1, 20],
     [3, 60],
@@ -45,7 +43,7 @@ export function run(el: HTMLElement): ExampleHandle {
     x1: 12,
     y0: -12,
     y1: 12,
-    line: { color: '#d62728', width: 2 },
+    line: { color: '#ff9e00', width: 2 },
   });
   const chart = createChart(el, {
     data: [
@@ -54,13 +52,11 @@ export function run(el: HTMLElement): ExampleHandle {
         mode: 'markers',
         x: pts.map((p) => p[0]),
         y: pts.map((p) => p[1]),
-        marker: { size: 8, color: '#1f77b4' },
+        marker: { size: 8 },
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 11 },
       showlegend: false,
-      margin: { l: 44, r: 20, t: 20, b: 32 },
       xaxis: { range: [0, 12] },
       yaxis: { range: [0, 100] },
       shapes: [
@@ -76,7 +72,7 @@ export function run(el: HTMLElement): ExampleHandle {
           x1: 35,
           y0: 20,
           y1: 44,
-          fillcolor: '#1f77b4',
+          fillcolor: '#5e74d5',
           line: { width: 0 },
           label: { text: 'peak', font: { color: '#ffffff' } },
         },
@@ -88,7 +84,7 @@ export function run(el: HTMLElement): ExampleHandle {
           xanchor: 5,
           yanchor: 35,
           path: 'M 0 -14 L -8 -30 L 8 -30 Z',
-          fillcolor: '#2ca02c',
+          fillcolor: '#118e36',
           line: { width: 0 },
         },
         // Mixed: data-sized in x, pixel-sized in y (a 16 px strip at y = 85).
@@ -100,9 +96,9 @@ export function run(el: HTMLElement): ExampleHandle {
           yanchor: 85,
           y0: -8,
           y1: 8,
-          fillcolor: 'rgba(255, 127, 14, 0.5)',
+          fillcolor: 'rgba(204, 84, 10, 0.5)',
           line: { width: 0 },
-          label: { text: '16 px tall', textposition: 'middle right', font: { size: 10 } },
+          label: { text: '16 px tall', textposition: 'middle right' },
         },
         // Label positions on one box.
         {
@@ -111,8 +107,8 @@ export function run(el: HTMLElement): ExampleHandle {
           x1: 11.5,
           y0: 10,
           y1: 75,
-          fillcolor: 'rgba(148, 103, 189, 0.12)',
-          line: { color: '#9467bd', width: 1 },
+          fillcolor: 'rgba(153, 98, 192, 0.18)',
+          line: { color: '#9962c0', width: 1 },
         },
         ...POSITIONS.map((p) => ({
           type: 'rect',
@@ -121,7 +117,7 @@ export function run(el: HTMLElement): ExampleHandle {
           y0: 10,
           y1: 75,
           line: { width: 0 },
-          label: { text: p, textposition: p, font: { size: 10, color: '#6a3d9a' } },
+          label: { text: p, textposition: p },
         })),
       ],
     },

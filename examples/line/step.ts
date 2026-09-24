@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -34,7 +33,6 @@ export function run(el: HTMLElement): ExampleHandle {
     { shape: 'hvh', name: "'hvh': step halfway" },
   ];
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: shapes.map(({ shape, name }, k) => ({
       type: 'scatter',
@@ -47,10 +45,7 @@ export function run(el: HTMLElement): ExampleHandle {
       marker: { size: 7 },
     })),
     layout: {
-      font: { family: 'Inter', size: 12 },
       yaxis: { title: { text: 'Rate (%), offset per series' }, ticksuffix: '%' },
-      margin: { l: 64, r: 24, t: 24, b: 40 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 

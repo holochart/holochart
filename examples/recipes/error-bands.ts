@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -33,7 +32,6 @@ export function run(el: HTMLElement): ExampleHandle {
   const meanB = xb.map((v) => 7 + Math.cos(v / 2) + normal() * 0.15);
   const sdB = xb.map(() => 0.6 + Math.abs(normal()) * 0.2);
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -42,8 +40,8 @@ export function run(el: HTMLElement): ExampleHandle {
         name: 'model A ± 1 sd',
         x,
         y: meanA,
-        line: { color: '#1f77b4', width: 2 },
-        error_y: { type: 'data', array: sdA, width: 0, thickness: 5, color: '#c6dbef' },
+        line: { color: '#5e74d5', width: 1.5 },
+        error_y: { type: 'data', array: sdA, width: 0, thickness: 5, color: '#202a4a' },
       },
       {
         type: 'scatter',
@@ -51,7 +49,7 @@ export function run(el: HTMLElement): ExampleHandle {
         name: 'model B upper',
         x: xb,
         y: meanB.map((m, i) => m + sdB[i]!),
-        line: { color: '#ff7f0e', width: 1, dash: 'dash' },
+        line: { color: '#cc540a', width: 1, dash: 'dash' },
         legendgroup: 'b',
         showlegend: false,
       },
@@ -61,7 +59,7 @@ export function run(el: HTMLElement): ExampleHandle {
         name: 'model B lower',
         x: xb,
         y: meanB.map((m, i) => m - sdB[i]!),
-        line: { color: '#ff7f0e', width: 1, dash: 'dash' },
+        line: { color: '#cc540a', width: 1, dash: 'dash' },
         legendgroup: 'b',
         showlegend: false,
       },
@@ -71,17 +69,14 @@ export function run(el: HTMLElement): ExampleHandle {
         name: 'model B ± 1 sd',
         x: xb,
         y: meanB,
-        line: { color: '#ff7f0e', width: 2 },
+        line: { color: '#cc540a', width: 1.5 },
         marker: { size: 5 },
         legendgroup: 'b',
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 12 },
-      margin: { l: 48, r: 24, t: 24, b: 40 },
-      plot_bgcolor: '#ffffff',
-      xaxis: { gridcolor: '#e5e5e5', zeroline: false },
-      yaxis: { gridcolor: '#e5e5e5', zeroline: false },
+      xaxis: { zeroline: false },
+      yaxis: { zeroline: false },
     },
   });
 

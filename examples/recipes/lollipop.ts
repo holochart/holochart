@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -19,7 +18,6 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const RAIN = [78, 61, 57, 44, 49, 38, 22, 27, 51, 83, 96, 88];
 
 export function run(el: HTMLElement): ExampleHandle {
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -28,24 +26,23 @@ export function run(el: HTMLElement): ExampleHandle {
         name: 'Rainfall',
         x: MONTHS,
         y: RAIN,
-        marker: { size: 13, color: '#17becf', line: { width: 2, color: '#0e7c86' } },
+        marker: { size: 10, color: '#128b8b', line: { width: 1.5, color: '#3fd0e0' } },
         error_y: {
           type: 'data',
           symmetric: false,
           array: RAIN.map(() => 0),
           arrayminus: RAIN,
           width: 0,
-          thickness: 2.5,
-          color: '#0e7c86',
+          thickness: 2,
+          color: '#128b8b',
         },
         hovertemplate: '%{x}: %{y} mm<extra></extra>',
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 12 },
+      // One label per stem: the default look's `nticks` would label every other month.
+      xaxis: { dtick: 1 },
       yaxis: { title: { text: 'Rainfall (mm)' } },
-      margin: { l: 56, r: 24, t: 24, b: 40 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 

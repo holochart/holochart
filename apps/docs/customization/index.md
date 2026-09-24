@@ -12,8 +12,9 @@ with a theme and reach for more control only where you need it. This section wil
 per layer, with a runnable example each.
 
 1. **Library defaults**: the `dflt` value of each attribute in the schema.
-2. **Theme or template**: `layout.template = 'dark'`, or an object with layout and per-trace-type
-   defaults. See [Themes & templates](/customization/themes-templates).
+2. **Theme or template**: `holochart` (the default look) unless you set `layout.template`, such as
+   `'plotly_dark'` or an object with layout and per-trace-type defaults. See
+   [Themes & templates](/customization/themes-templates).
 3. **Layout-level defaults**: `layout.colorway`, `layout.font`, `layout.hoverlabel`.
 4. **Trace attributes**: `{ marker: { color: 'red', size: 8 } }`.
 5. **Per-point arrays**: `{ marker: { color: [...], size: [...] } }`. See

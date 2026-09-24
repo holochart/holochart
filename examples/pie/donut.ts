@@ -1,15 +1,15 @@
 import { createChart, render, type Chart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
  * Donut (plan E9.11): `hole: 0.5` cuts out the middle and `title.position: 'middle center'` puts
- * the trace title in the hole, a common place for the total. White `marker.line` outlines separate
- * the slices, and `textinfo: 'percent'` keeps the ring labels short.
+ * the trace title in the hole, a common place for the total. A wider background-colored
+ * `marker.line` separates the slices, and `textinfo: 'percent'` keeps the ring labels short.
  */
 export const meta: ExampleMeta = {
   title: 'Pie: donut with a centered title',
-  description: 'A donut (hole 0.5) with the total as a title in the hole and white slice outlines.',
+  description:
+    'A donut (hole 0.5) with the total as a title in the hole and gaps between the slices.',
   tags: ['pie', 'donut', 'chart', 'title'],
   // SDF text anti-aliasing varies slightly across GPUs.
   testTolerance: 0.004,
@@ -43,15 +43,11 @@ function textReady(chart: Chart, quietMs = 300, maxMs = 15_000): Promise<void> {
 const CHARACTERS = '0123456789.,% ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
 export function run(el: HTMLElement): ExampleHandle {
-  useExampleFonts();
   let chart: Chart | undefined;
   let disposed = false;
-  // Inside-label fit decisions depend on text metrics: measure with the vendored font.
-  const ready = Promise.all([
-    document.fonts.load('12px Inter').catch(() => undefined),
-    document.fonts.load('bold 12px Inter').catch(() => undefined),
-    render.preloadTextFont({ family: 'Inter', characters: CHARACTERS }),
-  ]).then(async () => {
+  // Inside-label fit decisions depend on text metrics: measure with the shipped default font
+  // (loaded before the chart is created, so the first layout already uses it).
+  const ready = render.preloadTextFont({ characters: CHARACTERS }).then(async () => {
     if (disposed) return;
     chart = createChart(el, {
       data: [
@@ -62,7 +58,7 @@ export function run(el: HTMLElement): ExampleHandle {
           values: [5820, 4310, 960, 420, 190],
           hole: 0.5,
           textinfo: 'percent',
-          marker: { line: { color: '#ffffff', width: 2 } },
+          marker: { line: { color: '#0a0a0f', width: 2 } },
           title: {
             text: '<b>11,700</b><br>sessions',
             position: 'middle center',
@@ -71,10 +67,7 @@ export function run(el: HTMLElement): ExampleHandle {
         },
       ],
       layout: {
-        font: { family: 'Inter' },
         showlegend: true,
-        margin: { l: 24, r: 24, t: 24, b: 24 },
-        paper_bgcolor: '#ffffff',
       },
       config: { responsive: true },
     });

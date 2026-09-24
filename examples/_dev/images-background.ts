@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -20,7 +19,6 @@ const TERRAIN = new URL('../_lib/assets/terrain.png', import.meta.url).href;
 const LOGO = new URL('../_lib/assets/logo.png', import.meta.url).href;
 
 export function run(el: HTMLElement): ExampleHandle {
-  useExampleFonts();
   const t = Array.from({ length: 40 }, (_, i) => i / 3);
   const chart = createChart(el, {
     data: [
@@ -29,14 +27,12 @@ export function run(el: HTMLElement): ExampleHandle {
         mode: 'lines+markers',
         x: t.map((v) => 1 + v * 0.62),
         y: t.map((v) => 3 + 2.2 * Math.sin(v * 0.8) + v * 0.15),
-        line: { color: '#d62728', width: 3 },
-        marker: { size: 6, color: '#d62728' },
+        line: { width: 3 },
+        marker: { size: 6 },
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 11 },
       showlegend: false,
-      margin: { l: 44, r: 20, t: 20, b: 32 },
       xaxis: { range: [0, 10], gridcolor: 'rgba(0,0,0,0.25)' },
       yaxis: { range: [0, 8], gridcolor: 'rgba(0,0,0,0.25)' },
       images: [

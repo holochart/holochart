@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -24,46 +23,42 @@ export function run(el: HTMLElement): ExampleHandle {
   const forecastX = months.slice(14);
   const forecast = forecastX.map((_, k) => last + k * 1.4);
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
         name: 'upper limit (longdash)',
         x: months,
         y: months.map((m) => 62 + m * 1.5),
-        line: { dash: 'longdash', width: 1, color: '#7f7f7f' },
+        line: { dash: 'longdash', width: 1, color: '#80838f' },
       },
       {
         name: 'lower limit (dashdot)',
         x: months,
         y: months.map((m) => 30 + m * 1.5),
-        line: { dash: 'dashdot', width: 1, color: '#7f7f7f' },
+        line: { dash: 'dashdot', width: 1, color: '#80838f' },
       },
       {
         name: 'target (dot)',
         x: months,
         y: months.map(() => 70),
-        line: { dash: 'dot', width: 2, color: '#00cc96' },
+        line: { dash: 'dot', width: 2, color: '#118e36' },
       },
       {
         name: 'budget (custom dash list)',
         x: months,
         y: months.map((m) => 36 + m * 1.9),
-        line: { dash: '8px,3px,2px,3px', width: 2, color: '#ab63fa' },
+        line: { dash: '8px,3px,2px,3px', width: 2, color: '#9962c0' },
       },
-      { name: 'actual', x: months.slice(0, 15), y: actual, line: { width: 3.5, color: '#636efa' } },
+      { name: 'actual', x: months.slice(0, 15), y: actual, line: { width: 3, color: '#5e74d5' } },
       {
         name: 'forecast (dash)',
         x: forecastX,
         y: forecast,
-        line: { dash: 'dash', width: 3.5, color: '#636efa' },
+        line: { dash: 'dash', width: 3, color: '#5e74d5' },
       },
     ].map((t) => ({ type: 'scatter', mode: 'lines', ...t })),
     layout: {
-      font: { family: 'Inter', size: 12 },
       xaxis: { title: { text: 'Month' } },
-      margin: { l: 48, r: 24, t: 24, b: 48 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 

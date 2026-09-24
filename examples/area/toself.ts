@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -25,7 +24,6 @@ export function run(el: HTMLElement): ExampleHandle {
   // Pentagram: the five outer vertices of a regular pentagon, visited every second one.
   const star = Array.from({ length: 5 }, (_, k) => Math.PI / 2 + (k * 4 * Math.PI) / 5);
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -54,12 +52,8 @@ export function run(el: HTMLElement): ExampleHandle {
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 12 },
-      legend: { orientation: 'h', x: 0, y: 1.02, yanchor: 'bottom' },
       xaxis: { range: [-0.5, 9], zeroline: false },
       yaxis: { range: [-0.4, 2.2], zeroline: false },
-      margin: { l: 40, r: 24, t: 40, b: 36 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 

@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 import type { InteractionHook } from './interaction-scatter.ts';
 
@@ -42,8 +41,7 @@ function summarize(payload: unknown): unknown {
 
 export function run(el: HTMLElement): ExampleHandle {
   const x = Array.from({ length: 10 }, (_, i) => i);
-  const white = { color: '#ffffff', size: 11 };
-  useExampleFonts();
+  const white = { color: '#ffffff' };
   const chart = createChart(el, {
     data: [
       {
@@ -51,16 +49,12 @@ export function run(el: HTMLElement): ExampleHandle {
         mode: 'markers',
         x,
         y: x.map((v) => v * 10),
-        marker: { size: 10, color: '#444444' },
+        marker: { size: 10, color: '#80838f' },
       },
     ],
     layout: {
-      font: { family: 'Inter' },
-      margin: { l: 60, r: 20, t: 20, b: 50 },
       xaxis: { range: [-1, 10] },
       yaxis: { range: [-10, 100] },
-      paper_bgcolor: '#ffffff',
-      plot_bgcolor: '#e5ecf6',
       showlegend: false,
       annotations: [
         // 0: text only, dragging it moves x / y.
@@ -71,7 +65,7 @@ export function run(el: HTMLElement): ExampleHandle {
           showarrow: false,
           width: 80,
           height: 30,
-          bgcolor: '#d62728',
+          bgcolor: '#ea2a37',
           font: white,
         },
         // 1: arrow with a pixel tail; the text moves the tail, the head moves x / y.
@@ -83,7 +77,7 @@ export function run(el: HTMLElement): ExampleHandle {
           text: 'tail',
           width: 60,
           height: 24,
-          bgcolor: '#1f77b4',
+          bgcolor: '#5e74d5',
           font: white,
         },
         // 2: emits clickannotation.
@@ -93,7 +87,7 @@ export function run(el: HTMLElement): ExampleHandle {
           text: 'click me',
           showarrow: false,
           captureevents: true,
-          bgcolor: '#ff7f0e',
+          bgcolor: '#cc540a',
           font: white,
         },
         // 3, 4: shown / hidden by clicks on the points below them.
@@ -107,7 +101,7 @@ export function run(el: HTMLElement): ExampleHandle {
           clicktoshow: 'onoff',
           width: 60,
           height: 24,
-          bgcolor: '#2ca02c',
+          bgcolor: '#118e36',
           font: white,
         },
         {
@@ -120,7 +114,7 @@ export function run(el: HTMLElement): ExampleHandle {
           clicktoshow: 'onout',
           width: 60,
           height: 24,
-          bgcolor: '#9467bd',
+          bgcolor: '#9962c0',
           font: white,
         },
       ],

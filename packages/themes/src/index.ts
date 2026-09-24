@@ -1,8 +1,12 @@
 /**
- * @mk7s/holochart-themes — the built-in templates (plan E8.1): Holochart's own `holochart`,
- * `holochart-dark`, `high-contrast` and `neon`, and plotly.py's `plotly`, `plotly_white`,
- * `plotly_dark`, `simple_white`, `ggplot2`, `seaborn`, `presentation`, `xgridoff`, `ygridoff`,
- * `gridon` and `none`.
+ * @mk7s/holochart-themes — the built-in templates (plan E8.1): Holochart's own `holochart` (the
+ * default look), `plotly-classic` (Plotly's look), `high-contrast` and `neon`, plotly.py's
+ * `plotly`, `plotly_white`, `plotly_dark`, `simple_white`, `ggplot2`, `seaborn`, `presentation`,
+ * `xgridoff`, `ygridoff`, `gridon` and `none`, and `holochart-dark`, a deprecated alias of
+ * `holochart` (ADR-021).
+ *
+ * `holochart`, `plotly-classic` and `none` are core's built-in templates, which every bundle
+ * registers already (the runtime's shared registry applies `holochart` by default).
  *
  * The full `@mk7s/holochart` bundle registers them all ({@link builtinThemes}), so
  * `layout.template: 'plotly_dark'` (or `'seaborn+presentation'`) just works. With the runtime
@@ -10,7 +14,7 @@
  * Named palettes and colorscales live in core (`colors`, `colorways`, `registerBuiltinColors`).
  */
 import type { Template } from '@mk7s/holochart-core';
-import { highContrast, holochart, holochartDark, neon } from './holochart.ts';
+import { highContrast, holochart, holochartDark, neon, plotlyClassic } from './holochart.ts';
 import {
   ggplot2,
   gridon,
@@ -25,7 +29,7 @@ import {
   ygridoff,
 } from './plotly.ts';
 
-export { highContrast, holochart, holochartDark, neon } from './holochart.ts';
+export { highContrast, holochart, holochartDark, neon, plotlyClassic } from './holochart.ts';
 export {
   ggplot2,
   gridon,
@@ -43,6 +47,8 @@ export {
 /** Every built-in theme by its registered name. */
 export const THEMES = {
   holochart,
+  'plotly-classic': plotlyClassic,
+  /** @deprecated An alias of `holochart` (ADR-021). */
   'holochart-dark': holochartDark,
   plotly,
   plotly_white,

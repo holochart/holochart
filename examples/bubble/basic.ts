@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import { rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -8,7 +7,7 @@ import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
  * marker area, not its diameter, is proportional to the value, and `sizeref` sets the scale: a
  * value `v` draws `2·sqrt(v / 2 / sizeref)` px across. All three traces use the same `sizeref`, so
  * sizes compare across traces. `sizemin` keeps the smallest bubbles visible. Bubbles default to
- * `marker.opacity: 0.7` and a 1 px white outline, so overlaps stay readable.
+ * `marker.opacity: 0.7`, so overlaps stay readable.
  */
 export const meta: ExampleMeta = {
   title: 'Bubble: basic',
@@ -34,7 +33,6 @@ export function run(el: HTMLElement): ExampleHandle {
   const maxCustomers = Math.max(...groups.flatMap((g) => g.customers));
   const sizeref = (2 * maxCustomers) / 50 ** 2;
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: groups.map((g) => ({
       type: 'scatter',
@@ -46,11 +44,8 @@ export function run(el: HTMLElement): ExampleHandle {
       hovertemplate: 'Spend %{x:.0f}k$<br>Revenue %{y:.0f}k$<br>%{marker.size} customers',
     })),
     layout: {
-      font: { family: 'Inter', size: 12 },
       xaxis: { title: { text: 'Advertising spend (k$)' } },
       yaxis: { title: { text: 'Revenue (k$)' } },
-      margin: { l: 64, r: 24, t: 24, b: 48 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 

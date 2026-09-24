@@ -1,39 +1,743 @@
 /*
- * Holochart docs theme: brand accents on top of the VitePress default theme, plus styles for the
- * <Example> embed, status banners and the generated attribute reference.
+ * Holochart docs theme: the VitePress default theme restyled after the charts' default `holochart`
+ * template (ADR-021), so the pages and the charts they embed look like one thing. The site is dark
+ * only (`appearance: 'force-dark'` in the config), so the variables are set once, on `html.dark`
+ * (which outranks the default theme's `.dark` block).
+ *
+ * - Surfaces: the chart background `#0a0a0f` and slightly lifted greys for sidebars, code and
+ *   cards. Borders use the template's grid (`#1a1a22`) and axis-line (`#2c2c38`) colors.
+ * - Text: the template's title (`#eceef4`), text (`#a4a7b5`) and tick-label (`#80838f`) greys,
+ *   all at least 4.5:1 on every surface.
+ * - Accent: the colorway's red `#ea2a37`. Link text uses a lighter tint (`#ff5c66`, 6.5:1 on the
+ *   page); filled buttons use a darker one (`#d8232f`) so white labels stay above 4.5:1. Custom
+ *   blocks take their hues from the rest of the colorway.
+ * - Type: TeX Gyre Heros (see `fonts.css`), the font the charts draw with; a system monospace
+ *   for code. Dense but readable: 15 px body text, 14 px tables and sidebar.
  */
 
-:root {
-  --hc-violet-1: #5b4ae6;
-  --hc-violet-2: #6d5dfc;
-  --hc-violet-3: #8b7fff;
-  --hc-violet-soft: rgba(109, 93, 252, 0.14);
-  --hc-cyan: #11b5c8;
+:root,
+html.dark {
+  /* Chart template colors (packages/core/src/templates/builtin.ts). */
+  --hc-bg: #0a0a0f;
+  --hc-grid: #1a1a22;
+  --hc-axis: #2c2c38;
+  --hc-zero: #3e3e4c;
+  --hc-title: #eceef4;
+  --hc-text: #a4a7b5;
+  --hc-tick: #80838f;
+  --hc-red: #ea2a37;
+  --hc-blue: #5e74d5;
+  --hc-indigo: #9962c0;
+  --hc-emerald: #118e36;
+  --hc-orange: #cc540a;
+  --hc-teal: #128b8b;
+  --hc-gold: #997600;
+  --hc-magenta: #b8267e;
 
-  --vp-c-brand-1: var(--hc-violet-1);
-  --vp-c-brand-2: var(--hc-violet-2);
-  --vp-c-brand-3: var(--hc-violet-3);
-  --vp-c-brand-soft: var(--hc-violet-soft);
+  /* Surfaces. */
+  --hc-surface-1: #0d0d13;
+  --hc-surface-2: #111118;
+  --hc-surface-3: #16161f;
+  --hc-code-bg: #0e0e15;
+
+  --vp-c-bg: var(--hc-bg);
+  --vp-c-bg-alt: var(--hc-bg);
+  --vp-c-bg-soft: var(--hc-surface-2);
+  --vp-c-bg-elv: var(--hc-surface-2);
+
+  --vp-c-border: var(--hc-axis);
+  --vp-c-divider: var(--hc-grid);
+  --vp-c-gutter: var(--hc-grid);
+
+  --vp-c-text-1: #dcdee6;
+  --vp-c-text-2: var(--hc-text);
+  --vp-c-text-3: var(--hc-tick);
+
+  --vp-c-gray-1: #3e3e4c;
+  --vp-c-gray-2: #2c2c38;
+  --vp-c-gray-3: #1f1f29;
+  --vp-c-gray-soft: rgba(164, 167, 181, 0.08);
+
+  /* Colorway tints, lightened for text on dark surfaces (all at least 4.5:1). */
+  --vp-c-red-1: #ff5c66;
+  --vp-c-red-2: #ff808a;
+  --vp-c-red-3: #d8232f;
+  --vp-c-red-soft: rgba(234, 42, 55, 0.12);
+
+  --vp-c-indigo-1: #8d9df0;
+  --vp-c-indigo-2: #7385e0;
+  --vp-c-indigo-3: #5e74d5;
+  --vp-c-indigo-soft: rgba(94, 116, 213, 0.12);
+
+  --vp-c-purple-1: #c49bea;
+  --vp-c-purple-2: #ae7fd8;
+  --vp-c-purple-3: #9962c0;
+  --vp-c-purple-soft: rgba(153, 98, 192, 0.12);
+
+  --vp-c-green-1: #5fd08a;
+  --vp-c-green-2: #3cb96a;
+  --vp-c-green-3: #118e36;
+  --vp-c-green-soft: rgba(17, 142, 54, 0.12);
+
+  --vp-c-yellow-1: #e0b43a;
+  --vp-c-yellow-2: #c29a1c;
+  --vp-c-yellow-3: #997600;
+  --vp-c-yellow-soft: rgba(153, 118, 0, 0.14);
+
+  --vp-c-brand-1: var(--vp-c-red-1);
+  --vp-c-brand-2: var(--vp-c-red-2);
+  --vp-c-brand-3: var(--vp-c-red-3);
+  --vp-c-brand-soft: var(--vp-c-red-soft);
+
+  /* Tips are emerald (not the red brand), notes and info blue, warnings gold. */
+  --vp-c-tip-1: var(--vp-c-green-1);
+  --vp-c-tip-2: var(--vp-c-green-2);
+  --vp-c-tip-3: var(--vp-c-green-3);
+  --vp-c-tip-soft: var(--vp-c-green-soft);
+  --vp-c-note-1: var(--vp-c-indigo-1);
+  --vp-c-note-2: var(--vp-c-indigo-2);
+  --vp-c-note-3: var(--vp-c-indigo-3);
+  --vp-c-note-soft: var(--vp-c-indigo-soft);
+
+  --vp-font-family-base:
+    'TeX Gyre Heros', 'Helvetica Neue', Helvetica, Arial, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --vp-font-family-mono:
+    ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+
+  --vp-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --vp-shadow-2: 0 3px 12px rgba(0, 0, 0, 0.5);
+  --vp-shadow-3: 0 12px 32px rgba(0, 0, 0, 0.6);
+  --vp-shadow-4: 0 14px 44px rgba(0, 0, 0, 0.65);
+  --vp-shadow-5: 0 18px 56px rgba(0, 0, 0, 0.7);
+
+  --vp-nav-height: 56px;
+  --vp-nav-bg-color: rgba(10, 10, 15, 0.92);
+  --vp-nav-screen-bg-color: var(--hc-bg);
+  --vp-local-nav-bg-color: var(--hc-bg);
+  --vp-sidebar-bg-color: var(--hc-bg);
+  --vp-backdrop-bg-color: rgba(0, 0, 0, 0.72);
+
+  --vp-button-brand-bg: var(--vp-c-red-3);
+  --vp-button-brand-hover-bg: #c81e2a;
+  --vp-button-brand-active-bg: #b51a25;
+  --vp-button-alt-border: var(--hc-axis);
+  --vp-button-alt-text: var(--vp-c-text-1);
+  --vp-button-alt-bg: transparent;
+  --vp-button-alt-hover-border: var(--hc-zero);
+  --vp-button-alt-hover-text: var(--hc-title);
+  --vp-button-alt-hover-bg: var(--hc-surface-2);
+  --vp-button-alt-active-border: var(--hc-zero);
+  --vp-button-alt-active-text: var(--hc-title);
+  --vp-button-alt-active-bg: var(--hc-surface-3);
+
+  --vp-code-font-size: 0.875em;
+  --vp-code-line-height: 1.6;
+  --vp-code-color: #e1e3ea;
+  --vp-code-bg: var(--hc-surface-3);
+  --vp-code-block-bg: var(--hc-code-bg);
+  --vp-code-block-color: #c9ccd6;
+  --vp-code-block-divider-color: var(--hc-grid);
+  --vp-code-lang-color: var(--hc-tick);
+  --vp-code-line-highlight-color: rgba(164, 167, 181, 0.08);
+  --vp-code-copy-code-border-color: var(--hc-axis);
+  --vp-code-copy-code-bg: var(--hc-surface-2);
+  --vp-code-copy-code-hover-border-color: var(--hc-zero);
+  --vp-code-copy-code-hover-bg: var(--hc-surface-3);
+  --vp-code-tab-bg: var(--hc-surface-1);
+
+  --vp-custom-block-font-size: 14px;
+  --vp-custom-block-code-font-size: 13px;
+  --vp-custom-block-info-border: var(--hc-axis);
+  --vp-custom-block-details-border: var(--hc-axis);
+  --vp-custom-block-tip-border: var(--hc-emerald);
+  --vp-custom-block-note-border: var(--hc-blue);
+  --vp-custom-block-important-border: var(--hc-indigo);
+  --vp-custom-block-warning-border: var(--hc-gold);
+  --vp-custom-block-danger-border: var(--hc-red);
+  --vp-custom-block-caution-border: var(--hc-red);
+  --vp-custom-block-info-bg: var(--hc-surface-1);
+  --vp-custom-block-note-bg: var(--hc-surface-1);
+  --vp-custom-block-tip-bg: var(--hc-surface-1);
+  --vp-custom-block-important-bg: var(--hc-surface-1);
+  --vp-custom-block-warning-bg: var(--hc-surface-1);
+  --vp-custom-block-danger-bg: var(--hc-surface-1);
+  --vp-custom-block-caution-bg: var(--hc-surface-1);
+  --vp-custom-block-details-bg: var(--hc-surface-1);
 
   --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: linear-gradient(120deg, var(--hc-violet-2) 20%, var(--hc-cyan));
+  --vp-home-hero-name-background: linear-gradient(100deg, #ff5c66 10%, #ff2bd6 55%, #ff9e00 95%);
+  --vp-home-hero-image-background-image: radial-gradient(
+    closest-side,
+    rgba(234, 42, 55, 0.22),
+    rgba(94, 116, 213, 0.12) 60%,
+    transparent
+  );
+  --vp-home-hero-image-filter: blur(56px);
 
-  --vp-button-brand-bg: var(--hc-violet-1);
-  --vp-button-brand-hover-bg: var(--hc-violet-2);
-  --vp-button-brand-active-bg: var(--hc-violet-3);
+  --vp-local-search-bg: var(--hc-surface-1);
+  --vp-local-search-result-bg: var(--hc-surface-2);
+  --vp-local-search-result-border: var(--hc-grid);
+  --vp-local-search-result-selected-bg: var(--hc-surface-3);
+  --vp-local-search-result-selected-border: var(--hc-red);
+  --vp-local-search-highlight-bg: rgba(234, 42, 55, 0.28);
+  --vp-local-search-highlight-text: var(--hc-title);
 
-  --hc-example-stage-bg: #ffffff;
+  --vp-badge-info-bg: var(--hc-surface-3);
+
+  --hc-example-stage-bg: var(--hc-bg);
+
+  color-scheme: dark;
+  scrollbar-color: var(--hc-axis) var(--hc-bg);
 }
 
-.dark {
-  --vp-c-brand-1: #a79cff;
-  --vp-c-brand-2: #8b7fff;
-  --vp-c-brand-3: #6d5dfc;
-  --vp-c-brand-soft: rgba(139, 127, 255, 0.16);
-  --vp-button-brand-bg: #5b4ae6;
-  --vp-button-brand-hover-bg: #6d5dfc;
+::selection {
+  background: rgba(234, 42, 55, 0.35);
+  color: var(--hc-title);
+}
 
-  --hc-example-stage-bg: #1b1b1f;
+:focus-visible {
+  outline-color: var(--vp-c-brand-1);
+}
+
+/* ---------------------------------------------------------------------------------------- */
+/* Page type                                                                                 */
+/* ---------------------------------------------------------------------------------------- */
+
+.vp-doc {
+  font-size: 15px;
+}
+
+.vp-doc p,
+.vp-doc li {
+  line-height: 24px;
+}
+
+.vp-doc p,
+.vp-doc summary {
+  margin: 12px 0;
+}
+
+.vp-doc li + li {
+  margin-top: 4px;
+}
+
+.vp-doc h1,
+.vp-doc h2,
+.vp-doc h3,
+.vp-doc h4 {
+  color: var(--hc-title);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.vp-doc h1 {
+  line-height: 36px;
+  font-size: 28px;
+}
+
+@media (min-width: 768px) {
+  .vp-doc h1 {
+    line-height: 36px;
+    font-size: 30px;
+  }
+}
+
+.vp-doc h2 {
+  margin: 36px 0 12px;
+  padding-top: 20px;
+  line-height: 28px;
+  font-size: 20px;
+}
+
+.vp-doc h2 .header-anchor {
+  top: 20px;
+}
+
+.vp-doc h3 {
+  margin: 24px 0 0;
+  line-height: 24px;
+  font-size: 16px;
+}
+
+.vp-doc h4 {
+  margin: 20px 0 0;
+  line-height: 22px;
+  font-size: 15px;
+}
+
+.vp-doc .header-anchor {
+  color: var(--hc-tick);
+}
+
+.vp-doc a {
+  font-weight: 400;
+  text-decoration-color: rgba(255, 92, 102, 0.45);
+  text-underline-offset: 3px;
+}
+
+.vp-doc a:hover {
+  text-decoration-color: currentColor;
+}
+
+.vp-doc strong {
+  color: var(--hc-title);
+}
+
+.vp-doc blockquote > p {
+  font-size: 15px;
+}
+
+.vp-doc hr {
+  border-top-color: var(--hc-grid);
+}
+
+/* Inline code: a light chip with a hairline border, brighter than the text around it. */
+.vp-doc :not(pre) > code {
+  border: 1px solid var(--hc-grid);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+.vp-doc a > code {
+  border-color: rgba(234, 42, 55, 0.3);
+}
+
+/* ---------------------------------------------------------------------------------------- */
+/* Code blocks                                                                               */
+/* ---------------------------------------------------------------------------------------- */
+
+.vp-doc div[class*='language-'],
+.vp-block {
+  border: 1px solid var(--hc-grid);
+}
+
+@media (min-width: 640px) {
+  .vp-doc div[class*='language-'],
+  .vp-block {
+    border-radius: 4px;
+  }
+}
+
+.vp-doc div[class*='language-'] pre {
+  padding: 16px 0;
+}
+
+.vp-doc div[class*='language-'] > span.lang {
+  font-family: var(--vp-font-family-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.vp-doc .vp-code-group .tabs {
+  border: 1px solid var(--hc-grid);
+  border-bottom: 0;
+}
+
+@media (min-width: 640px) {
+  .vp-doc .vp-code-group .tabs {
+    border-radius: 4px 4px 0 0;
+  }
+
+  .vp-doc .vp-code-group div[class*='language-'] {
+    border-radius: 0 0 4px 4px;
+  }
+}
+
+.vp-doc .custom-block div[class*='language-'] {
+  border-radius: 3px;
+}
+
+/* ---------------------------------------------------------------------------------------- */
+/* Tables                                                                                    */
+/* ---------------------------------------------------------------------------------------- */
+
+.vp-doc table {
+  margin: 16px 0;
+}
+
+.vp-doc tr {
+  border-top-color: var(--hc-grid);
+}
+
+.vp-doc tr:nth-child(2n) {
+  background-color: var(--hc-surface-1);
+}
+
+.vp-doc th,
+.vp-doc td {
+  border-color: var(--hc-grid);
+  padding: 6px 12px;
+  line-height: 20px;
+}
+
+.vp-doc th {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--hc-text);
+  background-color: var(--hc-surface-2);
+}
+
+.vp-doc td {
+  font-size: 14px;
+}
+
+/* Names in a table's first column (themes, attributes) stay on one line. */
+.vp-doc td:first-child > code {
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------------------- */
+/* Custom blocks: a colored rule on the left, a quiet surface, a monospace label              */
+/* ---------------------------------------------------------------------------------------- */
+
+:root .custom-block {
+  border-width: 1px 1px 1px 2px;
+  border-style: solid;
+  border-radius: 3px;
+  padding: 12px 16px 6px;
+}
+
+:root .custom-block:not(.info, .details) {
+  border-top-color: var(--hc-grid);
+  border-right-color: var(--hc-grid);
+  border-bottom-color: var(--hc-grid);
+}
+
+:root .custom-block.info,
+:root .custom-block.details {
+  border-left-color: var(--hc-zero);
+}
+
+.vp-doc .custom-block p {
+  line-height: 22px;
+}
+
+.custom-block .custom-block-title {
+  font-family: var(--vp-font-family-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.custom-block.info .custom-block-title,
+.custom-block.details .custom-block-title,
+.custom-block.details summary {
+  color: var(--hc-text);
+}
+
+.custom-block.tip .custom-block-title {
+  color: var(--vp-c-tip-1);
+}
+
+.custom-block.note .custom-block-title {
+  color: var(--vp-c-note-1);
+}
+
+.custom-block.important .custom-block-title {
+  color: var(--vp-c-important-1);
+}
+
+.custom-block.warning .custom-block-title {
+  color: var(--vp-c-warning-1);
+}
+
+.custom-block.danger .custom-block-title,
+.custom-block.caution .custom-block-title {
+  color: var(--vp-c-danger-1);
+}
+
+.custom-block.details summary {
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+/* Links and code inside blocks keep the page's colors rather than the block hue. */
+.custom-block.tip a,
+.custom-block.note a,
+.custom-block.important a,
+.custom-block.warning a,
+.custom-block.danger a,
+.custom-block.caution a,
+.custom-block.info a {
+  color: var(--vp-c-brand-1);
+}
+
+.custom-block.tip code,
+.custom-block.note code,
+.custom-block.important code,
+.custom-block.warning code,
+.custom-block.danger code,
+.custom-block.caution code,
+.custom-block.info code {
+  color: var(--vp-code-color);
+  background-color: var(--hc-surface-3);
+}
+
+/* ---------------------------------------------------------------------------------------- */
+/* Nav, sidebar, outline                                                                     */
+/* ---------------------------------------------------------------------------------------- */
+
+.VPNavBar .VPNavBarTitle .title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--hc-title);
+}
+
+.VPNavBar .VPNavBarMenuLink,
+.VPNavBar .VPNavBarMenuGroup .button {
+  font-size: 14px;
+}
+
+/* The full search button (icon only below 768 px). */
+@media (min-width: 768px) {
+  .VPNavBarSearch .DocSearch-Button {
+    border: 1px solid var(--hc-grid);
+    border-radius: 4px;
+    background: var(--hc-surface-1);
+  }
+
+  .VPNavBarSearch .DocSearch-Button:hover {
+    border-color: var(--hc-axis);
+  }
+}
+
+.VPSidebar {
+  border-right: 1px solid var(--hc-grid);
+}
+
+.VPSidebar .VPSidebarItem .text {
+  padding: 3px 0;
+  line-height: 22px;
+  font-size: 14px;
+}
+
+/* Section titles: small monospace capitals, like a chart's axis title. */
+.VPSidebar .VPSidebarItem.level-0 > .item .text {
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hc-text);
+}
+
+.VPSidebar .group .VPSidebarItem.level-0 {
+  padding-bottom: 16px;
+}
+
+.VPSidebar .group .VPSidebarItem.collapsed.level-0 {
+  padding-bottom: 6px;
+}
+
+.VPSidebar .VPSidebarItem.level-1 .text,
+.VPSidebar .VPSidebarItem.level-2 .text {
+  font-weight: 400;
+}
+
+.VPSidebar .VPSidebarItem.is-active > .item .text,
+.VPSidebar .VPSidebarItem.is-active > .item > .link > .text {
+  color: var(--vp-c-brand-1);
+}
+
+.VPDoc .VPDocAsideOutline .outline-title {
+  font-family: var(--vp-font-family-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--hc-tick);
+}
+
+.VPDoc .VPDocAsideOutline .outline-link {
+  font-size: 13px;
+  line-height: 26px;
+}
+
+.VPDoc .VPDocAsideOutline .outline-marker {
+  background-color: var(--hc-red);
+}
+
+.VPDoc .VPDocFooter .pager-link {
+  border-color: var(--hc-grid);
+  border-radius: 4px;
+}
+
+.VPDoc .VPDocFooter .pager-link:hover {
+  border-color: var(--hc-red);
+}
+
+/* ---------------------------------------------------------------------------------------- */
+/* Local search                                                                              */
+/* ---------------------------------------------------------------------------------------- */
+
+:root .VPLocalSearchBox .shell {
+  border: 1px solid var(--hc-axis);
+  border-radius: 4px;
+}
+
+:root .VPLocalSearchBox .search-bar {
+  border-color: var(--hc-axis);
+  border-radius: 3px;
+  background: var(--hc-bg);
+}
+
+:root .VPLocalSearchBox .result {
+  border-radius: 3px;
+}
+
+.VPLocalSearchBox .excerpt-wrapper,
+.VPLocalSearchBox .titles {
+  font-size: 13px;
+}
+
+/* ---------------------------------------------------------------------------------------- */
+/* Home page                                                                                 */
+/* ---------------------------------------------------------------------------------------- */
+
+/* A faint chart grid behind the hero, fading out from the chart image. */
+.VPHome .VPHero {
+  position: relative;
+  isolation: isolate;
+}
+
+.VPHome .VPHero::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--vp-nav-height) * -1) 0 -48px;
+  z-index: -1;
+  background-image:
+    linear-gradient(var(--hc-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hc-grid) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: center top;
+  mask-image: radial-gradient(ellipse 70% 80% at 65% 40%, #000 20%, transparent 75%);
+  pointer-events: none;
+}
+
+.VPHome .VPHero .name,
+.VPHome .VPHero .text {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.VPHome .VPHero .text {
+  color: var(--hc-title);
+}
+
+.VPHome .VPHero .name,
+.VPHome .VPHero .text {
+  line-height: 36px;
+  font-size: 30px;
+}
+
+.VPHome .VPHero .tagline {
+  line-height: 24px;
+  font-size: 16px;
+  color: var(--hc-text);
+}
+
+@media (min-width: 640px) {
+  .VPHome .VPHero .name,
+  .VPHome .VPHero .text {
+    line-height: 48px;
+    font-size: 40px;
+  }
+
+  .VPHome .VPHero .tagline {
+    line-height: 28px;
+    font-size: 18px;
+  }
+}
+
+@media (min-width: 960px) {
+  .VPHome .VPHero .name,
+  .VPHome .VPHero .text {
+    line-height: 54px;
+    font-size: 46px;
+  }
+
+  .VPHome .VPHero .tagline {
+    line-height: 30px;
+    font-size: 19px;
+  }
+}
+
+.VPHero.has-image .image-src {
+  width: 100%;
+  max-width: 300px;
+  max-height: none;
+  border-radius: 3px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+
+@media (min-width: 640px) {
+  .VPHero.has-image .image-src {
+    max-width: 380px;
+  }
+}
+
+@media (min-width: 960px) {
+  .VPHero.has-image .image-src {
+    max-width: 520px;
+  }
+}
+
+:root .VPHome .VPButton.medium {
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+:root .VPFeatures .VPFeature {
+  border: 1px solid var(--hc-grid);
+  border-radius: 4px;
+  background-color: var(--hc-surface-1);
+  transition: border-color 0.2s;
+}
+
+:root .VPFeatures .VPFeature:hover {
+  border-color: var(--hc-axis);
+}
+
+.VPFeatures .VPFeature .title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--hc-title);
+}
+
+.VPFeatures .VPFeature .details {
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--hc-text);
+}
+
+/* The six feature cards take one colorway hue each, as a thin top rule. */
+.VPFeatures .item:nth-child(1) .VPFeature {
+  border-top: 2px solid var(--hc-red);
+}
+
+.VPFeatures .item:nth-child(2) .VPFeature {
+  border-top: 2px solid var(--hc-blue);
+}
+
+.VPFeatures .item:nth-child(3) .VPFeature {
+  border-top: 2px solid var(--hc-indigo);
+}
+
+.VPFeatures .item:nth-child(4) .VPFeature {
+  border-top: 2px solid var(--hc-emerald);
+}
+
+.VPFeatures .item:nth-child(5) .VPFeature {
+  border-top: 2px solid var(--hc-orange);
+}
+
+.VPFeatures .item:nth-child(6) .VPFeature {
+  border-top: 2px solid var(--hc-teal);
 }
 
 /* ---------------------------------------------------------------------------------------- */
@@ -42,10 +746,10 @@
 
 .hc-example {
   margin: 20px 0;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 8px;
+  border: 1px solid var(--hc-grid);
+  border-radius: 4px;
   overflow: hidden;
-  background: var(--vp-c-bg-soft);
+  background: var(--hc-surface-1);
 }
 
 .hc-example-bar {
@@ -54,21 +758,22 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--vp-c-divider);
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--hc-grid);
 }
 
 .hc-example-tabs,
 .hc-example-actions {
   display: flex;
-  gap: 4px;
+  gap: 2px;
 }
 
 .hc-example-tab,
 .hc-example-action {
-  padding: 2px 10px;
-  border-radius: 6px;
-  font-size: 13px;
+  padding: 0 8px;
+  border-radius: 3px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
   font-weight: 500;
   line-height: 26px;
   color: var(--vp-c-text-2);
@@ -87,7 +792,7 @@
 .hc-example-action:hover,
 .vp-doc a.hc-example-action:hover {
   color: var(--vp-c-text-1);
-  background: var(--vp-c-default-soft);
+  background: var(--hc-surface-3);
 }
 
 .hc-example-tab[aria-selected='true'] {
@@ -99,6 +804,7 @@
   position: relative;
 }
 
+/* Matches the default template's paper, so the chart runs edge to edge without a frame. */
 .hc-example-stage {
   width: 100%;
   background: var(--hc-example-stage-bg);
@@ -112,7 +818,8 @@
 .hc-example-status {
   margin: 0;
   padding: 16px;
-  font-size: 14px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 13px;
   color: var(--vp-c-text-2);
 }
 
@@ -126,23 +833,36 @@
   pointer-events: none;
 }
 
+/* A chip, so the message stays legible over a chart that is still drawing (or a light theme). */
+.hc-example-preview .hc-example-status > span {
+  padding: 2px 10px;
+  border: 1px solid var(--hc-axis);
+  border-radius: 3px;
+  background: rgba(10, 10, 15, 0.85);
+}
+
 .hc-example-status[data-status='error'] {
   color: var(--vp-c-danger-1);
 }
 
 .hc-example-source div[class*='language-'] {
   margin: 0 !important;
+  border: 0 !important;
   border-radius: 0 !important;
   max-height: 480px;
   overflow: auto;
 }
 
 .hc-example-caption {
-  padding: 8px 12px;
-  border-top: 1px solid var(--vp-c-divider);
+  padding: 6px 12px;
+  border-top: 1px solid var(--hc-grid);
   font-size: 13px;
   line-height: 20px;
   color: var(--vp-c-text-2);
+}
+
+.hc-example-caption strong {
+  color: var(--hc-title);
 }
 
 /* ---------------------------------------------------------------------------------------- */
@@ -161,17 +881,20 @@
 .hc-attr-deprecated {
   display: inline-block;
   margin-left: 6px;
-  padding: 0 8px;
-  border-radius: 10px;
+  padding: 0 6px;
+  border: 1px solid var(--hc-grid);
+  border-radius: 3px;
+  font-family: var(--vp-font-family-mono);
   font-size: 12px;
   font-weight: 500;
-  line-height: 20px;
+  line-height: 18px;
   vertical-align: middle;
   color: var(--vp-c-text-2);
-  background: var(--vp-c-default-soft);
+  background: var(--hc-surface-2);
 }
 
 .hc-attr-deprecated {
+  border-color: rgba(153, 118, 0, 0.5);
   color: var(--vp-c-warning-1);
   background: var(--vp-c-warning-soft);
 }
@@ -179,14 +902,15 @@
 .hc-attr-tree {
   margin: 16px 0 24px;
   padding: 8px 16px;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 8px;
+  border: 1px solid var(--hc-grid);
+  border-radius: 4px;
   font-size: 14px;
+  background: var(--hc-surface-1);
 }
 
 .hc-attr-tree summary {
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 700;
 }
 
 .vp-doc .hc-attr-tree ul {

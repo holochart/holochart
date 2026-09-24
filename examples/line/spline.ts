@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -22,13 +21,12 @@ export function run(el: HTMLElement): ExampleHandle {
   const y = x.map((v) => 10 + 4 * Math.sin(v / 1.8) + normal() * 1.2);
 
   const lines = [
-    { name: 'linear', line: { shape: 'linear', dash: 'dot', width: 1.5, color: '#7f7f7f' } },
+    { name: 'linear', line: { shape: 'linear', dash: 'dot', width: 1.5, color: '#80838f' } },
     { name: 'spline, smoothing 0.6', line: { shape: 'spline', smoothing: 0.6 } },
     { name: 'spline, smoothing 1', line: { shape: 'spline' } },
     { name: 'spline, smoothing 1.3', line: { shape: 'spline', smoothing: 1.3 } },
   ];
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       ...lines.map((l) => ({ type: 'scatter', mode: 'lines', x, y, ...l })),
@@ -38,14 +36,9 @@ export function run(el: HTMLElement): ExampleHandle {
         name: 'data',
         x,
         y,
-        marker: { size: 8, color: '#2a3f5f' },
+        marker: { size: 6, color: '#eceef4' },
       },
     ],
-    layout: {
-      font: { family: 'Inter', size: 12 },
-      margin: { l: 48, r: 24, t: 24, b: 40 },
-      plot_bgcolor: '#e5ecf6',
-    },
   });
 
   return {

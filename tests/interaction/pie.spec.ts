@@ -22,11 +22,11 @@ const VALUES = [40, 25, 15, 12, 8] as const;
 type RGB = readonly [number, number, number];
 /** `marker.colors` of the example, per label. */
 const COLORS: Record<(typeof LABELS)[number], RGB> = {
-  Alpha: [0xd6, 0x27, 0x28],
-  Beta: [0x1f, 0x77, 0xb4],
-  Gamma: [0x2c, 0xa0, 0x2c],
-  Delta: [0x94, 0x67, 0xbd],
-  Epsilon: [0xff, 0x7f, 0x0e],
+  Alpha: [0xea, 0x2a, 0x37],
+  Beta: [0x5e, 0x74, 0xd5],
+  Gamma: [0x11, 0x8e, 0x36],
+  Delta: [0x99, 0x62, 0xc0],
+  Epsilon: [0xcc, 0x54, 0x0a],
 };
 
 interface Pt {
@@ -43,7 +43,38 @@ interface PieGeometry {
   canvas: { left: number; top: number; width: number; height: number };
 }
 
+/**
+ * The pie's geometry, checked against the rendered pixels: the middle of each slice must show that
+ * slice's color. A figure change that moves the pie (e.g. a legend or title that grows the margins)
+ * then fails here, with a clear message, instead of as missed hovers and clicks.
+ */
 async function pieGeometry(page: Page): Promise<PieGeometry> {
+  const g = await figureGeometry(page);
+  let start = 0;
+  const total = VALUES.reduce((a, b) => a + b, 0);
+  for (const [i, label] of LABELS.entries()) {
+    const span = (VALUES[i]! / total) * 360;
+    const p = polar(g, start + span / 2, 0.6);
+    start += span;
+    const png = PNG.sync.read(
+      await page.screenshot({
+        clip: { x: Math.round(p.x), y: Math.round(p.y), width: 1, height: 1 },
+      }),
+    );
+    const pixel = [png.data[0], png.data[1], png.data[2]];
+    const ok = COLORS[label].every((c, k) => Math.abs((pixel[k] ?? -1) - c) <= 8);
+    if (!ok) {
+      throw new Error(
+        `pie geometry mismatch: ${label} expected at (${p.x.toFixed(0)}, ${p.y.toFixed(0)}) ` +
+          `but the pixel there is rgb(${pixel.join(', ')}); did the margins or domain change?`,
+      );
+    }
+  }
+  return g;
+}
+
+/** Pie geometry from the public figure (size, margins, domain). */
+async function figureGeometry(page: Page): Promise<PieGeometry> {
   return page.evaluate(() => {
     const chart = (
       window as unknown as {

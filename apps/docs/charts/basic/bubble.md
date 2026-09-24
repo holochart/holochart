@@ -111,8 +111,10 @@ with a second trace colored on a diverging scale around `cmid: 0`.
 
 - `marker.size`, `marker.sizemode`, `marker.sizeref`, and `marker.sizemin`, as above.
 - `marker.opacity`: bubbles default to 0.7, so overlapping bubbles stay visible.
-- `marker.line.color` / `marker.line.width`: bubbles default to a 1 px white outline, which
-  separates overlapping bubbles. Set `marker.line.width: 0` to remove it.
+- `marker.line.color` / `marker.line.width`: with Plotly's look (`plotly-classic`), bubbles
+  default to a 1 px white outline, which separates overlapping bubbles. The default `holochart`
+  look draws markers without outlines; set `marker.line.width: 1` and a `marker.line.color` to add
+  one.
 - `marker.color`, `marker.colorscale`, `cmin`, `cmax`, `cmid`, and `reversescale` for numeric
   colors; `marker.coloraxis` shares one scale and colorbar between traces.
 - `marker.symbol` works too, though circles are the norm for bubbles.
@@ -172,6 +174,7 @@ especially [`marker.size`](/reference/scatter#marker.size),
   `sizemode`, `sizeref`, and `sizemin` use Plotly's exact formula.
 - `bubbleSizeref(sizes, maxPx)` is a Holochart helper for Plotly's documented recipe
   `sizeref = 2 · max(size) / maxPx²`.
-- As in Plotly, bubbles (array `marker.size`) default to `marker.opacity: 0.7` and a 1 px white
-  outline.
+- As in Plotly, bubbles (array `marker.size`) default to `marker.opacity: 0.7` and, with
+  `plotly-classic`, a 1 px white outline. The default `holochart` look draws them without an
+  outline; see [Default look](/getting-started/from-plotly#default-look).
 - Not supported yet: a size legend (`marker.sizelegend`).

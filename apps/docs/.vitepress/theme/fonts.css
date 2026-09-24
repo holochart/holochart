@@ -1,0 +1,40 @@
+/*
+ * TeX Gyre Heros, the Helvetica-style font the charts draw with (ADR-021), from the render
+ * package's own files, so page text and chart text match. Vite bundles each face as a hashed
+ * asset; browsers fetch a face only when a page uses it. GUST Font License, see
+ * packages/render/fonts/GUST-FONT-LICENSE.txt.
+ *
+ * Weight ranges map every weight to the nearest real face, so the browser never synthesizes bold.
+ */
+
+@font-face {
+  font-family: 'TeX Gyre Heros';
+  font-style: normal;
+  font-weight: 100 500;
+  font-display: swap;
+  src: url('../../../../packages/render/fonts/texgyreheros-regular.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'TeX Gyre Heros';
+  font-style: normal;
+  font-weight: 600 900;
+  font-display: swap;
+  src: url('../../../../packages/render/fonts/texgyreheros-bold.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'TeX Gyre Heros';
+  font-style: italic;
+  font-weight: 100 500;
+  font-display: swap;
+  src: url('../../../../packages/render/fonts/texgyreheros-italic.otf') format('opentype');
+}
+
+@font-face {
+  font-family: 'TeX Gyre Heros';
+  font-style: italic;
+  font-weight: 600 900;
+  font-display: swap;
+  src: url('../../../../packages/render/fonts/texgyreheros-bolditalic.otf') format('opentype');
+}

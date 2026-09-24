@@ -180,96 +180,33 @@ exports[`built-in themes (E8.1) > high-contrast: layout values snapshot 1`] = `
 
 exports[`built-in themes (E8.1) > holochart: layout values snapshot 1`] = `
 {
-  "barLine": undefined,
+  "barLine": {
+    "width": 0,
+  },
   "colorscaleStops": {
-    "diverging": "RdBu",
-    "sequential": "Reds",
-    "sequentialminus": "Blues",
+    "diverging": "5 stops [0,"#6fe3ff"]…",
+    "sequential": "5 stops [0,"#3a0ca3"]…",
+    "sequentialminus": "5 stops [0,"#c8f7ff"]…",
   },
   "colorway": [
-    "#1f77b4",
-    "#ff7f0e",
-    "#2ca02c",
-    "#d62728",
-    "#9467bd",
-    "#8c564b",
-    "#e377c2",
-    "#7f7f7f",
-    "#bcbd22",
-    "#17becf",
-  ],
-  "dataTypes": [],
-  "font": {
-    "color": "#444",
-    "family": ""Open Sans", verdana, arial, sans-serif",
-    "size": 12,
-  },
-  "layoutKeys": [
-    "colorscale",
-    "colorway",
-    "font",
-    "paper_bgcolor",
-    "plot_bgcolor",
-    "xaxis",
-    "yaxis",
-  ],
-  "paper_bgcolor": "#fff",
-  "plot_bgcolor": "#fff",
-  "xaxis": {
-    "color": "#444",
-    "gridcolor": "#eee",
-  },
-  "yaxis": {
-    "gridcolor": "#eee",
-  },
-}
-`;
-
-exports[`built-in themes (E8.1) > holochart-dark: layout values snapshot 1`] = `
-{
-  "barLine": undefined,
-  "colorscaleStops": {
-    "diverging": "11 stops [0,"rgb(5,48,97)"]…",
-    "sequential": "Viridis",
-    "sequentialminus": "Viridis",
-  },
-  "colorway": [
-    "#4c9aff",
-    "#ff9f43",
-    "#34d399",
-    "#f87171",
-    "#c084fc",
-    "#d4a373",
-    "#f472b6",
-    "#a1a1aa",
-    "#e0d24a",
-    "#22d3ee",
+    "#ea2a37",
+    "#5e74d5",
+    "#9962c0",
+    "#118e36",
+    "#cc540a",
+    "#128b8b",
+    "#997600",
+    "#b8267e",
   ],
   "dataTypes": [
     "bar",
-    "choropleth",
-    "cone",
-    "contour",
-    "contourcarpet",
-    "heatmap",
-    "histogram2d",
-    "histogram2dcontour",
-    "mesh3d",
-    "parcoords",
+    "pie",
     "scatter",
-    "scatter3d",
-    "scattercarpet",
-    "scattergeo",
-    "scattergl",
-    "scattermapbox",
-    "scatterpolar",
-    "scatterpolargl",
-    "scatterternary",
-    "streamtube",
-    "surface",
   ],
   "font": {
-    "color": "#c9d1d9",
+    "color": "#a4a7b5",
+    "family": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "size": 9,
   },
   "layoutKeys": [
     "annotationdefaults",
@@ -277,21 +214,92 @@ exports[`built-in themes (E8.1) > holochart-dark: layout values snapshot 1`] = `
     "colorscale",
     "colorway",
     "font",
+    "hoverlabel",
     "legend",
+    "margin",
+    "modebar",
     "paper_bgcolor",
     "plot_bgcolor",
     "shapedefaults",
+    "title",
     "xaxis",
     "yaxis",
   ],
-  "paper_bgcolor": "#111418",
-  "plot_bgcolor": "#111418",
+  "paper_bgcolor": "#0a0a0f",
+  "plot_bgcolor": "#0a0a0f",
   "xaxis": {
-    "color": "#7d8590",
-    "gridcolor": "#262c36",
+    "color": "#a4a7b5",
+    "gridcolor": "#1a1a22",
+    "linecolor": "#2c2c38",
+    "showline": true,
+    "ticks": "outside",
+    "zerolinecolor": "#3e3e4c",
   },
   "yaxis": {
-    "gridcolor": "#262c36",
+    "gridcolor": "#1a1a22",
+  },
+}
+`;
+
+exports[`built-in themes (E8.1) > holochart-dark: layout values snapshot 1`] = `
+{
+  "barLine": {
+    "width": 0,
+  },
+  "colorscaleStops": {
+    "diverging": "5 stops [0,"#6fe3ff"]…",
+    "sequential": "5 stops [0,"#3a0ca3"]…",
+    "sequentialminus": "5 stops [0,"#c8f7ff"]…",
+  },
+  "colorway": [
+    "#ea2a37",
+    "#5e74d5",
+    "#9962c0",
+    "#118e36",
+    "#cc540a",
+    "#128b8b",
+    "#997600",
+    "#b8267e",
+  ],
+  "dataTypes": [
+    "bar",
+    "pie",
+    "scatter",
+  ],
+  "font": {
+    "color": "#a4a7b5",
+    "family": "'Helvetica Neue', Helvetica, Arial, sans-serif",
+    "size": 9,
+  },
+  "layoutKeys": [
+    "annotationdefaults",
+    "coloraxis",
+    "colorscale",
+    "colorway",
+    "font",
+    "hoverlabel",
+    "legend",
+    "margin",
+    "modebar",
+    "paper_bgcolor",
+    "plot_bgcolor",
+    "shapedefaults",
+    "title",
+    "xaxis",
+    "yaxis",
+  ],
+  "paper_bgcolor": "#0a0a0f",
+  "plot_bgcolor": "#0a0a0f",
+  "xaxis": {
+    "color": "#a4a7b5",
+    "gridcolor": "#1a1a22",
+    "linecolor": "#2c2c38",
+    "showline": true,
+    "ticks": "outside",
+    "zerolinecolor": "#3e3e4c",
+  },
+  "yaxis": {
+    "gridcolor": "#1a1a22",
   },
 }
 `;
@@ -632,6 +640,53 @@ exports[`built-in themes (E8.1) > plotly_white: layout values snapshot 1`] = `
   },
   "yaxis": {
     "gridcolor": "#EBF0F8",
+  },
+}
+`;
+
+exports[`built-in themes (E8.1) > plotly-classic: layout values snapshot 1`] = `
+{
+  "barLine": undefined,
+  "colorscaleStops": {
+    "diverging": "RdBu",
+    "sequential": "Reds",
+    "sequentialminus": "Blues",
+  },
+  "colorway": [
+    "#1f77b4",
+    "#ff7f0e",
+    "#2ca02c",
+    "#d62728",
+    "#9467bd",
+    "#8c564b",
+    "#e377c2",
+    "#7f7f7f",
+    "#bcbd22",
+    "#17becf",
+  ],
+  "dataTypes": [],
+  "font": {
+    "color": "#444",
+    "family": ""Open Sans", verdana, arial, sans-serif",
+    "size": 12,
+  },
+  "layoutKeys": [
+    "colorscale",
+    "colorway",
+    "font",
+    "paper_bgcolor",
+    "plot_bgcolor",
+    "xaxis",
+    "yaxis",
+  ],
+  "paper_bgcolor": "#fff",
+  "plot_bgcolor": "#fff",
+  "xaxis": {
+    "color": "#444",
+    "gridcolor": "#eee",
+  },
+  "yaxis": {
+    "gridcolor": "#eee",
   },
 }
 `;

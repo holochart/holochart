@@ -124,7 +124,8 @@ label once, and a legend click hides that label in every pie.
   every pie of the figure. `layout.extendpiecolors` (default `true`) extends the colorway with
   lighter and darker variants once it runs out, instead of repeating colors, which matters for
   pies with more than ten slices.
-- **Outlines.** `marker.line.color` and `marker.line.width` draw slice borders. A white 1–2 px
+- **Outlines.** `marker.line.color` and `marker.line.width` draw slice borders. The default look
+  separates slices with a 1 px line in the background color; on a light theme, a white 1–2 px
   outline separates neighbors well, especially on donuts.
 - **Shape.** `hole` for donuts, `pull` to pull slices out, `rotation` and `direction` for the
   start angle and order, `sort: false` to keep the input order.
@@ -185,8 +186,8 @@ label once, and a legend click hides that label in every pie.
   Add a caption or `aria-label` that states the main split, and a table of the values.
 - **Keyboard:** there is no keyboard navigation between slices yet.
 - **Color:** label slices directly (`textinfo: 'label+percent'`) so readers don't have to match
-  legend colors, keep the number of slices small, and separate slices with white outlines.
-  Pattern fills for print and color-blind readers come later.
+  legend colors, keep the number of slices small, and separate slices with outlines in the
+  background color. Pattern fills for print and color-blind readers come later.
 
 ## Attribute reference
 
