@@ -91,7 +91,8 @@ describe('orderCategories', () => {
       orderCategories(base, o, { values });
     // totals: b 12, c 5, a 6, d 0 (no finite values), e 0 (none)
     expect(order('total ascending')).toEqual(['d', 'e', 'c', 'a', 'b']);
-    expect(order('sum descending')).toEqual(['b', 'a', 'c', 'e', 'd']);
+    // Stable in both directions: the tied d and e keep trace order when descending too.
+    expect(order('sum descending')).toEqual(['b', 'a', 'c', 'd', 'e']);
     // min: b 1, c 5, a 3; d, e have none → last
     expect(order('min ascending')).toEqual(['b', 'a', 'c', 'd', 'e']);
     expect(order('max descending')).toEqual(['b', 'c', 'a', 'd', 'e']);

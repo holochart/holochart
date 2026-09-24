@@ -518,6 +518,37 @@ describe('component pointer hook', () => {
     expect(log).toHaveLength(0);
     expect(canvas(c).style.cursor).toBe('pointer');
   });
+
+  it('captures the pointer for component drags and ends them on pointercancel', async () => {
+    const seen: string[] = [];
+    const handle: ComponentModule = {
+      name: 'handle-test',
+      draw: {
+        create: () => ({
+          update: () => undefined,
+          handlePointer(e) {
+            seen.push(e.type);
+            return e.type !== 'leave';
+          },
+        }),
+      },
+    };
+    const s = setup({ width: 640, height: 400, components: [handle] });
+    t = s;
+    const c = await chart([DOTS], {}, {}, s);
+    const el = canvas(c);
+    const captured: number[] = [];
+    el.setPointerCapture = (id: number) => void captured.push(id);
+    fire(c, 'pointerdown', cx(5), cy(50));
+    // Without capture, a release outside the chart would never reach the component.
+    expect(captured).toEqual([1]);
+    fire(c, 'pointermove', cx(6), cy(50));
+    fire(c, 'pointercancel', cx(6), cy(50));
+    expect(seen).toEqual(['down', 'move', 'leave']);
+    // The gesture is over: the next down starts a new one.
+    fire(c, 'pointerdown', cx(5), cy(50));
+    expect(seen.at(-1)).toBe('down');
+  });
 });
 
 describe('static plots', () => {

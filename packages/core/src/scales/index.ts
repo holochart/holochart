@@ -7,6 +7,7 @@ export * from './scale.ts';
 export * from './autorange.ts';
 export * from './ticks.ts';
 export * from './categories.ts';
+export * from './category-values.ts';
 export * from './labels.ts';
 export * from './period.ts';
 export * from './format.ts';

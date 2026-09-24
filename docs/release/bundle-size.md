@@ -9,14 +9,21 @@ Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's
 
 | Entry                                   | What it measures                                           | Budget |
 | --------------------------------------- | ---------------------------------------------------------- | ------ |
-| `partial: core + scatter`               | `createChart` + `register` from runtime, `scatter` trace   | 165 kB |
-| `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 215 kB |
+| `partial: core + scatter`               | `createChart` + `register` from runtime, `scatter` trace   | 120 kB |
+| `text engine (lazy chunk …)`            | the SDF text engine chunk, loaded on first text use        | 49 kB  |
+| `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 170 kB |
 | `@mk7s/holochart (full, ESM)`           | everything the full bundle exports                         | 450 kB |
 | `@mk7s/holochart IIFE (includes three)` | `dist/holochart.iife.min.js` as shipped, **with** three.js | 650 kB |
 | each `@mk7s/holochart-*` package        | `export *` of that package                                 | report |
 
 The IIFE budget is the full budget plus a 200 kB allowance for the bundled three.js (about
 170–190 kB min + gzip on its own; ADR-015). Per-package entries are reported but not gated.
+
+An ESM entry's size is its **initial** download. Code an entry loads on demand with a dynamic
+`import()` is its **lazy** size, reported next to it; today that is only the SDF text engine
+(troika-three-text, bidi-js, webgl-sdf-generator, troika-worker-utils, troika-three-utils; plan
+E21.5), which has its own gated row. So core + scatter costs its initial size before the first
+frame and the text engine's size once it draws a label.
 
 Entries and budgets live in one place, [`tests/bundle/size/entries.ts`](../../tests/bundle/size/entries.ts),
 which [`.size-limit.ts`](../../.size-limit.ts) reads.
@@ -31,8 +38,16 @@ pnpm size:report   # Markdown table (after `pnpm size`); --base <main.json> adds
 How it measures: [`tests/bundle/size/bundle.ts`](../../tests/bundle/size/bundle.ts) bundles each
 entry from the packages' built `dist/` with rolldown (the bundler behind tsdown and Vite 8),
 tree-shaken and minified, with `three` external and every other dependency (d3, troika, earcut,
-flatbush, workspace packages) included, the way an app bundler would. size-limit (`@size-limit/file`)
-then gzips the results. The IIFE is measured as built.
+flatbush, workspace packages) included, the way an app bundler would. Code splitting is on, as in
+an app: each dynamic `import()` becomes its own chunk. The entry chunk plus every chunk it imports
+statically is written to `<id>.js` (the **initial** size); every other chunk goes to
+`<id>.lazy.js` (the **lazy** size), so each output chunk is counted exactly once and nothing drops
+out of the numbers. `manifest.json` records which packages the lazy chunks contain. size-limit
+(`@size-limit/file`) then gzips the results; a `lazyOf` entry in `entries.ts` gates another entry's
+lazy file (the text-engine row measures core + scatter's), and `bundle.ts` fails if that entry has
+no lazy chunks. The report adds a per-entry **Lazy** column (gzip level 9, like size-limit). The
+IIFE is measured as built: it is a single file, so the build inlines the text engine (as a module
+initialized on first use) and its lazy column reads "inlined".
 
 Until an entry's named exports exist (for example `scatter` before the scatter trace lands), that
 entry measures the whole package instead and the report adds a footnote.
@@ -41,28 +56,75 @@ In CI, the job writes the table to the job summary, uploads `size.json` as the `
 artifact, compares with the latest successful `main` run, and posts or updates one PR comment
 (same-repo PRs only; fork PRs get a read-only token, so they get the job summary only).
 
-## Current sizes (2026-09-23, M1 wave 3)
+## Current sizes (2026-09-23, M2 wave 0, after the diet)
 
-| Entry                     | Size      | Budget | Wave 2    |
-| ------------------------- | --------- | ------ | --------- |
-| `@mk7s/holochart-core`    | 48.84 kB  | —      | 45.74 kB  |
-| `@mk7s/holochart-render`  | 95.41 kB  | —      | 93.14 kB  |
-| `@mk7s/holochart-runtime` | 69.97 kB  | —      | 64.89 kB  |
-| partial: core + scatter   | 160.59 kB | 165 kB | 148.54 kB |
-| partial: basic            | 209.63 kB | 215 kB | 181.09 kB |
-| full, ESM                 | 225.53 kB | 450 kB | 203.79 kB |
-| IIFE (includes three)     | 355.16 kB | 650 kB | 333.34 kB |
+Initial download per entry, with the lazily loaded text engine in its own column (a chart
+downloads it the first time it draws text; charts without text never do).
 
-Wave 3 added the colorbar and annotations components, streaming (`extendTraces`), and JSON
-serialization. The `basic` budget was raised again, to 215 kB, by decision on 2026-09-23; core +
-scatter stays at 165 kB with about 3% headroom, so E21.5 is due before M2 adds more traces.
+| Entry                          | Initial   | Lazy     | Budget | M1 wave 3 |
+| ------------------------------ | --------- | -------- | ------ | --------- |
+| `@mk7s/holochart-core`         | 42.92 kB  | —        | —      | 48.84 kB  |
+| `@mk7s/holochart-render`       | 53.02 kB  | 44.17 kB | —      | 95.41 kB  |
+| `@mk7s/holochart-runtime`      | 64.00 kB  | —        | —      | 69.97 kB  |
+| `@mk7s/holochart-components`   | 79.24 kB  | 44.17 kB | —      | —         |
+| `@mk7s/holochart-traces-basic` | 78.26 kB  | 44.17 kB | —      | —         |
+| partial: core + scatter        | 107.92 kB | 44.17 kB | 120 kB | 160.59 kB |
+| text engine (lazy)             | 44.17 kB  | —        | 49 kB  | —         |
+| partial: basic                 | 154.10 kB | 44.17 kB | 170 kB | 209.63 kB |
+| full, ESM                      | 170.06 kB | 44.17 kB | 450 kB | 225.53 kB |
+| IIFE (includes three)          | 345.35 kB | inlined  | 650 kB | 355.16 kB |
 
-The partial budgets were 90 kB and 150 kB until M1 wave 2, set before the SDF text engine's
-weight was known. A breakdown of core + scatter (456 kB minified) shows: troika-three-text and
-its dependencies ~120 kB (26%), core 90 kB, render 83 kB, traces-basic 74 kB, runtime 60 kB.
-Schema descriptions are only 5–7% of core and traces-basic. They were raised to measured +10%
-by decision on 2026-09-23 (after wave 2). Plan story **E21.5 (bundle diet)** lazy-loads the text engine on first
-use, strips descriptions from production builds, and then tightens the budgets again.
+History: the partial budgets started at 90 kB and 150 kB, set before the SDF text engine's weight
+was known. They were raised to measured + 10% in M1 (165 / 200 kB after wave 2, `basic` 215 kB
+after wave 3) by decision, then tightened to measured + ~10% (120 / 170 kB) after the diet below.
+
+Splitting the text engine out costs about 1.8 kB in total (two chunks compress separately, and the
+loader adds a little code), and the IIFE about 3.3 kB (the inlined engine is wrapped as a lazily
+initialized module). `preloadTextEngine()` from `@mk7s/holochart-render` starts the download early.
+
+## Diet
+
+Plan E21.5. Three steps: lazy-load the text engine (above), strip schema descriptions from
+production builds, and audit tree-shaking.
+
+**Descriptions** ([ADR-020](../adr/020-strip-schema-descriptions.md)). A rolldown plugin
+(`scripts/build/strip-descriptions.ts`) blanks the `description` of every `attr.*()` call, and the
+argument of helpers such as `fontSchema('…')`, in `dist/index.js` and the IIFE (about 470
+strings). Core, runtime, components and traces-basic also ship `dist/index.development.js` with
+descriptions, under the `development` export condition. Sources, the docs attribute reference
+(byte-identical), TypeDoc, vitest and the JSDoc in `index.d.ts` keep them.
+`tests/build/strip-descriptions.test.ts` checks the output. Measured on the same tree, built with
+`HOLOCHART_KEEP_DESCRIPTIONS=1` (before) and without (after):
+
+| Entry                          | Before    | After     | Change           |
+| ------------------------------ | --------- | --------- | ---------------- |
+| `@mk7s/holochart-core`         | 49.14 kB  | 42.92 kB  | −6.23 kB (−13%)  |
+| `@mk7s/holochart-runtime`      | 70.62 kB  | 63.98 kB  | −6.64 kB (−9%)   |
+| `@mk7s/holochart-components`   | 87.72 kB  | 79.24 kB  | −8.48 kB (−10%)  |
+| `@mk7s/holochart-traces-basic` | 89.46 kB  | 78.26 kB  | −11.20 kB (−13%) |
+| partial: core + scatter        | 118.83 kB | 107.90 kB | −10.93 kB (−9%)  |
+| partial: basic                 | 167.82 kB | 154.09 kB | −13.74 kB (−8%)  |
+| full, ESM                      | 183.75 kB | 170.04 kB | −13.71 kB (−7%)  |
+| IIFE (includes three)          | 359.19 kB | 345.33 kB | −13.86 kB (−4%)  |
+
+Initial sizes; the lazy text engine (44.17 kB) and render (53.02 kB) are unchanged. After both
+steps the partial budgets were tightened to 120 / 170 kB (measured + ~10%).
+
+**Tree-shaking audit** (core + scatter, per-module sizes from a source build). No component and
+no unused render primitive is included: from render only markers, lines, text, the render root,
+the point index (flatbush) and the colorscale LUT, all used by scatter or hover; every package is
+`sideEffects: false` and there are no registries that import everything. Findings:
+
+- The bar schema (`barAttributes`, `barLayoutAttributes`) survives in the scatter partial, about
+  0.13–0.18 kB: each package's `dist/index.js` is one file, and top-level `attr.*()` calls and an
+  object spread look side-effectful to the app's bundler. Left as is: `/* @__PURE__ */` on those
+  declarations saves 0.13 kB; one output file per module (tsdown `unbundle`) saves 0.18 kB for
+  every such case but changes the published layout (ADR-015).
+- `Chart#toJSON` is a class method, so every chart bundles `core/serialize` and `runtime/json.ts`
+  (2.3 kB). Making it a separate `chartToJSON()` export is an API decision.
+- In `basic`, annotations draw boxes and arrowheads with the fill primitive, which pulls in earcut
+  and the self-intersection code (`fill-arrangement.ts`): 7.4 kB, of which the arrangement is
+  2.6 kB. Annotation shapes are simple polygons; a cheaper path would recover most of it.
 
 ## Partial bundles
 

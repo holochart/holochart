@@ -10,6 +10,7 @@ import {
   isArrayLike,
   toFloat64Array,
   type AxisExtremes,
+  type CategorySamples,
   type FindExtremesOptions,
   type FullTrace,
   type Scale,
@@ -241,6 +242,23 @@ function withErrorBars(
   // Plotly pads error-bar ends like markers (5% extra), without px padding.
   const ends = linearExtremes(axis, errorBarExtremeValues(bars), { padded: true });
   return { ...base, min: base.min.concat(ends.min), max: base.max.concat(ends.max) };
+}
+
+/**
+ * Samples for value-based `categoryorder`s (E3.6), as Plotly's `sortAxisCategoriesByValue` reads
+ * scatter calcdata: the category index is the point's coordinate on `axis`, the value its other
+ * coordinate in calc space (data values on a log axis, not their log10).
+ */
+export function scatterCategoryValues(
+  calc: ScatterCalc,
+  _trace: FullTrace,
+  axis: 'x' | 'y',
+  ctx: CalcContext,
+): CategorySamples {
+  const other = axis === 'x' ? calc.y : calc.x;
+  const otherAxis = axis === 'x' ? ctx.yaxis : ctx.xaxis;
+  const value = otherAxis?.type === 'log' ? other.map((l) => 10 ** l) : other;
+  return { index: axis === 'x' ? calc.x : calc.y, value };
 }
 
 /**

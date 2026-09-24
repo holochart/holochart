@@ -23,6 +23,7 @@
 import type {
   AxisExtremes,
   AxisType,
+  CategorySamples,
   Children,
   ComponentModule as CoreComponentModule,
   FullAxis,
@@ -253,6 +254,22 @@ export interface TraceModule<
    * order) that has `crossTraceCalc` runs it for all of them.
    */
   crossTraceCalc?(entries: readonly CrossTraceEntry<Calc>[], ctx: CrossTraceContext): void;
+  /**
+   * Samples for the value-based `categoryorder`s (E3.6: `total descending`, `median ascending`, …;
+   * Plotly's `sortAxisCategoriesByValue`): per point, the category index on `axis` (the linear
+   * coordinate calc produced) and the value to aggregate — a bar's own size (after `barnorm`), a
+   * scatter point's other coordinate, … in calc space. Called after `crossTraceCalc` for visible
+   * traces on a category axis with such an order; if the order changes, the runtime rebuilds the
+   * axis' scale and runs `calc` (and `crossTraceCalc`) again, like Plotly's second calc pass.
+   * Return `undefined` when the trace has nothing to contribute on this axis (e.g. it is a bar's
+   * size axis); traces without this method don't contribute either.
+   */
+  categoryValues?(
+    calc: Calc,
+    trace: FullTrace,
+    axis: 'x' | 'y',
+    ctx: CalcContext,
+  ): CategorySamples | undefined;
   readonly plot?: TraceRenderer<Calc>;
   /** Points near the pointer for hover (E6.1). Empty when nothing is within `query.distance`. */
   hoverPoints?(calc: Calc, trace: FullTrace, query: HoverQuery, ctx: HoverContext): HoverPoint[];

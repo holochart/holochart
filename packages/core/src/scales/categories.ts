@@ -6,6 +6,7 @@
  * Categories are compared by their string form, as in Plotly (`1` and `'1'` are one category).
  */
 import type { CATEGORY_ORDERS } from '../layout/schema.ts';
+import { sortCategoriesByValue } from './category-values.ts';
 import { isTwoLevel } from './scale.ts';
 import type { Scale, ScaleOptions, Tick } from './types.ts';
 
@@ -96,23 +97,6 @@ function median(values: readonly number[]): number {
     : ((s[mid - 1] as number) + (s[mid] as number)) / 2;
 }
 
-/** Aggregate one category's values; NaN when there is nothing to aggregate. */
-function aggregate(kind: string, raw: readonly number[] | undefined): number {
-  const values = (raw ?? []).filter((v) => Number.isFinite(v));
-  if (kind === 'total' || kind === 'sum') return values.reduce((s, v) => s + v, 0);
-  if (values.length === 0) return NaN;
-  switch (kind) {
-    case 'min':
-      return Math.min(...values);
-    case 'max':
-      return Math.max(...values);
-    case 'mean':
-      return values.reduce((s, v) => s + v, 0) / values.length;
-    default:
-      return median(values);
-  }
-}
-
 /** Options for {@link orderCategories}. */
 export interface OrderCategoriesOptions {
   /** Explicit order for `categoryorder: 'array'`. */
@@ -128,9 +112,10 @@ export interface OrderCategoriesOptions {
  * - `category ascending|descending`: by name (numerically when both names are numbers);
  * - `array`: `categoryarray` first — including entries with no data — then the remaining
  *   categories in trace order;
- * - `<aggregate> ascending|descending`: by the aggregate of `values` per category (stable, so ties
- *   keep trace order; descending is the reverse of ascending, as in Plotly). Categories without
- *   values sort last in both directions (`total`/`sum` count them as 0).
+ * - `<aggregate> ascending|descending`: by the aggregate of `values` per category, through
+ *   {@link sortCategoriesByValue} (stable in both directions, so ties keep trace order; categories
+ *   without values count as 0 for `total`/`sum` and sort last otherwise). `categoryarray` is
+ *   ignored, as in Plotly.
  */
 export function orderCategories(
   categories: readonly string[],
@@ -149,11 +134,7 @@ export function orderCategories(
     const sorted = [...categories].sort(compareCategories);
     return descending ? sorted.reverse() : sorted;
   }
-  const scored = categories.map((c) => ({ c, v: aggregate(kind, options.values?.get(c)) }));
-  const valid = scored.filter((s) => !Number.isNaN(s.v)).sort((a, b) => a.v - b.v);
-  if (descending) valid.reverse();
-  const missing = scored.filter((s) => Number.isNaN(s.v));
-  return [...valid, ...missing].map((s) => s.c);
+  return sortCategoriesByValue(categories, order, options.values);
 }
 
 /** The axis attributes {@link axisCategories} reads. */

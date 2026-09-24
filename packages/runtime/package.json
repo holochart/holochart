@@ -15,6 +15,7 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/index.d.ts",
+      "development": "./dist/index.development.js",
       "import": "./dist/index.js"
     }
   },
@@ -44,6 +45,7 @@
     "exports": {
       ".": {
         "types": "./dist/index.d.ts",
+        "development": "./dist/index.development.js",
         "import": "./dist/index.js"
       }
     }

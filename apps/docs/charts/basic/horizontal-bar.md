@@ -38,8 +38,9 @@ const chart = createChart(document.getElementById('chart')!, {
 ```
 
 Category axes run from the bottom up, so the first category is at the bottom. Sort ascending to
-put the largest bar on top. The live example adds value labels past the bar ends and highlights
-one bar with a per-bar color array:
+put the largest bar on top, either in the data or with `yaxis.categoryorder: 'total ascending'`
+(see [sorted bars](/charts/basic/bar#sorted-by-value)). The live example sorts the data itself,
+adds value labels past the bar ends and highlights one bar with a per-bar color array:
 
 <Example id="recipes/ranked-bars" />
 
@@ -144,6 +145,6 @@ for `barmode` and `barnorm`.
 - Same as Plotly: `orientation: 'h'` with categories in `y` and values in `x`. Figures port
   unchanged.
 - Categories keep the order of the data, as in Plotly. Sort the data yourself, or use
-  `yaxis.categoryorder: 'category ascending'` or `'array'` with `categoryarray`.
-- Not supported yet: the value-based orders `'total ascending'` / `'total descending'` (accepted,
-  but they keep trace order for now), `marker.pattern` (E8.10), and the timeline helper (M2).
+  `yaxis.categoryorder`: `'category ascending'`, `'array'` with `categoryarray`, or a value-based
+  order such as `'total ascending'` (also `min`, `max`, `sum`, `mean`, `median`).
+- Not supported yet: `marker.pattern` (E8.10) and the timeline helper (M2).

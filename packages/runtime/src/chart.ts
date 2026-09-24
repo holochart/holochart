@@ -37,6 +37,7 @@ import {
   type EncodedFigure,
   applyUirevision,
   coerceContainer,
+  collectCategoryValues,
   configSchema,
   createUiState,
   deepMerge,
@@ -44,9 +45,12 @@ import {
   getIn,
   isPlainObject,
   recordGuiEdit,
+  sortCategoriesByValue,
   supplyDefaults,
   toRGBA,
+  valueCategoryOrder,
   type AxisExtremes,
+  type CategorySamples,
   type FigureInput,
   type FullAxis,
   type FullConfig,
@@ -285,6 +289,8 @@ class AxisSlot implements AxisInfo {
   readonly letter: 'x' | 'y';
   full: FullAxis;
   state: ScaleState;
+  /** Value-based `categoryorder` only: categories in trace order, the tie order of the sort. */
+  traceOrder: readonly string[] | undefined;
   start = 0;
   end = 0;
 
@@ -1385,6 +1391,30 @@ export class Chart {
 
     // Cross-trace calc (stacking, grouping) per subplot and trace type, then extremes.
     this.#crossTraceCalc(fullLayout, fullData, plan, plans);
+
+    // Value-based category orders (E3.6) sort by what calc produced; if an order changed, calc
+    // again on the new scale, like Plotly's second calc pass. Streaming edits fall back to a full
+    // calc then: every retained point moves.
+    const resorted = this.#sortCategoriesByValue(fullData, plans, rescaled);
+    if (resorted.size > 0) {
+      const again = new Set<number>();
+      fullData.forEach((trace, i) => {
+        if (trace.visible === false) return;
+        if (!resorted.has(trace['xaxis'] as string) && !resorted.has(trace['yaxis'] as string)) {
+          return;
+        }
+        const slot = this.#traces[i] as TraceSlot;
+        slot.calc = slot.module?.calc
+          ? slot.module.calc(trace, this.#calcContext(trace, i))
+          : undefined;
+        slot.hasCalc = true;
+        previousCalcs[i] = undefined;
+        const { append: _, ...tp } = plans[i] as TraceUpdatePlan;
+        plans[i] = { ...tp, calc: true, plot: true, style: true };
+        again.add(i);
+      });
+      this.#crossTraceCalc(fullLayout, fullData, plan, plans, again);
+    }
     fullData.forEach((trace, i) => {
       const slot = this.#traces[i] as TraceSlot;
       const tp = plans[i] as TraceUpdatePlan;
@@ -1442,6 +1472,56 @@ export class Chart {
     };
   }
 
+  /**
+   * Sort the category axes with a value-based `categoryorder` (E3.6, Plotly's
+   * `sortAxisCategoriesByValue`): collect every visible trace's samples (`categoryValues`) on the
+   * axis, aggregate them per category and sort the trace-order list by the aggregate. Axes where
+   * nothing on them was recalculated are skipped. Returns the ids of axes whose order (and so
+   * scale) changed; their traces must calc again.
+   */
+  #sortCategoriesByValue(
+    fullData: readonly FullTrace[],
+    plans: readonly TraceUpdatePlan[],
+    rescaled: ReadonlySet<string>,
+  ): Set<string> {
+    const changed = new Set<string>();
+    for (const axis of this.#axes.values()) {
+      const current = axis.state.categories;
+      const order = axis.full.categoryorder as string | undefined;
+      if (axis.type !== 'category' || !current || !axis.traceOrder || !valueCategoryOrder(order)) {
+        continue;
+      }
+      const key = `${axis.letter}axis`;
+      const members: number[] = [];
+      fullData.forEach((trace, i) => {
+        if (trace[key] === axis.id) members.push(i);
+      });
+      if (!rescaled.has(axis.id) && !members.some((i) => plans[i]?.calc === true)) continue;
+      const samples: CategorySamples[] = [];
+      for (const i of members) {
+        const trace = fullData[i] as FullTrace;
+        const slot = this.#traces[i];
+        // Like Plotly, only visible traces count (`legendonly` ones don't).
+        if (trace.visible !== true || !slot?.hasCalc || !slot.module?.categoryValues) continue;
+        const s = slot.module.categoryValues(
+          slot.calc,
+          trace,
+          axis.letter,
+          this.#calcContext(trace, i),
+        );
+        if (s) samples.push(s);
+      }
+      const values = collectCategoryValues(current, samples);
+      const sorted = sortCategoriesByValue(axis.traceOrder, order as string, values);
+      const state = syncScale(axis.state, axis.type, sorted);
+      if (state !== axis.state) {
+        axis.state = state;
+        changed.add(axis.id);
+      }
+    }
+    return changed;
+  }
+
   /** Axis types, categories and scales. Returns the ids of axes whose scale was replaced. */
   #syncAxes(fullLayout: FullLayout, fullData: readonly FullTrace[]): Set<string> {
     const rescaled = new Set<string>();
@@ -1451,6 +1531,7 @@ export class Chart {
       const full = fullLayout[axisName(id)] as FullAxis | undefined;
       if (!full) continue;
       const type = axisTypeOf(full);
+      const prev = this.#axes.get(id);
       let lists: ReturnType<typeof axisCategoryLists> = {};
       if (isCategorical(type)) {
         const letter = id.charAt(0);
@@ -1458,14 +1539,14 @@ export class Chart {
         for (const trace of fullData) {
           if (trace.visible !== false && trace[`${letter}axis`] === id) columns.push(trace[letter]);
         }
-        lists = axisCategoryLists(full, type, columns);
+        lists = axisCategoryLists(full, type, columns, prev?.state.categories);
       }
-      const prev = this.#axes.get(id);
       const state = syncScale(prev?.state, type, lists.categories, lists.multicategories);
       if (!prev || prev.state !== state) rescaled.add(id);
       const slot = prev ?? new AxisSlot(id, full, state);
       slot.full = full;
       slot.state = state;
+      slot.traceOrder = lists.traceOrder;
       next.set(id, slot);
     }
     this.#axes = next;
@@ -1603,13 +1684,15 @@ export class Chart {
    * funnel and waterfall stack together as `bar-like`), else its trace type; the group's first
    * module with a `crossTraceCalc` runs it. It reruns when any trace of the group (hidden ones
    * included: hiding a bar restacks the others) was recalculated or declared a `crossTraceCalc`
-   * stage; every member then re-uploads (its calc was mutated in place).
+   * stage; every member then re-uploads (its calc was mutated in place). With `only`, just the
+   * groups with a member in it rerun (the second pass after a category reorder).
    */
   #crossTraceCalc(
     fullLayout: FullLayout,
     fullData: readonly FullTrace[],
     plan: Plan,
     plans: TraceUpdatePlan[],
+    only?: ReadonlySet<number>,
   ): void {
     const groups = new Map<
       string,
@@ -1630,16 +1713,20 @@ export class Chart {
           module: undefined,
           subplot: x + y,
           members: [],
-          dirty: plan.full || plan.structural,
+          dirty: only === undefined && (plan.full || plan.structural),
         };
         groups.set(key, group);
       }
       group.module ??= module.crossTraceCalc ? module : undefined;
       group.members.push(i);
       const stages = plan.traces.get(i);
-      if ((plans[i] as TraceUpdatePlan).calc || stages?.has('crossTraceCalc')) group.dirty = true;
+      if (only) {
+        if (only.has(i)) group.dirty = true;
+      } else if ((plans[i] as TraceUpdatePlan).calc || stages?.has('crossTraceCalc')) {
+        group.dirty = true;
+      }
     });
-    if (plan.layout.has('crossTraceCalc')) for (const g of groups.values()) g.dirty = true;
+    if (!only && plan.layout.has('crossTraceCalc')) for (const g of groups.values()) g.dirty = true;
     for (const group of groups.values()) {
       if (!group.dirty || !group.module?.crossTraceCalc) continue;
       const subplot = this.#subplots.get(group.subplot);

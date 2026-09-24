@@ -28,3 +28,4 @@ them and the old one is marked **Superseded by ADR-XXX**.
 | 017 | [Publish under the `@mk7s` npm scope](017-mk7s-npm-scope.md)                                            | Accepted      |
 | 018 | [Visual regression harness](018-visual-regression-harness.md)                                           | Accepted      |
 | 019 | [A runtime package owns charts, the pipeline and the plugin contracts](019-runtime-package.md)          | Accepted      |
+| 020 | [Strip schema descriptions from production builds](020-strip-schema-descriptions.md)                    | Proposed      |

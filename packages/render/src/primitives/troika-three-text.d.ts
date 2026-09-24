@@ -3,8 +3,10 @@
  * The package ships `.d.ts` files but does not point to them from `package.json`, so TypeScript
  * cannot find them under `moduleResolution: bundler`.
  *
- * Referenced from `text.ts` with a triple-slash directive so programs that compile the render
- * sources indirectly (e.g. the examples) see these declarations too.
+ * Referenced from `text.ts` and `text-engine.ts` with a triple-slash directive so programs that
+ * compile the render sources indirectly (e.g. the examples) see these declarations too. Render
+ * source imports troika for types only (`import type`); the runtime module is loaded lazily by
+ * `text-engine.ts` (plan E21.5).
  */
 declare module 'troika-three-text' {
   import type { Color, Mesh, Texture } from 'three';

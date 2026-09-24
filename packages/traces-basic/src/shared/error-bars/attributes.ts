@@ -83,9 +83,6 @@ function common(letter: 'x' | 'y') {
   };
 }
 
-const containerMeta = (letter: 'x' | 'y') =>
-  ({ editType: 'calc', description: `Error bars along the ${letter} axis.` }) as const;
-
 function errorXAttributes() {
   return attr.object(
     {
@@ -96,12 +93,15 @@ function errorXAttributes() {
           'Use the `error_y` color, thickness and width. Defaults to true when `error_y` is visible and none of those is set here.',
       }),
     },
-    containerMeta('x'),
+    { editType: 'calc', description: 'Error bars along the x axis.' },
   );
 }
 
 function errorYAttributes() {
-  return attr.object(common('y'), containerMeta('y'));
+  return attr.object(common('y'), {
+    editType: 'calc',
+    description: 'Error bars along the y axis.',
+  });
 }
 
 /**

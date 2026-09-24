@@ -1,4 +1,12 @@
-import { createScale, supplyDefaults, type FullLayout, type FullTrace } from '@mk7s/holochart-core';
+import {
+  collectCategoryValues,
+  createScale,
+  sortCategoriesByValue,
+  supplyDefaults,
+  type CategorySamples,
+  type FullLayout,
+  type FullTrace,
+} from '@mk7s/holochart-core';
 import {
   createResourceManager,
   IDENTITY_TRANSFORM,
@@ -250,6 +258,84 @@ describe('bar calc and cross-trace calc', () => {
     );
     const e = bar.extremes!(calcs[0]!, traces[0]!, { fullLayout, index: 0, xaxis: x, yaxis: y });
     expect(e.y?.max[0]?.padPx).toBeCloseTo(10 * 1.2 + 6);
+  });
+});
+
+describe('bar category values (value-based categoryorder, E3.6)', () => {
+  const lin = (id: string) => axisInfo(id, 'linear');
+
+  /** Sort the categories of the position axis by the traces' samples, as the runtime does. */
+  function sorted(
+    data: unknown[],
+    layout: unknown,
+    order: string,
+    letter: 'x' | 'y',
+    categories: string[],
+  ): string[] {
+    const cat = axisInfo(letter, 'category', categories);
+    const [x, y] = letter === 'x' ? [cat, lin('y')] : [lin('x'), cat];
+    const { traces, calcs } = calcAll(data, layout, x, y);
+    const samples = calcs
+      .map((c, i) => bar.categoryValues!(c, traces[i]!, letter, {} as CalcContext))
+      .filter((s): s is CategorySamples => s !== undefined);
+    return sortCategoriesByValue(categories, order, collectCategoryValues(categories, samples));
+  }
+
+  it('totals every trace of a stack (own sizes, not stacked tops)', () => {
+    const data = [
+      { x: ['a', 'b', 'c'], y: [1, 5, 2] },
+      { x: ['a', 'b', 'c'], y: [6, 1, 2] },
+    ];
+    // Totals: a 7, b 6, c 4 — in every barmode.
+    for (const barmode of ['group', 'stack', 'relative', 'overlay']) {
+      expect(sorted(data, { barmode }, 'total descending', 'x', ['a', 'b', 'c'])).toEqual([
+        'a',
+        'b',
+        'c',
+      ]);
+    }
+    // Max of own sizes: a 6, b 5, c 2 (a stacked top would give b 6).
+    expect(sorted(data, { barmode: 'stack' }, 'max ascending', 'x', ['a', 'b', 'c'])).toEqual([
+      'c',
+      'b',
+      'a',
+    ]);
+  });
+
+  it('uses barnorm-normalized sizes, like Plotly after cross-trace calc', () => {
+    const data = [
+      { x: ['a', 'b'], y: [1, 30] },
+      { x: ['a', 'b'], y: [3, 10] },
+    ];
+    // Fractions: trace 0 has a 0.25, b 0.75 → max: a 0.75, b 0.75 (tie) vs raw a 3, b 30.
+    expect(
+      sorted(data, { barmode: 'stack', barnorm: 'fraction' }, 'max descending', 'x', ['a', 'b']),
+    ).toEqual(['a', 'b']);
+    expect(sorted(data, { barmode: 'stack' }, 'max descending', 'x', ['a', 'b'])).toEqual([
+      'b',
+      'a',
+    ]);
+  });
+
+  it('reads horizontal bars on the y axis and skips bars without a value', () => {
+    const data = [
+      { y: ['p', 'q', 'r'], x: [3, null, 1], orientation: 'h' },
+      { y: ['q', 'r'], x: [2, 1], orientation: 'h' },
+    ];
+    // Totals: p 3, q 2, r 2 (tie keeps trace order).
+    expect(sorted(data, {}, 'total ascending', 'y', ['p', 'q', 'r'])).toEqual(['q', 'r', 'p']);
+    // Means: p 3, q 2, r 1.
+    expect(sorted(data, {}, 'mean ascending', 'y', ['p', 'q', 'r'])).toEqual(['r', 'q', 'p']);
+  });
+
+  it('contributes nothing on the size axis', () => {
+    const { traces, calcs } = calcAll(
+      [{ x: ['a'], y: [1] }],
+      {},
+      axisInfo('x', 'category', ['a']),
+      lin('y'),
+    );
+    expect(bar.categoryValues!(calcs[0]!, traces[0]!, 'y', {} as CalcContext)).toBeUndefined();
   });
 });
 

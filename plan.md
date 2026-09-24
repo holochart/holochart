@@ -597,6 +597,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] Parser for the Plotly tag subset → styled runs → multi-run layout
 - [ ] Links are clickable and open with `target` honored. Sanitized (no `javascript:` URLs).
 - [ ] Optional MathJax/KaTeX-rendered LaTeX via texture (`$...$`), `P3`
+- [ ] Scatter/bar `text` labels: today `<b>`/`<i>` are stripped (plain text); render them per run like titles and annotations (found in M1 wave 3)
 
 #### E2.11 — Mesh primitive & lit materials   `P0` `M`   deps: E2.3
 > As a contributor, I want an indexed mesh primitive with per-vertex color/intensity and configurable lighting, so that surface, mesh3d, isosurface, and extruded 2D shapes share it.
@@ -688,7 +689,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 
 #### E3.6 — Category & multicategory axes   `P0` `M`   deps: E3.1   · ✅ Done (M1 wave 1)
 > As a developer, I want categorical axes with ordering control and hierarchical categories, so that grouped categorical data displays properly.
-- [x] `categoryorder: 'trace' | 'category ascending/descending' | 'array' | 'total ascending/descending' | 'min/max/sum/mean/median ascending/descending'`, `categoryarray` — multicategory axes support `trace` and `category` orders only
+- [x] `categoryorder: 'trace' | 'category ascending/descending' | 'array' | 'total ascending/descending' | 'min/max/sum/mean/median ascending/descending'`, `categoryarray` — value-based orders sort by the traces' calc values with a second calc pass, as in Plotly (M2 wave 0; `geometric mean` not supported); multicategory axes support `trace` and `category` orders only
 - [x] Multicategory: 2-level `[[group], [item]]` data with divider lines (`dividercolor`, `dividerwidth`, `showdividers`) — divider data from `multicategoryLevels`; drawn by the axis renderer (wave 2)
 
 #### E3.7 — Log axes   `P0` `S`   deps: E3.3   · ✅ Done (M1 wave 1)
@@ -778,7 +779,8 @@ Customization is a **cascade**. Each layer overrides the one above it:
 #### E5.4 — Annotations   `P0` `M`   deps: E2.9, E2.5   · 🟡 Partial (M1 wave 3)
 > As a developer, I want text annotations with optional arrows anchored to data or paper, so that I can call out insights.
 - [x] `annotations[]: { text, x, y, xref, yref, xanchor, yanchor, xshift, yshift, showarrow, ax, ay, axref, ayref, arrowhead (0–8), arrowsize, arrowwidth, arrowcolor, arrowside, startarrowhead, standoff, startstandoff, bgcolor, bordercolor, borderwidth, borderpad, font, align, valign, textangle, width, height, opacity, visible, clicktoshow, captureevents, hovertext, hoverlabel }` — arrowhead 8 (undefined in Plotly) draws a bar; deferred: drawing `hovertext` labels
-- [x] Draggable when `config.editable` (moves the text and/or arrow tail) — written, with `clickannotation` and `clicktoshow`, but **no interaction test yet** (carry-forward)
+- [x] Draggable when `config.editable` (moves the text and/or arrow tail) — written, with `clickannotation` and `clicktoshow`, interaction-tested in M2 wave 0 (`tests/interaction/annotations.spec.ts`, which also found and fixed a runtime bug: component drags didn't capture the pointer)
+- [ ] Plotly gaps: dragging the arrow head doesn't move a tail given in axis units (`axref`/`ayref`), and `clicktoshow` doesn't check the clicked point's axes against `xref`/`yref`
 - [ ] 3D scene annotations (anchored to 3D points, projected to screen). See E14.1. — *M6*
 
 #### E5.5 — Shapes   `P0` `M`   deps: E2.5, E2.6
@@ -1812,7 +1814,7 @@ docs/
 > As a developer, I want to import only the traces I use, so that my bundle stays small.
 - [x] `import { createChart, register } from '@mk7s/holochart-runtime'; import { scatter, bar } from '@mk7s/holochart-traces-basic'; register(scatter, bar);` (core stays renderer-free, ADR-019)
 - [ ] Prebuilt CDN bundles: `holochart-basic`, `holochart-cartesian`, `holochart-3d`, `holochart-full` — *deferred: only the full IIFE so far*
-- [x] Size budgets (min+gz, excluding three): core+scatter ≤ 90 KB, basic ≤ 150 KB, full ≤ 450 KB — enforced by `pnpm size` and the CI bundle-size job; partial budgets raised to 165 / 200 kB after wave 2 and `basic` to 215 kB after wave 3 (see E21.5)
+- [x] Size budgets (min+gz, excluding three): core+scatter ≤ 90 KB, basic ≤ 150 KB, full ≤ 450 KB — enforced by `pnpm size` and the CI bundle-size job; partial budgets raised to 165 / 200 kB after wave 2 and `basic` to 215 kB after wave 3, then tightened to 120 / 170 kB (initial chunk; text engine 49 kB lazy) after the E21.5 diet
 
 #### E21.2 — Versioning & compatibility policy   `P0` `S`   · ✅ Done (M1 wave 1)
 - [x] SemVer. Deprecations live at least one minor version with console warnings before removal. Supported three.js range documented and tested in CI (min and latest).
@@ -1824,12 +1826,18 @@ docs/
 - [x] Project license (MIT recommended) + `THIRD_PARTY_NOTICES` for d3 (ISC), earcut (ISC), troika (MIT), plotly.js mocks (MIT, test-only), Natural Earth (public domain), colormaps (cmocean MIT, carto CC-BY) — MIT chosen; `LICENSE` in the root and every published package, `THIRD_PARTY_NOTICES.md` from `pnpm licenses list --prod`
 
 
-#### E21.5 — Bundle diet   `P1` `M`   deps: E21.1
+#### E21.5 — Bundle diet   `P1` `M`   deps: E21.1   · ✅ Done (M2 wave 0)
 > As a developer, I want small partial bundles, so that a scatter-only page doesn't ship the whole toolkit.
-- [ ] Lazy-load the SDF text engine (troika + bidi-js + webgl-sdf-generator, ~40 kB gz, ~26% of core + scatter) on first text use, with a sync fallback for the metrics oracle
-- [ ] Strip schema `description` strings from production builds (5–7% of core and traces-basic); keep them for docs, validation messages, and dev builds
-- [ ] Audit tree-shaking of `render` (only the primitives a trace uses) and `components`
-- [ ] Tighten the partial budgets back toward the original targets (core + scatter 90 kB, basic 150 kB), which were raised to measured +10% (165 / 200 kB) after M1 wave 2 by decision on 2026-09-23
+- [x] Lazy-load the SDF text engine (troika + bidi-js + webgl-sdf-generator, ~40 kB gz, ~26% of core + scatter) on first text use, with a sync fallback for the metrics oracle — 44.2 kB lazy chunk; `TextPrimitive.ready` covers the load; `preloadTextEngine()`; the size report lists lazy chunks separately
+- [x] Strip schema `description` strings from production builds (5–7% of core and traces-basic); keep them for docs, validation messages, and dev builds — rolldown plugin + `development` export condition (ADR-020, Proposed); −8 to −13% per package
+- [x] Audit tree-shaking of `render` (only the primitives a trace uses) and `components` — clean: scatter pulls no components and only the render parts it uses. Leftovers (E21.6): bar schema in the scatter partial (~0.2 kB), `Chart#toJSON` always bundles the serializer (2.3 kB), annotations pull earcut + self-intersection code (7.4 kB)
+- [x] Tighten the partial budgets back toward the original targets (core + scatter 90 kB, basic 150 kB), which were raised to measured +10% (165 / 200 kB) after M1 wave 2 by decision on 2026-09-23 — tightened to 120 / 170 kB (measured 107.9 / 154.1 kB initial + 44.2 kB lazy text engine); the original 90 / 150 kB targets predate the text engine
+
+#### E21.6 — Further bundle trims   `P2` `S`   deps: E21.5
+> As a developer, I want the last avoidable bytes out of partial bundles, so that budgets keep room for new traces.
+- [ ] Keep the bar schema out of the scatter partial (`/* @__PURE__ */` on top-level schema objects, or per-module output — ADR-015 impact)
+- [ ] Decide whether `Chart#toJSON` should stay a method (always bundles the 2.3 kB serializer) or delegate to a lazily imported module
+- [ ] Draw annotation boxes and arrowheads without the general fill path (earcut + self-intersection, 7.4 kB in `basic`)
 
 ---
 
@@ -1941,7 +1949,7 @@ gantt
   - Docs site live with scatter/line/bar pages: ✅ pages complete (9 complete pages, 0 lint errors); goes live on the next `pnpm docs:publish --deploy`.
   - Attribute reference generated: ✅ (now includes `marker.colorbar`, `zorder` on bar, annotations).
 - Budget: the `basic` partial bundle grew to 209.6 kB gzipped with colorbar, annotations and streaming; its budget was raised to 215 kB by decision (core + scatter stays 165 kB, ~3 % headroom). E21.5 (diet) is due before M2.
-- Carry-forward (not blocking the alpha): an interaction test for annotation drag, `clickannotation` and `clicktoshow`; `categoryorder: 'total ascending'/'total descending'` (accepted but ignored); `<b>`/`<i>` in scatter `text` are stripped rather than drawn bold/italic; E18.3 round trip over every example; E7.2 GPU benchmark (M7); Playwright runs started in parallel must use separate `--output` folders (they share `test-results/` by default).
+- Carry-forward (not blocking the alpha): ~~an interaction test for annotation drag, `clickannotation` and `clicktoshow`~~ and ~~value-based `categoryorder`~~ (both done in M2 wave 0); `<b>`/`<i>` in scatter `text` are stripped rather than drawn bold/italic (moved to E2.10, M2); E18.3 round trip over every example; E7.2 GPU benchmark (M7); Playwright runs started in parallel must use separate `--output` folders (they share `test-results/` by default).
 
 ### 11.2 M1 execution plan
 
@@ -1962,6 +1970,23 @@ contracts are written first so workstreams don't block each other.
 
 Safety rule for all waves: GPU checks run only in headless Chromium (SwiftShader, or the isolated
 spike runner for Metal), never in an embedded app browser, one heavy run at a time.
+
+### 11.3 M2 execution plan
+
+Wave 0 clears the room M2 needs before new traces land; later waves follow the M1 pattern (≤ 4
+parallel workstreams with separate files, shared contracts first).
+
+| Wave | Workstream | Stories |
+| --- | --- | --- |
+| 0 | Bundle diet: lazy text engine; strip schema descriptions + tree-shaking audit | E21.5 ✅ |
+| 0 | M1 carry-forward: value-based `categoryorder`; annotation interaction tests | E3.x, E5.4 ✅ |
+| 1+ | Area & stacked area, bubble, pie/donut; table, Gantt; shapes & layout components; themes & fonts; rich text; gallery & docs coverage gate | E9.4, E9.5, E9.11, E9.13, E9.14, E5.5, E5.6, E4.4–E4.6, E8.1–E8.3, E2.10, E17.1, E18.1, E19.5, E19.10 |
+
+Open after wave 0: one full-suite run failed `schema-properties` › "produces full output that is
+itself valid input" (supplyDefaults on invalid figures). It did not reproduce in 12 further full
+runs or 20,000 isolated cases, and the failing seed wasn't captured. Next step: seed property
+tests from the commit in PR CI (reproducible) and run random seeds nightly, so a failure always
+comes with its seed (E20.1).
 
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 

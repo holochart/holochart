@@ -1,15 +1,9 @@
 import { defineConfig } from 'tsdown';
+import { libraryConfig } from '../../scripts/build/tsdown-preset.ts';
 
 /**
- * ESM + one bundled `index.d.ts` (ADR-015). `dependencies` and `peerDependencies` (e.g. `three`,
- * ADR-003) are external automatically; declarations come from tsc via rolldown-plugin-dts.
+ * ESM + one bundled `index.d.ts` (ADR-015). `dist/index.js` has attribute-schema descriptions
+ * stripped; `dist/index.development.js` keeps them (`development` export condition, ADR-020).
+ * See scripts/build/tsdown-preset.ts.
  */
-export default defineConfig({
-  entry: ['src/index.ts'],
-  format: 'esm',
-  platform: 'neutral',
-  target: 'es2022',
-  sourcemap: true,
-  dts: true,
-  clean: true,
-});
+export default defineConfig(libraryConfig({ development: true }));
