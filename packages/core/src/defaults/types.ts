@@ -1,5 +1,6 @@
 /** Types of the supply-defaults output (`fullData`, `fullLayout`, `fullConfig`). */
 import type { configSchema } from '../config/schema.ts';
+import type { gridSchema } from '../layout/grid.ts';
 import type { layoutSchema, xaxisSchema } from '../layout/schema.ts';
 import type { TraceModule } from '../registry/types.ts';
 import type { InferFull } from '../schema/types.ts';
@@ -51,7 +52,25 @@ export interface Subplots {
   yaxis: string[];
 }
 
-type BaseFullLayout = Omit<InferFull<typeof layoutSchema>, 'xaxis' | 'yaxis' | 'template'>;
+/**
+ * `layout.grid` after defaults (plan E4.4, `defaults/grid.ts`). Present only for a grid of more
+ * than one cell; `subplots` (grid of independent subplots) or `xaxes`/`yaxes` hold the cell
+ * contents that were found.
+ */
+export type FullGrid = Omit<InferFull<typeof gridSchema>, 'rows' | 'columns'> & {
+  rows: number;
+  columns: number;
+  /** Cell extents per column (`x`) and per row (`y`, in `roworder`), in plot-area fractions. */
+  _domains: { x: [number, number][]; y: [number, number][] };
+  /** Whether cells hold independent subplots (`subplots`) rather than shared axes. */
+  _hasSubplotGrid: boolean;
+  /** Column (x axes) or row (y axes) of each axis placed in the grid. */
+  _axisMap?: Record<string, number>;
+  /** Default `anchor` of each axis placed in the grid (`'free'` for grid-edge sides). */
+  _anchors?: Record<string, string>;
+};
+
+type BaseFullLayout = Omit<InferFull<typeof layoutSchema>, 'xaxis' | 'yaxis' | 'template' | 'grid'>;
 
 /**
  * The layout after defaults. Axes exist only for discovered subplots; module and component layout
@@ -62,6 +81,8 @@ export type FullLayout = BaseFullLayout & {
   template: Template | null;
   xaxis?: FullAxis;
   yaxis?: FullAxis;
+  /** Only for a grid of more than one cell. */
+  grid?: FullGrid;
   _subplots: Subplots;
   [key: string]: unknown;
 };

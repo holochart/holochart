@@ -6,12 +6,15 @@ import {
   cssFontFamily,
   cssFontString,
   fontWeightRank,
+  fonts,
   getDefaultFontURL,
   measurementFace,
   normalizeFontStyle,
   normalizeFontWeight,
   parseFontFamilyList,
   registerFont,
+  registerFontFamily,
+  registeredFontFamilies,
   resolveFontFace,
   resolveFontURL,
   setDefaultFontURL,
@@ -128,6 +131,93 @@ describe('resolveFontFace', () => {
       style: 'normal',
     });
     expect(resolveFontFace('Open Sans')).toBeUndefined();
+  });
+});
+
+describe('fonts.register (E8.3)', () => {
+  const noCSS = { cssFontFace: false } as const;
+
+  it('registers regular/bold/italic/boldItalic and resolves each variant', () => {
+    fonts.register(
+      'Inter',
+      { regular: 'r.woff', bold: 'b.woff', italic: 'i.woff', boldItalic: 'bi.woff' },
+      noCSS,
+    );
+    expect(fonts.resolve('Inter')?.url).toBe('r.woff');
+    expect(fonts.resolve('Inter', 'bold')?.url).toBe('b.woff');
+    expect(fonts.resolve('Inter', 'normal', 'italic')?.url).toBe('i.woff');
+    expect(fonts.resolve('Inter', 700, 'italic')).toEqual({
+      family: 'Inter',
+      url: 'bi.woff',
+      weight: 700,
+      style: 'italic',
+    });
+    // CSS weight matching over the registered faces: 600 → bold, 300 → regular.
+    expect(fonts.resolve('Inter', 600)?.url).toBe('b.woff');
+    expect(fonts.resolve('Inter', 300)?.url).toBe('r.woff');
+  });
+
+  it('registers numeric weights, as URLs or per style', () => {
+    registerFontFamily(
+      'Inter',
+      {
+        regular: 'r.woff',
+        weights: { 300: 'light.woff', 600: { normal: 'sb.woff', italic: 'sbi.woff' } },
+      },
+      noCSS,
+    );
+    expect(resolveFontURL('Inter', 300)).toBe('light.woff');
+    expect(resolveFontURL('Inter', 200)).toBe('light.woff');
+    expect(resolveFontURL('Inter', 600)).toBe('sb.woff');
+    expect(resolveFontURL('Inter', 'bold')).toBe('sb.woff');
+    expect(resolveFontURL('Inter', 600, 'italic')).toBe('sbi.woff');
+    // Only one italic face: every italic request gets it.
+    expect(resolveFontURL('Inter', 400, 'italic')).toBe('sbi.woff');
+  });
+
+  it('resolves a fallback chain to the first registered family', () => {
+    fonts.register('Inter', { regular: 'inter.woff', bold: 'inter-bold.woff' }, noCSS);
+    const chain = '"Brand", Inter, sans-serif';
+    expect(fonts.resolve(chain, 'bold')?.url).toBe('inter-bold.woff');
+    const offBrand = fonts.register('Brand', { regular: 'brand.woff' }, noCSS);
+    expect(fonts.resolve(chain)?.url).toBe('brand.woff');
+    // The first registered family wins even without a matching weight.
+    expect(fonts.resolve(chain, 'bold')?.url).toBe('brand.woff');
+    offBrand();
+    expect(fonts.resolve(chain, 'bold')?.url).toBe('inter-bold.woff');
+  });
+
+  it('unregisters every face of the call and lists families', () => {
+    const off = fonts.register('Inter', { regular: 'r.woff', italic: 'i.woff' }, noCSS);
+    fonts.registerFace({ family: 'Roboto', url: 'roboto.woff' }, noCSS);
+    expect(fonts.families()).toEqual(['Inter', 'Roboto']);
+    expect(registeredFontFamilies()).toEqual(['Inter', 'Roboto']);
+    off();
+    expect(resolveFontFace('Inter')).toBeUndefined();
+    expect(fonts.families()).toEqual(['Roboto']);
+    fonts.clear();
+    expect(fonts.families()).toEqual([]);
+  });
+
+  it('keeps faces replaced by a later registration when the first call is undone', () => {
+    const off = fonts.register('Inter', { regular: 'old.woff', bold: 'b.woff' }, noCSS);
+    fonts.register('Inter', { regular: 'new.woff' }, noCSS);
+    off();
+    expect(resolveFontURL('Inter')).toBe('new.woff');
+    expect(resolveFontURL('Inter', 'bold')).toBe('new.woff');
+  });
+
+  it('registers each face as a CSS FontFace for the metrics oracle', () => {
+    const { added } = stubCSSFonts();
+    try {
+      fonts.register('Inter', { regular: 'r.woff', boldItalic: 'bi.woff' });
+      expect(added.map((f) => [f.family, f.source, f.descriptors])).toEqual([
+        ['Inter', 'url("r.woff")', { weight: '400', style: 'normal' }],
+        ['Inter', 'url("bi.woff")', { weight: '700', style: 'italic' }],
+      ]);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 

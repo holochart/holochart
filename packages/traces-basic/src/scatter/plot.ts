@@ -1,16 +1,19 @@
 /**
- * `scatter` renderer (plan E9.1–E9.3, E9.7, E22.1). A trace draws at most five GPU primitives,
- * whatever its size (plan §3 principle 6): x and y error bars (a line set + a cap marker set each),
- * one polyline set, one instanced marker set and one batched text set. They are updated in place
- * per the runtime's plan: `style` edits touch only style buffers, `selection` restyles markers,
- * and zoom/pan (`transform`) only sets uniforms — except for spline and decimated lines, whose
- * px-space geometry is rebuilt when the zoom changes the axis scales enough to matter.
+ * `scatter` renderer (plan E9.1–E9.4, E9.7, E22.1). A trace draws at most six GPU primitives,
+ * whatever its size (plan §3 principle 6): one batched fill, x and y error bars (a line set + a
+ * cap marker set each), one polyline set, one instanced marker set and one batched text set. They
+ * are updated in place per the runtime's plan: `style` edits touch only style buffers, `selection`
+ * restyles markers, and zoom/pan (`transform`) only sets uniforms — except for spline and
+ * decimated lines (and spline fills), whose geometry is rebuilt when the zoom changes the axis
+ * scales enough to matter.
  */
 import { createTickFormatter, isArrayLike, type FullTrace } from '@mk7s/holochart-core';
 import {
+  createFillPrimitive,
   createMarkers,
   createTextPrimitive,
   LinePrimitive,
+  type FillPrimitive,
   type DataTransform,
   type MarkerData,
   type MarkerPatch,
@@ -34,8 +37,9 @@ import {
 import { toRGBA } from '@mk7s/holochart-core';
 import { ErrorBarLayer, errorBarStyle } from '../shared/error-bars/index.ts';
 import { traceRenderOrder } from '../shared/render-order.ts';
-import type { ScatterCalc } from './calc.ts';
+import { drawnSeries, type ScatterCalc } from './calc.ts';
 import { windowChange } from './calc-stream.ts';
+import { fillStyle, traceFill, type TraceFill } from './fill-trace.ts';
 import { hasLines, hasMarkers, hasText } from './defaults.ts';
 import { needsRebuild, pathDependsOnScale, type LineShape } from './line-path.ts';
 import { LinePathStream } from './line-stream.ts';
@@ -45,10 +49,19 @@ import { lineCount, plainText, textPlacement, TEXT_LINE_HEIGHT } from './text-po
 export { markerStyle } from './style.ts';
 
 /**
- * Draw order within a trace (added to the trace's render order): error bars under the line, the
- * line under the markers, text on top — Plotly's layer order inside a scatter trace group.
+ * Draw order within a trace (added to the trace's render order): fills under the error bars,
+ * error bars under the line, the line under the markers, text on top — Plotly's layer order inside
+ * a scatter trace group. A `tonext*` fill draws in the previous trace's group, above that trace's
+ * own fill (`nextFill`), so the previous trace's line stays on top of it, as in Plotly.
  */
-const LAYER = { errorBars: 0.1, line: 0.2, markers: 0.3, text: 0.4 } as const;
+const LAYER = {
+  fill: 0.05,
+  nextFill: 0.06,
+  errorBars: 0.1,
+  line: 0.2,
+  markers: 0.3,
+  text: 0.4,
+} as const;
 
 export { traceRenderOrder };
 
@@ -324,6 +337,11 @@ function padFront(data: Partial<MarkerData>, front: number): Partial<MarkerData>
 // ---- View -------------------------------------------------------------------------------------
 
 class ScatterView implements TraceView<ScatterCalc> {
+  #fill: FillPrimitive | undefined;
+  /** The fill geometry the primitive holds (the memo returns the same object when unchanged). */
+  #fillBuilt: TraceFill | undefined;
+  /** The calc last drawn: a streamed calc (`appendOf`) of it can take the streaming path. */
+  #drawn: ScatterCalc | undefined;
   #errors: { x?: ErrorBarLayer; y?: ErrorBarLayer } = {};
   #line: LinePrimitive | undefined;
   /** The line's vertex path, kept incrementally while streaming (E7.2). */
@@ -343,7 +361,17 @@ class ScatterView implements TraceView<ScatterCalc> {
   }
 
   update(ctx: TracePlotContext<ScatterCalc>, plan: TraceUpdatePlan): void {
-    if (plan.append && this.#append(ctx, plan.append)) {
+    const previous = this.#drawn;
+    this.#drawn = ctx.calc;
+    // `crossTraceCalc` makes the runtime drop `plan.append` (the calc may have been rewritten);
+    // a calc that is exactly a streamed edit of the one drawn last can still stream.
+    const streamed = ctx.calc.appendOf;
+    const append =
+      plan.append ??
+      (streamed && previous !== undefined && streamed.previous === previous
+        ? streamed.append
+        : undefined);
+    if (append && this.#append(ctx, append)) {
       if (plan.transform) this.#setTransform(ctx);
       return;
     }
@@ -353,6 +381,36 @@ class ScatterView implements TraceView<ScatterCalc> {
     }
     if (plan.style || plan.selection) this.#restyle(ctx);
     if (plan.transform) this.#setTransform(ctx);
+  }
+
+  /** Create, remove or refresh the fill (geometry only when it changed, see `traceFill`). */
+  #syncFill(ctx: TracePlotContext<ScatterCalc>): void {
+    const { trace, calc } = ctx;
+    const t = ctx.transform;
+    const axes = { x: ctx.xaxis, y: ctx.yaxis };
+    const fill = traceFill(calc, trace, axes, {
+      scaleX: Math.abs(t.scaleX),
+      scaleY: Math.abs(t.scaleY),
+    });
+    const geometry = fill.geometry;
+    if (!geometry) {
+      this.#fill = this.#drop(ctx, this.#fill);
+      this.#fillBuilt = undefined;
+      return;
+    }
+    const style = fillStyle(trace, axes);
+    if (!this.#fill) {
+      this.#fill = this.#add(ctx, createFillPrimitive(ctx.primitives, { ...geometry, ...style }));
+    } else if (this.#fillBuilt !== fill) {
+      this.#fill.update({ ...geometry, ...style });
+    } else {
+      this.#fill.update(style);
+    }
+    this.#fillBuilt = fill;
+    const link = calc.link?.previous;
+    this.#fill.object.renderOrder = link
+      ? traceRenderOrder(link.trace, link.index) + LAYER.nextFill
+      : traceRenderOrder(trace, ctx.index) + LAYER.fill;
   }
 
   /** Create, remove or refresh the error bar layers. */
@@ -397,6 +455,8 @@ class ScatterView implements TraceView<ScatterCalc> {
     const change = windowChange(append);
     const order = traceRenderOrder(trace, ctx.index);
 
+    // Fills are rebuilt whole on a streaming edit (their rings join every point).
+    this.#syncFill(ctx);
     this.#syncErrorBars(ctx, order);
 
     const line = this.#line;
@@ -473,6 +533,7 @@ class ScatterView implements TraceView<ScatterCalc> {
     const order = traceRenderOrder(trace, ctx.index);
     const mode = trace['mode'];
 
+    this.#syncFill(ctx);
     this.#syncErrorBars(ctx, order);
 
     if (hasLines(mode) && calc.length > 0) {
@@ -519,6 +580,7 @@ class ScatterView implements TraceView<ScatterCalc> {
   /** Style-only update: colors, widths, opacities, selection. Geometry is untouched. */
   #restyle(ctx: TracePlotContext<ScatterCalc>): void {
     const { trace, calc } = ctx;
+    this.#fill?.update(fillStyle(trace, { x: ctx.xaxis, y: ctx.yaxis }));
     for (const letter of ['x', 'y'] as const) {
       this.#errors[letter]?.update({ style: errorBarStyle(trace, letter) });
     }
@@ -542,6 +604,9 @@ class ScatterView implements TraceView<ScatterCalc> {
 
   #setTransform(ctx: TracePlotContext<ScatterCalc>, synced = false): void {
     const t = ctx.transform;
+    // Spline fills follow the zoom like spline lines; `traceFill` decides when to rebuild.
+    if (!synced && this.#fillBuilt?.dependsOnScale) this.#syncFill(ctx);
+    this.#fill?.setTransform(t);
     this.#errors.x?.setTransform(t);
     this.#errors.y?.setTransform(t);
     if (this.#line) {
@@ -557,7 +622,8 @@ class ScatterView implements TraceView<ScatterCalc> {
   }
 
   #linePath(ctx: TracePlotContext<ScatterCalc>): { x: Float64Array; y: Float64Array } {
-    this.#path.rebuild(ctx.calc.x, ctx.calc.y, lineOptions(ctx.trace, ctx.transform));
+    const series = drawnSeries(ctx.calc);
+    this.#path.rebuild(series.x, series.y, lineOptions(ctx.trace, ctx.transform));
     this.#noteLineScales();
     return { x: this.#path.x, y: this.#path.y };
   }

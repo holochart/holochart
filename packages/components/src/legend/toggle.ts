@@ -61,6 +61,40 @@ export function legendToggle(
   return changes;
 }
 
+/**
+ * The next `layout.hiddenlabels` after a legend click on a per-point item (pie labels; Plotly's
+ * `handle_click` for pie-like traces). `keys` are every per-point item shown in the legend.
+ *
+ * - `toggle`: hide `key`, or show it again.
+ * - `toggleothers`: show `key` and hide every other item — unless that is already the case, in
+ *   which case every item comes back.
+ *
+ * Returns `undefined` when nothing changes. Labels hidden but not in the legend are kept.
+ */
+export function hiddenLabelsToggle(
+  hidden: readonly string[],
+  keys: readonly string[],
+  key: string,
+  mode: 'toggle' | 'toggleothers',
+): string[] | undefined {
+  const set = new Set(hidden);
+  if (mode === 'toggle') {
+    if (set.has(key)) set.delete(key);
+    else set.add(key);
+  } else {
+    const others = keys.filter((k) => k !== key);
+    const isolated = !set.has(key) && others.every((k) => set.has(k));
+    if (isolated) for (const k of others) set.delete(k);
+    else {
+      set.delete(key);
+      for (const k of others) set.add(k);
+    }
+  }
+  const next = [...set];
+  const same = next.length === hidden.length && next.every((k, i) => k === hidden[i]);
+  return same ? undefined : next;
+}
+
 /** Scheduling functions (injectable for tests). */
 export interface Timers {
   set(fn: () => void, ms: number): unknown;

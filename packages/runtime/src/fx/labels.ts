@@ -11,7 +11,7 @@
  * canvas. Label elements are pooled: hovering from point to point reuses them.
  */
 import { avoidOverlaps, type Placed, type Rect } from './geometry.ts';
-import type { LabelSpec, LabelStyle } from './hover.ts';
+import type { FontCss, LabelSpec, LabelStyle } from './hover.ts';
 import { appendRichText } from './richtext.ts';
 
 /** Gap (px) between a label and its point, and between stacked labels. */
@@ -55,6 +55,18 @@ function applyStyle(el: HTMLElement, s: LabelStyle): void {
   st.fontFamily = s.fontFamily;
   st.fontSize = `${s.fontSize}px`;
   st.textAlign = s.align === 'auto' ? 'left' : s.align;
+  applyFontCss(el, s.fontCss);
+}
+
+/** Set (or reset) the E8.3 font CSS; labels are reused, so unset fields are cleared. */
+function applyFontCss(el: HTMLElement, css: FontCss | undefined): void {
+  const st = el.style;
+  st.fontWeight = css?.fontWeight ?? '';
+  st.fontStyle = css?.fontStyle ?? '';
+  st.fontVariant = css?.fontVariant ?? '';
+  st.textTransform = css?.textTransform ?? '';
+  st.textDecorationLine = css?.textDecorationLine ?? '';
+  st.textShadow = css?.textShadow ?? '';
 }
 
 /**
@@ -147,6 +159,7 @@ export class HoverLayer {
         el.extra.style.color = spec.color;
         el.extra.style.fontFamily = spec.style.fontFamily;
         el.extra.style.fontSize = `${spec.style.fontSize}px`;
+        applyFontCss(el.extra, spec.style.fontCss);
         el.extra.style.background = 'rgba(255,255,255,0.85)';
       } else el.extra.style.display = 'none';
       el.arrow.style.background = spec.style.bgcolor;

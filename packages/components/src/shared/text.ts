@@ -146,6 +146,11 @@ export interface FullFont {
   readonly color: string;
   readonly weight?: number | 'normal' | 'bold';
   readonly style?: 'normal' | 'italic';
+  /** Plotly font extras (plan E8.3), drawn by the text primitive. */
+  readonly variant?: TextFont['variant'];
+  readonly textcase?: TextFont['textcase'];
+  readonly lineposition?: string;
+  readonly shadow?: string;
 }
 
 /** Fill unset fields of `font` from `base` (Plotly's font inheritance). */
@@ -156,6 +161,24 @@ export function inheritFont(font: Partial<FullFont> | undefined, base: FullFont)
     color: font?.color ?? base.color,
     weight: font?.weight ?? base.weight ?? 'normal',
     style: font?.style ?? base.style ?? 'normal',
+    ...extras(font?.variant ?? base.variant, font?.textcase ?? base.textcase, font, base),
+  };
+}
+
+/** The E8.3 font extras of `font` over `base`, omitting unset ones (keeps objects minimal). */
+function extras(
+  variant: FullFont['variant'],
+  textcase: FullFont['textcase'],
+  font: Partial<FullFont> | undefined,
+  base: Partial<FullFont>,
+): Partial<FullFont> {
+  const lineposition = font?.lineposition ?? base.lineposition;
+  const shadow = font?.shadow ?? base.shadow;
+  return {
+    ...(variant !== undefined ? { variant } : {}),
+    ...(textcase !== undefined ? { textcase } : {}),
+    ...(lineposition !== undefined ? { lineposition } : {}),
+    ...(shadow !== undefined ? { shadow } : {}),
   };
 }
 
@@ -166,6 +189,7 @@ export function textFont(font: FullFont, scale = 1): TextFont {
     size: font.size * scale,
     weight: font.weight ?? 'normal',
     style: font.style ?? 'normal',
+    ...extras(font.variant, font.textcase, font, {}),
   };
 }
 

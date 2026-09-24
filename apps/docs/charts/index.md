@@ -16,19 +16,19 @@ types are added as their traces land.
 
 ## Basic
 
-| Chart                                                   | Trace type(s)                             | Milestone |
-| ------------------------------------------------------- | ----------------------------------------- | --------- |
-| [Scatter](/charts/basic/scatter)                        | `scatter` (`mode: 'markers'`)             | M1        |
-| [Line](/charts/basic/line)                              | `scatter` (`mode: 'lines'`)               | M1        |
-| [Bubble](/charts/basic/scatter#colorscales-and-bubbles) | `scatter` (sized markers)                 | M2        |
-| [Dot](/charts/basic/scatter#dot-plot)                   | `scatter` (recipe)                        | M2        |
-| Area                                                    | `scatter` (`fill`, `stackgroup`)          | M2        |
-| [Bar](/charts/basic/bar)                                | `bar`                                     | M1        |
-| [Horizontal Bar](/charts/basic/horizontal-bar)          | `bar` (`orientation: 'h'`)                | M1        |
-| Pie                                                     | `pie`                                     | M2        |
-| Table                                                   | `table`                                   | M2        |
-| Gantt                                                   | `bar` (with a timeline helper)            | M2        |
-| [Error Bars](/charts/basic/scatter#error-bars)          | `error_x` / `error_y` on `scatter`, `bar` | M1        |
+| Chart                                          | Trace type(s)                             | Milestone |
+| ---------------------------------------------- | ----------------------------------------- | --------- |
+| [Scatter](/charts/basic/scatter)               | `scatter` (`mode: 'markers'`)             | M1        |
+| [Line](/charts/basic/line)                     | `scatter` (`mode: 'lines'`)               | M1        |
+| [Bubble](/charts/basic/bubble)                 | `scatter` (sized markers)                 | M2        |
+| [Dot](/charts/basic/scatter#dot-plot)          | `scatter` (recipe)                        | M2        |
+| [Area](/charts/basic/area)                     | `scatter` (`fill`, `stackgroup`)          | M2        |
+| [Bar](/charts/basic/bar)                       | `bar`                                     | M1        |
+| [Horizontal Bar](/charts/basic/horizontal-bar) | `bar` (`orientation: 'h'`)                | M1        |
+| [Pie](/charts/basic/pie)                       | `pie`                                     | M2        |
+| Table                                          | `table`                                   | M2        |
+| Gantt                                          | `bar` (with a timeline helper)            | M2        |
+| [Error Bars](/charts/basic/scatter#error-bars) | `error_x` / `error_y` on `scatter`, `bar` | M1        |
 
 ## Statistical
 

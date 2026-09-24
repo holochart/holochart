@@ -200,7 +200,8 @@ default, for example [`marker.size`](/reference/scatter#marker.size) and
 - The default `mode` follows Plotly: `'lines+markers'` for fewer than 20 points, `'lines'`
   otherwise.
 - Attribute names and the `hovertemplate` / `texttemplate` syntax match Plotly.
-- Not supported yet: `fill` and `stackgroup` (area charts, M2), `marker.gradient`,
-  `marker.angleref`, `marker.standoff`, `line.backoff`, and `hoveron`.
+- Not supported yet: `marker.gradient`, `marker.angleref`, `marker.standoff`, and `line.backoff`.
+  `fill`, `stackgroup`, and `hoveron` are covered on the [area page](/charts/basic/area), and
+  bubble sizing on the [bubble page](/charts/basic/bubble).
 - Draw order matches Plotly: traces with a higher `zorder` draw on top; at equal `zorder`, bars
   draw below scatter traces whatever their order in `data`; then trace order.

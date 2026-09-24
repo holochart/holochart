@@ -19,8 +19,8 @@ Pick a different chart when:
 - the x values have no order (two independent measurements): use a
   [scatter plot](/charts/basic/scatter);
 - you compare a few separate totals rather than a trend: use a [bar chart](/charts/basic/bar);
-- you need a shaded area under or between lines: area fills (`fill`, `stackgroup`) arrive in M2.
-  Until then, see the error band recipe below.
+- you need a shaded area under or between lines, or series that add up to a total: use an
+  [area chart](/charts/basic/area) (`fill`, `stackgroup`).
 
 ## Minimal example
 
@@ -94,8 +94,11 @@ the hovered x in one label.
 
 ### Error bands
 
-Holochart doesn't have `fill` yet (planned for M2), so a shaded band between an upper and a lower
-bound needs a workaround. Two work today:
+The recommended way to shade a band between an upper and a lower bound is `fill: 'tonexty'`: draw
+the lower bound with `line.width: 0`, then the upper bound with `fill: 'tonexty'` and a
+semi-transparent `fillcolor`. See the [range band on the area page](/charts/basic/area#range-band).
+
+The recipe below shows the older workarounds, from before `fill` existed:
 
 - **Dense error bars.** Give the line many points and a thick, capless, **opaque** `error_y`
   (`width: 0`, `thickness` larger than the pixel spacing between points). The bars overlap into a
@@ -181,7 +184,7 @@ especially [`line`](/reference/scatter#line) and
 
 - [Scatter](/charts/basic/scatter): the same trace with markers only
 - [Bar](/charts/basic/bar): discrete comparisons instead of trends
-- Area charts (`fill`, `stackgroup`) are planned for M2
+- [Area](/charts/basic/area): fills under or between lines, and stacked series
 
 ## Plotly migration notes
 
@@ -190,5 +193,5 @@ especially [`line`](/reference/scatter#line) and
 - `line.shape: 'spline'` follows Plotly's smoothing semantics.
 - `line.simplify` is on by default, as in Plotly, but Holochart decimates per pixel column and
   re-runs it on zoom.
-- Not supported yet: `fill`, `fillcolor`, `stackgroup`, `groupnorm` (M2), `line.backoff`, and
-  `hoveron: 'fills'`. Error bands need the workaround above until `fill: 'tonexty'` lands.
+- Not supported yet: `line.backoff`. `fill`, `fillcolor`, `stackgroup`, `groupnorm`, and
+  `hoveron: 'fills'` are covered on the [area page](/charts/basic/area#plotly-migration-notes).

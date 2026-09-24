@@ -11,10 +11,13 @@ import type { Issue } from '../validate/issues.ts';
 
 /**
  * Trace categories drive shared behavior: `cartesian` traces get `xaxis`/`yaxis` attributes and
- * take part in axis discovery; `showLegend` traces count towards the legend default.
+ * take part in axis discovery; `domain` traces get `domain.{x, y, row, column}` and are placed by
+ * a fraction of the plot area or a `layout.grid` cell (E4.5); `showLegend` traces count towards
+ * the legend default.
  */
 export type TraceCategory =
   | 'cartesian'
+  | 'domain'
   | 'showLegend'
   | 'symbols'
   | 'errorBarsOK'

@@ -25,7 +25,26 @@ export type TextFontWeight = number | 'normal' | 'bold';
 /** CSS font style. `oblique` is treated as `italic`. */
 export type TextFontStyle = 'normal' | 'italic';
 
-/** A font request: CSS family list, size in CSS px, weight, and style. */
+/**
+ * Capitals variant (Plotly `font.variant`, CSS `font-variant-caps`). The SDF renderer approximates
+ * the small/petite caps variants (see `resolveTextTransform` in text-style.ts).
+ */
+export type TextFontVariant =
+  'normal' | 'small-caps' | 'all-small-caps' | 'all-petite-caps' | 'petite-caps' | 'unicase';
+
+/** Letter case transform (Plotly `font.textcase`). `word caps` is CSS `capitalize`. */
+export type TextFontTextCase = 'normal' | 'word caps' | 'upper' | 'lower';
+
+/**
+ * Text decoration lines (Plotly `font.lineposition`): a flaglist of `under`, `over`, `through`
+ * joined by `+` (e.g. `'under+over'`), or `none`.
+ */
+export type TextFontLinePosition = string;
+
+/**
+ * A font request: CSS family list, size in CSS px, weight, and style, plus Plotly's paint-level
+ * font attributes (`variant`, `textcase`, `lineposition`, `shadow`).
+ */
 export interface TextFont {
   /** CSS font family list, e.g. `'Inter, "Open Sans", sans-serif'`. */
   family: string;
@@ -35,6 +54,17 @@ export interface TextFont {
   weight?: TextFontWeight;
   /** Default `'normal'`. */
   style?: TextFontStyle;
+  /** Default `'normal'`. Changes the drawn (and measured) text and size. */
+  variant?: TextFontVariant;
+  /** Default `'normal'`. Changes the drawn (and measured) text. */
+  textcase?: TextFontTextCase;
+  /** Decoration lines, e.g. `'under'`, `'under+through'`. Default `'none'`. */
+  lineposition?: TextFontLinePosition;
+  /**
+   * CSS `text-shadow`: `'none'` (default), `'auto'` (a thin halo in the text color's contrast
+   * color), or e.g. `'1px 1px 2px black'`. Only the first shadow of a list is drawn.
+   */
+  shadow?: string;
 }
 
 /** One registered font file (one face of a family). */
@@ -205,6 +235,70 @@ export function registerFont(
       notifyFontChange();
     }
   };
+}
+
+/** A URL, or per-style URLs, for one weight in {@link FontFamilyFaces.weights}. */
+export type FontWeightFaces = string | { normal?: string; italic?: string };
+
+/** Font files of one family for {@link registerFontFamily}. Every field is optional. */
+export interface FontFamilyFaces {
+  /** Upright 400. */
+  regular?: string;
+  /** Upright 700. */
+  bold?: string;
+  /** Italic 400. */
+  italic?: string;
+  /** Italic 700. */
+  boldItalic?: string;
+  /**
+   * Faces by numeric weight (e.g. `{ 300: 'light.woff', 600: { normal: 'sb.woff', italic:
+   * 'sbi.woff' } }`); a plain URL is the upright face. Overrides the named faces on conflict.
+   */
+  weights?: Readonly<Record<number, FontWeightFaces>>;
+}
+
+/**
+ * Register several faces of one family at once (plan E8.3: `fonts.register('Inter', { regular,
+ * bold, italic })`). Each face goes through {@link registerFont}, so troika resolution and the
+ * metrics oracle's CSS `FontFace` registration both apply. Returns a function that unregisters
+ * every face registered by this call (faces replaced by a later registration are left alone).
+ */
+export function registerFontFamily(
+  family: string,
+  faces: FontFamilyFaces,
+  options: RegisterFontOptions = {},
+): () => void {
+  const list: RegisteredFontFace[] = [];
+  const add = (url: string | undefined, weight: number, style: TextFontStyle): void => {
+    if (typeof url === 'string' && url.length > 0) list.push({ family, url, weight, style });
+  };
+  add(faces.regular, 400, 'normal');
+  add(faces.bold, 700, 'normal');
+  add(faces.italic, 400, 'italic');
+  add(faces.boldItalic, 700, 'italic');
+  for (const [key, value] of Object.entries(faces.weights ?? {})) {
+    const weight = Number(key);
+    if (!Number.isFinite(weight)) continue;
+    if (typeof value === 'string') add(value, weight, 'normal');
+    else {
+      add(value.normal, weight, 'normal');
+      add(value.italic, weight, 'italic');
+    }
+  }
+  const offs = list.map((face) => registerFont(face, options));
+  return () => {
+    for (const off of offs) off();
+  };
+}
+
+/** Names of the registered families (as first registered), in registration order. */
+export function registeredFontFamilies(): string[] {
+  const out: string[] = [];
+  for (const faces of registry.values()) {
+    const first = faces[0];
+    if (first) out.push(first.family);
+  }
+  return out;
 }
 
 /** Remove every registered font (tests, hot reload). */
@@ -493,3 +587,22 @@ function loadCSSFontFace(face: RegisteredFontFace, entry: Face): void {
     true,
   );
 }
+
+/**
+ * The font registry as one namespace (plan E8.3, `Holochart.fonts`): `register` a family's faces,
+ * `registerFace` one file, `resolve` a CSS family list to a registered face, list the registered
+ * `families`, or `clear` the registry.
+ *
+ * @example
+ * ```ts
+ * fonts.register('Inter', { regular: '/fonts/Inter.woff', bold: '/fonts/Inter-Bold.woff' });
+ * fonts.resolve('"Brand", Inter, sans-serif', 'bold')?.url; // '/fonts/Inter-Bold.woff'
+ * ```
+ */
+export const fonts = {
+  register: registerFontFamily,
+  registerFace: registerFont,
+  resolve: resolveFontFace,
+  families: registeredFontFamilies,
+  clear: clearFontRegistry,
+} as const;

@@ -9,6 +9,7 @@
  * `hoverPoints`; that part is theirs.)
  */
 import { formatValue, toRGBA, type FullLayout, type FullTrace } from '@mk7s/holochart-core';
+import type { ViewportRect } from '@mk7s/holochart-render';
 import type {
   AxisInfo,
   HoverContext,
@@ -21,7 +22,10 @@ import type { ChartPoint } from '../events.ts';
 import { perPoint, traceAttr, type Hovermode } from './settings.ts';
 import { formatTemplate, splitExtra } from './template.ts';
 
-/** One hoverable trace on a subplot, cached between pipeline runs. */
+/**
+ * One hoverable trace, cached between pipeline runs: on a cartesian subplot, or a domain trace
+ * (pie; M2 wave 1) placed on the figure without axes.
+ */
 export interface HoverEntry {
   readonly index: number;
   readonly module: TraceModule;
@@ -29,7 +33,13 @@ export interface HoverEntry {
   /** The input trace (for `data` in events and attributes missing from the trace schema). */
   readonly input: unknown;
   readonly calc: unknown;
-  readonly subplot: SubplotInfo;
+  /** The trace's subplot; `undefined` for domain traces. */
+  readonly subplot: SubplotInfo | undefined;
+  /**
+   * The rect (container px) hover points' `px`/`py` are measured in, from its bottom-left corner:
+   * the subplot's plot area, or the whole figure (the overlay viewport) for domain traces.
+   */
+  readonly rect: Readonly<ViewportRect>;
   readonly ctx: HoverContext;
   /** `hoverinfo: 'skip'`: no hover and no events. */
   readonly skip: boolean;
@@ -48,7 +58,18 @@ interface MutableQuery {
   yl: number;
   mode: 'closest' | 'x' | 'y';
   distance: number;
+  cx: number;
+  cy: number;
 }
+
+/** Domain traces to query on every hover (M2 wave 1), with the figure height for `py`. */
+export interface DomainHover {
+  readonly entries: readonly HoverEntry[];
+  /** Figure height in CSS px (overlay viewport px run bottom-up). */
+  readonly height: number;
+}
+
+const NO_DOMAIN: DomainHover = { entries: [], height: 0 };
 
 /** The query mode traces are asked for, per `hovermode`. */
 export function queryMode(hovermode: Exclude<Hovermode, false>): 'closest' | 'x' | 'y' {
@@ -65,7 +86,16 @@ export class HoverFinder {
   count = 0;
   /** The subplot of the winning point (for common labels and `xvals`). */
   subplot: SubplotInfo | undefined;
-  readonly #query: MutableQuery = { px: 0, py: 0, xl: 0, yl: 0, mode: 'closest', distance: 20 };
+  readonly #query: MutableQuery = {
+    px: 0,
+    py: 0,
+    xl: 0,
+    yl: 0,
+    mode: 'closest',
+    distance: 20,
+    cx: 0,
+    cy: 0,
+  };
   readonly #prevTrace: number[] = [];
   readonly #prevPoint: number[] = [];
 
@@ -88,8 +118,8 @@ export class HoverFinder {
 
   /**
    * Find the points under container position `(cx, cy)`: every subplot whose plot area contains it
-   * is queried (overlaid subplots share an area). Returns whether the set of hovered points
-   * changed since the previous call.
+   * is queried (overlaid subplots share an area), then every domain trace (they test their own
+   * shapes). Returns whether the set of hovered points changed since the previous call.
    */
   find(
     subplots: readonly SubplotInfo[],
@@ -98,12 +128,15 @@ export class HoverFinder {
     cy: number,
     hovermode: Exclude<Hovermode, false>,
     distance: number,
+    domain: DomainHover = NO_DOMAIN,
   ): boolean {
     this.count = 0;
     this.subplot = undefined;
     const q = this.#query;
     q.mode = queryMode(hovermode);
     q.distance = distance;
+    q.cx = cx;
+    q.cy = cy;
     let best = -1;
     let bestDistance = Infinity;
     // Index loops: this runs every frame while the pointer moves.
@@ -137,10 +170,39 @@ export class HoverFinder {
         }
       }
     }
+    // Domain traces (pie): figure px from the bottom-left corner, always `closest` (Plotly shows
+    // one pie label whatever `hovermode` says). Asked last, so on ties they win like topmost.
+    if (domain.entries.length > 0) {
+      q.mode = 'closest';
+      q.px = cx;
+      q.py = domain.height - cy;
+      q.xl = q.px;
+      q.yl = q.py;
+      for (let e = 0; e < domain.entries.length; e++) {
+        const entry = domain.entries[e] as HoverEntry;
+        if (entry.skip || !entry.module.hoverPoints) continue;
+        const points = entry.module.hoverPoints(
+          entry.calc,
+          entry.trace,
+          q as HoverQuery,
+          entry.ctx,
+        );
+        for (let k = 0; k < points.length; k++) {
+          const p = points[k] as HoverPoint;
+          if (!(p.distance <= distance)) continue;
+          if (p.distance <= bestDistance) {
+            bestDistance = p.distance;
+            best = this.count;
+          }
+          this.#push(entry, p);
+        }
+      }
+    }
     if (best >= 0) {
       const winner = this.found[best] as Found;
       this.subplot = winner.entry.subplot;
-      if (hovermode === 'closest') {
+      // A domain trace's label stands alone (no common axis label to share).
+      if (hovermode === 'closest' || !winner.entry.subplot) {
         // Closest shows one point: move the winner to the front.
         const first = this.found[0] as Found;
         this.found[0] = winner;
@@ -194,7 +256,7 @@ function dataValue(entry: HoverEntry, p: HoverPoint, letter: 'x' | 'y'): unknown
 
 /** Container px of a hover point's label anchor. */
 export function anchorOf(entry: HoverEntry, p: HoverPoint): { x: number; y: number } {
-  const r = entry.subplot.rect;
+  const r = entry.rect;
   return { x: r.x + p.px, y: r.y + r.height - p.py };
 }
 
@@ -206,11 +268,17 @@ export function buildPoint(entry: HoverEntry, p: HoverPoint, withBbox: boolean):
   out['data'] = entry.input;
   out['fullData'] = trace;
   out['curveNumber'] = entry.index;
-  out['pointNumber'] = i;
-  out['pointIndex'] = i;
+  // `pointIndex < 0`: no data point behind the hover (a scatter fill); Plotly omits the index.
+  if (i >= 0) {
+    out['pointNumber'] = i;
+    out['pointIndex'] = i;
+  }
   if (p.pointIndices) out['pointNumbers'] = p.pointIndices;
-  out['x'] = dataValue(entry, p, 'x');
-  out['y'] = dataValue(entry, p, 'y');
+  // Domain traces have no x/y (pie reports label/value/percent through `fields`).
+  const x = dataValue(entry, p, 'x');
+  const y = dataValue(entry, p, 'y');
+  if (x !== undefined || entry.subplot) out['x'] = x;
+  if (y !== undefined || entry.subplot) out['y'] = y;
   const z = p.fields?.['z'];
   if (z !== undefined) out['z'] = z;
   const customdata = perPoint(traceAttr(trace, entry.input, 'customdata'), i);
@@ -240,6 +308,60 @@ export interface LabelStyle {
   align: 'left' | 'right' | 'auto';
   namelength: number;
   showarrow: boolean;
+  /** CSS for the E8.3 font fields (labels are DOM, so these map directly). Unset: CSS default. */
+  fontCss?: FontCss;
+}
+
+/** CSS properties of a Plotly font's weight, style and E8.3 extras. */
+export interface FontCss {
+  fontWeight?: string;
+  fontStyle?: string;
+  fontVariant?: string;
+  textTransform?: string;
+  textDecorationLine?: string;
+  textShadow?: string;
+}
+
+const TEXTCASE_CSS: Readonly<Record<string, string>> = {
+  normal: 'none',
+  'word caps': 'capitalize',
+  upper: 'uppercase',
+  lower: 'lowercase',
+};
+const LINEPOSITION_CSS: Readonly<Record<string, string>> = {
+  under: 'underline',
+  over: 'overline',
+  through: 'line-through',
+};
+
+/**
+ * CSS for a font's `weight`, `style`, `variant`, `textcase`, `lineposition` and `shadow` (Plotly
+ * semantics; `shadow: 'auto'` is Plotly's 1px outline in the contrast color of `color`).
+ */
+export function fontCss(get: (field: string) => unknown, color: string): FontCss {
+  const out: FontCss = {};
+  const weight = get('weight');
+  if (typeof weight === 'number' || typeof weight === 'string') out.fontWeight = String(weight);
+  const style = str(get('style'));
+  if (style) out.fontStyle = style;
+  const variant = str(get('variant'));
+  if (variant) out.fontVariant = variant;
+  const textcase = str(get('textcase'));
+  if (textcase && TEXTCASE_CSS[textcase]) out.textTransform = TEXTCASE_CSS[textcase];
+  const lineposition = str(get('lineposition'));
+  if (lineposition) {
+    const lines = lineposition
+      .split('+')
+      .map((f) => LINEPOSITION_CSS[f])
+      .filter((v): v is string => v !== undefined);
+    out.textDecorationLine = lines.length > 0 ? lines.join(' ') : 'none';
+  }
+  const shadow = str(get('shadow'));
+  if (shadow === 'auto') {
+    const c = contrastColor(color);
+    out.textShadow = `1px 1px 1px ${c}, -1px -1px 1px ${c}, 1px -1px 1px ${c}, -1px 1px 1px ${c}`;
+  } else if (shadow) out.textShadow = shadow;
+  return out;
 }
 
 /** What one hover label shows. */
@@ -321,6 +443,8 @@ export function labelStyle(
     align: (['left', 'right', 'auto'] as const).find((a) => a === get('align')) ?? 'auto',
     namelength: Number(get('namelength') ?? 15),
     showarrow: get('showarrow') !== false,
+    // Plotly coerces `hoverlabel.font` from `layout.font`: unset fields inherit it.
+    fontCss: fontCss((field) => get(`font.${field}`) ?? font[field], fontColor),
   };
 }
 
@@ -373,7 +497,8 @@ export function labelText(
   const hovertext = perPoint(traceAttr(trace, entry.input, 'hovertext'), i);
   const text = hovertext ?? p.text ?? perPoint(trace['text'], i);
   const style = labelStyle(entry, i, '#000', fullLayout, false);
-  if (typeof template === 'string' && template !== '') {
+  // Templates read point data; a hover with no point behind it (a fill) never uses one (Plotly).
+  if (typeof template === 'string' && template !== '' && i >= 0) {
     const values: Record<string, unknown> = { ...(p.fields ?? {}) };
     values['x'] = x;
     values['y'] = y;
@@ -387,7 +512,7 @@ export function labelText(
       template,
       {
         values,
-        labels: { x: xLabel, y: yLabel },
+        labels: p.labels ? { x: xLabel, y: yLabel, ...p.labels } : { x: xLabel, y: yLabel },
         fullData: trace,
         data: entry.input,
         pointIndex: i,
@@ -403,6 +528,15 @@ export function labelText(
   const info = perPoint(traceAttr(trace, entry.input, 'hoverinfo'), i);
   if (info === 'none' || info === 'skip') return { text: '', extra: undefined };
   const flags = hoverinfoFlags(info);
+  if (p.hoverText !== undefined) {
+    // The trace built its own lines from its `hoverinfo` flags (pie: label, value, percent; a
+    // scatter fill: its text or name). The name box is left out when it would repeat the label.
+    const extra =
+      flags.has('name') && showName && p.hoverText !== name
+        ? truncateName(name, style.namelength)
+        : undefined;
+    return { text: p.hoverText, extra };
+  }
   const lines: string[] = [];
   const unified = hovermode === 'x unified' || hovermode === 'y unified';
   const axisValue =

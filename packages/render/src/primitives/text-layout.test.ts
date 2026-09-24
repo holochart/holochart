@@ -15,6 +15,7 @@ import {
   layoutKey,
   linearToSrgb,
   resolveTextLabel,
+  shadowOutline,
   srgbToLinear,
   textAngleToRotation,
   troikaAnchorY,
@@ -141,6 +142,87 @@ describe('resolveTextLabel', () => {
     expect(r.rotation).toBeCloseTo(-Math.PI / 4);
     expect(r.offsetX).toBe(3);
     expect(r.offsetY).toBe(-4);
+  });
+});
+
+describe('resolveTextLabel: font attributes (E8.3)', () => {
+  it('applies textcase to the typeset text and the layout key', () => {
+    const r = resolve({ text: 'élan vital', font: { textcase: 'word caps' } });
+    expect(r.layout.text).toBe('Élan Vital');
+    expect(r.layout.fontSize).toBe(12);
+    const upper = resolve({ text: 'abc' }, { font: { textcase: 'upper' } });
+    expect(upper.layout.text).toBe('ABC');
+    expect(upper.key).not.toBe(resolve({ text: 'abc' }).key);
+    // Same drawn text, same key: the glyphs are shared.
+    expect(upper.key).toBe(resolve({ text: 'ABC' }).key);
+    // A label can turn an inherited textcase off.
+    expect(
+      resolve({ text: 'abc', font: { textcase: 'normal' } }, { font: { textcase: 'upper' } }),
+    ).toMatchObject({ layout: { text: 'abc' } });
+  });
+
+  it('applies the variant as uppercase text at a scaled size', () => {
+    const r = resolve({ text: 'Small', font: { size: 20, variant: 'small-caps' } });
+    expect(r.layout.text).toBe('SMALL');
+    expect(r.layout.fontSize).toBeCloseTo(16);
+    expect(r.key).not.toBe(resolve({ text: 'SMALL', font: { size: 20 } }).key);
+    expect(resolve({ text: 'u', font: { variant: 'unicase' } }).layout).toMatchObject({
+      text: 'U',
+      fontSize: 12,
+    });
+  });
+
+  it('ellipsizes the transformed text at the scaled size', () => {
+    const r = resolve({
+      text: 'abcdefghij',
+      maxWidth: 30,
+      overflow: 'ellipsis',
+      font: { size: 10, textcase: 'upper' },
+    });
+    expect(r.layout.text.endsWith(TEXT_ELLIPSIS)).toBe(true);
+    expect(r.layout.text).toBe(r.layout.text.toUpperCase());
+    expect(oracle.measureWidth(r.layout.text, { family: 'x', size: 10 })).toBeLessThanOrEqual(30);
+  });
+
+  it('turns a CSS shadow into the outline pass', () => {
+    const r = resolve({ font: { shadow: '1px 2px 3px rgba(0, 0, 0, 0.5)' } });
+    expect(r.outline).toEqual({ width: 0, color: [0, 0, 0, 0.5], blur: 3, offsetX: 1, offsetY: 2 });
+    // An offset-only shadow is kept (troika draws it), a transparent one is dropped.
+    expect(resolve({ font: { shadow: '2px 2px' } }).outline).toMatchObject({ offsetX: 2 });
+    expect(resolve({ font: { shadow: '2px 2px transparent' } }).outline).toBeNull();
+    expect(resolve({ font: { shadow: 'none' } }).outline).toBeNull();
+  });
+
+  it("uses the text color for 'auto' and shadows without a color", () => {
+    const dark = resolve({ color: [0.1, 0.1, 0.2, 1], font: { shadow: 'auto' } });
+    expect(dark.outline).toEqual({
+      width: 1,
+      color: [1, 1, 1, 1],
+      blur: 1,
+      offsetX: 0,
+      offsetY: 0,
+    });
+    const light = resolve({ color: [0.9, 0.9, 0.9, 1] }, { font: { shadow: 'auto' } });
+    expect(light.outline?.color).toEqual([0, 0, 0, 1]);
+    expect(resolve({ color: [0, 1, 0, 1], font: { shadow: '1px 1px' } }).outline?.color).toEqual([
+      0, 1, 0, 1,
+    ]);
+    expect(shadowOutline(undefined, [0, 0, 0, 1], 12)).toBeUndefined();
+  });
+
+  it('lets an explicit outline win over the shadow', () => {
+    const halo = { width: 2, color: [1, 1, 1, 1] as const };
+    expect(resolve({ outline: halo, font: { shadow: '1px 1px black' } }).outline).toBe(halo);
+    expect(resolve({ font: { shadow: '1px 1px black' } }, { outline: halo }).outline).toBe(halo);
+  });
+
+  it('resolves decoration lines without changing the layout key', () => {
+    const r = resolve({ font: { lineposition: 'under+through' } });
+    expect(r.decoration).toEqual({ under: true, over: false, through: true });
+    expect(r.key).toBe(resolve({}).key);
+    expect(resolve({ font: { lineposition: 'none' } }).decoration).toBeNull();
+    expect(resolve({}).decoration).toBeNull();
+    expect(resolve({}, { font: { lineposition: 'over' } }).decoration?.over).toBe(true);
   });
 });
 

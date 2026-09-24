@@ -169,6 +169,10 @@ describe('supplyDefaults: axis defaults (E3)', () => {
       color: 'rgb(0, 128, 0)',
       weight: 'normal',
       style: 'normal',
+      variant: 'normal',
+      textcase: 'normal',
+      lineposition: 'none',
+      shadow: 'none',
     });
     expect(ax.title.font.size).toBe(12);
     // A changed axis color also colors its labels.

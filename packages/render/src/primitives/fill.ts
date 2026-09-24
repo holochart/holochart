@@ -6,7 +6,16 @@
  * sankey links. See `fill-triangulate.ts` for the input layout and `fill-arrangement.ts` for the
  * exact fill-rule algorithm and its limits.
  */
-import { BufferAttribute, BufferGeometry, DoubleSide, Mesh, type ShaderMaterial } from 'three';
+import {
+  BufferAttribute,
+  BufferGeometry,
+  DoubleSide,
+  Mesh,
+  type ShaderMaterial,
+  type Texture,
+} from 'three';
+import { acquireColorscaleTexture, COLORSCALE_LUT_SIZE } from '../colorscale/lut.ts';
+import type { Colorscale, ColorscaleTextureHandle } from '../colorscale/lut.ts';
 import type {
   ColorInput,
   DataTransform,
@@ -28,21 +37,37 @@ import {
   encodeFillPositions,
   triangulateFills,
   writeFillColors,
+  writeFillGradient,
   type FillGeometryInput,
+  type FillGradientDirection,
   type FillTriangulation,
 } from './fill-triangulate.ts';
 
 export * from './fill-triangulate.ts';
 
 /**
- * How a polygon is painted. Only `'solid'` (per-polygon {@link FillData.color}) is implemented.
+ * How the polygons are painted.
  *
- * Reserved for E8.10 / `fillgradient`: `{ kind: 'linear-gradient' | 'radial-gradient', ... }` and
- * `{ kind: 'pattern', ... }`. Those will add per-vertex attributes derived from the same
- * `vertexStarts` ranges (e.g. polygon-bbox-relative UVs) plus a LUT/pattern texture, so the
- * triangulation and batching stay unchanged.
+ * - `'solid'`: per-polygon {@link FillData.color}.
+ * - `'gradient'` (Plotly `fillgradient`): a colorscale along x (`horizontal`), y (`vertical`), or
+ *   outwards from the center of the bounding box of all vertices (`radial`); see
+ *   `writeFillGradient` for the exact mapping. Colors (and their alpha) come from the colorscale;
+ *   {@link FillData.opacity} still multiplies them. The colorscale is a shared LUT texture, so a
+ *   colorscale change uploads one 256×1 texture and nothing else.
+ *
+ * Reserved for E8.10: `{ kind: 'pattern', ... }` (per-vertex pattern UVs plus a pattern texture,
+ * same triangulation).
  */
-export type FillPaint = { kind: 'solid' };
+export type FillPaint =
+  | { kind: 'solid' }
+  | {
+      kind: 'gradient';
+      direction: FillGradientDirection;
+      colorscale: Colorscale;
+      /** Linear gradients: data coordinate of colorscale position 0 / 1 (default: the extent). */
+      start?: number | undefined;
+      stop?: number | undefined;
+    };
 
 /** Data for {@link FillPrimitive}. */
 export interface FillData extends FillGeometryInput {
@@ -58,13 +83,18 @@ const GEOMETRY_KEYS = ['x', 'y', 'z', 'rings', 'polygons', 'fillRule'] as const;
 
 interface FillUniforms extends TransformUniforms {
   uOpacity: { value: number };
+  /** 0 solid, 1 linear gradient, 2 radial gradient. */
+  uGradient: { value: number };
+  uLut: { value: Texture | null };
+  uLutSize: { value: number };
 }
 
 /**
  * Batched polygon fills: one merged indexed geometry, one draw call for any number of polygons.
  *
  * Updates: geometry keys (`x`, `y`, `z`, `rings`, `polygons`, `fillRule`) re-triangulate; `color`
- * alone rewrites only the color attribute; `opacity` and {@link setTransform} touch uniforms only.
+ * alone rewrites only the color attribute, `paint` only the gradient coordinates and LUT;
+ * `opacity` and {@link setTransform} touch uniforms only.
  */
 export class FillPrimitive implements Primitive<FillData> {
   readonly object: Mesh<BufferGeometry, ShaderMaterial>;
@@ -78,13 +108,21 @@ export class FillPrimitive implements Primitive<FillData> {
   private geometry: BufferGeometry;
   private positionAttr: BufferAttribute;
   private colorAttr: BufferAttribute;
+  private gradAttr: BufferAttribute;
   private indexAttr: BufferAttribute;
+  private lut: ColorscaleTextureHandle | undefined;
   private disposed = false;
 
   constructor(context: PrimitiveContext, data: FillData) {
     this.context = context;
     this.data = { ...data };
-    this.uniforms = { ...createTransformUniforms(), uOpacity: { value: data.opacity ?? 1 } };
+    this.uniforms = {
+      ...createTransformUniforms(),
+      uOpacity: { value: data.opacity ?? 1 },
+      uGradient: { value: 0 },
+      uLut: { value: null },
+      uLutSize: { value: COLORSCALE_LUT_SIZE },
+    };
     this.material = createPrimitiveMaterial({
       vertexShader: FILL_VERTEX_GLSL,
       fragmentShader: FILL_FRAGMENT_GLSL,
@@ -95,19 +133,21 @@ export class FillPrimitive implements Primitive<FillData> {
 
     this.origin = computeOrigin(data.x, data.y, data.z);
     this.tri = triangulateFills(this.data, this.origin);
-    const { geometry, position, color, index } = allocateGeometry(
+    const { geometry, position, color, grad, index } = allocateGeometry(
       this.tri.vertexCount,
       this.tri.indices.length,
     );
     this.geometry = geometry;
     this.positionAttr = position;
     this.colorAttr = color;
+    this.gradAttr = grad;
     this.indexAttr = index;
     this.object = new Mesh(geometry, this.material);
     // Buffers are RTC-encoded and transformed in the shader, so three's bounds are meaningless.
     this.object.frustumCulled = false;
     this.writeGeometry();
     this.writeColors();
+    this.writePaint();
     applyTransformUniforms(this.uniforms, this.transform, this.origin);
   }
 
@@ -132,9 +172,11 @@ export class FillPrimitive implements Primitive<FillData> {
       this.tri = triangulateFills(this.data, this.origin);
       this.writeGeometry();
       this.writeColors();
+      this.writePaint();
       applyTransformUniforms(this.uniforms, this.transform, this.origin);
-    } else if ('color' in patch) {
-      this.writeColors();
+    } else {
+      if ('color' in patch) this.writeColors();
+      if ('paint' in patch) this.writePaint();
     }
     this.context.invalidate();
   }
@@ -156,6 +198,8 @@ export class FillPrimitive implements Primitive<FillData> {
     this.object.removeFromParent();
     this.geometry.dispose();
     this.material.dispose();
+    this.lut?.release();
+    this.lut = undefined;
   }
 
   /** Upload positions + indices, growing (replacing) the geometry only when capacity is exceeded. */
@@ -171,6 +215,7 @@ export class FillPrimitive implements Primitive<FillData> {
       this.geometry = grown.geometry;
       this.positionAttr = grown.position;
       this.colorAttr = grown.color;
+      this.gradAttr = grown.grad;
       this.indexAttr = grown.index;
       this.object.geometry = grown.geometry;
     }
@@ -184,6 +229,30 @@ export class FillPrimitive implements Primitive<FillData> {
   private writeColors(): void {
     writeFillColors(this.data.color, this.tri.vertexStarts, this.colorAttr.array as Float32Array);
     markRange(this.colorAttr, this.tri.vertexCount * 4);
+  }
+
+  /** Gradient coordinates and the colorscale LUT (acquired before the old one is released). */
+  private writePaint(): void {
+    const paint = this.data.paint;
+    if (paint?.kind !== 'gradient' || paint.colorscale.length === 0) {
+      this.uniforms.uGradient.value = 0;
+      this.uniforms.uLut.value = null;
+      this.lut?.release();
+      this.lut = undefined;
+      return;
+    }
+    const next = acquireColorscaleTexture(this.context.resources, paint.colorscale);
+    this.lut?.release();
+    this.lut = next;
+    this.uniforms.uLut.value = next.texture;
+    this.uniforms.uGradient.value = paint.direction === 'radial' ? 2 : 1;
+    writeFillGradient(
+      this.tri.positions,
+      this.tri.vertexCount,
+      paint,
+      this.gradAttr.array as Float32Array,
+    );
+    markRange(this.gradAttr, this.tri.vertexCount * 2);
   }
 }
 
@@ -199,6 +268,7 @@ function allocateGeometry(
   geometry: BufferGeometry;
   position: BufferAttribute;
   color: BufferAttribute;
+  grad: BufferAttribute;
   index: BufferAttribute;
 } {
   // Never allocate empty GL buffers; a small floor also absorbs tiny streaming updates.
@@ -207,12 +277,14 @@ function allocateGeometry(
   const geometry = new BufferGeometry();
   const position = new BufferAttribute(new Float32Array(vcap * 3), 3);
   const color = new BufferAttribute(new Float32Array(vcap * 4), 4);
+  const grad = new BufferAttribute(new Float32Array(vcap * 2), 2);
   const index = new BufferAttribute(new Uint32Array(icap), 1);
   geometry.setAttribute('position', position);
   geometry.setAttribute('aColor', color);
+  geometry.setAttribute('aGrad', grad);
   geometry.setIndex(index);
   geometry.setDrawRange(0, 0);
-  return { geometry, position, color, index };
+  return { geometry, position, color, grad, index };
 }
 
 /** Upload only the used prefix of an attribute (plan §E16.3). */

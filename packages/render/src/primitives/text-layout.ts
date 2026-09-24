@@ -17,6 +17,13 @@ import {
   type TextFontWeight,
 } from './text-fonts.ts';
 import { TEXT_DEFAULT_LINE_HEIGHT, type FontMetricsOracle } from './text-metrics.ts';
+import {
+  hasDecorationLines,
+  parseLinePosition,
+  parseTextShadow,
+  resolveTextTransform,
+  type TextDecorationLines,
+} from './text-style.ts';
 
 /** Horizontal anchor: which side of the text block sits at the label position (Plotly `xanchor`). */
 export type TextAnchorX = 'left' | 'center' | 'right';
@@ -82,7 +89,11 @@ export interface TextStyle {
   align?: 'left' | 'center' | 'right';
   /** Line advance as a multiple of the font size. Default {@link TEXT_DEFAULT_LINE_HEIGHT}. */
   lineHeight?: number;
-  /** Outline/halo/shadow; `null` disables an outline inherited from the shared style. */
+  /**
+   * Outline/halo/shadow; `null` disables an outline inherited from the shared style. An outline
+   * takes precedence over `font.shadow`, which otherwise becomes the outline pass (a CSS shadow is
+   * an outline of width 0 with blur and offset).
+   */
   outline?: TextOutline | null;
   /** Screen-space offset from the anchor in px, `[dx, dy]` with +y down. Not rotated by `angle`. */
   offset?: readonly [number, number];
@@ -98,7 +109,9 @@ export interface TextLabel extends TextStyle {
 }
 
 /** Defaults applied under {@link TextStyle.font}. */
-export const TEXT_DEFAULT_FONT: Readonly<Required<TextFont>> = Object.freeze({
+export const TEXT_DEFAULT_FONT: Readonly<
+  Required<Pick<TextFont, 'family' | 'size' | 'weight' | 'style'>>
+> = Object.freeze({
   family: 'sans-serif',
   size: 12,
   weight: 400,
@@ -128,7 +141,13 @@ export interface ResolvedTextLabel {
   /** Identity of `layout`: equal keys ⇒ the typeset glyphs can be reused as-is. */
   key: string;
   color: RGBA;
+  /** The explicit outline, else the one derived from `font.shadow`, else `null`. */
   outline: TextOutline | null;
+  /**
+   * Decoration lines (`font.lineposition`), or `null` for none. Not part of {@link key}: the lines
+   * are drawn from the typeset glyph positions, they do not change them.
+   */
+  decoration: TextDecorationLines | null;
   /** Rotation about +z in radians (counter-clockwise, world convention). */
   rotation: number;
   offsetX: number;
@@ -183,12 +202,19 @@ export function resolveTextLabel(
 ): ResolvedTextLabel {
   const pick = <K extends keyof TextStyle>(k: K): TextStyle[K] =>
     label[k] !== undefined ? label[k] : style[k];
-  const weight = normalizeFontWeight(label.font?.weight ?? style.font?.weight);
-  const font = {
-    family: label.font?.family ?? style.font?.family ?? TEXT_DEFAULT_FONT.family,
-    size: label.font?.size ?? style.font?.size ?? TEXT_DEFAULT_FONT.size,
+  const pickFont = <K extends keyof TextFont>(k: K): TextFont[K] | undefined =>
+    label.font?.[k] ?? style.font?.[k];
+  const weight = normalizeFontWeight(pickFont('weight'));
+  // textcase + variant: the drawn text and size (the metrics oracle applies the same rule).
+  const transform = resolveTextTransform({
+    textcase: pickFont('textcase'),
+    variant: pickFont('variant'),
+  });
+  const font: TextFont = {
+    family: pickFont('family') ?? TEXT_DEFAULT_FONT.family,
+    size: (pickFont('size') ?? TEXT_DEFAULT_FONT.size) * transform.sizeScale,
     weight,
-    style: normalizeFontStyle(label.font?.style ?? style.font?.style),
+    style: normalizeFontStyle(pickFont('style')),
   };
   const anchorX = pick('anchorX') ?? 'left';
   const anchorY = pick('anchorY') ?? 'baseline';
@@ -200,7 +226,7 @@ export function resolveTextLabel(
   const lineHeight =
     lineHeightIn !== undefined && lineHeightIn > 0 ? lineHeightIn : TEXT_DEFAULT_LINE_HEIGHT;
 
-  let text = label.text == null ? '' : String(label.text);
+  let text = transform.transform(label.text == null ? '' : String(label.text));
   const sizeOk = Number.isFinite(font.size) && font.size > 0;
   let wrap = false;
   if (maxWidth !== Infinity && sizeOk) {
@@ -213,7 +239,7 @@ export function resolveTextLabel(
     font: resolveFont(font.family, font.weight, font.style) ?? null,
     fontSize: sizeOk ? font.size : 0,
     fontWeight: weight,
-    fontStyle: font.style,
+    fontStyle: font.style ?? 'normal',
     lineHeight,
     maxWidth: wrap ? maxWidth : Infinity,
     whiteSpace: wrap ? 'normal' : 'nowrap',
@@ -221,14 +247,17 @@ export function resolveTextLabel(
     anchorY: troikaAnchorY(anchorY),
     textAlign: pick('align') ?? anchorX,
   };
-  const outline = pick('outline') ?? null;
+  const color = pick('color') ?? DEFAULT_COLOR;
+  const outline = pick('outline') ?? shadowOutline(pickFont('shadow'), color, font.size) ?? null;
+  const lines = parseLinePosition(pickFont('lineposition'));
   const offset = pick('offset');
   const z = label.z ?? 0;
   return {
     layout,
     key: layoutKey(layout),
-    color: pick('color') ?? DEFAULT_COLOR,
-    outline: outline && (outline.width > 0 || (outline.blur ?? 0) > 0) ? outline : null,
+    color,
+    outline: outline && isVisibleOutline(outline) ? outline : null,
+    decoration: hasDecorationLines(lines) ? lines : null,
     rotation: textAngleToRotation(pick('angle') ?? 0),
     offsetX: offset?.[0] ?? 0,
     offsetY: offset?.[1] ?? 0,
@@ -239,6 +268,26 @@ export function resolveTextLabel(
       Number.isFinite(label.y) &&
       Number.isFinite(z),
   };
+}
+
+/** Whether an outline draws anything (troika skips the outline pass otherwise). */
+function isVisibleOutline(o: TextOutline): boolean {
+  return o.width > 0 || (o.blur ?? 0) > 0 || (o.offsetX ?? 0) !== 0 || (o.offsetY ?? 0) !== 0;
+}
+
+/**
+ * A `font.shadow` as the troika outline pass: a CSS shadow is an outline of width 0 with the
+ * shadow's blur and offset (troika's outline offset is +y down, like CSS); Plotly's `auto` is a
+ * 1 px halo ({@link parseTextShadow}). `undefined` when there is no shadow.
+ */
+export function shadowOutline(
+  shadow: string | undefined,
+  textColor: RGBA,
+  fontSize: number,
+): TextOutline | undefined {
+  const s = parseTextShadow(shadow, textColor, fontSize);
+  if (!s || s.color[3] <= 0) return undefined;
+  return { width: s.width, color: s.color, blur: s.blur, offsetX: s.offsetX, offsetY: s.offsetY };
 }
 
 /** Result of {@link assignLabelSlots}. */

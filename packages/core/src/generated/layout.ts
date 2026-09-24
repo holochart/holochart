@@ -96,6 +96,10 @@ export interface Layout {
    */
   meta?: unknown;
   /**
+   * A grid of subplots (Plotly `layout.grid`). Cartesian axes placed in the grid get their `domain`, `anchor`, `side` and `position` defaults from their cell; domain traces (pie, …) are placed with `domain.row` / `domain.column`. Values given on an axis or a trace always win.
+   */
+  grid?: LayoutGrid;
+  /**
    * A x axis. `xaxis2`, `xaxis3`, … declare further x axes, referenced from traces as `'x2'`, `'x3'`, ….
    */
   xaxis?: LayoutXaxis;
@@ -203,6 +207,32 @@ export interface LayoutFont {
    * @defaultValue `"normal"`
    */
   style?: 'normal' | 'italic';
+  /**
+   * Capitals variant (CSS `font-variant-caps`). The SDF text renderer approximates small and petite caps with uppercase letters at a reduced size.
+   *
+   * @defaultValue `"normal"`
+   */
+  variant?:
+    'normal' | 'small-caps' | 'all-small-caps' | 'all-petite-caps' | 'petite-caps' | 'unicase';
+  /**
+   * Letter case transform: `upper`, `lower`, `word caps` (first letter of each word), or `normal`.
+   *
+   * @defaultValue `"normal"`
+   */
+  textcase?: 'normal' | 'word caps' | 'upper' | 'lower';
+  /**
+   * Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.
+   *
+   * @defaultValue `"none"`
+   */
+  lineposition?:
+    'under' | 'over' | 'through' | `${'under' | 'over' | 'through'}+${string}` | 'none';
+  /**
+   * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
+   *
+   * @defaultValue `"none"`
+   */
+  shadow?: string;
 }
 
 /**
@@ -289,6 +319,24 @@ export interface LayoutTitleFont {
    * Font style.
    */
   style?: 'normal' | 'italic';
+  /**
+   * Capitals variant (CSS `font-variant-caps`). The SDF text renderer approximates small and petite caps with uppercase letters at a reduced size.
+   */
+  variant?:
+    'normal' | 'small-caps' | 'all-small-caps' | 'all-petite-caps' | 'petite-caps' | 'unicase';
+  /**
+   * Letter case transform: `upper`, `lower`, `word caps` (first letter of each word), or `normal`.
+   */
+  textcase?: 'normal' | 'word caps' | 'upper' | 'lower';
+  /**
+   * Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.
+   */
+  lineposition?:
+    'under' | 'over' | 'through' | `${'under' | 'over' | 'through'}+${string}` | 'none';
+  /**
+   * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
+   */
+  shadow?: string;
 }
 
 /**
@@ -351,6 +399,94 @@ export interface LayoutTransition {
    * @defaultValue `"layout first"`
    */
   ordering?: 'layout first' | 'traces first';
+}
+
+/**
+ * A grid of subplots (Plotly `layout.grid`). Cartesian axes placed in the grid get their `domain`, `anchor`, `side` and `position` defaults from their cell; domain traces (pie, …) are placed with `domain.row` / `domain.column`. Values given on an axis or a trace always win.
+ */
+export interface LayoutGrid {
+  /**
+   * Number of rows. Defaults to the length of `subplots` or `yaxes`. A grid needs more than one cell (`rows * columns > 1`); otherwise it is ignored.
+   *
+   * Range: 1 – 100
+   */
+  rows?: number;
+  /**
+   * Whether row 0 (of `subplots`, `yaxes` and trace `domain.row`) is the top row or the bottom row.
+   *
+   * @defaultValue `"top to bottom"`
+   */
+  roworder?: 'top to bottom' | 'bottom to top';
+  /**
+   * Number of columns. Defaults to the length of `subplots[0]` or `xaxes`.
+   *
+   * Range: 1 – 100
+   */
+  columns?: number;
+  /**
+   * The cartesian subplot of each cell, as a 2D array `[row][column]` of ids like `'xy'` or `'x2y3'`, or `''` for an empty cell. All cells of a column must share one x axis and all cells of a row one y axis; a subplot that breaks this, or that no trace or axis creates, leaves its cell empty. Takes precedence over `xaxes`/`yaxes`. With `pattern: 'independent'` and no arrays, it defaults to `'xy'`, `'x2y2'`, … in row-major order.
+   */
+  subplots?: readonly (readonly string[])[];
+  /**
+   * The x axis of each column (`'x'`, `'x2'`, …, or `''` for none), used when there is no `subplots` array. Defaults to `'x'`, `'x2'`, … for `pattern: 'coupled'`.
+   */
+  xaxes?: readonly string[];
+  /**
+   * The y axis of each row (`'y'`, `'y2'`, …, or `''` for none), used when there is no `subplots` array. Defaults to `'y'`, `'y2'`, … for `pattern: 'coupled'`.
+   */
+  yaxes?: readonly string[];
+  /**
+   * Default cell contents when neither `subplots` nor `xaxes`/`yaxes` is given: `coupled` shares one x axis per column and one y axis per row (`xaxes: ['x', 'x2', …]`, `yaxes: ['y', 'y2', …]`); `independent` gives every cell its own pair (`'xy'`, `'x2y2'`, … in row-major order).
+   *
+   * @defaultValue `"coupled"`
+   */
+  pattern?: 'independent' | 'coupled';
+  /**
+   * Horizontal space between columns, as a fraction of a column width. Defaults to 0.2 for a grid of independent subplots (`subplots` or `pattern: independent`), 0.1 otherwise.
+   *
+   * Range: 0 – 1
+   */
+  xgap?: number;
+  /**
+   * Vertical space between rows, as a fraction of a row height. Defaults to 0.3 for a grid of independent subplots (`subplots` or `pattern: independent`), 0.1 otherwise.
+   *
+   * Range: 0 – 1
+   */
+  ygap?: number;
+  /**
+   * The part of the plot area the grid fills.
+   */
+  domain?: LayoutGridDomain;
+  /**
+   * Where the x axes are drawn by default: `bottom plot` / `top plot` against the bottom-most / top-most subplot of their column; `bottom` / `top` at the bottom / top edge of the grid (`anchor: 'free'`), even when that cell is empty.
+   *
+   * @defaultValue `"bottom plot"`
+   */
+  xside?: 'bottom' | 'bottom plot' | 'top plot' | 'top';
+  /**
+   * Where the y axes are drawn by default: `left plot` / `right plot` against the left-most / right-most subplot of their row; `left` / `right` at the left / right edge of the grid (`anchor: 'free'`), even when that cell is empty.
+   *
+   * @defaultValue `"left plot"`
+   */
+  yside?: 'left' | 'left plot' | 'right plot' | 'right';
+}
+
+/**
+ * The part of the plot area the grid fills.
+ */
+export interface LayoutGridDomain {
+  /**
+   * Horizontal extent `[start, end]` of the whole grid, as fractions of the plot area. An empty or reversed extent falls back to `[0, 1]`.
+   *
+   * @defaultValue `[0,1]`
+   */
+  x?: readonly [number, number];
+  /**
+   * Vertical extent `[start, end]` of the whole grid, as fractions of the plot area (from the bottom). An empty or reversed extent falls back to `[0, 1]`.
+   *
+   * @defaultValue `[0,1]`
+   */
+  y?: readonly [number, number];
 }
 
 /**
@@ -433,6 +569,12 @@ export interface LayoutXaxis {
    * @defaultValue `"bottom"`
    */
   side?: 'bottom' | 'top';
+  /**
+   * Draw this axis over another x axis (`'x'`, `'x2'`, …), sharing its `domain` (this axis' own `domain` is ignored), e.g. a secondary y axis with `side: 'right'`. Unset (or `free`) by default. The target must exist and must not overlay another axis itself; otherwise this is ignored. Templates cannot set it, since it names specific axes. Zoom and pan do not yet move overlaid axes together (plan E3.9).
+   *
+   * @defaultValue `"x"`
+   */
+  overlaying?: 'x' | `x${number}` | 'free';
   /**
    * Position of the axis in paper coordinates (0–1 across the y direction). Only used when `anchor` is `free`.
    *
@@ -824,6 +966,24 @@ export interface LayoutXaxisTickfont {
    * Font style.
    */
   style?: 'normal' | 'italic';
+  /**
+   * Capitals variant (CSS `font-variant-caps`). The SDF text renderer approximates small and petite caps with uppercase letters at a reduced size.
+   */
+  variant?:
+    'normal' | 'small-caps' | 'all-small-caps' | 'all-petite-caps' | 'petite-caps' | 'unicase';
+  /**
+   * Letter case transform: `upper`, `lower`, `word caps` (first letter of each word), or `normal`.
+   */
+  textcase?: 'normal' | 'word caps' | 'upper' | 'lower';
+  /**
+   * Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.
+   */
+  lineposition?:
+    'under' | 'over' | 'through' | `${'under' | 'over' | 'through'}+${string}` | 'none';
+  /**
+   * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
+   */
+  shadow?: string;
 }
 
 /**
@@ -986,6 +1146,24 @@ export interface LayoutXaxisTitleFont {
    * Font style.
    */
   style?: 'normal' | 'italic';
+  /**
+   * Capitals variant (CSS `font-variant-caps`). The SDF text renderer approximates small and petite caps with uppercase letters at a reduced size.
+   */
+  variant?:
+    'normal' | 'small-caps' | 'all-small-caps' | 'all-petite-caps' | 'petite-caps' | 'unicase';
+  /**
+   * Letter case transform: `upper`, `lower`, `word caps` (first letter of each word), or `normal`.
+   */
+  textcase?: 'normal' | 'word caps' | 'upper' | 'lower';
+  /**
+   * Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.
+   */
+  lineposition?:
+    'under' | 'over' | 'through' | `${'under' | 'over' | 'through'}+${string}` | 'none';
+  /**
+   * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
+   */
+  shadow?: string;
 }
 
 /**
@@ -1068,6 +1246,12 @@ export interface LayoutYaxis {
    * @defaultValue `"left"`
    */
   side?: 'left' | 'right';
+  /**
+   * Draw this axis over another y axis (`'y'`, `'y2'`, …), sharing its `domain` (this axis' own `domain` is ignored), e.g. a secondary y axis with `side: 'right'`. Unset (or `free`) by default. The target must exist and must not overlay another axis itself; otherwise this is ignored. Templates cannot set it, since it names specific axes. Zoom and pan do not yet move overlaid axes together (plan E3.9).
+   *
+   * @defaultValue `"y"`
+   */
+  overlaying?: 'y' | `y${number}` | 'free';
   /**
    * Position of the axis in paper coordinates (0–1 across the x direction). Only used when `anchor` is `free`.
    *
@@ -1459,6 +1643,24 @@ export interface LayoutYaxisTickfont {
    * Font style.
    */
   style?: 'normal' | 'italic';
+  /**
+   * Capitals variant (CSS `font-variant-caps`). The SDF text renderer approximates small and petite caps with uppercase letters at a reduced size.
+   */
+  variant?:
+    'normal' | 'small-caps' | 'all-small-caps' | 'all-petite-caps' | 'petite-caps' | 'unicase';
+  /**
+   * Letter case transform: `upper`, `lower`, `word caps` (first letter of each word), or `normal`.
+   */
+  textcase?: 'normal' | 'word caps' | 'upper' | 'lower';
+  /**
+   * Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.
+   */
+  lineposition?:
+    'under' | 'over' | 'through' | `${'under' | 'over' | 'through'}+${string}` | 'none';
+  /**
+   * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
+   */
+  shadow?: string;
 }
 
 /**
@@ -1621,4 +1823,22 @@ export interface LayoutYaxisTitleFont {
    * Font style.
    */
   style?: 'normal' | 'italic';
+  /**
+   * Capitals variant (CSS `font-variant-caps`). The SDF text renderer approximates small and petite caps with uppercase letters at a reduced size.
+   */
+  variant?:
+    'normal' | 'small-caps' | 'all-small-caps' | 'all-petite-caps' | 'petite-caps' | 'unicase';
+  /**
+   * Letter case transform: `upper`, `lower`, `word caps` (first letter of each word), or `normal`.
+   */
+  textcase?: 'normal' | 'word caps' | 'upper' | 'lower';
+  /**
+   * Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.
+   */
+  lineposition?:
+    'under' | 'over' | 'through' | `${'under' | 'over' | 'through'}+${string}` | 'none';
+  /**
+   * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
+   */
+  shadow?: string;
 }

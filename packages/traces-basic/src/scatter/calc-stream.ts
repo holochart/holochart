@@ -26,6 +26,7 @@ import {
   linearExtremeOptions,
   linearExtremes,
   markerDiameters,
+  scatterExtremes,
   markerPadding,
   writeCoordinates,
   writeMarkerDiameters,
@@ -131,6 +132,10 @@ export function calcScatterAppend(
 ): ScatterCalc | undefined {
   const length = typeof trace['_length'] === 'number' ? trace['_length'] : -1;
   if (length !== append.length || previous.length !== append.previous) return undefined;
+  // Stacked coordinates depend on every trace of the group: restack from a full calc.
+  if (previous.stack || (typeof trace['stackgroup'] === 'string' && trace['stackgroup'] !== '')) {
+    return undefined;
+  }
   if (!ctx.xaxis || !ctx.yaxis) return undefined;
   if (trace['xperiod'] !== undefined || trace['yperiod'] !== undefined) return undefined;
   if (isTwoLevel(trace['x']) || isTwoLevel(trace['y'])) return undefined;
@@ -201,6 +206,8 @@ export function calcScatterAppend(
 
   const x = next.x.subarray(head, head + n);
   const y = next.y.subarray(head, head + n);
+  // Keep one generation of history: the previous calc forgets its own predecessor.
+  previous.appendOf = undefined;
   return {
     x,
     y,
@@ -211,6 +218,7 @@ export function calcScatterAppend(
     errorX: calcErrorBars(trace, 'x', x, ctx.xaxis.type),
     errorY: calcErrorBars(trace, 'y', y, ctx.yaxis.type),
     stream: next,
+    appendOf: { previous, append },
   };
 }
 
@@ -227,6 +235,44 @@ function removesExtreme(current: AxisExtremes, removed: AxisExtremes): boolean {
 
 const LINEAR = { type: 'linear' } as unknown as Scale;
 
+/** The extremes last computed for each calc, so a streamed calc can merge into its previous. */
+const EXTREMES = new WeakMap<ScatterCalc, TraceExtremes>();
+
+/**
+ * Scatter `extremes`: the incremental {@link scatterExtremesAppend} when `calc` is a streamed
+ * calc (`appendOf`) whose previous calc's extremes are known — the runtime drops `plan.append`
+ * once `crossTraceCalc` ran on the subplot, so this keeps streaming autorange O(added) — else a
+ * full {@link scatterExtremes}.
+ */
+export function scatterExtremesCached(
+  calc: ScatterCalc,
+  trace: FullTrace,
+  ctx: CalcContext,
+): TraceExtremes {
+  const link = calc.appendOf;
+  const previous = link ? EXTREMES.get(link.previous) : undefined;
+  const out =
+    (link && previous
+      ? scatterExtremesAppend(previous, calc, link.previous, trace, ctx, link.append)
+      : undefined) ?? scatterExtremes(calc, trace, ctx);
+  EXTREMES.set(calc, out);
+  return out;
+}
+
+/** {@link scatterExtremesAppend}, remembering the result for the next streamed calc. */
+export function scatterExtremesAppendCached(
+  previous: TraceExtremes,
+  calc: ScatterCalc,
+  previousCalc: ScatterCalc,
+  trace: FullTrace,
+  ctx: CalcContext,
+  append: TraceAppend,
+): TraceExtremes | undefined {
+  const out = scatterExtremesAppend(previous, calc, previousCalc, trace, ctx, append);
+  if (out) EXTREMES.set(calc, out);
+  return out;
+}
+
 /**
  * Scatter `extremesAppend` (E7.2): merge the extremes of the added points into the previous
  * ones, per axis, unless a removed point was one of them (then that axis is recomputed over the
@@ -241,7 +287,8 @@ export function scatterExtremesAppend(
   append: TraceAppend,
 ): TraceExtremes | undefined {
   if (calc.errorX || calc.errorY || previousCalc.errorX || previousCalc.errorY) return undefined;
-  const opts = linearExtremeOptions(calc, trace);
+  if (calc.stack || previousCalc.stack) return undefined;
+  const opts = linearExtremeOptions(calc, trace, ctx);
   const change = windowChange(append);
   const out: { x?: AxisExtremes; y?: AxisExtremes } = {};
   for (const letter of ['x', 'y'] as const) {

@@ -17,7 +17,9 @@ import type {
   SelectionQuery,
 } from '@mk7s/holochart-runtime';
 import type { ScatterCalc } from './calc.ts';
-import { hasLines, hasMarkers, hasText, isBubble } from './defaults.ts';
+import { hasFill, hasLines, hasMarkers, hasText, isBubble } from './defaults.ts';
+import { fillContains, fillLabelPosition } from './fill.ts';
+import { fillMode, traceFill } from './fill-trace.ts';
 import { dataValue } from './plot.ts';
 import { markerOf, pointColor } from './style.ts';
 
@@ -25,6 +27,9 @@ import { markerOf, pointColor } from './style.ts';
 const MIN_RADIUS = 3;
 
 interface Spatial {
+  /** The coordinate arrays indexed (stacking replaces a calc's arrays in place). */
+  readonly x: Float64Array;
+  readonly y: Float64Array;
   readonly index: PointIndex;
   /** Largest drawn marker radius (px), to widen candidate searches. */
   readonly maxRadius: number;
@@ -51,7 +56,7 @@ function isSorted(values: Float64Array): boolean {
 /** The calc's spatial index and summaries, built on first use (ADR-010). */
 function spatial(calc: ScatterCalc): Spatial {
   let s = SPATIAL.get(calc);
-  if (s) return s;
+  if (s && s.x === calc.x && s.y === calc.y) return s;
   let maxRadius = 0;
   const sizes = calc.markerSize;
   if (typeof sizes === 'number') maxRadius = sizes / 2;
@@ -70,6 +75,8 @@ function spatial(calc: ScatterCalc): Spatial {
     if (y > y1) y1 = y;
   }
   s = {
+    x: calc.x,
+    y: calc.y,
     index: new PointIndex(calc.x, calc.y),
     maxRadius,
     xSorted: isSorted(calc.x),
@@ -232,8 +239,29 @@ export function scatterHoverPoints(
   ctx: HoverContext,
 ): HoverPoint[] {
   if (calc.length === 0) return [];
+  const hoveron = typeof trace['hoveron'] === 'string' ? trace['hoveron'] : 'points';
+  const flags = hoveron.split('+');
+  // Plotly: points first; the fill only when no point is close enough.
+  if (flags.includes('points')) {
+    const point = hoverPoint(calc, trace, query, ctx);
+    if (point) return [point];
+  }
+  if (flags.includes('fills') && query.mode === 'closest' && hasFill(trace)) {
+    const fill = hoverFill(calc, trace, query, ctx);
+    if (fill) return [fill];
+  }
+  return [];
+}
+
+/** The nearest point (see {@link scatterHoverPoints}). */
+function hoverPoint(
+  calc: ScatterCalc,
+  trace: FullTrace,
+  query: HoverQuery,
+  ctx: HoverContext,
+): HoverPoint | undefined {
   const mode = trace['mode'];
-  if (!hasMarkers(mode) && !hasLines(mode) && !hasText(mode)) return [];
+  if (!hasMarkers(mode) && !hasLines(mode) && !hasText(mode)) return undefined;
   const t = ctx.transform;
   const sx = Math.abs(t.scaleX) || 1;
   const sy = Math.abs(t.scaleY) || 1;
@@ -241,7 +269,7 @@ export function scatterHoverPoints(
     query.mode === 'closest'
       ? hoverClosest(calc, query, sx, sy)
       : hoverAxis(calc, query, query.mode, sx, sy);
-  if (!hit) return [];
+  if (!hit) return undefined;
   const i = hit.i;
   const marker = trace['marker'] as Record<string, unknown> | undefined;
   const fields: Record<string, unknown> = {};
@@ -254,19 +282,74 @@ export function scatterHoverPoints(
   if (trace['ids'] !== undefined) fields['id'] = valueAt(trace['ids'], i);
   const text = stringAt(trace['hovertext'], i) ?? stringAt(trace['text'], i);
   const color = pointColor(trace, i, ctx.fullLayout);
-  return [
-    {
-      pointIndex: i,
-      distance: hit.d,
-      px: calc.x[i]! * t.scaleX + t.offsetX,
-      py: calc.y[i]! * t.scaleY + t.offsetY,
-      x: dataValue(trace, 'x', i),
-      y: dataValue(trace, 'y', i),
-      ...(text !== undefined ? { text } : {}),
-      ...(color !== undefined ? { color } : {}),
-      fields,
-    },
-  ];
+  // A stacked point reports its own (normalized) size along the stacking axis, not the running
+  // total it is drawn at (Plotly).
+  const stack = calc.stack;
+  const size = stack?.value[i];
+  const sizeLetter = stack ? (stack.orientation === 'v' ? 'y' : 'x') : undefined;
+  return {
+    pointIndex: i,
+    distance: hit.d,
+    px: calc.x[i]! * t.scaleX + t.offsetX,
+    py: calc.y[i]! * t.scaleY + t.offsetY,
+    x: sizeLetter === 'x' && size !== undefined ? size : dataValue(trace, 'x', i),
+    y: sizeLetter === 'y' && size !== undefined ? size : dataValue(trace, 'y', i),
+    ...(text !== undefined ? { text } : {}),
+    ...(color !== undefined ? { color } : {}),
+    fields,
+  };
+}
+
+/**
+ * Hover on the filled area (Plotly `hoveron: 'fills'`): when the pointer is inside the fill (a
+ * `tonext` fill excludes the area of the trace it fills to), a label naming the trace, placed at
+ * the middle of the containing rings. Ranked at the query's maximum distance, so any point within
+ * reach (of this or another trace) wins, as in Plotly. The point carries `pointIndex: -1` and
+ * `fields.hoveron: 'fills'`; there is no data point behind it.
+ */
+function hoverFill(
+  calc: ScatterCalc,
+  trace: FullTrace,
+  query: HoverQuery,
+  ctx: HoverContext,
+): HoverPoint | undefined {
+  const t = ctx.transform;
+  const fill = traceFill(
+    calc,
+    trace,
+    { x: ctx.xaxis, y: ctx.yaxis },
+    { scaleX: Math.abs(t.scaleX), scaleY: Math.abs(t.scaleY) },
+  );
+  const g = fill.geometry;
+  if (!g || !fillContains(g, query.xl, query.yl)) return undefined;
+  const span = (axis: HoverContext['xaxis']): number => {
+    const d = axis ? Math.abs(axis.end - axis.start) : NaN;
+    return d > 0 ? d : Infinity;
+  };
+  const width = span(ctx.xaxis);
+  const height = span(ctx.yaxis);
+  const at = fillLabelPosition(
+    g,
+    [query.xl, query.yl],
+    (x, y) => [x * t.scaleX + t.offsetX, y * t.scaleY + t.offsetY],
+    { width, height },
+  ) ?? { x: query.px, y: query.py };
+  const fillcolor = typeof trace['fillcolor'] === 'string' ? trace['fillcolor'] : undefined;
+  const line = (trace['line'] as { color?: unknown } | undefined)?.color;
+  const color = fillcolor ?? (typeof line === 'string' ? line : undefined);
+  const scalarText =
+    typeof trace['text'] === 'string' && trace['text'] !== '' ? trace['text'] : undefined;
+  return {
+    pointIndex: -1,
+    distance: Number.isFinite(query.distance) ? query.distance : Number.MAX_VALUE,
+    px: at.x,
+    py: at.y,
+    text: scalarText ?? String(trace['name'] ?? ''),
+    // The label shows only this (no `(x, y)`: there is no data point), as Plotly does for fills.
+    hoverText: scalarText ?? String(trace['name'] ?? ''),
+    ...(color !== undefined ? { color } : {}),
+    fields: { hoveron: 'fills', fill: fillMode(trace) },
+  };
 }
 
 /**
@@ -357,6 +440,18 @@ export function scatterLegendIcon(trace: FullTrace): LegendGlyph {
       color: typeof color === 'string' ? color : undefined,
       opacity,
     };
+  }
+  if (hasFill(trace)) {
+    // Plotly's legend shows the fill swatch edged with the line; the glyph contract has one kind.
+    const fillcolor = trace['fillcolor'];
+    return strip({
+      kind: 'fill' as const,
+      fill: {
+        color: typeof fillcolor === 'string' ? fillcolor : undefined,
+        lineColor: lineGlyph?.color,
+        lineWidth: lineGlyph ? Math.min(lineGlyph.width, 2) : 0,
+      },
+    });
   }
   const kind: LegendGlyph['kind'] = lines && markers ? 'lines+markers' : lines ? 'line' : 'marker';
   return strip({ kind, marker: markerGlyph, line: lineGlyph });

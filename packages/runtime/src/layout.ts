@@ -143,3 +143,53 @@ export function splitSubplotId(id: string): [string, string] | undefined {
 export function axisName(id: string): string {
   return `${id.charAt(0)}axis${id.slice(1)}`;
 }
+
+/**
+ * A domain trace's rect (plan E4.5): `domain.x` / `domain.y` fractions (y from the bottom) of the
+ * plot area, in container px. Unlike axis spans this is not rounded: circular traces center on it
+ * exactly. Reversed or out-of-range fractions are sorted and clamped to [0, 1].
+ */
+export function domainRect(
+  area: Readonly<ViewportRect>,
+  x: readonly [number, number],
+  y: readonly [number, number],
+): ViewportRect {
+  const clamp = (v: number): number => (Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0);
+  const [x0, x1] = [clamp(x[0]), clamp(x[1])].sort((a, b) => a - b) as [number, number];
+  const [y0, y1] = [clamp(y[0]), clamp(y[1])].sort((a, b) => a - b) as [number, number];
+  return {
+    x: area.x + x0 * area.width,
+    y: area.y + (1 - y1) * area.height,
+    width: (x1 - x0) * area.width,
+    height: (y1 - y0) * area.height,
+  };
+}
+
+/**
+ * The largest rect of aspect ratio `aspect` (width / height) centered in `rect` (plan E4.5:
+ * aspect-preserving fit, so pies stay circular in a wide domain).
+ */
+export function fitAspect(rect: Readonly<ViewportRect>, aspect = 1): ViewportRect {
+  const a = aspect > 0 && Number.isFinite(aspect) ? aspect : 1;
+  const width = Math.max(0, Math.min(rect.width, rect.height * a));
+  const height = a > 0 ? width / a : 0;
+  return {
+    x: rect.x + (rect.width - width) / 2,
+    y: rect.y + (rect.height - height) / 2,
+    width,
+    height,
+  };
+}
+
+/** The circle inscribed in a rect: center (container px) and radius (plan E4.5, pie). */
+export function inscribedCircle(rect: Readonly<ViewportRect>): {
+  cx: number;
+  cy: number;
+  r: number;
+} {
+  return {
+    cx: rect.x + rect.width / 2,
+    cy: rect.y + rect.height / 2,
+    r: Math.max(0, Math.min(rect.width, rect.height) / 2),
+  };
+}

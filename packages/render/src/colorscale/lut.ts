@@ -6,7 +6,9 @@
  * `reversescale` never touch the texture: shaders map a value to `t` with uniforms and sample the
  * LUT at {@link lutCoord}.
  *
- * Interpolation happens in sRGB byte space, matching Plotly (which interpolates CSS rgb strings).
+ * Interpolation happens in sRGB byte space by default, matching Plotly (which interpolates CSS rgb
+ * strings); an optional {@link ColorscaleInterpolation} (`layout.colorscaleInterpolation`, E8.2)
+ * mixes stops in Oklab, CIE Lab or LCh instead (see interpolate.ts).
  * The texture is tagged `NoColorSpace` so the sampled values are the raw sRGB numbers the custom
  * shaders write straight to the output (see the color conventions in `types.ts`).
  */
@@ -19,6 +21,7 @@ import {
   UnsignedByteType,
 } from 'three';
 import type { ResourceManager, RGBA } from '../types.ts';
+import { densifyColorscale, type ColorscaleInterpolation } from './interpolate.ts';
 
 /** A colorscale stop: position in [0, 1] and an sRGB 0–1 RGBA color. */
 export type ColorscaleStop = readonly [position: number, color: RGBA];
@@ -39,16 +42,24 @@ function normalizedStops(scale: Colorscale): ColorscaleStop[] {
   return stops.sort((a, b) => a[0] - b[0]);
 }
 
+/** Stops to interpolate linearly in sRGB for `space` (perceptual spaces are baked in). */
+function spaceStops(scale: Colorscale, space: ColorscaleInterpolation): ColorscaleStop[] {
+  const stops = normalizedStops(scale);
+  return space === 'rgb' ? stops : [...densifyColorscale(stops, space, COLORSCALE_LUT_SIZE)];
+}
+
 /**
- * Sample a colorscale at `t` ∈ [0, 1] (clamped) with linear interpolation. CPU mirror of the LUT
- * (without 8-bit quantization), for legends, colorbars, and hover labels.
+ * Sample a colorscale at `t` ∈ [0, 1] (clamped) with linear interpolation (in `space`, default
+ * sRGB). CPU mirror of the LUT (without 8-bit quantization), for legends, colorbars, and hover
+ * labels.
  */
 export function sampleColorscale(
   scale: Colorscale,
   t: number,
   out: [number, number, number, number] = [0, 0, 0, 0],
+  space: ColorscaleInterpolation = 'rgb',
 ): [number, number, number, number] {
-  return sampleSorted(normalizedStops(scale), t, out);
+  return sampleSorted(spaceStops(scale, space), t, out);
 }
 
 function sampleSorted(
@@ -81,13 +92,17 @@ function sampleSorted(
   return out;
 }
 
-/** Build the RGBA8 LUT for a colorscale: texel `i` holds the color at `t = i / (size - 1)`. */
+/**
+ * Build the RGBA8 LUT for a colorscale: texel `i` holds the color at `t = i / (size - 1)`,
+ * interpolated in `space` (default sRGB).
+ */
 export function buildColorscaleLUT(
   scale: Colorscale,
   size = COLORSCALE_LUT_SIZE,
   out: Uint8Array = new Uint8Array(size * 4),
+  space: ColorscaleInterpolation = 'rgb',
 ): Uint8Array {
-  const stops = normalizedStops(scale);
+  const stops = spaceStops(scale, space);
   const rgba: [number, number, number, number] = [0, 0, 0, 0];
   for (let i = 0; i < size; i++) {
     sampleSorted(stops, size > 1 ? i / (size - 1) : 0, rgba);
@@ -107,17 +122,20 @@ export function lutCoord(t: number, size = COLORSCALE_LUT_SIZE): number {
 }
 
 /** Resource key for a colorscale. Colors are quantized to 8 bits, as in the LUT. */
-export function colorscaleKey(scale: Colorscale): string {
+export function colorscaleKey(scale: Colorscale, space: ColorscaleInterpolation = 'rgb'): string {
   const parts = normalizedStops(scale).map(
     ([p, c]) =>
       `${+p.toFixed(6)}:${c.map((v) => Math.round(Math.min(1, Math.max(0, v)) * 255)).join(',')}`,
   );
-  return `colorscale:${parts.join('|')}`;
+  return `colorscale:${space === 'rgb' ? '' : `${space}:`}${parts.join('|')}`;
 }
 
 /** Create a LUT texture (not cached; prefer {@link acquireColorscaleTexture}). */
-export function createColorscaleTexture(scale: Colorscale): DataTexture {
-  const data = buildColorscaleLUT(scale);
+export function createColorscaleTexture(
+  scale: Colorscale,
+  space: ColorscaleInterpolation = 'rgb',
+): DataTexture {
+  const data = buildColorscaleLUT(scale, COLORSCALE_LUT_SIZE, undefined, space);
   const texture = new DataTexture(data, COLORSCALE_LUT_SIZE, 1, RGBAFormat, UnsignedByteType);
   texture.magFilter = LinearFilter;
   texture.minFilter = LinearFilter;
@@ -144,9 +162,10 @@ export interface ColorscaleTextureHandle {
 export function acquireColorscaleTexture(
   resources: ResourceManager,
   scale: Colorscale,
+  space: ColorscaleInterpolation = 'rgb',
 ): ColorscaleTextureHandle {
-  const key = colorscaleKey(scale);
-  const texture = resources.acquire(key, () => createColorscaleTexture(scale));
+  const key = colorscaleKey(scale, space);
+  const texture = resources.acquire(key, () => createColorscaleTexture(scale, space));
   let released = false;
   return {
     key,

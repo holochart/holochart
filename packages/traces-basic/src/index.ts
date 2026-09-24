@@ -4,10 +4,12 @@
  */
 import type { Registrable } from '@mk7s/holochart-runtime';
 import { bar } from './bar/index.ts';
+import { pie } from './pie/index.ts';
 import { scatter } from './scatter/index.ts';
 
 export * from './scatter/index.ts';
 export * from './bar/index.ts';
+export * from './pie/index.ts';
 
 /** Every trace module in this package, in registration order (the full bundle registers these). */
-export const basicTraces: readonly Registrable[] = [scatter, bar];
+export const basicTraces: readonly Registrable[] = [scatter, bar, pie];

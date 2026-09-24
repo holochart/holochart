@@ -12,3 +12,4 @@ export * from './arc.ts';
 export * from './text.ts';
 export * from './text-metrics.ts';
 export * from './text-fonts.ts';
+export * from './text-style.ts';
