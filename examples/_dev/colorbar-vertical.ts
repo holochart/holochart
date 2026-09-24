@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -24,7 +23,6 @@ export function run(el: HTMLElement): ExampleHandle {
   const y = Float64Array.from({ length: n }, () => normal() * 1.5);
   const depth = Array.from(x, (v, i) => Math.round(50 + v * 18 + (y[i] as number) * 12));
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -46,11 +44,6 @@ export function run(el: HTMLElement): ExampleHandle {
         },
       },
     ],
-    layout: {
-      font: { family: 'Inter' },
-      margin: { l: 48, r: 24, t: 24, b: 40 },
-      plot_bgcolor: '#f4f6fa',
-    },
   });
 
   return {

@@ -14,3 +14,6 @@ the importer renders without errors.
 
 Until then, see the [chart types](/charts/) overview for which trace types are planned and when,
 and [Coming from Plotly](/getting-started/from-plotly).
+
+Figures without `layout.template` render with Holochart's dark default look, not Plotly's; see
+[Default look](/getting-started/from-plotly#default-look) for how to match plotly.js.

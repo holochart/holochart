@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -27,7 +26,6 @@ export function run(el: HTMLElement): ExampleHandle {
     { name: 'Other', f: (i: number) => 3 + i * 0.05 },
   ];
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: series.map((s, k) => ({
       type: 'scatter',
@@ -39,12 +37,9 @@ export function run(el: HTMLElement): ExampleHandle {
       hovertemplate: '%{y:.1f}%',
     })),
     layout: {
-      font: { family: 'Inter', size: 12 },
       hovermode: 'x unified',
       title: { text: 'Visits by device' },
       yaxis: { ticksuffix: '%', range: [0, 100] },
-      margin: { l: 56, r: 24, t: 48, b: 40 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 

@@ -11,6 +11,10 @@ Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's
 | --------------------------------------- | ---------------------------------------------------------- | ------ |
 | `partial: core + scatter`               | `createChart` + `register` from runtime, `scatter` trace   | 142 kB |
 | `text engine (lazy chunk …)`            | the SDF text engine chunk, loaded on first text use        | 49 kB  |
+| `default font, regular face (lazy …)`   | TeX Gyre Heros Regular chunk, loaded on first text use     | 95 kB  |
+| `default font, bold face (lazy …)`      | the bold face chunk, loaded when bold text is drawn        | 95 kB  |
+| `default font, italic face (lazy …)`    | the italic face chunk, loaded when italic text is drawn    | 98 kB  |
+| `default font, bold italic face (…)`    | the bold italic face chunk                                 | 95 kB  |
 | `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 212 kB |
 | `@mk7s/holochart (full, ESM)`           | everything the full bundle exports                         | 450 kB |
 | `@mk7s/holochart IIFE (includes three)` | `dist/holochart.iife.min.js` as shipped, **with** three.js | 650 kB |
@@ -20,10 +24,24 @@ The IIFE budget is the full budget plus a 200 kB allowance for the bundled three
 170–190 kB min + gzip on its own; ADR-015). Per-package entries are reported but not gated.
 
 An ESM entry's size is its **initial** download. Code an entry loads on demand with a dynamic
-`import()` is its **lazy** size, reported next to it; today that is only the SDF text engine
-(troika-three-text, bidi-js, webgl-sdf-generator, troika-worker-utils, troika-three-utils; plan
-E21.5), which has its own gated row. So core + scatter costs its initial size before the first
-frame and the text engine's size once it draws a label.
+`import()` is its **lazy** size, reported next to it: the SDF text engine (troika-three-text,
+bidi-js, webgl-sdf-generator, troika-worker-utils, troika-three-utils; plan E21.5), which has its
+own gated row, and the built-in default font (below). So core + scatter costs its initial size
+before the first frame, and the text engine's size plus the regular font face once it draws a
+label.
+
+The **default font** (plan E2.18) is TeX Gyre Heros, shipped with render in four faces. For ESM
+consumers each face is a generated module exporting the OTF file as a base64 `data:` URL
+(`packages/render/src/fonts/generated/`, from `packages/render/fonts/*.otf` by
+`node scripts/fonts/generate-default-fonts.ts`; `tests/build/default-fonts.test.ts` fails when
+they are stale), imported with a dynamic `import()`, so every bundler emits it as its own lazy
+chunk. A page loads one face at a time and only the faces its text uses (plain text: regular
+only), so the faces are measured one by one, each with a gated row, and reported summed in the
+**Fonts** column; they never count toward an initial size. Base64 costs about a third over the
+binary: a face is ~134 kB raw, ~64 kB gzipped as an `.otf`, and ~86 kB gzipped as a chunk. The
+IIFE does not contain the fonts: they ship as `dist/fonts/*.otf` next to the script and are
+fetched relative to it (its Fonts column reads "files"). Apps that prefer to self-host the files
+set `configureText({ defaultFontFaces })` (see the styling guide).
 
 Entries and budgets live in one place, [`tests/bundle/size/entries.ts`](../../tests/bundle/size/entries.ts),
 which [`.size-limit.ts`](../../.size-limit.ts) reads.
@@ -40,14 +58,17 @@ entry from the packages' built `dist/` with rolldown (the bundler behind tsdown 
 tree-shaken and minified, with `three` external and every other dependency (d3, troika, earcut,
 flatbush, workspace packages) included, the way an app bundler would. Code splitting is on, as in
 an app: each dynamic `import()` becomes its own chunk. The entry chunk plus every chunk it imports
-statically is written to `<id>.js` (the **initial** size); every other chunk goes to
-`<id>.lazy.js` (the **lazy** size), so each output chunk is counted exactly once and nothing drops
-out of the numbers. `manifest.json` records which packages the lazy chunks contain. size-limit
-(`@size-limit/file`) then gzips the results; a `lazyOf` entry in `entries.ts` gates another entry's
-lazy file (the text-engine row measures core + scatter's), and `bundle.ts` fails if that entry has
-no lazy chunks. The report adds a per-entry **Lazy** column (gzip level 9, like size-limit). The
-IIFE is measured as built: it is a single file, so the build inlines the text engine (as a module
-initialized on first use) and its lazy column reads "inlined".
+statically is written to `<id>.js` (the **initial** size); every font face chunk goes to
+`<id>.lazy.font-<face>.js`, and every other chunk to `<id>.lazy.js` (the **lazy** size), so each
+output chunk is counted exactly once and nothing drops out of the numbers (a chunk mixing a font
+with other code fails the script). `manifest.json` records which packages the lazy chunks contain
+and which font parts exist. size-limit (`@size-limit/file`) then gzips the results; a `lazyOf`
+entry in `entries.ts` gates another entry's lazy file, or with `lazyPart` one of its font faces
+(the text-engine and font rows measure core + scatter's), and `bundle.ts` fails if that entry has
+no such chunks. The report adds per-entry **Lazy** and **Fonts** columns (gzip level 9, like
+size-limit; Fonts sums the faces). The IIFE is measured as built: it is a single file, so the
+build inlines the text engine (as a module initialized on first use) and its lazy column reads
+"inlined".
 
 Until an entry's named exports exist (for example `scatter` before the scatter trace lands), that
 entry measures the whole package instead and the report adds a footnote.
@@ -56,24 +77,36 @@ In CI, the job writes the table to the job summary, uploads `size.json` as the `
 artifact, compares with the latest successful `main` run, and posts or updates one PR comment
 (same-repo PRs only; fork PRs get a read-only token, so they get the job summary only).
 
-## Current sizes (2026-09-23, M2 wave 1)
+## Current sizes (2026-09-23, M2 default look)
 
-Initial download per entry, with the lazily loaded text engine in its own column (a chart
-downloads it the first time it draws text; charts without text never do).
+Initial download per entry. Lazy chunks are listed separately: the text engine (loaded the first
+time a chart draws text) and the default font's faces (the regular face with the first text; bold
+and italic only when used). Charts without text load none of them.
 
-| Entry                          | Initial   | Lazy     | Budget | M2 wave 0 |
-| ------------------------------ | --------- | -------- | ------ | --------- |
-| `@mk7s/holochart-core`         | 57.74 kB  | —        | —      | 42.92 kB  |
-| `@mk7s/holochart-render`       | 58.99 kB  | 45.73 kB | —      | 53.02 kB  |
-| `@mk7s/holochart-runtime`      | 68.70 kB  | —        | —      | 64.00 kB  |
-| `@mk7s/holochart-components`   | 98.54 kB  | 45.73 kB | —      | 79.24 kB  |
-| `@mk7s/holochart-traces-basic` | 106.86 kB | 45.73 kB | —      | 78.26 kB  |
-| `@mk7s/holochart-themes`       | 8.09 kB   | —        | —      | 0 kB      |
-| partial: core + scatter        | 129.20 kB | 45.73 kB | 142 kB | 107.92 kB |
-| text engine (lazy)             | 45.73 kB  | —        | 49 kB  | 44.17 kB  |
-| partial: basic                 | 192.93 kB | 45.73 kB | 212 kB | 154.10 kB |
-| full, ESM                      | 217.96 kB | 45.73 kB | 450 kB | 170.06 kB |
-| IIFE (includes three)          | 394.36 kB | inlined  | 650 kB | 345.35 kB |
+| Entry                          | Initial   | Text engine | Budget | M2 wave 1 |
+| ------------------------------ | --------- | ----------- | ------ | --------- |
+| `@mk7s/holochart-core`         | 58.73 kB  | —           | —      | 57.74 kB  |
+| `@mk7s/holochart-render`       | 59.78 kB  | 45.73 kB    | —      | 58.99 kB  |
+| `@mk7s/holochart-runtime`      | 70.19 kB  | —           | —      | 68.70 kB  |
+| `@mk7s/holochart-components`   | 98.33 kB  | 45.73 kB    | —      | 98.54 kB  |
+| `@mk7s/holochart-traces-basic` | 106.66 kB | 45.73 kB    | —      | 106.86 kB |
+| `@mk7s/holochart-themes`       | 8.53 kB   | —           | —      | 8.09 kB   |
+| partial: core + scatter        | 131.09 kB | 45.73 kB    | 142 kB | 129.20 kB |
+| text engine (lazy)             | 45.73 kB  | —           | 49 kB  | 45.73 kB  |
+| partial: basic                 | 194.67 kB | 45.73 kB    | 212 kB | 192.93 kB |
+| full, ESM                      | 219.74 kB | 45.73 kB    | 450 kB | 217.96 kB |
+| IIFE (includes three)          | 396.23 kB | inlined     | 650 kB | 394.36 kB |
+
+| Default font face (lazy)   | Size     | Budget |
+| -------------------------- | -------- | ------ |
+| TeX Gyre Heros regular     | 85.75 kB | 95 kB  |
+| TeX Gyre Heros bold        | 86.03 kB | 95 kB  |
+| TeX Gyre Heros italic      | 88.59 kB | 98 kB  |
+| TeX Gyre Heros bold italic | 86.23 kB | 95 kB  |
+
+The default look (ADR-021) added the `holochart` template to core and its registration to the
+runtime (~1 kB), and the font loader (~0.7 kB). The IIFE loads `fonts/*.otf` shipped next to it
+instead of inlining them.
 
 Wave 1 added area fills (the fill primitive and exact-fill code, ~12 kB of core + scatter), fonts
 and colorscale interpolation, grid and domain placement, pie (~10 kB of basic), shapes and images
@@ -90,6 +123,25 @@ and raised to measured + ~10% (142 / 212 kB) after M2 wave 1 by decision.
 Splitting the text engine out costs about 1.8 kB in total (two chunks compress separately, and the
 loader adds a little code), and the IIFE about 3.3 kB (the inlined engine is wrapped as a lazily
 initialized module). `preloadTextEngine()` from `@mk7s/holochart-render` starts the download early.
+
+## Default font (2026-09-23, M2 default look)
+
+Measured on the working tree with the new default look in progress (core and themes numbers are
+still moving, so the table above is not refreshed yet):
+
+| Lazy chunk (core + scatter) | min+gz   | Budget |
+| --------------------------- | -------- | ------ |
+| TeX Gyre Heros Regular      | 85.75 kB | 95 kB  |
+| TeX Gyre Heros Bold         | 86.03 kB | 95 kB  |
+| TeX Gyre Heros Italic       | 88.59 kB | 98 kB  |
+| TeX Gyre Heros Bold Italic  | 86.23 kB | 95 kB  |
+| all four (the Fonts column) | 346.6 kB | —      |
+
+The face loader, the `data:`→`blob:` conversion and the face matching add about 0.7 kB to the
+initial chunk of anything that draws text (render's text exports: 10.9 → 11.6 kB), and replace
+the troika CDN fallback faces the metrics oracle registered before. The IIFE grows by the same
+code only; its four `.otf` files (133–139 kB each, uncompressed) are separate downloads. The text
+engine chunk is unchanged (45.73 kB).
 
 ## Diet
 

@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -20,25 +19,20 @@ const Y2015 = [31, 28, 33, 36, 38, 40, 44, 47];
 const Y2025 = [29, 30, 30, 39, 35, 42, 41, 52];
 
 export function run(el: HTMLElement): ExampleHandle {
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
-      { name: '2015', x: Y2015, marker: { color: '#9ecae1' } },
-      { name: '2025', x: Y2025, marker: { color: '#08519c' } },
+      { name: '2015', x: Y2015, marker: { color: '#80838f' } },
+      { name: '2025', x: Y2025, marker: { color: '#5e74d5' } },
     ].map((t) => ({
       type: 'scatter',
       mode: 'markers',
       y: CITIES,
       ...t,
-      marker: { ...t.marker, size: 12, line: { width: 1, color: '#ffffff' } },
+      marker: { ...t.marker, size: 10, line: { width: 1, color: '#0a0a0f' } },
     })),
     layout: {
-      font: { family: 'Inter', size: 12 },
-      title: { text: 'Average commute (minutes)', xref: 'paper', x: 0, xanchor: 'left' },
-      legend: { orientation: 'h', x: 1, xanchor: 'right', y: 1.1 },
+      title: { text: 'Average commute (minutes)' },
       xaxis: { range: [24, 56], zeroline: false },
-      margin: { l: 72, r: 24, t: 56, b: 40 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 

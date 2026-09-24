@@ -160,6 +160,15 @@ export type {
 // Templates (E1.5)
 export { composeTemplates, resolveTemplate, templateTraceFor } from './templates/templates.ts';
 export type { ResolvedTemplate, Template, TemplateSource } from './templates/templates.ts';
+// Built-in templates every bundle registers: the default look and Plotly's (ADR-021)
+export {
+  DEFAULT_TEMPLATE_NAME,
+  HOLOCHART_COLORWAY,
+  HOLOCHART_FONT_FAMILY,
+  holochartTemplate,
+  noneTemplate,
+  plotlyClassicTemplate,
+} from './templates/builtin.ts';
 
 // Color system: named colorscales, colorways, palettes (E8.2)
 export * from './colors/index.ts';

@@ -1,6 +1,5 @@
 import { createChart } from '@mk7s/holochart';
 import type { InteractionHook } from '../_dev/interaction-scatter.ts';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -12,8 +11,9 @@ import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
  * The geometry is fixed so the tests can find slices without internals: 640×400 px, 20 px
  * margins, the pie in `domain.x: [0, 0.6]` (a 360×360 px cell, so radius 180 px centered at
  * (200, 200)), `direction: 'clockwise'` from 12 o'clock, values already in descending order. The
- * legend sits inside the plot area right of the pie, so it pushes no margin, and the slice colors
- * are explicit so the tests can find legend glyphs by color.
+ * legend is set explicitly (vertical, inside the plot area right of the pie), so it pushes no
+ * margin whatever the default template's legend placement is, and the slice colors are explicit so
+ * the tests can find legend glyphs by color.
  *
  * Not a visual test: its point is the pointer behavior, covered by the interaction suite.
  */
@@ -59,7 +59,6 @@ function summarize(payload: unknown): unknown {
 }
 
 export function run(el: HTMLElement): ExampleHandle {
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -71,16 +70,14 @@ export function run(el: HTMLElement): ExampleHandle {
         rotation: 0,
         domain: { x: [0, 0.6], y: [0, 1] },
         textinfo: 'none',
-        marker: { colors: ['#d62728', '#1f77b4', '#2ca02c', '#9467bd', '#ff7f0e'] },
+        marker: { colors: ['#ea2a37', '#5e74d5', '#118e36', '#9962c0', '#cc540a'] },
         hovertemplate: '%{label}: %{value} (%{percent})<extra></extra>',
       },
     ],
     layout: {
-      font: { family: 'Inter' },
       margin: { l: 20, r: 20, t: 20, b: 20 },
-      paper_bgcolor: '#ffffff',
       showlegend: true,
-      legend: { x: 0.7, y: 0.95, xanchor: 'left', yanchor: 'top' },
+      legend: { orientation: 'v', x: 0.7, y: 0.95, xanchor: 'left', yanchor: 'top' },
     },
   });
   const hook: InteractionHook = { chart, events: [] };

@@ -1,5 +1,4 @@
 import { createChart, type Chart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -39,8 +38,6 @@ function settled(chart: Chart): Promise<void> {
 }
 
 export function run(el: HTMLElement): ExampleHandle {
-  // Vendored Inter for axis labels: offline and deterministic (troika's default is a CDN font).
-  useExampleFonts();
   const quarters = ['Q1', 'Q2', 'Q3', 'Q4'];
   const chart = createChart(el, {
     data: [
@@ -50,7 +47,8 @@ export function run(el: HTMLElement): ExampleHandle {
         x: quarters,
         y: [24, 28, 30, 34],
         offsetgroup: 'a',
-        marker: { color: 'rgba(31, 119, 180, 0.25)' },
+        // The 2025 color, translucent: targets read as a backdrop to the actuals.
+        marker: { color: 'rgba(234, 42, 55, 0.3)' },
       },
       {
         type: 'bar',
@@ -67,14 +65,10 @@ export function run(el: HTMLElement): ExampleHandle {
         y: [21, 25, 31, 29],
         offsetgroup: 'a',
         width: 0.2,
-        marker: { color: '#1f77b4' },
+        marker: { color: '#ea2a37' },
       },
     ],
     layout: {
-      font: { family: 'Inter' },
-      margin: { l: 48, r: 24, t: 24, b: 40 },
-      paper_bgcolor: '#ffffff',
-      plot_bgcolor: '#e5ecf6',
       barmode: 'group',
       bargap: 0.25,
       bargroupgap: 0.1,

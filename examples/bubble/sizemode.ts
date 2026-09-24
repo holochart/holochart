@@ -1,5 +1,4 @@
 import { bubbleSizeref, createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -37,16 +36,12 @@ export function run(el: HTMLElement): ExampleHandle {
     hovertemplate: `size %{marker.size} (${sizemode})<extra></extra>`,
   });
 
-  useExampleFonts();
   const chart = createChart(el, {
-    data: [row('diameter', '#ef553b'), row('area', '#636efa')],
+    data: [row('diameter', '#ea2a37'), row('area', '#5e74d5')],
     layout: {
-      font: { family: 'Inter', size: 12 },
       showlegend: false,
       xaxis: { title: { text: 'marker.size' } },
       yaxis: { title: { text: 'marker.sizemode' } },
-      margin: { l: 96, r: 32, t: 24, b: 48 },
-      plot_bgcolor: '#f4f6fa',
     },
   });
 

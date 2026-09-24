@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -30,16 +29,12 @@ export function run(el: HTMLElement): ExampleHandle {
     y.push(Math.round(level * (weekend ? 0.82 : 1)));
   }
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [{ type: 'scatter', mode: 'lines', name: 'Active users', x, y }],
     layout: {
-      font: { family: 'Inter', size: 12 },
       title: { text: 'Daily active users, 2025' },
       xaxis: { title: { text: 'Date' } },
       yaxis: { title: { text: 'Users' } },
-      margin: { l: 64, r: 24, t: 48, b: 56 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 

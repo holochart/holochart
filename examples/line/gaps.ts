@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -24,7 +23,6 @@ export function run(el: HTMLElement): ExampleHandle {
   const missing = (i: number): boolean => (i >= 10 && i <= 14) || (i >= 30 && i <= 32) || i === 40;
   const y = reading.map((v, i) => (missing(i) ? (i === 40 ? NaN : null) : v));
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -46,12 +44,8 @@ export function run(el: HTMLElement): ExampleHandle {
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 12 },
       xaxis: { title: { text: 'Hour' } },
       yaxis: { title: { text: 'Temperature (°C)' } },
-      legend: { orientation: 'h', y: 1.12 },
-      margin: { l: 56, r: 24, t: 40, b: 48 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 

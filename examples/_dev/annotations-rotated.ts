@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -17,8 +16,7 @@ export const meta: ExampleMeta = {
 };
 
 export function run(el: HTMLElement): ExampleHandle {
-  useExampleFonts();
-  const box = { bgcolor: '#ffffff', bordercolor: '#444', borderwidth: 1, borderpad: 4 };
+  const box = { bgcolor: '#15151d', bordercolor: '#3e3e4c', borderwidth: 1, borderpad: 4 };
   const chart = createChart(el, {
     data: [
       {
@@ -26,14 +24,10 @@ export function run(el: HTMLElement): ExampleHandle {
         mode: 'lines',
         x: [0, 1, 2, 3, 4, 5, 6],
         y: [1, 3, 2, 5, 4, 6, 5],
-        line: { color: '#1f77b4', width: 2 },
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 12 },
       showlegend: false,
-      margin: { l: 40, r: 24, t: 24, b: 30 },
-      plot_bgcolor: '#f4f6fa',
       yaxis: { range: [0, 7.5] },
       annotations: [
         { x: 1, y: 3, text: 'rotated −30°', textangle: -30, ax: -40, ay: -50, ...box },
@@ -47,7 +41,7 @@ export function run(el: HTMLElement): ExampleHandle {
           ax: 40,
           ay: 60,
           ...box,
-          bgcolor: '#eaf2fb',
+          bgcolor: 'rgba(94, 116, 213, 0.18)',
         },
         {
           x: 2,
@@ -56,7 +50,7 @@ export function run(el: HTMLElement): ExampleHandle {
           showarrow: false,
           textangle: 20,
           yshift: -24,
-          font: { size: 16, color: '#2ca02c' },
+          font: { size: 13, color: '#118e36' },
         },
         {
           x: 4,
@@ -76,7 +70,7 @@ export function run(el: HTMLElement): ExampleHandle {
           text: 'paper note, 45°',
           textangle: 45,
           showarrow: false,
-          font: { color: '#888' },
+          font: { color: '#80838f' },
         },
       ],
     },

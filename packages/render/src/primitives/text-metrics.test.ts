@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   DEFAULT_FONT_CSS_FAMILY,
-  TROIKA_FALLBACK_CSS_FAMILY,
+  BUILTIN_FONT_CSS_FAMILY,
   clearFontRegistry,
   fonts,
   measurementFace,
@@ -257,14 +257,18 @@ describe('measuring with the rendered font (E2.18)', () => {
     expect(faces.every((f) => f.weight === 400 && f.style === 'normal')).toBe(true);
   });
 
-  it("measures with troika's fallback font when no default font is configured", () => {
+  it("measures with the built-in default font's face when no default font URL is set", () => {
     const { m, faces } = recordingMeasurer();
-    createFontMetricsOracle({ measurer: m }).measureWidth('x', { family: 'Open Sans', size: 10 });
-    expect(faces[0]).toEqual({
-      family: `${TROIKA_FALLBACK_CSS_FAMILY}, "Open Sans"`,
-      weight: 400,
-      style: 'normal',
-    });
+    const o = createFontMetricsOracle({ measurer: m });
+    const family = "'Helvetica Neue', Helvetica, Arial, sans-serif";
+    o.measureWidth('x', { family, size: 10 });
+    o.measureWidth('x', { family, size: 10, weight: 600, style: 'italic' });
+    const list = `${BUILTIN_FONT_CSS_FAMILY}, "Helvetica Neue", "Helvetica", "Arial", sans-serif`;
+    // The shipped faces: regular, and bold italic for a semibold italic request.
+    expect(faces).toEqual([
+      { family: list, weight: 400, style: 'normal' },
+      { family: list, weight: 700, style: 'italic' },
+    ]);
   });
 
   it('keeps registered families (with the registered face)', () => {

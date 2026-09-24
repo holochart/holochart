@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -21,7 +20,6 @@ export function run(el: HTMLElement): ExampleHandle {
   const x = Array.from({ length: 13 }, (_, i) => i);
   const y = [3, 4, 3.5, 5, 7.5, 7, 6, 8.5, 9, 7, 5.5, 6.5, 8];
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       { type: 'scatter', mode: 'lines+markers', x, y, name: 'sales' },
@@ -31,14 +29,10 @@ export function run(el: HTMLElement): ExampleHandle {
         y: [4, 7, 5],
         xaxis: 'x2',
         yaxis: 'y2',
-        marker: { color: '#9aa7b8' },
       },
     ],
     layout: {
-      font: { family: 'Inter' },
       showlegend: false,
-      margin: { l: 48, r: 24, t: 24, b: 40 },
-      plot_bgcolor: '#f4f6fa',
       xaxis: { domain: [0, 0.64] },
       xaxis2: { domain: [0.72, 1], anchor: 'y2' },
       yaxis2: { anchor: 'x2' },
@@ -50,8 +44,8 @@ export function run(el: HTMLElement): ExampleHandle {
           text: 'Dip',
           ax: 20,
           ay: 40,
-          arrowcolor: '#d62728',
-          font: { color: '#d62728' },
+          arrowcolor: '#ff9e00',
+          font: { color: '#ff9e00' },
         },
         {
           x: 10,
@@ -61,8 +55,8 @@ export function run(el: HTMLElement): ExampleHandle {
           ax: 11.5,
           ay: 3.2,
           text: 'tail in data units',
-          bgcolor: '#ffffff',
-          bordercolor: '#1f77b4',
+          bgcolor: '#15151d',
+          bordercolor: '#5e74d5',
           borderwidth: 1,
           borderpad: 4,
         },
@@ -73,7 +67,6 @@ export function run(el: HTMLElement): ExampleHandle {
           showarrow: false,
           yshift: 14,
           xshift: -8,
-          font: { size: 11, color: '#555' },
         },
         { xref: 'paper', yref: 'paper', x: 0, y: 1, text: 'top-left (paper)', showarrow: false },
         {
@@ -83,8 +76,8 @@ export function run(el: HTMLElement): ExampleHandle {
           y: 0,
           text: 'bottom-right (paper)',
           showarrow: false,
-          bgcolor: '#fff3cd',
-          bordercolor: '#e0b000',
+          bgcolor: 'rgba(153, 118, 0, 0.2)',
+          bordercolor: '#997600',
         },
         {
           xref: 'x2 domain',

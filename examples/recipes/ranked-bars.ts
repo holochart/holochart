@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -30,7 +29,6 @@ const SHARE: [string, number][] = [
 export function run(el: HTMLElement): ExampleHandle {
   const sorted = [...SHARE].sort((a, b) => a[1] - b[1]);
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -41,18 +39,15 @@ export function run(el: HTMLElement): ExampleHandle {
         texttemplate: '%{x:.1f}%',
         textposition: 'outside',
         marker: {
-          color: sorted.map(([name]) => (name === 'Social networks' ? '#ef553b' : '#636efa')),
+          color: sorted.map(([name]) => (name === 'Social networks' ? '#ea2a37' : '#3e4258')),
         },
         hovertemplate: '%{y}: %{x:.1f}%<extra></extra>',
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 12 },
       title: { text: 'Where visitors come from' },
       xaxis: { ticksuffix: '%', range: [0, 44] },
       bargap: 0.25,
-      margin: { l: 136, r: 24, t: 48, b: 40 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 

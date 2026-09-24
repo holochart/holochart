@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -15,7 +14,6 @@ export const meta: ExampleMeta = {
 };
 
 export function run(el: HTMLElement): ExampleHandle {
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -28,7 +26,6 @@ export function run(el: HTMLElement): ExampleHandle {
       { type: 'bar', x: [1, 2, 3, 4, 5], y: [2, 2, 3, 1, 4], name: 'Signups' },
     ],
     layout: {
-      font: { family: 'Inter' },
       title: { text: 'Weekly traffic' },
       xaxis: { title: { text: 'Week' } },
       yaxis: { title: { text: 'Count' } },

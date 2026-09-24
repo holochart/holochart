@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -28,7 +27,6 @@ export function run(el: HTMLElement): ExampleHandle {
   const mean = fx.map((v, i) => last + i * 0.35 + 4 * (Math.sin(v / 4) - Math.sin(59 / 4)));
   const spread = fx.map((_, i) => 1.28 * 1.4 * Math.sqrt(i));
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -49,7 +47,7 @@ export function run(el: HTMLElement): ExampleHandle {
         x: fx,
         y: mean.map((m, i) => m + spread[i]!),
         fill: 'tonexty',
-        fillcolor: 'rgba(239, 85, 59, 0.2)',
+        fillcolor: 'rgba(234, 42, 55, 0.2)',
         line: { width: 0 },
         legendgroup: 'interval',
         hoverinfo: 'skip',
@@ -60,7 +58,7 @@ export function run(el: HTMLElement): ExampleHandle {
         name: 'history',
         x: hx,
         y: hy,
-        line: { color: '#2a3f5f', width: 2 },
+        line: { color: '#a4a7b5', width: 1.5 },
       },
       {
         type: 'scatter',
@@ -68,15 +66,12 @@ export function run(el: HTMLElement): ExampleHandle {
         name: 'forecast',
         x: fx,
         y: mean,
-        line: { color: '#ef553b', width: 2, dash: 'dash' },
+        line: { color: '#ea2a37', width: 1.5, dash: 'dash' },
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 12 },
       xaxis: { title: { text: 'Week' } },
       yaxis: { title: { text: 'Orders (thousands)' } },
-      margin: { l: 56, r: 24, t: 24, b: 48 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 

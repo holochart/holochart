@@ -1,5 +1,4 @@
 import { createChart, type Chart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -36,8 +35,6 @@ function settled(chart: Chart): Promise<void> {
 }
 
 export function run(el: HTMLElement): ExampleHandle {
-  // Vendored Inter for axis labels: offline and deterministic (troika's default is a CDN font).
-  useExampleFonts();
   const x = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
   const chart = createChart(el, {
     data: [
@@ -47,10 +44,6 @@ export function run(el: HTMLElement): ExampleHandle {
       { type: 'bar', name: 'Grants', x, y: [4, 0, 5, 2, 0, 6, 3, 5] },
     ],
     layout: {
-      font: { family: 'Inter' },
-      margin: { l: 48, r: 24, t: 24, b: 40 },
-      paper_bgcolor: '#ffffff',
-      plot_bgcolor: '#e5ecf6',
       barmode: 'relative',
       bargap: 0.3,
     },

@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -19,7 +18,6 @@ export const meta: ExampleMeta = {
 const LOGO = new URL('../_lib/assets/logo.png', import.meta.url).href;
 
 export function run(el: HTMLElement): ExampleHandle {
-  useExampleFonts();
   const boxes = [
     { x: 0.05, sizing: 'contain', xanchor: 'left', yanchor: 'top' },
     { x: 0.38, sizing: 'fill', xanchor: 'left', yanchor: 'top' },
@@ -33,13 +31,12 @@ export function run(el: HTMLElement): ExampleHandle {
         mode: 'lines',
         x: [0, 1, 2, 3, 4, 5],
         y: [1, 3, 2, 4, 3, 5],
-        line: { color: '#cccccc', width: 2 },
+        line: { color: '#3e3e4c', width: 2 },
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 11 },
       showlegend: false,
-      margin: { l: 40, r: 110, t: 30, b: 30 },
+      margin: { r: 110 }, // room for the translucent logo in the top-right margin
       images: [
         ...boxes.map((b) => ({
           source: LOGO,
@@ -70,7 +67,7 @@ export function run(el: HTMLElement): ExampleHandle {
         x1: b.x + size.sizex,
         y0: 0.8 - size.sizey,
         y1: 0.8,
-        line: { color: '#888', width: 1, dash: 'dot' },
+        line: { color: '#80838f', width: 1, dash: 'dot' },
         label: { text: b.sizing, textposition: 'bottom center', yanchor: 'top', padding: 6 },
       })),
     },

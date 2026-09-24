@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -11,7 +10,7 @@ import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 export const meta: ExampleMeta = {
   title: 'Colorbar: coloraxis shared by two traces',
   description:
-    'Two subplots colored through one RdBu coloraxis centered on 0; one top-aligned colorbar for both.',
+    'Two subplots colored through one diverging coloraxis centered on 0; one top-aligned colorbar for both.',
   tags: ['dev', 'chart', 'colorbar', 'coloraxis', 'subplots'],
   size: { width: 760, height: 420 },
   testTolerance: 0.004,
@@ -29,7 +28,6 @@ export function run(el: HTMLElement): ExampleHandle {
   const a = cloud(200, 21, -1.5);
   const b = cloud(200, 22, 2.5);
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -52,22 +50,16 @@ export function run(el: HTMLElement): ExampleHandle {
       },
     ],
     layout: {
-      font: { family: 'Inter' },
       showlegend: false,
-      margin: { l: 48, r: 24, t: 24, b: 40 },
-      plot_bgcolor: '#f4f6fa',
       xaxis: { domain: [0, 0.46] },
       xaxis2: { domain: [0.54, 1], anchor: 'y2' },
       yaxis2: { anchor: 'x2', showticklabels: false },
       coloraxis: {
-        colorscale: 'RdBu',
-        reversescale: true,
         cmid: 0,
         colorbar: {
           y: 1,
           yanchor: 'top',
           len: 0.8,
-          thickness: 18,
           dtick: 2,
           title: { text: 'Δ score' },
         },

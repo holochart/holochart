@@ -6,7 +6,7 @@ import {
   type TextLabel,
   type TextPrimitive,
 } from '@mk7s/holochart-render';
-import { useExampleFonts } from '../_lib/fonts.ts';
+import { registerInter } from '../_lib/fonts.ts';
 import { rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 import {
@@ -301,7 +301,7 @@ async function dom(page: SpikePage, width: number, height: number, reps: number)
 }
 
 async function main(page: SpikePage, disposers: (() => void)[]): Promise<void> {
-  useExampleFonts();
+  registerInter();
   await sleep(300);
   const q = new URLSearchParams(window.location.search);
   const reps = Math.max(2, Number(q.get('reps')) || 5);

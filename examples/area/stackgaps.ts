@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -37,7 +36,7 @@ export function run(el: HTMLElement): ExampleHandle {
         y: ay,
         stackgroup: side,
         stackgaps: side === 'left' ? 'infer zero' : 'interpolate',
-        line: { color: '#636efa' },
+        line: { color: '#ea2a37' },
         legendgroup: 'a',
         showlegend: side === 'left',
         ...axes,
@@ -49,7 +48,7 @@ export function run(el: HTMLElement): ExampleHandle {
         x: bx,
         y: by,
         stackgroup: side,
-        line: { color: '#ef553b' },
+        line: { color: '#5e74d5' },
         legendgroup: 'b',
         showlegend: side === 'left',
         ...axes,
@@ -57,24 +56,20 @@ export function run(el: HTMLElement): ExampleHandle {
     ];
   };
 
+  // Panel labels sit inside the top of each plot: the legend row is above the plots.
   const panel = (n: string, text: string) => ({
     xref: `${n} domain`,
     yref: `y${n.slice(1)} domain`,
     x: 0.5,
     y: 1,
-    yanchor: 'bottom',
+    yanchor: 'top',
     text,
     showarrow: false,
   });
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [...pair('left'), ...pair('right')],
     layout: {
-      font: { family: 'Inter', size: 12 },
-      legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: -0.12, yanchor: 'top' },
-      margin: { l: 40, r: 16, t: 36, b: 64 },
-      plot_bgcolor: '#e5ecf6',
       xaxis: { domain: [0, 0.47] },
       yaxis: { range: [0, 8] },
       xaxis2: { domain: [0.53, 1], anchor: 'y2' },

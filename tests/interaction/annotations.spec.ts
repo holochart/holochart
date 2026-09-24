@@ -17,14 +17,15 @@ const { PNG } = pngjs;
  *   2 'click me' text only at (1, 40), captureevents
  *   3 'onoff'    hidden, clicktoshow 'onoff' on the point (3, 30), 25 px above it, green
  *   4 'onout'    hidden, clicktoshow 'onout' on the point (6, 60), 25 px above it, purple
+ * (colors from the default colorway; the tests sample them, so they must stay flat and opaque)
  */
 const EXAMPLE = '_dev/annotations-interactive';
 
 type RGB = readonly [number, number, number];
-const RED: RGB = [0xd6, 0x27, 0x28];
-const BLUE: RGB = [0x1f, 0x77, 0xb4];
-const GREEN: RGB = [0x2c, 0xa0, 0x2c];
-const PURPLE: RGB = [0x94, 0x67, 0xbd];
+const RED: RGB = [0xea, 0x2a, 0x37];
+const BLUE: RGB = [0x5e, 0x74, 0xd5];
+const GREEN: RGB = [0x11, 0x8e, 0x36];
+const PURPLE: RGB = [0x99, 0x62, 0xc0];
 
 /** Longer than `config.doubleClickDelay` (300 ms), so two clicks never make a double-click. */
 const BETWEEN_CLICKS_MS = 450;
@@ -176,8 +177,18 @@ test('clicking a captureevents annotation emits clickannotation', async ({ page 
     text: 'click me',
     showarrow: false,
     captureevents: true,
-    bgcolor: '#ff7f0e',
-    font: { color: '#ffffff', size: 11 },
+    bgcolor: '#cc540a',
+    font: { color: '#ffffff' },
+  });
+  // The font the annotation inherits from the layout (the default template sets family and size).
+  const layoutFont = await page.evaluate(() => {
+    const hook = (
+      window as unknown as {
+        __interaction: { chart: { fullLayout: { font: { family: string; size: number } } } };
+      }
+    ).__interaction;
+    const { family, size } = hook.chart.fullLayout.font;
+    return { family, size };
   });
   expect(click.payload['fullAnnotation']).toMatchObject({
     _index: 2,
@@ -190,7 +201,7 @@ test('clicking a captureevents annotation emits clickannotation', async ({ page 
     xref: 'x',
     yref: 'y',
     // Colors come back normalized (`rgb(…)`), so only compare the rest of the font.
-    font: { size: 11, family: 'Inter' },
+    font: layoutFont,
   });
 
   await settle(page);

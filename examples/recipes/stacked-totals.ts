@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -26,7 +25,6 @@ const SERIES = [
 export function run(el: HTMLElement): ExampleHandle {
   const totals = QUARTERS.map((_, i) => SERIES.reduce((sum, s) => sum + s.y[i]!, 0));
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       ...SERIES.map((s) => ({
@@ -46,17 +44,14 @@ export function run(el: HTMLElement): ExampleHandle {
         y: totals,
         texttemplate: '%{y}',
         textposition: 'top center',
-        textfont: { size: 13, weight: 'bold' },
+        textfont: { size: 10, weight: 'bold', color: '#eceef4' },
         showlegend: false,
         hoverinfo: 'skip',
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 12 },
       barmode: 'stack',
       yaxis: { title: { text: 'Revenue ($M)' }, range: [0, Math.max(...totals) * 1.15] },
-      margin: { l: 56, r: 24, t: 24, b: 40 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 

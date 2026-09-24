@@ -636,7 +636,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 > As a developer using the default fonts, I want text measured with the font that is actually drawn, so that margins, legends, and labels are never clipped or misplaced.
 - [x] Re-run layout when web fonts finish loading, and make `chart.ready` wait for in-flight fonts — done 2026-09-23 (PR #8): legends measured with a fallback font were clipped ("2025 targe…") and baselines differed between macOS and Linux CI
 - [x] When a trace or layout font family isn't registered, troika draws with the default font (Inter in the examples) but the metrics oracle measures the CSS family (`"Open Sans", verdana, arial, sans-serif`), i.e. whatever system font matches. Make the oracle measure with the font troika will use (e.g. register the default font under an internal CSS family and fall back to it) — done: `configureText({ defaultFontURL })` also registers a `holochart-default` face; unregistered families measure with it (`_dev/text-default-font` fails at 1.8 % without the fix)
-- [x] Ship a default font with the library (or document that one must be registered) so out-of-the-box charts measure and render identically on every platform — decided: with no default font configured, troika's CDN fallback faces are registered for measuring (loaded on first use); offline/deterministic use must register a font (documented). Bundling a font remains open
+- [x] Ship a default font with the library (or document that one must be registered) so out-of-the-box charts measure and render identically on every platform — decided: with no default font configured, troika's CDN fallback faces are registered for measuring (loaded on first use); offline/deterministic use must register a font (documented). Bundling a font remains open. **Superseded (M2, default look):** TeX Gyre Heros ships with render as the default font (lazy per-face chunks for ESM, `dist/fonts/*.otf` next to the IIFE); no CDN fetch by default
 
 #### E2.16 — Shared renderer / context pooling   `P2` `M`   deps: E2.3
 > As a developer building a dashboard with 50 charts, I want charts to share a WebGL context, so that I don't hit the browser context limit.
@@ -932,6 +932,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `holochart` (default), `holochart-dark`, `plotly`, `plotly_white`, `plotly_dark`, `simple_white`, `ggplot2`, `seaborn`, `presentation` (large fonts), `xgridoff`, `ygridoff`, `gridon`, `none`, `high-contrast`, and `neon` (3D glow showcase) — plotly.py template values written from memory: verify against plotly.py before 1.0; `neon` glow approximated in 2D until E8.12
 - [x] Every theme has a visual regression snapshot on the "theme sampler" figure
 - [x] Docs page with side-by-side previews
+- [x] **Default look (M2, decided by the owner):** `holochart` is now a dark, dense look (near-black, tiny Helvetica-style text in the shipped TeX Gyre Heros, red/blue/indigo/emerald/… colorway, neon plasma sequential scale, tight margins, horizontal legend) applied by the runtime whenever `layout.template` is unset, in every bundle; Plotly's look is `plotly-classic` (identical to the previous default) and `setDefaultTemplate('plotly-classic')` switches globally; `holochart-dark` is a deprecated alias ([ADR-021](docs/adr/021-default-look.md))
 
 #### E8.2 — Color system: colorways, palettes & colorscales   `P0` `M`   deps: E2.12   · ✅ Done (M2 wave 1)
 > As a designer, I want every Plotly and d3 palette and colorscale, plus my own, so that I can encode data with the right colors.
@@ -1985,6 +1986,7 @@ parallel workstreams with separate files, shared contracts first).
 | 1 | Grid, domain placement, pie & donut (runtime domain contract, legend per label) | E4.4, E4.5, E9.11 ✅ |
 | 1 | Shapes, layout images (components, image primitive) | E5.5, E5.6 ✅ |
 | 1 | Themes, color system, fonts (themes package, core palettes, text) | E8.1, E8.2, E8.3 ✅ |
+| 1b | Default look: dark dense `holochart` template, shipped TeX Gyre Heros font, examples and docs restyled (owner decision) | E8.1, E2.18, ADR-021 |
 | 2 | Rich text, uniform text; table, Gantt; accessibility, raster export; gallery, docs gates, new chart pages | E2.10, E4.6, E9.13, E9.14, E17.1, E18.1, E19.5, E19.10 |
 
 Open after wave 0: one full-suite run failed `schema-properties` › "produces full output that is

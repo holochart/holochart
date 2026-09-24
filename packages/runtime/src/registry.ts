@@ -5,7 +5,14 @@
  * render-side view of the same modules. Built-ins register through exactly this API, the same one
  * third-party plugins use (E22.1).
  */
-import { createRegistry, type Registry } from '@mk7s/holochart-core';
+import {
+  createRegistry,
+  DEFAULT_TEMPLATE_NAME,
+  holochartTemplate,
+  noneTemplate,
+  plotlyClassicTemplate,
+  type Registry,
+} from '@mk7s/holochart-core';
 import type { ComponentModule, Registrable, TemplateModule, TraceModule } from './contracts.ts';
 
 /** Summary of what is registered (`registry.list()`). */
@@ -34,6 +41,17 @@ export interface ChartRegistry {
   getComponent(name: string): ComponentModule | undefined;
   /** Components in draw order (`order`, then registration order). */
   components(): readonly ComponentModule[];
+  /**
+   * Set the template applied when `layout.template` is unset, by registered name, or `undefined`
+   * for none (Plotly's schema defaults). Applies from the next render of each chart (any update,
+   * `react` or new chart). Warns when the name is not registered.
+   *
+   * @example
+   * ```ts
+   * registry.setDefaultTemplate('plotly-classic'); // Plotly's look for figures without a template
+   * ```
+   */
+  setDefaultTemplate(name: string | undefined): ChartRegistry;
   /** Introspection: everything registered. */
   list(): RegistryListing;
 }
@@ -74,9 +92,15 @@ export function createChartRegistry(options: ChartRegistryOptions = {}): ChartRe
   const templates = new Map<string, TemplateModule>();
   let ordered: ComponentModule[] | undefined;
 
-  const replace = <T>(map: Map<string, T>, what: string, name: string, module: T): boolean => {
+  const replace = <T>(
+    map: Map<string, T>,
+    what: string,
+    name: string,
+    module: T,
+    same: (a: T, b: T) => boolean = (a, b) => a === b,
+  ): boolean => {
     const existing = map.get(name);
-    if (existing === module) return false;
+    if (existing !== undefined && same(existing, module)) return false;
     if (existing !== undefined) {
       warn(`[holochart] ${what} '${name}' is already registered; the new module replaces it.`);
     }
@@ -104,13 +128,24 @@ export function createChartRegistry(options: ChartRegistryOptions = {}): ChartRe
           }
           case 'template': {
             const t = m as TemplateModule;
-            if (replace(templates, 'template', t.name, t))
+            // Two modules wrapping the same template object are the same registration (the
+            // themes package re-exports the built-in templates this registry starts with).
+            if (replace(templates, 'template', t.name, t, (a, b) => a.template === b.template))
               core.registerTemplate(t.name, t.template);
             if (t.default === true) core.setDefaultTemplate(t.name);
             break;
           }
         }
       }
+      return chartRegistry;
+    },
+    setDefaultTemplate(name) {
+      if (name !== undefined && core.getTemplate(name) === undefined) {
+        warn(
+          `[holochart] setDefaultTemplate('${name}'): no template '${name}' is registered; figures without \`layout.template\` get Plotly's schema defaults until it is.`,
+        );
+      }
+      core.setDefaultTemplate(name);
       return chartRegistry;
     },
     getTrace: (type) => traces.get(type),
@@ -140,8 +175,25 @@ export function createChartRegistry(options: ChartRegistryOptions = {}): ChartRe
   return chartRegistry;
 }
 
-/** The shared registry used by charts that are not given one. */
-export const registry: ChartRegistry = createChartRegistry();
+/**
+ * The templates the shared {@link registry} starts with (ADR-021): `holochart`, the default look,
+ * and Plotly's look as `plotly-classic` and `none`, so every bundle, partial ones included, renders
+ * the default look and can switch back with `setDefaultTemplate('plotly-classic')`.
+ */
+const builtinTemplates: readonly TemplateModule[] = [
+  { kind: 'template', name: DEFAULT_TEMPLATE_NAME, template: holochartTemplate, default: true },
+  { kind: 'template', name: 'plotly-classic', template: plotlyClassicTemplate },
+  { kind: 'template', name: 'none', template: noneTemplate },
+];
+
+/**
+ * The shared registry used by charts that are not given one. Unlike a fresh
+ * {@link createChartRegistry}, it starts with the built-in templates and applies `holochart` to
+ * figures without `layout.template` (ADR-021).
+ */
+export const registry: ChartRegistry = /* @__PURE__ */ createChartRegistry().register(
+  ...builtinTemplates,
+);
 
 /**
  * Register modules into the shared {@link registry} (plan E21.1 partial bundles):
@@ -154,6 +206,20 @@ export const registry: ChartRegistry = createChartRegistry();
  */
 export function register(...modules: readonly Registrable[]): ChartRegistry {
   return registry.register(...modules);
+}
+
+/**
+ * Set the template the shared {@link registry} applies when `layout.template` is unset: a
+ * registered name, or `undefined` for none. Figures that set `layout.template` are unaffected.
+ * Apps migrating from Plotly call it once, before creating charts, to keep Plotly's look:
+ *
+ * ```ts
+ * import { setDefaultTemplate } from '@mk7s/holochart';
+ * setDefaultTemplate('plotly-classic');
+ * ```
+ */
+export function setDefaultTemplate(name: string | undefined): ChartRegistry {
+  return registry.setDefaultTemplate(name);
 }
 
 /** Shorthand for a {@link TemplateModule}. */

@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -32,7 +31,6 @@ export function run(el: HTMLElement): ExampleHandle {
   const xs = (n: number, start: number): Float64Array =>
     Float64Array.from({ length: n }, (_, i) => start + i);
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       { type: 'scatter', mode: 'lines', name: 'lines', x: xs(60, 0), y: walk(60, 0, a) },
@@ -55,13 +53,7 @@ export function run(el: HTMLElement): ExampleHandle {
         marker: { size: 5, symbol: 'diamond' },
       },
     ],
-    layout: {
-      font: { family: 'Inter' },
-      margin: { l: 48, r: 24, t: 24, b: 40 },
-      paper_bgcolor: '#ffffff',
-      plot_bgcolor: '#e5ecf6',
-      legend: { orientation: 'h', y: 1.08 },
-    },
+    layout: {},
   });
 
   const stream = async (): Promise<void> => {

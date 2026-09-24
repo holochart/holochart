@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import { rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -16,7 +15,8 @@ export const meta: ExampleMeta = {
   testTolerance: 0.004,
 };
 
-const CLASSES = ['#2a9d8f', '#e9c46a', '#f4a261', '#e76f51'];
+/** Brighter means riskier, reading on the dark background. */
+const CLASSES = ['#6a00f4', '#ff2bd6', '#ff9e00', '#f9f871'];
 
 function stepped(colors: readonly string[]): [number, string][] {
   return colors.flatMap((c, i): [number, string][] => [
@@ -32,7 +32,6 @@ export function run(el: HTMLElement): ExampleHandle {
   const y = Float64Array.from({ length: n }, () => random() * 10);
   const cls = Array.from(x, (v, i) => Math.min(3, Math.floor((v + (y[i] as number)) / 5)));
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -60,11 +59,6 @@ export function run(el: HTMLElement): ExampleHandle {
         },
       },
     ],
-    layout: {
-      font: { family: 'Inter' },
-      margin: { l: 48, r: 24, t: 24, b: 40 },
-      plot_bgcolor: '#f4f6fa',
-    },
   });
 
   return {

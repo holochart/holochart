@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -41,7 +40,6 @@ export function run(el: HTMLElement): ExampleHandle {
     showarrow: false,
   });
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -50,12 +48,12 @@ export function run(el: HTMLElement): ExampleHandle {
         x: px,
         y: py,
         fill: 'tozeroy',
-        line: { color: '#636efa', width: 2 },
+        line: { color: '#5e74d5', width: 1.5 },
         fillgradient: {
           type: 'vertical',
           colorscale: [
-            [0, 'rgba(99, 110, 250, 0)'],
-            [1, 'rgba(99, 110, 250, 0.7)'],
+            [0, 'rgba(94, 116, 213, 0)'],
+            [1, 'rgba(94, 116, 213, 0.7)'],
           ],
         },
       },
@@ -67,13 +65,13 @@ export function run(el: HTMLElement): ExampleHandle {
         xaxis: 'x2',
         yaxis: 'y2',
         fill: 'tozeroy',
-        line: { color: '#2a3f5f', width: 1.5 },
+        line: { color: '#a4a7b5', width: 1.25 },
         fillgradient: {
           type: 'horizontal',
           colorscale: [
-            [0, 'rgba(33, 102, 172, 0.8)'],
-            [0.5, 'rgba(244, 165, 130, 0.8)'],
-            [1, 'rgba(178, 24, 43, 0.8)'],
+            [0, 'rgba(47, 125, 225, 0.8)'],
+            [0.5, 'rgba(153, 98, 192, 0.8)'],
+            [1, 'rgba(234, 42, 55, 0.8)'],
           ],
         },
       },
@@ -85,21 +83,18 @@ export function run(el: HTMLElement): ExampleHandle {
         xaxis: 'x3',
         yaxis: 'y3',
         fill: 'toself',
-        line: { color: '#ab63fa', width: 1 },
+        line: { color: '#9962c0', width: 1 },
         fillgradient: {
           type: 'radial',
           colorscale: [
-            [0, 'rgba(255, 255, 255, 0.9)'],
-            [1, 'rgba(171, 99, 250, 0.8)'],
+            [0, 'rgba(255, 43, 214, 0.9)'],
+            [1, 'rgba(106, 0, 244, 0.2)'],
           ],
         },
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 12 },
       showlegend: false,
-      margin: { l: 40, r: 16, t: 40, b: 36 },
-      plot_bgcolor: '#f4f6fa',
       xaxis: { domain: [0, 0.3] },
       xaxis2: { domain: [0.37, 0.67], anchor: 'y2', dtick: 6 },
       yaxis2: { anchor: 'x2', ticksuffix: '°' },

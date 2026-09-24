@@ -34,9 +34,11 @@
  * ## Fonts
  *
  * Families resolve to font files through `registerFont` / `fonts.register` (text-fonts.ts).
- * Unregistered families use troika's default font: `configureText({ defaultFontURL })` or, if
- * unset, troika's CDN fallback. Visual tests need a vendored font (e.g. Inter, OFL) so rendering is
- * offline and deterministic.
+ * Unregistered families use the app's `configureText({ defaultFontURL })` if set, else the built-in
+ * default font (TeX Gyre Heros, shipped with the library): the face matching each label's weight
+ * and style is loaded the first time a label needs it, and the primitive typesets only once the
+ * faces its labels need have loaded ({@link TextPrimitive.ready} covers that too), so troika never
+ * falls back to its CDN font for a whole label.
  *
  * Plotly's paint-level font attributes (E8.3): `textcase` and `variant` change the typeset text and
  * size (text-style.ts; small caps are approximated), `shadow` becomes the outline pass unless the
@@ -70,11 +72,13 @@ import type { DataTransform, Primitive, PrimitiveContext, ViewportSize } from '.
 import { IDENTITY_TRANSFORM } from '../types.ts';
 import { computeOrigin, effectiveTransform, type Vec3 } from './common.ts';
 import {
-  resolveFontURL,
+  defaultFontFacesPending,
+  loadDefaultFontFaces,
+  resolveDrawnFontURL,
+  setDefaultFontFaces,
   setDefaultFontURL,
-  setUnicodeFontsURL,
-  normalizeFontStyle,
-  normalizeFontWeight,
+  type FontFamilyFaces,
+  type TextFontRequest,
   type TextFontStyle,
   type TextFontWeight,
 } from './text-fonts.ts';
@@ -83,7 +87,9 @@ import {
   batchedColorChannel,
   clampAlpha,
   computeLabelPlacement,
+  labelFontRequest,
   resolveTextLabel,
+  TEXT_DEFAULT_FONT,
   worldPerPixel,
   type FontURLResolver,
   type LabelPlacement,
@@ -130,7 +136,11 @@ export interface TextData {
 export interface TextPrimitiveOptions {
   /** Oracle used for ellipsis truncation. Default: the shared default oracle. */
   metrics?: FontMetricsOracle;
-  /** Family → font URL resolution. Default: the `registerFont` registry. */
+  /**
+   * Family → font URL resolution. Default: the `registerFont` registry, else the built-in default
+   * font ({@link resolveDrawnFontURL}), whose faces the primitive loads before typesetting. A custom
+   * resolver loads nothing: `undefined` means troika's default font.
+   */
   resolveFont?: FontURLResolver;
   /** Max idle troika members kept for reuse. Default 256. */
   poolSize?: number;
@@ -139,13 +149,24 @@ export interface TextPrimitiveOptions {
 /** Global text-rendering configuration (wraps troika's `configureTextBuilder`). */
 export interface TextConfig {
   /**
-   * Font file (TTF/OTF/WOFF, not WOFF2) used when a family is not registered. Unset → troika's
-   * CDN-hosted fallback, which is not suitable for offline/deterministic tests: vendor a font file
-   * (e.g. Inter, OFL-licensed) and point this at it. Also registered as a CSS font face so layout
-   * measures unregistered families with this font (see `measurementFace`).
+   * One font file (TTF/OTF/WOFF, not WOFF2) for every family that is not registered, at every
+   * weight and style (troika never synthesizes bold or italic). Unset → the built-in default font,
+   * TeX Gyre Heros, shipped with Holochart in four faces and loaded lazily. Also registered as a
+   * CSS font face so layout measures unregistered families with this font (see `measurementFace`).
    */
   defaultFontURL?: string;
-  /** Location of troika's unicode fallback-font data (default: CDN). */
+  /**
+   * Self-hosted files for the built-in default font's faces, e.g. the OTF files shipped in
+   * `@mk7s/holochart-render/fonts/` (with their license) served by the app: unregistered families
+   * then draw from these URLs instead of the bundled `data:` chunks (ESM) or the files next to the
+   * IIFE script, keeping bold and italic. Useful under a Content Security Policy without `data:`
+   * or `blob:` sources, or to serve the fonts from a CDN. Ignored while `defaultFontURL` is set.
+   */
+  defaultFontFaces?: FontFamilyFaces;
+  /**
+   * Location of troika's unicode fallback-font data (default: CDN), used only for characters the
+   * drawn font lacks (e.g. Cyrillic or CJK with the built-in default font).
+   */
   unicodeFontsURL?: string;
   /** Typeset in a web worker (default true). Disable under CSPs that forbid blob workers. */
   useWorker?: boolean;
@@ -167,13 +188,14 @@ export function configureText(config: TextConfig): void {
   configureTextEngine(out);
   // Tell the metrics oracle which files troika draws unregistered families with (E2.18).
   if (config.defaultFontURL !== undefined) setDefaultFontURL(config.defaultFontURL);
-  if (config.unicodeFontsURL !== undefined) setUnicodeFontsURL(config.unicodeFontsURL);
+  if (config.defaultFontFaces !== undefined) setDefaultFontFaces(config.defaultFontFaces);
 }
 
 /**
  * Load a font and pre-generate glyph SDFs (e.g. digits for tick labels) so the first frame with
- * text does not stall. Resolves the family through the font registry. Loads the text engine first
- * if needed.
+ * text does not stall. Resolves the family through the font registry, else the default font (no
+ * family: the default font's face for the weight and style). Loads the text engine and the
+ * default font face first if needed.
  */
 export function preloadTextFont(options: {
   family?: string;
@@ -181,18 +203,17 @@ export function preloadTextFont(options: {
   style?: TextFontStyle;
   characters?: string | string[];
 }): Promise<void> {
-  const font =
-    options.family !== undefined
-      ? (resolveFontURL(
-          options.family,
-          normalizeFontWeight(options.weight),
-          normalizeFontStyle(options.style),
-        ) ?? null)
-      : null;
+  const request: TextFontRequest = {
+    family: options.family ?? TEXT_DEFAULT_FONT.family,
+    weight: options.weight,
+    style: options.style,
+  };
   const characters = options.characters ?? ' ';
-  return loadTextEngine().then(
-    (engine) =>
+  const faces = loadDefaultFontFaces([request]) ?? Promise.resolve();
+  return Promise.all([loadTextEngine(), faces]).then(
+    ([engine]) =>
       new Promise((resolve) => {
+        const font = resolveDrawnFontURL(request.family, request.weight, request.style) ?? null;
         engine.preloadFont({ font, characters }, () => resolve());
       }),
   );
@@ -220,7 +241,8 @@ const IDENTITY_QUAT = new Quaternion();
  *
  * `ready` resolves once every typesetting triggered so far has finished (a fresh promise after each
  * update that re-typesets), including loading the text engine when the first labels arrive before
- * it has loaded; visual tests and `chart.ready` await it before capturing.
+ * it has loaded, and the default font faces the labels need; visual tests and `chart.ready` await
+ * it before capturing.
  */
 export class TextPrimitive implements Primitive<TextData> {
   /**
@@ -243,6 +265,8 @@ export class TextPrimitive implements Primitive<TextData> {
   private readonly baseMaterial: MeshBasicMaterial;
   private readonly metrics: FontMetricsOracle;
   private readonly resolveFont: FontURLResolver;
+  /** The default resolver is in use: load the default font faces labels need before typesetting. */
+  private readonly usesDefaultFont: boolean;
   private readonly poolSize: number;
 
   private data: TextData = { labels: [], style: {}, mode: 'fixed', sizing: 'screen' };
@@ -269,7 +293,8 @@ export class TextPrimitive implements Primitive<TextData> {
   constructor(context: PrimitiveContext, options: TextPrimitiveOptions = {}) {
     this.context = context;
     this.metrics = options.metrics ?? getDefaultFontMetricsOracle();
-    this.resolveFont = options.resolveFont ?? resolveFontURL;
+    this.resolveFont = options.resolveFont ?? resolveDrawnFontURL;
+    this.usesDefaultFont = options.resolveFont === undefined;
     this.poolSize = Math.max(0, options.poolSize ?? DEFAULT_POOL_SIZE);
 
     // Straight-alpha blending, no depth writes (anti-aliased glyph edges must not punch holes),
@@ -296,7 +321,8 @@ export class TextPrimitive implements Primitive<TextData> {
 
   /**
    * Resolves when all typesetting requested so far has completed and been packed, including
-   * loading the text engine first if labels arrived before it had loaded.
+   * loading the text engine first if labels arrived before it had loaded, and the default font
+   * faces the labels are drawn with.
    */
   get ready(): Promise<void> {
     return this.pending;
@@ -333,8 +359,15 @@ export class TextPrimitive implements Primitive<TextData> {
 
     let needsSync = false;
     if (patch.labels !== undefined || patch.style !== undefined) {
-      needsSync = this.syncLabels(batch, next);
-      this.updatePositions();
+      const fonts = this.missingFonts(next, true);
+      if (fonts) {
+        // A label needs a default font face that is still loading: keep drawing the previous
+        // labels, and typeset the current ones once it has arrived.
+        this.track(fonts.then(() => this.syncWhenFontsReady(batch)));
+      } else {
+        needsSync = this.syncLabels(batch, next);
+        this.updatePositions();
+      }
     }
     if (next.mode !== prev.mode || next.sizing !== prev.sizing) this.placementDirty = true;
     // Per-frame modes may place labels anywhere; bounds-based culling would lag a frame behind.
@@ -396,6 +429,8 @@ export class TextPrimitive implements Primitive<TextData> {
       return;
     }
     this.attaching = true;
+    // Fetch the default font faces the labels need in parallel with the engine (install() waits).
+    void this.missingFonts(this.data, true);
     const installed = loadTextEngine().then(
       (engine) => {
         this.attaching = false;
@@ -408,12 +443,52 @@ export class TextPrimitive implements Primitive<TextData> {
         reportEngineError(error);
       },
     );
-    this.pending = Promise.all([this.pending, installed]).then(() => undefined);
+    this.track(installed);
+  }
+
+  /** Make {@link ready} wait for `work` too. */
+  private track(work: Promise<unknown>): void {
+    this.pending = Promise.all([this.pending, work]).then(() => undefined);
   }
 
   /**
-   * Create the batch and apply the current data to it: the queued labels are typeset now. Returns
-   * the typesetting promise (resolved when there is nothing to typeset).
+   * The default font faces the labels are drawn with that have not loaded yet: a promise for their
+   * load (started here), or `null` when every label can be typeset now. Only labels with text
+   * count, so an empty label never loads a face. `retryFailed` retries faces that failed before
+   * (a new update); follow-up checks don't, so a failing face can't loop.
+   */
+  private missingFonts(data: TextData, retryFailed: boolean): Promise<void> | null {
+    if (!this.usesDefaultFont || !defaultFontFacesPending(retryFailed)) return null;
+    const requests = new Map<string, TextFontRequest>();
+    for (const label of data.labels) {
+      if (label.text == null || label.text === '') continue;
+      const r = labelFontRequest(label, data.style);
+      requests.set(`${r.style}|${r.weight}|${r.family}`, r);
+    }
+    return requests.size > 0 ? loadDefaultFontFaces(requests.values(), { retryFailed }) : null;
+  }
+
+  /**
+   * Typeset the current labels once the default font faces they need have loaded (again if more
+   * are needed by then). Returns when the typesetting has finished.
+   */
+  private syncWhenFontsReady(batch: BatchedText): Promise<void> {
+    if (this.disposed || this.batch !== batch) return Promise.resolve();
+    const fonts = this.missingFonts(this.data, false);
+    if (fonts) return fonts.then(() => this.syncWhenFontsReady(batch));
+    const needsSync = this.syncLabels(batch, this.data);
+    this.updatePositions();
+    batch.frustumCulled = !this.perFrame();
+    this.applyStaticPlacement();
+    this.updateDecorations(batch);
+    this.context.invalidate();
+    return needsSync ? this.startSync(batch) : Promise.resolve();
+  }
+
+  /**
+   * Create the batch and apply the current data to it: the queued labels are typeset now, or once
+   * the default font faces they need have loaded. Returns the typesetting promise (resolved when
+   * there is nothing to typeset).
    */
   private install(engine: TextEngine): Promise<void> {
     this.engine = engine;
@@ -429,15 +504,7 @@ export class TextPrimitive implements Primitive<TextData> {
     };
     this.batch = batch;
     this.object.add(batch);
-
-    const needsSync = this.syncLabels(batch, this.data);
-    this.updatePositions();
-    batch.frustumCulled = !this.perFrame();
-    this.applyStaticPlacement();
-    this.updateDecorations(batch);
-    const done = needsSync ? this.startSync(batch) : Promise.resolve();
-    this.context.invalidate();
-    return done;
+    return this.syncWhenFontsReady(batch);
   }
 
   /** Resolve labels, reuse/pool members, and apply layout + paint. Returns true if a sync is due. */

@@ -12,7 +12,9 @@ import path from 'node:path';
  *
  * An ESM entry's size is its **initial** chunk (what loads before the page runs); code behind a
  * dynamic `import()` (the SDF text engine, E21.5) is measured separately as that entry's lazy
- * chunks (see bundle.ts), reported per entry and gated by a `lazyOf` row.
+ * chunks (see bundle.ts), reported per entry and gated by a `lazyOf` row. The built-in default
+ * font's faces (E2.18) are lazy chunks too, but each is measured on its own ({@link LAZY_PARTS}):
+ * a page loads one face at a time, and only the faces its text uses.
  */
 
 export const ROOT = path.resolve(import.meta.dirname, '../../..');
@@ -45,6 +47,23 @@ export interface SizeEntry {
   file?: string;
   /** Measure the lazy (dynamically imported) chunks of the entry with this id, instead. */
   lazyOf?: string;
+  /** With `lazyOf`: measure this part of the lazy chunks ({@link LAZY_PARTS}) instead. */
+  lazyPart?: string;
+}
+
+/**
+ * Lazy chunks measured separately from the rest of an entry's lazy code: the built-in default
+ * font's faces (TeX Gyre Heros as `data:` URL modules, one chunk each). `lazyPart` of a chunk
+ * whose modules are one font face, else `undefined`.
+ */
+export const LAZY_PARTS = ['font-regular', 'font-bold', 'font-italic', 'font-bolditalic'] as const;
+
+const FONT_MODULE = /[\\/]texgyreheros-(regular|bold|italic|bolditalic)(?:-[\w-]+)?\.(?:js|ts)$/;
+
+/** The {@link LAZY_PARTS} entry a module belongs to, if any. */
+export function lazyPartOf(moduleId: string): string | undefined {
+  const face = FONT_MODULE.exec(moduleId)?.[1];
+  return face ? `font-${face}` : undefined;
 }
 
 /** One entry per published package: the cost of `import … from '<package>'`. */
@@ -88,6 +107,7 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     limit: '49 kB',
     lazyOf: 'partial-core-scatter',
   },
+  ...fontRows(),
   {
     // The future `holochart-basic` CDN variant: runtime, components, and the basic traces.
     id: 'partial-basic',
@@ -119,14 +139,39 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
   },
 ];
 
-/** Lazy chunks of an entry, concatenated (written by bundle.ts only when there are any). */
-export function lazyFile(id: string): string {
-  return path.join(OUT_DIR, `${id}.lazy.js`);
+/**
+ * Plan E2.18: the built-in default font (TeX Gyre Heros), one lazy chunk per face, loaded the first
+ * time text needs that face (a chart with plain text loads only the regular face; charts without
+ * text load none). The same chunks for every entry that has text. Each face is a base64 `data:`
+ * URL of a ~135 kB OTF file: about 85 kB min+gz. Measured 2026-09-23; budget = measured + ~10%.
+ */
+function fontRows(): SizeEntry[] {
+  const faces = [
+    ['regular', 'regular', '95 kB'],
+    ['bold', 'bold', '95 kB'],
+    ['italic', 'italic', '98 kB'],
+    ['bolditalic', 'bold italic', '95 kB'],
+  ] as const;
+  return faces.map(([face, label, limit]) => ({
+    id: `font-${face}-lazy`,
+    name: `default font, ${label} face (lazy chunk of core + scatter)`,
+    limit,
+    lazyOf: 'partial-core-scatter',
+    lazyPart: `font-${face}`,
+  }));
+}
+
+/**
+ * Lazy chunks of an entry, concatenated (written by bundle.ts only when there are any): the rest
+ * of its lazy code, or one of its {@link LAZY_PARTS}.
+ */
+export function lazyFile(id: string, part?: string): string {
+  return path.join(OUT_DIR, part ? `${id}.lazy.${part}.js` : `${id}.lazy.js`);
 }
 
 /** Path of the file size-limit measures for an entry, relative to the repo root. */
 export function measuredFile(entry: SizeEntry): string {
-  if (entry.lazyOf) return path.relative(ROOT, lazyFile(entry.lazyOf));
+  if (entry.lazyOf) return path.relative(ROOT, lazyFile(entry.lazyOf, entry.lazyPart));
   return entry.file ?? path.relative(ROOT, path.join(OUT_DIR, `${entry.id}.js`));
 }
 
@@ -139,4 +184,6 @@ export interface ManifestEntry {
   note?: string;
   /** Set when the entry has lazy chunks (in `lazyFile(id)`): how many, and which packages. */
   lazy?: { chunks: number; packages: string[] };
+  /** Lazy chunks measured on their own (in `lazyFile(id, part)`): chunk count per part. */
+  lazyParts?: Record<string, number>;
 }

@@ -1,5 +1,4 @@
 import { createChart, render, type Chart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -45,14 +44,11 @@ function textReady(chart: Chart, quietMs = 300, maxMs = 15_000): Promise<void> {
 const CHARACTERS = '0123456789.% ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
 export function run(el: HTMLElement): ExampleHandle {
-  useExampleFonts();
   let chart: Chart | undefined;
   let disposed = false;
-  // Outside-label placement depends on text metrics: measure with the vendored font.
-  const ready = Promise.all([
-    document.fonts.load('12px Inter').catch(() => undefined),
-    render.preloadTextFont({ family: 'Inter', characters: CHARACTERS }),
-  ]).then(async () => {
+  // Outside-label placement depends on text metrics: measure with the shipped default font
+  // (loaded before the chart is created, so the first layout already uses it).
+  const ready = render.preloadTextFont({ characters: CHARACTERS }).then(async () => {
     if (disposed) return;
     chart = createChart(el, {
       data: [
@@ -67,16 +63,13 @@ export function run(el: HTMLElement): ExampleHandle {
           direction: 'clockwise',
           textposition: 'outside',
           textinfo: 'label+percent',
-          marker: { line: { color: '#ffffff', width: 1 } },
         },
       ],
       layout: {
-        font: { family: 'Inter' },
         title: { text: 'Support tickets by topic' },
         showlegend: false,
         // Outside labels need room around the pie.
-        margin: { l: 100, r: 100, t: 72, b: 40 },
-        paper_bgcolor: '#ffffff',
+        margin: { l: 90, r: 90 },
       },
       config: { responsive: true },
     });

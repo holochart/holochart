@@ -12,6 +12,10 @@ import type { TextLabel } from './text-layout.ts';
  *
  * Positive outcomes of the dynamic import are awaited with `vi.waitFor` rather than a fixed number
  * of ticks, which a loaded machine can outlast.
+ *
+ * The built-in default font's faces (plan E2.18) are mocked the same way: each face's loader
+ * records its file (`fontLoads`), waits for `fontGate`, and resolves to `/fonts/<file>` (or fails
+ * with `fontFail`), so the tests see which faces load, when, and what troika is told to draw with.
  */
 function freshState() {
   return {
@@ -27,6 +31,12 @@ function freshState() {
     syncs: [] as (() => void)[],
     /** `configureTextBuilder` calls and `Text` constructions, in order. */
     log: [] as string[],
+    /** Default font faces whose load started, by file name. */
+    fontLoads: [] as string[],
+    /** While set, default font face loads wait for it. */
+    fontGate: null as Promise<void> | null,
+    /** Make default font face loads fail. */
+    fontFail: false,
   };
 }
 type MockState = ReturnType<typeof freshState>;
@@ -36,6 +46,30 @@ let troika: MockState = freshState();
 function mockEngine(): void {
   const state = troika;
   vi.doMock('troika-three-text', () => mockTroika(state));
+}
+
+/** Register the default font faces mock (400/700 × upright/italic) for the current test's state. */
+function mockDefaultFont(): void {
+  const state = troika;
+  const face = (file: string, weight: number, style: 'normal' | 'italic') => ({
+    file,
+    weight,
+    style,
+    load: async (): Promise<string> => {
+      state.fontLoads.push(file);
+      if (state.fontGate) await state.fontGate;
+      if (state.fontFail) throw new Error('font chunk failed');
+      return `/fonts/${file}`;
+    },
+  });
+  vi.doMock('../fonts/default-font-files.ts', () => ({
+    DEFAULT_FONT_FILES: [
+      face('regular.otf', 400, 'normal'),
+      face('bold.otf', 700, 'normal'),
+      face('italic.otf', 400, 'italic'),
+      face('bolditalic.otf', 700, 'italic'),
+    ],
+  }));
 }
 
 async function mockTroika(troika: MockState) {
@@ -50,6 +84,7 @@ async function mockTroika(troika: MockState) {
   };
   class Text extends Object3D {
     text = '';
+    font: string | null = null;
     /** The text of the last finished typesetting (`textRenderInfo.parameters.text` in troika). */
     typeset = '';
     sync(): void {
@@ -98,7 +133,7 @@ async function mockTroika(troika: MockState) {
 
 type TextModule = typeof import('./text.ts');
 interface MockBatch {
-  members: Set<{ text: string }>;
+  members: Set<{ text: string; font: string | null }>;
   renderOrder: number;
 }
 
@@ -156,6 +191,7 @@ beforeEach(async () => {
   troika = freshState();
   troika.gate = new Promise<void>((resolve) => (open = resolve));
   mockEngine();
+  mockDefaultFont();
   mod = await import('./text.ts');
 });
 
@@ -175,6 +211,7 @@ describe('TextPrimitive: lazy text engine (E21.5)', () => {
     await text.ready;
     await flush();
     expect(troika.loads).toBe(0);
+    expect(troika.fontLoads).toEqual([]);
     expect(text.object.children).toHaveLength(0);
     text.dispose();
     expect(troika.loads).toBe(0);
@@ -281,8 +318,178 @@ describe('TextPrimitive: lazy text engine (E21.5)', () => {
     open();
     await mod.preloadTextEngine();
     expect(troika.loads).toBe(1);
+    expect(troika.fontLoads).toEqual([]);
     await expect(mod.preloadTextFont({ characters: '0123456789' })).resolves.toBeUndefined();
     expect(troika.loads).toBe(1);
+    // Without a family: the default font's face for the weight and style.
+    expect(troika.fontLoads).toEqual(['regular.otf']);
+    await mod.preloadTextFont({ weight: 'bold', characters: 'A' });
+    expect(troika.fontLoads).toEqual(['regular.otf', 'bold.otf']);
+  });
+});
+
+describe('TextPrimitive: built-in default font (E2.18)', () => {
+  const fontsOf = (primitive: { object: { children: unknown[] } }) =>
+    [...(batchOf(primitive)?.members ?? [])].map((m) => [m.text, m.font]);
+
+  /** Release the gated font loads. */
+  let openFonts: () => void = () => {};
+  const gateFonts = (): void => {
+    troika.fontGate = new Promise<void>((resolve) => (openFonts = resolve));
+  };
+  afterEach(() => openFonts());
+
+  it('loads only the regular face for plain labels, and draws unregistered families with it', async () => {
+    open();
+    const text = mod.createTextPrimitive(context(), {
+      labels: [
+        { text: 'a', x: 0, y: 0 },
+        {
+          text: 'b',
+          x: 1,
+          y: 0,
+          font: { family: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
+        },
+        // Empty labels draw nothing and need no face.
+        { text: '', x: 2, y: 0, font: { weight: 'bold' } },
+      ],
+    });
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(1));
+    finishSyncs();
+    await text.ready;
+    expect(troika.fontLoads).toEqual(['regular.otf']);
+    expect(fontsOf(text)).toEqual([
+      ['a', '/fonts/regular.otf'],
+      ['b', '/fonts/regular.otf'],
+      ['', '/fonts/regular.otf'],
+    ]);
+  });
+
+  it('loads bold and italic faces only when used, and picks them by weight and style', async () => {
+    open();
+    const text = mod.createTextPrimitive(context(), { labels: labels('a') });
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(1));
+    finishSyncs();
+    await text.ready;
+    text.update({
+      labels: [
+        { text: 'semibold', x: 0, y: 0, font: { weight: 600 } },
+        { text: 'medium', x: 1, y: 0, font: { weight: 500 } },
+        { text: 'bold italic', x: 2, y: 0, font: { weight: 'bold', style: 'italic' } },
+      ],
+    });
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(1));
+    finishSyncs();
+    await text.ready;
+    expect([...troika.fontLoads].sort()).toEqual(['bold.otf', 'bolditalic.otf', 'regular.otf']);
+    expect(fontsOf(text)).toEqual([
+      ['semibold', '/fonts/bold.otf'],
+      ['medium', '/fonts/regular.otf'],
+      ['bold italic', '/fonts/bolditalic.otf'],
+    ]);
+  });
+
+  it('typesets only once the faces have loaded, and `ready` includes their load', async () => {
+    gateFonts();
+    open();
+    const text = mod.createTextPrimitive(context(), { labels: labels('a') });
+    await vi.waitFor(() => expect(troika.loaded).toBe(1));
+    expect(troika.fontLoads).toEqual(['regular.otf']);
+    const ready = text.ready;
+    expect(await settled(ready)).toBe(false);
+    expect(troika.syncs).toHaveLength(0); // never typeset with troika's (CDN) default font
+    openFonts();
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(1));
+    expect(await settled(ready)).toBe(false); // still typesetting
+    finishSyncs();
+    await ready;
+    expect(fontsOf(text)).toEqual([['a', '/fonts/regular.otf']]);
+
+    // A later update needing a new face keeps the old labels until it arrives.
+    gateFonts();
+    text.update({ labels: [{ text: 'b', x: 0, y: 0, font: { style: 'italic' } }] });
+    const next = text.ready;
+    await flush();
+    expect(troika.syncs).toHaveLength(0);
+    expect(fontsOf(text)).toEqual([['a', '/fonts/regular.otf']]);
+    expect(await settled(next)).toBe(false);
+    openFonts();
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(1));
+    finishSyncs();
+    await next;
+    expect(fontsOf(text)).toEqual([['b', '/fonts/italic.otf']]);
+  });
+
+  it('shares one load per face between primitives', async () => {
+    open();
+    const a = mod.createTextPrimitive(context(), { labels: labels('a') });
+    const b = mod.createTextPrimitive(context(), { labels: labels('b') });
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(2));
+    finishSyncs();
+    await Promise.all([a.ready, b.ready]);
+    expect(troika.fontLoads).toEqual(['regular.otf']);
+  });
+
+  it("uses the app's default font URL or registered families instead", async () => {
+    const fonts = await import('./text-fonts.ts');
+    fonts.registerFont({ family: 'Brand', url: '/brand.woff' }, { cssFontFace: false });
+    open();
+    const registered = mod.createTextPrimitive(context(), {
+      labels: [{ text: 'r', x: 0, y: 0, font: { family: 'Brand, sans-serif', weight: 'bold' } }],
+    });
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(1));
+    finishSyncs();
+    await registered.ready;
+    expect(fontsOf(registered)).toEqual([['r', '/brand.woff']]);
+    expect(troika.fontLoads).toEqual([]);
+
+    mod.configureText({ defaultFontURL: '/app.woff' });
+    const text = mod.createTextPrimitive(context(), { labels: labels('a') });
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(1));
+    finishSyncs();
+    await text.ready;
+    // null: troika's configured default font, i.e. the app's.
+    expect(fontsOf(text)).toEqual([['a', null]]);
+    expect(troika.fontLoads).toEqual([]);
+  });
+
+  it('draws with self-hosted faces from configureText({ defaultFontFaces })', async () => {
+    mod.configureText({ defaultFontFaces: { regular: '/self/r.otf', bold: '/self/b.otf' } });
+    open();
+    const text = mod.createTextPrimitive(context(), {
+      labels: [
+        { text: 'a', x: 0, y: 0 },
+        { text: 'b', x: 1, y: 0, font: { weight: 'bold', style: 'italic' } },
+      ],
+    });
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(1));
+    finishSyncs();
+    await text.ready;
+    expect(troika.fontLoads).toEqual([]);
+    expect(fontsOf(text)).toEqual([
+      ['a', '/self/r.otf'],
+      ['b', '/self/b.otf'], // no italic face: the closest weight of the other style
+    ]);
+  });
+
+  it("falls back to troika's default font when a face fails, without hanging", async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    troika.fontFail = true;
+    open();
+    const text = mod.createTextPrimitive(context(), { labels: labels('a') });
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(1));
+    finishSyncs();
+    await text.ready;
+    expect(fontsOf(text)).toEqual([['a', null]]);
+    expect(error).toHaveBeenCalledTimes(1);
+    // The next update retries the face.
+    troika.fontFail = false;
+    text.update({ labels: labels('b') });
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(1));
+    finishSyncs();
+    await text.ready;
+    expect(troika.fontLoads).toEqual(['regular.otf', 'regular.otf']);
+    expect(fontsOf(text)).toEqual([['b', '/fonts/regular.otf']]);
   });
 });
 

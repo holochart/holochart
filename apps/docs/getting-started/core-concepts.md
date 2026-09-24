@@ -94,22 +94,22 @@ with `layout.template`, either by name or as an object:
 
 ```ts
 // By name
-const layout = { template: 'dark' };
+const layout = { template: 'plotly_dark' };
 
 // As an object
 const branded = {
   template: {
-    layout: { font: { family: 'Inter' } },
+    layout: { font: { size: 11 } },
     data: { scatter: [{ marker: { size: 8 } }], bar: [{ marker: { cornerradius: 4 } }] },
   },
 };
 ```
 
-Named templates can be combined, as in `'dark+presentation'`. The built-in named templates
-(`'dark'`, `'presentation'`, and others) arrive with the themes in M2; object templates work today.
-Values you set on a trace or in
-layout always win over the template. Templates are the first layer of the
-[customization cascade](/customization/).
+Without `layout.template`, charts use `holochart`, Holochart's dark default look. A template you
+set replaces it; `'plotly-classic'` gives Plotly's look. Named templates can be combined, as in
+`'plotly_white+presentation'`, and [15 are built in](/customization/themes-templates). Values you
+set on a trace or in layout always win over the template. Templates are the second layer of the
+[customization cascade](/customization/), right above the schema defaults.
 
 ## Updates and edit types
 

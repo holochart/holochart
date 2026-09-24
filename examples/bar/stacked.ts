@@ -1,11 +1,10 @@
 import { createChart, type Chart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
  * Stacked bars on a date axis (plan E9.8, E9.9): `barmode: 'stack'` stacks traces per position in
  * trace order; bar widths are in ms (80% of the month spacing). Only the outermost bar of each
- * stack gets the corner radius, and white outlines separate the segments.
+ * stack gets the corner radius, and background-colored outlines separate the segments.
  */
 export const meta: ExampleMeta = {
   title: 'Bar: stacked, date axis',
@@ -38,8 +37,6 @@ function settled(chart: Chart): Promise<void> {
 }
 
 export function run(el: HTMLElement): ExampleHandle {
-  // Vendored Inter for axis labels: offline and deterministic (troika's default is a CDN font).
-  useExampleFonts();
   const months = [
     '2024-01-01',
     '2024-02-01',
@@ -48,7 +45,7 @@ export function run(el: HTMLElement): ExampleHandle {
     '2024-05-01',
     '2024-06-01',
   ];
-  const line = { width: 1, color: '#ffffff' };
+  const line = { width: 1, color: '#0a0a0f' };
   const chart = createChart(el, {
     data: [
       { type: 'bar', name: 'Hardware', x: months, y: [14, 16, 13, 18, 21, 19], marker: { line } },
@@ -56,10 +53,8 @@ export function run(el: HTMLElement): ExampleHandle {
       { type: 'bar', name: 'Services', x: months, y: [5, 4, 7, 9, 8, 11], marker: { line } },
     ],
     layout: {
-      font: { family: 'Inter' },
-      margin: { l: 48, r: 24, t: 24, b: 40 },
-      paper_bgcolor: '#ffffff',
-      plot_bgcolor: '#e5ecf6',
+      // One tick per month, under each stack (the default tick density would tick every two weeks).
+      xaxis: { dtick: 'M1' },
       barmode: 'stack',
       barcornerradius: 6,
     },

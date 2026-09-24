@@ -1,5 +1,4 @@
-import { componentsReady, createChart, type Chart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
+import { createChart } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -21,9 +20,6 @@ const X = [0, 1, 2, 3, 4, 5, 6, 7];
 const Y = [0, 0.8, 0.3, 1.2, 0.6, 0.9, 0.1, 0.7];
 
 export function run(el: HTMLElement): ExampleHandle {
-  let chart: Chart | undefined;
-  let disposed = false;
-
   const series = [
     { name: 'linear', line: { shape: 'linear' } },
     { name: 'spline', line: { shape: 'spline' } },
@@ -60,29 +56,13 @@ export function run(el: HTMLElement): ExampleHandle {
     },
   ];
 
-  const ready = (async () => {
-    useExampleFonts();
-    await document.fonts.load('12px Inter');
-    if (disposed) return;
-    chart = createChart(el, {
-      data: [...series, ...top],
-      layout: {
-        font: { family: 'Inter', size: 11 },
-        margin: { l: 40, r: 20, t: 20, b: 30 },
-        plot_bgcolor: '#e5ecf6',
-      },
-    });
-    await componentsReady(chart);
-  })();
+  const chart = createChart(el, {
+    data: [...series, ...top],
+  });
 
   return {
-    ready,
-    get renderer() {
-      return chart?.three.renderer;
-    },
-    dispose: () => {
-      disposed = true;
-      chart?.destroy();
-    },
+    ready: chart.ready.then(() => undefined),
+    renderer: chart.three.renderer,
+    dispose: () => chart.destroy(),
   };
 }

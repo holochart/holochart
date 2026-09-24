@@ -1,5 +1,4 @@
 import { createChart, render, type Chart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -46,15 +45,11 @@ const { preloadTextFont } = render;
 const CHARACTERS = '0123456789.,+-−$%M ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
 export function run(el: HTMLElement): ExampleHandle {
-  useExampleFonts();
   let chart: Chart | undefined;
   let disposed = false;
-  // Measure labels with the vendored font, not a fallback, so fit decisions are deterministic, and
-  // generate its glyphs up front so typesetting is quick.
-  const ready = Promise.all([
-    document.fonts.load('12px Inter').catch(() => undefined),
-    preloadTextFont({ family: 'Inter', characters: CHARACTERS }),
-  ]).then(async () => {
+  // Load the shipped default font before the first layout, so labels are measured with it, not a
+  // fallback (fit decisions are deterministic), and generate its glyphs up front.
+  const ready = preloadTextFont({ characters: CHARACTERS }).then(async () => {
     if (disposed) return;
     chart = createChart(el, {
       data: [
@@ -65,7 +60,6 @@ export function run(el: HTMLElement): ExampleHandle {
           y: [42.5, 3.2, 27.8, 35.1, 1.4],
           texttemplate: '$%{value:.1f}M',
           textposition: 'auto',
-          marker: { color: '#2a3f5f' },
         },
         {
           type: 'bar',
@@ -74,7 +68,6 @@ export function run(el: HTMLElement): ExampleHandle {
           y: [12, -4, 8, 15, -2],
           texttemplate: '%{value:+d}%',
           textposition: 'outside',
-          marker: { color: '#f2c14e' },
         },
         {
           type: 'bar',
@@ -87,14 +80,11 @@ export function run(el: HTMLElement): ExampleHandle {
           insidetextanchor: 'middle',
           xaxis: 'x2',
           yaxis: 'y2',
-          marker: { color: ['#636efa', '#ef553b', '#00cc96'] },
+          // A light fill in the middle: its inside label switches to dark text.
+          marker: { color: ['#9962c0', '#f2c14e', '#128b8b'] },
         },
       ],
       layout: {
-        font: { family: 'Inter' },
-        margin: { l: 48, r: 24, t: 24, b: 40 },
-        paper_bgcolor: '#ffffff',
-        plot_bgcolor: '#e5ecf6',
         xaxis: { domain: [0, 0.62] },
         xaxis2: { domain: [0.7, 1], anchor: 'y2' },
         yaxis2: { anchor: 'x2' },

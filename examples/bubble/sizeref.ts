@@ -1,5 +1,4 @@
 import { bubbleSizeref, createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import { rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -37,7 +36,6 @@ export function run(el: HTMLElement): ExampleHandle {
     56,
   );
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: groups.map((g) => ({
       type: 'scatter',
@@ -49,11 +47,9 @@ export function run(el: HTMLElement): ExampleHandle {
       hovertemplate: 'GDP/capita %{x:$,.0f}<br>Life exp. %{y:.1f}<br>Pop. %{marker.size:,}',
     })),
     layout: {
-      font: { family: 'Inter', size: 12 },
-      xaxis: { type: 'log', title: { text: 'GDP per capita (US$)' } },
+      // Label 1, 2 and 5 of each decade: the default look's dense `nticks` would label every digit.
+      xaxis: { type: 'log', dtick: 'D2', title: { text: 'GDP per capita (US$)' } },
       yaxis: { title: { text: 'Life expectancy (years)' } },
-      margin: { l: 64, r: 24, t: 24, b: 48 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 

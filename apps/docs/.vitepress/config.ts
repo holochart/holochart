@@ -13,6 +13,7 @@ import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, type MarkdownOptions } from 'vitepress';
+import { holochartCodeTheme } from './code-theme.ts';
 import { exampleSourcesPlugin } from './plugins/example-sources.ts';
 import { buildSidebar, nav } from './sidebar.ts';
 
@@ -29,7 +30,8 @@ const sandboxUrl = process.env['HOLOCHART_SANDBOX_URL'] ?? 'http://localhost:517
 const repoUrl = 'https://github.com/holochart/holochart';
 
 const markdown: MarkdownOptions = {
-  theme: { light: 'github-light', dark: 'github-dark' },
+  // The site is always dark (`appearance: 'force-dark'`); the light theme is never shown.
+  theme: { light: 'github-light', dark: holochartCodeTheme },
 };
 
 /**
@@ -56,6 +58,9 @@ export default defineConfig({
   title: 'Holochart',
   description: 'Declarative, GPU-rendered charts built on three.js.',
   base,
+  // Dark only, like the charts (ADR-021): the default `holochart` template draws on `#0a0a0f`, and
+  // a light page around dark charts would frame every example in a bright border.
+  appearance: 'force-dark',
   cleanUrls: true,
   // Keep the page hash map out of every HTML file (hundreds of generated API pages).
   metaChunk: true,
@@ -65,7 +70,8 @@ export default defineConfig({
   rewrites: { 'reference/attributes/:page': 'reference/:page' },
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}logo.svg` }],
-    ['meta', { name: 'theme-color', content: '#6d5dfc' }],
+    ['meta', { name: 'theme-color', content: '#0a0a0f' }],
+    ['meta', { name: 'color-scheme', content: 'dark' }],
   ],
   markdown,
   themeConfig: {

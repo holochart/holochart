@@ -46,7 +46,13 @@ export type {
 } from './contracts.ts';
 
 // Registry (E22.2)
-export { createChartRegistry, defineTemplate, register, registry } from './registry.ts';
+export {
+  createChartRegistry,
+  defineTemplate,
+  register,
+  registry,
+  setDefaultTemplate,
+} from './registry.ts';
 export type { ChartRegistry, ChartRegistryOptions, RegistryListing } from './registry.ts';
 
 // Chart (E7.1, E4.1, E4.3)

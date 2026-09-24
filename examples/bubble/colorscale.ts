@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import { rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -26,7 +25,6 @@ export function run(el: HTMLElement): ExampleHandle {
   const output = depth.map((d) => Math.round((d - 600) * (0.2 + random() * 0.6)));
   const maxOutput = Math.max(...output);
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: [
       {
@@ -49,11 +47,8 @@ export function run(el: HTMLElement): ExampleHandle {
       },
     ],
     layout: {
-      font: { family: 'Inter', size: 12 },
       xaxis: { title: { text: 'East (km)' } },
       yaxis: { title: { text: 'North (km)' } },
-      margin: { l: 56, r: 24, t: 24, b: 48 },
-      plot_bgcolor: '#f4f6fa',
     },
   });
 

@@ -240,3 +240,21 @@ describe('customization cascade precedence (plan §8 layers 1–5)', () => {
     expect(fullLayout.width).toBe(700);
   });
 });
+
+describe('template validation of item defaults', () => {
+  it('checks `<itemName>defaults` against the item schema', () => {
+    const r = fixtureRegistry();
+    const names = Object.values(r.getLayoutSchema().children)
+      .filter((c) => c.kind === 'items')
+      .map((c) => (c as { itemName: string }).itemName);
+    expect(names.length).toBeGreaterThan(0);
+    const key = `${names[0]}defaults`;
+    expect(validate([], { template: { layout: { [key]: {} } } }, r)).toEqual([]);
+    expect(
+      validate([], { template: { layout: { [key]: { nope: 1 } } } }, r).map((i) => i.path),
+    ).toEqual([`layout.template.layout.${key}.nope`]);
+    expect(
+      validate([], { template: { layout: { widgetdefaults: {} } } }, r).map((i) => i.code),
+    ).toEqual(['unknown-attribute']);
+  });
+});

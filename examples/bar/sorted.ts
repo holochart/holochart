@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -18,8 +17,6 @@ export const meta: ExampleMeta = {
 };
 
 export function run(el: HTMLElement): ExampleHandle {
-  // Vendored Inter for axis labels: offline and deterministic (troika's default is a CDN font).
-  useExampleFonts();
   const fruits = ['Kiwi', 'Apple', 'Mango', 'Pear', 'Plum'];
   const regions = ['Canada', 'Brazil', 'India', 'Japan', 'Kenya', 'Spain'];
   const chart = createChart(el, {
@@ -36,16 +33,10 @@ export function run(el: HTMLElement): ExampleHandle {
         yaxis: 'y2',
         text: ['18', '42', '67', '25', '9', '33'],
         textposition: 'outside',
-        marker: { color: '#00a88f' },
         showlegend: false,
       },
     ],
     layout: {
-      font: { family: 'Inter' },
-      margin: { l: 48, r: 24, t: 24, b: 40 },
-      paper_bgcolor: '#ffffff',
-      plot_bgcolor: '#e5ecf6',
-      legend: { x: 0.54, y: 0.98, xanchor: 'right', yanchor: 'top' },
       xaxis: { domain: [0, 0.55], categoryorder: 'total descending' },
       yaxis: { domain: [0, 1] },
       xaxis2: { domain: [0.7, 1], anchor: 'y2', range: [0, 80] },

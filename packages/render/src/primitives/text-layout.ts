@@ -11,8 +11,9 @@ import type { RGBA } from '../types.ts';
 import {
   normalizeFontStyle,
   normalizeFontWeight,
-  resolveFontURL,
+  resolveDrawnFontURL,
   type TextFont,
+  type TextFontRequest,
   type TextFontStyle,
   type TextFontWeight,
 } from './text-fonts.ts';
@@ -156,7 +157,10 @@ export interface ResolvedTextLabel {
   visible: boolean;
 }
 
-/** Font resolver signature (default: the registry's {@link resolveFontURL}). */
+/**
+ * Font resolver signature (default: {@link resolveDrawnFontURL}, i.e. registered families, else
+ * the built-in default font once its face has loaded).
+ */
 export type FontURLResolver = (
   family: string,
   weight?: TextFontWeight,
@@ -193,28 +197,45 @@ export function layoutKey(p: TroikaLayoutProps): string {
   ].join('\u0001');
 }
 
+/**
+ * The family, weight and style a label is drawn with (label font over the shared style over
+ * {@link TEXT_DEFAULT_FONT}), i.e. what picks its font file. Cheap: used to find the default font
+ * faces a set of labels needs before typesetting them.
+ */
+export function labelFontRequest(
+  label: TextLabel,
+  style: TextStyle,
+): TextFontRequest & { weight: number; style: TextFontStyle } {
+  return {
+    family: label.font?.family ?? style.font?.family ?? TEXT_DEFAULT_FONT.family,
+    weight: normalizeFontWeight(label.font?.weight ?? style.font?.weight),
+    style: normalizeFontStyle(label.font?.style ?? style.font?.style),
+  };
+}
+
 /** Resolve a label against the shared style: fonts, overflow handling, anchors, paint. */
 export function resolveTextLabel(
   label: TextLabel,
   style: TextStyle,
   oracle: FontMetricsOracle,
-  resolveFont: FontURLResolver = resolveFontURL,
+  resolveFont: FontURLResolver = resolveDrawnFontURL,
 ): ResolvedTextLabel {
   const pick = <K extends keyof TextStyle>(k: K): TextStyle[K] =>
     label[k] !== undefined ? label[k] : style[k];
   const pickFont = <K extends keyof TextFont>(k: K): TextFont[K] | undefined =>
     label.font?.[k] ?? style.font?.[k];
-  const weight = normalizeFontWeight(pickFont('weight'));
+  const request = labelFontRequest(label, style);
+  const weight = request.weight;
   // textcase + variant: the drawn text and size (the metrics oracle applies the same rule).
   const transform = resolveTextTransform({
     textcase: pickFont('textcase'),
     variant: pickFont('variant'),
   });
   const font: TextFont = {
-    family: pickFont('family') ?? TEXT_DEFAULT_FONT.family,
+    family: request.family,
     size: (pickFont('size') ?? TEXT_DEFAULT_FONT.size) * transform.sizeScale,
     weight,
-    style: normalizeFontStyle(pickFont('style')),
+    style: request.style,
   };
   const anchorX = pick('anchorX') ?? 'left';
   const anchorY = pick('anchorY') ?? 'baseline';

@@ -1,5 +1,4 @@
-import { componentsReady, createChart, type Chart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
+import { createChart } from '@mk7s/holochart';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -18,8 +17,6 @@ export const meta: ExampleMeta = {
 };
 
 export function run(el: HTMLElement): ExampleHandle {
-  let chart: Chart | undefined;
-  let disposed = false;
   const random = rng(21);
   const normal = gaussian(rng(22));
 
@@ -39,43 +36,27 @@ export function run(el: HTMLElement): ExampleHandle {
   };
   const symbols = ['circle', 'square', 'diamond', 'triangle-up', 'x'];
 
-  const ready = (async () => {
-    useExampleFonts();
-    await document.fonts.load('12px Inter');
-    if (disposed) return;
-    chart = createChart(el, {
-      data: [
-        { x: wave.x, y: wave.y, name: 'lines (120 pts)' },
-        { x: steps.x, y: steps.y, name: 'lines+markers (12 pts)', zorder: 1 },
-        {
-          ...cloud,
-          mode: 'markers',
-          name: 'markers',
-          marker: {
-            size: 9,
-            symbol: Array.from({ length: cloudN }, (_, i) => symbols[i % symbols.length]!),
-            opacity: 0.75,
-            line: { width: 1, color: '#ffffff' },
-          },
+  const chart = createChart(el, {
+    data: [
+      { x: wave.x, y: wave.y, name: 'lines (120 pts)' },
+      { x: steps.x, y: steps.y, name: 'lines+markers (12 pts)', zorder: 1 },
+      {
+        ...cloud,
+        mode: 'markers',
+        name: 'markers',
+        marker: {
+          size: 9,
+          symbol: Array.from({ length: cloudN }, (_, i) => symbols[i % symbols.length]!),
+          opacity: 0.75,
+          line: { width: 1, color: '#0a0a0f' },
         },
-      ],
-      layout: {
-        font: { family: 'Inter', size: 11 },
-        margin: { l: 40, r: 20, t: 20, b: 30 },
-        plot_bgcolor: '#e5ecf6',
       },
-    });
-    await componentsReady(chart);
-  })();
+    ],
+  });
 
   return {
-    ready,
-    get renderer() {
-      return chart?.three.renderer;
-    },
-    dispose: () => {
-      disposed = true;
-      chart?.destroy();
-    },
+    ready: chart.ready.then(() => undefined),
+    renderer: chart.three.renderer,
+    dispose: () => chart.destroy(),
   };
 }

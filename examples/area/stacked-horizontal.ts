@@ -1,5 +1,4 @@
 import { createChart } from '@mk7s/holochart';
-import { useExampleFonts } from '../_lib/fonts.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -24,7 +23,6 @@ export function run(el: HTMLElement): ExampleHandle {
     { name: 'Coarse', f: (h: number) => 25 * Math.exp(-h / 1.2) + 1 },
   ];
 
-  useExampleFonts();
   const chart = createChart(el, {
     data: classes.map((c, k) => ({
       type: 'scatter',
@@ -35,12 +33,9 @@ export function run(el: HTMLElement): ExampleHandle {
       ...(k === 0 ? { orientation: 'h' } : {}),
     })),
     layout: {
-      font: { family: 'Inter', size: 12 },
       hovermode: 'y unified',
       xaxis: { title: { text: 'Particles per cm³' } },
       yaxis: { title: { text: 'Altitude (km)' } },
-      margin: { l: 64, r: 24, t: 24, b: 48 },
-      plot_bgcolor: '#e5ecf6',
     },
   });
 
