@@ -303,8 +303,26 @@ export interface TraceModule<
    * (currently `'bar-like'`, see the runtime's `STACK_GROUPS`): then all traces whose modules list
    * it stack together — bar, histogram, funnel, waterfall — and the group's first module (in trace
    * order) that has `crossTraceCalc` runs it for all of them.
+   *
+   * **Changed report** (E7.2 / E16.3). The return value says which entries' views must redraw:
+   * - `undefined` (return nothing): every entry changed. Each gets `calc`, `plot` and `style` in
+   *   its update plan and loses `plan.append` (so extremes are recomputed and streaming views
+   *   redraw whole) — the safe default, and what bar does.
+   * - An iterable of `entry.index` values (the trace's index in `data`, not its position in
+   *   `entries`): only those entries get that treatment. Indices not among `entries` are ignored.
+   *   An entry that is **not** listed keeps its update plan exactly as it was — including
+   *   `plan.append` (the streaming fast path of `extendTraces`) and `plot: false` (its view is not
+   *   redrawn and its extremes are not recomputed). So a module may only omit an entry when what
+   *   its view draws and its autorange read from the calc is unchanged by this call (ideally the
+   *   very same arrays and objects as before), or when the trace itself was recalculated this pass
+   *   and this call did not rewrite what `calc` / `calcAppend` produced — its plan then already
+   *   carries `calc` (or `append`) from the runtime. When in doubt, list the entry. An empty
+   *   iterable means nothing changed.
    */
-  crossTraceCalc?(entries: readonly CrossTraceEntry<Calc>[], ctx: CrossTraceContext): void;
+  crossTraceCalc?(
+    entries: readonly CrossTraceEntry<Calc>[],
+    ctx: CrossTraceContext,
+  ): void | Iterable<number>;
   /**
    * Cross-trace step for traces in the `domain` category (M2 wave 1, E4.5): called once per trace
    * type with every visible trace of that type that has a calc, in trace order, with their solved
@@ -417,10 +435,17 @@ export interface TraceDescription {
 
 // ---- Interaction parts of the trace contract (M1 wave 2) --------------------------------------
 
-/** One trace's calc as seen by {@link TraceModule.crossTraceCalc}. */
+/**
+ * One trace's calc as seen by {@link TraceModule.crossTraceCalc}. The calc is the one the trace's
+ * slot holds: a fresh object when the trace was recalculated this pass (`calc` / `calcAppend`),
+ * else the object the previous cross-trace pass mutated.
+ */
 export interface CrossTraceEntry<Calc = unknown> {
   readonly trace: FullTrace;
-  /** Index of the trace in `data`. */
+  /**
+   * Index of the trace in `data` — what `crossTraceCalc` returns to report the entries it
+   * changed.
+   */
   readonly index: number;
   readonly calc: Calc;
 }
@@ -575,6 +600,12 @@ export interface MarginPush {
   readonly r?: number;
   readonly t?: number;
   readonly b?: number;
+  /**
+   * Reserved room (Plotly's `_reservedMargin`, e.g. a container-referenced title with
+   * `automargin`): added on top of the other components' pushes on that side instead of competing
+   * with them, so a top title and a top legend stack rather than overlap.
+   */
+  readonly reserved?: boolean;
 }
 
 /** Context for {@link ComponentModule.pushMargin}. */
@@ -677,6 +708,28 @@ export interface ComponentPointerEvent {
   cursor: string | undefined;
 }
 
+/**
+ * A shape-drawing gesture (E5.5): with a draw `dragmode` (`drawline`, `drawopenpath`,
+ * `drawclosedpath`, `drawcircle`, `drawrect`), a drag that starts on a cartesian subplot's plot
+ * area — and that no view took through `handlePointer` — is offered to component views'
+ * {@link ComponentView.drawShape}, topmost first, once per animation frame while it moves, then
+ * once more when it ends. A press without a drag stays a click. The runtime only tracks the
+ * pointer; the view previews and commits the shape (the shapes component does, with `newshape`).
+ */
+export interface DrawGesture {
+  readonly mode: 'drawline' | 'drawopenpath' | 'drawclosedpath' | 'drawcircle' | 'drawrect';
+  /** The subplot the drag started on. */
+  readonly subplot: SubplotInfo;
+  /**
+   * Pointer positions in container px (top-left origin, like `SubplotInfo.rect`), clamped to the
+   * subplot's plot area, flat `[x0, y0, x1, y1, …]`: the start and the current position for
+   * `drawline` / `drawcircle` / `drawrect`, every sampled vertex for the freeform modes.
+   */
+  readonly points: readonly number[];
+  /** `move`: preview; `end`: the pointer was released (commit); `cancel`: drop the preview. */
+  readonly phase: 'move' | 'end' | 'cancel';
+}
+
 /** What changed since a component view's last update. */
 export interface ComponentUpdatePlan {
   /** Declared stages of the update (see core `STAGE_ORDER`), layout- and trace-level combined. */
@@ -697,6 +750,11 @@ export interface ComponentView {
    * don't need this.
    */
   handlePointer?(event: ComponentPointerEvent): boolean | void;
+  /**
+   * Shape drawing hook (E5.5, see {@link DrawGesture}). Return `true` when the view handles the
+   * gesture: later views are then not asked for this call.
+   */
+  drawShape?(gesture: DrawGesture): boolean | void;
 }
 
 export interface ComponentRenderer {

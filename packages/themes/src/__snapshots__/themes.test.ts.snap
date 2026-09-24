@@ -57,7 +57,6 @@ exports[`built-in themes (E8.1) > ggplot2: layout values snapshot 1`] = `
     "paper_bgcolor",
     "plot_bgcolor",
     "shapedefaults",
-    "title",
     "xaxis",
     "yaxis",
   ],
@@ -82,7 +81,9 @@ exports[`built-in themes (E8.1) > gridon: layout values snapshot 1`] = `
   "barLine": undefined,
   "colorscaleStops": {},
   "colorway": undefined,
-  "dataTypes": [],
+  "dataTypes": [
+    "pie",
+  ],
   "font": undefined,
   "layoutKeys": [
     "xaxis",
@@ -699,6 +700,7 @@ exports[`built-in themes (E8.1) > presentation: layout values snapshot 1`] = `
   "colorscaleStops": {},
   "colorway": undefined,
   "dataTypes": [
+    "pie",
     "scatter",
     "scatter3d",
     "scattergl",
@@ -783,7 +785,6 @@ exports[`built-in themes (E8.1) > seaborn: layout values snapshot 1`] = `
     "paper_bgcolor",
     "plot_bgcolor",
     "shapedefaults",
-    "title",
     "xaxis",
     "yaxis",
   ],
@@ -893,10 +894,13 @@ exports[`built-in themes (E8.1) > xgridoff: layout values snapshot 1`] = `
   "barLine": undefined,
   "colorscaleStops": {},
   "colorway": undefined,
-  "dataTypes": [],
+  "dataTypes": [
+    "pie",
+  ],
   "font": undefined,
   "layoutKeys": [
     "xaxis",
+    "yaxis",
   ],
   "paper_bgcolor": undefined,
   "plot_bgcolor": undefined,
@@ -912,7 +916,9 @@ exports[`built-in themes (E8.1) > ygridoff: layout values snapshot 1`] = `
   "barLine": undefined,
   "colorscaleStops": {},
   "colorway": undefined,
-  "dataTypes": [],
+  "dataTypes": [
+    "pie",
+  ],
   "font": undefined,
   "layoutKeys": [
     "yaxis",

@@ -76,6 +76,21 @@ export const modebarIcons = {
     'M16 5.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z',
     'M15.2 12h1.6v3h-1.6zM15.2 17h1.6v3h-1.6zM3 7.2h3v1.6H3zM8 7.2h3v1.6H8zM2 21h20v1.5H2z',
   ),
+  /** Segment with end handles: draw line. */
+  drawLine: icon('M4.4 18.2 18.2 4.4l1.4 1.4L5.8 19.6z', 'M2 17h5v5H2zM17 2h5v5h-5z'),
+  /** Zigzag stroke: draw open freeform. */
+  drawOpenPath: icon('M2 16.9 7.2 9l5 6.1 4.1-7.2 5.7 5-1.3 1.5-3.9-3.4-4.3 7.5-5.1-6.2-3.7 5.6z'),
+  /** Irregular ring: draw closed freeform. */
+  drawClosedPath: icon('M4 5l9-2 8 7-5 11-11-3zm2 1.6.6 9.8 8.3 2.2 3.7-8.2-6-5.2z'),
+  /** Ring: draw circle. */
+  drawCircle: icon('M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zm0 2a7 7 0 1 0 0 14 7 7 0 0 0 0-14z'),
+  /** Rectangle outline: draw rectangle. */
+  drawRect: icon('M3 5h18v14H3zm2 2v10h14V7z'),
+  /** Eraser over a baseline: erase the active shape. */
+  eraseShape: icon(
+    'M14.5 3 21 9.5 11.5 19H7.3L3 14.7zm-5 5.9-3.7 3.8 3.1 3.1h1.7l2.5-2.5z',
+    'M13 19h8v2h-8z',
+  ),
   /** Filled dot: the fallback for custom buttons without an icon. */
   dot: icon('M12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10z'),
 } as const satisfies Readonly<Record<string, ModebarIcon>>;

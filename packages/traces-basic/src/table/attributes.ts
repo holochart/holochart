@@ -141,24 +141,27 @@ function block(which: 'header' | 'cells', height: number) {
 }
 
 /** The table schema. */
-export const tableAttributes = attr.object(
-  {
-    columnwidth: attr.number({
-      arrayOk: true,
-      editType: 'plot',
+// A pure IIFE, so bundles without this trace drop the whole schema: a package ships as one file,
+// where top-level `attr.*()` calls would otherwise look side-effectful (E21.6).
+export const tableAttributes = /* @__PURE__ */ (() =>
+  attr.object(
+    {
+      columnwidth: attr.number({
+        arrayOk: true,
+        editType: 'plot',
+        description:
+          'Relative column widths: columns share the domain width in proportion to these values (one for all, or one per column; a short array repeats its last entry, non-numeric entries count 1).',
+      }),
+      columnorder: attr.dataArray({
+        editType: 'calc',
+        description:
+          'The rendered order of the data columns: a value `2` at position `0` means that data column 0 is drawn as the third column. Dragging a header cell reorders the columns and restyles this attribute.',
+      }),
+      header: block('header', 28),
+      cells: block('cells', 20),
+    },
+    {
       description:
-        'Relative column widths: columns share the domain width in proportion to these values (one for all, or one per column; a short array repeats its last entry, non-numeric entries count 1).',
-    }),
-    columnorder: attr.dataArray({
-      editType: 'calc',
-      description:
-        'The rendered order of the data columns: a value `2` at position `0` means that data column 0 is drawn as the third column. Dragging a header cell reorders the columns and restyles this attribute.',
-    }),
-    header: block('header', 28),
-    cells: block('cells', 20),
-  },
-  {
-    description:
-      'Table: a grid of formatted values with a fixed header, placed by `domain`. Only the visible rows are laid out and drawn, so large tables scroll smoothly.',
-  },
-);
+        'Table: a grid of formatted values with a fixed header, placed by `domain`. Only the visible rows are laid out and drawn, so large tables scroll smoothly.',
+    },
+  ))();

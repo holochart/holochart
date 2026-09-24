@@ -48,9 +48,10 @@ export function resolveFigureSize(
   return { width: pick('width'), height: pick('height') };
 }
 
-function normalizePushes(pushes: readonly MarginPush[]): Margins {
+function normalizePushes(pushes: readonly MarginPush[], reserved: boolean): Margins {
   const out: Margins = { l: 0, r: 0, t: 0, b: 0 };
   for (const p of pushes) {
+    if ((p.reserved === true) !== reserved) continue;
     for (const side of ['l', 'r', 't', 'b'] as const) {
       const v = p[side];
       if (typeof v === 'number' && v > out[side]) out[side] = v;
@@ -70,21 +71,32 @@ function fit(a: number, b: number, total: number): [number, number] {
 
 /**
  * Margins after component pushes (only grow when `margin.autoexpand`) and after shrinking to
- * leave at least {@link MIN_PLOT_SIZE} px of plot area. Single pass; the iterative automargin
- * solve is E4.2.
+ * leave at least {@link MIN_PLOT_SIZE} px of plot area. Single pass; the runtime iterates it for
+ * automargin (E4.2).
+ *
+ * Per side, ordinary pushes compete (the largest wins) and reserved pushes (Plotly's
+ * `_reservedMargin`: a container-referenced title with `automargin`) stack on top of them, so
+ * the side becomes `max(margin, push + reserved)` — Plotly's `doAutoMargin`, where the requested
+ * margin's slack beyond the pushes absorbs the reserved room. `margin.gutter` (a Holochart
+ * extension, 0 in Plotly's look) keeps pushed content that far from the figure edge; it is not
+ * added where something is reserved, since the reserved component sits between the two.
  */
 export function resolveMargins(
-  margin: Readonly<Margins> & { readonly autoexpand?: boolean },
+  margin: Readonly<Margins> & { readonly autoexpand?: boolean; readonly gutter?: number },
   pushes: readonly MarginPush[],
   size: Readonly<Size>,
 ): Margins {
   const m: Margins = { l: margin.l, r: margin.r, t: margin.t, b: margin.b };
   if (margin.autoexpand !== false && pushes.length > 0) {
-    const p = normalizePushes(pushes);
-    m.l = Math.max(m.l, p.l);
-    m.r = Math.max(m.r, p.r);
-    m.t = Math.max(m.t, p.t);
-    m.b = Math.max(m.b, p.b);
+    const pushed = normalizePushes(pushes, false);
+    const reserved = normalizePushes(pushes, true);
+    const g = typeof margin.gutter === 'number' && margin.gutter > 0 ? margin.gutter : 0;
+    for (const side of ['l', 'r', 't', 'b'] as const) {
+      const p = pushed[side];
+      const r = reserved[side];
+      const need = p > 0 && r === 0 ? p + g : p + r;
+      m[side] = Math.max(m[side], need);
+    }
   }
   [m.l, m.r] = fit(m.l, m.r, size.width);
   [m.t, m.b] = fit(m.t, m.b, size.height);

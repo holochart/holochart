@@ -5,7 +5,12 @@ import { supplyDefaults } from '../defaults/supply-defaults.ts';
 import type { FullAxis } from '../defaults/types.ts';
 import { stripInternal } from '../util/objects.ts';
 import { validate } from '../validate/validate.ts';
-import { makeSubplots, type SubplotCell, type SubplotSpec } from './make-subplots.ts';
+import {
+  makeSubplots,
+  SUBPLOT_TITLE_NAME,
+  type SubplotCell,
+  type SubplotSpec,
+} from './make-subplots.ts';
 
 const close = (actual: unknown, expected: readonly number[]) => {
   const a = actual as number[];
@@ -125,8 +130,10 @@ describe('makeSubplots: layout', () => {
       xanchor: 'center',
       yanchor: 'bottom',
       showarrow: false,
-      font: { size: 16 },
+      name: SUBPLOT_TITLE_NAME,
     });
+    // The size follows layout.font (the annotations component applies the 4/3 scale).
+    expect(annotations[0]?.['font']).toBeUndefined();
     expect(annotations[0]?.['x']).toBeCloseTo(0.225, 12);
     expect(annotations[0]?.['y']).toBe(1);
     expect(annotations[1]).toMatchObject({ text: 'B', x: 0.775, y: 1 });

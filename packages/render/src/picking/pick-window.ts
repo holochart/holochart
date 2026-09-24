@@ -181,7 +181,7 @@ export function computePickWindow(
   return true;
 }
 
-const scratchT = new Matrix4();
+const scratchT = /* @__PURE__ */ new Matrix4();
 
 /**
  * Narrow `projection` onto the pick window: `out = T × projection`, where `T` scales and

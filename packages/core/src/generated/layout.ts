@@ -78,11 +78,23 @@ export interface Layout {
    */
   hovermode?: 'x' | 'y' | 'closest' | false | 'x unified' | 'y unified';
   /**
-   * What dragging on the plot area does.
+   * What dragging on the plot area does: zoom, pan, box or lasso select, or draw a new shape (`draw*`, styled by `newshape`).
    *
    * @defaultValue `"zoom"`
    */
-  dragmode?: 'zoom' | 'pan' | 'select' | 'lasso' | 'orbit' | 'turntable' | false;
+  dragmode?:
+    | 'zoom'
+    | 'pan'
+    | 'select'
+    | 'lasso'
+    | 'drawclosedpath'
+    | 'drawopenpath'
+    | 'drawline'
+    | 'drawrect'
+    | 'drawcircle'
+    | 'orbit'
+    | 'turntable'
+    | false;
   /**
    * Default transition for animated updates (E7.3).
    */
@@ -171,6 +183,14 @@ export interface LayoutMargin {
    * @defaultValue `true`
    */
   autoexpand?: boolean;
+  /**
+   * Holochart extension: space (CSS px) kept between the figure edge and content that grows a margin (automargin tick labels and axis titles, legends, colorbars), so it never touches the edge. 0 (Plotly) lets that content reach the edge.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `0`
+   */
+  gutter?: number;
 }
 
 /**
@@ -778,6 +798,12 @@ export interface LayoutXaxis {
    * @defaultValue `1`
    */
   ticklabelstep?: number;
+  /**
+   * Log axes whose automatic ticks fall between powers of ten (2, 5 or every digit): `small digits` labels them with a small digit (2, 5), `complete` with the full value in the tick font, with `tickprefix`/`ticksuffix` (20, 50, 200), `none` leaves them unlabelled.
+   *
+   * @defaultValue `"small digits"`
+   */
+  minorloglabels?: 'small digits' | 'complete' | 'none';
   /**
    * Shift of tick labels along the axis, in px.
    *
@@ -1455,6 +1481,12 @@ export interface LayoutYaxis {
    * @defaultValue `1`
    */
   ticklabelstep?: number;
+  /**
+   * Log axes whose automatic ticks fall between powers of ten (2, 5 or every digit): `small digits` labels them with a small digit (2, 5), `complete` with the full value in the tick font, with `tickprefix`/`ticksuffix` (20, 50, 200), `none` leaves them unlabelled.
+   *
+   * @defaultValue `"small digits"`
+   */
+  minorloglabels?: 'small digits' | 'complete' | 'none';
   /**
    * Shift of tick labels along the axis, in px.
    *

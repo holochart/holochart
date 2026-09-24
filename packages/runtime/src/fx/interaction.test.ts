@@ -551,6 +551,92 @@ describe('component pointer hook', () => {
   });
 });
 
+describe('draw dragmodes (E5.5)', () => {
+  function drawer() {
+    const gestures: { mode: string; phase: string; points: number[]; subplot: string }[] = [];
+    const module: ComponentModule = {
+      name: 'draw-test',
+      draw: {
+        create: () => ({
+          update: () => undefined,
+          drawShape(g) {
+            gestures.push({
+              mode: g.mode,
+              phase: g.phase,
+              points: [...g.points],
+              subplot: g.subplot.id,
+            });
+            return true;
+          },
+        }),
+      },
+    };
+    return { gestures, module };
+  }
+
+  it('hands line / rect / circle drags to drawShape: start and pointer, clamped to the plot', async () => {
+    const d = drawer();
+    const s = setup({ width: 640, height: 400, components: [d.module] });
+    t = s;
+    const c = await chart([DOTS], { dragmode: 'drawrect' }, {}, s);
+    const log = record(c, 'relayout', 'click');
+    expect(canvas(c).style.touchAction).toBe('none');
+    await drag(c, [cx(2), cy(20)], [700, 10]);
+    expect(d.gestures.map((g) => g.phase)).toEqual(['move', 'move', 'end']);
+    expect(d.gestures.at(-1)).toEqual({
+      mode: 'drawrect',
+      phase: 'end',
+      points: [cx(2), cy(20), 620, 30],
+      subplot: 'xy',
+    });
+    // No zoom: the runtime itself commits nothing.
+    expect(log).toHaveLength(0);
+    expect(c.layout['xaxis']).toEqual({ range: [0, 10] });
+  });
+
+  it('collects the vertices of freeform draws; a press without a drag stays a click', async () => {
+    const d = drawer();
+    const s = setup({ width: 640, height: 400, components: [d.module] });
+    t = s;
+    const c = await chart([DOTS], { dragmode: 'drawclosedpath' }, {}, s);
+    const log = record(c, 'click');
+    fire(c, 'pointerdown', cx(1), cy(10));
+    fire(c, 'pointermove', cx(3), cy(10));
+    fire(c, 'pointermove', cx(3), cy(40));
+    frame();
+    fire(c, 'pointerup', cx(1), cy(40));
+    const end = d.gestures.at(-1);
+    expect(end?.phase).toBe('end');
+    expect(end?.points).toEqual([cx(1), cy(10), cx(3), cy(10), cx(3), cy(40), cx(1), cy(40)]);
+    // Click on a point.
+    fire(c, 'pointerdown', cx(5), cy(50));
+    fire(c, 'pointerup', cx(5), cy(50));
+    expect(log.map((l) => l.name)).toEqual(['click']);
+    expect(d.gestures).toHaveLength(2);
+  });
+
+  it('cancels the preview on pointercancel and shows a crosshair over the plot', async () => {
+    const d = drawer();
+    const s = setup({ width: 640, height: 400, components: [d.module] });
+    t = s;
+    const c = await chart([DOTS], { dragmode: 'drawline' }, {}, s);
+    fire(c, 'pointermove', cx(5), cy(20));
+    expect(canvas(c).style.cursor).toBe('crosshair');
+    fire(c, 'pointerdown', cx(1), cy(10));
+    fire(c, 'pointermove', cx(4), cy(30));
+    frame();
+    fire(c, 'pointercancel', cx(4), cy(30));
+    expect(d.gestures.map((g) => g.phase)).toEqual(['move', 'cancel']);
+  });
+
+  it('does nothing on the plot without a component that draws', async () => {
+    const c = await chart([DOTS], { dragmode: 'drawcircle' });
+    const log = record(c, 'relayout');
+    await drag(c, [cx(2), cy(20)], [cx(6), cy(60)]);
+    expect(log).toHaveLength(0);
+  });
+});
+
 describe('static plots', () => {
   it('attach no interaction with config.staticPlot', async () => {
     const c = await chart([DOTS], {}, { staticPlot: true });

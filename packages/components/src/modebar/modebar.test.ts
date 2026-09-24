@@ -292,6 +292,44 @@ describe('modebar view', () => {
     expect(frozen.element.children).toHaveLength(1);
   });
 
+  it('selects draw dragmodes and erases the active shape', async () => {
+    const { setShapeEraser } = await import('../shapes/draw.ts');
+    const chart = fakeChart({ modeBarButtonsToAdd: ['drawrect', 'eraseshape'] });
+    const view = createModebarView(chart, context(chart));
+    button(view.toolbar, 'drawrect').click();
+    expect(chart.relayout).toHaveBeenLastCalledWith({ dragmode: 'drawrect' });
+    view.update(context(chart, { dragmode: 'drawrect' }));
+    expect(button(view.toolbar, 'drawrect').getAttribute('aria-pressed')).toBe('true');
+    expect(button(view.toolbar, 'zoom2d').getAttribute('aria-pressed')).toBe('false');
+    const erase = vi.fn(() => true);
+    setShapeEraser(chart, erase);
+    button(view.toolbar, 'eraseshape').click();
+    expect(erase).toHaveBeenCalledOnce();
+    expect(button(view.toolbar, 'eraseshape').hasAttribute('aria-pressed')).toBe(false);
+  });
+
+  it('on touch, shows after a tap on the chart and hides after a tap elsewhere', () => {
+    const chart = fakeChart();
+    createModebarView(chart, context(chart));
+    const host = chart.element;
+    const tap = (target: Element, pointerType = 'touch'): void => {
+      target.dispatchEvent(new PointerEvent('pointerdown', { pointerType, bubbles: true }));
+    };
+    const css = document.getElementById('hc-modebar-style')?.textContent ?? '';
+    // No always-shown rule for hover-less devices any more.
+    expect(css).not.toContain('hover:none');
+    expect(css).toContain('.hc-modebar-host--hover.hc-modebar-host--touched .hc-modebar');
+    tap(host.querySelector('canvas') as Element, 'mouse');
+    expect(host.classList.contains('hc-modebar-host--touched')).toBe(false);
+    tap(host.querySelector('canvas') as Element);
+    expect(host.classList.contains('hc-modebar-host--touched')).toBe(true);
+    // Taps inside the chart (the toolbar included) keep it shown.
+    tap(host.querySelector('.hc-modebar') as Element);
+    expect(host.classList.contains('hc-modebar-host--touched')).toBe(true);
+    tap(document.body);
+    expect(host.classList.contains('hc-modebar-host--touched')).toBe(false);
+  });
+
   it('does nothing without a chart until one is located', () => {
     const chart = fakeChart();
     const found: { chart?: ModebarChartLike } = {};
@@ -307,8 +345,12 @@ describe('modebar view', () => {
     chart.element.style.position = '';
     const view = createModebarView(chart, context(chart));
     const bar = view.toolbar;
+    chart.element.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch' }));
     view.dispose();
     expect(bar?.isConnected).toBe(false);
+    expect(chart.element.className).toBe('');
+    // Touch listeners are gone too.
+    chart.element.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch' }));
     expect(chart.element.className).toBe('');
     expect(chart.element.style.position).toBe('');
     view.update(context(chart));

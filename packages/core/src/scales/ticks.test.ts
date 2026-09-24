@@ -307,6 +307,72 @@ describe('log axes', () => {
     ]);
   });
 
+  it('labels in-between ticks in full with minorloglabels: complete', () => {
+    const t = ticks('log', [0, 2], 400, {
+      minorloglabels: 'complete',
+      tickprefix: '$',
+      ticksuffix: 'T',
+    });
+    expect(texts(t)).toEqual(['$1T', '$2T', '$5T', '$10T', '$20T', '$50T', '$100T']);
+    // Full size, like the powers of ten.
+    expect(majors(t).every((x) => x.fontScale === undefined)).toBe(true);
+    // Exponent formats apply to the in-between values too.
+    const big = ticks('log', [3, 5], 400, { minorloglabels: 'complete' });
+    expect(texts(big)).toEqual(['1000', '2000', '5000', '10k', '20k', '50k', '100k']);
+    const e = ticks('log', [3, 4], 400, { minorloglabels: 'complete', exponentformat: 'e' });
+    expect(texts(e).slice(0, 3)).toEqual(['1e+3', '2e+3', '3e+3']);
+    const power = ticks('log', [2, 4], 400, {
+      minorloglabels: 'complete',
+      exponentformat: 'power',
+    });
+    expect(texts(power).slice(0, 4)).toEqual([
+      '10<sup>2</sup>',
+      '2×10<sup>2</sup>',
+      '5×10<sup>2</sup>',
+      '10<sup>3</sup>',
+    ]);
+    // Every digit (D1) as well.
+    expect(texts(ticks('log', [0, 1.2], 400, { minorloglabels: 'complete' }))).toEqual([
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      '10',
+    ]);
+  });
+
+  it('leaves in-between ticks unlabelled with minorloglabels: none', () => {
+    const t = ticks('log', [0, 2], 400, { minorloglabels: 'none', ticksuffix: 'x' });
+    expect(texts(t)).toEqual(['1x', '', '', '10x', '', '', '100x']);
+    // The ticks themselves stay.
+    expect(values(t)).toHaveLength(7);
+  });
+
+  it('keeps prefix and suffix on every label of decade and L steps', () => {
+    expect(texts(ticks('log', [0, 5], 400, { ticksuffix: 'T' }))).toEqual([
+      '1T',
+      '10T',
+      '100T',
+      '1000T',
+      '10kT',
+      '100kT',
+    ]);
+    expect(texts(ticks('log', [0.1, 0.6], 400, { tickprefix: '~' }))).toEqual([
+      '~1.5',
+      '~2',
+      '~2.5',
+      '~3',
+      '~3.5',
+    ]);
+    const power = ticks('log', [0, 5], 400, { exponentformat: 'power', ticksuffix: ' W' });
+    expect(texts(power).slice(0, 3)).toEqual(['1 W', '10 W', '10<sup>2</sup> W']);
+  });
+
   it('shows every digit (D1) for about a decade', () => {
     expect(texts(ticks('log', [0, 1.2], 400))).toEqual([
       '1',

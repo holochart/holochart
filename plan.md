@@ -783,12 +783,12 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] Plotly gaps: dragging the arrow head doesn't move a tail given in axis units (`axref`/`ayref`), and `clicktoshow` doesn't check the clicked point's axes against `xref`/`yref`
 - [ ] 3D scene annotations (anchored to 3D points, projected to screen). See E14.1. — *M6*
 
-#### E5.5 — Shapes   `P0` `M`   deps: E2.5, E2.6   · 🟡 Partial (M2 wave 1)
+#### E5.5 — Shapes   `P0` `M`   deps: E2.5, E2.6   · ✅ Done (M3 wave 0)
 > As a developer, I want lines, rectangles, circles, and SVG paths drawn in data or paper coordinates, so that I can mark thresholds and regions.
 - [x] `shapes[]: { type: 'line' | 'rect' | 'circle' | 'path', x0, x1, y0, y1, path, xref, yref, xsizemode, ysizemode, xanchor, yanchor, layer: 'above' | 'below' | 'between', line.{color, width, dash}, fillcolor, fillrule, opacity, label.{text, font, textposition, textangle, padding, texttemplate}, showlegend, legendgroup }` — autorange includes data-referenced shapes (component `extremes` hook); *deferred: shape legend entries*
 - [x] SVG path parser (M, L, H, V, C, Q, Z) with flattening — also relative commands, S/T and arcs
 - [x] Helpers: `addHline`, `addVline`, `addHrect`, `addVrect` (like Python's `add_hline`) — exported functions `addHline(chart, …)` etc. (no chart methods: the runtime can't depend on components)
-- [ ] Editable shapes (drag and resize), plus drawing new shapes via modebar (`drawline`, `drawopenpath`, `drawclosedpath`, `drawcircle`, `drawrect`, `eraseshape`), `P1` — drag and resize done; *drawing tools deferred: need draw `dragmode` values in core and runtime*
+- [x] Editable shapes (drag and resize), plus drawing new shapes via modebar (`drawline`, `drawopenpath`, `drawclosedpath`, `drawcircle`, `drawrect`, `eraseshape`), `P1` — drag and resize done; *drawing tools deferred: need draw `dragmode` values in core and runtime* — drag/resize (M2) and the draw dragmodes + `eraseshape` (M3 wave 0); vertex handles on the active shape deferred
 
 #### E5.6 — Layout images   `P1` `S`   deps: E2.3   · ✅ Done (M2 wave 1)
 > As a designer, I want logos or background images placed on the figure, so that I can brand charts.
@@ -929,7 +929,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 
 #### E8.1 — Built-in themes   `P0` `M`   deps: E1.5   · ✅ Done (M2 wave 1)
 > As a designer, I want polished built-in themes, so that charts look good with zero effort.
-- [x] `holochart` (default), `holochart-dark`, `plotly`, `plotly_white`, `plotly_dark`, `simple_white`, `ggplot2`, `seaborn`, `presentation` (large fonts), `xgridoff`, `ygridoff`, `gridon`, `none`, `high-contrast`, and `neon` (3D glow showcase) — plotly.py template values written from memory: verify against plotly.py before 1.0; `neon` glow approximated in 2D until E8.12
+- [x] `holochart` (default), `holochart-dark`, `plotly`, `plotly_white`, `plotly_dark`, `simple_white`, `ggplot2`, `seaborn`, `presentation` (large fonts), `xgridoff`, `ygridoff`, `gridon`, `none`, `high-contrast`, and `neon` (3D glow showcase) — plotly.py theme values checked against plotly.py's template files (commit f670752, a fixture test keeps them in sync; M3 wave 0); `neon` glow approximated in 2D until E8.12
 - [x] Every theme has a visual regression snapshot on the "theme sampler" figure
 - [x] Docs page with side-by-side previews
 - [x] **Default look (M2, decided by the owner):** `holochart` is now a dark, dense look (near-black, tiny Helvetica-style text in the shipped TeX Gyre Heros, red/blue/indigo/emerald/… colorway, neon plasma sequential scale, tight margins, horizontal legend) applied by the runtime whenever `layout.template` is unset, in every bundle; Plotly's look is `plotly-classic` (identical to the previous default) and `setDefaultTemplate('plotly-classic')` switches globally; `holochart-dark` is a deprecated alias ([ADR-021](docs/adr/021-default-look.md))
@@ -1771,6 +1771,7 @@ docs/
 #### E20.1 — Unit test foundation   `P0` `S`   deps: E0.1   · ✅ Done (M0)
 - [ ] Vitest with coverage thresholds: `core` ≥ 90%, trace calc ≥ 85% — *deferred: core ≥ 90% enforced; trace-calc ≥ 85% added with trace packages (M1)*
 - [x] Test utilities: figure builders, seeded data, approximate equality for float arrays
+- [x] Reproducible property tests (M3 wave 0): CI seeds fast-check from the commit SHA, failures print the seed and a replay command, and a nightly workflow runs the property files with random seeds (`property-nightly.yml`)
 
 #### E20.2 — Schema property tests   `P0` `M`   deps: E1.1–E1.4   · ✅ Done (M0)
 > As a maintainer, I want fuzzed figures generated from the schema, so that no valid input crashes the pipeline.
@@ -1834,12 +1835,12 @@ docs/
 - [x] Audit tree-shaking of `render` (only the primitives a trace uses) and `components` — clean: scatter pulls no components and only the render parts it uses. Leftovers (E21.6): bar schema in the scatter partial (~0.2 kB), `Chart#toJSON` always bundles the serializer (2.3 kB), annotations pull earcut + self-intersection code (7.4 kB)
 - [x] Tighten the partial budgets back toward the original targets (core + scatter 90 kB, basic 150 kB), which were raised to measured +10% (165 / 200 kB) after M1 wave 2 by decision on 2026-09-23 — tightened to 120 / 170 kB (measured 107.9 / 154.1 kB initial + 44.2 kB lazy text engine); the original 90 / 150 kB targets predate the text engine
 
-#### E21.6 — Further bundle trims   `P2` `S`   deps: E21.5
+#### E21.6 — Further bundle trims   `P2` `S`   deps: E21.5   · 🟡 Partial (M3 wave 0)
 > As a developer, I want the last avoidable bytes out of partial bundles, so that budgets keep room for new traces.
-- [ ] Keep the bar schema out of the scatter partial (`/* @__PURE__ */` on top-level schema objects, or per-module output — ADR-015 impact)
-- [ ] Decide whether `Chart#toJSON` should stay a method (always bundles the 2.3 kB serializer) or delegate to a lazily imported module
-- [ ] Draw annotation boxes and arrowheads without the general fill path (earcut + self-intersection, 7.4 kB in `basic`)
-- [ ] Code-split render's ESM build so the fill primitive and exact-fill code (~8 kB) load only for traces with `fill` (decided after M2 wave 1, when budgets were raised to 142 / 212 kB; raised again to 153 / 234 kB after M2 wave 2)
+- [x] Keep the bar schema out of the scatter partial (`/* @__PURE__ */` on top-level schema objects, or per-module output — ADR-015 impact) — done (M3 wave 0): pure wrappers keep the bar, pie and table schemas out (−1.4 kB)
+- [ ] Decide whether `Chart#toJSON` should stay a method (always bundles the 2.3 kB serializer) or delegate to a lazily imported module — still open (API decision)
+- [x] Draw annotation boxes and arrowheads without the general fill path (earcut + self-intersection, 7.4 kB in `basic`) — superseded: annotations and shapes draw through the lazily loaded fill code
+- [x] Code-split render's ESM build so the fill primitive and exact-fill code (~8 kB) load only for traces with `fill` (decided after M2 wave 1, when budgets were raised to 142 / 212 kB; raised again to 153 / 234 kB after M2 wave 2) — done (M3 wave 0): `LazyFillPrimitive`, 8.5 kB lazy chunk; core + scatter 139.0 → 130.0 kB, basic 213.4 → 205.8 kB
 
 ---
 
@@ -1981,16 +1982,17 @@ gantt
 - Carry-forward to M3, in priority order:
   1. Release setup: npm token and the `npm` environment, then `RELEASE_ENABLED=true` (the Release
      workflow is now skipped until then instead of failing), and `0.2.0`.
-  2. E21.6 bundle trims (split the fill code, keep the bar schema out of the scatter partial).
-  3. Gaps found by the OpenRouter demo (log-axis annotation coordinates, log tick labels and
-     `ticksuffix`, legend-group toggling, `makeSubplots` title size, touch modebar over the legend).
-  4. ADR-021 follow-ups: heavy fills on dark, title vs multi-row legend, empty top band, tick labels
-     touching the edge.
-  5. Property-test seeding in CI (E20.1) and the unreproduced `schema-properties` failure.
-  6. Verify the plotly.py theme values (written from memory) against plotly.py.
-  7. Docs: attribute coverage in examples toward 70%; the 4 undescribed scatter containers.
-  8. Shape drawing tools (draw `dragmode`s), `crossTraceCalc` changed-trace reporting, fill hover in
-     non-`closest` modes.
+  2. ~~E21.6 bundle trims~~ — done in M3 wave 0 (fill code lazy, schema leaks fixed).
+  3. ~~Gaps found by the OpenRouter demo~~ — done in M3 wave 0.
+  4. ADR-021 follow-ups: ~~title vs multi-row legend, empty top band, tick labels touching the
+     edge~~ (done in M3 wave 0); heavy fills on dark still open.
+  5. ~~Property-test seeding~~ — done in M3 wave 0; the old `schema-properties` failure didn't
+     reproduce in ~70,000 cases and was most likely a timeout under load (test timeout now 30 s).
+  6. ~~Verify the plotly.py theme values against plotly.py~~ — done in M3 wave 0 (6 themes corrected; `plotly-py.test.ts`).
+  7. Docs: attribute coverage in examples 34.8% → 60.8% and all containers described (M3 wave 0);
+     70% still to reach.
+  8. ~~Shape drawing tools, `crossTraceCalc` changed-trace reporting, fill hover in every
+     hovermode~~ — done in M3 wave 0.
 
 **Verdict:** M2's exit criteria are met, and M2 is closed. Publishing `0.2.0` waits on the npm
 setup (carry-forward 1).
@@ -2040,8 +2042,7 @@ comes with its seed (E20.1).
 Open after wave 1: `crossTraceCalc` can't report which traces it changed, so one stacked trace's
 update redraws every scatter trace on the subplot and streaming appends lose their fast path there
 (E7.2/E16.3); fill hover works in `closest` mode only; shape drawing tools need draw `dragmode`
-values (E5.5); the plotly.py theme values were written from memory and need checking against
-plotly.py (E8.1).
+values (E5.5); the plotly.py theme values were checked against plotly.py in M3 wave 0 (E8.1).
 
 Gaps found building the OpenRouter demo (`apps/docs/demos/openrouter.md`, worked around in the
 examples): a legend group click doesn't toggle same-group traces with `showlegend: false`; switching
@@ -2055,6 +2056,39 @@ Open after wave 2: rich text inside table cells; check that table clipping (a GL
 primitive, since overlay viewports don't clip) is right in raster export; four scatter containers
 (`selected`/`unselected` `.marker`/`.textfont`) have no descriptions; attributes used in examples
 are at 34.8% (target 70%); markdown snippets are type-checked but not executed.
+
+### 11.4 M3 execution plan
+
+Same pattern as M2: ≤ 4 parallel workstreams per wave with separate files, contracts first, the
+default look (ADR-021) for every new example.
+
+| Wave | Workstream | Stories |
+| --- | --- | --- |
+| 0 | Bundle trims (fill code split, schema leaks) | E21.6 ✅ |
+| 0 | Axis and layout gaps: log-axis coordinate conversion, log tick labels, margins (title vs legend, top band, edge gutter), `makeSubplots` titles | M2 carry-forward ✅ |
+| 0 | Legend-group toggling, shape drawing tools, touch modebar, fill hover in x/y modes, `crossTraceCalc` changed traces | E5.5, M2 carry-forward ✅ |
+| 0 | Test and docs quality: property-test seeding (E20.1), undescribed attributes, example coverage | E20.1, E19.10 ✅ |
+| 1 | `histogram`, `histogram2d`, `histogram2dcontour` (with contouring) | E10.1–E10.3 |
+| 1 | `box`, `violin`, strip | E10.4–E10.6 |
+| 1 | Range breaks, linked axes and constraints, spikelines | E3.8–E3.10 |
+| 2 | `splom`, `parcoords`, `parcats` | E10.9–E10.11 |
+| 2 | Range slider and selector, update menus, sliders, layout selections | E5.9–E5.12 |
+| 3 | Transitions, frames and `animate` | E7.3, E7.4 |
+| 3 | Keyboard and touch | E6.5, E6.6 |
+| 3 | Express: data model, mappings, facets, animation frames, ECDF, distplot/marginals | E23.1–E23.4, E10.7, E10.8 |
+
+Open after M3 wave 0 (found while fixing the carry-forward):
+- The visual harness's per-example tolerance (0.4% of pixels) let a whole title move from left to
+  centre pass, because thin text changes few pixels; baselines of changed examples were force-
+  regenerated. Tighten it (per-region or exact-diff thresholds for text) (E20.3).
+- Accepted but not drawn: `legendgrouptitle`, `legendwidth`, `legend.grouptitlefont`; `table`
+  traces never appear in the legend.
+- On overlaying axes, the overlay's grid lines draw over the base plot's traces.
+- Bars ignore `xperiod`; a scatter with a date `x0` + `dx` shows the same x in every hover label;
+  `displaylogo` is missing from the config schema.
+- `minorloglabels` (new, Plotly's `small digits` default) draws 6 px digits in the dense default
+  look; consider `complete` in the `holochart` template.
+- Heavy fills on dark (ADR-021) and the `toJSON` API decision (E21.6) remain.
 
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 

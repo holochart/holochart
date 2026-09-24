@@ -33,6 +33,9 @@ export function run(el: HTMLElement): ExampleHandle {
     ],
     layout: {
       showlegend: false,
+      // Room above the plot for the peak's label and the paper-referenced heading (annotations
+      // never grow the margins, as in Plotly).
+      margin: { t: 42 },
       xaxis: { domain: [0, 0.64] },
       xaxis2: { domain: [0.72, 1], anchor: 'y2' },
       yaxis2: { anchor: 'x2' },

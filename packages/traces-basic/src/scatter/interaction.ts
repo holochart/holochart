@@ -241,12 +241,14 @@ export function scatterHoverPoints(
   if (calc.length === 0) return [];
   const hoveron = typeof trace['hoveron'] === 'string' ? trace['hoveron'] : 'points';
   const flags = hoveron.split('+');
-  // Plotly: points first; the fill only when no point is close enough.
+  // Plotly: points first; the fill only when no point is close enough. In every hovermode, as
+  // plotly.js `scatter/hover.js` (the fill ranks last, so in `x` / `y` / unified modes it joins
+  // the points found at the pointer, with no common axis value of its own).
   if (flags.includes('points')) {
     const point = hoverPoint(calc, trace, query, ctx);
     if (point) return [point];
   }
-  if (flags.includes('fills') && query.mode === 'closest' && hasFill(trace)) {
+  if (flags.includes('fills') && hasFill(trace)) {
     const fill = hoverFill(calc, trace, query, ctx);
     if (fill) return [fill];
   }

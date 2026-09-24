@@ -13,17 +13,31 @@
  * With `config.editable`, `config.edits.shapePosition` or a shape's own `editable`, dragging a shape
  * moves it, dragging a line's end moves that end and dragging a rect's or ellipse's edge or corner
  * resizes it. The drag previews locally and commits one `relayout` (`shapes[i].x0`, …) on release.
+ *
+ * ## Drawing
+ *
+ * With a draw `dragmode` the runtime hands drags on a subplot to {@link ShapesView.drawShape}
+ * (see `draw.ts`): the new shape previews at half its `newshape` opacity and is committed with one
+ * GUI `relayout` of the whole `shapes` list, as in Plotly. Clicking an `editable` shape (drawn
+ * shapes are) makes it the active shape (`layout.activeshape` style) unless
+ * `config.edits.shapePosition` is on; the `eraseshape` modebar button removes it.
  */
-import { createFillPrimitive, LinePrimitive, type FillPrimitive } from '@mk7s/holochart-render';
+import {
+  createLazyFillPrimitive,
+  LinePrimitive,
+  type LazyFillPrimitive,
+} from '@mk7s/holochart-render';
 import type {
   ComponentDrawContext,
   ComponentModule,
   ComponentPointerEvent,
   ComponentUpdatePlan,
   ComponentView,
+  DrawGesture,
   SubplotInfo,
 } from '@mk7s/holochart-runtime';
 import type { LabelItem } from '../axes/geometry.ts';
+import type { FullFont } from '../shared/text.ts';
 import { TextBatch } from '../shared/batches.ts';
 import { findChart, fireAndForget } from '../shared/host.ts';
 import { handleLinkPointer } from '../shared/text.ts';
@@ -43,6 +57,17 @@ import {
   type ShapeEnv,
   type ShapeGeometry,
 } from './geometry.ts';
+import {
+  activeshapeAttributes,
+  activeshapeOf,
+  drawnOutline,
+  newshapeAttributes,
+  newshapeOf,
+  outlineShape,
+  previewShape,
+  setShapeEraser,
+  supplyNewshapeDefaults,
+} from './draw.ts';
 import type { PathValue } from './path.ts';
 import { shapesAttributes, supplyShapeDefaults, type FullShape } from './schema.ts';
 
@@ -313,28 +338,68 @@ export function dragOverride(drag: Drag, env: ShapeEnv): Override {
 
 const CURSORS: Record<string, string> = { start: 'crosshair', end: 'crosshair', move: 'move' };
 
+/** The active shape's look (plotly.js `activeshape`): its fill (closed shapes) and opacity. */
+function activeStyle(s: FullShape, fullLayout: Record<string, unknown>): FullShape {
+  const a = activeshapeOf(fullLayout);
+  const open = s.type === 'line' || (s.type === 'path' && !/z\s*$/i.test(s.path ?? ''));
+  return { ...s, opacity: a.opacity, ...(open ? {} : { fillcolor: a.fillcolor }) };
+}
+
 class ShapesView implements ComponentView {
   #ctx: ComponentDrawContext;
   readonly #layers: LayerHost;
-  readonly #fills = new Map<string, { prim: FillPrimitive; key: string }>();
+  readonly #fills = new Map<string, { prim: LazyFillPrimitive; key: string }>();
   readonly #lines = new Map<string, { prim: LinePrimitive; key: string }>();
   readonly #texts = new Map<string, TextBatch>();
   #geoms: ShapeGeometry[] = [];
   #drag: Drag | undefined;
+  /** The shape being drawn (draw `dragmode`s), not yet in `layout.shapes`. */
+  #preview: FullShape | undefined;
+  /** `_index` of the active shape (clicked, for `eraseshape`). */
+  #active: number | undefined;
+  /** The chart the eraser is registered for. */
+  #chart: object | undefined;
 
   constructor(ctx: ComponentDrawContext) {
     this.#ctx = ctx;
     this.#layers = new LayerHost(ctx, 'shapes');
+    this.#register();
     this.#draw();
   }
 
   update(ctx: ComponentDrawContext, plan: ComponentUpdatePlan): void {
     this.#ctx = ctx;
+    this.#register();
     const s = plan.stages;
-    if (!plan.layout && !s.has('plot') && !s.has('style') && !s.has('calc') && !s.has('ticks')) {
+    // The active shape must still exist and be activatable (plotly.js drops it otherwise).
+    let dropped = false;
+    if (this.#active !== undefined) {
+      const shape = shapesOf(ctx.fullLayout)[this.#active];
+      if (!shape || !this.#canActivate(shape)) {
+        this.#active = undefined;
+        dropped = true;
+      }
+    }
+    if (
+      !dropped &&
+      !plan.layout &&
+      !s.has('plot') &&
+      !s.has('style') &&
+      !s.has('calc') &&
+      !s.has('ticks')
+    ) {
       return;
     }
     this.#draw();
+  }
+
+  /** Let the `eraseshape` modebar button reach this view (by chart). */
+  #register(): void {
+    const chart = findChart(this.#ctx);
+    if (!chart || chart === this.#chart) return;
+    if (this.#chart) setShapeEraser(this.#chart, undefined);
+    this.#chart = chart;
+    setShapeEraser(chart, () => this.#erase());
   }
 
   #env(): ShapeEnv {
@@ -346,9 +411,14 @@ class ShapesView implements ComponentView {
     const env = this.#env();
     const drag = this.#drag;
     this.#geoms = [];
+    const active = this.#active;
     for (const s of shapesOf(ctx.fullLayout)) {
       const over = drag?.index === s._index ? dragOverride(drag, env) : undefined;
-      const g = shapeGeometry(s, env, over);
+      const g = shapeGeometry(s._index === active ? activeStyle(s, ctx.fullLayout) : s, env, over);
+      if (g) this.#geoms.push(g);
+    }
+    if (this.#preview) {
+      const g = shapeGeometry(this.#preview, env);
       if (g) this.#geoms.push(g);
     }
     this.#layers.begin(ctx);
@@ -413,7 +483,7 @@ class ShapesView implements ComponentView {
         const k = JSON.stringify(f);
         let e = this.#fills.get(key);
         if (!e) {
-          const prim = createFillPrimitive(ctx.primitives, data);
+          const prim = createLazyFillPrimitive(ctx.primitives, data);
           prim.object.renderOrder = order;
           ctx.add(prim, viewport);
           this.#fills.set(key, (e = { prim, key: k }));
@@ -477,15 +547,78 @@ class ShapesView implements ComponentView {
   }
 
   #canEdit(s: FullShape): boolean {
-    if (s.editable) return true;
-    const ctx = this.#ctx;
-    const cfg = ctx.fullConfig as
+    return s.editable || this.#editsShapePosition();
+  }
+
+  /** plotly.js `couldHaveActiveShape` and `editable`: shapes clicked to select them. */
+  #canActivate(s: FullShape): boolean {
+    return s.editable && !this.#editsShapePosition();
+  }
+
+  /** `config.edits.shapePosition`, or `config.editable` unless the input opts out. */
+  #editsShapePosition(): boolean {
+    const cfg = this.#ctx.fullConfig as
       { editable?: unknown; edits?: Record<string, unknown> } | undefined;
     if (cfg?.edits?.['shapePosition'] === true) return true;
     if (cfg?.editable !== true) return false;
     // Defaulted `edits` are all false; only an explicit input `false` opts out of `editable`.
-    const input = findChart(ctx)?.config as { edits?: Record<string, unknown> } | undefined;
+    const input = findChart(this.#ctx)?.config as { edits?: Record<string, unknown> } | undefined;
     return input?.edits?.['shapePosition'] !== false;
+  }
+
+  #setActive(index: number | undefined): void {
+    if (index === this.#active) return;
+    this.#active = index;
+    this.#draw();
+    this.#ctx.invalidate();
+  }
+
+  /** Remove the active shape with one GUI `relayout` of `shapes` (plotly.js `eraseActiveShape`). */
+  #erase(): boolean {
+    const index = this.#active;
+    const chart = findChart(this.#ctx);
+    if (index === undefined || !chart) return false;
+    const list = chart.layout['shapes'];
+    if (!Array.isArray(list) || index >= list.length) return false;
+    this.#active = undefined;
+    fireAndForget(chart.relayout({ shapes: list.filter((_, i) => i !== index) }, { gui: true }));
+    return true;
+  }
+
+  /** A draw gesture (draw `dragmode`s, E5.5): preview while moving, one `relayout` at the end. */
+  drawShape(gesture: DrawGesture): boolean {
+    const ctx = this.#ctx;
+    const style = newshapeOf(ctx.fullLayout);
+    const outline =
+      gesture.phase === 'cancel'
+        ? undefined
+        : drawnOutline(gesture.mode, gesture.points, gesture.subplot.rect, style.drawdirection);
+    const shape = outline && outlineShape(outline, gesture.subplot, this.#env(), style);
+    if (gesture.phase === 'end' && shape) {
+      const chart = findChart(ctx);
+      if (chart) {
+        const list = chart.layout['shapes'];
+        const shapes = [...(Array.isArray(list) ? list : []), shape];
+        // The preview's primitives stay until the relayout redraws with the new shape instead.
+        this.#preview = undefined;
+        this.#active = undefined;
+        fireAndForget(chart.relayout({ shapes }, { gui: true }).catch(() => this.#redraw()));
+        return true;
+      }
+    }
+    this.#preview =
+      gesture.phase === 'move' && shape
+        ? previewShape(shape, style, ctx.fullLayout.font as FullFont)
+        : undefined;
+    this.#active = undefined;
+    this.#draw();
+    ctx.invalidate();
+    return true;
+  }
+
+  #redraw(): void {
+    this.#draw();
+    this.#ctx.invalidate();
   }
 
   handlePointer(event: ComponentPointerEvent): boolean {
@@ -520,9 +653,13 @@ class ShapesView implements ComponentView {
       event.cursor = CURSORS[mode] ?? `${mode.slice(7)}-resize`;
       if (event.type === 'down' && event.button === 0) {
         this.#drag = { index: g.index, mode, base: g, x0: event.x, y0: event.y, dx: 0, dy: 0 };
+      } else if (event.type === 'click' && this.#canActivate(g.shape)) {
+        this.#setActive(g.index);
       }
       return true;
     }
+    // A press anywhere else deactivates the active shape (and goes on to the chart).
+    if (event.type === 'down' && this.#active !== undefined) this.#setActive(undefined);
     return false;
   }
 
@@ -541,6 +678,8 @@ class ShapesView implements ComponentView {
 
   dispose(): void {
     const ctx = this.#ctx;
+    if (this.#chart) setShapeEraser(this.#chart, undefined);
+    this.#chart = undefined;
     for (const e of this.#fills.values()) ctx.remove(e.prim);
     for (const e of this.#lines.values()) ctx.remove(e.prim);
     for (const b of this.#texts.values()) b.dispose();
@@ -555,9 +694,14 @@ class ShapesView implements ComponentView {
 export const shapesComponent: ComponentModule = {
   name: 'shapes',
   order: 35,
-  layoutSchema: { shapes: shapesAttributes },
+  layoutSchema: {
+    shapes: shapesAttributes,
+    newshape: newshapeAttributes,
+    activeshape: activeshapeAttributes,
+  },
   supplyLayoutDefaults(_layoutIn, layoutOut) {
     supplyShapeDefaults(layoutOut);
+    supplyNewshapeDefaults(layoutOut);
   },
   extremes: (ctx) => shapeExtremes(shapesOf(ctx.fullLayout), ctx.axes, ctx.fullData.length),
   draw: {

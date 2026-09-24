@@ -494,6 +494,13 @@ function axisSchema<const L extends 'x' | 'y'>(letter: L) {
         editType: 'ticks',
         description: 'Label every n-th tick only (`tickmode` `auto` and `linear`).',
       }),
+      minorloglabels: attr.enumerated({
+        values: ['small digits', 'complete', 'none'],
+        dflt: 'small digits',
+        editType: tickLayout,
+        description:
+          'Log axes whose automatic ticks fall between powers of ten (2, 5 or every digit): `small digits` labels them with a small digit (2, 5), `complete` with the full value in the tick font, with `tickprefix`/`ticksuffix` (20, 50, 200), `none` leaves them unlabelled.',
+      }),
       ticklabelshift: attr.integer({
         dflt: 0,
         editType: tickLayout,
@@ -731,6 +738,12 @@ export const layoutSchema = attr.object(
           dflt: true,
           description: 'Let components (legend, colorbars, automargin axes) grow the margins.',
         }),
+        gutter: attr.number({
+          min: 0,
+          dflt: 0,
+          description:
+            'Holochart extension: space (CSS px) kept between the figure edge and content that grows a margin (automargin tick labels and axis titles, legends, colorbars), so it never touches the edge. 0 (Plotly) lets that content reach the edge.',
+        }),
       },
       { editType: 'layout', description: 'Space around the plot area.' },
     ),
@@ -857,10 +870,24 @@ export const layoutSchema = attr.object(
         'How hover picks points: nearest point, all points at the same x/y, or unified labels.',
     }),
     dragmode: attr.enumerated({
-      values: ['zoom', 'pan', 'select', 'lasso', 'orbit', 'turntable', false],
+      values: [
+        'zoom',
+        'pan',
+        'select',
+        'lasso',
+        'drawclosedpath',
+        'drawopenpath',
+        'drawline',
+        'drawrect',
+        'drawcircle',
+        'orbit',
+        'turntable',
+        false,
+      ],
       dflt: 'zoom',
       editType: 'modebar',
-      description: 'What dragging on the plot area does.',
+      description:
+        'What dragging on the plot area does: zoom, pan, box or lasso select, or draw a new shape (`draw*`, styled by `newshape`).',
     }),
     transition: attr.object(
       {

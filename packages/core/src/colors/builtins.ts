@@ -48,8 +48,8 @@ function plotlyjsGroup(kind: ColorscaleKind): Record<string, ColorscaleInput> {
  * the string means; those lists stay available as values (e.g. `COLORBREWER_SEQUENTIAL.Blues`).
  */
 export const BUILTIN_COLORSCALE_GROUPS: readonly ColorscaleGroup[] = [
-  { source: 'plotly.js', kind: 'sequential', scales: plotlyjsGroup('sequential') },
-  { source: 'plotly.js', kind: 'diverging', scales: plotlyjsGroup('diverging') },
+  { source: 'plotly.js', kind: 'sequential', scales: /* @__PURE__ */ plotlyjsGroup('sequential') },
+  { source: 'plotly.js', kind: 'diverging', scales: /* @__PURE__ */ plotlyjsGroup('diverging') },
   { source: 'plotly', kind: 'sequential', scales: SEQUENTIAL },
   { source: 'plotly', kind: 'diverging', scales: DIVERGING_PLOTLY },
   { source: 'ColorBrewer', kind: 'sequential', scales: COLORBREWER_SEQUENTIAL },

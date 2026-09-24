@@ -20,6 +20,9 @@ env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
   TURBO_TELEMETRY_DISABLED: '1'
+  # fast-check properties are seeded from the commit (plan E20.1, tests/property/setup.ts), so a
+  # failure replays locally from the printed command; random seeds run nightly (property-nightly.yml).
+  FC_SEED: ${{ github.event.pull_request.head.sha || github.sha }}
 
 jobs:
   lint:

@@ -36,7 +36,7 @@ export function run(el: HTMLElement): ExampleHandle {
     ],
     layout: {
       showlegend: false,
-      margin: { r: 110 }, // room for the translucent logo in the top-right margin
+      margin: { r: 110, t: 42 }, // room for the translucent logo in the top-right margin
       images: [
         ...boxes.map((b) => ({
           source: LOGO,

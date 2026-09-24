@@ -149,16 +149,18 @@ export function titleLayout(
   if (xanchor === 'left') x += t.pad.l;
   else if (xanchor === 'right') x -= t.pad.r;
 
+  // Plotly: with `automargin`, a container-referenced title has no `y: 'auto'`; it sits at the top.
+  const y0 = t.y === 'auto' && t.automargin && t.yref === 'container' ? 1 : t.y;
+
   // Top of the block, container px.
   let top: number;
-  if (t.y === 'auto') {
+  if (y0 === 'auto') {
     if (t.automargin && t.yref === 'paper') top = plotArea.y - t.pad.b - b.height;
     else top = margin.t / 2 - b.height / 2;
   } else {
-    const y =
-      t.yref === 'paper' ? plotArea.y + (1 - t.y) * plotArea.height : (1 - t.y) * size.height;
+    const y = t.yref === 'paper' ? plotArea.y + (1 - y0) * plotArea.height : (1 - y0) * size.height;
     const yanchor =
-      t.yanchor !== 'auto' ? t.yanchor : t.y > 2 / 3 ? 'top' : t.y < 1 / 3 ? 'bottom' : 'middle';
+      t.yanchor !== 'auto' ? t.yanchor : y0 > 2 / 3 ? 'top' : y0 < 1 / 3 ? 'bottom' : 'middle';
     top =
       yanchor === 'top'
         ? y + t.pad.t
@@ -198,7 +200,12 @@ export function titleLayout(
   let push: MarginPush | undefined;
   if (t.automargin) {
     const need = Math.ceil(b.height + t.pad.t + t.pad.b);
-    push = { t: need };
+    // Plotly's `applyTitleAutoMargin`: a container-referenced title reserves its room on its side
+    // (top unless it sits in the lower half), on top of what other components push there, so a
+    // top legend stacks under it; a paper-referenced one pushes like any other component.
+    if (t.yref === 'container')
+      push = y0 === 'auto' || y0 >= 0.5 ? { t: need, reserved: true } : { b: need, reserved: true };
+    else push = { t: need };
   }
   return { labels, push };
 }

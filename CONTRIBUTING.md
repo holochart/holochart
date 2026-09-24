@@ -72,6 +72,7 @@ examples/        Canonical examples: sandbox, docs, gallery, and visual tests
   _dev/          Primitive-level dev examples
 tests/visual/    Playwright visual regression harness and baselines
 tests/bundle/    IIFE smoke test and bundle-size entries (size-limit)
+tests/property/  fast-check seeding for the unit suite (Vitest setup file)
 tools/           Internal tooling (schema-gen, ...)
 deploy/          Docs proxy for mk7s.dev (Cloudflare)
 docs/adr/        Architecture Decision Records
@@ -113,12 +114,47 @@ same way the visual harness does.
 ### Unit tests
 
 Vitest runs `*.test.ts` files colocated with sources under `packages/*/src` and `tools/*/src`,
-plus repo-tooling tests under `tests/` (lint rules, visual-diff helpers).
+plus repo-tooling tests under `tests/` (lint rules, visual-diff helpers, property seeding).
 Keep data-pipeline code (validation, defaults, calc, layout) pure so it can be tested without a
-GPU. `fast-check` is available for property-based tests.
+GPU. `fast-check` is available for property-based tests (see below).
 
-Coverage thresholds are planned (`core` at 90% or more, trace calc at 85% or more) but are
-disabled until the packages have real code. Run `pnpm test:coverage` to see current numbers.
+`pnpm test:coverage` enforces 90% coverage for `packages/core` (lines, functions, branches,
+statements); the trace-calc threshold (85%) is still planned.
+
+### Property tests
+
+Properties (`fc.assert(fc.property(…))`) are seeded by the Vitest setup file
+[`tests/property/setup.ts`](tests/property/setup.ts), so every run can be replayed:
+
+| Where                            | Seed                                                                                               |
+| -------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Local `pnpm test`                | A fresh random seed per test                                                                       |
+| PR and `main` CI                 | `FC_SEED` = the commit SHA: the same commit always runs the same cases                             |
+| Nightly (`property-nightly.yml`) | Random per test and per repetition, 25 runs of every property-test file (`--repeats 24`), 4 shards |
+
+A property that passes its own `seed` keeps it. When a property fails, its error ends with the
+seed, the counterexample path, and the command that replays it, for example:
+
+```text
+fast-check seed: -684789228, path: "6:1:0:2"
+Replay: FC_SEED=-684789228 FC_PATH=6:1:0:2 pnpm test packages/core/src/x.test.ts -t '^suite > test$'
+Replay the whole run (search + shrink): FC_SEED=-684789228 pnpm test packages/core/src/x.test.ts -t '^suite > test$'
+```
+
+A test that fails another way after running a property (most often a timeout) prints its seed
+and replay command to stderr. The variables:
+
+- `FC_SEED`: a 32-bit integer (as printed) or a commit SHA (its first 8 hex digits). Replays a CI
+  failure with `FC_SEED=<sha>`.
+- `FC_PATH`: jumps straight to the shrunk counterexample (needs `FC_SEED`; keep the `-t` filter,
+  since a path belongs to one property).
+
+To explore more cases locally, repeat tests with fresh seeds, e.g.
+`pnpm test packages/core/src/__testing__/schema-properties.test.ts --repeats 49`. The nightly
+workflow can also be started by hand (Actions → Property tests (nightly) → Run workflow) with a
+different `repeats` count. When a property finds a bug, fix it and add the counterexample as a
+plain regression test next to the property (see "regressions found by the E20.2 properties" in
+`packages/core/src/__testing__/schema-properties.test.ts`).
 
 ### Visual regression tests
 

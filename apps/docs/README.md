@@ -158,14 +158,14 @@ pnpm --filter @mk7s/holochart-docs quality --json report.json # also write the n
 
 With `GITHUB_STEP_SUMMARY` set (GitHub Actions), a short Markdown summary is appended to it.
 
-| Gate                          | Kind        | What it checks                                                                                                                                                                                                             |
-| ----------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Attribute descriptions        | hard, 100%  | Every leaf attribute (`valType`) of layout, config and every discovered trace has a non-empty `description`. Missing ones are listed by path. Containers (`role: object` / `items`) without one are listed but don't fail. |
-| Attributes used in examples   | report only | Share of leaf attributes that some example under `examples/` sets (target ≥ 70%), overall, per namespace, and the least covered groups (`bar.error_x`, …).                                                                 |
-| Trace types with ≥ 5 examples | hard        | Every **released** trace type has at least 5 examples. Draft chart pages' types are only reported.                                                                                                                         |
-| Snippet type-check            | hard        | Every ` ```ts ` / ` ```typescript ` block of the hand-written pages compiles.                                                                                                                                              |
-| Internal links                | hard        | Markdown links to site paths (`/fundamentals/traces#…`, `./page`) resolve to a page. Anchors and external links (counted per host, never fetched) are report only.                                                         |
-| Spelling                      | report only | A list of common misspellings (`teh`, `recieve`, `seperate`, …) and doubled words (`the the`) in prose. Full dictionary spell checking is deferred: there is no English word list in CI.                                   |
+| Gate                          | Kind        | What it checks                                                                                                                                                                                    |
+| ----------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Attribute descriptions        | hard, 100%  | Every attribute of layout, config and every discovered trace, leaves (`valType`) and containers (`role: object` / `items`) alike, has a non-empty `description`. Missing ones are listed by path. |
+| Attributes used in examples   | report only | Share of leaf attributes that some example under `examples/` sets (target ≥ 70%), overall, per namespace, and the least covered groups (`bar.error_x`, …).                                        |
+| Trace types with ≥ 5 examples | hard        | Every **released** trace type has at least 5 examples. Draft chart pages' types are only reported.                                                                                                |
+| Snippet type-check            | hard        | Every ` ```ts ` / ` ```typescript ` block of the hand-written pages compiles.                                                                                                                     |
+| Internal links                | hard        | Markdown links to site paths (`/fundamentals/traces#…`, `./page`) resolve to a page. Anchors and external links (counted per host, never fetched) are report only.                                |
+| Spelling                      | report only | A list of common misspellings (`teh`, `recieve`, `seperate`, …) and doubled words (`the the`) in prose. Full dictionary spell checking is deferred: there is no English word list in CI.          |
 
 Details:
 

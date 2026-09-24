@@ -78,7 +78,8 @@ export interface ScatterCalc {
   readonly stream?: unknown;
   /**
    * Set by `calcAppend` (E7.2): this calc is `previous` plus `append`. Views and `extremes` use it
-   * to take the streaming path even when `crossTraceCalc` made the runtime drop `plan.append`.
+   * to take the streaming path even when `crossTraceCalc` reported the trace as changed (the
+   * runtime then drops `plan.append`).
    * Cleared on `previous` when the next streamed calc is made, so at most two calcs stay alive.
    */
   appendOf?: { readonly previous: ScatterCalc; readonly append: TraceAppend } | undefined;

@@ -70,6 +70,34 @@ describe('resolveMargins', () => {
     expect(m.l).toBe(80);
   });
 
+  it('stacks reserved pushes on top of the others (title over a top legend)', () => {
+    const size = { width: 700, height: 450 };
+    const base = { l: 40, r: 16, t: 16, b: 32 };
+    // Legend push 50 (two rows) and a reserved title of 25: 75, not max(50, 25).
+    expect(resolveMargins(base, [{ t: 50 }, { t: 25, reserved: true }], size).t).toBe(75);
+    // Alone, the reserved title only needs its own room.
+    expect(resolveMargins(base, [{ t: 25, reserved: true }], size).t).toBe(25);
+    // Plotly: the requested margin's slack beyond the pushes absorbs the reserved room.
+    expect(
+      resolveMargins({ ...base, t: 100 }, [{ t: 50 }, { t: 25, reserved: true }], size).t,
+    ).toBe(100);
+    expect(resolveMargins({ ...base, t: 60 }, [{ t: 50 }, { t: 25, reserved: true }], size).t).toBe(
+      75,
+    );
+  });
+
+  it('keeps pushed content `gutter` px from the figure edge', () => {
+    const size = { width: 700, height: 450 };
+    const base = { l: 40, r: 16, t: 16, b: 32, gutter: 4 };
+    const m = resolveMargins(base, [{ l: 52, r: 10 }, { b: 30 }], size);
+    // Pushes past the margin get the gutter; pushes inside it change nothing.
+    expect(m).toEqual({ l: 56, r: 16, t: 16, b: 34 });
+    // Not where a reserved component already sits between the content and the edge.
+    expect(resolveMargins(base, [{ t: 30 }, { t: 20, reserved: true }], size).t).toBe(50);
+    // No gutter by default (Plotly).
+    expect(resolveMargins({ ...base, gutter: 0 }, [{ l: 52 }], size).l).toBe(52);
+  });
+
   it('shrinks margins proportionally to leave a minimum plot area', () => {
     const m = resolveMargins(MARGIN, [], { width: 200, height: 450 });
     expect(m.l + m.r).toBeCloseTo(200 - MIN_PLOT_SIZE);

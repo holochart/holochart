@@ -135,6 +135,14 @@ test('IIFE exposes window.Holochart and renders with the bundled three.js', asyn
     return 'loaded';
   });
   expect(engine).toBe('loaded');
+  // Same for the fill code (plan E21.6).
+  const fill = await page.evaluate(async () => {
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global from the IIFE */
+    const render = (window as any).Holochart.render;
+    await render.preloadFillPrimitive();
+    return render.fillPrimitiveLoaded() as boolean;
+  });
+  expect(fill).toBe(true);
   expect(errors).toEqual([]);
   // Self-contained: nothing is fetched beyond the page's own files, and no font without text.
   expect(requests.filter((url) => !url.startsWith(`${ORIGIN}/`))).toEqual([]);

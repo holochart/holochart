@@ -68,7 +68,9 @@ export interface MakeSubplotsOptions {
   columnWidths?: readonly number[];
   /**
    * Titles of the subplots in row-major order (row 1 first), skipping empty and spanned cells;
-   * `''` or `null` leaves a subplot untitled.
+   * `''` or `null` leaves a subplot untitled. They are paper annotations named
+   * {@link SUBPLOT_TITLE_NAME}, drawn at 4/3 of `layout.font.size` (plotly.py: 16 px over a 12 px
+   * base, fixed).
    */
   subplotTitles?: readonly (string | null | undefined)[];
   /** Space between columns, as a plot-area fraction (default `0.2 / cols`). */
@@ -76,6 +78,19 @@ export interface MakeSubplotsOptions {
   /** Space between rows, as a plot-area fraction (default `0.3 / rows`). */
   verticalSpacing?: number;
 }
+
+/**
+ * `name` of the subplot title annotations {@link makeSubplots} adds. They carry no font size: the
+ * annotations component draws them at {@link SUBPLOT_TITLE_FONT_SCALE} × `layout.font.size`
+ * unless a size is set (on the annotation or by the template's `annotationdefaults`).
+ */
+export const SUBPLOT_TITLE_NAME = 'subplot title';
+
+/**
+ * Subplot title size relative to `layout.font.size`: plotly.py's 16 px over its 12 px base font,
+ * so Plotly's look keeps 16 px and a 9 px base (Holochart's default look) gets 12 px.
+ */
+export const SUBPLOT_TITLE_FONT_SCALE = 4 / 3;
 
 /** An extent `[start, end]` in plot-area fractions. */
 export type Extent = [number, number];
@@ -426,7 +441,8 @@ export function makeSubplots(options: MakeSubplotsOptions = {}): MakeSubplotsRes
         xanchor: 'center',
         yanchor: 'bottom',
         showarrow: false,
-        font: { size: 16 },
+        // No font size: it follows `layout.font` (SUBPLOT_TITLE_FONT_SCALE), not Python's 16 px.
+        name: SUBPLOT_TITLE_NAME,
       });
     });
     if (annotations.length > 0) sortedLayout['annotations'] = annotations;

@@ -36,6 +36,7 @@
 import {
   type EncodedFigure,
   applyUirevision,
+  axisTypeChangeEdits,
   coerceContainer,
   collectCategoryValues,
   configSchema,
@@ -1160,7 +1161,11 @@ export class Chart {
   }
 
   #relayoutInto(plan: Plan, update: AttributeUpdate, payload?: AttributeUpdate): void {
-    const edits = withRangeImplications(update, this.#figure.layout, this.#full?.fullLayout);
+    const edits = withRangeImplications(
+      axisTypeChangeEdits(update, this.#figure.layout, this.#full?.fullLayout),
+      this.#figure.layout,
+      this.#full?.fullLayout,
+    );
     const paths = Object.keys(edits).filter((p) => edits[p] !== undefined);
     if (paths.length === 0) return;
     this.#figure.layout = applyEdits(this.#figure.layout, edits);
@@ -1871,8 +1876,13 @@ export class Chart {
    * funnel and waterfall stack together as `bar-like`), else its trace type; the group's first
    * module with a `crossTraceCalc` runs it. It reruns when any trace of the group (hidden ones
    * included: hiding a bar restacks the others) was recalculated or declared a `crossTraceCalc`
-   * stage; every member then re-uploads (its calc was mutated in place). With `only`, just the
-   * groups with a member in it rerun (the second pass after a category reorder).
+   * stage. The members the module reports as changed (its return value; all of them when it
+   * returns nothing) then re-upload: their plans get `calc`, `plot` and `style` and lose `append`
+   * (their calc was mutated in place). Unreported members keep their plans as they were, so a
+   * streaming append to one trace keeps its fast path when stacking elsewhere on the subplot
+   * reruns, and an unaffected trace is not redrawn. With `only`, just the groups with a member in
+   * it rerun (the second pass after a category reorder; the members in `only` already have full
+   * plans).
    */
   #crossTraceCalc(
     fullLayout: FullLayout,
@@ -1926,13 +1936,15 @@ export class Chart {
           calc: (this.#traces[i] as TraceSlot).calc,
         }));
       if (entries.length === 0) continue;
-      group.module.crossTraceCalc(entries, {
+      const reported = group.module.crossTraceCalc(entries, {
         fullLayout,
         subplot,
         xaxis: subplot.xaxis,
         yaxis: subplot.yaxis,
       });
+      const changed = reported ? new Set(reported) : undefined;
       for (const e of entries) {
+        if (changed && !changed.has(e.index)) continue;
         // Cross-trace calc rewrote the calc in place: no longer a streaming-only change.
         const { append: _, ...tp } = plans[e.index] as TraceUpdatePlan;
         plans[e.index] = { ...tp, calc: true, plot: true, style: true };
@@ -2151,6 +2163,10 @@ export class Chart {
       isFixed: (axis) => this.#isFixed(axis),
       limits: (axis) => this.#limits(axis),
       dispatch: (event, only) => this.#dispatchPointer(event, only),
+      drawShape: (gesture) => {
+        for (const slot of this.#componentOrder)
+          if (slot.view?.drawShape?.(gesture) === true) return;
+      },
       preview: (ranges) => this.#previewRanges(ranges),
       commit: (ranges) => {
         this.#commitRanges(ranges).catch(() => undefined);

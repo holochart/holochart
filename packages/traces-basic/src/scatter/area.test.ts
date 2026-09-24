@@ -323,9 +323,13 @@ describe('scatter hover on fills and stacks', () => {
     expect(p!.fields).toMatchObject({ hoveron: 'fills' });
     expect(p!.color).toBe(traces[0]!['fillcolor']);
     expect(p!.py).toBe(50);
-    // Outside the fill: nothing. Fills only hover in closest mode.
+    // Outside the fill: nothing. Fills hover in every hovermode, as in plotly.js.
     expect(scatterHoverPoints(calcs[0]!, traces[0]!, query(150, 50), h)).toEqual([]);
-    expect(scatterHoverPoints(calcs[0]!, traces[0]!, query(50, 50, 'x'), h)).toEqual([]);
+    for (const mode of ['x', 'y'] as const) {
+      const [f] = scatterHoverPoints(calcs[0]!, traces[0]!, query(50, 50, mode), h);
+      expect(f).toMatchObject({ pointIndex: -1, text: 'box', distance: 20 });
+    }
+    expect(scatterHoverPoints(calcs[0]!, traces[0]!, query(150, 50, 'x'), h)).toEqual([]);
   });
 
   it('points win over the fill; hoveron points ignores the fill', () => {

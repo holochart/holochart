@@ -6,6 +6,11 @@
  * by screen readers for free. The view adds one absolutely positioned `div` to `chart.element`;
  * visibility (`displayModeBar: 'hover'`) is CSS driven by a class on that element and one shared
  * `<style>` element, so hovering costs no JavaScript.
+ *
+ * Touch screens have no hover: like Plotly (where a tap gives the chart a sticky `:hover`), a tap
+ * on the chart shows the toolbar and a tap outside it hides it again, so the toolbar doesn't sit
+ * over the legend or the plot (M2 carry-forward: the always-shown touch toolbar covered the top
+ * legend of the default look).
  */
 import { attr, isPlainObject, toRGBA, type FullLayout, type FullTrace } from '@mk7s/holochart-core';
 import type {
@@ -16,6 +21,7 @@ import type {
   ComponentView,
 } from '@mk7s/holochart-runtime';
 import { findChart, fireAndForget } from '../shared/host.ts';
+import { eraseActiveShape } from '../shapes/draw.ts';
 import {
   MODEBAR_ZOOM_IN_FACTOR,
   MODEBAR_ZOOM_OUT_FACTOR,
@@ -121,13 +127,15 @@ export function supplyModebarDefaults(
 const STYLE_ID = 'hc-modebar-style';
 const HOST = 'hc-modebar-host';
 const HOST_HOVER = 'hc-modebar-host--hover';
+/** Set on the host after a tap on the chart (touch has no hover), until a tap outside it. */
+const HOST_TOUCHED = 'hc-modebar-host--touched';
 
 /**
  * Shared by every modebar in a document (or shadow root). `'hover'` mode hides the toolbar with
  * opacity (not `display`) so its buttons stay in the tab order; it shows while the chart is
  * hovered, and while a button has keyboard focus (`:focus-visible`, so a mouse click does not pin
- * it open; `:focus-within` where `:has()` is unsupported). Touch screens without hover always
- * show it.
+ * it open; `:focus-within` where `:has()` is unsupported). On touch, a tap on the chart shows it
+ * (`HOST_TOUCHED`, set by the view).
  */
 const CSS = `
 .hc-modebar{position:absolute;top:2px;right:2px;z-index:1001;display:flex;flex-direction:row;align-items:flex-start;gap:4px;line-height:0;opacity:1;transition:opacity .3s ease}
@@ -141,10 +149,9 @@ const CSS = `
 .hc-modebar-btn .hc-modebar-icon{display:block;width:16px;height:16px;pointer-events:none}
 .hc-modebar-btn .hc-modebar-icon svg{width:100%;height:100%}
 .${HOST_HOVER} .hc-modebar{opacity:0;pointer-events:none}
-.${HOST_HOVER}:hover .hc-modebar{opacity:1;pointer-events:auto}
+.${HOST_HOVER}:hover .hc-modebar,.${HOST_HOVER}.${HOST_TOUCHED} .hc-modebar{opacity:1;pointer-events:auto}
 @supports selector(:has(*)){.${HOST_HOVER} .hc-modebar:has(:focus-visible){opacity:1;pointer-events:auto}}
 @supports not selector(:has(*)){.${HOST_HOVER} .hc-modebar:focus-within{opacity:1;pointer-events:auto}}
-@media (hover:none){.${HOST_HOVER} .hc-modebar{opacity:1;pointer-events:auto}}
 @media (prefers-reduced-motion:reduce){.hc-modebar{transition:none}}
 `;
 
@@ -296,6 +303,18 @@ export function createModebarView<Ctx extends ModebarViewContext>(
     (options.warn ?? ((m: string) => console.warn(m)))(message);
   };
 
+  // Touch: a tap on the chart shows the toolbar, a tap elsewhere hides it (see the module docs).
+  const onHostPointer = (event: PointerEvent): void => {
+    if (event.pointerType === 'touch') chart?.element.classList.add(HOST_TOUCHED);
+  };
+  const onDocPointer = (event: PointerEvent): void => {
+    const host = chart?.element;
+    if (!host || !host.classList.contains(HOST_TOUCHED)) return;
+    // `composedPath`: a chart inside a shadow root is retargeted to its shadow host.
+    if (event.composedPath().includes(host)) return;
+    host.classList.remove(HOST_TOUCHED);
+  };
+
   const relayout = (update: ModebarLayoutUpdate): void => {
     if (!chart || Object.keys(update).length === 0) return;
     fireAndForget(chart.relayout(update));
@@ -320,7 +339,15 @@ export function createModebarView<Ctx extends ModebarViewContext>(
       case 'pan2d':
       case 'select2d':
       case 'lasso2d':
+      case 'drawline':
+      case 'drawopenpath':
+      case 'drawclosedpath':
+      case 'drawcircle':
+      case 'drawrect':
         if (fl.dragmode !== button.dragmode) relayout({ dragmode: button.dragmode });
+        return;
+      case 'eraseshape':
+        eraseActiveShape(chart);
         return;
       case 'hoverClosestCartesian':
       case 'hoverCompareCartesian':
@@ -400,6 +427,8 @@ export function createModebarView<Ctx extends ModebarViewContext>(
       host.style.position = 'relative';
     }
     host.classList.add(HOST);
+    host.addEventListener('pointerdown', onHostPointer, true);
+    doc.addEventListener('pointerdown', onDocPointer, true);
     const bar = doc.createElement('div');
     bar.className = 'hc-modebar';
     bar.setAttribute('role', 'toolbar');
@@ -426,7 +455,9 @@ export function createModebarView<Ctx extends ModebarViewContext>(
     appliedStyle = undefined;
     if (chart) {
       const host = chart.element;
-      host.classList.remove(HOST, HOST_HOVER);
+      host.removeEventListener('pointerdown', onHostPointer, true);
+      host.ownerDocument.removeEventListener('pointerdown', onDocPointer, true);
+      host.classList.remove(HOST, HOST_HOVER, HOST_TOUCHED);
       if (hostPosition !== undefined) host.style.position = hostPosition;
     }
     hostPosition = undefined;

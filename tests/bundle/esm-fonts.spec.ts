@@ -1,8 +1,5 @@
-import { realpathSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
 import { expect, test } from '@playwright/test';
+import { bundleApp, ORIGIN, serveApp } from './esm-app.ts';
 
 /**
  * The built-in default font through an app bundler (plan E2.18): `@mk7s/holochart`'s ESM build is
@@ -11,48 +8,6 @@ import { expect, test } from '@playwright/test';
  * as `blob:` URLs): only the faces its text uses are loaded, and nothing is fetched from anywhere
  * but the page's own chunks. Needs the packages built (`pnpm build`).
  */
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const ENTRY = resolve(ROOT, 'packages/holochart/dist/index.js');
-const ORIGIN = 'http://holochart.test';
-
-interface OutputChunk {
-  type: 'chunk' | 'asset';
-  fileName: string;
-  code?: string;
-  isEntry?: boolean;
-}
-
-/** Bundle the full ESM build (three included) into chunks, in memory. */
-async function bundleApp(): Promise<Map<string, string>> {
-  const vite = realpathSync(fileURLToPath(import.meta.resolve('vite')));
-  const rolldown = (await import(pathToFileURL(createRequire(vite).resolve('rolldown')).href)) as {
-    rolldown(options: Record<string, unknown>): Promise<{
-      generate(options: Record<string, unknown>): Promise<{ output: OutputChunk[] }>;
-      close(): Promise<void>;
-    }>;
-  };
-  const build = await rolldown.rolldown({
-    input: 'app',
-    platform: 'browser',
-    logLevel: 'warn',
-    plugins: [
-      {
-        name: 'app-entry',
-        resolveId: (id: string) => (id === 'app' ? id : null),
-        load: (id: string) =>
-          id === 'app'
-            ? `import * as Holochart from ${JSON.stringify(ENTRY)}; window.Holochart = Holochart;`
-            : null,
-      },
-    ],
-  });
-  try {
-    const { output } = await build.generate({ format: 'es', entryFileNames: 'app.js' });
-    return new Map(output.filter((c) => c.type === 'chunk').map((c) => [c.fileName, c.code ?? '']));
-  } finally {
-    await build.close();
-  }
-}
 
 test('ESM: text draws with the default font from per-face lazy chunks', async ({ page }) => {
   test.setTimeout(60_000);
@@ -60,30 +15,7 @@ test('ESM: text draws with the default font from per-face lazy chunks', async ({
   const fontChunks = [...chunks.keys()].filter((name) => name.startsWith('texgyreheros-'));
   expect(fontChunks).toHaveLength(4);
 
-  const errors: string[] = [];
-  const requests: string[] = [];
-  page.on('pageerror', (err) => errors.push(err.message));
-  page.on('console', (msg) => {
-    if (msg.type() === 'error') errors.push(msg.text());
-  });
-  page.on('request', (req) => requests.push(req.url()));
-  await page.route('**/*', async (route) => {
-    const url = new URL(route.request().url());
-    if (url.origin !== ORIGIN) {
-      await route.abort('internetdisconnected');
-      return;
-    }
-    if (url.pathname === '/') {
-      await route.fulfill({
-        contentType: 'text/html',
-        body: '<!doctype html><html><body><div id="root"></div><script type="module" src="/app.js"></script></body></html>',
-      });
-      return;
-    }
-    const code = chunks.get(url.pathname.slice(1));
-    if (code === undefined) await route.fulfill({ status: 404, body: 'not found' });
-    else await route.fulfill({ contentType: 'text/javascript', body: code });
-  });
+  const { errors, requests } = await serveApp(page, chunks);
 
   await page.goto(`${ORIGIN}/`);
   await page.waitForFunction(() => 'Holochart' in window);

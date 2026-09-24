@@ -42,8 +42,10 @@ interface FamilyOptions {
   layout?: TemplateLayout;
   /** Extra per-type trace defaults, merged over the family's. */
   data?: TemplateData;
-  /** Show `title.x = 0.05` (every full plotly.py template does). */
-  titleX?: number;
+  /** `title.x`: 0.05 unless given; `null` leaves it unset (ggplot2 and seaborn set none). */
+  titleX?: number | null;
+  /** `annotationdefaults` (default: arrows in the ink color, no arrowhead, 1 px). */
+  annotation?: Record<string, unknown>;
 }
 
 /** A full plotly.py-style template from its palette of values. */
@@ -57,7 +59,7 @@ function family(o: FamilyOptions): Template {
   const errors = { color: o.ink };
   return {
     layout: {
-      annotationdefaults: { arrowcolor: o.ink, arrowhead: 0, arrowwidth: 1 },
+      annotationdefaults: o.annotation ?? { arrowcolor: o.ink, arrowhead: 0, arrowwidth: 1 },
       ...colorbars.layout,
       colorscale,
       colorway: [...o.colorway],
@@ -67,7 +69,7 @@ function family(o: FamilyOptions): Template {
       paper_bgcolor: o.paper,
       plot_bgcolor: o.plot,
       shapedefaults: { line: { color: o.ink } },
-      title: { x: o.titleX ?? 0.05 },
+      ...(o.titleX === null ? {} : { title: { x: o.titleX ?? 0.05 } }),
       ...bothAxes({ automargin: true, autotypenumbers: 'strict', ...o.axis }),
       ...o.layout,
     },
@@ -188,7 +190,6 @@ export const simple_white: Template = /* @__PURE__ */ family({
     linecolor: SIMPLE_INK,
     showgrid: false,
     showline: true,
-    tickcolor: SIMPLE_INK,
     ticks: 'outside',
     title: { standoff: 15 },
     zeroline: false,
@@ -199,6 +200,7 @@ export const simple_white: Template = /* @__PURE__ */ family({
   colorbar: { outlinewidth: 1, tickcolor: SIMPLE_INK, ticks: 'outside' },
   barLine: { color: 'white', width: 0.5 },
   table: ['rgb(237,237,237)', 'rgb(217,217,217)', 'white'],
+  annotation: { arrowhead: 0, arrowwidth: 1 },
   layout: { shapedefaults: { fillcolor: 'black', line: { width: 0 }, opacity: 0.3 } },
   data: {
     histogram: [
@@ -234,6 +236,8 @@ export const ggplot2: Template = /* @__PURE__ */ family({
   colorbar: { outlinewidth: 0, tickcolor: GG_PANEL, ticklen: 6, ticks: 'inside' },
   barLine: { color: GG_PANEL, width: 0.5 },
   table: [GG_PANEL, 'rgb(217,217,217)', 'white'],
+  titleX: null,
+  annotation: { arrowhead: 0, arrowwidth: 1 },
   layout: { shapedefaults: { fillcolor: 'black', line: { width: 0 }, opacity: 0.3 } },
 });
 
@@ -290,8 +294,9 @@ export const seaborn: Template = /* @__PURE__ */ family({
   colorbar: { outlinewidth: 0, tickcolor: SEABORN_INK, ticklen: 8, ticks: 'outside', tickwidth: 2 },
   barLine: { color: SEABORN_PANEL, width: 0.5 },
   table: ['rgb(231,231,240)', 'rgb(183,183,191)', 'white'],
+  titleX: null,
+  annotation: { arrowcolor: 'rgb(67,103,167)' },
   layout: {
-    annotationdefaults: { arrowcolor: 'rgb(67,103,167)', arrowhead: 0, arrowwidth: 1 },
     shapedefaults: { fillcolor: 'rgb(67,103,167)', line: { width: 0 }, opacity: 0.5 },
   },
 });
@@ -314,17 +319,28 @@ export const presentation: Template = {
     scatterpolar: [{ type: 'scatterpolar', ...LARGE_MARKERS }],
     scatterternary: [{ type: 'scatterternary', ...LARGE_MARKERS }],
     table: [{ type: 'table', cells: { height: 30 }, header: { height: 36 } }],
+    pie: [{ type: 'pie', automargin: true }],
   },
 };
 
+/** plotly.py's grid templates also carry these (so composing one keeps them). */
+const PIE_AUTOMARGIN = { pie: [{ type: 'pie', automargin: true }] };
+const STANDOFF = { title: { standoff: 15 } };
+
 /** No vertical grid lines (compose it with another template). */
-export const xgridoff: Template = { layout: { xaxis: { showgrid: false } } };
+export const xgridoff: Template = {
+  layout: { xaxis: { showgrid: false, ...STANDOFF }, yaxis: STANDOFF },
+  data: PIE_AUTOMARGIN,
+};
 
 /** No horizontal grid lines (compose it with another template). */
-export const ygridoff: Template = { layout: { yaxis: { showgrid: false } } };
+export const ygridoff: Template = { layout: { yaxis: { showgrid: false } }, data: PIE_AUTOMARGIN };
 
 /** Grid lines on both axes, e.g. `'simple_white+gridon'`. */
-export const gridon: Template = { layout: /* @__PURE__ */ bothAxes({ showgrid: true }) };
+export const gridon: Template = {
+  layout: /* @__PURE__ */ bothAxes({ showgrid: true, ...STANDOFF }),
+  data: PIE_AUTOMARGIN,
+};
 
 /**
  * The empty template: the library's schema defaults (Plotly's look), as with

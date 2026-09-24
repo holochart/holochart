@@ -179,10 +179,11 @@ test.describe('table rich-text links', () => {
 
   test('a link in a cell shows a pointer and opens on click, not on a drag', async ({ page }) => {
     const box = (await page.locator(`#${TEST_CONTAINER_ID}`).boundingBox())!;
-    // The link's cell: the last column (x ≈ 525–625) of the first body row (y ≈ 72–122) of the
-    // 640×400 example; find the text by its cursor rather than by exact font metrics.
+    // The link's cell: the last column (x ≈ 525–625) of the first body row of the 640×400
+    // example. Find the text by its cursor rather than by exact positions, over a band tall enough
+    // that margin changes in the default look don't move it out of the search.
     let link: { x: number; y: number } | undefined;
-    for (let y = 80; y <= 94 && !link; y += 3) {
+    for (let y = 40; y <= 140 && !link; y += 3) {
       for (let x = 530; x <= 600 && !link; x += 5) {
         if ((await cursorAt(page, box.x + x, box.y + y)) === 'pointer') {
           link = { x: box.x + x, y: box.y + y };
