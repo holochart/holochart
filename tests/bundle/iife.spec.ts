@@ -247,3 +247,48 @@ test('IIFE draws text with the shipped default font, loading only the faces it u
   expect(requests.filter((url) => !url.startsWith(`${ORIGIN}/`))).toEqual([]);
   expect(errors).toEqual([]);
 });
+
+test('IIFE draws the controls whose views load on first use (inlined)', async ({ page }) => {
+  const { errors, requests } = await servePage(page);
+  await page.goto(`${ORIGIN}/`);
+  // Update menus and sliders (plan E21.6): their views are behind a dynamic import() that the
+  // single-file build inlines, so they draw by `chart.ready` without fetching anything.
+  const dom = await page.evaluate(async () => {
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global from the IIFE */
+    const hc = (window as any).Holochart;
+    const el = document.getElementById('root')!;
+    const buttons = [
+      { label: 'A', method: 'relayout', args: [{ 'title.text': 'A' }] },
+      { label: 'B', method: 'relayout', args: [{ 'title.text': 'B' }] },
+    ];
+    const steps = [
+      { label: 'one', method: 'skip' },
+      { label: 'two', method: 'skip' },
+    ];
+    const chart = hc.createChart(el, {
+      data: [{ x: [1, 2, 3], y: [2, 1, 3] }],
+      layout: {
+        width: 400,
+        height: 300,
+        updatemenus: [{ type: 'buttons', buttons }],
+        sliders: [{ steps }],
+      },
+    });
+    await chart.ready;
+    const out = {
+      menuButtons: el.querySelectorAll('.hc-menus .hc-menu-btn').length,
+      sliders: el.querySelectorAll('.hc-sliders .hc-slider').length,
+      order: [...el.children].map((c) => c.className.split(' ')[0]).filter(Boolean),
+    };
+    chart.destroy();
+    return out;
+  });
+  expect(dom.menuButtons).toBe(2);
+  expect(dom.sliders).toBe(1);
+  expect(dom.order.indexOf('hc-menus')).toBeLessThan(dom.order.indexOf('hc-sliders'));
+  expect(dom.order.indexOf('hc-sliders')).toBeLessThan(dom.order.indexOf('hc-modebar'));
+  // Nothing but the script and the font faces the text uses.
+  expect(requests.filter((url) => !url.startsWith(`${ORIGIN}/`))).toEqual([]);
+  expect(requests.filter((url) => url.endsWith('.js'))).toEqual([`${ORIGIN}${SCRIPT_PATH}`]);
+  expect(errors).toEqual([]);
+});

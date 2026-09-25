@@ -66,6 +66,7 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
         'styling-themes',
         'hover-text-templates',
         'interaction-events',
+        'controls',
         'updating-charts',
         'transitions-animation',
         'colors-colorscales',
@@ -136,6 +137,9 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
         'box',
         'violin',
         'strip',
+        'splom',
+        'parallel-coordinates',
+        'parallel-categories',
       ]),
     },
   ];

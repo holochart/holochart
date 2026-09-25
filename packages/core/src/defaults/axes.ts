@@ -22,7 +22,9 @@
  *   `automargin` → `true`, `shift` → ∓3; `shift` → 0 otherwise. `autoshift`/`shift` are unset
  *   on every other axis;
  * - linked axes and constraints (`matches`, `scaleanchor`, `constraintoward`, E3.9):
- *   `defaults/constraints.ts`.
+ *   `defaults/constraints.ts`;
+ * - splom traces (E10.9) add their dimension axes and cell subplots, typed from the dimension
+ *   values (`defaults/splom-axes.ts`).
  *
  * Every rule reads the resolved input the same way it writes it, so the output fed back in is a
  * fixed point (supply-defaults idempotence).
@@ -43,6 +45,8 @@ import type { AttrSpec, ObjectNode } from '../schema/types.ts';
 import { isPlainObject } from '../util/objects.ts';
 import { supplyAxisConstraints } from './constraints.ts';
 import { coerceContainer, resolveWithTemplate } from './container.ts';
+import { hasRangeslider, supplyRangeControls, supplyRangesliderSelf } from './rangeslider.ts';
+import { getSplomStash, splomMatchDefaults } from './splom-axes.ts';
 import type { FullAxis, FullLayout, FullTrace, Subplots } from './types.ts';
 
 /** Axis types {@link autoType} can detect. */
@@ -320,6 +324,35 @@ function dependentDefaults(
   return out;
 }
 
+/**
+ * Range slider and selector defaults that are plain overrides (plan E5.9, `rangeslider.ts`): the
+ * selector font inherits `layout.font`; a y axis anchored to an x axis with a visible range
+ * slider is `fixedrange` by default (Plotly: the slider pans, the y axis stays put).
+ */
+function rangeControlDefaults(
+  resolve: Resolver,
+  fullLayout: FullLayout,
+  letter: 'x' | 'y',
+  anchorDflt: unknown,
+): Record<string, unknown> {
+  if (letter === 'y') {
+    const anchor = resolve('anchor', anchorDflt);
+    const x =
+      typeof anchor === 'string' && anchor !== 'free'
+        ? fullLayout[keyForSubplotId(anchor, 'xaxis', 'x')]
+        : undefined;
+    return hasRangeslider(x) ? { fixedrange: true } : {};
+  }
+  const font = fullLayout.font;
+  const out: Record<string, unknown> = {};
+  for (const k of ['family', 'size', 'color', 'weight', 'style', 'variant', 'textcase'] as const) {
+    out[`rangeselector.font.${k}`] = font[k];
+  }
+  out['rangeselector.font.lineposition'] = font.lineposition;
+  out['rangeselector.font.shadow'] = font.shadow;
+  return out;
+}
+
 /** Validate `dtick`/`tick0` for linear tick modes now that the axis type is known. */
 function cleanLinearTicks(ax: FullAxis): void {
   if (ax.tickmode === 'linear') {
@@ -486,6 +519,27 @@ export function supplyCartesianAxes(
       if (data !== undefined) firstData[letter].set(id, { trace, data });
     }
   }
+  // Splom traces (E10.9) create one axis pair per dimension and one subplot per drawn cell.
+  const splom = getSplomStash(fullLayout);
+  if (splom) {
+    for (const id of splom.subplots) {
+      const at = id.indexOf('y');
+      const x = id.slice(0, at);
+      const y = id.slice(at);
+      addUnique(subplots.xaxis, x);
+      addUnique(subplots.yaxis, y);
+      addUnique(subplots.cartesian, id);
+      if (!counterpart.x.has(x)) counterpart.x.set(x, y);
+      if (!counterpart.y.has(y)) counterpart.y.set(y, x);
+    }
+    for (const letter of ['x', 'y'] as const) {
+      for (const [id, s] of Object.entries(splom.axes[letter])) {
+        addUnique(subplots[letter === 'x' ? 'xaxis' : 'yaxis'], id);
+        if (firstData[letter].has(id) || !isArrayLike(s.data) || s.data.length === 0) continue;
+        firstData[letter].set(id, { trace: s.trace, data: s.data });
+      }
+    }
+  }
   for (const [key, value] of Object.entries(layoutIn)) {
     if (!isPlainObject(value)) continue;
     const x = subplotIdForKey(key, 'xaxis', 'x');
@@ -523,6 +577,10 @@ export function supplyCartesianAxes(
         );
       };
       resolvers.set(id, resolve);
+      // A numeric `position` only means something on a free axis (Plotly).
+      const anchor = isNumeric(getIn(axIn, 'position'))
+        ? 'free'
+        : (counterpart[letter].get(id) ?? other);
       const ax = coerceContainer(
         node,
         axIn,
@@ -530,13 +588,16 @@ export function supplyCartesianAxes(
         {
           template: tmpl,
           overrides: {
-            // A numeric `position` only means something on a free axis (Plotly).
-            anchor: isNumeric(getIn(axIn, 'position'))
-              ? 'free'
-              : (counterpart[letter].get(id) ?? other),
+            anchor,
             // Unset unless the user sets it (see supplyOverlaying).
             overlaying: null,
             ...dependentDefaults(resolve, fullLayout, letter),
+            ...rangeControlDefaults(
+              resolve,
+              fullLayout,
+              letter,
+              extra?.get(id)?.['anchor'] ?? anchor,
+            ),
             ...extra?.get(id),
           },
         },
@@ -553,6 +614,7 @@ export function supplyCartesianAxes(
       ax._id = id;
       ax._name = key;
       fullLayout[key] = ax;
+      if (letter === 'x') supplyRangesliderSelf(axIn, ax, fullLayout);
     }
     const overlaying = getNodeAtPath(node, 'overlaying');
     supplyOverlaying(
@@ -564,12 +626,17 @@ export function supplyCartesianAxes(
       overlaying?.kind === 'attr' ? overlaying : undefined,
     );
   }
+  const xNode = layoutSchema.children['xaxis'];
+  if (xNode?.kind === 'object') {
+    supplyRangeControls(layoutIn, fullLayout, subplots, templateLayout, xNode);
+  }
   supplyFreeAxes(fullLayout, subplots, resolvers);
   supplyAxisConstraints(
     layoutIn,
     fullLayout,
     [...subplots.xaxis, ...subplots.yaxis],
     templateLayout,
+    splomMatchDefaults(fullLayout),
   );
   return subplots;
 }

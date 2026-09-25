@@ -129,12 +129,32 @@ export interface CalcContext {
    */
   readonly xaxis: AxisInfo | undefined;
   readonly yaxis: AxisInfo | undefined;
+  /**
+   * Every cartesian axis by id (M3 wave 2), for multi-subplot traces (see
+   * {@link TraceModule.cells}), which convert each column through the axis it is drawn on. Always
+   * set by the runtime; optional for hand-built contexts.
+   */
+  readonly axes?: ReadonlyMap<string, AxisInfo>;
 }
 
 /** What a trace contributes to the autorange of each of its axes. */
 export interface TraceExtremes {
   readonly x?: AxisExtremes;
   readonly y?: AxisExtremes;
+  /**
+   * Extremes by axis id (M3 wave 2), for multi-subplot traces (see {@link TraceModule.cells}),
+   * which have no single x and y axis. When set, `x` and `y` are ignored.
+   */
+  readonly byAxis?: Readonly<Record<string, AxisExtremes>>;
+}
+
+/**
+ * One cartesian subplot a multi-subplot trace draws on (M3 wave 2, E10.9; see
+ * {@link TraceModule.cells}): the ids of its axes, e.g. `{ xaxis: 'x2', yaxis: 'y3' }`.
+ */
+export interface TraceCellRef {
+  readonly xaxis: string;
+  readonly yaxis: string;
 }
 
 /**
@@ -209,10 +229,18 @@ export interface TracePlotContext<Calc = unknown> {
   /** Pass to primitive factories (`createMarkers(ctx.primitives, …)`). */
   readonly primitives: PrimitiveContext;
   /**
-   * Add a primitive to the trace's viewport. The runtime tracks it: it is reported by
-   * `chart.getTraceObjects(i)` and removed and disposed with the view.
+   * Multi-subplot traces (M3 wave 2, E10.9; see {@link TraceModule.cells}): the subplots of the
+   * trace's cells that exist, in the order `cells` listed them. Each has its own viewport, axes
+   * and transform; add a cell's primitives with `add(primitive, cell.viewport)`. `subplot`,
+   * `xaxis` and `yaxis` are `undefined` for such traces, and `viewport` is the overlay. Zooming or
+   * panning any cell's axes sends a `transform` update with the new transforms here.
    */
-  add<T>(primitive: Primitive<T>): Primitive<T>;
+  readonly cells?: readonly SubplotInfo[];
+  /**
+   * Add a primitive to the trace's viewport, or to `viewport` (a cell's, M3 wave 2). The runtime
+   * tracks it: it is reported by `chart.getTraceObjects(i)` and removed and disposed with the view.
+   */
+  add<T>(primitive: Primitive<T>, viewport?: Viewport): Primitive<T>;
   /** Remove (and dispose) a primitive added with {@link add}. */
   remove<T>(primitive: Primitive<T>): void;
   /** Schedule a frame (ADR-007), e.g. after async resources finish loading. */
@@ -262,6 +290,22 @@ export interface TraceModule<
   Calc = unknown,
   C extends Children = Children,
 > extends CoreTraceModule<C> {
+  /**
+   * Multi-subplot traces (M3 wave 2, E10.9 `splom`): the cartesian subplots the trace draws on,
+   * instead of the one its `xaxis` / `yaxis` would name (such a trace is not in the `cartesian`
+   * category and has neither; core's supply-defaults creates its axes and subplots, see core's
+   * `stashSplomAxis`). The runtime then gives `calc` every axis (`ctx.axes`), autoranges each axis
+   * from `extremes(…).byAxis`, draws the view with `ctx.cells` (one per existing subplot, updated
+   * on zoom and pan of any of them), and asks `hoverPoints` / `selectPoints` once per cell under
+   * the pointer or the selection, with that cell's axes and transform in the context. The
+   * selection is per trace, so selecting in one cell selects the same points in every cell.
+   */
+  cells?(trace: FullTrace): readonly TraceCellRef[];
+  /**
+   * Multi-subplot traces: the data the trace puts on axis `axisId` (its category list comes from
+   * it, like a trace's `x` on its x axis), or `undefined` for none.
+   */
+  axisData?(trace: FullTrace, axisId: string): unknown;
   /** Pure calc: full trace → calcdata. */
   calc?(trace: FullTrace, ctx: CalcContext): Calc;
   /** Autorange contribution, in linear coordinates with px padding. */
@@ -693,6 +737,62 @@ export interface ComponentDrawContext {
    * optional for hand-built test contexts.
    */
   calcdata?(index: number): unknown;
+  /**
+   * A second view of cartesian subplot `subplot`'s traces in a viewport of its own (M3 wave 2,
+   * E5.9: the range slider's thumbnail; see {@link SubplotMirror}), or `undefined` when there is
+   * no such subplot. The mirror belongs to this component: dispose it when done (the runtime also
+   * disposes it with the component's view). Always set by the runtime; optional for hand-built
+   * test contexts.
+   */
+  mirrorSubplot?(subplot: string, options: SubplotMirrorOptions): SubplotMirror | undefined;
+  /**
+   * The range axis `id` autoranges to over all of its data (traces' and components' extremes),
+   * whatever its `autorange` and `range` say, in linear coordinates (M3 wave 2, E5.9: the range
+   * slider spans all the data). `undefined` for an unknown axis.
+   */
+  autorange?(id: string): readonly [number, number] | undefined;
+}
+
+/**
+ * Where and how a {@link SubplotMirror} draws: its viewport rect and the linear ranges of its x and
+ * y axes (the traces' own linear space, so a range slider passes the linear range of its span).
+ */
+export interface SubplotMirrorOptions {
+  /** Viewport rect in container px (top-left origin); the mirror clips to it. */
+  readonly rect: Readonly<ViewportRect>;
+  /** Linear x range drawn across `rect.width` (left to right). */
+  readonly x: readonly [number, number];
+  /** Linear y range drawn across `rect.height` (bottom to top). */
+  readonly y: readonly [number, number];
+  /** Background painted under the traces (sRGB 0–1), or `null` (default) for none. */
+  readonly background?: readonly [number, number, number, number] | null;
+  /** Draw order among mirrors (lower first). Mirrors draw after every subplot, before the overlay. */
+  readonly order?: number;
+}
+
+/**
+ * A secondary view of one cartesian subplot's traces (M3 wave 2, E5.9). Each trace on the subplot
+ * gets a second `TraceView` from its module's `plot.create`, drawn into the mirror's viewport with
+ * the mirror's axes (same type, categories and range breaks as the subplot's, the mirror's ranges
+ * and length) and transform. The runtime updates the mirror views with the main views' update
+ * plans (data, style, selection), so they stay in step; {@link set} only changes transforms.
+ * Mirror views get no pointer events and are not hoverable. Traces that draw on several subplots
+ * (`splom` cells) are not mirrored.
+ */
+export interface SubplotMirror {
+  /** The mirrored subplot's id (`'xy'`). */
+  readonly subplot: string;
+  readonly viewport: Viewport;
+  /** The mirror's axes (after the first placement). */
+  readonly xaxis: AxisInfo | undefined;
+  readonly yaxis: AxisInfo | undefined;
+  /** Linear coordinates → mirror viewport world px. */
+  readonly transform: Readonly<DataTransform> | undefined;
+  readonly disposed: boolean;
+  /** Move the mirror or change its ranges: a transform update for the views, no uploads. */
+  set(options: SubplotMirrorOptions): void;
+  /** Remove the viewport and free the mirror views. */
+  dispose(): void;
 }
 
 /**

@@ -22,6 +22,7 @@ import { MAX_GRID_CELLS_PER_SIDE } from '../layout/grid.ts';
 import type { AttrSpec, ObjectNode } from '../schema/types.ts';
 import { isPlainObject } from '../util/objects.ts';
 import { coerceContainer, resolveWithTemplate } from './container.ts';
+import type { GridFallback } from './splom-axes.ts';
 import type { FullGrid, FullLayout } from './types.ts';
 
 /** A cell extent `[start, end]` in plot-area fractions. */
@@ -83,18 +84,25 @@ export function gridCellExtents(
  * Grid sizing (phase 1): coerce `layout.grid` (without its cell contents) into
  * `fullLayout.grid` with `_domains` and `_hasSubplotGrid`, or leave `fullLayout.grid` unset when
  * there is no grid of more than one cell. Runs before trace defaults.
+ *
+ * @param fallback - Cell contents (and side defaults) to use where the user's grid names none: the
+ * axes of splom traces (E10.9, Plotly's grid `getAxes` reading `_splomAxes`). With a fallback a
+ * grid is made even without `layout.grid`, as Plotly does for sploms; supply-defaults then runs
+ * this again after the trace defaults.
  */
 export function supplyGridSizing(
   layoutIn: Readonly<Record<string, unknown>>,
   fullLayout: FullLayout,
   templateLayout: Record<string, unknown> | undefined,
   layoutSchema: ObjectNode,
+  fallback?: GridFallback,
 ): void {
   delete fullLayout.grid;
-  const gridIn = layoutIn['grid'];
+  const rawGrid = layoutIn['grid'];
   const node = layoutSchema.children['grid'];
-  // Plotly only makes a grid the user asked for; a template grid alone does not.
-  if (!isPlainObject(gridIn) || node?.kind !== 'object') return;
+  // Plotly only makes a grid the user asked for; a template grid alone does not (sploms do).
+  if ((!isPlainObject(rawGrid) && !fallback) || node?.kind !== 'object') return;
+  const gridIn: Record<string, unknown> = isPlainObject(rawGrid) ? rawGrid : {};
   const tmpl = isPlainObject(templateLayout?.['grid']) ? templateLayout['grid'] : undefined;
   const resolve = (key: string, dflt?: unknown): unknown => {
     const spec = node.children[key] as AttrSpec;
@@ -115,6 +123,10 @@ export function supplyGridSizing(
   };
   const firstRow = content.subplots?.[0];
   let hasSubplotGrid = content.subplots !== undefined && Array.isArray(firstRow);
+  if (fallback && !hasSubplotGrid) {
+    content.xaxes ??= [...fallback.xaxes];
+    content.yaxes ??= [...fallback.yaxes];
+  }
   const dfltRows = hasSubplotGrid ? content.subplots?.length : content.yaxes?.length;
   const dfltColumns = hasSubplotGrid
     ? (firstRow as unknown[] | undefined)?.length
@@ -140,6 +152,8 @@ export function supplyGridSizing(
         columns,
         xgap: hasSubplotGrid ? 0.2 : 0.1,
         ygap: hasSubplotGrid ? 0.3 : 0.1,
+        ...(fallback?.xside !== undefined ? { xside: fallback.xside } : {}),
+        ...(fallback?.yside !== undefined ? { yside: fallback.yside } : {}),
       },
     },
   ) as unknown as FullGrid;

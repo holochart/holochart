@@ -358,6 +358,8 @@
     "captureevents": false
    }
   ],
+  "updatemenus": [],
+  "sliders": [],
   "modebar": {
    "orientation": "h",
    "bgcolor": "rgba(10, 10, 15, 0.6)",

@@ -13,6 +13,11 @@ import { legendComponent } from './legend/legend.ts';
 import { modebarComponent } from './modebar/index.ts';
 import { shapesComponent } from './shapes/shapes.ts';
 import { titleComponent } from './title/title.ts';
+import { rangesliderComponent } from './rangeslider/rangeslider.ts';
+import { rangeselectorComponent } from './rangeselector/component.ts';
+import { selectionsComponent } from './selections/selections.ts';
+import { updatemenusComponent } from './updatemenus/updatemenus.ts';
+import { slidersComponent } from './sliders/sliders.ts';
 
 // Axes (E3.4) and automargin (E4.2)
 export { axesComponent, buildAxesScene } from './axes/axes.ts';
@@ -164,6 +169,19 @@ export type { AnchoredBox } from './shared/placement.ts';
 // Modebar (E5.8)
 export * from './modebar/index.ts';
 
+// Update menus (E5.10)
+export * from './updatemenus/index.ts';
+
+// Sliders (E5.11)
+export * from './sliders/index.ts';
+
+// Range slider and range selector (E5.9)
+export * from './rangeslider/index.ts';
+export * from './rangeselector/index.ts';
+
+// Selections as layout objects (E5.12)
+export * from './selections/index.ts';
+
 // Shared
 export { componentsReady } from './shared/ready.ts';
 export { plainText } from './shared/text.ts';
@@ -177,5 +195,10 @@ export const builtinComponents: readonly Registrable[] = [
   imagesComponent,
   shapesComponent,
   annotationsComponent,
+  selectionsComponent,
+  rangesliderComponent,
+  rangeselectorComponent,
+  updatemenusComponent,
+  slidersComponent,
   modebarComponent,
 ];

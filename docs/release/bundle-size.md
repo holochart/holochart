@@ -17,6 +17,7 @@ Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's
 | `default font, italic face (lazy …)`    | the italic face chunk, loaded when italic text is drawn    | 98 kB  |
 | `default font, bold italic face (…)`    | the bold italic face chunk                                 | 95 kB  |
 | `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 234 kB |
+| `controls views (lazy chunks of basic)` | menus, sliders, range selector/slider, selections views    | 16 kB  |
 | `@mk7s/holochart (full, ESM)`           | everything the full bundle exports                         | 450 kB |
 | `@mk7s/holochart IIFE (includes three)` | `dist/holochart.iife.min.js` as shipped, **with** three.js | 650 kB |
 | each `@mk7s/holochart-*` package        | `export *` of that package                                 | report |
@@ -27,9 +28,10 @@ The IIFE budget is the full budget plus a 200 kB allowance for the bundled three
 An ESM entry's size is its **initial** download. Code an entry loads on demand with a dynamic
 `import()` is its **lazy** size, reported next to it: the SDF text engine (troika-three-text,
 bidi-js, webgl-sdf-generator, troika-worker-utils, troika-three-utils; plan E21.5), which has its
-own gated row, the fill primitive (below, plan E21.6), and the built-in default font (below). So
-core + scatter costs its initial size before the first frame, the text engine's size plus the
-regular font face once it draws a label, and the fill chunk once it draws a fill.
+own gated row, the fill primitive (below, plan E21.6), the controls' views (below, E21.6), and the
+built-in default font (below). So core + scatter costs its initial size before the first frame,
+the text engine's size plus the regular font face once it draws a label, and the fill chunk once
+it draws a fill; `basic` adds a control's chunk once a figure shows that control.
 
 The **fill primitive** (plan E21.6) — the fill mesh and shaders, earcut, and the exact
 even-odd / nonzero code (`fill-arrangement.ts`) — loads the first time a chart draws a fill:
@@ -44,6 +46,30 @@ reachable is never split into a chunk, render's ESM build emits the lazy entry a
 (the `render` namespace of the full bundle, or render's `export *`) therefore keep a copy in their
 initial chunk and still load the lazy one on the first fill (5.6 kB, as earcut is already there).
 The IIFE inlines the chunk (its Fill column reads "inlined").
+
+The **controls' views** (plan E21.6, M3 wave 2) — the DOM views of the update menus, sliders and
+range selector, the range slider's thumbnail, masks and drag handling, and the selection outlines,
+with the code only they use (the API command dispatch and binding tracking shared by menus and
+sliders, the range selector's date math, the range slider's drag math, the selection outline
+geometry) — load the first time a figure uses that component: a non-empty `layout.updatemenus` or
+`layout.sliders`, an x axis with a visible `rangeslider` or `rangeselector`, or a visible
+`layout.selections` item. Schemas, defaults and margin pushes stay in the package entry (validation,
+`supplyDefaults` and layout need them synchronously). The components draw through
+`lazyRenderer` (components' `src/shared/lazy-view.ts`): until the view has loaded, the component
+holds a hidden placeholder primitive whose `ready` covers the load and the view's creation, so
+`chart.ready`, update promises, image export and `componentsReady` wait for it like they wait for
+text and layout images; the view is then created with the latest draw context, and its DOM is
+moved to where a synchronously created view would have mounted it (an anchor left in the draw
+order), so the tab order of the chart's controls is unchanged. Once loaded (by any chart), views
+are created synchronously, as before. Nothing imports these modules statically, so components'
+ESM build emits each as its own chunk, `dist/controls-<component>-<hash>.js`, plus
+`dist/controls-shared-<hash>.js` for the command code menus and sliders share (chunk names are set
+in `packages/components/tsdown.config.ts`); code they share with the entry lands in shared chunks
+that `index.js` imports. To keep that code out of the package entry, the view factories
+(`createUpdatemenusView`, `createSlidersView`, `cssEasing`, `createRangeselectorView`) and those
+view-only helpers are no longer exported (they were unreleased); their types still are. The five
+chunks are measured summed, gated by their own row and reported in the **Controls** column; the
+IIFE inlines them.
 
 The **default font** (plan E2.18) is TeX Gyre Heros, shipped with render in four faces. For ESM
 consumers each face is a generated module exporting the OTF file as a base64 `data:` URL
@@ -62,7 +88,9 @@ Entries and budgets live in one place, [`tests/bundle/size/entries.ts`](../../te
 which [`.size-limit.ts`](../../.size-limit.ts) reads. The bundle smoke tests
 (`tests/bundle/*.spec.ts`) check that the lazy chunks load in a browser: the font faces
 (`esm-fonts.spec.ts`), the fill chunk (`esm-fill.spec.ts`: not requested without fills, drawn when
-`chart.ready` resolves), and the IIFE's inlined engine and fill code (`iife.spec.ts`).
+`chart.ready` resolves), the controls' chunks (`esm-controls.spec.ts`: none requested by a figure
+without controls, only the used component's chunks otherwise, drawn and in DOM order when
+`chart.ready` resolves), and the IIFE's inlined engine, fill code and controls (`iife.spec.ts`).
 
 ## Running it
 
@@ -78,16 +106,18 @@ flatbush, workspace packages) included, the way an app bundler would. Code split
 an app: each dynamic `import()` becomes its own chunk. The entry chunk plus every chunk it imports
 statically is written to `<id>.js` (the **initial** size); the lazy chunks measured on their own
 (`LAZY_PARTS`) go to `<id>.lazy.<part>.js` — the fill chunk (render's `dist/fill-lazy.js` and
-earcut) to `<id>.lazy.fill.js`, each font face to `<id>.lazy.font-<face>.js` — and every other
+earcut) to `<id>.lazy.fill.js`, the controls' views (components' `dist/controls-*.js`) to
+`<id>.lazy.controls.js`, each font face to `<id>.lazy.font-<face>.js` — and every other
 chunk to `<id>.lazy.js` (the **lazy** size), so each output chunk is counted exactly once and
 nothing drops out of the numbers (a chunk mixing a part with other code fails the script).
 `manifest.json` records which packages the lazy chunks contain and which parts exist.
 size-limit (`@size-limit/file`) then gzips the results; a `lazyOf` entry in `entries.ts` gates
 another entry's lazy file, or with `lazyPart` one of its parts (the text-engine, fill and font rows
-measure core + scatter's), and `bundle.ts` fails if that entry has no such chunks. The report adds
-per-entry **Lazy**, **Fill** and **Fonts** columns (gzip level 9, like size-limit; Fonts sums the
-faces). The IIFE is measured as built: it is a single file, so the build inlines the text engine
-and the fill code (as modules initialized on first use) and its lazy columns read "inlined".
+measure core + scatter's, the controls row basic's), and `bundle.ts` fails if that entry has no
+such chunks. The report adds per-entry **Lazy**, **Fill**, **Controls** and **Fonts** columns (gzip
+level 9, like size-limit; Controls sums the components' chunks, Fonts the faces). The IIFE is
+measured as built: it is a single file, so the build inlines the text engine, the fill code and
+the controls' views (as modules initialized on first use) and its lazy columns read "inlined".
 
 Until an entry's named exports exist (for example `scatter` before the scatter trace lands), that
 entry measures the whole package instead and the report adds a footnote.
@@ -96,7 +126,41 @@ In CI, the job writes the table to the job summary, uploads `size.json` as the `
 artifact, compares with the latest successful `main` run, and posts or updates one PR comment
 (same-repo PRs only; fork PRs get a read-only token, so they get the job summary only).
 
-## Current sizes (2026-09-24, M3 wave 0)
+## Current sizes (2026-09-25, M3 wave 2)
+
+Measured on the M3 wave 2 working tree before and after the controls' views were made lazy
+(E21.6), everything else equal. Initial sizes; Lazy, Fill and the fonts (346.61 kB, four faces)
+are unchanged for every entry.
+
+| Entry                          | Before         | After     | Change    | Controls (lazy) | Budget   |
+| ------------------------------ | -------------- | --------- | --------- | --------------- | -------- |
+| `@mk7s/holochart-core`         | 69.67 kB       | 69.67 kB  | 0         | —               | —        |
+| `@mk7s/holochart-render`       | 69.85 kB       | 69.85 kB  | 0         | —               | —        |
+| `@mk7s/holochart-runtime`      | 92.10 kB       | 92.10 kB  | 0         | —               | —        |
+| `@mk7s/holochart-components`   | 117.19 kB      | 107.99 kB | −9.20 kB  | 14.35 kB        | —        |
+| `@mk7s/holochart-traces-basic` | 118.53 kB      | 118.53 kB | 0         | —               | —        |
+| `@mk7s/holochart-traces-stats` | 160.25 kB      | 160.25 kB | 0         | —               | —        |
+| `@mk7s/holochart-themes`       | 9.41 kB        | 9.41 kB   | 0         | —               | —        |
+| partial: core + scatter        | 145.51 kB      | 145.51 kB | 0         | —               | 153 kB   |
+| text engine (lazy)             | 46.62 kB       | 46.62 kB  | 0         | —               | 49 kB    |
+| fill primitive (lazy)          | 8.52 kB        | 8.52 kB   | 0         | —               | 9.4 kB   |
+| font faces (lazy, each)        | 85.75–88.59 kB | unchanged | 0         | —               | 95–98 kB |
+| partial: basic                 | 243.45 kB      | 232.17 kB | −11.28 kB | 14.49 kB        | 234 kB   |
+| controls views (lazy, new)     | —              | 14.49 kB  | new       | —               | 16 kB    |
+| full, ESM                      | 336.52 kB      | 325.63 kB | −10.89 kB | 14.48 kB        | 450 kB   |
+| IIFE (includes three)          | 514.70 kB      | 517.24 kB | +2.54 kB  | inlined         | 650 kB   |
+
+`basic` was 9.45 kB over its budget and now uses 99.2% of it (1.83 kB left); the controls row's
+budget is measured + ~10%. The chunks compress separately, so moving 14.5 kB of lazy code takes
+11.3 kB out of `basic`. What stays in the entry for these components: their schemas and defaults
+(~3.8 kB gzipped on their own for menus and sliders), the layout and margin code, the component
+wiring and the lazy loader (~0.9 kB). The IIFE grows because rolldown wraps the inlined views, and
+the entry modules they import, as lazily initialized modules. View-only code left in modules the
+entry needs, a few hundred bytes: `shared/dom.ts`'s `applyDomFont`, `nextFrame` and `uniqueDomId`
+(the module is shared with the modebar), and the placement functions in the menus', sliders' and
+range selector's `layout.ts`.
+
+## Sizes after M3 wave 0 (2026-09-24)
 
 Measured on `main` (b4e5d00) plus the E21.6 trims only (below); the rest of M3 wave 0 moves these
 numbers too, so re-run `pnpm size` for the merged tree. Initial download per entry. Lazy chunks

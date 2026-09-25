@@ -292,6 +292,79 @@ Because of that, per-point steps in data units are taken in that compressed spac
 series and `xperiod` alignment across a break are not exact, and bar widths are measured without
 the hidden time.
 
+## Range slider and range selector
+
+Long time series get two navigation aids from the x axis, as in Plotly:
+
+- [`xaxis.rangeslider`](/reference/layout#xaxis.rangeslider) adds an overview strip under the axis
+  with all the data and a window over the range in view. Drag the window to pan, drag its ends to
+  zoom, drag from outside it to draw a new window, or click beside it to center the window there.
+  `rangeslider: {}` is enough to turn it on.
+- [`xaxis.rangeselector`](/reference/layout#xaxis.rangeselector) adds buttons that set the range to
+  a preset span ending at the current range end: `count` × `step` (`'month'`, `'year'`, `'day'`,
+  `'hour'`, `'minute'`, `'second'`) back from it with `stepmode: 'backward'`, from the start of the
+  period with `stepmode: 'todate'` (`count: 1, step: 'year', stepmode: 'todate'` is year to date),
+  or everything with `step: 'all'`. The button whose range is in view shows as active. Date axes
+  only.
+
+```ts
+const x = ['2024-01-02', '2024-03-01', '2024-06-03', '2024-09-02', '2024-12-02'];
+const y = [182, 179, 194, 229, 239];
+
+createChart(el, {
+  data: [{ type: 'scatter', mode: 'lines', x, y }],
+  layout: {
+    xaxis: {
+      range: ['2024-06-03', '2024-12-02'],
+      rangeslider: {},
+      rangeselector: {
+        buttons: [
+          { count: 1, label: '1m', step: 'month', stepmode: 'backward' },
+          { count: 6, label: '6m', step: 'month', stepmode: 'backward' },
+          { count: 1, label: 'YTD', step: 'year', stepmode: 'todate' },
+          { step: 'all' },
+        ],
+      },
+    },
+  },
+});
+```
+
+<Example id="_dev/rangeslider-timeseries" :height="440" />
+
+The thumbnail is not a picture of the chart: the subplot's traces are drawn a second time, in a
+small viewport of their own, so it stays sharp, follows restyles and new data, and costs no extra
+work while you pan (moving the window changes transforms only). Its x range is the axis'
+autorange over all the data (`rangeslider.range` with `autorange: false`), widened to cover the
+range in view. Its y range is set per subplot with `rangeslider.yaxis.rangemode` (`yaxis2` for the
+subplot on `y2`, …): `'match'` (default) follows the y axis in view, `'auto'` spans all the y
+data, `'fixed'` uses `rangeslider.yaxis.range`; outside `'match'`, the part of the window outside
+the y range in view is shaded.
+
+Range breaks carry over: the slider skips them like the axis does, and the selector counts
+calendar time back from the range end.
+
+<Example id="_dev/rangeslider-rangebreaks" :height="420" />
+
+What to know:
+
+- **One `relayout` per drag.** While you drag the window, the range is previewed (transforms
+  only, `relayouting` events); releasing commits it with one `relayout` of `xaxis.range[0]` and
+  `xaxis.range[1]`. Plotly relayouts on every move.
+- **The margin grows.** The bottom margin makes room for the axis labels, a 15 px gap, the slider
+  (`thickness` × the height inside the layout's own margins, default 0.15) and `margin.b` again
+  below it.
+- **Y axes stay put.** A y axis anchored to an axis with a range slider defaults to
+  `fixedrange: true`, as in Plotly: zoom along x with the slider or the selector.
+- **The axis title stays with the axis**, above the slider (Plotly moves it below the slider).
+- **Selector buttons are real `<button>`s** over the chart (like the modebar): focusable, operable
+  with the keyboard and announced with their span ("6m (Last 6 months)"). They are not part of
+  image exports, and they are disabled with `config.staticPlot`. The default look puts them at the
+  top right, clear of the legend; set `x` and `y` together (and `xanchor` / `yanchor`) to move
+  them.
+- Plotly's date arithmetic is kept (UTC): one month back from 2024-03-31 is 2024-03-02 (February
+  31 overflows), and `todate` starts at the first period boundary at or after `count` steps back.
+
 ## Linked axes (`matches`)
 
 [`matches`](/reference/layout#xaxis.matches) links an axis to another of the same type. Linked axes

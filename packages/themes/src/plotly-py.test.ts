@@ -19,8 +19,8 @@ import { THEMES } from './index.ts';
  * Known, intended differences:
  * - plotly.py sets `autotypenumbers: 'strict'` on the layout; Holochart has no layout-level
  *   `autotypenumbers`, so the themes set the same value on both axes.
- * - Layout blocks for features Holochart doesn't have yet (polar, ternary, geo, maps, 3D scenes,
- *   update menus, sliders) and trace types it doesn't register yet are skipped.
+ * - Layout blocks for features Holochart doesn't have yet (polar, ternary, geo, maps, 3D scenes)
+ *   and trace types it doesn't register yet are skipped.
  */
 const NAMES = [
   'plotly',
@@ -34,10 +34,22 @@ const NAMES = [
   'ygridoff',
   'gridon',
 ] as const;
-const SKIP_LAYOUT =
-  /^(polar|ternary|geo|mapbox|map|scene|updatemenudefaults|sliderdefaults|smith|autotypenumbers)(\.|$)/;
+const SKIP_LAYOUT = /^(polar|ternary|geo|mapbox|map|scene|smith|autotypenumbers)(\.|$)/;
 const PER_AXIS = /^[xy]axis\.autotypenumbers$/;
-const TYPES = new Set(['scatter', 'bar', 'pie', 'table', 'histogram']);
+const TYPES = new Set([
+  'scatter',
+  'bar',
+  'pie',
+  'table',
+  'histogram',
+  'histogram2d',
+  'histogram2dcontour',
+  'box',
+  'violin',
+  'splom',
+  'parcoords',
+  'parcats',
+]);
 
 type Tpl = { layout?: object; data?: Record<string, object[]> };
 

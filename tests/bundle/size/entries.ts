@@ -14,8 +14,10 @@ import path from 'node:path';
  * dynamic `import()` (the SDF text engine, E21.5) is measured separately as that entry's lazy
  * chunks (see bundle.ts), reported per entry and gated by a `lazyOf` row. Some lazy chunks are
  * measured on their own ({@link LAZY_PARTS}): the fill primitive (E21.6), loaded the first time a
- * chart draws a fill, and the built-in default font's faces (E2.18), of which a page loads one at a
- * time, and only the faces its text uses.
+ * chart draws a fill, the views of the controls (E21.6: update menus, sliders, range selector,
+ * range slider, selection outlines), loaded the first time a figure uses one, and the built-in
+ * default font's faces (E2.18), of which a page loads one at a time, and only the faces its text
+ * uses.
  */
 
 export const ROOT = path.resolve(import.meta.dirname, '../../..');
@@ -58,18 +60,27 @@ export const FONT_PARTS = ['font-regular', 'font-bold', 'font-italic', 'font-bol
 /**
  * Lazy chunks measured separately from the rest of an entry's lazy code (a chunk belongs to a part
  * when all its modules do, see {@link lazyPartOf}): the fill primitive (plan E21.6: render's
- * `dist/fill-lazy.js` and earcut, which only it uses) and the {@link FONT_PARTS}.
+ * `dist/fill-lazy.js` and earcut, which only it uses), the controls' views (E21.6: components'
+ * `dist/controls-*.js`, one chunk per component, summed) and the {@link FONT_PARTS}.
  */
-export const LAZY_PARTS = ['fill', ...FONT_PARTS] as const;
+export const LAZY_PARTS = ['fill', 'controls', ...FONT_PARTS] as const;
 
 const FONT_MODULE = /[\\/]texgyreheros-(regular|bold|italic|bolditalic)(?:-[\w-]+)?\.(?:js|ts)$/;
 /** render's lazily loaded fill chunk (built or from sources), and earcut. */
 const FILL_MODULE =
   /[\\/](?:render[\\/](?:dist[\\/]fill-lazy\.js|src[\\/]primitives[\\/]fill(?:-lazy|-triangulate|-arrangement|\.glsl)?\.ts)|node_modules[\\/]earcut[\\/].*)$/;
 
+/**
+ * components' lazily loaded views and the code only they use (`src/shared/lazy-view.ts`): built
+ * (`dist/controls-*.js`), or from sources.
+ */
+const CONTROLS_MODULE =
+  /[\\/]components[\\/](?:dist[\\/]controls-[\w-]+\.js|src[\\/](?:(?:updatemenus|sliders|rangeslider|selections)[\\/]view|rangeselector[\\/](?:rangeselector|step)|updatemenus[\\/]commands|(?:rangeslider|selections)[\\/]geometry)\.ts)$/;
+
 /** The {@link LAZY_PARTS} entry a module belongs to, if any. */
 export function lazyPartOf(moduleId: string): string | undefined {
   if (FILL_MODULE.test(moduleId)) return 'fill';
+  if (CONTROLS_MODULE.test(moduleId)) return 'controls';
   const face = FONT_MODULE.exec(moduleId)?.[1];
   return face ? `font-${face}` : undefined;
 }
@@ -140,7 +151,8 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     // Initial chunk only. Raised from 150 kB to 200 / 215 kB in M1 (waves 2 and 3), then tightened
     // to measured + ~10% after the E21.5 diet (M2 wave 0: 154.1 kB), then raised to measured + ~10%
     // after M2 wave 1 by decision (pie, shapes, images, themes and colors: 192.9 kB), and again after
-    // M2 wave 2 (table, rich text, accessibility, export, timeline: 212.5 kB).
+    // M2 wave 2 (table, rich text, accessibility, export, timeline: 212.5 kB). M3 wave 2 keeps it:
+    // the controls' views load on first use (the row below; 243.5 → 232.2 kB).
     limit: '234 kB',
     imports: [
       { pkg: 'runtime' },
@@ -148,6 +160,18 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
       { pkg: 'traces-basic' },
       { pkg: 'themes' },
     ],
+  },
+  {
+    // Plan E21.6: the views of the update menus, sliders, range selector, range slider and
+    // selection outlines (DOM controls and outlines most figures never show), each loaded with a
+    // dynamic import() the first time a figure uses that component; one chunk per component,
+    // summed here (a figure using all five). Measured 14.49 kB when split out (2026-09-25);
+    // budget = measured + ~10%.
+    id: 'controls-lazy',
+    name: 'controls views (lazy chunks of basic)',
+    limit: '16 kB',
+    lazyOf: 'partial-basic',
+    lazyPart: 'controls',
   },
   {
     id: 'full',
