@@ -387,6 +387,30 @@
       "thumbnailSize": { "width": 640, "height": 371 }
     },
     {
+      "id": "_dev/rangeslider-rangebreaks",
+      "title": "Range slider with range breaks",
+      "description": "A weekday-only stock chart (weekends and holidays removed with rangebreaks) with a range slider whose thumbnail autoranges y, and 1m / 3m / all buttons.",
+      "tags": ["dev", "axes", "rangeslider", "rangeselector", "rangebreaks", "date", "finance"],
+      "category": "_dev",
+      "traceTypes": ["scatter"],
+      "size": { "width": 760, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/_dev/rangeslider-rangebreaks.webp",
+      "thumbnailSize": { "width": 640, "height": 354 }
+    },
+    {
+      "id": "_dev/rangeslider-timeseries",
+      "title": "Range slider and selector: daily time series",
+      "description": "Two years of daily highs and lows with a range slider thumbnail under the x axis and 1m / 6m / YTD / 1y / all range selector buttons.",
+      "tags": ["dev", "axes", "rangeslider", "rangeselector", "date", "time series", "scatter"],
+      "category": "_dev",
+      "traceTypes": ["scatter"],
+      "size": { "width": 760, "height": 440 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/_dev/rangeslider-timeseries.webp",
+      "thumbnailSize": { "width": 640, "height": 371 }
+    },
+    {
       "id": "_dev/rects-bars",
       "title": "Rects: bars and pixel snapping",
       "description": "Instanced bars with borders and corner radii; 1 px borders at fractional positions, snap off vs on.",
@@ -435,6 +459,30 @@
       "thumbnailSize": { "width": 640, "height": 320 }
     },
     {
+      "id": "_dev/selections-lasso",
+      "title": "Selections: restored lasso on a date axis",
+      "description": "A path (lasso) selection given in layout.selections selects points of a date-axis scatter on load.",
+      "tags": ["dev", "interaction", "selections", "lasso", "date", "scatter"],
+      "category": "_dev",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/_dev/selections-lasso.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "_dev/selections-rect",
+      "title": "Selections: restored box selections",
+      "description": "Two rect selections from layout.selections select points in two scatter traces on load; they can be moved, resized or cleared.",
+      "tags": ["dev", "interaction", "selections", "select", "scatter"],
+      "category": "_dev",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/_dev/selections-rect.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "_dev/shapes-basic",
       "title": "Shapes: lines, rects, circles",
       "description": "Lines, rectangles and ellipses in data and paper coordinates, dashed outlines, translucent fills and labelled threshold lines.",
@@ -481,6 +529,18 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/_dev/shapes-pixel.webp",
       "thumbnailSize": { "width": 640, "height": 373 }
+    },
+    {
+      "id": "_dev/sliders-sweep",
+      "title": "Sliders: parameter sweep (restyle)",
+      "description": "A slider under the plot steps a sine wave through frequencies with restyle; current value label and thinned tick labels.",
+      "tags": ["dev", "chart", "sliders", "restyle"],
+      "category": "_dev",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/_dev/sliders-sweep.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
     },
     {
       "id": "_dev/spikes-hover",
@@ -565,6 +625,42 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/_dev/uniformtext-pie.webp",
       "thumbnailSize": { "width": 640, "height": 320 }
+    },
+    {
+      "id": "_dev/updatemenus-buttons",
+      "title": "Update menus: buttons (restyle visibility, relayout axis type)",
+      "description": "Two button menus: one row restyles trace visibility, one column relayouts the y-axis type between linear and log.",
+      "tags": ["dev", "chart", "updatemenus", "restyle", "relayout"],
+      "category": "_dev",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/_dev/updatemenus-buttons.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "_dev/updatemenus-classic",
+      "title": "Update menus and slider: Plotly's look",
+      "description": "A button menu, a dropdown and a slider with template plotly-classic: Plotly widget colors and sizes.",
+      "tags": ["dev", "chart", "updatemenus", "sliders", "themes"],
+      "category": "_dev",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 440 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/_dev/updatemenus-classic.webp",
+      "thumbnailSize": { "width": 640, "height": 440 }
+    },
+    {
+      "id": "_dev/updatemenus-dropdown",
+      "title": "Update menus: dropdowns (restyle chart type, update)",
+      "description": "A dropdown switching between line, markers and bars with restyle, and one calling update (trace color + title).",
+      "tags": ["dev", "chart", "updatemenus", "dropdown", "restyle", "update"],
+      "category": "_dev",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/_dev/updatemenus-dropdown.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
       "id": "_dev/viewports-grid",
@@ -1539,6 +1635,114 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "parcats/basic",
+      "title": "Parallel categories: basic",
+      "description": "Hair, eye color and sex of eight people as bands and the paths between them.",
+      "tags": ["parcats", "statistical", "domain", "categorical", "basic"],
+      "category": "parcats",
+      "traceTypes": ["parcats"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/parcats/basic.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "parcats/colored",
+      "title": "Parallel categories: colored paths",
+      "description": "Orders by channel, device and basket size, colored by whether they converted.",
+      "tags": ["parcats", "statistical", "domain", "categorical", "colorscale"],
+      "category": "parcats",
+      "traceTypes": ["parcats"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/parcats/colored.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "parcats/counts",
+      "title": "Parallel categories: counts",
+      "description": "Titanic passengers and crew by class, sex, age and survival, from counted rows.",
+      "tags": ["parcats", "statistical", "domain", "categorical", "aggregated"],
+      "category": "parcats",
+      "traceTypes": ["parcats"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/parcats/counts.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "parcats/freeform",
+      "title": "Parallel categories: freeform arrangement",
+      "description": "Dimensions reordered with displayindex, paths sorted backward, bands freely draggable.",
+      "tags": ["parcats", "statistical", "domain", "categorical", "interaction"],
+      "category": "parcats",
+      "traceTypes": ["parcats"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/parcats/freeform.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "parcats/hspline",
+      "title": "Parallel categories: curved paths",
+      "description": "Survey answers across three questions, paths drawn as horizontal splines.",
+      "tags": ["parcats", "statistical", "domain", "categorical", "hspline"],
+      "category": "parcats",
+      "traceTypes": ["parcats"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/parcats/hspline.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "parcoords/basic",
+      "title": "Parallel coordinates: basic",
+      "description": "Four measurements of 150 flowers: one axis per measurement, one line per flower.",
+      "tags": ["parcoords", "statistical", "domain", "basic"],
+      "category": "parcoords",
+      "traceTypes": ["parcoords"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/parcoords/basic.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "parcoords/colorscale",
+      "title": "Parallel coordinates: colorscale",
+      "description": "400 cars across six measurements, each line colored by its fuel economy.",
+      "tags": ["parcoords", "statistical", "domain", "colorscale", "colorbar"],
+      "category": "parcoords",
+      "traceTypes": ["parcoords"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/parcoords/colorscale.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "parcoords/constraints",
+      "title": "Parallel coordinates: constraint ranges",
+      "description": "Two brushed ranges on one axis and one on another; lines outside them fade to grey.",
+      "tags": ["parcoords", "statistical", "domain", "selection", "colorscale"],
+      "category": "parcoords",
+      "traceTypes": ["parcoords"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/parcoords/constraints.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "parcoords/ticktext",
+      "title": "Parallel coordinates: tick text and labels",
+      "description": "Coded categories shown by name with tickvals / ticktext, tilted axis labels below the axes.",
+      "tags": ["parcoords", "statistical", "domain", "ticks", "categorical"],
+      "category": "parcoords",
+      "traceTypes": ["parcoords"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/parcoords/ticktext.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "pie/basic",
       "title": "Pie: basic",
       "description": "Six slices from labels and values with percent labels and a per-label legend.",
@@ -1789,6 +1993,66 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/scatter/text-labels.webp",
       "thumbnailSize": { "width": 640, "height": 440 }
+    },
+    {
+      "id": "splom/axis-types",
+      "title": "Scatter plot matrix: axis types",
+      "description": "Date, category and log dimensions; axis.matches links a dimension’s x and y axes.",
+      "tags": ["splom", "statistical", "dates", "categories", "log"],
+      "category": "splom",
+      "traceTypes": ["splom"],
+      "size": { "width": 640, "height": 600 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/splom/axis-types.webp",
+      "thumbnailSize": { "width": 640, "height": 600 }
+    },
+    {
+      "id": "splom/colorscale",
+      "title": "Scatter plot matrix: colorscale",
+      "description": "Four car measurements colored by fuel economy through a colorscale, with a colorbar.",
+      "tags": ["splom", "statistical", "colorscale", "colorbar"],
+      "category": "splom",
+      "traceTypes": ["splom"],
+      "size": { "width": 640, "height": 600 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/splom/colorscale.webp",
+      "thumbnailSize": { "width": 640, "height": 600 }
+    },
+    {
+      "id": "splom/dense",
+      "title": "Scatter plot matrix: 8 dimensions",
+      "description": "Eight correlated signals, 400 samples in 64 cells, with small translucent points.",
+      "tags": ["splom", "statistical", "large-data"],
+      "category": "splom",
+      "traceTypes": ["splom"],
+      "size": { "width": 640, "height": 640 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/splom/dense.webp",
+      "thumbnailSize": { "width": 640, "height": 640 }
+    },
+    {
+      "id": "splom/iris",
+      "title": "Scatter plot matrix: iris",
+      "description": "Four measurements of three species, every pair plotted against each other; one trace per species.",
+      "tags": ["splom", "statistical", "basic"],
+      "category": "splom",
+      "traceTypes": ["splom"],
+      "size": { "width": 640, "height": 600 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/splom/iris.webp",
+      "thumbnailSize": { "width": 640, "height": 600 }
+    },
+    {
+      "id": "splom/lower-half",
+      "title": "Scatter plot matrix: lower half",
+      "description": "Only the cells below the diagonal: showupperhalf false and no diagonal, one trace colored by class.",
+      "tags": ["splom", "statistical"],
+      "category": "splom",
+      "traceTypes": ["splom"],
+      "size": { "width": 640, "height": 600 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/splom/lower-half.webp",
+      "thumbnailSize": { "width": 640, "height": 600 }
     },
     {
       "id": "strip/basic",

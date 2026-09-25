@@ -818,10 +818,210 @@ function axisSchema<const L extends 'x' | 'y'>(letter: L) {
   );
 }
 
-/** Cartesian x-axis schema (plan E3). */
-export const xaxisSchema = axisSchema('x');
+const RANGE_DESCRIPTION =
+  'in data units, like the axis `range` (dates on date axes, exponents on log axes)';
+
+/**
+ * `xaxis.rangeslider` (plan E5.9, Plotly semantics): an overview strip under the x axis with a
+ * thumbnail of the subplot's traces and a draggable window over the axis range. Present in the
+ * full layout only while visible (see `defaults/rangeslider.ts`).
+ */
+export const rangesliderSchema = attr.object(
+  {
+    visible: attr.boolean({
+      description:
+        'Show the range slider. Defaults to `true` when `rangeslider` is given (`rangeslider: {}` is enough), else `false`.',
+    }),
+    thickness: attr.number({
+      min: 0,
+      max: 1,
+      dflt: 0.15,
+      description:
+        'Height of the slider as a fraction of the figure height minus `margin.t` and `margin.b`. The bottom margin grows to make room for it.',
+    }),
+    bgcolor: attr.color({ description: 'Background of the slider. Defaults to `plot_bgcolor`.' }),
+    bordercolor: attr.color({ dflt: '#444', description: 'Border color of the slider.' }),
+    borderwidth: attr.integer({ min: 0, dflt: 0, description: 'Border width of the slider, px.' }),
+    autorange: attr.boolean({
+      description:
+        'Span every data point of the axis (its autorange, whatever the axis range in view). Defaults to `true` unless a full `range` is given.',
+    }),
+    range: attr.infoArray({
+      items: [attr.any({ dflt: null }), attr.any({ dflt: null })],
+      description: `Range the slider spans, ${RANGE_DESCRIPTION}. The slider always covers the axis range in view as well.`,
+    }),
+    yaxis: attr.subplotObject(
+      'y',
+      {
+        rangemode: attr.enumerated({
+          values: ['auto', 'fixed', 'match'],
+          description:
+            "The y range of this subplot's thumbnail: `match` follows the y axis range in view, `auto` spans all the y data (autorange), `fixed` uses `range`. Defaults to `fixed` with a valid `range`, else `match`.",
+        }),
+        range: attr.infoArray({
+          items: [attr.any({ dflt: null }), attr.any({ dflt: null })],
+          description: `Thumbnail y range for \`rangemode: 'fixed'\`, ${RANGE_DESCRIPTION}.`,
+        }),
+      },
+      {
+        description:
+          'Thumbnail y range per y axis: `yaxis` for the subplot on `y`, `yaxis2` for `y2`, … (one thumbnail per subplot on this x axis, drawn over each other).',
+      },
+    ),
+  },
+  {
+    editType: 'layout',
+    description:
+      'Range slider (plan E5.9): an overview of all the data under the x axis, with a window over the range in view. Drag the window to pan, its ends to zoom, or click elsewhere to center the window there; the axis range changes with one `relayout` at the end of the drag. Y axes anchored to an axis with a range slider default to `fixedrange: true`, as in Plotly.',
+  },
+);
+
+/** `xaxis.rangeselector` (plan E5.9, Plotly semantics): preset range buttons over the chart. */
+export const rangeselectorSchema = attr.object(
+  {
+    visible: attr.boolean({
+      description: 'Show the range selector. Defaults to `true` when it has `buttons`.',
+    }),
+    buttons: attr.items(
+      {
+        visible: attr.boolean({ dflt: true, description: 'Show this button.' }),
+        step: attr.enumerated({
+          values: ['month', 'year', 'day', 'hour', 'minute', 'second', 'all'],
+          dflt: 'month',
+          description:
+            'Unit of the range the button sets, with `count`; `all` autoranges the axis instead.',
+        }),
+        stepmode: attr.enumerated({
+          values: ['backward', 'todate'],
+          dflt: 'backward',
+          description:
+            "`backward`: the range ends at the current range end and starts `count` `step`s before it. `todate`: it starts at the start of the `step` period, `count - 1` periods back (`count: 1, step: 'year'` is year-to-date).",
+        }),
+        count: attr.number({
+          min: 0,
+          dflt: 1,
+          description: 'Number of `step`s the range spans.',
+        }),
+        label: attr.string({
+          description:
+            'Button text. Default: `count` and the first letter of `step` (`6m`), or `all`.',
+        }),
+      },
+      { itemName: 'button', description: 'The buttons, left to right.' },
+    ),
+    x: attr.number({
+      min: -2,
+      max: 3,
+      description:
+        'Horizontal position in paper coordinates (fractions of the plot area width). Defaults to the start of the axis domain. Give `x` and `y` together; one alone is ignored.',
+    }),
+    xanchor: attr.enumerated({
+      values: ['auto', 'left', 'center', 'right'],
+      dflt: 'left',
+      description: 'Which side of the button row `x` refers to.',
+    }),
+    y: attr.number({
+      min: -2,
+      max: 3,
+      description:
+        'Vertical position in paper coordinates. Defaults to just above the highest subplot on this x axis.',
+    }),
+    yanchor: attr.enumerated({
+      values: ['auto', 'top', 'middle', 'bottom'],
+      dflt: 'bottom',
+      description: 'Which side of the button row `y` refers to.',
+    }),
+    font: axisFontSchema('Button font. Defaults to `layout.font`.', 'layout'),
+    bgcolor: attr.color({ dflt: '#eee', description: 'Background of the buttons.' }),
+    activecolor: attr.color({
+      description:
+        'Background of the active button (the one whose range is in view) and of hovered buttons. Defaults to `bgcolor` darkened (light colors) or lightened (dark colors).',
+    }),
+    bordercolor: attr.color({ dflt: '#444', description: 'Border color of the buttons.' }),
+    borderwidth: attr.number({ min: 0, dflt: 0, description: 'Border width of the buttons, px.' }),
+  },
+  {
+    editType: 'layout',
+    description:
+      'Range selector (plan E5.9): buttons over the chart that set the x range to a preset span ending at the current range end (last 6 months, year to date, all). Date axes only. The button whose range is in view shows as active.',
+  },
+);
+
+const xaxisBase = axisSchema('x');
+
+/** Cartesian x-axis schema (plan E3): the axis attributes plus the range slider and selector. */
+export const xaxisSchema = attr.subplotObject(
+  'x',
+  { ...xaxisBase.children, rangeslider: rangesliderSchema, rangeselector: rangeselectorSchema },
+  {
+    ...(xaxisBase.editType === undefined ? {} : { editType: xaxisBase.editType }),
+    ...(xaxisBase.description === undefined ? {} : { description: xaxisBase.description }),
+    role: 'layout',
+  },
+);
 /** Cartesian y-axis schema (plan E3). */
 export const yaxisSchema = axisSchema('y');
+
+/**
+ * `layout.selections[]` (plan E5.12, Plotly 2.13+): box and lasso selections kept as layout
+ * objects. Box and lasso drags add one (`relayout` of `selections`); selections given in the
+ * layout select the points inside them on every draw; dragging one moves or resizes it.
+ */
+export const selectionsSchema = attr.items(
+  {
+    visible: attr.boolean({
+      dflt: true,
+      description:
+        'Whether this selection applies (set to `false` by the template machinery when `templateitemname` names no template selection).',
+    }),
+    type: attr.enumerated({
+      values: ['rect', 'path'],
+      description:
+        '`rect`: the box from (`x0`, `y0`) to (`x1`, `y1`); `path`: the polygon `path` (lasso). Default: `path` when `path` is set, else `rect`.',
+    }),
+    xref: attr.subplotId({
+      dflt: 'x',
+      description: 'The x axis the coordinates refer to (`x`, `x2`, …).',
+    }),
+    yref: attr.subplotId({
+      dflt: 'y',
+      description: 'The y axis the coordinates refer to (`y`, `y2`, …).',
+    }),
+    x0: attr.any({
+      description:
+        'Start x of a `rect`, in data units of `xref` (dates, category names or indices; data values on log axes). A `rect` needs all four of `x0`, `x1`, `y0`, `y1`.',
+    }),
+    x1: attr.any({ description: 'End x of a `rect`.' }),
+    y0: attr.any({ description: 'Start y of a `rect`.' }),
+    y1: attr.any({ description: 'End y of a `rect`.' }),
+    path: attr.string({
+      description:
+        'Polygon of a `path` selection, SVG-like in data units: `M x,y L x,y … Z` (also `H`, `V` and relative commands). Dates use `_` between date and time (`2024-01-05_12:00`).',
+    }),
+    opacity: attr.number({ min: 0, max: 1, dflt: 0.7, description: 'Opacity of the outline.' }),
+    line: attr.object(
+      {
+        color: attr.color({
+          description:
+            'Outline color. Default: a color contrasting with `plot_bgcolor` (white on dark, `#444` on light).',
+        }),
+        width: attr.number({ min: 1, dflt: 1, description: 'Outline width, px.' }),
+        dash: attr.string({
+          dflt: 'dot',
+          description:
+            "Dash style: `solid`, `dot`, `dash`, `longdash`, `dashdot`, `longdashdot` or a px list (`'5px,10px'`).",
+        }),
+      },
+      { description: 'Outline style.' },
+    ),
+  },
+  {
+    itemName: 'selection',
+    editType: 'plot',
+    description:
+      'Selections as layout objects (plan E5.12): each box or lasso drag in `select` / `lasso` mode adds one (shift keeps the others), and every selection on a subplot selects the points inside it (`selectedpoints` follows). Set them to restore a selection; drag one to move or resize it; a double-click clears them.',
+  },
+);
 
 /** The base layout schema. Registry-merged with trace-module and component layout attributes. */
 export const layoutSchema = attr.object(
@@ -1047,6 +1247,7 @@ export const layoutSchema = attr.object(
     grid: gridSchema,
     xaxis: xaxisSchema,
     yaxis: yaxisSchema,
+    selections: selectionsSchema,
   },
   { editType: 'calc', description: 'Figure layout.' },
 );

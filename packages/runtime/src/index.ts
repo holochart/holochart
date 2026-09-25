@@ -38,8 +38,11 @@ export type {
   Registrable,
   SelectionQuery,
   SubplotInfo,
+  SubplotMirror,
+  SubplotMirrorOptions,
   TemplateModule,
   TraceAppend,
+  TraceCellRef,
   TraceExtremes,
   TraceModule,
   TracePlotContext,
@@ -115,6 +118,16 @@ export type { ChartFigureSource, ChartToJSONOptions } from './json.ts';
 export { formatTemplate, splitExtra } from './fx/template.ts';
 export type { TemplateContext, TemplateOptions } from './fx/template.ts';
 export { pointInPolygon, selectionContains } from './fx/geometry.ts';
+// Selections as layout objects (E5.12)
+export {
+  linearToPosition,
+  parseSelectionPath,
+  positionToLinear,
+  selectionFromQuery,
+  selectionQuery,
+  selectionsOf,
+} from './fx/selections.ts';
+export type { FullSelection } from './fx/selections.ts';
 export { createLatestQueue } from './fx/queue.ts';
 export type { LatestQueue } from './fx/queue.ts';
 export { DRAW_DRAGMODES, fxComponent, fxLayoutAttributes, isDrawDragmode } from './fx/settings.ts';

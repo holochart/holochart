@@ -810,24 +810,24 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `layout.modebar.{orientation, bgcolor, color, activecolor, add, remove, uirevision}`
 - [x] Custom buttons via `config.modeBarButtonsToAdd: [{ name, icon, click }]`
 
-#### E5.9 — Range slider & range selector   `P1` `M`   deps: E3.5, E4.2
+#### E5.9 — Range slider & range selector   `P1` `M`   deps: E3.5, E4.2   · ✅ Done (M3 wave 2)
 > As a finance user, I want a mini-overview slider and preset range buttons, so that I can navigate long time series.
-- [ ] `xaxis.rangeslider.{visible, thickness, bgcolor, bordercolor, borderwidth, range, autorange, yaxis.rangemode}`. It renders a thumbnail of the traces.
-- [ ] `xaxis.rangeselector.{buttons[{count, step: 'month' | 'year' | 'day' | 'hour' | 'minute' | 'second' | 'all', stepmode: 'backward' | 'todate', label}], x, y, font, bgcolor, activecolor}`
+- [x] `xaxis.rangeslider.{visible, thickness, bgcolor, bordercolor, borderwidth, range, autorange, yaxis.rangemode}`. It renders a thumbnail of the traces. — the thumbnail re-renders the subplot's traces (runtime `mirrorSubplot`); one relayout per drag; keyboard control deferred
+- [x] `xaxis.rangeselector.{buttons[{count, step: 'month' | 'year' | 'day' | 'hour' | 'minute' | 'second' | 'all', stepmode: 'backward' | 'todate', label}], x, y, font, bgcolor, activecolor}` — accessible DOM buttons, Plotly's date arithmetic
 
-#### E5.10 — Update menus (buttons & dropdowns)   `P1` `M`   deps: E7.1
+#### E5.10 — Update menus (buttons & dropdowns)   `P1` `M`   deps: E7.1   · ✅ Done (M3 wave 2)
 > As a developer, I want in-chart buttons and dropdowns that call `restyle`/`relayout`/`update`/`animate`, so that I can build interactive explorations without extra UI code.
-- [ ] `updatemenus[]: { type: 'dropdown' | 'buttons', direction, active, buttons[{label, method, args, args2, execute}], x, y, xanchor, yanchor, pad, font, bgcolor, bordercolor, showactive }`
-- [ ] Rendered as accessible DOM controls positioned over the canvas
+- [x] `updatemenus[]: { type: 'dropdown' | 'buttons', direction, active, buttons[{label, method, args, args2, execute}], x, y, xanchor, yanchor, pad, font, bgcolor, bordercolor, showactive }` — `args2`, `execute`, active tracking; `animate` waits for E7.4
+- [x] Rendered as accessible DOM controls positioned over the canvas — toolbar with roving focus; dropdown as a listbox
 
-#### E5.11 — Sliders   `P1` `M`   deps: E7.4
+#### E5.11 — Sliders   `P1` `M`   deps: E7.4   · 🟡 Partial (M3 wave 2)
 > As a developer, I want sliders that step through frames or states, so that I can animate over time (like the Gapminder demo).
-- [ ] `sliders[]: { steps[{label, method, args, value}], active, currentvalue.{prefix, suffix, visible, xanchor, font, offset}, transition, pad, len, x, y, ticklen, tickcolor, font }`
-- [ ] Keyboard accessible. Syncs with `animate` playback.
+- [x] `sliders[]: { steps[{label, method, args, value}], active, currentvalue.{prefix, suffix, visible, xanchor, font, offset}, transition, pad, len, x, y, ticklen, tickcolor, font }`
+- [ ] Keyboard accessible. Syncs with `animate` playback. — keyboard done (`role="slider"`); syncing with `animate` playback lands with E7.4 (wave 3), the `animatingframe` hook is ready
 
-#### E5.12 — Selections as layout objects   `P1` `S`   deps: E6.3
+#### E5.12 — Selections as layout objects   `P1` `S`   deps: E6.3   · ✅ Done (M3 wave 2)
 > As a developer, I want persistent selection shapes in `layout.selections`, so that selections survive redraws and can be set programmatically.
-- [ ] `selections[]: { type: 'rect' | 'path', x0, x1, y0, y1, path, xref, yref, line }`
+- [x] `selections[]: { type: 'rect' | 'path', x0, x1, y0, y1, path, xref, yref, line }` — stored on box/lasso, restored on load, editable; `newselection`/`activeselection` deferred
 
 ---
 
@@ -1171,25 +1171,25 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] Figure-factory helper `Holochart.ff.distplot(samples[], labels[], { binSize, curveType: 'kde' | 'normal', showHist, showCurve, showRug })`
 - [ ] Express `marginalX`/`marginalY: 'histogram' | 'box' | 'violin' | 'rug'` with an auto subplot layout and shared axes
 
-#### E10.9 — `splom` (scatter plot matrix)   `P1` `L`   deps: E9.1, E6.3, E4.4
+#### E10.9 — `splom` (scatter plot matrix)   `P1` `L`   deps: E9.1, E6.3, E4.4   · ✅ Done (M3 wave 2)
 > As an analyst, I want a scatter plot matrix with linked brushing, so that I can explore many variables at once.
-- [ ] `dimensions[]: { label, values, visible, axis.{type, matches} }`, `diagonal.visible`, `showupperhalf`, `showlowerhalf`, marker styling
-- [ ] One draw call per cell using shared GPU buffers (each dimension uploaded once and indexed per cell)
-- [ ] Selecting in any cell highlights the same samples in every cell
-- [ ] Performance: 10 dimensions × 100k points interactive
+- [x] `dimensions[]: { label, values, visible, axis.{type, matches} }`, `diagonal.visible`, `showupperhalf`, `showlowerhalf`, marker styling — Plotly's splom axis bookkeeping in core; hover labels read `label: value`
+- [x] One draw call per cell using shared GPU buffers (each dimension uploaded once and indexed per cell) — `MarkerMatrix`: each dimension uploaded once
+- [x] Selecting in any cell highlights the same samples in every cell — runtime multi-subplot plumbing (`multi-subplot.ts`)
+- [x] Performance: 10 dimensions × 100k points interactive — CPU: first draw ~40 ms, selection ~10 ms, zoom ~4 ms at 10 × 100k (GPU pass in M7)
 
-#### E10.10 — `parcoords` (parallel coordinates)   `P1` `L`   deps: E2.5, E3.3
+#### E10.10 — `parcoords` (parallel coordinates)   `P1` `L`   deps: E2.5, E3.3   · ✅ Done (M3 wave 2)
 > As an analyst, I want parallel coordinates with brushing, so that I can explore high-dimensional data.
-- [ ] `dimensions[]: { label, values, range, constraintrange (single or multiple ranges), tickvals, ticktext, tickformat, visible, multiselect }`
-- [ ] `line.{color, colorscale, cmin, cmax, showscale}`, `unselected.line.{color, opacity}`, `labelangle`, `labelside`, `rangefont`, `tickfont`
-- [ ] Axis brushing (drag on axis to filter), axis reordering (drag labels), all GPU-rendered for 100k+ lines
-- [ ] `restyle` event on brush with the `constraintrange` paths
+- [x] `dimensions[]: { label, values, range, constraintrange (single or multiple ranges), tickvals, ticktext, tickformat, visible, multiselect }`
+- [x] `line.{color, colorscale, cmin, cmax, showscale}`, `unselected.line.{color, opacity}`, `labelangle`, `labelside`, `rangefont`, `tickfont` — unselected lines share the selected pass (Plotly draws them underneath)
+- [x] Axis brushing (drag on axis to filter), axis reordering (drag labels), all GPU-rendered for 100k+ lines — ~25–50 fps brushing at 100k × 8 (selection mask on the CPU; GPU mask deferred)
+- [x] `restyle` event on brush with the `constraintrange` paths — a brush applies a real restyle
 
-#### E10.11 — `parcats` (parallel categories)   `P1` `L`   deps: E2.6
+#### E10.11 — `parcats` (parallel categories)   `P1` `L`   deps: E2.6   · ✅ Done (M3 wave 2)
 > As an analyst, I want parallel categories (a Sankey-like view for categorical dimensions), so that I can see how categories co-occur.
-- [ ] `dimensions[]: { label, values, categoryorder, categoryarray, ticktext, displayindex, visible }`, `counts`
-- [ ] `line.{color, colorscale, shape: 'linear' | 'hspline'}`, `arrangement: 'perpendicular' | 'freeform' | 'fixed'`, `bundlecolors`, `sortpaths: 'forward' | 'backward'`, `hoveron: 'category' | 'color' | 'dimension'`
-- [ ] Drag to reorder categories and dimensions
+- [x] `dimensions[]: { label, values, categoryorder, categoryarray, ticktext, displayindex, visible }`, `counts`
+- [x] `line.{color, colorscale, shape: 'linear' | 'hspline'}`, `arrangement: 'perpendicular' | 'freeform' | 'fixed'`, `bundlecolors`, `sortpaths: 'forward' | 'backward'`, `hoveron: 'category' | 'color' | 'dimension'` — band/path strokes and raising hovered bands deferred
+- [x] Drag to reorder categories and dimensions
 
 ---
 
@@ -2071,8 +2071,8 @@ default look (ADR-021) for every new example.
 | 1 | `histogram`, `histogram2d`, `histogram2dcontour` (with contouring) | E10.1–E10.3 ✅ |
 | 1 | `box`, `violin`, strip | E10.4–E10.6 ✅ |
 | 1 | Range breaks, linked axes and constraints, spikelines | E3.8–E3.10 ✅ |
-| 2 | `splom`, `parcoords`, `parcats` | E10.9–E10.11 |
-| 2 | Range slider and selector, update menus, sliders, layout selections | E5.9–E5.12 |
+| 2 | `splom`, `parcoords`, `parcats` | E10.9–E10.11 ✅ |
+| 2 | Range slider and selector, update menus, sliders, layout selections | E5.9–E5.12 ✅ |
 | 3 | Transitions, frames and `animate` | E7.3, E7.4 |
 | 3 | Keyboard and touch | E6.5, E6.6 |
 | 3 | Express: data model, mappings, facets, animation frames, ECDF, distplot/marginals | E23.1–E23.4, E10.7, E10.8 |

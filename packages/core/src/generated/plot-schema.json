@@ -1399,6 +1399,236 @@
             "description": "Distance in px between the tick labels and the title. By default it follows the tick labels automatically.",
             "valType": "number"
           }
+        },
+        "rangeslider": {
+          "editType": "layout",
+          "description": "Range slider (plan E5.9): an overview of all the data under the x axis, with a window over the range in view. Drag the window to pan, its ends to zoom, or click elsewhere to center the window there; the axis range changes with one `relayout` at the end of the drag. Y axes anchored to an axis with a range slider default to `fixedrange: true`, as in Plotly.",
+          "role": "object",
+          "visible": {
+            "description": "Show the range slider. Defaults to `true` when `rangeslider` is given (`rangeslider: {}` is enough), else `false`.",
+            "valType": "boolean"
+          },
+          "thickness": {
+            "min": 0,
+            "max": 1,
+            "dflt": 0.15,
+            "description": "Height of the slider as a fraction of the figure height minus `margin.t` and `margin.b`. The bottom margin grows to make room for it.",
+            "valType": "number"
+          },
+          "bgcolor": {
+            "description": "Background of the slider. Defaults to `plot_bgcolor`.",
+            "valType": "color"
+          },
+          "bordercolor": {
+            "dflt": "#444",
+            "description": "Border color of the slider.",
+            "valType": "color"
+          },
+          "borderwidth": {
+            "min": 0,
+            "dflt": 0,
+            "description": "Border width of the slider, px.",
+            "valType": "integer"
+          },
+          "autorange": {
+            "description": "Span every data point of the axis (its autorange, whatever the axis range in view). Defaults to `true` unless a full `range` is given.",
+            "valType": "boolean"
+          },
+          "range": {
+            "items": [
+              {
+                "dflt": null,
+                "valType": "any"
+              },
+              {
+                "dflt": null,
+                "valType": "any"
+              }
+            ],
+            "description": "Range the slider spans, in data units, like the axis `range` (dates on date axes, exponents on log axes). The slider always covers the axis range in view as well.",
+            "valType": "info_array"
+          },
+          "yaxis": {
+            "description": "Thumbnail y range per y axis: `yaxis` for the subplot on `y`, `yaxis2` for `y2`, … (one thumbnail per subplot on this x axis, drawn over each other).",
+            "subplot": "y",
+            "role": "object",
+            "rangemode": {
+              "values": ["auto", "fixed", "match"],
+              "description": "The y range of this subplot's thumbnail: `match` follows the y axis range in view, `auto` spans all the y data (autorange), `fixed` uses `range`. Defaults to `fixed` with a valid `range`, else `match`.",
+              "valType": "enumerated"
+            },
+            "range": {
+              "items": [
+                {
+                  "dflt": null,
+                  "valType": "any"
+                },
+                {
+                  "dflt": null,
+                  "valType": "any"
+                }
+              ],
+              "description": "Thumbnail y range for `rangemode: 'fixed'`, in data units, like the axis `range` (dates on date axes, exponents on log axes).",
+              "valType": "info_array"
+            }
+          }
+        },
+        "rangeselector": {
+          "editType": "layout",
+          "description": "Range selector (plan E5.9): buttons over the chart that set the x range to a preset span ending at the current range end (last 6 months, year to date, all). Date axes only. The button whose range is in view shows as active.",
+          "role": "object",
+          "visible": {
+            "description": "Show the range selector. Defaults to `true` when it has `buttons`.",
+            "valType": "boolean"
+          },
+          "buttons": {
+            "description": "The buttons, left to right.",
+            "itemName": "button",
+            "role": "items",
+            "items": {
+              "role": "object",
+              "visible": {
+                "dflt": true,
+                "description": "Show this button.",
+                "valType": "boolean"
+              },
+              "step": {
+                "values": ["month", "year", "day", "hour", "minute", "second", "all"],
+                "dflt": "month",
+                "description": "Unit of the range the button sets, with `count`; `all` autoranges the axis instead.",
+                "valType": "enumerated"
+              },
+              "stepmode": {
+                "values": ["backward", "todate"],
+                "dflt": "backward",
+                "description": "`backward`: the range ends at the current range end and starts `count` `step`s before it. `todate`: it starts at the start of the `step` period, `count - 1` periods back (`count: 1, step: 'year'` is year-to-date).",
+                "valType": "enumerated"
+              },
+              "count": {
+                "min": 0,
+                "dflt": 1,
+                "description": "Number of `step`s the range spans.",
+                "valType": "number"
+              },
+              "label": {
+                "description": "Button text. Default: `count` and the first letter of `step` (`6m`), or `all`.",
+                "valType": "string"
+              },
+              "name": {
+                "editType": "none",
+                "description": "Name of this button, used to reference it from a template via `templateitemname`.",
+                "valType": "string"
+              },
+              "templateitemname": {
+                "editType": "plot",
+                "description": "Name of a template button to inherit from. If no template item matches, this button is hidden (`visible: false`).",
+                "valType": "string"
+              }
+            }
+          },
+          "x": {
+            "min": -2,
+            "max": 3,
+            "description": "Horizontal position in paper coordinates (fractions of the plot area width). Defaults to the start of the axis domain. Give `x` and `y` together; one alone is ignored.",
+            "valType": "number"
+          },
+          "xanchor": {
+            "values": ["auto", "left", "center", "right"],
+            "dflt": "left",
+            "description": "Which side of the button row `x` refers to.",
+            "valType": "enumerated"
+          },
+          "y": {
+            "min": -2,
+            "max": 3,
+            "description": "Vertical position in paper coordinates. Defaults to just above the highest subplot on this x axis.",
+            "valType": "number"
+          },
+          "yanchor": {
+            "values": ["auto", "top", "middle", "bottom"],
+            "dflt": "bottom",
+            "description": "Which side of the button row `y` refers to.",
+            "valType": "enumerated"
+          },
+          "font": {
+            "description": "Button font. Defaults to `layout.font`.",
+            "editType": "layout",
+            "role": "object",
+            "family": {
+              "noBlank": true,
+              "strict": true,
+              "description": "CSS font-family list. The renderer uses the first family it can load and falls back through the list.",
+              "valType": "string"
+            },
+            "size": {
+              "min": 1,
+              "description": "Font size in CSS pixels.",
+              "valType": "number"
+            },
+            "color": {
+              "description": "Text color.",
+              "valType": "color"
+            },
+            "weight": {
+              "min": 1,
+              "max": 1000,
+              "extras": ["normal", "bold"],
+              "description": "Font weight: a CSS numeric weight (1–1000), `normal` or `bold`.",
+              "valType": "integer"
+            },
+            "style": {
+              "values": ["normal", "italic"],
+              "description": "Font style.",
+              "valType": "enumerated"
+            },
+            "variant": {
+              "values": [
+                "normal",
+                "small-caps",
+                "all-small-caps",
+                "all-petite-caps",
+                "petite-caps",
+                "unicase"
+              ],
+              "description": "Capitals variant (CSS `font-variant-caps`). The SDF text renderer approximates small and petite caps with uppercase letters at a reduced size.",
+              "valType": "enumerated"
+            },
+            "textcase": {
+              "values": ["normal", "word caps", "upper", "lower"],
+              "description": "Letter case transform: `upper`, `lower`, `word caps` (first letter of each word), or `normal`.",
+              "valType": "enumerated"
+            },
+            "lineposition": {
+              "flags": ["under", "over", "through"],
+              "extras": ["none"],
+              "description": "Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.",
+              "valType": "flaglist"
+            },
+            "shadow": {
+              "description": "CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.",
+              "valType": "string"
+            }
+          },
+          "bgcolor": {
+            "dflt": "#eee",
+            "description": "Background of the buttons.",
+            "valType": "color"
+          },
+          "activecolor": {
+            "description": "Background of the active button (the one whose range is in view) and of hovered buttons. Defaults to `bgcolor` darkened (light colors) or lightened (dark colors).",
+            "valType": "color"
+          },
+          "bordercolor": {
+            "dflt": "#444",
+            "description": "Border color of the buttons.",
+            "valType": "color"
+          },
+          "borderwidth": {
+            "min": 0,
+            "dflt": 0,
+            "description": "Border width of the buttons, px.",
+            "valType": "number"
+          }
         }
       },
       "yaxis": {
@@ -2268,6 +2498,91 @@
             "min": 0,
             "description": "Distance in px between the tick labels and the title. By default it follows the tick labels automatically.",
             "valType": "number"
+          }
+        }
+      },
+      "selections": {
+        "editType": "plot",
+        "description": "Selections as layout objects (plan E5.12): each box or lasso drag in `select` / `lasso` mode adds one (shift keeps the others), and every selection on a subplot selects the points inside it (`selectedpoints` follows). Set them to restore a selection; drag one to move or resize it; a double-click clears them.",
+        "itemName": "selection",
+        "role": "items",
+        "items": {
+          "role": "object",
+          "visible": {
+            "dflt": true,
+            "description": "Whether this selection applies (set to `false` by the template machinery when `templateitemname` names no template selection).",
+            "valType": "boolean"
+          },
+          "type": {
+            "values": ["rect", "path"],
+            "description": "`rect`: the box from (`x0`, `y0`) to (`x1`, `y1`); `path`: the polygon `path` (lasso). Default: `path` when `path` is set, else `rect`.",
+            "valType": "enumerated"
+          },
+          "xref": {
+            "dflt": "x",
+            "description": "The x axis the coordinates refer to (`x`, `x2`, …).",
+            "valType": "subplotid"
+          },
+          "yref": {
+            "dflt": "y",
+            "description": "The y axis the coordinates refer to (`y`, `y2`, …).",
+            "valType": "subplotid"
+          },
+          "x0": {
+            "description": "Start x of a `rect`, in data units of `xref` (dates, category names or indices; data values on log axes). A `rect` needs all four of `x0`, `x1`, `y0`, `y1`.",
+            "valType": "any"
+          },
+          "x1": {
+            "description": "End x of a `rect`.",
+            "valType": "any"
+          },
+          "y0": {
+            "description": "Start y of a `rect`.",
+            "valType": "any"
+          },
+          "y1": {
+            "description": "End y of a `rect`.",
+            "valType": "any"
+          },
+          "path": {
+            "description": "Polygon of a `path` selection, SVG-like in data units: `M x,y L x,y … Z` (also `H`, `V` and relative commands). Dates use `_` between date and time (`2024-01-05_12:00`).",
+            "valType": "string"
+          },
+          "opacity": {
+            "min": 0,
+            "max": 1,
+            "dflt": 0.7,
+            "description": "Opacity of the outline.",
+            "valType": "number"
+          },
+          "line": {
+            "description": "Outline style.",
+            "role": "object",
+            "color": {
+              "description": "Outline color. Default: a color contrasting with `plot_bgcolor` (white on dark, `#444` on light).",
+              "valType": "color"
+            },
+            "width": {
+              "min": 1,
+              "dflt": 1,
+              "description": "Outline width, px.",
+              "valType": "number"
+            },
+            "dash": {
+              "dflt": "dot",
+              "description": "Dash style: `solid`, `dot`, `dash`, `longdash`, `dashdot`, `longdashdot` or a px list (`'5px,10px'`).",
+              "valType": "string"
+            }
+          },
+          "name": {
+            "editType": "none",
+            "description": "Name of this selection, used to reference it from a template via `templateitemname`.",
+            "valType": "string"
+          },
+          "templateitemname": {
+            "editType": "plot",
+            "description": "Name of a template selection to inherit from. If no template item matches, this selection is hidden (`visible: false`).",
+            "valType": "string"
           }
         }
       }

@@ -101,6 +101,7 @@ import type {
   DomainInfo,
   DomainTraceEntry,
   MarginPush,
+  SelectionQuery,
   SubplotInfo,
   TraceExtremes,
   TraceAppend,
@@ -119,6 +120,9 @@ import {
 } from './events.ts';
 import type { LinearRange } from './fx/geometry.ts';
 import type { DomainHover, HoverEntry } from './fx/hover.ts';
+import { buildPoint } from './fx/hover.ts';
+import { selectionFromQuery, selectionQuery, selectionsOf } from './fx/selections.ts';
+import { SubplotMirrors } from './mirror.ts';
 import { Interaction } from './fx/interaction.ts';
 import { HoverLayer } from './fx/labels.ts';
 import {
@@ -162,6 +166,16 @@ import { describeChart, type ChartDescription } from './a11y/describe.ts';
 import { A11yMirror, type A11yChange } from './a11y/mirror.ts';
 import type { DownloadImageOptions, ExportSource, ToImageOptions } from './export/types.ts';
 import { registry as defaultRegistry, type ChartRegistry } from './registry.ts';
+import {
+  axisDataOf,
+  cellsRescaled,
+  entrySubplots,
+  extremesOn,
+  isMultiSubplot,
+  placedViewport,
+  placePrimitive,
+  traceCells,
+} from './multi-subplot.ts';
 
 /** Options for {@link createChart} that are not part of the figure. */
 export interface ChartOptions {
@@ -243,6 +257,12 @@ interface Plan {
   layoutOther: boolean;
   /** Interaction-mode layout edits (`dragmode`, `hovermode`, …). */
   layoutQuiet: boolean;
+  /** `layout.selections` changed (E5.12): select the points inside them again. */
+  selections: boolean;
+  /** A GUI edit moved or resized an existing selection (`selected` follows the reselection). */
+  selectionsEdited: boolean;
+  /** Traces whose input `selectedpoints` changed: they keep it over layout selections. */
+  inputSelection: Set<number>;
 }
 
 /**
@@ -281,6 +301,8 @@ interface TraceSlot {
    * `selectedpoints` attribute.
    */
   selection: readonly number[] | null | undefined;
+  /** The selection comes from `layout.selections` (E5.12): cleared when they go away. */
+  layoutSelected?: boolean;
 }
 
 interface ComponentSlot {
@@ -392,6 +414,9 @@ function emptyPlan(): Plan {
     rangesAltered: new Set(),
     layoutOther: false,
     layoutQuiet: false,
+    selections: false,
+    selectionsEdited: false,
+    inputSelection: new Set(),
   };
 }
 
@@ -400,6 +425,9 @@ const RANGE_PATH = /^[xy]axis\d*\.(?:range(?:\[[01]\])?|autorange)$/;
 const QUIET_PATH = /^(?:dragmode|hovermode|selectdirection|clickmode)$/;
 
 const RANGE_SET_PATH = /^([xy])axis(\d*)\.range(?:\[[01]\])?$/;
+/** Paths of `layout.selections` (E5.12) and of one selection's geometry. */
+const SELECTIONS_PATH = /^selections(?:$|[.[])/;
+const SELECTION_EDIT_PATH = /^selections\[\d+\]\./;
 
 /** Record what kind of layout edit `paths` are, for {@link a11yChangeOf}. */
 function classifyLayoutPaths(
@@ -414,7 +442,11 @@ function classifyLayoutPaths(
     }
     if (RANGE_PATH.test(path)) plan.layoutRanges = true;
     else if (QUIET_PATH.test(path)) plan.layoutQuiet = true;
-    else plan.layoutOther = true;
+    else if (SELECTIONS_PATH.test(path)) {
+      // Selections (E5.12) change what is selected, not what the description says.
+      plan.selections = true;
+      plan.layoutQuiet = true;
+    } else plan.layoutOther = true;
   }
 }
 
@@ -553,6 +585,19 @@ export class Chart {
   #destroyed = false;
   #unsubscribeFonts: (() => void) | undefined;
   #a11y: A11yMirror | undefined;
+  /** Secondary views of subplots' traces (E5.9 range slider thumbnails), see `mirror.ts`. */
+  readonly #mirrors: SubplotMirrors = new SubplotMirrors({
+    root: () => this.#requireRoot(),
+    subplot: (id) => this.#subplots.get(id),
+    fullLayout: () => this.#full?.fullLayout,
+    fullData: () => this.#full?.fullData ?? [],
+    trace: (i) => {
+      const slot = this.#traces[i];
+      return slot?.hasCalc ? { module: slot.module, calc: slot.calc } : undefined;
+    },
+    selection: (i) => this.#selectionOf(i),
+    plotArea: () => this.#plotArea,
+  });
 
   /** Prefer {@link createChart}. A chart already in `el` is destroyed first. */
   constructor(el: HTMLElement, figure: FigureInput = {}, options: ChartOptions = {}) {
@@ -846,11 +891,50 @@ export class Chart {
     return this.#resetView('reset');
   }
 
-  /** Clear every selection (emits `deselect` when there was one). */
+  /** Clear every selection, `layout.selections` included (emits `deselect` when there was one). */
   clearSelection(): Promise<Chart> {
     const had = this.#clearSelection();
     if (had) this.#events.emit('deselect', undefined);
     return this.#schedule(() => undefined);
+  }
+
+  /**
+   * Show axis ranges now without committing them (M3 wave 2, E5.9: interactive components such
+   * as the range slider preview a drag this way): linear coordinates keyed by axis id
+   * (`{ x: [l0, l1] }`). Like a zoom drag, traces only get new transforms, components redraw
+   * their ticks, linked axes (`matches`, `scaleanchor`) follow, and `relayouting` is emitted; the
+   * input layout is untouched. Finish with {@link commitRanges}, or undo by previewing the ranges
+   * shown before.
+   */
+  previewRanges(ranges: Readonly<Record<string, readonly [number, number]>>): void {
+    if (this.#destroyed || !this.#full) return;
+    const map = new Map<string, LinearRange>();
+    const edits: Record<string, unknown> = {};
+    for (const [id, r] of Object.entries(ranges)) {
+      const axis = this.#axes.get(id);
+      if (!axis || !Number.isFinite(r[0]) || !Number.isFinite(r[1])) continue;
+      map.set(id, [r[0], r[1]]);
+      edits[`${axis.name}.range[0]`] = axis.scale.l2r(r[0]);
+      edits[`${axis.name}.range[1]`] = axis.scale.l2r(r[1]);
+    }
+    if (map.size === 0) return;
+    this.#previewRanges(map);
+    this.#events.emit('relayouting', edits);
+  }
+
+  /**
+   * Set axis ranges as a user interaction (M3 wave 2, E5.9): linear coordinates keyed by axis
+   * id, committed with one GUI `relayout` (kept across `uirevision`) whose event carries Plotly's
+   * `'xaxis.range[0]'` / `'xaxis.range[1]'` keys, like the end of a zoom drag.
+   */
+  commitRanges(ranges: Readonly<Record<string, readonly [number, number]>>): Promise<Chart> {
+    const map = new Map<string, LinearRange>();
+    for (const [id, r] of Object.entries(ranges)) {
+      if (this.#axes.has(id) && Number.isFinite(r[0]) && Number.isFinite(r[1])) {
+        map.set(id, [r[0], r[1]]);
+      }
+    }
+    return this.#commitRanges(map);
   }
 
   // ---- update API (E7.1) ----------------------------------------------------------------------
@@ -878,6 +962,9 @@ export class Chart {
   relayout(update: AttributeUpdate, options: { gui?: boolean } = {}): Promise<Chart> {
     return this.#schedule((plan) => {
       if (options.gui) this.#recordLayoutGui(update);
+      if (options.gui && Object.keys(update).some((k) => SELECTION_EDIT_PATH.test(k))) {
+        plan.selectionsEdited = true;
+      }
       this.#relayoutInto(plan, update);
     });
   }
@@ -1375,6 +1462,7 @@ export class Chart {
     for (const slot of this.#traces) if (slot) for (const p of slot.primitives) collect(p);
     for (const slot of this.#components.values())
       for (const p of slot.primitives.keys()) collect(p);
+    for (const p of this.#mirrors.primitives()) collect(p);
     return out;
   }
 
@@ -1453,6 +1541,7 @@ export class Chart {
     this.#observer = null;
     for (const off of this.#rootListeners) off();
     this.#rootListeners = [];
+    this.#mirrors.clear();
     this.#root?.destroy();
     this.#root = undefined;
   }
@@ -1546,7 +1635,9 @@ export class Chart {
     const plans: TraceUpdatePlan[] = fullData.map((trace, i) => {
       const slot = this.#traces[i] as TraceSlot;
       const onRescaled =
-        rescaled.has(trace['xaxis'] as string) || rescaled.has(trace['yaxis'] as string);
+        rescaled.has(trace['xaxis'] as string) ||
+        rescaled.has(trace['yaxis'] as string) ||
+        cellsRescaled(slot.module, trace, rescaled);
       const stages = plan.traces.get(i) ?? EMPTY_STAGES;
       const pending = plan.appends.get(i);
       const tp = tracePlan(stages, plan.layout, {
@@ -1649,11 +1740,14 @@ export class Chart {
       sp.viewport.background = overlays(sp) ? null : plotBg;
     }
 
+    this.#reselect(plan, fullLayout, fullData);
+    this.#syncSelectedpoints(fullData);
     for (const i of plan.selection) {
       const tp = plans[i];
       if (tp) plans[i] = { ...tp, selection: true };
     }
     fullData.forEach((trace, i) => this.#plotTrace(i, trace, plans[i] as TraceUpdatePlan));
+    if (this.#mirrors.size > 0) this.#mirrors.sync(plans, plan.structural);
 
     const stages = new Set(plan.layout);
     for (const s of plan.traces.values()) for (const stage of s) stages.add(stage);
@@ -1678,6 +1772,7 @@ export class Chart {
       index,
       xaxis: this.#axes.get(trace['xaxis'] as string),
       yaxis: this.#axes.get(trace['yaxis'] as string),
+      axes: this.#axes,
     };
   }
 
@@ -1746,7 +1841,12 @@ export class Chart {
         const letter = id.charAt(0);
         const columns: unknown[] = [];
         for (const trace of fullData) {
-          if (trace.visible !== false && trace[`${letter}axis`] === id) columns.push(trace[letter]);
+          if (trace.visible !== false && trace[`${letter}axis`] === id) {
+            columns.push(trace[letter]);
+          } else {
+            const data = axisDataOf(trace, id);
+            if (data !== undefined) columns.push(data);
+          }
         }
         lists = axisCategoryLists(full, type, columns, prev?.state.categories);
       }
@@ -1917,10 +2017,9 @@ export class Chart {
     const fromComponents = this.#componentExtremes(fullData);
     const extremesOf = (axis: AxisSlot): AxisExtremes[] => {
       const extremes: AxisExtremes[] = [];
-      const key = `${axis.letter}axis`;
       fullData.forEach((trace, i) => {
-        if (trace.visible !== true || trace[key] !== axis.id) return;
-        const e = this.#traces[i]?.extremes?.[axis.letter];
+        if (trace.visible !== true) return;
+        const e = extremesOn(this.#traces[i]?.extremes, trace, axis);
         if (e) extremes.push(e);
       });
       for (const byAxis of fromComponents) {
@@ -2249,14 +2348,18 @@ export class Chart {
       ...(subplot ? {} : optional('domain', this.#domainOf(trace))),
       plotArea: this.#plotArea,
       primitives: root.context,
-      add: (primitive) => {
-        viewport.add(primitive);
+      ...optional('cells', traceCells(slot.module, trace, this.#subplots)),
+      add: (primitive, vp = viewport) => {
+        vp.add(primitive);
         slot.primitives.add(primitive as Primitive<unknown>);
+        if (vp !== viewport) placePrimitive(primitive as Primitive<unknown>, vp);
         return primitive;
       },
       remove: (primitive) => {
         slot.primitives.delete(primitive as Primitive<unknown>);
-        viewport.remove(primitive, { dispose: true });
+        (placedViewport(primitive as Primitive<unknown>) ?? viewport).remove(primitive, {
+          dispose: true,
+        });
       },
       invalidate: () => root.invalidate(),
       selectedPoints: this.#selectionOf(index),
@@ -2269,7 +2372,9 @@ export class Chart {
     try {
       view?.dispose?.();
     } finally {
-      for (const p of slot.primitives) slot.viewport?.remove(p, { dispose: true });
+      for (const p of slot.primitives) {
+        (placedViewport(p) ?? slot.viewport)?.remove(p, { dispose: true });
+      }
       slot.primitives.clear();
       slot.viewport = undefined;
     }
@@ -2333,6 +2438,8 @@ export class Chart {
       ...(this.#full ? { fullConfig: this.#full.fullConfig } : {}),
       traceModule: (type: string) => this.#registry.getTrace(type),
       calcdata: (index: number) => this.#calcdataOf(index),
+      mirrorSubplot: (id, options) => this.#mirrors.create(slot, id, options),
+      autorange: (id) => this.#fullAutorange(id),
     };
   }
 
@@ -2372,6 +2479,7 @@ export class Chart {
       selection: (index) => this.#selectionOf(index),
       select: (selection) => this.#select(selection),
       clearSelection: () => this.#clearSelection(),
+      commitSelection: (sp, query, shift) => this.#commitSelection(sp, query, shift),
       axes: () => this.#axes,
       plotArea: () => this.#plotArea,
       renderHover: (points: readonly ChartPoint[]) => {
@@ -2395,27 +2503,28 @@ export class Chart {
         const module = slot?.module;
         if (!slot?.hasCalc || !module || trace.visible !== true) return;
         if (!module.hoverPoints && !module.selectPoints) return;
-        const subplot = this.#subplots.get(`${String(trace['xaxis'])}${String(trace['yaxis'])}`);
-        if (!subplot) return;
         const input = this.#figure.data[index];
-        const list = map.get(subplot.id) ?? [];
-        list.push({
-          index,
-          module,
-          trace,
-          input,
-          calc: slot.calc,
-          subplot,
-          rect: subplot.rect,
-          ctx: {
-            fullLayout: full.fullLayout,
-            xaxis: subplot.xaxis,
-            yaxis: subplot.yaxis,
-            transform: subplot.transform,
-          },
-          skip: traceAttr(trace, input, 'hoverinfo') === 'skip',
-        });
-        map.set(subplot.id, list);
+        // One entry per subplot the trace is on (every cell of a multi-subplot trace).
+        for (const subplot of entrySubplots(module, trace, this.#subplots)) {
+          const list = map.get(subplot.id) ?? [];
+          list.push({
+            index,
+            module,
+            trace,
+            input,
+            calc: slot.calc,
+            subplot,
+            rect: subplot.rect,
+            ctx: {
+              fullLayout: full.fullLayout,
+              xaxis: subplot.xaxis,
+              yaxis: subplot.yaxis,
+              transform: subplot.transform,
+            },
+            skip: traceAttr(trace, input, 'hoverinfo') === 'skip',
+          });
+          map.set(subplot.id, list);
+        }
       });
       this.#hoverEntries = map;
     }
@@ -2513,6 +2622,12 @@ export class Chart {
         slot.view.update(this.#plotContext(i, trace, slot, sp, sp.viewport), TRANSFORM_ONLY);
       });
     }
+    // Multi-subplot traces (splom) draw in many subplots: one update with every cell's transform.
+    full.fullData.forEach((trace, i) => {
+      const slot = this.#traces[i];
+      if (!slot?.view || !slot.viewport || !isMultiSubplot(slot.module)) return;
+      slot.view.update(this.#plotContext(i, trace, slot, undefined, slot.viewport), TRANSFORM_ONLY);
+    });
     for (const slot of this.#components.values()) {
       slot.view?.update(this.#componentContext(full.fullLayout, full.fullData, slot), {
         stages: TICKS_ONLY,
@@ -2593,6 +2708,145 @@ export class Chart {
 
   // ---- selection (E6.3) ----------------------------------------------------------------------------
 
+  /**
+   * Select the points inside `layout.selections` (E5.12, Plotly's `reselect`): on the first draw,
+   * when the selections change, and when a trace on a subplot with selections is recalculated.
+   * Every selectable trace on a subplot with selections gets the union of what each selection
+   * contains; traces selected by selections that are gone are cleared. Traces whose input
+   * `selectedpoints` changed in this update keep it. A GUI edit of a selection (a drag of the
+   * selections component) emits `selected` with the new points.
+   */
+  #reselect(plan: Plan, fullLayout: FullLayout, fullData: readonly FullTrace[]): void {
+    const list = selectionsOf(fullLayout);
+    const layoutSelected = this.#traces.some((t) => t?.layoutSelected === true);
+    if (list.length === 0 && !layoutSelected) return;
+    const recalculated =
+      plan.layout.has('calc') ||
+      plan.appends.size > 0 ||
+      [...plan.traces.values()].some((s) => s.has('calc'));
+    if (!plan.full && !plan.selections && !plan.structural && !recalculated) return;
+    const bySubplot = new Map<string, NonNullable<ReturnType<typeof selectionQuery>>[]>();
+    for (const sel of list) {
+      const sp = this.#subplots.get(`${String(sel.xref)}${String(sel.yref)}`);
+      const query = sp && selectionQuery(sel, sp.xaxis, sp.yaxis);
+      if (!sp || !query) continue;
+      const queries = bySubplot.get(sp.id) ?? [];
+      queries.push(query);
+      bySubplot.set(sp.id, queries);
+    }
+    // Entries are built lazily from the current slots: rebuild them for this run.
+    this.#hoverEntries = null;
+    const selected = new Map<number, Set<number>>();
+    for (const [id, queries] of bySubplot) {
+      for (const entry of this.#entries(id)) {
+        const select = entry.module.selectPoints;
+        if (!select || plan.inputSelection.has(entry.index)) continue;
+        const set = selected.get(entry.index) ?? new Set<number>();
+        for (const q of queries)
+          for (const i of select(entry.calc, entry.trace, q, entry.ctx)) set.add(i);
+        selected.set(entry.index, set);
+      }
+    }
+    this.#hoverEntries = null;
+    this.#traces.forEach((slot, i) => {
+      if (!slot || plan.inputSelection.has(i)) return;
+      const set = selected.get(i);
+      if (set) {
+        slot.selection = [...set].sort((a, b) => a - b);
+        slot.layoutSelected = true;
+        plan.selection.add(i);
+      } else if (slot.layoutSelected) {
+        slot.selection = null;
+        slot.layoutSelected = false;
+        plan.selection.add(i);
+      }
+    });
+    if (plan.selectionsEdited) {
+      const selections = this.#figure.layout['selections'];
+      plan.after.push(() => {
+        const points = [];
+        for (const [index, set] of selected) {
+          const trace = fullData[index];
+          const sp =
+            trace && this.#subplots.get(`${String(trace['xaxis'])}${String(trace['yaxis'])}`);
+          const entry = sp && this.#entries(sp.id).find((e) => e.index === index);
+          if (!entry) continue;
+          for (const i of set) {
+            points.push(buildPoint(entry, { pointIndex: i, distance: 0, px: 0, py: 0 }, false));
+          }
+        }
+        this.#events.emit('selected', {
+          points,
+          ...(Array.isArray(selections) ? { selections } : {}),
+        });
+      });
+    }
+  }
+
+  /**
+   * `fullData[i].selectedpoints` shows the selection in effect (E5.12, Plotly keeps
+   * `selectedpoints` in sync): the interactive one or the one `layout.selections` made; the
+   * input trace is left as given (`chart.toImage` hands the selection over too).
+   */
+  #syncSelectedpoints(fullData: readonly FullTrace[]): void {
+    fullData.forEach((trace, i) => {
+      const selection = this.#traces[i]?.selection;
+      if (selection === undefined) return;
+      if (selection === null) delete (trace as Record<string, unknown>)['selectedpoints'];
+      else (trace as Record<string, unknown>)['selectedpoints'] = [...selection];
+    });
+  }
+
+  /**
+   * A finished box or lasso drag as a layout selection (E5.12): appended to `layout.selections`
+   * with shift, replacing them otherwise, through one GUI `relayout`. Returns the new list.
+   */
+  #commitSelection(
+    sp: SubplotInfo,
+    query: SelectionQuery,
+    shift: boolean,
+  ): readonly Record<string, unknown>[] | undefined {
+    const sel = selectionFromQuery(query, sp.xaxis, sp.yaxis);
+    if (!sel) return undefined;
+    const current = this.#figure.layout['selections'];
+    const list = shift && Array.isArray(current) ? [...(current as unknown[]), sel] : [sel];
+    this.relayout({ selections: list }, { gui: true }).catch(() => undefined);
+    return list as Record<string, unknown>[];
+  }
+
+  /** Remove `layout.selections` (a GUI relayout); returns whether there were any. */
+  #dropLayoutSelections(): boolean {
+    const current = this.#figure.layout['selections'];
+    if (!Array.isArray(current) || current.length === 0) return false;
+    this.relayout({ selections: [] }, { gui: true }).catch(() => undefined);
+    return true;
+  }
+
+  /**
+   * The range axis `id` autoranges to over all its data (E5.9: range slider), whatever its
+   * `autorange` / `range` say; linear coordinates.
+   */
+  #fullAutorange(id: string): readonly [number, number] | undefined {
+    const axis = this.#axes.get(id);
+    const full = this.#full;
+    if (!axis || !full) return undefined;
+    const key = `${axis.letter}axis`;
+    const extremes: AxisExtremes[] = [];
+    full.fullData.forEach((trace, i) => {
+      const e = this.#traces[i]?.extremes;
+      if (trace.visible !== true || !e) return;
+      const byAxis = (e as { byAxis?: Readonly<Record<string, AxisExtremes>> }).byAxis;
+      const mine = byAxis ? byAxis[id] : trace[key] === id ? e[axis.letter] : undefined;
+      if (mine) extremes.push(mine);
+    });
+    for (const byAxis of this.#componentExtremes(full.fullData)) {
+      const e = byAxis[id];
+      if (e) extremes.push(e);
+    }
+    const auto = { ...axis.full, autorange: true } as FullAxis;
+    return resolveAxisRange(auto, axis.scale, extremes);
+  }
+
   /** A trace's selection: the interactive one, else its `selectedpoints` attribute. */
   #selectionOf(index: number): readonly number[] | null {
     const slot = this.#traces[index];
@@ -2608,8 +2862,12 @@ export class Chart {
   /** The input `selectedpoints` changed (restyle / react): it wins over the interactive selection. */
   #followInputSelection(plan: Plan, index: number): void {
     const slot = this.#traces[index];
-    if (slot) slot.selection = undefined;
+    if (slot) {
+      slot.selection = undefined;
+      slot.layoutSelected = false;
+    }
     plan.selection.add(index);
+    plan.inputSelection.add(index);
   }
 
   #select(selection: ReadonlyMap<number, readonly number[]>): void {
@@ -2625,7 +2883,7 @@ export class Chart {
 
   /** Clear every selection; returns whether anything was selected. */
   #clearSelection(): boolean {
-    let had = false;
+    let had = this.#dropLayoutSelections();
     const cleared: number[] = [];
     this.#traces.forEach((slot, i) => {
       if (!slot || this.#selectionOf(i) === null) return;
@@ -2648,6 +2906,7 @@ export class Chart {
       view?.dispose?.();
     } finally {
       for (const [p, vp] of slot.primitives) vp.remove(p, { dispose: true });
+      this.#mirrors.disposeOwner(slot);
       slot.primitives.clear();
     }
   }

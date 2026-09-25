@@ -102,6 +102,15 @@ export interface InteractionHost {
   select(selection: ReadonlyMap<number, readonly number[]>): void;
   /** Clear every selection; returns whether there was one. */
   clearSelection(): boolean;
+  /**
+   * Store a finished box / lasso selection in `layout.selections` (E5.12): appended with
+   * `shift`, replacing the others otherwise. Returns the new list for the `selected` event.
+   */
+  commitSelection?(
+    subplot: SubplotInfo,
+    query: SelectionQuery,
+    shift: boolean,
+  ): readonly Record<string, unknown>[] | undefined;
   /** Offer a shape-drawing gesture to component views (draw `dragmode`s, E5.5). */
   drawShape?(gesture: DrawGesture): void;
   /** `config.renderHover(points)`: a custom label element, if configured. */
@@ -1244,9 +1253,11 @@ export class Interaction {
           }
         }
         host.select(selection);
+        const selections = host.commitSelection?.(sp, query, drag.shift);
         host.events.emit('selected', {
           points: this.#selectionPoints(selection),
           ...this.#selectionShape(drag, query),
+          ...(selections ? { selections } : {}),
           event: e,
         });
         return;

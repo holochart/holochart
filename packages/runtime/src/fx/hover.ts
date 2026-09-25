@@ -98,6 +98,8 @@ export class HoverFinder {
   };
   readonly #prevTrace: number[] = [];
   readonly #prevPoint: number[] = [];
+  /** Subplot of each previous point: a multi-subplot trace (splom) shows one point in many. */
+  readonly #prevSubplot: (SubplotInfo | undefined)[] = [];
 
   #push(entry: HoverEntry, point: HoverPoint): void {
     const slot = this.found[this.count];
@@ -114,6 +116,7 @@ export class HoverFinder {
     this.subplot = undefined;
     this.#prevTrace.length = 0;
     this.#prevPoint.length = 0;
+    this.#prevSubplot.length = 0;
   }
 
   /**
@@ -237,7 +240,11 @@ export class HoverFinder {
     if (!changed) {
       for (let i = 0; i < n; i++) {
         const f = this.found[i] as Found;
-        if (f.entry.index !== this.#prevTrace[i] || f.point.pointIndex !== this.#prevPoint[i]) {
+        if (
+          f.entry.index !== this.#prevTrace[i] ||
+          f.point.pointIndex !== this.#prevPoint[i] ||
+          f.entry.subplot !== this.#prevSubplot[i]
+        ) {
           changed = true;
           break;
         }
@@ -246,10 +253,12 @@ export class HoverFinder {
     if (changed) {
       this.#prevTrace.length = n;
       this.#prevPoint.length = n;
+      this.#prevSubplot.length = n;
       for (let i = 0; i < n; i++) {
         const f = this.found[i] as Found;
         this.#prevTrace[i] = f.entry.index;
         this.#prevPoint[i] = f.point.pointIndex;
+        this.#prevSubplot[i] = f.entry.subplot;
       }
     }
     return changed;

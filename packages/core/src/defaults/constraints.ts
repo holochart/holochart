@@ -165,12 +165,15 @@ function copyValue(v: unknown): unknown {
  *
  * @param ids - Every cartesian axis id, x axes first, then y axes, each by number.
  * @param templateLayout - The template's layout (only `constraintoward` reads it).
+ * @param matchDefaults - Default `matches` by axis id, used when the user's axis sets none (splom
+ *   dimensions with `axis.matches`, E10.9; Plotly's `splomStash.matches`).
  */
 export function supplyAxisConstraints(
   layoutIn: Readonly<Record<string, unknown>>,
   fullLayout: FullLayout,
   ids: readonly string[],
   templateLayout: Record<string, unknown> | undefined,
+  matchDefaults?: ReadonlyMap<string, string>,
 ): void {
   const constraintGroups: AxisConstraintGroup[] = [];
   const matchGroups: AxisMatchGroup[] = [];
@@ -204,7 +207,8 @@ export function supplyAxisConstraints(
     );
     const isCandidate = (v: unknown): v is string =>
       typeof v === 'string' && candidates.includes(v);
-    const matches = isCandidate(axIn['matches']) ? axIn['matches'] : undefined;
+    const requested = axIn['matches'] ?? matchDefaults?.get(id);
+    const matches = isCandidate(requested) ? requested : undefined;
     const scaleanchor =
       matches === undefined && isCandidate(axIn['scaleanchor']) ? axIn['scaleanchor'] : undefined;
 

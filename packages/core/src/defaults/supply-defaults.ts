@@ -9,7 +9,8 @@
  * 4. traces — common attributes, then each module's conditional defaults, with template traces
  *    cycled per type and colorway colors cycled per trace index;
  * 5. trace-module and component layout attributes;
- * 6. cartesian axis discovery (`fullLayout._subplots`);
+ * 6. cartesian axis discovery (`fullLayout._subplots`), after the grid the axes of splom traces
+ *    make;
  * 7. `showlegend`, whose default depends on the traces.
  *
  * The result is a fixed point: feeding the (underscore-stripped) output back in produces the same
@@ -30,6 +31,8 @@ import { supplyCartesianAxes } from './axes.ts';
 import { coerceAtPath, coerceContainer } from './container.ts';
 import { supplyDomainDefaults } from './domain.ts';
 import { gridAxisOverrides, supplyGridSizing } from './grid.ts';
+import { supplySelectionDefaults } from './selections.ts';
+import { splomAxisOverrides, splomGridFallback } from './splom-axes.ts';
 import type { FigureInput, FullConfig, FullLayout, FullTrace } from './types.ts';
 
 /** Options for {@link supplyDefaults}. */
@@ -55,6 +58,16 @@ export interface SupplyDefaultsResult {
 const BASE_LAYOUT_KEYS = new Set(Object.keys(layoutSchema.children));
 const LATE_LAYOUT_KEYS = new Set(['font', 'showlegend', 'template', 'grid']);
 const EARLY_LAYOUT_KEYS = new Set([...BASE_LAYOUT_KEYS].filter((k) => !LATE_LAYOUT_KEYS.has(k)));
+
+/** Per-axis overrides of two sources, key by key (the second wins on the same key). */
+function mergeOverrides(
+  a: Map<string, Record<string, unknown>>,
+  b: Map<string, Record<string, unknown>>,
+): Map<string, Record<string, unknown>> {
+  if (a.size === 0) return b;
+  for (const [id, o] of b) a.set(id, { ...a.get(id), ...o });
+  return a;
+}
 
 function reportIssues(
   issues: readonly Issue[],
@@ -204,6 +217,7 @@ export function supplyDefaults(
     },
   });
   fullLayout.template = template;
+  supplySelectionDefaults(fullLayout);
   // Grid cells first: domain traces are placed in them (`domain.row` / `domain.column`).
   supplyGridSizing(layoutIn, fullLayout, tLayout, schema);
 
@@ -247,8 +261,12 @@ export function supplyDefaults(
     owner.supplyLayoutDefaults?.(layoutIn, fullLayout, layoutCtx);
   }
 
+  // Splom traces (E10.9) lay their axes out as a grid, unless the user's grid names the cells.
+  const splomGrid = splomGridFallback(fullLayout);
+  if (splomGrid) supplyGridSizing(layoutIn, fullLayout, tLayout, schema, splomGrid);
+
   fullLayout._subplots = supplyCartesianAxes(layoutIn, fullLayout, fullData, tLayout, schema, (s) =>
-    gridAxisOverrides(fullLayout, s),
+    mergeOverrides(splomAxisOverrides(fullLayout), gridAxisOverrides(fullLayout, s)),
   );
 
   // Pie-like traces count twice (Plotly): one pie shows its per-label legend by default.

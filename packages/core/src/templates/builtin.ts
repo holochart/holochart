@@ -134,7 +134,21 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
       // A thin top band: the title and the legend push the top margin when there is one.
       // `gutter` keeps what grows a margin (automargin tick labels, the legend) off the edge.
       margin: { l: 40, r: 16, t: 16, b: 32, pad: 0, gutter: 4 },
-      xaxis: axis,
+      xaxis: {
+        ...axis,
+        // A framed overview strip (the slider background is the plot background).
+        rangeslider: { bordercolor: AXIS, borderwidth: 1 },
+        // Top right, out of the way of the legend at the top left; raised dark buttons.
+        rangeselector: {
+          x: 1,
+          xanchor: 'right',
+          bgcolor: '#15151d',
+          activecolor: ZERO,
+          bordercolor: AXIS,
+          borderwidth: 1,
+          font: { size: 9, color: TEXT },
+        },
+      },
       yaxis: axis,
       legend: {
         orientation: 'h',
@@ -187,10 +201,30 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
       // Thin outlines and small points, like scatter (Plotly's 2 px / 6 px read heavy when dense).
       box: [{ line: { width: 1 }, marker: { size: 3, line: { width: 0, color: BG } } }],
       violin: [{ line: { width: 1 }, marker: { size: 3, line: { width: 0, color: BG } } }],
+      // Scatter plot matrices are dense small multiples: small points, slim colorbars.
+      splom: [{ marker: { size: 3, line: { width: 0, color: BG }, colorbar } }],
       // Heatmap-like traces don't pick automatic colorscales (Plotly): give them the sequential
       // ramp, as plotly.py's templates do. Contours use it automatically (`autocolorscale`).
       histogram2d: [{ colorscale: sequential, colorbar }],
       histogram2dcontour: [{ colorbar }],
+      // Parallel coordinates and categories: the sequential ramp (parcoords defaults to Viridis),
+      // slim colorbars, 9 px axis labels and 8 px tick and range labels (Plotly's 1/1.2 of the
+      // layout font rounds up to 8 px for the labels too).
+      parcoords: [
+        {
+          line: { colorscale: sequential, colorbar },
+          labelfont: { size: 9, color: TEXT },
+          tickfont: { size: 8, color: TICK },
+          rangefont: { size: 8, color: TICK },
+        },
+      ],
+      parcats: [
+        {
+          line: { colorbar },
+          labelfont: { size: 9, color: TEXT },
+          tickfont: { size: 8, color: TEXT },
+        },
+      ],
       // A raised header (the hover-label background) over background-colored cells, both with
       // faint 1 px rules; bright header text, 9 px throughout.
       table: [

@@ -61,6 +61,11 @@ export interface SelectionEventData {
   readonly range?: Readonly<Record<string, readonly [unknown, unknown]>>;
   /** Lasso selections: the polygon in data (range) units, keyed by axis id. */
   readonly lassoPoints?: Readonly<Record<string, readonly unknown[]>>;
+  /**
+   * `layout.selections` after this selection (E5.12, Plotly 2.13+): box and lasso drags store
+   * their outline there; also set when a selection was moved or resized.
+   */
+  readonly selections?: readonly unknown[];
   readonly event?: Event;
 }
 

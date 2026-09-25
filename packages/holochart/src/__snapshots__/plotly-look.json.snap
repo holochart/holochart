@@ -299,6 +299,8 @@
     "captureevents": false
    }
   ],
+  "updatemenus": [],
+  "sliders": [],
   "modebar": {
    "orientation": "h",
    "add": [],

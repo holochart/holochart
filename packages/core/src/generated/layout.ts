@@ -131,6 +131,10 @@ export interface Layout {
    * Further `yaxis` containers (`yaxis2`, `yaxis3`, …), with the same attributes.
    */
   [key: `yaxis${number}`]: LayoutYaxis | undefined;
+  /**
+   * Selections as layout objects (plan E5.12): each box or lasso drag in `select` / `lasso` mode adds one (shift keeps the others), and every selection on a subplot selects the points inside it (`selectedpoints` follows). Set them to restore a selection; drag one to move or resize it; a double-click clears them.
+   */
+  selections?: Array<LayoutSelection>;
 }
 
 /**
@@ -1030,6 +1034,14 @@ export interface LayoutXaxis {
    * Axis title.
    */
   title?: LayoutXaxisTitle;
+  /**
+   * Range slider (plan E5.9): an overview of all the data under the x axis, with a window over the range in view. Drag the window to pan, its ends to zoom, or click elsewhere to center the window there; the axis range changes with one `relayout` at the end of the drag. Y axes anchored to an axis with a range slider default to `fixedrange: true`, as in Plotly.
+   */
+  rangeslider?: LayoutXaxisRangeslider;
+  /**
+   * Range selector (plan E5.9): buttons over the chart that set the x range to a preset span ending at the current range end (last 6 months, year to date, all). Date axes only. The button whose range is in view shows as active.
+   */
+  rangeselector?: LayoutXaxisRangeselector;
 }
 
 /**
@@ -1290,6 +1302,232 @@ export interface LayoutXaxisTitle {
  * Axis title font. Defaults to `layout.font` with 1.2× size.
  */
 export interface LayoutXaxisTitleFont {
+  /**
+   * CSS font-family list. The renderer uses the first family it can load and falls back through the list.
+   */
+  family?: string;
+  /**
+   * Font size in CSS pixels.
+   *
+   * Minimum: 1
+   */
+  size?: number;
+  /**
+   * Text color.
+   */
+  color?: string;
+  /**
+   * Font weight: a CSS numeric weight (1–1000), `normal` or `bold`.
+   *
+   * Range: 1 – 1000
+   */
+  weight?: number | 'normal' | 'bold';
+  /**
+   * Font style.
+   */
+  style?: 'normal' | 'italic';
+  /**
+   * Capitals variant (CSS `font-variant-caps`). The SDF text renderer approximates small and petite caps with uppercase letters at a reduced size.
+   */
+  variant?:
+    'normal' | 'small-caps' | 'all-small-caps' | 'all-petite-caps' | 'petite-caps' | 'unicase';
+  /**
+   * Letter case transform: `upper`, `lower`, `word caps` (first letter of each word), or `normal`.
+   */
+  textcase?: 'normal' | 'word caps' | 'upper' | 'lower';
+  /**
+   * Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.
+   */
+  lineposition?:
+    'under' | 'over' | 'through' | `${'under' | 'over' | 'through'}+${string}` | 'none';
+  /**
+   * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
+   */
+  shadow?: string;
+}
+
+/**
+ * Range slider (plan E5.9): an overview of all the data under the x axis, with a window over the range in view. Drag the window to pan, its ends to zoom, or click elsewhere to center the window there; the axis range changes with one `relayout` at the end of the drag. Y axes anchored to an axis with a range slider default to `fixedrange: true`, as in Plotly.
+ */
+export interface LayoutXaxisRangeslider {
+  /**
+   * Show the range slider. Defaults to `true` when `rangeslider` is given (`rangeslider: {}` is enough), else `false`.
+   */
+  visible?: boolean;
+  /**
+   * Height of the slider as a fraction of the figure height minus `margin.t` and `margin.b`. The bottom margin grows to make room for it.
+   *
+   * Range: 0 – 1
+   *
+   * @defaultValue `0.15`
+   */
+  thickness?: number;
+  /**
+   * Background of the slider. Defaults to `plot_bgcolor`.
+   */
+  bgcolor?: string;
+  /**
+   * Border color of the slider.
+   *
+   * @defaultValue `"#444"`
+   */
+  bordercolor?: string;
+  /**
+   * Border width of the slider, px.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `0`
+   */
+  borderwidth?: number;
+  /**
+   * Span every data point of the axis (its autorange, whatever the axis range in view). Defaults to `true` unless a full `range` is given.
+   */
+  autorange?: boolean;
+  /**
+   * Range the slider spans, in data units, like the axis `range` (dates on date axes, exponents on log axes). The slider always covers the axis range in view as well.
+   */
+  range?: readonly [unknown, unknown];
+  /**
+   * Thumbnail y range per y axis: `yaxis` for the subplot on `y`, `yaxis2` for `y2`, … (one thumbnail per subplot on this x axis, drawn over each other).
+   */
+  yaxis?: LayoutXaxisRangesliderYaxis;
+  /**
+   * Further `yaxis` containers (`yaxis2`, `yaxis3`, …), with the same attributes.
+   */
+  [key: `yaxis${number}`]: LayoutXaxisRangesliderYaxis | undefined;
+}
+
+/**
+ * Thumbnail y range per y axis: `yaxis` for the subplot on `y`, `yaxis2` for `y2`, … (one thumbnail per subplot on this x axis, drawn over each other).
+ */
+export interface LayoutXaxisRangesliderYaxis {
+  /**
+   * The y range of this subplot's thumbnail: `match` follows the y axis range in view, `auto` spans all the y data (autorange), `fixed` uses `range`. Defaults to `fixed` with a valid `range`, else `match`.
+   */
+  rangemode?: 'auto' | 'fixed' | 'match';
+  /**
+   * Thumbnail y range for `rangemode: 'fixed'`, in data units, like the axis `range` (dates on date axes, exponents on log axes).
+   */
+  range?: readonly [unknown, unknown];
+}
+
+/**
+ * Range selector (plan E5.9): buttons over the chart that set the x range to a preset span ending at the current range end (last 6 months, year to date, all). Date axes only. The button whose range is in view shows as active.
+ */
+export interface LayoutXaxisRangeselector {
+  /**
+   * Show the range selector. Defaults to `true` when it has `buttons`.
+   */
+  visible?: boolean;
+  /**
+   * The buttons, left to right.
+   */
+  buttons?: Array<LayoutXaxisRangeselectorButton>;
+  /**
+   * Horizontal position in paper coordinates (fractions of the plot area width). Defaults to the start of the axis domain. Give `x` and `y` together; one alone is ignored.
+   *
+   * Range: -2 – 3
+   */
+  x?: number;
+  /**
+   * Which side of the button row `x` refers to.
+   *
+   * @defaultValue `"left"`
+   */
+  xanchor?: 'auto' | 'left' | 'center' | 'right';
+  /**
+   * Vertical position in paper coordinates. Defaults to just above the highest subplot on this x axis.
+   *
+   * Range: -2 – 3
+   */
+  y?: number;
+  /**
+   * Which side of the button row `y` refers to.
+   *
+   * @defaultValue `"bottom"`
+   */
+  yanchor?: 'auto' | 'top' | 'middle' | 'bottom';
+  /**
+   * Button font. Defaults to `layout.font`.
+   */
+  font?: LayoutXaxisRangeselectorFont;
+  /**
+   * Background of the buttons.
+   *
+   * @defaultValue `"#eee"`
+   */
+  bgcolor?: string;
+  /**
+   * Background of the active button (the one whose range is in view) and of hovered buttons. Defaults to `bgcolor` darkened (light colors) or lightened (dark colors).
+   */
+  activecolor?: string;
+  /**
+   * Border color of the buttons.
+   *
+   * @defaultValue `"#444"`
+   */
+  bordercolor?: string;
+  /**
+   * Border width of the buttons, px.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `0`
+   */
+  borderwidth?: number;
+}
+
+/**
+ * One item of `buttons`.
+ *
+ * Template defaults for every item go in `buttondefaults`.
+ */
+export interface LayoutXaxisRangeselectorButton {
+  /**
+   * Show this button.
+   *
+   * @defaultValue `true`
+   */
+  visible?: boolean;
+  /**
+   * Unit of the range the button sets, with `count`; `all` autoranges the axis instead.
+   *
+   * @defaultValue `"month"`
+   */
+  step?: 'month' | 'year' | 'day' | 'hour' | 'minute' | 'second' | 'all';
+  /**
+   * `backward`: the range ends at the current range end and starts `count` `step`s before it. `todate`: it starts at the start of the `step` period, `count - 1` periods back (`count: 1, step: 'year'` is year-to-date).
+   *
+   * @defaultValue `"backward"`
+   */
+  stepmode?: 'backward' | 'todate';
+  /**
+   * Number of `step`s the range spans.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `1`
+   */
+  count?: number;
+  /**
+   * Button text. Default: `count` and the first letter of `step` (`6m`), or `all`.
+   */
+  label?: string;
+  /**
+   * Name of this button, used to reference it from a template via `templateitemname`.
+   */
+  name?: string;
+  /**
+   * Name of a template button to inherit from. If no template item matches, this button is hidden (`visible: false`).
+   */
+  templateitemname?: string;
+}
+
+/**
+ * Button font. Defaults to `layout.font`.
+ */
+export interface LayoutXaxisRangeselectorFont {
   /**
    * CSS font-family list. The renderer uses the first family it can load and falls back through the list.
    */
@@ -2133,4 +2371,98 @@ export interface LayoutYaxisTitleFont {
    * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
    */
   shadow?: string;
+}
+
+/**
+ * One item of `selections`.
+ *
+ * Template defaults for every item go in `selectiondefaults`.
+ */
+export interface LayoutSelection {
+  /**
+   * Whether this selection applies (set to `false` by the template machinery when `templateitemname` names no template selection).
+   *
+   * @defaultValue `true`
+   */
+  visible?: boolean;
+  /**
+   * `rect`: the box from (`x0`, `y0`) to (`x1`, `y1`); `path`: the polygon `path` (lasso). Default: `path` when `path` is set, else `rect`.
+   */
+  type?: 'rect' | 'path';
+  /**
+   * The x axis the coordinates refer to (`x`, `x2`, …).
+   *
+   * @defaultValue `"x"`
+   */
+  xref?: 'x' | `x${number}`;
+  /**
+   * The y axis the coordinates refer to (`y`, `y2`, …).
+   *
+   * @defaultValue `"y"`
+   */
+  yref?: 'y' | `y${number}`;
+  /**
+   * Start x of a `rect`, in data units of `xref` (dates, category names or indices; data values on log axes). A `rect` needs all four of `x0`, `x1`, `y0`, `y1`.
+   */
+  x0?: unknown;
+  /**
+   * End x of a `rect`.
+   */
+  x1?: unknown;
+  /**
+   * Start y of a `rect`.
+   */
+  y0?: unknown;
+  /**
+   * End y of a `rect`.
+   */
+  y1?: unknown;
+  /**
+   * Polygon of a `path` selection, SVG-like in data units: `M x,y L x,y … Z` (also `H`, `V` and relative commands). Dates use `_` between date and time (`2024-01-05_12:00`).
+   */
+  path?: string;
+  /**
+   * Opacity of the outline.
+   *
+   * Range: 0 – 1
+   *
+   * @defaultValue `0.7`
+   */
+  opacity?: number;
+  /**
+   * Outline style.
+   */
+  line?: LayoutSelectionLine;
+  /**
+   * Name of this selection, used to reference it from a template via `templateitemname`.
+   */
+  name?: string;
+  /**
+   * Name of a template selection to inherit from. If no template item matches, this selection is hidden (`visible: false`).
+   */
+  templateitemname?: string;
+}
+
+/**
+ * Outline style.
+ */
+export interface LayoutSelectionLine {
+  /**
+   * Outline color. Default: a color contrasting with `plot_bgcolor` (white on dark, `#444` on light).
+   */
+  color?: string;
+  /**
+   * Outline width, px.
+   *
+   * Minimum: 1
+   *
+   * @defaultValue `1`
+   */
+  width?: number;
+  /**
+   * Dash style: `solid`, `dot`, `dash`, `longdash`, `dashdot`, `longdashdot` or a px list (`'5px,10px'`).
+   *
+   * @defaultValue `"dot"`
+   */
+  dash?: string;
 }

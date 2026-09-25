@@ -20,6 +20,7 @@ import type {
   ComponentUpdatePlan,
   ComponentView,
 } from '@mk7s/holochart-runtime';
+import { claimPositionedHost, ensureStyle, shieldEvents } from '../shared/dom.ts';
 import { findChart, fireAndForget } from '../shared/host.ts';
 import { eraseActiveShape } from '../shapes/draw.ts';
 import {
@@ -155,20 +156,6 @@ const CSS = `
 @media (prefers-reduced-motion:reduce){.hc-modebar{transition:none}}
 `;
 
-function ensureStyle(el: HTMLElement): void {
-  const doc = el.ownerDocument;
-  const root = el.getRootNode();
-  // Styles in `document.head` do not reach into a shadow root: inject into the root instead.
-  const inShadow = typeof ShadowRoot !== 'undefined' && root instanceof ShadowRoot;
-  const scope: Document | ShadowRoot = inShadow ? root : doc;
-  if (scope.getElementById(STYLE_ID)) return;
-  const style = doc.createElement('style');
-  style.id = STYLE_ID;
-  style.textContent = CSS;
-  if (inShadow) root.appendChild(style);
-  else (doc.head ?? doc.documentElement).appendChild(style);
-}
-
 // ---- Icons ------------------------------------------------------------------------------------
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -266,10 +253,6 @@ function hasSelectable(fullData: readonly FullTrace[]): boolean {
   return fullData.some((t) => t.visible === true && typeof t._module?.selectPoints === 'function');
 }
 
-/** Stop pointer events on the toolbar from reaching the chart's own drag/zoom/double-click. */
-const SHIELDED_EVENTS = ['pointerdown', 'mousedown', 'touchstart', 'dblclick'] as const;
-const stop = (event: Event): void => event.stopPropagation();
-
 /**
  * Create a modebar view for `chart` (the component's `draw.create` finds the chart and calls
  * this). With no chart the view does nothing until `options.locate` finds one.
@@ -292,8 +275,9 @@ export function createModebarView<Ctx extends ModebarViewContext>(
   let buttons: { readonly el: HTMLButtonElement; readonly button: ModebarButton }[] = [];
   let focusIndex = 0;
   let appliedStyle: ModebarStyle | undefined;
-  /** The host's inline `position` before we set `relative`, when we did. */
-  let hostPosition: string | undefined;
+  /** Releases the positioned host (the toolbar is absolutely positioned against it). */
+  let releaseHost: (() => void) | undefined;
+  let unshield: (() => void) | undefined;
   let disposed = false;
 
   const warned = new Set<string>();
@@ -417,15 +401,10 @@ export function createModebarView<Ctx extends ModebarViewContext>(
   };
 
   const mount = (host: HTMLElement): HTMLDivElement => {
-    ensureStyle(host);
+    ensureStyle(host, STYLE_ID, CSS);
     const doc = host.ownerDocument;
-    const view = doc.defaultView;
-    const position = view ? view.getComputedStyle(host).position : '';
     // The toolbar is absolutely positioned against the chart element.
-    if (position === 'static' || position === '') {
-      hostPosition = host.style.position;
-      host.style.position = 'relative';
-    }
+    releaseHost = claimPositionedHost(host);
     host.classList.add(HOST);
     host.addEventListener('pointerdown', onHostPointer, true);
     doc.addEventListener('pointerdown', onDocPointer, true);
@@ -436,7 +415,8 @@ export function createModebarView<Ctx extends ModebarViewContext>(
     bar.addEventListener('click', onClick);
     bar.addEventListener('keydown', onKeydown);
     bar.addEventListener('focusin', onFocusin);
-    for (const type of SHIELDED_EVENTS) bar.addEventListener(type, stop);
+    // Pointer events on the toolbar must not reach the chart's own drag/zoom/double-click.
+    unshield = shieldEvents(bar);
     host.appendChild(bar);
     return bar;
   };
@@ -446,7 +426,8 @@ export function createModebarView<Ctx extends ModebarViewContext>(
     toolbar.removeEventListener('click', onClick);
     toolbar.removeEventListener('keydown', onKeydown);
     toolbar.removeEventListener('focusin', onFocusin);
-    for (const type of SHIELDED_EVENTS) toolbar.removeEventListener(type, stop);
+    unshield?.();
+    unshield = undefined;
     toolbar.remove();
     toolbar = undefined;
     key = undefined;
@@ -458,9 +439,9 @@ export function createModebarView<Ctx extends ModebarViewContext>(
       host.removeEventListener('pointerdown', onHostPointer, true);
       host.ownerDocument.removeEventListener('pointerdown', onDocPointer, true);
       host.classList.remove(HOST, HOST_HOVER, HOST_TOUCHED);
-      if (hostPosition !== undefined) host.style.position = hostPosition;
     }
-    hostPosition = undefined;
+    releaseHost?.();
+    releaseHost = undefined;
   };
 
   const build = (bar: HTMLDivElement, groups: readonly ModebarButtonGroup[]): void => {
