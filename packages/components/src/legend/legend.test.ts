@@ -1,4 +1,4 @@
-import type { FullTrace } from '@mk7s/holochart-core';
+import { makeSubplots, type FullTrace } from '@mk7s/holochart-core';
 import { describe, expect, it } from 'vitest';
 import { defaults, fakeTraceModule, measure, testRegistry } from '../__testing__/fixtures.ts';
 import {
@@ -10,7 +10,8 @@ import {
   legendOrigin,
   legendShown,
 } from './layout.ts';
-import { buildLegendScene, legendComponent, legendGlyphOf } from './legend.ts';
+import { annotationsComponent } from '../annotations/annotations.ts';
+import { buildLegendScene, legendComponent, legendGlyphOf, legendTitleLift } from './legend.ts';
 import type { FullLegend } from './schema.ts';
 
 const registry = testRegistry([legendComponent]);
@@ -282,6 +283,38 @@ describe('legend position and margins', () => {
       axes: new Map(),
     });
     expect(push && 'r' in push ? push.r : 0).toBeGreaterThan(40);
+  });
+});
+
+describe('legend above subplot titles', () => {
+  const withTitles = testRegistry([legendComponent, annotationsComponent]);
+  const sp = makeSubplots({ rows: 1, cols: 2, subplotTitles: ['A', 'B'] });
+  const top = { orientation: 'h', x: 0, y: 1, yanchor: 'bottom' };
+
+  it('lifts a top legend by the top-row titles, and pushes the margin that much more', () => {
+    const { fullLayout, fullData } = defaults(
+      { font: { size: 12 }, legend: top, ...sp.layout },
+      [{ name: 'a' }, { name: 'b' }],
+      withTitles,
+    );
+    const legend = fullLayout['legend'] as FullLegend;
+    // 16 px titles: 16 × 1.3 line box + 2 × (borderwidth 1 + borderpad 1).
+    const lift = Math.round(16 * 1.3 + 4);
+    expect(legendTitleLift(legend, fullLayout, measure)).toBe(lift);
+    const plain = defaults({ legend: top }, [{ name: 'a' }, { name: 'b' }], withTitles);
+    const lifted = buildLegendScene(fullLayout, fullData, SIZE, AREA, measure).box;
+    const unlifted = buildLegendScene(plain.fullLayout, plain.fullData, SIZE, AREA, measure).box;
+    expect((unlifted?.top ?? 0) - (lifted?.top ?? 0)).toBe(lift);
+    const ctx = { fullLayout, fullData, width: SIZE.width, height: SIZE.height } as never;
+    const plainCtx = { ...plain, width: SIZE.width, height: SIZE.height } as never;
+    const push = legendComponent.pushMargin?.(ctx) as { t: number };
+    const plainPush = legendComponent.pushMargin?.(plainCtx) as { t: number };
+    expect(push.t - plainPush.t).toBe(lift);
+  });
+
+  it('leaves legends elsewhere where they are', () => {
+    const { fullLayout } = defaults({ ...sp.layout }, [{ name: 'a' }, { name: 'b' }], withTitles);
+    expect(legendTitleLift(fullLayout['legend'] as FullLegend, fullLayout, measure)).toBe(0);
   });
 });
 

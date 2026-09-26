@@ -242,12 +242,16 @@ describe('sliders view', () => {
 });
 
 describe('cssEasing', () => {
-  it("maps Plotly's easings to CSS", () => {
+  it("maps Plotly's (d3 v3) easings to CSS", () => {
     expect(cssEasing('linear')).toBe('linear');
     expect(cssEasing('cubic-in-out')).toBe('cubic-bezier(0.65,0,0.35,1)');
-    expect(cssEasing('cubic')).toBe('cubic-bezier(0.65,0,0.35,1)');
+    // A bare name is `-in` in d3 v3.
+    expect(cssEasing('cubic')).toBe('cubic-bezier(0.32,0,0.67,0)');
     expect(cssEasing('quad-in')).toBe('cubic-bezier(0.11,0,0.5,0)');
-    expect(cssEasing('elastic-out')).toBe(cssEasing('back-out'));
-    expect(cssEasing('bounce-in')).toBe(cssEasing('cubic-in'));
+    // d3 v3's elastic and bounce bases are out-shaped: `-in` overshoots / bounces at the end.
+    expect(cssEasing('elastic-in')).toBe(cssEasing('back-out'));
+    expect(cssEasing('elastic-out')).toBe(cssEasing('back-in'));
+    expect(cssEasing('bounce-in')).toBe(cssEasing('cubic-out'));
+    expect(cssEasing('bounce-in-out')).toBe(cssEasing('cubic-in-out'));
   });
 });

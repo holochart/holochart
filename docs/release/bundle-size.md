@@ -12,6 +12,7 @@ Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's
 | `partial: core + scatter`               | `createChart` + `register` from runtime, `scatter` trace   | 153 kB |
 | `text engine (lazy chunk …)`            | the SDF text engine chunk, loaded on first text use        | 49 kB  |
 | `fill primitive (lazy chunk …)`         | fill primitive + earcut + exact fill rules, on first fill  | 9.4 kB |
+| `animation (lazy chunk …)`              | transitions, frames and `animate`, on first animation      | 6.4 kB |
 | `default font, regular face (lazy …)`   | TeX Gyre Heros Regular chunk, loaded on first text use     | 95 kB  |
 | `default font, bold face (lazy …)`      | the bold face chunk, loaded when bold text is drawn        | 95 kB  |
 | `default font, italic face (lazy …)`    | the italic face chunk, loaded when italic text is drawn    | 98 kB  |
@@ -19,6 +20,7 @@ Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's
 | `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 234 kB |
 | `controls views (lazy chunks of basic)` | menus, sliders, range selector/slider, selections views    | 16 kB  |
 | `@mk7s/holochart (full, ESM)`           | everything the full bundle exports                         | 450 kB |
+| `@mk7s/holochart + …-express (ESM)`     | the full bundle plus every Express function (`hx.*`)       | 371 kB |
 | `@mk7s/holochart IIFE (includes three)` | `dist/holochart.iife.min.js` as shipped, **with** three.js | 650 kB |
 | each `@mk7s/holochart-*` package        | `export *` of that package                                 | report |
 
@@ -28,10 +30,11 @@ The IIFE budget is the full budget plus a 200 kB allowance for the bundled three
 An ESM entry's size is its **initial** download. Code an entry loads on demand with a dynamic
 `import()` is its **lazy** size, reported next to it: the SDF text engine (troika-three-text,
 bidi-js, webgl-sdf-generator, troika-worker-utils, troika-three-utils; plan E21.5), which has its
-own gated row, the fill primitive (below, plan E21.6), the controls' views (below, E21.6), and the
-built-in default font (below). So core + scatter costs its initial size before the first frame,
-the text engine's size plus the regular font face once it draws a label, and the fill chunk once
-it draws a fill; `basic` adds a control's chunk once a figure shows that control.
+own gated row, the fill primitive (below, plan E21.6), the controls' views (below, E21.6), the
+animation code (below, E7.3 / E7.4), and the built-in default font (below). So core + scatter
+costs its initial size before the first frame, the text engine's size plus the regular font face
+once it draws a label, the fill chunk once it draws a fill, and the animation chunk once it
+animates; `basic` adds a control's chunk once a figure shows that control.
 
 The **fill primitive** (plan E21.6) — the fill mesh and shaders, earcut, and the exact
 even-odd / nonzero code (`fill-arrangement.ts`) — loads the first time a chart draws a fill:
@@ -71,6 +74,18 @@ view-only helpers are no longer exported (they were unreleased); their types sti
 chunks are measured summed, gated by their own row and reported in the **Controls** column; the
 IIFE inlines them.
 
+The **animation code** (plan E7.3, E7.4, M3 wave 3) — the transition engine (interpolation of
+numbers, OKLab colors, per-point arrays matched by `ids`, axis ranges), Plotly's easings, the frame
+list and `baseframe` merging, and `animate`'s queue and timing — loads the first time a chart
+animates: `chart.animate`, `addFrames` / `deleteFrames` (and the functional wrappers), or `react`
+with a `layout.transition`. The chart methods stay in the runtime entry and load
+`src/anim/animation.ts` with a dynamic `import()`; runtime's ESM build emits it as
+`dist/animation-<hash>.js` (code it shares with the entry, such as the update planner, lands in a
+shared chunk that `index.js` imports). It is measured on its own, gated by its row and reported in
+the **Animation** column; the IIFE inlines it. The sliders' handle glide keeps its CSS
+`cubic-bezier` approximations of the easings, so the exact easing curves stay out of the initial
+bundle.
+
 The **default font** (plan E2.18) is TeX Gyre Heros, shipped with render in four faces. For ESM
 consumers each face is a generated module exporting the OTF file as a base64 `data:` URL
 (`packages/render/src/fonts/generated/`, from `packages/render/fonts/*.otf` by
@@ -107,15 +122,16 @@ an app: each dynamic `import()` becomes its own chunk. The entry chunk plus ever
 statically is written to `<id>.js` (the **initial** size); the lazy chunks measured on their own
 (`LAZY_PARTS`) go to `<id>.lazy.<part>.js` — the fill chunk (render's `dist/fill-lazy.js` and
 earcut) to `<id>.lazy.fill.js`, the controls' views (components' `dist/controls-*.js`) to
-`<id>.lazy.controls.js`, each font face to `<id>.lazy.font-<face>.js` — and every other
+`<id>.lazy.controls.js`, the animation code (runtime's `dist/animation-*.js`) to `<id>.lazy.animation.js`, each font face to `<id>.lazy.font-<face>.js` — and every other
 chunk to `<id>.lazy.js` (the **lazy** size), so each output chunk is counted exactly once and
 nothing drops out of the numbers (a chunk mixing a part with other code fails the script).
 `manifest.json` records which packages the lazy chunks contain and which parts exist.
 size-limit (`@size-limit/file`) then gzips the results; a `lazyOf` entry in `entries.ts` gates
-another entry's lazy file, or with `lazyPart` one of its parts (the text-engine, fill and font rows
-measure core + scatter's, the controls row basic's), and `bundle.ts` fails if that entry has no
-such chunks. The report adds per-entry **Lazy**, **Fill**, **Controls** and **Fonts** columns (gzip
-level 9, like size-limit; Controls sums the components' chunks, Fonts the faces). The IIFE is
+another entry's lazy file, or with `lazyPart` one of its parts (the text-engine, fill, animation and
+font rows measure core + scatter's, the controls row basic's), and `bundle.ts` fails if that entry
+has no such chunks. The report adds per-entry **Lazy**, **Fill**, **Controls**, **Animation** and
+**Fonts** columns (gzip level 9, like size-limit; Controls sums the components' chunks, Fonts the
+faces). The IIFE is
 measured as built: it is a single file, so the build inlines the text engine, the fill code and
 the controls' views (as modules initialized on first use) and its lazy columns read "inlined".
 
@@ -126,7 +142,59 @@ In CI, the job writes the table to the job summary, uploads `size.json` as the `
 artifact, compares with the latest successful `main` run, and posts or updates one PR comment
 (same-repo PRs only; fork PRs get a read-only token, so they get the job summary only).
 
-## Current sizes (2026-09-25, M3 wave 2)
+## Current sizes (2026-09-25, M3 wave 3: Express)
+
+Measured on the M3 wave 3 working tree before and after the Express package (plan E23.1–E23.4,
+E10.7, E10.8) and the legend's room for facet labels landed, everything else equal. Initial
+sizes; the lazy chunks are unchanged.
+
+| Entry                        | Before    | After     | Change   | Budget |
+| ---------------------------- | --------- | --------- | -------- | ------ |
+| `@mk7s/holochart-core`       | 69.67 kB  | 69.69 kB  | +0.02 kB | —      |
+| `@mk7s/holochart-components` | 107.99 kB | 108.08 kB | +0.09 kB | —      |
+| `@mk7s/holochart-express`    | —         | 106.48 kB | new      | —      |
+| partial: core + scatter      | 145.90 kB | 145.90 kB | 0        | 153 kB |
+| partial: basic               | 232.65 kB | 232.78 kB | +0.13 kB | 234 kB |
+| full, ESM                    | 326.12 kB | 339.04 kB | +12.9 kB | 450 kB |
+| IIFE (includes three)        | 522.51 kB | 535.69 kB | +13.2 kB | 650 kB |
+
+The full bundle now includes Express as a namespace (`export * as express from
+'@mk7s/holochart-express'`; `Holochart.express` in the IIFE), because its `scatter`, `strip`,
+`timeline`, `box`, … share their names with the trace modules and helpers the bundle exports.
+Express adds about **12.8 kB** to the full bundle and 13 kB to the IIFE: the table model and CSV
+parser, the grouping engine, facet grids, animation controls, the 16 functions, the KDE and
+`ff.distplot`; ESM apps that never touch `express` tree-shake it away. The package row
+(106.43 kB) is mostly the runtime and core it imports (`newPlot` for its render-into-an-element
+overload, the registry for the default template's colors); an app that draws charts has those
+already. The other entries grow by the legend's room for top-row subplot titles and facet labels
+(components) and `FACET_LABEL_NAME` (core); `basic` now uses 99.5% of its budget (1.22 kB left).
+
+## Sizes after M3 wave 3 transitions and animation (2026-09-25)
+
+Measured on the M3 wave 3 working tree before and after transitions, frames and `animate` (E7.3,
+E7.4) landed, everything else equal. Initial sizes; the text engine, fill, controls and font
+chunks are unchanged.
+
+| Entry                          | Before    | After     | Change   | Animation (lazy) | Budget |
+| ------------------------------ | --------- | --------- | -------- | ---------------- | ------ |
+| `@mk7s/holochart-runtime`      | 92.10 kB  | 93.69 kB  | +1.59 kB | 5.81 kB          | —      |
+| `@mk7s/holochart-components`   | 107.99 kB | 107.99 kB | 0        | 5.81 kB          | —      |
+| `@mk7s/holochart-traces-basic` | 118.53 kB | 118.58 kB | +0.05 kB | 5.81 kB          | —      |
+| partial: core + scatter        | 145.51 kB | 145.90 kB | +0.39 kB | 5.81 kB          | 153 kB |
+| animation (lazy, new)          | —         | 5.81 kB   | new      | —                | 6.4 kB |
+| partial: basic                 | 232.17 kB | 232.65 kB | +0.48 kB | 5.81 kB          | 234 kB |
+| full, ESM                      | 325.63 kB | 326.12 kB | +0.49 kB | 5.81 kB          | 450 kB |
+| IIFE (includes three)          | 517.24 kB | 522.51 kB | +5.27 kB | inlined          | 650 kB |
+
+What the entry gains: the `addFrames` / `deleteFrames` / `animate` methods and functional
+wrappers, the chart's hooks for the lazily loaded code (the `react` branch for
+`layout.transition`, `fullLayout._currentFrame`, in-between runs without validation), and longer
+`animatable` lists on scatter and bar. `basic` now uses 99.4% of its budget (1.35 kB left). The
+runtime package on its own grows more because the animation chunk mixes colors with render's
+`mixColors` (OKLab), which a runtime without traces didn't include before; every entry with traces
+already has it.
+
+## Sizes after M3 wave 2 (2026-09-25)
 
 Measured on the M3 wave 2 working tree before and after the controls' views were made lazy
 (E21.6), everything else equal. Initial sizes; Lazy, Fill and the fonts (346.61 kB, four faces)

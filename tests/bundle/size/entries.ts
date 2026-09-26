@@ -15,9 +15,10 @@ import path from 'node:path';
  * chunks (see bundle.ts), reported per entry and gated by a `lazyOf` row. Some lazy chunks are
  * measured on their own ({@link LAZY_PARTS}): the fill primitive (E21.6), loaded the first time a
  * chart draws a fill, the views of the controls (E21.6: update menus, sliders, range selector,
- * range slider, selection outlines), loaded the first time a figure uses one, and the built-in
- * default font's faces (E2.18), of which a page loads one at a time, and only the faces its text
- * uses.
+ * range slider, selection outlines), loaded the first time a figure uses one, the animation code
+ * (E7.3, E7.4: transitions, frames, `animate`), loaded the first time a chart animates, and the
+ * built-in default font's faces (E2.18), of which a page loads one at a time, and only the faces
+ * its text uses.
  */
 
 export const ROOT = path.resolve(import.meta.dirname, '../../..');
@@ -61,9 +62,10 @@ export const FONT_PARTS = ['font-regular', 'font-bold', 'font-italic', 'font-bol
  * Lazy chunks measured separately from the rest of an entry's lazy code (a chunk belongs to a part
  * when all its modules do, see {@link lazyPartOf}): the fill primitive (plan E21.6: render's
  * `dist/fill-lazy.js` and earcut, which only it uses), the controls' views (E21.6: components'
- * `dist/controls-*.js`, one chunk per component, summed) and the {@link FONT_PARTS}.
+ * `dist/controls-*.js`, one chunk per component, summed), the animation code (E7.3, E7.4:
+ * runtime's `dist/animation-*.js`) and the {@link FONT_PARTS}.
  */
-export const LAZY_PARTS = ['fill', 'controls', ...FONT_PARTS] as const;
+export const LAZY_PARTS = ['fill', 'controls', 'animation', ...FONT_PARTS] as const;
 
 const FONT_MODULE = /[\\/]texgyreheros-(regular|bold|italic|bolditalic)(?:-[\w-]+)?\.(?:js|ts)$/;
 /** render's lazily loaded fill chunk (built or from sources), and earcut. */
@@ -77,10 +79,18 @@ const FILL_MODULE =
 const CONTROLS_MODULE =
   /[\\/]components[\\/](?:dist[\\/]controls-[\w-]+\.js|src[\\/](?:(?:updatemenus|sliders|rangeslider|selections)[\\/]view|rangeselector[\\/](?:rangeselector|step)|updatemenus[\\/]commands|(?:rangeslider|selections)[\\/]geometry)\.ts)$/;
 
+/**
+ * runtime's lazily loaded animation code (transitions, frames, `animate`, easings; `src/anim/`):
+ * built (`dist/animation-*.js`), or from sources (`types.ts` is type-only).
+ */
+const ANIMATION_MODULE =
+  /[\\/]runtime[\\/](?:dist[\\/]animation-[\w-]+\.js|src[\\/]anim[\\/](?:animation|easing|frames|interpolate)\.ts)$/;
+
 /** The {@link LAZY_PARTS} entry a module belongs to, if any. */
 export function lazyPartOf(moduleId: string): string | undefined {
   if (FILL_MODULE.test(moduleId)) return 'fill';
   if (CONTROLS_MODULE.test(moduleId)) return 'controls';
+  if (ANIMATION_MODULE.test(moduleId)) return 'animation';
   const face = FONT_MODULE.exec(moduleId)?.[1];
   return face ? `font-${face}` : undefined;
 }
@@ -102,6 +112,7 @@ const PACKAGES: readonly SizeEntry[] = [
     imports: [{ pkg: 'traces-stats' }],
   },
   { id: 'themes', name: '@mk7s/holochart-themes', imports: [{ pkg: 'themes' }] },
+  { id: 'express', name: '@mk7s/holochart-express', imports: [{ pkg: 'express' }] },
 ];
 
 export const SIZE_ENTRIES: readonly SizeEntry[] = [
@@ -142,6 +153,18 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     limit: '9.4 kB',
     lazyOf: 'partial-core-scatter',
     lazyPart: 'fill',
+  },
+  {
+    // Plan E7.3 / E7.4 (M3 wave 3): transitions, frames and `animate` — the interpolation, easings,
+    // frame queue and timing — loaded with a dynamic import() the first time a chart animates
+    // (`animate`, `addFrames` / `deleteFrames`, or `react` with a `layout.transition`); the same
+    // chunk for every entry with the runtime. Measured 5.81 kB when split out (2026-09-25);
+    // budget = measured + ~10%.
+    id: 'animation-lazy',
+    name: 'animation (lazy chunk of core + scatter)',
+    limit: '6.4 kB',
+    lazyOf: 'partial-core-scatter',
+    lazyPart: 'animation',
   },
   ...fontRows(),
   {

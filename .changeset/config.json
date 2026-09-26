@@ -12,7 +12,9 @@
       "@mk7s/holochart-runtime",
       "@mk7s/holochart-components",
       "@mk7s/holochart-traces-basic",
-      "@mk7s/holochart-themes"
+      "@mk7s/holochart-traces-stats",
+      "@mk7s/holochart-themes",
+      "@mk7s/holochart-express"
     ]
   ],
   "linked": [],

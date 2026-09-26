@@ -40,9 +40,9 @@ types are added as their traces land.
 | [Box](/charts/statistical/box)                                   | `box`                                           | M3        |
 | [Violin](/charts/statistical/violin)                             | `violin`                                        | M3        |
 | [Strip](/charts/statistical/strip)                               | `box` (points only, with a helper)              | M3        |
-| ECDF                                                             | `scatter` (via a helper)                        | M3        |
-| Distplot                                                         | `histogram`, `scatter` (via a helper)           | M3        |
-| Marginals                                                        | `histogram`, `box`, `violin` on linked subplots | M3        |
+| [ECDF](/express/statistics#ecdf)                                 | `scatter` (Express `hx.ecdf`)                   | M3        |
+| [Distplot](/express/statistics#distplot)                         | `histogram`, `scatter` (`ff.distplot`)          | M3        |
+| [Marginals](/express/statistics#marginals)                       | `histogram`, `box`, `violin` on linked subplots | M3        |
 | [SPLOM](/charts/statistical/splom)                               | `splom`                                         | M3        |
 | [Parallel Coordinates](/charts/statistical/parallel-coordinates) | `parcoords`                                     | M3        |
 | [Parallel Categories](/charts/statistical/parallel-categories)   | `parcats`                                       | M3        |

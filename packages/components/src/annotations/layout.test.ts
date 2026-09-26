@@ -1,4 +1,4 @@
-import { createScale, makeSubplots, type FullAxis } from '@mk7s/holochart-core';
+import { createScale, FACET_LABEL_NAME, makeSubplots, type FullAxis } from '@mk7s/holochart-core';
 import { describe, expect, it } from 'vitest';
 import { defaults, measure, testRegistry } from '../__testing__/fixtures.ts';
 import { annotationBatches, annotationsComponent, annotationsOf } from './annotations.ts';
@@ -108,6 +108,36 @@ describe('annotation defaults', () => {
       registry,
     ).fullLayout;
     expect(subplotTitlePush(plain, measure)).toBeUndefined();
+  });
+
+  it('pushes for Express facet labels too, which keep the layout font size', () => {
+    const label = {
+      name: FACET_LABEL_NAME,
+      text: 'day=Sat',
+      xref: 'paper',
+      yref: 'paper',
+      x: 0.5,
+      y: 1,
+      xanchor: 'center',
+      yanchor: 'bottom',
+      showarrow: false,
+    };
+    const rotated = {
+      ...label,
+      text: 'time=Lunch',
+      x: 1,
+      y: 0.5,
+      textangle: 90,
+      yanchor: 'middle',
+    };
+    const { fullLayout } = defaults(
+      { font: { size: 9 }, annotations: [label, rotated] },
+      [],
+      registry,
+    );
+    expect(annotationsOf(fullLayout).map((a) => a.font.size)).toEqual([9, 9]);
+    // 9 px text: 9 × 1.3 line box + 2 × (borderwidth 1 + borderpad 1); the row label doesn't push.
+    expect(subplotTitlePush(fullLayout, measure)).toEqual({ t: Math.round(9 * 1.3 + 4) });
   });
 });
 

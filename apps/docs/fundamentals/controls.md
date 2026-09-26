@@ -66,7 +66,7 @@ order:
 | `restyle`  | `['attr', value, traces?]` or `[{ attr: value }, traces?]` | `chart.restyle(update, traces)`                             |
 | `relayout` | `['attr', value]` or `[{ attr: value }]`                   | `chart.relayout(update)`                                    |
 | `update`   | `[traceUpdate, layoutUpdate, traces?]`                     | `chart.updateAttributes(traceUpdate, layoutUpdate, traces)` |
-| `animate`  | `[frames, animationOptions]`                               | `chart.animate(...)` once frames are available              |
+| `animate`  | `[frames, animationOptions]`                               | `chart.animate(frames, animationOptions)`                   |
 | `skip`     | none                                                       | nothing, only the event                                     |
 
 In a `restyle`, an array value holds one value per trace. That is why `visible: [true, false]`
@@ -82,10 +82,62 @@ A few more button attributes:
 - `visible: false` hides a button. A button without `args` is hidden too, unless its method is
   `skip`.
 
-::: info Animation
-`method: 'animate'` needs frames and `chart.animate`, which arrive with animation support (plan
-E7.4). Until then, an `animate` button logs one warning and does nothing.
-:::
+## Play, pause and sliders over frames
+
+With `method: 'animate'` a button or step plays [animation frames](/fundamentals/transitions-animation).
+Plotly's Play / Pause pair works as is: Play plays every frame from the current one, Pause drops
+the frames still queued (the one playing finishes), and a slider with one step per frame moves
+to each frame as it plays.
+
+<Example id="animation/gapminder" :height="560" />
+
+```ts
+const years = ['2000', '2001', '2002'];
+createChart(el, {
+  data,
+  frames: years.map((year, i) => ({ name: year, data: [{ y: [i, i + 2, i + 1] }] })),
+  layout: {
+    updatemenus: [
+      {
+        type: 'buttons',
+        showactive: false,
+        buttons: [
+          {
+            label: 'Play',
+            method: 'animate',
+            args: [null, { frame: { duration: 500, redraw: false }, fromcurrent: true }],
+          },
+          {
+            label: 'Pause',
+            method: 'animate',
+            args: [
+              [null],
+              { mode: 'immediate', frame: { duration: 0 }, transition: { duration: 0 } },
+            ],
+          },
+        ],
+      },
+    ],
+    sliders: [
+      {
+        currentvalue: { prefix: 'Year: ' },
+        steps: years.map((year) => ({
+          label: year,
+          method: 'animate',
+          args: [[year], { mode: 'immediate', transition: { duration: 300 } }],
+        })),
+      },
+    ],
+  },
+});
+```
+
+A slider or menu whose steps each animate to one frame (`args: [['2001'], …]`) follows playback:
+when a frame starts (`animatingframe`), the step for that frame becomes active, without running
+it again, and `sliderchange` reports `interaction: false`. Menus follow the same way, through
+Plotly's `fullLayout._currentFrame`. Play and Pause buttons (`null` and `[null]`) are never
+tracked, so give them `showactive: false`. Pausing is not an error: the Play call's promise
+rejects (as in Plotly), but the button swallows that rejection quietly.
 
 ## The active button
 

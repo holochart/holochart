@@ -84,6 +84,7 @@ test('IIFE exposes window.Holochart and renders with the bundled three.js', asyn
       createRegistry: typeof hc.createRegistry,
       attr: typeof hc.attr,
       createRenderRoot: typeof render?.createRenderRoot,
+      expressScatter: typeof (hc.express as Record<string, unknown> | undefined)?.scatter,
     };
   });
   expect(api).not.toBeNull();
@@ -93,6 +94,7 @@ test('IIFE exposes window.Holochart and renders with the bundled three.js', asyn
     createRegistry: 'function',
     attr: 'object',
     createRenderRoot: 'function',
+    expressScatter: 'function',
   });
 
   // Exercise core (figure pipeline) and render (WebGL through the bundled three.js).

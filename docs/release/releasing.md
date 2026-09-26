@@ -35,7 +35,7 @@ tarballs to `release-artifacts/`; delete it afterwards).
 
 ## Why one fixed version
 
-All seven published packages are one Changesets `fixed` group (`.changeset/config.json`), so any
+The published packages are one Changesets `fixed` group (`.changeset/config.json`), so any
 release bumps all of them to the same version, even unchanged ones. We chose `fixed` over `linked`
 (which aligns versions only among packages that are released) and over independent versions
 because:

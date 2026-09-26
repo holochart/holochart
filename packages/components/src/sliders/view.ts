@@ -96,8 +96,10 @@ const BEZIER: Record<string, readonly [string, string, string]> = {
 };
 
 /**
- * A Plotly easing name as a CSS timing function. `elastic` and `bounce` (not expressible as one
- * cubic Bézier) use `back` and `cubic`; a bare name means `-in-out`, as in d3.
+ * A Plotly easing name as a CSS timing function, approximating the d3 v3 curves chart transitions
+ * use (runtime's lazily loaded `anim/easing.ts`): a bare name means `-in`, and `elastic` and
+ * `bounce` (not expressible as one cubic Bézier) use `back` and `cubic` — flipped, since d3 v3's
+ * `elastic-in` / `bounce-in` are out-shaped.
  */
 export function cssEasing(easing: string): string {
   const [name = 'cubic', ...rest] = easing.split('-');
@@ -105,7 +107,8 @@ export function cssEasing(easing: string): string {
   const mode = rest.join('-');
   const key = name === 'elastic' ? 'back' : name === 'bounce' ? 'cubic' : name;
   const curves = BEZIER[key] ?? BEZIER['cubic'];
-  const k = mode === 'in' ? 0 : mode === 'out' ? 1 : 2;
+  let k = mode === 'out' ? 1 : mode === 'in-out' ? 2 : 0;
+  if (key !== name && k < 2) k = 1 - k;
   return `cubic-bezier(${(curves as readonly string[])[k]})`;
 }
 

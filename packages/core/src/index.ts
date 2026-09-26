@@ -152,6 +152,7 @@ export type {
 
 // Subplot grids (E4.4)
 export {
+  FACET_LABEL_NAME,
   makeSubplots,
   SUBPLOT_TITLE_FONT_SCALE,
   SUBPLOT_TITLE_NAME,

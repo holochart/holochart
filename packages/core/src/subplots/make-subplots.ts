@@ -85,6 +85,13 @@ export interface MakeSubplotsOptions {
 export const SUBPLOT_TITLE_NAME = 'subplot title';
 
 /**
+ * `name` of the facet labels Express adds (`day=Sat` above a facet column, `time=Dinner` at the
+ * right of a facet row): like {@link SUBPLOT_TITLE_NAME}, those above the top row push the top
+ * margin (a top legend sits above them), but they keep `layout.font`'s size, as px's facet labels.
+ */
+export const FACET_LABEL_NAME = 'facet label';
+
+/**
  * Subplot title size relative to `layout.font.size`: plotly.py's 16 px over its 12 px base font,
  * so Plotly's look keeps 16 px and a 9 px base (Holochart's default look) gets 12 px.
  */

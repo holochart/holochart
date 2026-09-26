@@ -99,7 +99,11 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
         'ssr',
       ]),
     },
-    { text: 'Express API', collapsed: true, items: pages('express/', ['']) },
+    {
+      text: 'Express API',
+      collapsed: true,
+      items: pages('express/', ['', 'data', 'mappings', 'facets', 'animation', 'statistics']),
+    },
     {
       text: 'Extending Holochart',
       collapsed: true,

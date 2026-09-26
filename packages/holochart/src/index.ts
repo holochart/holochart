@@ -53,6 +53,11 @@ export * from '@mk7s/holochart-traces-stats';
 export * from '@mk7s/holochart-components';
 /** The built-in themes (plan E8.1), namespaced: `themes.THEMES`, `themes.plotly_dark`, … */
 export * as themes from '@mk7s/holochart-themes';
+/**
+ * Plotly Express-style charts from tabular data (plan E23), namespaced because its `scatter`,
+ * `strip`, `box`, … share names with the trace modules above: `express.scatter(rows, { x, y })`.
+ */
+export * as express from '@mk7s/holochart-express';
 /** Web fonts for chart text (plan E8.3): `fonts.register('Inter', { regular, bold, … })`. */
 export { fonts } from '@mk7s/holochart-render';
 

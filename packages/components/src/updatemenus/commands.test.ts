@@ -73,6 +73,15 @@ describe('executeCommand (Plotly executeAPICommand)', () => {
     await expect(executeCommand(c, 'relayout', ['a', 1], warn)).resolves.toBeUndefined();
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('bad'));
   });
+
+  it('an animation dropped by a later animate call (Pause) resolves quietly', async () => {
+    const warn = vi.fn();
+    const c = fakeChart(true);
+    const error = Object.assign(new Error('interrupted'), { name: 'AnimationInterrupted' });
+    c.animate!.mockImplementationOnce(() => Promise.reject(error));
+    await expect(executeCommand(c, 'animate', [null, {}], warn)).resolves.toBeUndefined();
+    expect(warn).not.toHaveBeenCalled();
+  });
 });
 
 describe('commandBindings (Plotly computeAPICommandBindings)', () => {

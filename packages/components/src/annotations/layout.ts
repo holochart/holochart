@@ -9,7 +9,7 @@
  */
 import type { TextAnchorX, TextAnchorY } from '@mk7s/holochart-render';
 import type { RGBA } from '@mk7s/holochart-render';
-import { SUBPLOT_TITLE_NAME, type FullLayout } from '@mk7s/holochart-core';
+import { FACET_LABEL_NAME, SUBPLOT_TITLE_NAME, type FullLayout } from '@mk7s/holochart-core';
 import type { AxisInfo, MarginPush } from '@mk7s/holochart-runtime';
 import type { LabelItem } from '../axes/geometry.ts';
 import {
@@ -543,8 +543,9 @@ export function hitAnnotation(
 }
 
 /**
- * Top-margin push of the subplot titles `makeSubplots` adds (named `SUBPLOT_TITLE_NAME`): those
- * on the top row sit above the plot area, in the top margin, and need their box height there.
+ * Top-margin push of the subplot titles `makeSubplots` adds (named `SUBPLOT_TITLE_NAME`) and of
+ * Express's facet labels (`FACET_LABEL_NAME`): those on the top row sit above the plot area, in
+ * the top margin, and need their box height there.
  * A Holochart extension: Plotly annotations never push margins (plotly.py relies on its 100 px
  * top margin), but the default look's thin top band would clip them. Like a top legend, the push
  * stacks under a reserved (container-referenced, `automargin`) figure title.
@@ -557,7 +558,8 @@ export function subplotTitlePush(
   if (!Array.isArray(list)) return undefined;
   let t = 0;
   for (const a of list as FullAnnotation[]) {
-    if ((a as { name?: unknown }).name !== SUBPLOT_TITLE_NAME || a.visible === false) continue;
+    const name = (a as { name?: unknown }).name;
+    if ((name !== SUBPLOT_TITLE_NAME && name !== FACET_LABEL_NAME) || a.visible === false) continue;
     // makeSubplots puts them at the top of their cell: only the top row (y = 1) is in the margin.
     if (a.yref !== 'paper' || typeof a.y !== 'number' || Math.abs(a.y - 1) > 1e-9) continue;
     // Only boxes that rise from their anchor (bottom-anchored, unrotated) take room above it.

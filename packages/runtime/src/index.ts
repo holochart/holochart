@@ -65,7 +65,10 @@ export type { ChartRegistry, ChartRegistryOptions, RegistryListing } from './reg
 export { Chart, createChart, getChart, STACK_GROUPS } from './chart.ts';
 export type { ChartOptions, ChartThree, FigurePatch } from './chart.ts';
 export {
+  addFrames,
   addTraces,
+  animate,
+  deleteFrames,
   deleteTraces,
   downloadImage,
   extendTraces,
@@ -94,6 +97,18 @@ export type {
   PointerEventData,
   SelectionEventData,
 } from './events.ts';
+
+// Transitions and animation (E7.3, E7.4)
+export type {
+  AnimateTarget,
+  AnimatingFrameEvent,
+  AnimationOptions,
+  ComputedFrame,
+  EasingName,
+  Frame,
+  FrameOptions,
+  TransitionOptions,
+} from './anim/types.ts';
 
 // Raster export (E18.1)
 export type { DownloadImageOptions, ImageFormat, ToImageOptions } from './export/types.ts';

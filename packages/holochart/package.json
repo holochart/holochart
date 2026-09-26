@@ -37,6 +37,7 @@
   "dependencies": {
     "@mk7s/holochart-components": "workspace:*",
     "@mk7s/holochart-core": "workspace:*",
+    "@mk7s/holochart-express": "workspace:*",
     "@mk7s/holochart-render": "workspace:*",
     "@mk7s/holochart-runtime": "workspace:*",
     "@mk7s/holochart-themes": "workspace:*",

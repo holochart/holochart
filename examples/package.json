@@ -13,7 +13,8 @@
     "@mk7s/holochart-core": "workspace:*",
     "@mk7s/holochart-render": "workspace:*",
     "three": "catalog:",
-    "@mk7s/holochart": "workspace:*"
+    "@mk7s/holochart": "workspace:*",
+    "@mk7s/holochart-express": "workspace:*"
   },
   "devDependencies": {
     "@types/three": "catalog:",
