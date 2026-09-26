@@ -22,7 +22,8 @@
     "@mk7s/holochart-render": "workspace:*",
     "@mk7s/holochart-runtime": "workspace:*",
     "@mk7s/holochart-examples": "workspace:*",
-    "three": "catalog:"
+    "three": "catalog:",
+    "@mk7s/holochart-express": "workspace:*"
   },
   "devDependencies": {
     "@types/three": "catalog:",

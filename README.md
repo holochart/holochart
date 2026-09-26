@@ -48,9 +48,10 @@ All packages are `0.0.0` placeholders in this monorepo; none are published yet.
 | `@mk7s/holochart-components`   | `packages/components`   | Axes, legend, colorbar, annotations, shapes, hover labels, modebar    |
 | `@mk7s/holochart-traces-basic` | `packages/traces-basic` | Basic traces: scatter, bar, pie, table                                |
 | `@mk7s/holochart-themes`       | `packages/themes`       | Built-in templates, palettes, colorscales                             |
+| `@mk7s/holochart-express`      | `packages/express`      | Express API: charts from tables, facets, animation frames (`hx.*`)    |
 
-`three` is a peer dependency. More trace packages, framework wrappers, and an Express API are
-planned; see [ARCHITECTURE.md](ARCHITECTURE.md).
+`three` is a peer dependency. More trace packages and framework wrappers are planned; see
+[ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Development quickstart
 

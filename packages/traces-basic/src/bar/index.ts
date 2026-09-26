@@ -34,7 +34,22 @@ export const bar: TraceModule<BarCalc, typeof barAttributes.children> = {
     docsPage: 'bar',
     plotlyEquivalent: 'bar',
   },
-  animatable: ['x', 'y', 'base', 'width', 'offset', 'marker.color', 'marker.opacity'],
+  // Plotly's (positions, `marker.line.width`) and bar geometry and colors (E7.3).
+  animatable: [
+    'x',
+    'x0',
+    'dx',
+    'y',
+    'y0',
+    'dy',
+    'base',
+    'width',
+    'offset',
+    'marker.color',
+    'marker.opacity',
+    'marker.line.color',
+    'marker.line.width',
+  ],
   supplyDefaults: supplyBarDefaults,
   supplyLayoutDefaults: (
     layoutIn: Readonly<Record<string, unknown>>,

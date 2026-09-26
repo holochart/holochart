@@ -29,30 +29,34 @@ The event names are fixed. The payload summaries below are provisional and may c
 first alpha. The [API reference](/reference/api/) has the exact types once the runtime ships.
 :::
 
-| Event                  | When it fires                                         | Payload (provisional)                                    |
-| ---------------------- | ----------------------------------------------------- | -------------------------------------------------------- |
-| `click`                | A data point is clicked                               | `points[]`, original pointer event                       |
-| `doubleclick`          | The plot area is double-clicked                       | none                                                     |
-| `hover`                | The pointer moves onto one or more points             | `points[]`, pointer position                             |
-| `unhover`              | The pointer leaves the hovered points                 | `points[]` that were hovered                             |
-| `selecting`            | During a box or lasso selection drag                  | `points[]`, `range` or `lassoPoints`                     |
-| `selected`             | A box or lasso selection completes                    | `points[]`, `range` or `lassoPoints`                     |
-| `deselect`             | The selection is cleared                              | none                                                     |
-| `relayout`             | Layout changed (zoom, pan, `chart.relayout`)          | The changed layout paths and values                      |
-| `relayouting`          | Continuously during a zoom or pan drag                | The changing layout paths and values                     |
-| `restyle`              | Trace attributes changed (`chart.update`)             | The changed paths and values, and trace indices          |
-| `legendclick`          | A legend item is clicked                              | Trace index; return `false` to cancel the default toggle |
-| `legenddoubleclick`    | A legend item is double-clicked                       | Trace index; return `false` to cancel the default        |
-| `sliderchange`         | A layout slider changes step                          | Slider, new step, previous active step                   |
-| `buttonclicked`        | An update-menu button is clicked                      | Menu, button, and button index                           |
-| `animated`             | An animation finishes                                 | none                                                     |
-| `animatingframe`       | An animation frame starts                             | Frame name and frame                                     |
-| `transitioning`        | A transition starts                                   | none                                                     |
-| `afterplot`            | After each full plot or replot                        | none                                                     |
-| `beforerender`         | Before each rendered frame                            | three.js `scene`, `camera`, and `renderer`               |
-| `afterrender`          | After each rendered frame                             | three.js `scene`, `camera`, and `renderer`               |
-| `webglcontextlost`     | The browser dropped the WebGL context                 | Original context event                                   |
-| `webglcontextrestored` | The WebGL context came back and the chart re-rendered | none                                                     |
+| Event                   | When it fires                                                      | Payload (provisional)                                    |
+| ----------------------- | ------------------------------------------------------------------ | -------------------------------------------------------- |
+| `click`                 | A data point is clicked                                            | `points[]`, original pointer event                       |
+| `doubleclick`           | The plot area is double-clicked                                    | none                                                     |
+| `hover`                 | The pointer moves onto one or more points                          | `points[]`, pointer position                             |
+| `unhover`               | The pointer leaves the hovered points                              | `points[]` that were hovered                             |
+| `selecting`             | During a box or lasso selection drag                               | `points[]`, `range` or `lassoPoints`                     |
+| `selected`              | A box or lasso selection completes                                 | `points[]`, `range` or `lassoPoints`                     |
+| `deselect`              | The selection is cleared                                           | none                                                     |
+| `relayout`              | Layout changed (zoom, pan, `chart.relayout`)                       | The changed layout paths and values                      |
+| `relayouting`           | Continuously during a zoom or pan drag                             | The changing layout paths and values                     |
+| `restyle`               | Trace attributes changed (`chart.update`)                          | The changed paths and values, and trace indices          |
+| `legendclick`           | A legend item is clicked                                           | Trace index; return `false` to cancel the default toggle |
+| `legenddoubleclick`     | A legend item is double-clicked                                    | Trace index; return `false` to cancel the default        |
+| `sliderchange`          | A layout slider changes step                                       | Slider, new step, previous active step                   |
+| `buttonclicked`         | An update-menu button is clicked                                   | Menu, button, and button index                           |
+| `animating`             | `animate` starts playing frames                                    | none                                                     |
+| `animatingframe`        | An animation frame starts                                          | Frame name, computed frame, frame and transition options |
+| `animated`              | An animation finishes (no frame left to play)                      | none                                                     |
+| `animationinterrupted`  | Queued frames were dropped (`mode: 'next'` or `'immediate'`)       | none                                                     |
+| `transitioning`         | A transition starts (a frame, or `react` with `layout.transition`) | none                                                     |
+| `transitioned`          | A transition finished and its final state is drawn                 | none                                                     |
+| `transitioninterrupted` | Another transition cut a transition short                          | none                                                     |
+| `afterplot`             | After each full plot or replot                                     | none                                                     |
+| `beforerender`          | Before each rendered frame                                         | three.js `scene`, `camera`, and `renderer`               |
+| `afterrender`           | After each rendered frame                                          | three.js `scene`, `camera`, and `renderer`               |
+| `webglcontextlost`      | The browser dropped the WebGL context                              | Original context event                                   |
+| `webglcontextrestored`  | The WebGL context came back and the chart re-rendered              | none                                                     |
 
 Each entry in `points[]` describes one point: `curveNumber` (trace index), `pointNumber`, `x`, `y`
 (and `z` in 3D), `customdata`, the trace's `data` and `fullData`, and the point's bounding box in

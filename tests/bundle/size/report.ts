@@ -44,6 +44,8 @@ interface SizeResult {
   fill?: number;
   /** Gzipped size of the entry's lazy controls' views, all components (absent when none). */
   controls?: number;
+  /** Gzipped size of the entry's lazy animation chunk (absent when none). */
+  animation?: number;
   /** Gzipped size of the entry's lazy font faces, summed over the faces (absent when none). */
   fonts?: number;
 }
@@ -115,6 +117,9 @@ for (const r of results) {
   const controls =
     id && manifest.get(id)?.lazyParts?.['controls'] ? lazySize(id, 'controls') : undefined;
   if (controls !== undefined) r.controls = controls;
+  const animation =
+    id && manifest.get(id)?.lazyParts?.['animation'] ? lazySize(id, 'animation') : undefined;
+  if (animation !== undefined) r.animation = animation;
   const fonts = id ? fontsSize(manifest.get(id)) : undefined;
   if (fonts !== undefined) r.fonts = fonts;
 }
@@ -129,6 +134,7 @@ const rows = results.map((r) => {
   const lazy = r.lazy !== undefined ? kB(r.lazy) : entry?.file ? 'inlined' : '—';
   const fill = r.fill !== undefined ? kB(r.fill) : entry?.file ? 'inlined' : '—';
   const controls = r.controls !== undefined ? kB(r.controls) : entry?.file ? 'inlined' : '—';
+  const animation = r.animation !== undefined ? kB(r.animation) : entry?.file ? 'inlined' : '—';
   const fonts = r.fonts !== undefined ? kB(r.fonts) : entry?.file ? 'files' : '—';
   const cells = [
     name,
@@ -136,6 +142,7 @@ const rows = results.map((r) => {
     lazy,
     fill,
     controls,
+    animation,
     fonts,
     r.sizeLimit ? kB(r.sizeLimit) : '—',
   ];
@@ -146,12 +153,12 @@ const rows = results.map((r) => {
 
 const header = base
   ? [
-      '| Entry | Size (min+gz) | Lazy (min+gz) | Fill (lazy) | Controls (lazy) | Fonts (lazy) | Budget | Δ vs main | |',
-      '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |',
+      '| Entry | Size (min+gz) | Lazy (min+gz) | Fill (lazy) | Controls (lazy) | Animation (lazy) | Fonts (lazy) | Budget | Δ vs main | |',
+      '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |',
     ]
   : [
-      '| Entry | Size (min+gz) | Lazy (min+gz) | Fill (lazy) | Controls (lazy) | Fonts (lazy) | Budget | |',
-      '| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |',
+      '| Entry | Size (min+gz) | Lazy (min+gz) | Fill (lazy) | Controls (lazy) | Animation (lazy) | Fonts (lazy) | Budget | |',
+      '| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |',
     ];
 const notes = [...manifest.values()].map((m) => m.note);
 const footnotes = notes.filter(Boolean);
@@ -175,7 +182,8 @@ const markdown = [
     ', gated by its own row. Fill is the fill primitive (earcut and the exact fill rules), loaded' +
     ' the first time a chart draws a fill. Controls is the views of the update menus, sliders, range' +
     ' selector, range slider and selections, one chunk per component (summed), each loaded the first' +
-    ' time a figure uses that component. Fonts is the built-in default font (TeX Gyre Heros): four faces, each' +
+    ' time a figure uses that component. Animation is the transitions, frames and `animate` code, loaded' +
+    ' the first time a chart animates. Fonts is the built-in default font (TeX Gyre Heros): four faces, each' +
     ' its own lazy chunk, summed; a page loads only the faces its text uses (usually just regular).',
   ...(base ? [] : ['', '_No baseline from `main` was available, so no deltas are shown._']),
   ...(footnotes.length ? ['', ...footnotes.map((n) => `¹ ${n}`)] : []),

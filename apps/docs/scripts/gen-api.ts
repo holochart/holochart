@@ -30,7 +30,13 @@ const LINK_ROOT = '/reference/api/';
 const STRICT = process.argv.includes('--strict');
 
 /** Public packages in the API reference, in sidebar order. */
-const PACKAGES = ['packages/holochart', 'packages/runtime', 'packages/core', 'packages/render'];
+const PACKAGES = [
+  'packages/holochart',
+  'packages/runtime',
+  'packages/core',
+  'packages/render',
+  'packages/express',
+];
 
 interface SidebarItem {
   text: string;

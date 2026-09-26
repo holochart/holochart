@@ -10,6 +10,7 @@ import {
   type Chart,
   type ChartOptions,
 } from './chart.ts';
+import type { AnimateTarget, AnimationOptions, Frame } from './anim/types.ts';
 import type { DownloadImageOptions, ToImageOptions } from './export/types.ts';
 import type { AttributeUpdate, MaxPoints, StreamUpdate } from './plan.ts';
 
@@ -134,6 +135,39 @@ export function prependTraces(
   maxPoints?: MaxPoints,
 ): Promise<Chart> {
   return call(() => chartIn(el, 'prependTraces').prependTraces(update, indices, maxPoints));
+}
+
+/** Plotly `addFrames`: see {@link Chart.addFrames}. */
+export function addFrames(
+  el: HTMLElement,
+  frames: readonly Frame[] | null | undefined,
+  indices?: number | readonly (number | null | undefined)[],
+): Promise<Chart> {
+  return call(() => chartIn(el, 'addFrames').addFrames(frames, indices));
+}
+
+/** Plotly `deleteFrames`: see {@link Chart.deleteFrames}. */
+export function deleteFrames(
+  el: HTMLElement,
+  indices?: number | readonly number[] | null,
+): Promise<Chart> {
+  return call(() => chartIn(el, 'deleteFrames').deleteFrames(indices));
+}
+
+/**
+ * Plotly `animate`: play frames by group, name or object. See {@link Chart.animate}.
+ *
+ * @example
+ * ```ts
+ * await animate(el, null, { frame: { duration: 500, redraw: false }, fromcurrent: true });
+ * ```
+ */
+export function animate(
+  el: HTMLElement,
+  target?: AnimateTarget,
+  options?: AnimationOptions,
+): Promise<Chart> {
+  return call(() => chartIn(el, 'animate').animate(target, options));
 }
 
 /**

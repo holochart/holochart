@@ -186,8 +186,10 @@ A strip plot is a `box` trace: see the [box attribute reference](/reference/box)
   - The box outline is removed with `line.width: 0` instead of a transparent line color, so the
     points keep the colorway color without the helper writing colors into every trace.
   - `jitter` is an option (px has none; it keeps Plotly's default 0.3).
-  - Not supported: `facet_row` / `facet_col`, `animation_frame`, `log_x` / `log_y`,
+  - Not supported here: `facet_row` / `facet_col`, `animation_frame`, `log_x` / `log_y`,
     `range_x` / `range_y`, `width` / `height` / `template` (set them on the returned figure).
+    The [Express API](/express/statistics#box-violin-strip)'s `hx.strip(data, options)` builds
+    the same figure and supports all of them.
 - Plotly strip figures (box traces with `boxpoints: 'all'` and transparent colors) carry over
   unchanged; the legend shows a marker for them, as in Plotly.
 - Beeswarm layouts (plan E10.6, `jittermode: 'beeswarm'`) are not implemented yet.

@@ -31,6 +31,7 @@ import type {
   LegendItem,
   TraceModule,
 } from '@mk7s/holochart-runtime';
+import { subplotTitlePush } from '../annotations/layout.ts';
 import type { DashItem, LabelItem, RectItem } from '../axes/geometry.ts';
 import { DashBatch, RectBatch, TextBatch } from '../shared/batches.ts';
 import { findChart, fireAndForget, overlayTransform } from '../shared/host.ts';
@@ -44,6 +45,7 @@ import {
 import {
   hasLegendEntry,
   layoutLegend,
+  legendAnchors,
   legendEntries,
   legendMarginPush,
   legendOrigin,
@@ -177,6 +179,21 @@ export interface LegendScene {
   labels: LabelItem[];
 }
 
+/**
+ * How far a legend on top of the plot area (paper `y >= 1`, bottom-anchored, like the default
+ * look's) moves up so the top row's subplot titles (`makeSubplots`, Express facet labels) stay
+ * visible beneath it: their height above the plot area. A Holochart extension; Plotly's legends
+ * sit at the right, clear of them.
+ */
+export function legendTitleLift(
+  legend: FullLegend,
+  fullLayout: FullLayout,
+  measure: MeasureLine,
+): number {
+  if (legend.yref !== 'paper' || legend.y < 1 || legendAnchors(legend).y !== 'bottom') return 0;
+  return subplotTitlePush(fullLayout, measure)?.t ?? 0;
+}
+
 /** Legend geometry for the current layout. */
 export function buildLegendScene(
   fullLayout: FullLayout,
@@ -211,7 +228,9 @@ export function buildLegendScene(
     figureHeight: size.height,
   });
   if (boxes.width <= 0 || boxes.height <= 0) return empty;
-  const { left, top } = legendOrigin(legend, size, plotArea, boxes);
+  const origin = legendOrigin(legend, size, plotArea, boxes);
+  const left = origin.left;
+  const top = origin.top - legendTitleLift(legend, fullLayout, measure);
   const scene: LegendScene = {
     ...empty,
     box: { left, top, width: boxes.width, height: boxes.height },
@@ -566,7 +585,9 @@ export const legendComponent: ComponentModule = {
       plotWidth,
       figureHeight: ctx.height,
     });
-    return legendMarginPush(legend, ctx, m, boxes);
+    const push = legendMarginPush(legend, ctx, m, boxes);
+    const lift = legendTitleLift(legend, ctx.fullLayout, oracleMeasure);
+    return push && lift > 0 && push.t !== undefined ? { ...push, t: push.t + lift } : push;
   },
   draw: {
     create: (ctx) => new LegendView(ctx),

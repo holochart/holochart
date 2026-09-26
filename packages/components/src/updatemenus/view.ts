@@ -393,6 +393,8 @@ export function createUpdatemenusView<Ctx extends UpdatemenusViewContext>(
     const hadFocus = m.el.contains(doc.activeElement);
     const focusedIndex = hadFocus ? itemIndex(m, doc.activeElement) : undefined;
     const headerFocused = hadFocus && doc.activeElement === m.header;
+    // An open list keeps the focus across a rebuild (`sync` reopens it).
+    const listFocused = hadFocus && m.list !== undefined && doc.activeElement === m.list;
     m.el.replaceChildren();
     m.items = new Map();
     m.header = undefined;
@@ -483,7 +485,7 @@ export function createUpdatemenusView<Ctx extends UpdatemenusViewContext>(
     m.header = header;
     m.headerLabel = headerLabel;
     m.list = list;
-    if (headerFocused || hadFocus) header.focus();
+    if (headerFocused || (hadFocus && !listFocused)) header.focus();
   };
 
   /** Pressed / selected states and the dropdown's header label. */
@@ -619,10 +621,19 @@ export function createUpdatemenusView<Ctx extends UpdatemenusViewContext>(
       const key = menuKey(m.menu, m.layout);
       style(m);
       if (key !== m.key) {
+        // A rebuild (new labels or metrics, e.g. once the font loads) while the list is open keeps
+        // it open, focused and highlighted where it was, so keys pressed meanwhile aren't lost.
         const wasOpen = m.open;
+        const listFocused =
+          wasOpen && m.list !== undefined && m.el.ownerDocument.activeElement === m.list;
+        const highlighted = m.order[m.cursor];
         build(m);
         m.key = key;
-        if (wasOpen) openList(m, false);
+        if (wasOpen) {
+          openList(m, listFocused);
+          const at = highlighted === undefined ? -1 : m.order.indexOf(highlighted);
+          if (at >= 0) highlight(m, at);
+        }
       }
       const pos = placeUpdatemenu(
         m.menu,

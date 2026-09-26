@@ -59,16 +59,16 @@ names are `@mk7s/holochart` and `@mk7s/holochart-*`
 | `apps/sandbox`            | Vite dev sandbox with example picker and GPU stats                  | Exists  |
 | `examples/`               | Canonical examples (sandbox, docs, gallery, visual tests)           | Exists  |
 | `tools/schema-gen`        | Schema to TS types, JSON Schema, attribute reference docs           | Exists  |
-| `packages/traces-stats`   | histogram(2d), box, violin, splom, parcoords, parcats               | Planned |
+| `packages/traces-stats`   | histogram(2d), box, violin, splom, parcoords, parcats               | Exists  |
 | `packages/traces-sci`     | heatmap, contour, image, polar, ternary, quiver, streamline, carpet | Planned |
 | `packages/traces-finance` | ohlc, candlestick, waterfall, funnel, funnelarea, indicator         | Planned |
 | `packages/traces-hier`    | sunburst, treemap, icicle, sankey                                   | Planned |
 | `packages/traces-3d`      | scatter3d, surface, mesh3d, cone, streamtube, volume, isosurface    | Planned |
 | `packages/traces-geo`     | Stretch: scattergeo, choropleth, globe, tile maps                   | Planned |
-| `packages/express`        | High-level API (`hx.scatter(df, ...)`), faceting, trendlines        | Planned |
+| `packages/express`        | High-level API (`hx.scatter(df, ...)`), faceting, frames, marginals | Exists  |
 | `packages/compat-plotly`  | Plotly figure JSON importer and attribute mapper                    | Planned |
 | `packages/react` etc.     | Framework wrappers: React, Vue, Svelte, web component               | Planned |
-| `apps/docs`               | Documentation site (VitePress)                                      | Planned |
+| `apps/docs`               | Documentation site (VitePress)                                      | Exists  |
 | `apps/playground`         | Live editor (Monaco + preview)                                      | Planned |
 | `apps/bench`              | Performance benchmark harness                                       | Planned |
 | `tools/gallery-gen`       | Playwright screenshot pipeline for thumbnails                       | Planned |

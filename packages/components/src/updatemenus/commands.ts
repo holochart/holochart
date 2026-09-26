@@ -19,8 +19,8 @@ export interface CommandChart {
     layoutUpdate: Readonly<Record<string, unknown>>,
     traces?: number | readonly number[],
   ): unknown;
-  /** Frames and `animate` arrive with plan E7.4; until then `animate` commands warn. */
-  animate?: (target: unknown, options?: unknown) => unknown;
+  /** Plotly's `animate` (E7.4); a chart-like without it makes `animate` commands warn. */
+  animate?(target: unknown, options?: unknown): unknown;
 }
 
 /** `restyle` / `relayout` arguments (`'attr', value` or `{ attr: value }`) → an update object. */
@@ -46,7 +46,7 @@ function tracesOf(value: unknown): number | readonly number[] | undefined {
  * - `restyle`: `['attr', value, traces?]` or `[{ attr: value }, traces?]`
  * - `relayout`: `['attr', value]` or `[{ attr: value }]`
  * - `update`: `[traceUpdate, layoutUpdate, traces?]`
- * - `animate`: `[frameOrGroupOrNames, animationOptions]`, when the chart has `animate`
+ * - `animate`: `[frameOrGroupOrNames, animationOptions]` (`chart.animate`, plan E7.4)
  * - `skip`: nothing
  *
  * Returns the chart call's promise (resolved `undefined` for `skip` and unsupported methods).
@@ -78,9 +78,7 @@ export function executeCommand(
     case 'animate':
       if (typeof chart.animate === 'function') result = chart.animate(a[0], a[1]);
       else
-        warn(
-          "[holochart] method 'animate' needs frames and chart.animate (plan E7.4), which this chart doesn't have yet; ignored.",
-        );
+        warn("[holochart] method 'animate' needs chart.animate, which this chart lacks; ignored.");
       break;
     default:
       break;
@@ -88,7 +86,10 @@ export function executeCommand(
   return Promise.resolve(result).then(
     () => undefined,
     (error: unknown) => {
-      warn(`[holochart] API call to ${method} rejected: ${String(error)}`);
+      // A Pause button drops the frames a Play button queued: expected, not worth a warning.
+      if ((error as { name?: unknown } | null)?.name !== 'AnimationInterrupted') {
+        warn(`[holochart] API call to ${method} rejected: ${String(error)}`);
+      }
       return undefined;
     },
   );

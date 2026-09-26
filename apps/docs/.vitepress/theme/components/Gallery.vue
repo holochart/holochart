@@ -18,6 +18,8 @@ type Entry = (typeof data.examples)[number];
 /** Categories that are not chart types, in display order after the chart types. */
 const CATEGORY_LABELS: Record<string, string> = {
   recipes: 'Recipes',
+  animation: 'Animation',
+  express: 'Express API',
   demos: 'Demos',
   themes: 'Themes',
   _dev: 'Internals',

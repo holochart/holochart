@@ -64,6 +64,7 @@ packages/        Published libraries (@mk7s/holochart and @mk7s/holochart-*)
   components/    Axes, legend, colorbar, annotations, shapes, hover labels, modebar
   traces-basic/  scatter, bar, pie, table
   themes/        Templates, palettes, colorscales
+  express/       Express API (hx.scatter(data, …)): tables to figures, facets, frames
   holochart/     Full bundle
 apps/sandbox/    Vite dev sandbox (pnpm dev)
 apps/docs/       Docs site (VitePress), served at mk7s.dev/holochart/

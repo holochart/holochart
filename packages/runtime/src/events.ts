@@ -4,6 +4,7 @@
  */
 import type { FullTrace } from '@mk7s/holochart-core';
 import type { FrameInfo } from '@mk7s/holochart-render';
+import type { AnimatingFrameEvent } from './anim/types.ts';
 import type { AxisInfo } from './contracts.ts';
 import type { AttributeUpdate, MaxPoints, StreamUpdate } from './plan.ts';
 
@@ -136,6 +137,20 @@ export interface ChartEvents {
   /** Legend item clicked; a listener returning `false` cancels the default toggle. */
   legendclick: LegendEventData;
   legenddoubleclick: LegendEventData;
+  /** `chart.animate` started playing frames (E7.4); nothing was playing before. */
+  animating: undefined;
+  /** A frame starts: its name (sliders move to it), the computed frame and its options. */
+  animatingframe: AnimatingFrameEvent;
+  /** No frame is left to play (also emitted when `animate` is given nothing to play). */
+  animated: undefined;
+  /** Queued frames were dropped by an `animate` call with `mode: 'next'` or `'immediate'`. */
+  animationinterrupted: undefined;
+  /** A transition (E7.3) starts: a frame, or `react` with `layout.transition`. */
+  transitioning: undefined;
+  /** A transition finished and its final state is drawn. */
+  transitioned: undefined;
+  /** A transition was cut short by another one (it jumps to its end state). */
+  transitioninterrupted: undefined;
   webglcontextlost: undefined;
   webglcontextrestored: undefined;
   /** The chart was destroyed (`chart.destroy()` / `purge(el)`). */

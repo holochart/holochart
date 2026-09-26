@@ -490,7 +490,11 @@ describe('autorange: axis types', () => {
 
 describe('autorange: properties', () => {
   const point = fc.record({
-    l: fc.double({ min: -1e6, max: 1e6, noNaN: true }),
+    // No subnormals: a span near Number.MIN_VALUE divided by the axis length underflows to 0 in
+    // the slope search (as in plotly.js), so such points never win; real data never gets there.
+    l: fc
+      .double({ min: -1e6, max: 1e6, noNaN: true })
+      .map((v) => (Math.abs(v) < Number.MIN_VALUE * 2 ** 52 ? 0 : v)),
     padPx: fc.double({ min: 0, max: 60, noNaN: true }),
     extrapad: fc.boolean(),
   });

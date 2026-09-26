@@ -258,6 +258,25 @@ describe('update menus view: dropdown', () => {
     expect(chart.relayout).toHaveBeenCalledWith({ 'updatemenus[0].active': 2 }, { gui: true });
   });
 
+  it('a rebuild while the list is open keeps it open, focused and highlighted', () => {
+    const chart = fakeChart();
+    const view = createUpdatemenusView(chart, context(dropdown()), { measure });
+    const header = view.root?.querySelector('button') as HTMLButtonElement;
+    header.focus();
+    key(header, 'ArrowDown');
+    key(view.root?.querySelector('[role="listbox"]') as HTMLElement, 'ArrowDown');
+    // New labels (or metrics, once the font loads) rebuild the DOM.
+    const relabeled = VISIBILITY.map((b, i) => ({ ...b, label: `L${i}` }));
+    view.update(context(dropdown({ buttons: relabeled })));
+    const list = view.root?.querySelector('[role="listbox"]') as HTMLElement;
+    const ids = [...list.querySelectorAll('[role="option"]')].map((o) => o.id);
+    expect(list.hasAttribute('data-open')).toBe(true);
+    expect(document.activeElement).toBe(list);
+    expect(list.getAttribute('aria-activedescendant')).toBe(ids[1]);
+    key(list, 'Enter');
+    expect(chart.relayout).toHaveBeenCalledWith({ 'updatemenus[0].active': 1 }, { gui: true });
+  });
+
   it('a press outside closes the list', () => {
     const view = createUpdatemenusView(fakeChart(), context(dropdown()), { measure });
     const header = view.root?.querySelector('button') as HTMLButtonElement;
@@ -294,6 +313,22 @@ describe('update menus view: updates', () => {
     expect(chart.relayout).toHaveBeenCalledWith({ 'updatemenus[0].active': 1 }, { gui: true });
     const buttons = [...(view.root?.querySelectorAll('button') ?? [])];
     expect(buttons.map((b) => b.getAttribute('aria-pressed'))).toEqual(['false', 'true']);
+  });
+
+  it('buttons animating to single frames follow the frame shown (fullLayout._currentFrame)', () => {
+    const chart = fakeChart();
+    const menu = {
+      type: 'buttons',
+      buttons: ['1990', '2000'].map((f) => ({ label: f, method: 'animate', args: [[f]] })),
+    };
+    const at = (frame?: string) => {
+      const ctx = context({ updatemenus: [menu] });
+      if (frame) ctx.fullLayout['_currentFrame'] = frame;
+      return ctx;
+    };
+    const view = createUpdatemenusView(chart, at(), { measure });
+    view.update(at('2000'));
+    expect(chart.relayout).toHaveBeenCalledWith({ 'updatemenus[0].active': 1 }, { gui: true });
   });
 
   it('keeps DOM (and focus) across updates, rebuilds when labels change', () => {

@@ -165,6 +165,8 @@ import { chartToJSON, type ChartToJSONOptions } from './json.ts';
 import { describeChart, type ChartDescription } from './a11y/describe.ts';
 import { A11yMirror, type A11yChange } from './a11y/mirror.ts';
 import type { DownloadImageOptions, ExportSource, ToImageOptions } from './export/types.ts';
+import type { Animation } from './anim/animation.ts';
+import type { AnimateTarget, AnimationHost, AnimationOptions, Frame } from './anim/types.ts';
 import { registry as defaultRegistry, type ChartRegistry } from './registry.ts';
 import {
   axisDataOf,
@@ -224,7 +226,8 @@ interface Figure {
   datasets: FigureInput['datasets'];
 }
 
-interface Plan {
+/** What a pipeline run does (internal; the animation code plans its runs with it). */
+export interface Plan {
   /** Recalc and redraw everything (first draw, renderer re-created). */
   full: boolean;
   /** Re-create the render root (config changed). */
@@ -263,6 +266,11 @@ interface Plan {
   selectionsEdited: boolean;
   /** Traces whose input `selectedpoints` changed: they keep it over layout selections. */
   inputSelection: Set<number>;
+  /**
+   * An in-between frame of a transition (E7.3): no validation, no `afterplot`, and the a11y
+   * mirror throttles like streaming.
+   */
+  tween: boolean;
 }
 
 /**
@@ -417,6 +425,7 @@ function emptyPlan(): Plan {
     selections: false,
     selectionsEdited: false,
     inputSelection: new Set(),
+    tween: false,
   };
 }
 
@@ -457,6 +466,7 @@ function classifyLayoutPaths(
  */
 function a11yChangeOf(plan: Plan): A11yChange {
   if (plan.full || plan.remount || plan.structural || plan.validate) return 'content';
+  if (plan.tween) return 'stream';
   if (plan.traces.size > 0 || plan.layoutOther) return 'content';
   // Layout stages with no recorded paths (web fonts loaded): re-describe, it's rare.
   if (plan.layout.size > 0 && !plan.layoutRanges && !plan.layoutQuiet) return 'content';
@@ -585,6 +595,11 @@ export class Chart {
   #destroyed = false;
   #unsubscribeFonts: (() => void) | undefined;
   #a11y: A11yMirror | undefined;
+  /** Frames and transitions (E7.3, E7.4): their code loads on first use. */
+  #animation: Promise<Animation> | undefined;
+  /** The animation frame shown last (Plotly's `fullLayout._currentFrame`). */
+  #currentFrame: string | null = null;
+  #onRemap: ((order: readonly (number | undefined)[]) => void) | undefined;
   /** Secondary views of subplots' traces (E5.9 range slider thumbnails), see `mirror.ts`. */
   readonly #mirrors: SubplotMirrors = new SubplotMirrors({
     root: () => this.#requireRoot(),
@@ -1014,17 +1029,29 @@ export class Chart {
    */
   react(figure: FigureInput): Promise<Chart> {
     if (this.#destroyed) return Promise.reject(destroyedError());
+    // `layout.transition` animates the change (E7.3, Plotly's `transitionFromReact`).
+    if (isPlainObject(figure.layout) && isPlainObject(figure.layout['transition'])) {
+      return this.#animate((a) => a.react(figure));
+    }
+    const apply = this.#reactPlan(figure);
+    return apply ? this.#schedule(apply) : Promise.resolve(this);
+  }
+
+  /** The update `react(figure)` makes, or `undefined` when nothing changed. */
+  #reactPlan(figure: FigureInput): ((plan: Plan) => void) | undefined {
     // Double-click "reset" returns to the ranges of the latest figure the app gave.
     this.#initialAxes.clear();
     const current = this.#figure;
     const next = normalizeFigure(figure);
     const effective = normalizeFigure(applyUirevision(current, next, this.#ui));
+    // Like Plotly, frames stay unless the figure brings its own.
+    effective.frames ??= current.frames;
     const diff = diffFigures(current, effective, this.#registry.core);
     if (diff.empty && !this.#plan) {
       this.#figure = effective;
-      return Promise.resolve(this);
+      return undefined;
     }
-    return this.#schedule((plan) => {
+    return (plan) => {
       this.#figure = effective;
       plan.validate = true;
       if (diff.configChanged) {
@@ -1054,7 +1081,7 @@ export class Chart {
       for (const [i, { type, paths }] of byTrace) {
         addStages(plan, i, planTraceEdit(paths, type, i, this.#registry.core, this.#fullFor(plan)));
       }
-    });
+    };
   }
 
   /** Add traces (at the end, or at `newIndices` in the final order, like Plotly). */
@@ -1209,6 +1236,78 @@ export class Chart {
     });
   }
 
+  // ---- frames & animation (E7.3, E7.4) ------------------------------------------------------------
+
+  /**
+   * Add animation frames (Plotly `addFrames`): a frame whose name is taken replaces that frame;
+   * others are inserted at `indices[i]` (default: appended). Unnamed frames are named
+   * `'frame <n>'`. See {@link animate}.
+   */
+  addFrames(
+    frames: readonly Frame[] | null | undefined,
+    indices?: number | readonly (number | null | undefined)[],
+  ): Promise<Chart> {
+    return this.#animate((a) => {
+      a.addFrames(frames, indices);
+      return this;
+    });
+  }
+
+  /** Remove frames by index (Plotly `deleteFrames`); every frame when `indices` is omitted. */
+  deleteFrames(indices?: number | readonly number[] | null): Promise<Chart> {
+    return this.#animate((a) => {
+      a.deleteFrames(indices);
+      return this;
+    });
+  }
+
+  /**
+   * Play frames (Plotly `animate`): every frame, a frame **group** by name, frame names in a list
+   * (`['2007']`), or frame objects; each frame transitions in over `transition.duration` and the
+   * next starts `frame.duration` later. Resolves once the last frame has played; rejects when a
+   * later call (`mode: 'next'` / `'immediate'`) drops it. Emits `animating`, `animatingframe`
+   * (sliders follow it), `transitioning` / `transitioned` and `animated`. The animation code loads
+   * on first use.
+   *
+   * @example
+   * ```ts
+   * await chart.animate(null, { frame: { duration: 500 }, transition: { duration: 300 } });
+   * await chart.animate([null], { mode: 'immediate' }); // pause
+   * ```
+   */
+  animate(target?: AnimateTarget, options?: AnimationOptions): Promise<Chart> {
+    return this.#animate((a) => a.animate(target, options));
+  }
+
+  /** Run `fn` with this chart's animation state, loading the animation code the first time. */
+  #animate<T>(fn: (animation: Animation) => T | Promise<T>): Promise<T> {
+    if (this.#destroyed) return Promise.reject(destroyedError());
+    this.#animation ??= import('./anim/animation.ts').then((m) => {
+      const host: AnimationHost = {
+        chart: this,
+        core: this.#registry.core,
+        scheduler: this.#options.renderRoot?.scheduler ?? browserFrameScheduler,
+        figure: () => this.#figure,
+        full: () => this.#full,
+        axes: () => this.#axes,
+        run: (mutate) => this.#schedule(mutate),
+        patch: (plan, traces, layout) => {
+          for (const [i, edits] of traces) this.#editTraceInto(plan, i, edits);
+          this.#relayoutInto(plan, layout, null);
+        },
+        react: (figure) => this.#reactPlan(figure),
+        current: (name) => {
+          this.#currentFrame = name;
+        },
+        remapped: (listener) => {
+          this.#onRemap = listener;
+        },
+      };
+      return m.createAnimation(host);
+    });
+    return this.#animation.then(fn);
+  }
+
   /** Re-measure the container and re-layout (automatic with `config.responsive`). */
   resize(): Promise<Chart> {
     return this.#schedule((plan) => {
@@ -1277,7 +1376,8 @@ export class Chart {
     }
   }
 
-  #relayoutInto(plan: Plan, update: AttributeUpdate, payload?: AttributeUpdate): void {
+  /** `payload`: the `relayout` event's (default: the edits); `null`: no event. */
+  #relayoutInto(plan: Plan, update: AttributeUpdate, payload?: AttributeUpdate | null): void {
     const edits = withMatchedAxes(
       withRangeImplications(
         axisTypeChangeEdits(update, this.#figure.layout, this.#full?.fullLayout),
@@ -1291,7 +1391,7 @@ export class Chart {
     this.#figure.layout = applyEdits(this.#figure.layout, edits);
     classifyLayoutPaths(plan, paths, edits);
     for (const s of planLayoutEdit(paths, this.#registry.core)) plan.layout.add(s);
-    plan.after.push(() => this.#events.emit('relayout', payload ?? edits));
+    if (payload !== null) plan.after.push(() => this.#events.emit('relayout', payload ?? edits));
   }
 
   #recordLayoutGui(update: AttributeUpdate): void {
@@ -1352,6 +1452,7 @@ export class Chart {
     });
     plan.structural = true;
     plan.layout.add('layout');
+    this.#onRemap?.(order);
   }
 
   // ---- scheduling -------------------------------------------------------------------------------
@@ -1398,7 +1499,7 @@ export class Chart {
     }
     try {
       for (const emit of plan.after) emit();
-      this.#events.emit('afterplot', undefined);
+      if (!plan.tween) this.#events.emit('afterplot', undefined);
     } finally {
       this.#settle(waiters);
     }
@@ -1569,11 +1670,13 @@ export class Chart {
     const validate =
       plan.full ||
       plan.validate ||
-      plan.layout.has('calc') ||
-      [...plan.traces.values()].some((s) => s.has('calc'));
+      (!plan.tween &&
+        (plan.layout.has('calc') || [...plan.traces.values()].some((s) => s.has('calc'))));
     const full = supplyDefaults(this.#figure, registry.core, { validate });
     this.#full = full;
     const { fullData, fullLayout, fullConfig } = full;
+    // Kept across runs like Plotly (update menus and sliders follow it, E5.11).
+    if (this.#currentFrame !== null) fullLayout['_currentFrame'] = this.#currentFrame;
 
     // Measure before (re)mounting: an old canvas must not decide the new size.
     const size = resolveFigureSize(this.#figure.layout, fullLayout, this.#container());
