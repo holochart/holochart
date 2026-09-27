@@ -162,6 +162,37 @@ describe('label helpers', () => {
   });
 });
 
+describe('grid cells (M4: heatmap, image)', () => {
+  const grid = {
+    text: [
+      ['a', 'b'],
+      ['c', 'd'],
+    ],
+    customdata: [
+      [1, 2],
+      [3, 4],
+    ],
+    hovertemplate: '%{text} %{customdata} %{pointNumber}<extra></extra>',
+  };
+  const cell: HoverPoint = { ...P, pointIndex: 3, cell: [1, 0], x: 0, y: 1 };
+
+  it('reads 2D per-point attributes at [row][column] and reports the pair', () => {
+    const e = entry(grid);
+    expect(labelText(e, cell, 'closest', true, LAYOUT).text).toBe('c 3 1,0');
+    expect(buildPoint(e, cell, false)).toMatchObject({
+      pointNumber: [1, 0],
+      pointIndex: [1, 0],
+      text: 'c',
+      customdata: 3,
+    });
+  });
+
+  it('reads nothing from 1D arrays for a cell', () => {
+    const e = entry({ text: ['a', 'b', 'c', 'd'] });
+    expect(buildPoint(e, cell, false)).not.toHaveProperty('text');
+  });
+});
+
 describe('fontCss (E8.3 font fields on DOM hover labels)', () => {
   it('maps Plotly font fields to CSS', () => {
     const font: Record<string, unknown> = {

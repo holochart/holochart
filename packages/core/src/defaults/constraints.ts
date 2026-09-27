@@ -167,6 +167,8 @@ function copyValue(v: unknown): unknown {
  * @param templateLayout - The template's layout (only `constraintoward` reads it).
  * @param matchDefaults - Default `matches` by axis id, used when the user's axis sets none (splom
  *   dimensions with `axis.matches`, E10.9; Plotly's `splomStash.matches`).
+ * @param scaleanchorDefaults - Default `scaleanchor` by axis id, used when the user's axis has no
+ *   `scaleanchor` key at all (y axes of `image` traces: their anchor; `false` opts out).
  */
 export function supplyAxisConstraints(
   layoutIn: Readonly<Record<string, unknown>>,
@@ -174,6 +176,7 @@ export function supplyAxisConstraints(
   ids: readonly string[],
   templateLayout: Record<string, unknown> | undefined,
   matchDefaults?: ReadonlyMap<string, string>,
+  scaleanchorDefaults?: ReadonlyMap<string, string>,
 ): void {
   const constraintGroups: AxisConstraintGroup[] = [];
   const matchGroups: AxisMatchGroup[] = [];
@@ -209,8 +212,11 @@ export function supplyAxisConstraints(
       typeof v === 'string' && candidates.includes(v);
     const requested = axIn['matches'] ?? matchDefaults?.get(id);
     const matches = isCandidate(requested) ? requested : undefined;
+    const scaleanchorIn = Object.hasOwn(axIn, 'scaleanchor')
+      ? axIn['scaleanchor']
+      : scaleanchorDefaults?.get(id);
     const scaleanchor =
-      matches === undefined && isCandidate(axIn['scaleanchor']) ? axIn['scaleanchor'] : undefined;
+      matches === undefined && isCandidate(scaleanchorIn) ? scaleanchorIn : undefined;
 
     if (matches !== undefined) {
       ax.matches = matches;

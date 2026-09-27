@@ -178,6 +178,30 @@ describe('crossTraceLayout', () => {
     expect(calc.layouts).toBe(1);
   });
 
+  it('groups modules sharing one crossTraceLayout, with subplot-placed traces (polar)', async () => {
+    const disc = discModule(log);
+    // A trace type placed by a layout container (like polar traces): not in the `domain`
+    // category, its domain comes from `subplotDomain`.
+    t.registry.register(disc, {
+      ...disc,
+      type: 'ring',
+      categories: ['showLegend'],
+      subplotDomain: () => ({ x: [0.25, 0.75], y: [0, 1] }),
+    });
+    const c = await chart([
+      { type: 'disc', domain: { x: [0, 0.25] } },
+      { type: 'ring' },
+      { type: 'dots', x: [1], y: [1] },
+    ]);
+    expect(log.layouts).toHaveLength(1);
+    expect(log.layouts[0]?.indices).toEqual([0, 1]);
+    expect(log.layouts[0]?.domains[1]?.rect).toEqual({ x: 185, y: 30, width: 290, height: 320 });
+    const ring = log.plots.find((p) => p.index === 1);
+    expect(ring?.overlay).toBe(true);
+    expect(ring?.domain?.x).toEqual([0.25, 0.75]);
+    expect((c.getCalcdata(1) as DiscCalc).r).toBe(145);
+  });
+
   it('reruns after a layout change and re-reads the members', async () => {
     const c = await chart([{ type: 'disc' }]);
     log.plots.length = 0;

@@ -29,3 +29,6 @@ export {
 } from './shared/colorscale.ts';
 // Draw order of traces (Plotly's layer order), for trace types in other packages (box, violin).
 export { traceRenderOrder } from './shared/render-order.ts';
+// For the polar traces (traces-sci, M4 wave 1): scatter's line shaping (splines) and bar styles.
+export { buildLinePath, type LinePathOptions } from './scatter/line-path.ts';
+export { barStyle, type BarStyle } from './bar/style.ts';

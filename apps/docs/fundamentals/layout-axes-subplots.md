@@ -229,7 +229,8 @@ If you add annotations of your own, concatenate them with the titles:
 - `l`, `r`, `t`, `b`: padding inside the cell, as plot-area fractions.
 
 Other subplot types (`scene`, `polar`, `ternary`, `geo`, `map`, `smith`) throw an error naming the
-milestone that adds them.
+milestone that adds them. To put polar subplots in a grid, set their `domain` (or `domain.row` /
+`domain.column` with `layout.grid`) instead: see [polar subplots](#polar-subplots).
 
 #### Differences from Python's `make_subplots`
 
@@ -241,6 +242,41 @@ milestone that adds them.
   shared subplots differ in extent (`sharedX: 'rows'`, or `sharedX: 'all'` over several columns),
   each extent gets its own axis with [`matches`](#linked-axes-matches) set to the first one, as in
   Python. A spanning cell in a shared column (or row) keeps its own, unlinked axis.
+
+## Polar subplots
+
+Polar traces ([`scatterpolar`](/charts/scientific/polar) and
+[`barpolar`](/charts/scientific/barpolar)) are drawn on polar subplots instead of x/y axes. Each
+subplot is a layout container: `layout.polar`, `layout.polar2`, …, with its own radial and angular
+axes (`radialaxis`, `angularaxis`), `sector`, `hole`, `bgcolor` and `domain`. A trace picks its
+subplot with `subplot: 'polar2'` (default `'polar'`), the way cartesian traces pick `xaxis` and
+`yaxis`.
+
+- **Placement.** `polar.domain.x` / `domain.y` give the subplot's extent as fractions of the plot
+  area; the subplot is the largest circle (or sector) that fits in it, centered. With
+  `layout.grid`, `domain.row` and `domain.column` place it in a grid cell. Subplots without a
+  `domain` share the width side by side, as in Plotly.
+- **Mixing.** Polar and cartesian subplots can share a figure: give each its own part of the plot
+  area (axis `domain` for the cartesian one, `polar.domain` for the polar one).
+
+```ts
+import { createChart } from '@mk7s/holochart';
+
+createChart(document.getElementById('chart')!, {
+  data: [
+    { type: 'scatter', x: [1, 2, 3], y: [2, 1, 3] },
+    { type: 'scatterpolar', r: [1, 2, 3], theta: [0, 120, 240], subplot: 'polar' },
+    { type: 'barpolar', r: [3, 1, 2], theta: ['N', 'E', 'S'], subplot: 'polar2' },
+  ],
+  layout: {
+    xaxis: { domain: [0, 0.3] },
+    polar: { domain: { x: [0.35, 0.65] } },
+    polar2: { domain: { x: [0.7, 1] }, angularaxis: { direction: 'clockwise' } },
+  },
+});
+```
+
+<Example id="polar/subplots" />
 
 ## Range breaks
 

@@ -82,6 +82,14 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
     tickcolor: AXIS,
     tickfont: { size: 8, color: TICK },
   };
+  const polarAxis = {
+    color: TEXT,
+    linecolor: AXIS,
+    gridcolor: '#202029',
+    ticklen: 3,
+    tickcolor: AXIS,
+    tickfont: { size: 8, color: TICK },
+  };
   const axis = {
     color: TEXT,
     showline: true,
@@ -169,6 +177,13 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
         font: { size: 9, color: TITLE },
       },
       coloraxis: { colorbar },
+      // Polar subplots: the plot background, the axis look, and a grid a step brighter than the
+      // cartesian one (circles and spokes need the stronger cue, as in Plotly).
+      polar: {
+        bgcolor: BG,
+        angularaxis: polarAxis,
+        radialaxis: { ...polarAxis, title: { font: { size: 9, color: TEXT } } },
+      },
       modebar: { bgcolor: 'rgba(10,10,15,0.6)', color: '#4a4c58', activecolor: TEXT },
       annotationdefaults: { arrowcolor: TEXT, arrowwidth: 1, font: { color: TEXT } },
       shapedefaults: { line: { color: TEXT, width: 1 } },
@@ -192,6 +207,9 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
       ],
       // A background-colored rim separates the slices.
       pie: [{ marker: { line: { color: BG, width: 1 } } }],
+      // Polar traces look like their cartesian twins; stacked polar bars get a thin rim.
+      scatterpolar: [{ line: { width: 1.25 }, marker: { size: 4, line: { width: 0, color: BG } } }],
+      barpolar: [{ marker: { line: { color: BG, width: 0.5 }, colorbar } }],
       // Histograms are bars: same borderless look and readable error bars.
       histogram: [
         {
@@ -207,8 +225,11 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
       splom: [{ marker: { size: 3, line: { width: 0, color: BG }, colorbar } }],
       // Heatmap-like traces don't pick automatic colorscales (Plotly): give them the sequential
       // ramp, as plotly.py's templates do. Contours use it automatically (`autocolorscale`).
+      heatmap: [{ colorscale: sequential, colorbar }],
       histogram2d: [{ colorscale: sequential, colorbar }],
       histogram2dcontour: [{ colorbar }],
+      // Contour plots, like heatmaps, don't pick automatic colorscales (Plotly's `contour`).
+      contour: [{ colorscale: sequential, colorbar }],
       // Parallel coordinates and categories: the sequential ramp (parcoords defaults to Viridis),
       // slim colorbars, 9 px axis labels and 8 px tick and range labels (Plotly's 1/1.2 of the
       // layout font rounds up to 8 px for the labels too).

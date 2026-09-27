@@ -2,10 +2,10 @@
  * Plotly's templates (plotly.py `plotly.io.templates`): `plotly`, `plotly_white`, `plotly_dark`,
  * `simple_white`, `ggplot2`, `seaborn`, `presentation`, `xgridoff`, `ygridoff`, `gridon` and
  * `none`, with plotly.py's values for everything Holochart draws: backgrounds, fonts, colorways,
- * automatic colorscales, axis grid/line/zero-line/tick styling, colorbars, bar outlines, error
- * bars, annotation/shape defaults and table fills.
+ * automatic colorscales, axis grid/line/zero-line/tick styling (cartesian and polar), colorbars,
+ * bar outlines, error bars, annotation/shape defaults and table fills.
  *
- * Blocks for subplot types Holochart does not have yet (polar, ternary, geo, mapbox, 3D scenes)
+ * Blocks for subplot types Holochart does not have yet (ternary, geo, mapbox, 3D scenes)
  * and widgets (sliders, update menus) are left out; they join these templates with their E-stories.
  * Trace types that are not registered simply ignore their template entries.
  */
@@ -40,6 +40,8 @@ interface FamilyOptions {
   table: readonly [cells: string, header: string, line: string];
   /** Extra layout keys. */
   layout?: TemplateLayout;
+  /** Polar grid color, when not the cartesian one (`plotly_dark`). */
+  polarGrid?: string;
   /** Extra per-type trace defaults, merged over the family's. */
   data?: TemplateData;
   /** `title.x`: 0.05 unless given; `null` leaves it unset (ggplot2 and seaborn set none). */
@@ -57,6 +59,12 @@ function family(o: FamilyOptions): Template {
   };
   if (o.colorscale.diverging) colorscale['diverging'] = o.colorscale.diverging;
   const errors = { color: o.ink };
+  const marker = { line: o.barLine, pattern: PATTERN };
+  // Polar axes take the cartesian grid/line/tick styling (no titles or zero lines).
+  const polarAxis = Object.fromEntries(
+    Object.entries(o.axis).filter(([k]) => !/^(title|zero)/.test(k)),
+  );
+  if (o.polarGrid) polarAxis['gridcolor'] = o.polarGrid;
   return {
     layout: {
       annotationdefaults: o.annotation ?? { arrowcolor: o.ink, arrowhead: 0, arrowwidth: 1 },
@@ -71,18 +79,13 @@ function family(o: FamilyOptions): Template {
       shapedefaults: { line: { color: o.ink } },
       ...(o.titleX === null ? {} : { title: { x: o.titleX ?? 0.05 } }),
       ...bothAxes({ automargin: true, autotypenumbers: 'strict', ...o.axis }),
+      polar: { bgcolor: o.plot, angularaxis: polarAxis, radialaxis: polarAxis },
       ...o.layout,
     },
     data: {
       ...colorbars.data,
-      bar: [
-        {
-          type: 'bar',
-          error_x: errors,
-          error_y: errors,
-          marker: { line: o.barLine, pattern: PATTERN },
-        },
-      ],
+      bar: [{ type: 'bar', error_x: errors, error_y: errors, marker }],
+      barpolar: [{ type: 'barpolar', marker }],
       histogram: [{ type: 'histogram', marker: { pattern: PATTERN } }],
       // Holochart's scatter is GPU-drawn (plotly.js scattergl), so it takes scattergl's colorbar
       // defaults as well as scatter's fill pattern.
@@ -163,6 +166,7 @@ export const plotly_dark: Template = /* @__PURE__ */ family({
   colorbar: { outlinewidth: 0, ticks: '' },
   barLine: { color: DARK, width: 0.5 },
   table: ['#506784', '#2a3f5f', DARK],
+  polarGrid: '#506784',
   layout: {
     sliderdefaults: { bgcolor: '#C8D4E3', bordercolor: DARK, borderwidth: 1, tickwidth: 0 },
     updatemenudefaults: { bgcolor: '#506784', borderwidth: 0 },

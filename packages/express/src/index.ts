@@ -2,7 +2,8 @@
  * @mk7s/holochart-express — Plotly Express-style charts from tabular data (plan E23, milestone
  * M3): one call turns rows, columns, an Arrow table or CSV into a figure with one trace per group,
  * a legend, facets, animation frames and marginals, following plotly.py's `px` and
- * `figure_factory.create_distplot`.
+ * `figure_factory.create_distplot`. `imshow` (M4) draws arrays rather than tables: matrices as
+ * heatmaps, RGB / RGBA arrays and `ImageData` as images.
  *
  * ```ts
  * import hx from '@mk7s/holochart-express';
@@ -20,6 +21,7 @@ import { bar, timeline } from './charts/bar.ts';
 import { box, histogram, strip, violin } from './charts/distribution.ts';
 import { densityContour, densityHeatmap } from './charts/density.ts';
 import { ecdf } from './charts/ecdf.ts';
+import { imshow } from './charts/imshow.ts';
 import { parallelCategories, parallelCoordinates, scatterMatrix } from './charts/multidim.ts';
 import { pie } from './charts/pie.ts';
 import { fromCSV } from './data/csv.ts';
@@ -34,6 +36,7 @@ export {
   densityHeatmap,
   ecdf,
   histogram,
+  imshow,
   line,
   parallelCategories,
   parallelCoordinates,
@@ -78,6 +81,15 @@ export type {
   ScatterMatrixOptions,
 } from './charts/multidim.ts';
 export type { PieOptions } from './charts/pie.ts';
+export type {
+  ImageDataLike,
+  ImshowArray,
+  ImshowFunction,
+  ImshowInput,
+  ImshowLabels,
+  ImshowOptions,
+  ImshowValue,
+} from './charts/imshow.ts';
 
 /** Data helpers: `data.fromCSV(text)`, `data.toTable(rows)`, `data.columnTypes(rows)`, …. */
 export const data = { fromCSV, toTable, columnTypes, inferColumnType, Table } as const;
@@ -99,6 +111,7 @@ const hx = {
   ecdf,
   densityHeatmap,
   densityContour,
+  imshow,
   scatterMatrix,
   parallelCoordinates,
   parallelCategories,

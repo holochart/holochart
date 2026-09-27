@@ -566,7 +566,7 @@ export interface LayoutXaxis {
    */
   autotypenumbers?: 'convert types' | 'strict';
   /**
-   * Whether the range is computed from the data. `reversed` autoranges with the axis flipped. `min`/`max` autorange only that end and take the other from `range` (`min reversed`/`max reversed` also flip the axis). Defaults to `false` when a full `range` is given, and to `min`/`max` when one end of `range` is `null`.
+   * Whether the range is computed from the data. `reversed` autoranges with the axis flipped. `min`/`max` autorange only that end and take the other from `range` (`min reversed`/`max reversed` also flip the axis). Defaults to `false` when a full `range` is given, to `min`/`max` when one end of `range` is `null`, and to `reversed` on a y axis only `image` traces use (row 0 at the top, as in Plotly).
    *
    * @defaultValue `true`
    */
@@ -648,7 +648,7 @@ export interface LayoutXaxis {
    */
   matches?: string;
   /**
-   * Lock the scale (px per unit) of this axis to another axis (`'x'`, `'y2'`, …) of the same type, times `scaleratio`: `yaxis: { scaleanchor: 'x' }` keeps one unit the same length on both axes, e.g. for maps or square plots. Zooming either axis zooms the other. `false` or unset for none; ignored with `matches` or when it would create a loop.
+   * Lock the scale (px per unit) of this axis to another axis (`'x'`, `'y2'`, …) of the same type, times `scaleratio`: `yaxis: { scaleanchor: 'x' }` keeps one unit the same length on both axes, e.g. for maps or square plots. Zooming either axis zooms the other. `false` or unset for none (the y axis of an `image` trace defaults to its anchor, for square pixels, as in Plotly); ignored with `matches` or when it would create a loop.
    */
   scaleanchor?: unknown;
   /**
@@ -660,7 +660,7 @@ export interface LayoutXaxis {
    */
   scaleratio?: number;
   /**
-   * How a `scaleanchor` / `matches` constraint is met on this axis: `range` widens the range, `domain` shrinks the axis (and its subplot) inside its `domain`.
+   * How a `scaleanchor` / `matches` constraint is met on this axis: `range` widens the range, `domain` shrinks the axis (and its subplot) inside its `domain`. Default `domain` on the axes of `image` traces (Plotly).
    *
    * @defaultValue `"range"`
    */
@@ -1601,7 +1601,7 @@ export interface LayoutYaxis {
    */
   autotypenumbers?: 'convert types' | 'strict';
   /**
-   * Whether the range is computed from the data. `reversed` autoranges with the axis flipped. `min`/`max` autorange only that end and take the other from `range` (`min reversed`/`max reversed` also flip the axis). Defaults to `false` when a full `range` is given, and to `min`/`max` when one end of `range` is `null`.
+   * Whether the range is computed from the data. `reversed` autoranges with the axis flipped. `min`/`max` autorange only that end and take the other from `range` (`min reversed`/`max reversed` also flip the axis). Defaults to `false` when a full `range` is given, to `min`/`max` when one end of `range` is `null`, and to `reversed` on a y axis only `image` traces use (row 0 at the top, as in Plotly).
    *
    * @defaultValue `true`
    */
@@ -1683,7 +1683,7 @@ export interface LayoutYaxis {
    */
   matches?: string;
   /**
-   * Lock the scale (px per unit) of this axis to another axis (`'x'`, `'y2'`, …) of the same type, times `scaleratio`: `yaxis: { scaleanchor: 'x' }` keeps one unit the same length on both axes, e.g. for maps or square plots. Zooming either axis zooms the other. `false` or unset for none; ignored with `matches` or when it would create a loop.
+   * Lock the scale (px per unit) of this axis to another axis (`'x'`, `'y2'`, …) of the same type, times `scaleratio`: `yaxis: { scaleanchor: 'x' }` keeps one unit the same length on both axes, e.g. for maps or square plots. Zooming either axis zooms the other. `false` or unset for none (the y axis of an `image` trace defaults to its anchor, for square pixels, as in Plotly); ignored with `matches` or when it would create a loop.
    */
   scaleanchor?: unknown;
   /**
@@ -1695,7 +1695,7 @@ export interface LayoutYaxis {
    */
   scaleratio?: number;
   /**
-   * How a `scaleanchor` / `matches` constraint is met on this axis: `range` widens the range, `domain` shrinks the axis (and its subplot) inside its `domain`.
+   * How a `scaleanchor` / `matches` constraint is met on this axis: `range` widens the range, `domain` shrinks the axis (and its subplot) inside its `domain`. Default `domain` on the axes of `image` traces (Plotly).
    *
    * @defaultValue `"range"`
    */

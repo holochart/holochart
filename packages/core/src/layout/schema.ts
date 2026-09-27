@@ -227,7 +227,7 @@ function axisSchema<const L extends 'x' | 'y'>(letter: L) {
         dflt: true,
         editType: rangeEdit,
         description:
-          'Whether the range is computed from the data. `reversed` autoranges with the axis flipped. `min`/`max` autorange only that end and take the other from `range` (`min reversed`/`max reversed` also flip the axis). Defaults to `false` when a full `range` is given, and to `min`/`max` when one end of `range` is `null`.',
+          'Whether the range is computed from the data. `reversed` autoranges with the axis flipped. `min`/`max` autorange only that end and take the other from `range` (`min reversed`/`max reversed` also flip the axis). Defaults to `false` when a full `range` is given, to `min`/`max` when one end of `range` is `null`, and to `reversed` on a y axis only `image` traces use (row 0 at the top, as in Plotly).',
       }),
       autorangeoptions: attr.object(
         {
@@ -367,7 +367,7 @@ function axisSchema<const L extends 'x' | 'y'>(letter: L) {
       scaleanchor: attr.any({
         editType: rangeEdit,
         description:
-          "Lock the scale (px per unit) of this axis to another axis (`'x'`, `'y2'`, …) of the same type, times `scaleratio`: `yaxis: { scaleanchor: 'x' }` keeps one unit the same length on both axes, e.g. for maps or square plots. Zooming either axis zooms the other. `false` or unset for none; ignored with `matches` or when it would create a loop.",
+          "Lock the scale (px per unit) of this axis to another axis (`'x'`, `'y2'`, …) of the same type, times `scaleratio`: `yaxis: { scaleanchor: 'x' }` keeps one unit the same length on both axes, e.g. for maps or square plots. Zooming either axis zooms the other. `false` or unset for none (the y axis of an `image` trace defaults to its anchor, for square pixels, as in Plotly); ignored with `matches` or when it would create a loop.",
       }),
       scaleratio: attr.number({
         min: 0,
@@ -381,7 +381,7 @@ function axisSchema<const L extends 'x' | 'y'>(letter: L) {
         dflt: 'range',
         editType: rangeEdit,
         description:
-          'How a `scaleanchor` / `matches` constraint is met on this axis: `range` widens the range, `domain` shrinks the axis (and its subplot) inside its `domain`.',
+          'How a `scaleanchor` / `matches` constraint is met on this axis: `range` widens the range, `domain` shrinks the axis (and its subplot) inside its `domain`. Default `domain` on the axes of `image` traces (Plotly).',
       }),
       constraintoward: attr.enumerated({
         values: ['left', 'center', 'right', 'top', 'middle', 'bottom'],

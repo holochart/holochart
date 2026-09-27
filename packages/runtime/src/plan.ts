@@ -113,7 +113,8 @@ export function flattenPatch(
   return out;
 }
 
-const RANGE_PATH = /^([xy]axis\d*)\.range(?:\[([01])\])?$/;
+// Cartesian axes and polar radial axes (M4 wave 1: `polar2.radialaxis.range[1]`).
+const RANGE_PATH = /^([xy]axis\d*|polar\d*\.radialaxis)\.range(?:\[([01])\])?$/;
 
 /**
  * Relayout side effects on axis ranges (Plotly semantics): setting a range (or one end of it)
@@ -135,9 +136,7 @@ export function withRangeImplications(
       if (!Array.isArray(current) || current.length !== 2) {
         // `range[0]` and `range[1]` in one update (a zoom) fill the same array.
         const pending = out[`${axis}.range`];
-        const inUse = Array.isArray(pending)
-          ? pending
-          : (fullLayout?.[axis] as { range?: unknown } | undefined)?.range;
+        const inUse = Array.isArray(pending) ? pending : getIn(fullLayout, `${axis}.range`);
         if (Array.isArray(inUse) && inUse.length === 2) {
           const filled = [...(inUse as unknown[])];
           filled[Number(m[2])] = value;

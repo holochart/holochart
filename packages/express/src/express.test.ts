@@ -396,6 +396,7 @@ describe('data input', () => {
         'ecdf',
         'ff',
         'histogram',
+        'imshow',
         'line',
         'parallelCategories',
         'parallelCoordinates',

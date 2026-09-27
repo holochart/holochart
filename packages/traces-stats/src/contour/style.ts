@@ -1,6 +1,6 @@
 /**
- * Contour colors (plan E10.3), following plotly.js `contour/make_color_map.js` and
- * `contour/colorbar.js`:
+ * Contour colors of `histogram2dcontour` and `contour` (plan E10.3, E11.2), following plotly.js
+ * `contour/make_color_map.js`, `contour/colorbar.js` and `contour/style.js`:
  *
  * - `fill`: band k (between level k and k + 1) takes the color at its middle, the colorscale
  *   spanning `[start − size/2, last + size/2]`; the area below the first level takes the band −1
@@ -8,14 +8,21 @@
  * - `lines`: each line takes the color at its level, the colorscale spanning `[start, last]`.
  * - `heatmap`: the trace's `zmin` / `zmax` domain, as a heatmap (continuous colorbar).
  * - `none`: lines in `line.color`, no colorbar.
+ * - constraint contours: lines in `line.color`, the shaded region in `fillcolor`, no colorbar.
  */
 import { toRGBA, type FullLayout, type FullTrace, type RGBA } from '@mk7s/holochart-core';
 import { sampleColorscale } from '@mk7s/holochart-render';
-import type { ColorbarSpec } from '@mk7s/holochart-runtime';
+import type { ColorbarSpec, LegendGlyph, LegendIconContext } from '@mk7s/holochart-runtime';
 import { rgbaToCss } from '@mk7s/holochart-traces-basic';
+import { heatmapLegendIcon } from '../histogram2d/index.ts';
 import { recordedZExtent, zColorMapping, type ZColorMapping } from '../histogram2d/colorscale.ts';
 import { bandValue, contourColorRange, type ContourLevels } from '../shared/contour.ts';
-import { levelsOf } from './calc.ts';
+import { levelsOf } from './field.ts';
+
+/** Whether a trace draws constraint contours. */
+export function isConstraint(trace: FullTrace): boolean {
+  return (trace['contours'] as { type?: unknown } | undefined)?.type === 'constraint';
+}
 
 /** Color of `z` in a colorscale spanning `[lo, hi]` (clamped; `reversescale` honored). */
 export function colorIn(mapping: ZColorMapping, lo: number, hi: number, z: number): RGBA {
@@ -44,7 +51,7 @@ export function levelLineColors(
   mapping: ZColorMapping | undefined,
 ): RGBA[] {
   const contours = (trace['contours'] ?? {}) as Record<string, unknown>;
-  if (contours['coloring'] === 'lines' && mapping) {
+  if (contours['coloring'] === 'lines' && mapping && !isConstraint(trace)) {
     const [lo, hi] = contourColorRange('lines', levels, mapping.zmin, mapping.zmax);
     return levels.levels.map((l) => colorIn(mapping, lo, hi, l));
   }
@@ -56,8 +63,8 @@ export function levelLineColors(
 }
 
 /**
- * The colorscale of a contour trace: `undefined` for `coloring: 'none'` (lines in `line.color`
- * only). `extent` is the binned value extent.
+ * The colorscale of a contour trace: `undefined` for `coloring: 'none'` and constraint contours
+ * (lines in `line.color` only). `extent` is the value extent.
  */
 export function contourMapping(
   trace: FullTrace,
@@ -65,7 +72,7 @@ export function contourMapping(
   extent?: readonly [number, number],
 ): ZColorMapping | undefined {
   const coloring = (trace['contours'] as { coloring?: unknown } | undefined)?.coloring;
-  if (coloring === 'none') return undefined;
+  if (coloring === 'none' || isConstraint(trace)) return undefined;
   return zColorMapping(trace, fullLayout, extent);
 }
 
@@ -74,7 +81,7 @@ export function contourMapping(
  * widened to the data), a continuous bar for `heatmap` and `lines`, nothing for `none`.
  */
 export function contourColorbar(trace: FullTrace, fullLayout: FullLayout): ColorbarSpec | null {
-  if (trace.visible !== true) return null;
+  if (trace.visible !== true || isConstraint(trace)) return null;
   const coloring = (trace['contours'] as { coloring?: unknown } | undefined)?.coloring;
   if (coloring === 'none') return null;
   const axisId = trace['coloraxis'];
@@ -132,4 +139,34 @@ function cssStops(mapping: ZColorMapping, a: number, b: number): [number, string
   return mapping.reversescale
     ? stops.map(([p, c]): [number, string] => [1 - p, c]).reverse()
     : stops;
+}
+
+/**
+ * Legend glyph: the line for `coloring: 'none'`, the shaded region with its outline for
+ * constraint contours, else a swatch of the colorscale.
+ */
+export function contourLegendIcon(trace: FullTrace, ctx?: LegendIconContext): LegendGlyph {
+  const contours = (trace['contours'] ?? {}) as Record<string, unknown>;
+  const line = (trace['line'] ?? {}) as Record<string, unknown>;
+  const lineColor = typeof line['color'] === 'string' ? line['color'] : '#000';
+  const lineWidth = typeof line['width'] === 'number' ? line['width'] : 0.5;
+  const showLines = contours['showlines'] !== false;
+  if (isConstraint(trace) && typeof trace['fillcolor'] === 'string') {
+    return {
+      kind: 'fill',
+      fill: {
+        color: trace['fillcolor'],
+        ...(showLines ? { lineColor, lineWidth: Math.min(lineWidth, 2) } : {}),
+      },
+    };
+  }
+  if (contours['coloring'] !== 'none' && !isConstraint(trace)) return heatmapLegendIcon(trace, ctx);
+  return {
+    kind: 'line',
+    line: {
+      color: lineColor,
+      width: lineWidth,
+      ...(typeof line['dash'] === 'string' ? { dash: line['dash'] } : {}),
+    },
+  };
 }

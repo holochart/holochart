@@ -1198,40 +1198,40 @@ Customization is a **cascade**. Each layer overrides the one above it:
 **Goal:** Plotly's scientific chart types: heatmaps, contours, images, polar, ternary, vector fields, and carpet.
 **Milestone:** M4 · **Package:** `traces-sci`
 
-#### E11.1 — `heatmap`   `P1` `L`   deps: E2.12, E3.4
+#### E11.1 — `heatmap`   `P1` `L`   deps: E2.12, E3.4   · 🟡 Partial (M4 wave 1)
 > As a scientist, I want heatmaps for matrix data, so that I can visualize 2D fields.
-- [ ] `z` (2D array or 1D with `x`/`y` columns), `x`, `y`, `x0`/`dx`, `y0`/`dy`, `transpose`, `xtype`/`ytype: 'array' | 'scaled'`
-- [ ] Rendering: a single float `DataTexture` + colorscale LUT in the shader for regular grids. Instanced cells for irregular grids or when `xgap`/`ygap` > 0.
-- [ ] `zsmooth: false | 'fast' | 'best'` (GPU bilinear vs bicubic), `zmin`, `zmax`, `zmid`, `zauto`, `connectgaps`, `hoverongaps`
-- [ ] Annotated heatmap: `texttemplate`/`textfont` per cell with auto-contrast text color
-- [ ] Category, date, and log axes
-- [ ] 4096×4096 heatmap renders < 100 ms, with pan/zoom at 60 fps
+- [x] `z` (2D array or 1D with `x`/`y` columns), `x`, `y`, `x0`/`dx`, `y0`/`dy`, `transpose`, `xtype`/`ytype: 'array' | 'scaled'`
+- [x] Rendering: a single float `DataTexture` + colorscale LUT in the shader for regular grids. Instanced cells for irregular grids or when `xgap`/`ygap` > 0. — one texture covers uneven grids (edge-texture lookup) and gaps in the same shader, so no instanced path; colorscale / z range / gap restyles are uniform or LUT updates
+- [x] `zsmooth: false | 'fast' | 'best'` (GPU bilinear vs bicubic), `zmin`, `zmax`, `zmid`, `zauto`, `connectgaps`, `hoverongaps` — `'best'` is bilinear between cell centers, as in plotly.js (not bicubic)
+- [x] Annotated heatmap: `texttemplate`/`textfont` per cell with auto-contrast text color (up to 65,536 cells)
+- [x] Category, date, and log axes — *deferred: `xperiod`, range breaks, calendars*
+- [ ] 4096×4096 heatmap renders < 100 ms, with pan/zoom at 60 fps — CPU ≈ 150–200 ms (calc + pack); headless SwiftShader first draw 1.3 s, pan ~9 fps; unverified on a real GPU; R32F packing would halve upload
 
-#### E11.2 — `contour`   `P1` `L`   deps: E11.1, E2.5, E2.6
+#### E11.2 — `contour`   `P1` `L`   deps: E11.1, E2.5, E2.6   · ✅ Done (M4 wave 1)
 > As a scientist, I want contour plots with labels and multiple coloring modes, so that I can visualize level sets.
-- [ ] Marching squares (`d3-contour` or a custom implementation supporting non-uniform grids)
-- [ ] `contours.{start, end, size, coloring: 'fill' | 'heatmap' | 'lines' | 'none', showlines, showlabels, labelfont, labelformat, type: 'levels' | 'constraint', operation: '=' | '<' | '>=' | '[]' | '][' ..., value}`, `ncontours`, `autocontour`
-- [ ] `line.{color, width, dash, smoothing}`
-- [ ] Contour labels placed along the lines with gaps in the lines. Label collision avoidance.
-- [ ] Constraint contours (shade regions satisfying an inequality)
+- [x] Marching squares (`d3-contour` or a custom implementation supporting non-uniform grids)
+- [x] `contours.{start, end, size, coloring: 'fill' | 'heatmap' | 'lines' | 'none', showlines, showlabels, labelfont, labelformat, type: 'levels' | 'constraint', operation: '=' | '<' | '>=' | '[]' | '][' ..., value}`, `ncontours`, `autocontour`
+- [x] `line.{color, width, dash, smoothing}`
+- [x] Contour labels placed along the lines with gaps in the lines. Label collision avoidance.
+- [x] Constraint contours (shade regions satisfying an inequality) — every operation, also on `histogram2dcontour`; contouring shared between both traces (traces-stats `contour/`); Plotly's label optimizer with exact line cuts; `connectgaps: false` clipping — *deferred: period alignment, calendars, range breaks, the exact heatmap-coloring clip at gaps*
 
-#### E11.3 — `image` & imshow   `P1` `M`   deps: E2.3
+#### E11.3 — `image` & imshow   `P1` `M`   deps: E2.3   · ✅ Done (M4 wave 1)
 > As a scientist, I want to show images and matrices as images, so that I can visualize pixel data and photos.
-- [ ] `image` trace: `z` (RGB/RGBA/HSL arrays), `source` (URL/data URI), `colormodel: 'rgb' | 'rgba' | 'rgba256' | 'hsl' | 'hsla'`, `zmin`, `zmax`, `dx`, `dy`, `x0`, `y0`, `zsmooth`
-- [ ] Hover shows pixel values
-- [ ] Express `hx.imshow(matrixOrImage, { colorscale, aspect: 'equal' | 'auto', facetCol, animationFrame, binaryString })` choosing `heatmap` vs `image` automatically
+- [x] `image` trace: `z` (RGB/RGBA/HSL arrays), `source` (URL/data URI), `colormodel: 'rgb' | 'rgba' | 'rgba256' | 'hsl' | 'hsla'`, `zmin`, `zmax`, `dx`, `dy`, `x0`, `y0`, `zsmooth` — Plotly's image axis defaults (reversed y, `scaleanchor`, `constrain: 'domain'`); `source` takes base64 data URIs only, as plotly.js — *deferred: URL sources*
+- [x] Hover shows pixel values
+- [x] Express `hx.imshow(matrixOrImage, { colorscale, aspect: 'equal' | 'auto', facetCol, animationFrame, binaryString })` choosing `heatmap` vs `image` automatically
 
-#### E11.4 — Polar subplot & `scatterpolar` / radar   `P1` `L`   deps: E2.4, E2.5, E3.3
+#### E11.4 — Polar subplot & `scatterpolar` / radar   `P1` `L`   deps: E2.4, E2.5, E3.3   · ✅ Done (M4 wave 1)
 > As a developer, I want polar coordinates for scatter, lines, and radar charts, so that I can plot angular data.
-- [ ] `layout.polar.{domain, sector, hole, bgcolor, gridshape: 'circular' | 'linear', angularaxis.{type, direction, rotation, period, thetaunit, categoryorder, tickmode…, layer}, radialaxis.{range, type (linear/log/date/category), angle, side, autorange, tickmode…}, bargap, barmode}`
-- [ ] `scatterpolar`: `r`, `theta`, `thetaunit: 'radians' | 'degrees' | 'gradians'`, `r0`/`dr`, `theta0`/`dtheta`, and all scatter modes and fills (`fill: 'toself'` for radar)
-- [ ] Line segments rendered as arcs in angular space (resampled) for `line.shape: 'spline'` and gridshape circular
-- [ ] Polar zoom (radial drag) and rotation (angular drag)
+- [x] `layout.polar.{domain, sector, hole, bgcolor, gridshape: 'circular' | 'linear', angularaxis.{type, direction, rotation, period, thetaunit, categoryorder, tickmode…, layer}, radialaxis.{range, type (linear/log/date/category), angle, side, autorange, tickmode…}, bargap, barmode}`
+- [x] `scatterpolar`: `r`, `theta`, `thetaunit: 'radians' | 'degrees' | 'gradians'`, `r0`/`dr`, `theta0`/`dtheta`, and all scatter modes and fills (`fill: 'toself'` for radar)
+- [x] Line segments rendered as arcs in angular space (resampled) for `line.shape: 'spline'` and gridshape circular
+- [x] Polar zoom (radial drag) and rotation (angular drag) — plus zoom box, double-click reset, legend toggle; polar lives in traces-sci (a `polarComponent` registered with the traces; runtime hook `subplotDomain`) — *deferred: box/lasso selection on polar, modebar reset, `marker.gradient`, `line.backoff`, tick-label overlap avoidance*
 
-#### E11.5 — `barpolar` & wind rose   `P1` `M`   deps: E11.4, E2.8
+#### E11.5 — `barpolar` & wind rose   `P1` `M`   deps: E11.4, E2.8   · ✅ Done (M4 wave 1)
 > As a meteorologist, I want polar bars, so that I can build wind roses and polar histograms.
-- [ ] `r`, `theta`, `base`, `offset`, `width`, marker styling, `polar.barmode: 'stack' | 'overlay'`
-- [ ] Wind rose docs example with stacked speed bins
+- [x] `r`, `theta`, `base`, `offset`, `width`, marker styling, `polar.barmode: 'stack' | 'overlay'`
+- [x] Wind rose docs example with stacked speed bins
 
 #### E11.6 — Ternary subplot & `scatterternary`   `P2` `M`   deps: E2.4, E3.3
 > As a scientist, I want ternary plots, so that I can plot three-component compositions.
@@ -2124,9 +2124,9 @@ E16.3 and E16.4 were done in M0; keyboard and touch (E6.5, E6.6) stay deferred f
 | 0 | Line decimation, time-series ergonomics (docs, 2.6M-point target), log-plot docs | E16.2 🟡 (`marker.aggregate` P2), E12.1 🟡 (real-GPU fps), E11.11 ✅ |
 | 0 | Custom marker symbols and image sprites | E8.11 ✅ |
 | 0 | M3 carry-forward: legend group titles and width, overlay grid order, bar `xperiod`, `x0`/`dx` hover, `displaylogo`, `minorloglabels`, text-aware visual tolerance | M3 carry-forward ✅, E20.3 ✅ |
-| 1 | `heatmap` (annotated), `image`, `imshow` | E11.1, E11.3 |
-| 1 | `contour` with labels and constraint contours | E11.2 |
-| 1 | Polar subplot, `scatterpolar`, `barpolar`, wind rose | E11.4, E11.5 |
+| 1 | `heatmap` (annotated), `image`, `imshow` | E11.1 🟡 (real-GPU perf, periods), E11.3 ✅ |
+| 1 | `contour` with labels and constraint contours | E11.2 ✅ |
+| 1 | Polar subplot, `scatterpolar`, `barpolar`, wind rose | E11.4 ✅, E11.5 ✅ |
 | 2 | `ohlc`, `candlestick` | E12.2, E12.3 |
 | 2 | `waterfall`, `funnel`, `funnelarea` | E12.4–E12.6 |
 | 2 | `indicator` | E12.7 |
@@ -2145,6 +2145,13 @@ can't come from templates and are deep-validated only at draw time; custom SDFs 
 precomputed; `marker.image` isn't on box/violin; line decimation doesn't cover dashes, splines,
 stacks or non-monotonic x, and `marker.aggregate` (P2) is open; hyphens may be missing from some
 legend text (seen once, not investigated).
+
+Open after M4 wave 1: heatmap `xperiod`, range breaks and calendars (also for contour); the
+4096² heatmap target unmeasured on a real GPU (R32F packing would halve the upload); image
+`source` URLs (data URIs only, as plotly.js); on log axes image pixels are spaced evenly in log
+space; contour smoothing is in grid-index space and labels can sit a few px from Plotly's; polar
+box/lasso selection and modebar reset; `thetaunit: 'gradians'` is honoured (plotly.js treats it as
+radians).
 
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 

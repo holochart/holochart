@@ -23,7 +23,11 @@
  *    the color of band k, each over the previous ones. Build regions from the unsmoothed or the
  *    smoothed paths, converting ring vertices with {@link indexToData} like the lines.
  * 7. **Lines and labels** — convert the paths to px (y up), measure the label texts, call
- *    {@link placeContourLabels}, then {@link cutPath} with the returned gaps before drawing lines.
+ *    {@link placeContourLabels} (Plotly's label optimizer), then clip every line with the placed
+ *    label boxes ({@link clipPolylineByBoxes}) before drawing it.
+ * 8. **Constraints** — `contours.type: 'constraint'` contours the constraint's one or two levels
+ *    ({@link constraintLevels}) and shades {@link constraintRegion}, composed from the level
+ *    regions of step 6.
  */
 export {
   bandValue,
@@ -53,12 +57,41 @@ export {
 } from './contour-fill.ts';
 export { smoothPath } from './contour-smooth.ts';
 export {
+  clipPolylineByBoxes,
   cutPath,
+  LABEL_CONSTANTS,
   placeContourLabels,
+  segmentDistance,
+  type ClippedLine,
   type ContourLabel,
+  type LabelBox,
   type LabelOptions,
   type LabelPath,
   type LabelPlacement,
   type LabelSize,
   type PlotRect,
 } from './contour-labels.ts';
+export {
+  CONSTRAINT_OPERATIONS,
+  CONSTRAINT_REDUCTION,
+  concatRegions,
+  constraintHasFill,
+  constraintLevels,
+  constraintRegion,
+  constraintValue,
+  isIntervalOperation,
+  reverseRegion,
+  satisfiesConstraint,
+  type ConstraintOperation,
+  type ReducedOperation,
+} from './contour-constraint.ts';
+export {
+  clipPathToMask,
+  hasGaps,
+  inMask,
+  MASK_LEVEL,
+  maskIndex,
+  maskRegion,
+  presenceField,
+  type MaskIndex,
+} from './contour-mask.ts';

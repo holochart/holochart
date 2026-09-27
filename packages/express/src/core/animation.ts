@@ -23,8 +23,17 @@ function frameArgs(duration: number, redraw: boolean): Record<string, unknown> {
  * frame and the frame column as its `currentvalue.prefix` (`year=`), both below the plot.
  */
 export function animationControls(args: Args, figure: ExpressFigure): void {
-  const frames = figure.frames ?? [];
   const column = args.cols.animationFrame;
+  frameControls(figure, `${column === undefined ? '' : args.label(column)}=`);
+}
+
+/**
+ * The controls of {@link animationControls} for any figure with frames, with `prefix` as the
+ * slider's `currentvalue.prefix` (`imshow` passes `animation_frame=`, naming a dimension rather
+ * than a column).
+ */
+export function frameControls(figure: ExpressFigure, prefix: string): void {
+  const frames = figure.frames ?? [];
   // Plotly redraws non-scatter traces after each frame; Holochart always updates incrementally,
   // but the flag is kept as px writes it.
   const redraw = figure.data.some((t) => t['type'] !== 'scatter');
@@ -47,7 +56,7 @@ export function animationControls(args: Args, figure: ExpressFigure): void {
   figure.layout['sliders'] = [
     {
       active: 0,
-      currentvalue: { prefix: `${column === undefined ? '' : args.label(column)}=` },
+      currentvalue: { prefix },
       len: 0.9,
       pad: { b: 10, t: 60 },
       steps: frames.map((f) => ({

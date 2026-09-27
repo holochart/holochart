@@ -23,8 +23,8 @@ import { histogram2d } from '../histogram2d/index.ts';
 import { regionArea } from '../shared/contour.ts';
 import type { Histogram2dContourCalc } from './calc.ts';
 import { histogram2dcontour } from './index.ts';
-import { fillData, labelLayout, levelText, showsLines } from './plot.ts';
-import { bandColors, contourMapping } from './style.ts';
+import { fillData, labelLayout, levelText, showsLines } from '../contour/plot.ts';
+import { bandColors, contourMapping } from '../contour/style.ts';
 
 // troika typesets in a worker with browser globals; the view tests only need its object graph.
 vi.mock('../../../render/node_modules/troika-three-text', async () => {

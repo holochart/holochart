@@ -104,7 +104,15 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
     {
       text: 'Express API',
       collapsed: true,
-      items: pages('express/', ['', 'data', 'mappings', 'facets', 'animation', 'statistics']),
+      items: pages('express/', [
+        '',
+        'data',
+        'mappings',
+        'facets',
+        'animation',
+        'statistics',
+        'imshow',
+      ]),
     },
     {
       text: 'Extending Holochart',
@@ -150,7 +158,14 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
     },
     {
       text: 'Scientific',
-      items: pages('charts/scientific/', ['log-plots']),
+      items: pages('charts/scientific/', [
+        'heatmap',
+        'contour',
+        'image',
+        'polar',
+        'barpolar',
+        'log-plots',
+      ]),
     },
   ];
 

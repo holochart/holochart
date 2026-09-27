@@ -87,6 +87,14 @@ describe('withRangeImplications', () => {
     });
   });
 
+  it('treats polar radial axes like cartesian ones (M4 wave 1)', () => {
+    const fullLayout = { polar2: { radialaxis: { range: [0, 8] } } } as unknown as FullLayout;
+    expect(withRangeImplications({ 'polar2.radialaxis.range[1]': 4 }, {}, fullLayout)).toEqual({
+      'polar2.radialaxis.range': [0, 4],
+      'polar2.radialaxis.autorange': false,
+    });
+  });
+
   it('keeps an explicit autorange and ignores range resets', () => {
     expect(
       withRangeImplications({ 'xaxis.range': [0, 1], 'xaxis.autorange': true }, {}, undefined),

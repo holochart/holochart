@@ -182,6 +182,17 @@ export function recordedZExtent(trace: FullTrace): readonly [number, number] | u
   return extents.get(zExtentKey(trace));
 }
 
+/**
+ * Trace types whose `z` colorscale goes through this module (their color axes' domains are read
+ * from the recorded extents): the 2D histograms here, and `heatmap` / `contour` of traces-sci.
+ */
+const Z_TRACE_TYPES: ReadonlySet<string> = /* @__PURE__ */ new Set([
+  'histogram2d',
+  'histogram2dcontour',
+  'heatmap',
+  'contour',
+]);
+
 /** Private layout key: per color axis, the extent keys of the traces of this package on it. */
 const AXIS_TRACES_KEY = '_zExtentKeys';
 
@@ -198,7 +209,7 @@ export function supplyZColoraxisDefaults(
   const byAxis = new Map<string, string[]>();
   for (const trace of ctx.fullData) {
     if (trace.visible === false) continue;
-    if (trace.type !== 'histogram2d' && trace.type !== 'histogram2dcontour') continue;
+    if (!Z_TRACE_TYPES.has(trace.type)) continue;
     const id = trace['coloraxis'];
     if (typeof id !== 'string') continue;
     const keys = byAxis.get(id) ?? [];

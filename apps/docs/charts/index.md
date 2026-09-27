@@ -49,20 +49,20 @@ types are added as their traces land.
 
 ## Scientific
 
-| Chart                                     | Trace type(s)                               | Milestone |
-| ----------------------------------------- | ------------------------------------------- | --------- |
-| Heatmap                                   | `heatmap`                                   | M4        |
-| Contour                                   | `contour`                                   | M4        |
-| Image                                     | `image`                                     | M4        |
-| [Log Plots](/charts/scientific/log-plots) | any cartesian trace with `type: 'log'` axes | M1        |
-| Polar                                     | `scatterpolar`                              | M4        |
-| Radar                                     | `scatterpolar` (`fill: 'toself'`)           | M4        |
-| Wind Rose                                 | `barpolar`                                  | M4        |
-| Ternary                                   | `scatterternary`                            | M7        |
-| Quiver                                    | `quiver`                                    | M7        |
-| Streamline                                | `streamline`                                | M7        |
-| Dendrogram                                | `scatter` (via a helper)                    | M7        |
-| Carpet                                    | `carpet`, `scattercarpet`, `contourcarpet`  | M8        |
+| Chart                                          | Trace type(s)                               | Milestone |
+| ---------------------------------------------- | ------------------------------------------- | --------- |
+| [Heatmap](/charts/scientific/heatmap)          | `heatmap`                                   | M4        |
+| [Contour](/charts/scientific/contour)          | `contour`                                   | M4        |
+| [Image](/charts/scientific/image)              | `image`                                     | M4        |
+| [Log Plots](/charts/scientific/log-plots)      | any cartesian trace with `type: 'log'` axes | M1        |
+| [Polar](/charts/scientific/polar)              | `scatterpolar`                              | M4        |
+| [Radar](/charts/scientific/polar#radar-charts) | `scatterpolar` (`fill: 'toself'`)           | M4        |
+| [Wind Rose](/charts/scientific/barpolar)       | `barpolar` (stacked)                        | M4        |
+| Ternary                                        | `scatterternary`                            | M7        |
+| Quiver                                         | `quiver`                                    | M7        |
+| Streamline                                     | `streamline`                                | M7        |
+| Dendrogram                                     | `scatter` (via a helper)                    | M7        |
+| Carpet                                         | `carpet`, `scattercarpet`, `contourcarpet`  | M8        |
 
 ## Financial
 

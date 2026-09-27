@@ -22,7 +22,7 @@ Pick a different chart when:
 - you have a few hundred points and each one matters: use a [scatter](/charts/basic/scatter);
 - you want smooth density levels rather than cells, or an overlay on top of points: use a
   [2D density contour](/charts/statistical/histogram2d-contour);
-- the values are already on a grid (one `z` per cell, not samples): use a heatmap (M4);
+- the values are already on a grid (one `z` per cell, not samples): use a [heatmap](/charts/scientific/heatmap);
 - only one variable matters: use a histogram.
 
 ## Minimal example
@@ -265,7 +265,7 @@ layout reference.
 - [2D density contour](/charts/statistical/histogram2d-contour): the same binning drawn as
   contour levels, for smooth shapes and overlays on scatter plots
 - [Scatter](/charts/basic/scatter): each sample as a point, for small data or outliers
-- Heatmap (M4): values already on a grid
+- [Heatmap](/charts/scientific/heatmap): values already on a grid
 
 ## Plotly migration notes
 

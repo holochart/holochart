@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { Group, RGFormat, RedFormat, type DataTexture, type Vector2, type Vector3 } from 'three';
+import {
+  DoubleSide,
+  Group,
+  RGFormat,
+  RedFormat,
+  type DataTexture,
+  type Vector2,
+  type Vector3,
+} from 'three';
 import { colorscaleKey, type Colorscale } from '../colorscale/lut.ts';
 import { createResourceManager } from '../resources.ts';
 import type { PrimitiveContext } from '../types.ts';
@@ -548,5 +556,36 @@ describe('HeatmapPrimitive', () => {
     expect(h.uniforms.uZ.value).toBeNull();
     h.update({ opacity: 0.1 }); // ignored after dispose
     expect(h.uniforms.uOpacity.value).toBe(1);
+  });
+});
+
+describe('HeatmapPrimitive (M4: heatmap trace)', () => {
+  const input = (patch: Partial<HeatmapInput> = {}): HeatmapInput => ({
+    z: [0, 10, 20, 30],
+    nx: 2,
+    ny: 2,
+    xEdges: [0, 1, 2],
+    yEdges: [0, 1, 2],
+    colorscale: GRAY,
+    ...patch,
+  });
+
+  it('draws both faces, so descending edges and reversed axes stay visible', () => {
+    const h = createHeatmapPrimitive(context(), input());
+    expect(h.object.material.side).toBe(DoubleSide);
+    h.dispose();
+  });
+
+  it('takes a known value range instead of scanning, and forgets it with new values', () => {
+    const h = createHeatmapPrimitive(context(), input({ zRange: [-100, 100] }));
+    expect([h.current.zmin, h.current.zmax]).toEqual([-100, 100]);
+    // zOrigin is the range's center: the texture holds values relative to 0.
+    expect(Array.from((h.uniforms.uZ.value as DataTexture).image.data as Float32Array)).toEqual([
+      0, 1, 10, 1, 20, 1, 30, 1,
+    ]);
+    h.update({ z: [1, 2, 3, 4] });
+    expect(h.current.zRange).toBeUndefined();
+    expect([h.current.zmin, h.current.zmax]).toEqual([1, 4]);
+    h.dispose();
   });
 });
