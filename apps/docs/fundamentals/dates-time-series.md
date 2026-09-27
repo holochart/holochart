@@ -13,6 +13,11 @@ for closed markets, period alignment for monthly or weekly data, and unified hov
 stay fast: dense lines are decimated per pixel column, and a pan or zoom only re-reads the points
 in view.
 
+Prices with an open, high, low and close per period have chart types of their own:
+[OHLC](/charts/financial/ohlc) and [candlestick](/charts/financial/candlestick) charts. They take
+everything on this page (range breaks, period alignment, unified hover) and turn the range slider
+on by default, as in Plotly.
+
 ## A basic time series
 
 Give `x` as dates and the x axis becomes a date axis on its own (`xaxis.type: 'date'` forces it):
@@ -143,6 +148,10 @@ createChart(el, {
 ```
 
 <Example id="timeseries/business-hours" />
+
+Financial charts use the same breaks: see
+[candlesticks on a trading calendar](/charts/financial/candlestick#range-breaks-and-range-selector)
+and [intraday candles](/charts/financial/candlestick#intraday-candles-with-overnight-breaks).
 
 ## Period alignment
 

@@ -76,6 +76,26 @@ export function castOption(item: unknown, indices: readonly number[]): unknown {
   return item ? item : undefined;
 }
 
+/**
+ * A slice's `marker.pattern` (render's `PatternAttributes`): array attributes cast to the slice's
+ * value (Plotly's `castOption`), and the background defaulting to `paper` (Plotly) unless the
+ * pattern overlays the slice color. `undefined` without a shape.
+ */
+export function slicePattern(
+  pattern: unknown,
+  pts: readonly number[],
+  paper: unknown,
+): Record<string, unknown> | undefined {
+  if (!pattern || typeof pattern !== 'object') return undefined;
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(pattern)) {
+    out[key] = isArrayLike(value) ? castOption(value, pts) : value;
+  }
+  if (!out['shape']) return undefined;
+  if (out['fillmode'] !== 'overlay') out['bgcolor'] ??= paper;
+  return out;
+}
+
 /** Plotly's `isValidTextValue`: a non-empty string or a finite number. */
 export function isValidTextValue(v: unknown): v is string | number {
   return (typeof v === 'string' && v !== '') || (typeof v === 'number' && Number.isFinite(v));

@@ -28,6 +28,8 @@
  *   the pie apex) stay sharp, as in d3.
  * - The border is drawn inside the wedge. For a Plotly-style centered stroke, grow the outer radius
  *   and shrink the inner one by `bw / 2`; for slice separators prefer `padAngle`.
+ * - `pattern` (plan E8.10, see `pattern.ts`) hatches the fill of the wedges that have a shape, with
+ *   tiles anchored at each wedge's center; {@link ArcPrimitive.ready} covers loading its code.
  */
 import {
   DynamicDrawUsage,
@@ -63,6 +65,10 @@ import {
   type Vec3,
 } from './common.ts';
 import { ARC_FRAGMENT_SHADER, ARC_VERTEX_SHADER } from './arc.glsl.ts';
+import { patternsReady, syncInstancePattern, type PatternFill } from './pattern.ts';
+
+const SHADERS = [ARC_VERTEX_SHADER, ARC_FRAGMENT_SHADER] as const;
+const RESOLVED: Promise<void> = Promise.resolve();
 
 const TAU = Math.PI * 2;
 const EPSILON = 1e-12;
@@ -96,6 +102,8 @@ export interface ArcData {
   borderWidth: ScalarInput;
   /** Multiplies every color's alpha. Default 1. */
   opacity: number;
+  /** Pattern fills per wedge (plan E8.10), or `null` (the default) for plain fills. */
+  pattern: PatternFill | null;
 }
 
 const DEFAULTS: Omit<ArcData, 'x' | 'y'> = {
@@ -110,6 +118,7 @@ const DEFAULTS: Omit<ArcData, 'x' | 'y'> = {
   borderColor: [0, 0, 0, 0],
   borderWidth: 0,
   opacity: 1,
+  pattern: null,
 };
 
 const CENTER_KEYS = ['x', 'y', 'z'] as const;
@@ -436,6 +445,11 @@ export class ArcPrimitive implements Primitive<ArcData> {
     return this.count;
   }
 
+  /** Resolves once the pattern (if any) is drawn: its code loads on first use. */
+  get ready(): Promise<void> {
+    return this.data.pattern ? patternsReady() : RESOLVED;
+  }
+
   update(patch: Partial<ArcData>): void {
     if (this.disposed) return;
     const data = this.data as unknown as Record<string, unknown>;
@@ -478,6 +492,15 @@ export class ArcPrimitive implements Primitive<ArcData> {
     if (all || patch.borderWidth !== undefined) {
       expandScalar(this.data.borderWidth, count, 0, b.borderWidth.array as Float32Array);
       markRange(b.borderWidth, count);
+    }
+    if (all || patch.pattern !== undefined) {
+      syncInstancePattern(
+        this.object,
+        SHADERS,
+        () => (this.disposed ? null : this.data.pattern),
+        () => this.count,
+        () => this.ctx.invalidate(),
+      );
     }
     this.material.uniforms.uOpacity!.value = this.data.opacity;
     this.ctx.invalidate();

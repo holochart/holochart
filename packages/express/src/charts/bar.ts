@@ -91,7 +91,7 @@ function barConfig(
     ...tailRoles(args),
   ];
   const groupers: Grouper[] = [{ variable: 'color', path: 'marker.color' }];
-  // Fill patterns are drawn from plan E8.10: only written when `pattern` is given.
+  // Fill patterns (plan E8.10): only written when `pattern` is given.
   if (args.cols.pattern !== undefined)
     groupers.push({ variable: 'pattern', path: 'marker.pattern.shape' });
   groupers.push({ variable: 'animationFrame' }, { variable: 'facetRow' }, { variable: 'facetCol' });

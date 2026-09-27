@@ -186,6 +186,7 @@ class BarView implements TraceView<BarCalc> {
         fill: style.fill,
         borderColor: style.border,
         borderWidth: style.borderWidth,
+        pattern: style.pattern,
         opacity: traceOpacity(ctx.trace),
         ...(plan.transform ? {} : { cornerRadius: cornerRadii(ctx.calc, ctx).radius }),
       });
@@ -255,6 +256,7 @@ class BarView implements TraceView<BarCalc> {
       fill: style.fill,
       borderColor: style.border,
       borderWidth: style.borderWidth,
+      pattern: style.pattern,
       cornerRadius: radii.radius,
       // Plotly strokes bar outlines on the edge path (SVG semantics).
       borderAlign: 'center',

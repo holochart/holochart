@@ -199,4 +199,6 @@ layout reference.
   which can differ slightly from Plotly's drawing.
 - `thetaunit: 'gradians'` converts gradians (400 per turn); plotly.js reads them as radians.
 - Transitions don't interpolate polar bars; Plotly doesn't either.
-- Not supported yet: `marker.pattern` (hatching) and box or lasso selection on polar subplots.
+- `marker.pattern` hatches the bars as on bar charts, with tiles anchored at the pole on
+  circular grids (see [Patterns & textures](/customization/markers-patterns)).
+- Not supported yet: box or lasso selection on polar subplots.

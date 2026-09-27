@@ -5,8 +5,8 @@
  * schema/defaults parts and the runtime's render and interaction parts in one object, registered
  * with `register(pie)` (ADR-019).
  *
- * Deferred: animated re-flow and pull transitions (E7.3), `marker.pattern` (E8.10), `uniformtext`
- * (E4.6), `automargin`.
+ * `marker.pattern` draws pattern fills (E8.10). Deferred: animated re-flow and pull transitions
+ * (E7.3), `uniformtext` (E4.6), `automargin`.
  */
 import type { TraceModule } from '@mk7s/holochart-runtime';
 import { pieAttributes, pieLayoutAttributes } from './attributes.ts';

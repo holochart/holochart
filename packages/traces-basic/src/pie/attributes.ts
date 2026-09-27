@@ -3,11 +3,13 @@
  * `layout_attributes.js`. `domain` comes from the registry (the trace is in the `domain`
  * category); `name`, `opacity`, `hovertext`, `customdata`, … are common trace attributes.
  *
- * Deferred: `marker.pattern` (E8.10), `automargin` (outside labels pushing the margins),
+ * `marker.pattern` is the shared pattern fill (E8.10).
+ * Deferred: `marker.pattern.path`, `automargin` (outside labels pushing the margins),
  * `texttemplatefallback` / `hovertemplatefallback`, per-slice `showlegend` / `legend` /
  * `legendrank` arrays, and the font `variant` / `textcase` / `lineposition` / `shadow` fields.
  */
 import { attr } from '@mk7s/holochart-core';
+import { patternAttributes } from '../shared/pattern.ts';
 
 /** Font of slice labels and titles. `size` and `color` may be given per slice. */
 function textFont(description: string) {
@@ -102,6 +104,7 @@ export const pieAttributes = /* @__PURE__ */ (() =>
             },
             { editType: 'calc', description: 'Slice outlines.' },
           ),
+          pattern: patternAttributes('slice'),
         },
         { editType: 'calc', description: 'Slice style.' },
       ),

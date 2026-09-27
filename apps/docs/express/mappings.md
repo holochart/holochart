@@ -41,7 +41,7 @@ Grouping columns split the rows into groups, and each group becomes one trace:
 | `color`                | `color`                  | `marker.color` (lines: `line.color`)                       | the template's colorway                                            |
 | `symbol`               | `symbol`                 | `marker.symbol`                                            | template's scatter symbols, else circle, diamond, square, x, cross |
 | `lineDash`             | `line_dash`              | `line.dash` (`line`, `ecdf`)                               | solid, dot, dash, longdash, dashdot, longdashdot                   |
-| `pattern`              | `pattern_shape`          | `marker.pattern.shape` (`bar`, `histogram`)                | `''`, `/`, `\`, `x`, `+`, `.`                                      |
+| `pattern`              | `pattern_shape`          | `marker.pattern.shape` (`bar`, `histogram`, `timeline`)    | `''`, `/`, `\`, `x`, `+`, `.`                                      |
 | `lineGroup`            | `line_group`             | its own line, same style and legend entry (`line`, `area`) | —                                                                  |
 | `facetRow`, `facetCol` | `facet_row`, `facet_col` | its own [subplot](/express/facets)                         | —                                                                  |
 | `animationFrame`       | `animation_frame`        | its own [frame](/express/animation)                        | —                                                                  |

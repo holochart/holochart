@@ -60,6 +60,7 @@ value to their new one:
 | `scatter`   | `x`, `y`, `x0`, `dx`, `y0`, `dy`, `marker.color`, `marker.size`, `marker.opacity`, `marker.line.color`, `marker.line.width`, `line.color`, `line.width` |
 | `bar`       | `x`, `y`, `x0`, `dx`, `y0`, `dy`, `base`, `width`, `offset`, `marker.color`, `marker.opacity`, `marker.line.color`, `marker.line.width`                 |
 | `histogram` | `marker.color`, `marker.opacity` (the bins themselves are recomputed, so bar positions snap)                                                            |
+| `indicator` | `value`, `delta.reference` (the number counts up, formatted every frame, and the gauge bar sweeps)                                                      |
 | every trace | `opacity`                                                                                                                                               |
 
 - **Numbers** move linearly along the eased progress. Positions on category axes don't

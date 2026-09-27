@@ -121,6 +121,15 @@ not the aligned position, as in Plotly.
 
 <Example id="bar/period" />
 
+### Pattern fills
+
+`marker.pattern` hatches bars with lines or dots: `shape` (`'/'`, `'\'`, `'x'`, `'-'`, `'|'`,
+`'+'`, `'.'`), `size`, `solidity` and colors, one for all bars or one per bar. Patterns tell
+series apart without color, for print and color-blind readers. See
+[Patterns & textures](/customization/markers-patterns) for fill modes and colors.
+
+<Example id="bar/patterns" />
+
 ## Styling
 
 - `marker.color`: one color, one per bar, or numbers mapped through `marker.colorscale`.
@@ -133,7 +142,9 @@ not the aligned position, as in Plotly.
 - `layout.barmode`, `bargap`, `bargroupgap`, and `barnorm` for how bar traces combine.
 - `xaxis.categoryorder` (or `yaxis.` for horizontal bars) and `categoryarray` for the order of
   the categories.
-- Pattern fills (`marker.pattern`) come later (plan E8.10).
+- `marker.pattern` for hatch pattern fills: `shape`, `fillmode` (`'replace'` or `'overlay'`),
+  `fgcolor`, `bgcolor`, `fgopacity`, `size` and `solidity` (see
+  [Patterns & textures](/customization/markers-patterns)).
 
 ## Interactivity
 
@@ -167,7 +178,8 @@ not the aligned position, as in Plotly.
 - **Keyboard:** there is no keyboard navigation between bars yet.
 - **Color:** bar labels (`texttemplate`) carry exact values without relying on color. In stacked
   bars, keep the segment order the same as the legend and use white outlines between segments.
-  Hatch patterns (`marker.pattern`) for print and color-blind readers come later.
+  Hatch patterns (`marker.pattern`) tell series apart without color, for print and color-blind
+  readers: see [Patterns & textures](/customization/markers-patterns#print-and-grayscale).
 
 ## Attribute reference
 
@@ -194,5 +206,6 @@ Bar layout options such as [`barmode`](/reference/layout#barmode) and
   a higher `zorder` (on bars too) draws a trace on top of lower ones.
 - `xperiod`, `xperiod0` and `xperiodalignment` (and the `y` ones for horizontal bars) work as in
   Plotly, and also on linear axes (Plotly only aligns periods on date axes).
-- Not supported yet: `marker.pattern` (E8.10).
+- `marker.pattern` matches Plotly, except `pattern.path` (custom SVG tiles), which is not
+  supported yet; see [the differences](/customization/markers-patterns#differences-from-plotly).
 - Bar extrusion (`depth`, `bevel`, `material`) is a planned Holochart extension (M6).

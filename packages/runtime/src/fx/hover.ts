@@ -582,6 +582,7 @@ export function labelText(
   if (flags.has('text') && text !== undefined && text !== null && text !== '') {
     lines.push(String(text));
   }
+  if (p.extraText) lines.push(p.extraText);
   const extra =
     !unified && flags.has('name') && showName ? truncateName(name, style.namelength) : undefined;
   return { text: lines.filter((l) => l !== '').join('<br>'), extra };

@@ -93,9 +93,12 @@ export class LazyFillPrimitive implements Primitive<FillData> {
     else this.#load();
   }
 
-  /** Resolves once the fill is drawn: its code has loaded (or failed to) and it holds the data. */
+  /**
+   * Resolves once the fill is drawn: its code has loaded (or failed to) and it holds the data, and
+   * so has the code of its pattern paint, if any (plan E8.10).
+   */
   get ready(): Promise<void> {
-    return this.#pending;
+    return this.#fill?.ready ?? this.#pending;
   }
 
   /** The underlying fill primitive, once the fill code has loaded (else `null`). */

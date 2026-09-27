@@ -3,7 +3,8 @@
  * `components/rangeslider/defaults.js`, `components/rangeselector/defaults.js`) that depend on
  * other values:
  *
- * - `rangeslider.visible` → `true` when the input axis has a `rangeslider` object; `bgcolor` →
+ * - `rangeslider.visible` → `true` when the input axis has a `rangeslider` object, or when a trace
+ *   on the axis asks for one (`requestRangeslider`: `ohlc`, `candlestick`); `bgcolor` →
  *   `plot_bgcolor`; `autorange` → `true` unless `range` is a full range; one `yaxis<N>`
  *   container per subplot on the axis, whose `rangemode` defaults to `fixed` with a valid
  *   `range`, else `match` (`range` is dropped for `match`);
@@ -102,6 +103,18 @@ interface RangeselectorOut {
   [key: string]: unknown;
 }
 
+/** Private `fullLayout` key: x axis ids whose traces ask for a range slider. */
+const REQUEST_KEY = '_requestRangeslider';
+
+/**
+ * Called by a trace's supply-defaults (plan E12.2: `ohlc`, `candlestick`) to make the range slider
+ * of x axis `xaxis` visible by default (Plotly's `layout._requestRangeslider`). The input's own
+ * `rangeslider.visible` still wins.
+ */
+export function requestRangeslider(fullLayout: FullLayout, xaxis: string): void {
+  ((fullLayout[REQUEST_KEY] ??= {}) as Record<string, boolean>)[xaxis] = true;
+}
+
 /**
  * Range-slider defaults of one coerced x axis that need only the axis itself (visibility, colors,
  * autorange). Run right after the axis is coerced, before its y axes are: their `fixedrange`
@@ -110,15 +123,17 @@ interface RangeselectorOut {
 export function supplyRangesliderSelf(
   axIn: unknown,
   ax: FullAxis,
-  fullLayout: Pick<FullLayout, 'plot_bgcolor'>,
+  fullLayout: Pick<FullLayout, 'plot_bgcolor'> & Record<string, unknown>,
 ): void {
   const out = ax as unknown as Record<string, unknown>;
   const rs = out['rangeslider'] as RangesliderOut | undefined;
   if (rs) {
-    // Only the input decides (Plotly): a template cannot turn a slider on for every axis.
+    // Only the input decides (Plotly): a template cannot turn a slider on for every axis; a
+    // trace can (`requestRangeslider`).
     const rsIn = getIn(axIn, 'rangeslider');
     const given = explicitVisible(rsIn);
-    rs.visible = given ?? isPlainObject(rsIn);
+    const requested = (fullLayout[REQUEST_KEY] as Record<string, boolean> | undefined)?.[ax._id];
+    rs.visible = given ?? (isPlainObject(rsIn) || requested === true);
     if (!rs.visible) hide(out, 'rangeslider', given);
     else {
       rs.bgcolor ??= fullLayout.plot_bgcolor;

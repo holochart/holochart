@@ -16,6 +16,7 @@ import {
 } from '../shared/colorscale.ts';
 import { pointCount } from '../shared/data.ts';
 import { supplyErrorBarDefaults } from '../shared/error-bars/index.ts';
+import { supplyPatternDefaults } from '../shared/pattern.ts';
 
 /** Plotly's `Color.defaultLine`: the default marker outline color. */
 const DEFAULT_LINE = '#444';
@@ -356,6 +357,7 @@ export function supplyScatterDefaults(
   const fill = ctx.coerce<string>('fill', stack ? stack.fillDflt : 'none');
   if (fill !== 'none') {
     coerceFillColor(traceOut, ctx);
+    supplyPatternDefaults(traceIn, ctx, 'fillpattern');
     if (!hasLines(mode)) {
       // The fill follows the line shape even when the line is not drawn (Plotly).
       if (ctx.coerce('line.shape') === 'spline') ctx.coerce('line.smoothing');

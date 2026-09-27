@@ -28,6 +28,9 @@
  * - `image` traces (M4, Plotly `cartesian/layout_defaults`): their axes default to
  *   `constrain: 'domain'`, their y axis to `autorange: 'reversed'` (unless a non-image trace
  *   shares it or a `range` is given) and to `scaleanchor` = its anchor (square pixels).
+ * - `funnel` traces (M4, Plotly `cartesian/layout_defaults`): their value axis defaults to
+ *   `visible: false` and a horizontal funnel's y axis to `autorange: 'reversed'` (first stage on
+ *   top), unless another trace type uses the axis (or a `range` is given).
  *
  * Every rule reads the resolved input the same way it writes it, so the output fed back in is a
  * fixed point (supply-defaults idempotence).
@@ -516,6 +519,11 @@ export function supplyCartesianAxes(
   // Axes of image traces, and y axes shared with other traces (which must not reverse).
   const imageAxes = new Set<string>();
   const plainY = new Set<string>();
+  // Funnel value axes (hidden) and horizontal funnels' y axes (reversed), and the axes other
+  // traces show.
+  const funnelHide = new Set<string>();
+  const funnelReverse = new Set<string>();
+  const shown = new Set<string>();
 
   for (const trace of fullData) {
     if (trace._module?.categories.includes('cartesian') !== true) continue;
@@ -530,7 +538,14 @@ export function supplyCartesianAxes(
     if (trace.type === 'image') {
       imageAxes.add(x);
       imageAxes.add(y);
-    } else plainY.add(y);
+    } else if (trace.type === 'funnel') {
+      funnelHide.add(trace['orientation'] === 'h' ? x : y);
+      if (trace['orientation'] === 'h') funnelReverse.add(y);
+    } else {
+      plainY.add(y);
+      shown.add(x);
+      shown.add(y);
+    }
     for (const [letter, id] of [
       ['x', x],
       ['y', y],
@@ -621,6 +636,12 @@ export function supplyCartesianAxes(
             ),
             ...(imageAxes.has(id)
               ? imageAxisDefaults(resolve, letter === 'y' && !plainY.has(id))
+              : {}),
+            ...(funnelHide.has(id) && !shown.has(id) ? { visible: false } : {}),
+            ...(funnelReverse.has(id) &&
+            !plainY.has(id) &&
+            rangeAutorange(resolve('range'), false) === true
+              ? { autorange: 'reversed' }
               : {}),
             ...extra?.get(id),
           },

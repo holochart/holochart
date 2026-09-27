@@ -23,6 +23,7 @@ in float iZ;                 // plane z (RTC data space)
 in vec4 iFill;
 in vec4 iBorderColor;
 in vec2 iStyle;              // border width px, corner radius px
+// @pattern-decl
 
 out vec2 vUv;                // (0,0) at (x0,y0), (1,1) at (x1,y1); extends past [0,1] by the AA pad
 out vec2 vPxPerUv;           // CSS px per uv unit, measured perpendicular to each pair of edges
@@ -97,6 +98,7 @@ void main() {
   vFill = iFill;
   vBorderColor = iBorderColor;
   vStyle = vec3(bw, max(iStyle.y, 0.0), outset);
+  // @pattern-vary
   gl_Position = vec4((screen / uResolution * 2.0 - 1.0) * clip.w, clip.z, clip.w);
 }
 `;
@@ -111,6 +113,7 @@ in vec2 vPxPerUv;
 flat in vec4 vFill;
 flat in vec4 vBorderColor;
 flat in vec3 vStyle;
+// @pattern-decl
 
 out highp vec4 fragColor;
 
@@ -134,8 +137,9 @@ void main() {
   float inner = bw > 0.0 ? clamp(0.5 - (d + bw) / aa, 0.0, 1.0) : 1.0;
 
   // Composite fill over border in premultiplied space, output straight alpha.
-  float a = mix(vBorderColor.a, vFill.a, inner);
-  vec3 pm = mix(vBorderColor.rgb * vBorderColor.a, vFill.rgb * vFill.a, inner);
+  vec4 fill = vFill; // @pattern-fill
+  float a = mix(vBorderColor.a, fill.a, inner);
+  vec3 pm = mix(vBorderColor.rgb * vBorderColor.a, fill.rgb * fill.a, inner);
   float alpha = a * outer * uOpacity;
   if (alpha <= 0.0) discard;
   fragColor = vec4(pm / max(a, 1e-6), alpha);

@@ -66,7 +66,8 @@ export const FONT_PARTS = ['font-regular', 'font-bold', 'font-italic', 'font-bol
  * runtime's `dist/animation-*.js`), the line level of detail (E16.2: traces-basic's
  * `dist/line-lod-*.js`), the custom marker symbols and image sprites (E8.11: render's
  * `dist/custom-markers-*.js`), the style rules and functions (E8.5, E8.6: runtime's
- * `dist/styles-*.js`) and the {@link FONT_PARTS}.
+ * `dist/styles-*.js`), the pattern fills (E8.10: render's `dist/pattern-code-*.js`) and the
+ * {@link FONT_PARTS}.
  */
 export const LAZY_PARTS = [
   'fill',
@@ -75,6 +76,7 @@ export const LAZY_PARTS = [
   'lod',
   'markers',
   'style',
+  'pattern',
   ...FONT_PARTS,
 ] as const;
 
@@ -118,6 +120,13 @@ const MARKERS_MODULE =
 const STYLE_MODULE =
   /[\\/]runtime[\\/](?:dist[\\/]styles-[\w-]+\.js|src[\\/]style[\\/]styles\.ts)$/;
 
+/**
+ * render's lazily loaded pattern-fill code (E8.10: the pattern shader code and the attribute
+ * writer): built (`dist/pattern-code-*.js`), or from sources.
+ */
+const PATTERN_MODULE =
+  /[\\/]render[\\/](?:dist[\\/]pattern-code-[\w-]+\.js|src[\\/]primitives[\\/]pattern-code\.ts)$/;
+
 /** The {@link LAZY_PARTS} entry a module belongs to, if any. */
 export function lazyPartOf(moduleId: string): string | undefined {
   if (FILL_MODULE.test(moduleId)) return 'fill';
@@ -126,6 +135,7 @@ export function lazyPartOf(moduleId: string): string | undefined {
   if (LOD_MODULE.test(moduleId)) return 'lod';
   if (MARKERS_MODULE.test(moduleId)) return 'markers';
   if (STYLE_MODULE.test(moduleId)) return 'style';
+  if (PATTERN_MODULE.test(moduleId)) return 'pattern';
   const face = FONT_MODULE.exec(moduleId)?.[1];
   return face ? `font-${face}` : undefined;
 }
@@ -148,6 +158,12 @@ const PACKAGES: readonly SizeEntry[] = [
   },
   // Report-only (M4): the scientific traces, never in `basic`.
   { id: 'traces-sci', name: '@mk7s/holochart-traces-sci', imports: [{ pkg: 'traces-sci' }] },
+  // Report-only (M4 wave 2): the financial traces, never in `basic`.
+  {
+    id: 'traces-finance',
+    name: '@mk7s/holochart-traces-finance',
+    imports: [{ pkg: 'traces-finance' }],
+  },
   { id: 'themes', name: '@mk7s/holochart-themes', imports: [{ pkg: 'themes' }] },
   { id: 'express', name: '@mk7s/holochart-express', imports: [{ pkg: 'express' }] },
 ];
@@ -223,6 +239,18 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     limit: '3.9 kB',
     lazyOf: 'partial-core-scatter',
     lazyPart: 'markers',
+  },
+  {
+    // Plan E8.10 (M4 wave 2): pattern fills — Plotly's per-item pattern rules (fill modes, default
+    // and contrast colors, legend sizes), the pattern shader code injected into the rect, arc and
+    // fill shaders, and the pattern attribute writer — loaded with a dynamic import() the first
+    // time a chart draws a pattern (`marker.pattern`, `fillpattern`). Measured 2.04 kB when split
+    // out (2026-09-27); budget = measured + ~10%.
+    id: 'pattern-lazy',
+    name: 'pattern fills (lazy chunk of core + scatter)',
+    limit: '2.25 kB',
+    lazyOf: 'partial-core-scatter',
+    lazyPart: 'pattern',
   },
   {
     // Plan E8.5 / E8.6 (M4 wave 0): style rules (compiling and validating `when` / `set`, applying

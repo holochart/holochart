@@ -345,8 +345,9 @@ export interface TraceModule<
    *
    * The group is the trace type, unless the module's `categories` list a shared stack group
    * (currently `'bar-like'`, see the runtime's `STACK_GROUPS`): then all traces whose modules list
-   * it stack together — bar, histogram, funnel, waterfall — and the group's first module (in trace
-   * order) that has `crossTraceCalc` runs it for all of them.
+   * it stack together — bar and histogram; waterfall and funnel lay out per type, as in Plotly —
+   * and the group's first module (in trace order) that has `crossTraceCalc` runs it for all of
+   * them.
    *
    * **Changed report** (E7.2 / E16.3). The return value says which entries' views must redraw:
    * - `undefined` (return nothing): every entry changed. Each gets `calc`, `plot` and `style` in
@@ -595,6 +596,12 @@ export interface HoverPoint {
    */
   readonly hoverText?: string;
   /**
+   * Lines the trace adds after the x / y and `text` lines of a label built from `hoverinfo`
+   * (M4 wave 2, Plotly's `extraText`): a waterfall's change and initial value, a funnel's
+   * percentages. Ignored with `hoverText` or a `hovertemplate`.
+   */
+  readonly extraText?: string;
+  /**
    * Px from the pointer used to pick the point spike lines follow (E3.10, Plotly's
    * `spikeDistance`). Default: the distance from the pointer to (`px`, `py`).
    */
@@ -651,9 +658,28 @@ export interface ColorbarSpec {
   readonly attributes: Readonly<Record<string, unknown>>;
 }
 
+/**
+ * One piece of a {@link LegendGlyph} of kind `'parts'`: a line segment or a filled rect, in px
+ * from the glyph center (x right, y down; the glyph area is `legend.itemwidth` wide).
+ */
+export type LegendGlyphPart =
+  | {
+      readonly segment: readonly [number, number, number, number];
+      readonly color: string;
+      readonly width: number;
+      readonly dash?: string;
+    }
+  | {
+      readonly rect: readonly [number, number, number, number];
+      readonly color: string;
+      readonly lineColor?: string;
+      readonly lineWidth?: number;
+    };
+
 /** What the legend draws for one trace (E5.2). Colors are CSS color strings. */
 export interface LegendGlyph {
-  readonly kind: 'marker' | 'line' | 'lines+markers' | 'bar' | 'fill';
+  /** `parts`: the {@link LegendGlyph.parts} only (M4: the two-direction `ohlc` / `candlestick` glyphs). */
+  readonly kind: 'marker' | 'line' | 'lines+markers' | 'bar' | 'fill' | 'parts';
   readonly marker?: {
     readonly symbol?: string | number;
     /** Image sprite drawn instead of the symbol (`marker.image`, plan E8.11). */
@@ -669,7 +695,15 @@ export interface LegendGlyph {
     readonly color?: string;
     readonly lineColor?: string;
     readonly lineWidth?: number;
+    /**
+     * A hatch pattern drawn instead of `color` (plan E8.10): the trace's Plotly pattern attributes
+     * (`marker.pattern`, `fillpattern`), of which the legend draws the first item, with `color` as
+     * the fill color they default to.
+     */
+    readonly pattern?: Readonly<Record<string, unknown>>;
   };
+  /** Segments and rects drawn in order (rects below segments), for `kind: 'parts'`. */
+  readonly parts?: readonly LegendGlyphPart[];
 }
 
 // ---- Component contract -----------------------------------------------------------------------

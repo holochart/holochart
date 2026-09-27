@@ -1405,7 +1405,7 @@
           "description": "Range slider (plan E5.9): an overview of all the data under the x axis, with a window over the range in view. Drag the window to pan, its ends to zoom, or click elsewhere to center the window there; the axis range changes with one `relayout` at the end of the drag. Y axes anchored to an axis with a range slider default to `fixedrange: true`, as in Plotly.",
           "role": "object",
           "visible": {
-            "description": "Show the range slider. Defaults to `true` when `rangeslider` is given (`rangeslider: {}` is enough), else `false`.",
+            "description": "Show the range slider. Defaults to `true` when `rangeslider` is given (`rangeslider: {}` is enough) or the axis has an `ohlc` or `candlestick` trace, else `false`.",
             "valType": "boolean"
           },
           "thickness": {

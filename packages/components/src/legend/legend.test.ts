@@ -355,6 +355,37 @@ describe('buildLegendScene', () => {
     ).toEqual([12, 12]);
   });
 
+  it('draws parts glyphs (ohlc, candlestick) around the glyph center, dimmed when hidden', () => {
+    const reg = testRegistry(
+      [legendComponent],
+      fakeTraceModule({
+        legendIcon: () => ({
+          kind: 'parts',
+          parts: [
+            { rect: [0, -6, 8, 6], color: 'red', lineColor: 'blue', lineWidth: 3 },
+            { segment: [8, 0, 15, 0], color: 'blue', width: 9, dash: 'dot' },
+          ],
+        }),
+      } as never),
+    );
+    const { fullLayout, fullData } = defaults(
+      { showlegend: true },
+      [{ visible: 'legendonly' }],
+      reg,
+    );
+    const scene = buildLegendScene(fullLayout, fullData, SIZE, AREA, measure);
+    const [box, rect] = scene.rects;
+    const [line] = scene.lines;
+    expect(rect!.x1 - rect!.x0).toBe(8);
+    expect(rect!.y1 - rect!.y0).toBe(12);
+    expect(rect!.color).toEqual([1, 0, 0, 0.5]);
+    expect(scene.rectBorders[1]).toEqual({ color: [0, 0, 1, 0.5], width: 2 });
+    expect(line).toMatchObject({ x0: rect!.x1, y0: (rect!.y0 + rect!.y1) / 2, width: 5 });
+    expect(line!.x1 - line!.x0).toBe(7);
+    expect(line!.dash).toBe('dot');
+    expect(box!.x0).toBeLessThan(rect!.x0);
+  });
+
   it('is empty when the legend is not shown', () => {
     const { fullLayout, fullData } = setup({}, [{}]);
     expect(buildLegendScene(fullLayout, fullData, SIZE, AREA, measure).box).toBeUndefined();

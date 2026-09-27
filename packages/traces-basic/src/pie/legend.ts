@@ -5,21 +5,29 @@
 import { isArrayLike, type FullLayout, type FullTrace } from '@mk7s/holochart-core';
 import type { LegendGlyph, LegendIconContext, LegendItem } from '@mk7s/holochart-runtime';
 import type { PieCalc, PieSlice } from './calc.ts';
-import { castOption, rgbaString } from './helpers.ts';
+import { castOption, rgbaString, slicePattern } from './helpers.ts';
 import { pieColorway } from './layout.ts';
 
 const DEFAULT_LINE = '#444';
 
-function glyph(trace: FullTrace, pts: readonly number[], color: string): LegendGlyph {
-  const line = (trace['marker'] as { line?: { color?: unknown; width?: unknown } } | undefined)
-    ?.line;
+function glyph(
+  trace: FullTrace,
+  pts: readonly number[],
+  color: string,
+  fullLayout: FullLayout | undefined,
+): LegendGlyph {
+  const marker = trace['marker'] as
+    { line?: { color?: unknown; width?: unknown }; pattern?: unknown } | undefined;
+  const line = marker?.line;
   const lineColor = castOption(line?.color, pts);
+  const pattern = slicePattern(marker?.pattern, pts, fullLayout?.paper_bgcolor);
   return {
     kind: 'bar',
     fill: {
       color,
       lineColor: typeof lineColor === 'string' ? lineColor : DEFAULT_LINE,
       lineWidth: Number(castOption(line?.width, pts)) || 0,
+      ...(pattern && { pattern }),
     },
   };
 }
@@ -43,7 +51,7 @@ export function pieLegendItems(
   return calc.slices.map((slice, k) => ({
     key: slice.label,
     name: slice.label,
-    glyph: glyph(trace, slice.pts, colorOf(slice, k, ctx.fullLayout)),
+    glyph: glyph(trace, slice.pts, colorOf(slice, k, ctx.fullLayout), ctx.fullLayout),
     hidden: slice.hidden,
   }));
 }
@@ -56,5 +64,10 @@ export function pieLegendIcon(trace: FullTrace, ctx?: LegendIconContext): Legend
   const colors = (trace['marker'] as { colors?: unknown } | undefined)?.colors;
   const explicit = isArrayLike(colors) ? rgbaString(colors[0]) : null;
   const way = ctx?.fullLayout ? pieColorway(ctx.fullLayout) : [];
-  return glyph(trace, [0], explicit ?? (way[0] as string | undefined) ?? DEFAULT_LINE);
+  return glyph(
+    trace,
+    [0],
+    explicit ?? (way[0] as string | undefined) ?? DEFAULT_LINE,
+    ctx?.fullLayout,
+  );
 }

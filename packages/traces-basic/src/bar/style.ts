@@ -1,11 +1,12 @@
 /**
- * Bar styling (plan E9.8, E6.3): fills, outlines, opacity and selection styles as per-bar render
- * buffers, the legend glyph, and helpers shared with text and hover.
+ * Bar styling (plan E9.8, E6.3, E8.10): fills, outlines, opacity, patterns and selection styles as
+ * per-bar render buffers, the legend glyph, and helpers shared with text and hover.
  */
 import { isArrayLike, toRGBA, type FullLayout, type FullTrace } from '@mk7s/holochart-core';
-import type { RGBA, ScalarInput } from '@mk7s/holochart-render';
+import type { PatternFill, RGBA, ScalarInput } from '@mk7s/holochart-render';
 import type { LegendGlyph } from '@mk7s/holochart-runtime';
 import { mapColors, resolveColorMapping } from '../shared/colorscale.ts';
+import { patternFill } from '../shared/pattern.ts';
 
 /** Plotly's `DESELECTDIM`: opacity factor of unselected bars without an explicit style. */
 export const DESELECT_DIM = 0.2;
@@ -35,6 +36,8 @@ export interface BarStyle {
   readonly borderWidth: ScalarInput;
   /** Fill per bar before opacity: hover label and legend colors, text contrast. */
   readonly color: Float32Array;
+  /** `marker.pattern` per bar (with the same opacity as the fill), or `null` without one. */
+  readonly pattern: PatternFill | null;
 }
 
 /** Per-bar colors of a color container (`marker`, `marker.line`): CSS colors or a colorscale. */
@@ -96,6 +99,7 @@ export function barStyle(
   const unsel = (trace['unselected'] ?? {}) as SelectionStyle;
   const selColor = typeof sel.marker?.color === 'string' ? toRGBA(sel.marker.color) : null;
   const unselColor = typeof unsel.marker?.color === 'string' ? toRGBA(unsel.marker.color) : null;
+  const opacities = new Float32Array(count);
   for (let i = 0; i < count; i++) {
     let opacity = numberAt(marker.opacity, i, 1);
     if (selected) {
@@ -108,12 +112,14 @@ export function barStyle(
     }
     fill[i * 4 + 3]! *= opacity;
     border[i * 4 + 3]! *= opacity;
+    opacities[i] = opacity;
   }
   const width = marker.line?.width;
   const borderWidth: ScalarInput = isArrayLike(width)
     ? Float32Array.from({ length: count }, (_, i) => Math.max(0, numberAt(width, i, 0)))
     : Math.max(0, numberAt(width, 0, 0));
-  return { fill, border, borderWidth, color };
+  const pattern = patternFill(marker['pattern'], color, opacities, fullLayout?.plot_bgcolor);
+  return { fill, border, borderWidth, color, pattern };
 }
 
 /** An sRGB 0–1 color from a style buffer as a CSS `rgb()`/`rgba()` string. */
@@ -158,12 +164,14 @@ export function barLegendIcon(trace: FullTrace): LegendGlyph {
   const length = typeof trace['_length'] === 'number' ? trace['_length'] : 1;
   const style = barStyle(trace, Math.max(1, length));
   const marker = (trace['marker'] ?? {}) as FullMarker;
+  const pattern = style.pattern ? (marker['pattern'] as Readonly<Record<string, unknown>>) : null;
   return {
     kind: 'bar',
     fill: {
       color: cssColor(style.fill, 0),
       lineColor: cssColor(style.border, 0),
       lineWidth: numberAt(marker.line?.width, 0, 0),
+      ...(pattern && { pattern }),
     },
   };
 }

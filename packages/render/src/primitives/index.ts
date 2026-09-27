@@ -8,6 +8,7 @@ export * from './line-join.ts';
 export * from './line.glsl.ts';
 export * from './fill.ts';
 export * from './fill-loader.ts';
+export * from './pattern.ts';
 export * from './rect.ts';
 export * from './heatmap.ts';
 export * from './raster.ts';

@@ -9,8 +9,9 @@
  *
  * ## Primitives (constant draw calls whatever the item count)
  *
- * One rect batch (background and bar/fill glyphs), one line batch per dash pattern (line glyphs),
- * one marker set (marker glyphs) and one text batch (names and title), all in the overlay.
+ * One rect batch (background, bar/fill glyphs and glyph rects), one line batch per dash pattern
+ * (line glyphs and glyph segments), one marker set (marker glyphs) and one text batch (names and
+ * title), all in the overlay.
  *
  * ## Pointer input
  *
@@ -304,17 +305,54 @@ export function buildLegendScene(
     if ((g.kind === 'bar' || g.kind === 'fill') && g.fill) {
       const w = g.kind === 'bar' ? 6 : half - 3;
       const h = g.kind === 'bar' ? 6 : 5;
+      const color = rgba(g.fill.color, [0.5, 0.5, 0.5, 1]);
+      const attributes = g.fill.pattern;
       scene.rects.push({
         x0: gx - w,
         x1: gx + w,
         y0: gy - h,
         y1: gy + h,
-        color: faded(rgba(g.fill.color, [0.5, 0.5, 0.5, 1]), hidden),
+        color: faded(color, hidden),
+        ...(attributes && {
+          pattern: {
+            attributes,
+            color,
+            opacity: hidden ? HIDDEN_ALPHA : 1,
+            background: fullLayout.paper_bgcolor,
+          },
+        }),
       });
       scene.rectBorders.push({
         color: faded(rgba(g.fill.lineColor), hidden),
         width: Math.min(g.fill.lineWidth ?? 0, 2),
       });
+    }
+    for (const p of g.parts ?? []) {
+      if ('rect' in p) {
+        const [x0, y0, x1, y1] = p.rect;
+        scene.rects.push({
+          x0: gx + x0,
+          x1: gx + x1,
+          y0: gy + y0,
+          y1: gy + y1,
+          color: faded(rgba(p.color), hidden),
+        });
+        scene.rectBorders.push({
+          color: faded(rgba(p.lineColor), hidden),
+          width: Math.min(p.lineWidth ?? 0, 2),
+        });
+      } else {
+        const [x0, y0, x1, y1] = p.segment;
+        scene.lines.push({
+          x0: gx + x0,
+          x1: gx + x1,
+          y0: gy + y0,
+          y1: gy + y1,
+          color: faded(rgba(p.color, [0, 0, 0, 1]), hidden),
+          width: Math.min(p.width, MAX_LINE_WIDTH),
+          dash: p.dash ?? 'solid',
+        });
+      }
     }
     if ((g.kind === 'marker' || g.kind === 'lines+markers') && g.marker) {
       const m = g.marker;

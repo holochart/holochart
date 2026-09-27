@@ -117,6 +117,14 @@ label once, and a legend click hides that label in every pie.
 
 <Example id="pie/grid-scalegroup" :height="420" />
 
+### Pattern fills
+
+`marker.pattern.shape` hatches each slice with its own pattern, in the slice color on the paper
+color (see [Patterns & textures](/customization/markers-patterns)). The legend shows the patterns
+too.
+
+<Example id="pie/patterns" />
+
 ## Styling
 
 - **Colors.** `marker.colors` sets one color per slice. Without it, slices take their colors from
@@ -134,7 +142,8 @@ label once, and a legend click hides that label in every pie.
 - **Title.** `title.text`, `title.font`, and `title.position`: `'top left'`, `'top center'` (the
   default), `'top right'`, `'middle center'` (inside the hole), `'bottom left'`, `'bottom center'`,
   or `'bottom right'`.
-- Pattern fills (`marker.pattern`) come later (plan E8.10).
+- **Patterns.** `marker.pattern` hatches the slices: `shape`, `size`, `solidity` and colors per
+  slice, and `fillmode` (see [Patterns & textures](/customization/markers-patterns)).
 
 ## Interactivity
 
@@ -187,7 +196,8 @@ label once, and a legend click hides that label in every pie.
 - **Keyboard:** there is no keyboard navigation between slices yet.
 - **Color:** label slices directly (`textinfo: 'label+percent'`) so readers don't have to match
   legend colors, keep the number of slices small, and separate slices with outlines in the
-  background color. Pattern fills for print and color-blind readers come later.
+  background color. Pattern fills (`marker.pattern`) tell slices apart in print and for
+  color-blind readers.
 
 ## Attribute reference
 
@@ -214,7 +224,9 @@ The pie layout options `piecolorway`, `extendpiecolors`, `hiddenlabels`, and `gr
 - Differences and not supported yet:
   - Hiding or showing a slice re-flows the others at once; the animated transition is planned.
     Pulled-slice transitions are planned too.
-  - `marker.pattern` (pattern fills, E8.10).
+  - `marker.pattern.path` (custom SVG pattern tiles); with `fillmode: 'overlay'` each slice
+    overlays its own color (see the
+    [pattern differences](/customization/markers-patterns#differences-from-plotly)).
   - `layout.uniformtext` (one font size for all slice labels).
   - `automargin` on pies: outside labels don't push the margins yet, so set `layout.margin`
     wide enough for them.

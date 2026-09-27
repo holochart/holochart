@@ -1,10 +1,10 @@
 /**
  * `histogram` attribute schema (plan E10.1, ADR-002), following plotly.js' histogram attributes:
  * the samples (`x` or `y`), binning (`nbinsx`, `xbins`, `bingroup`), aggregation (`histfunc`,
- * `histnorm`, `cumulative`) and bar styling shared with `bar` (labels, `marker`, error bars,
- * `offsetgroup` / `alignmentgroup`, selection styles).
+ * `histnorm`, `cumulative`) and bar styling shared with `bar` (labels, `marker` with
+ * `marker.pattern`, error bars, `offsetgroup` / `alignmentgroup`, selection styles).
  *
- * Deferred: `xbins.adaptive` (rebinning on zoom, P2), `marker.pattern`, calendars.
+ * Deferred: `xbins.adaptive` (rebinning on zoom, P2), calendars.
  */
 import { attr } from '@mk7s/holochart-core';
 import { barAttributes } from '@mk7s/holochart-traces-basic';

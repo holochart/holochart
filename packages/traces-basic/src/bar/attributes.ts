@@ -3,12 +3,14 @@
  * types, validation, defaults, edit types and docs, following plotly.js' bar attributes.
  *
  * Error bars (`error_x` / `error_y`) come from the shared error-bar module (E9.7). Period
- * alignment (`xperiod`…) follows scatter's (E3.5). Deferred: `marker.pattern` (E8.10),
- * `marker.colorbar` (E5.3: `showscale` is declared, the colorbar component draws it).
+ * alignment (`xperiod`…) follows scatter's (E3.5), `marker.pattern` the shared pattern fills
+ * (E8.10). Deferred: `marker.colorbar` (E5.3: `showscale` is declared, the colorbar component
+ * draws it), `marker.pattern.path` (custom SVG tiles).
  */
 import { attr } from '@mk7s/holochart-core';
 import { colorscaleAttributes } from '../shared/colorscale.ts';
 import { errorBarAttributes } from '../shared/error-bars/index.ts';
+import { patternAttributes } from '../shared/pattern.ts';
 
 const coordinate = (letter: 'x' | 'y') =>
   ({
@@ -285,6 +287,7 @@ export const barAttributes = /* @__PURE__ */ (() =>
             },
             { editType: 'style', description: 'Bar outline.' },
           ),
+          pattern: patternAttributes('bar'),
         },
         { editType: 'calc', description: 'Bar style.' },
       ),

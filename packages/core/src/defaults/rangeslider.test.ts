@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { fixtureRegistry } from '../__fixtures__/modules.ts';
 import { stripInternal } from '../util/objects.ts';
-import { contrastShade, isFullRange } from './rangeslider.ts';
+import { contrastShade, isFullRange, requestRangeslider } from './rangeslider.ts';
 import { supplyDefaults } from './supply-defaults.ts';
 import type { FigureInput } from './types.ts';
 
@@ -86,6 +86,38 @@ describe('range slider defaults (E5.9)', () => {
     expect(rs['yaxis2']).toEqual({ rangemode: 'fixed', range: [0, 5] });
     // y3 is not on x: dropped.
     expect(rs).not.toHaveProperty('yaxis3');
+  });
+
+  it('shows by default on the x axis of a trace that requests it (ohlc, candlestick)', () => {
+    // A trace type whose defaults ask for a range slider, as Plotly's financial traces do.
+    const registry = fixtureRegistry();
+    const scatter = registry.getModule('scatter')!;
+    registry.register({
+      ...scatter,
+      type: 'finance',
+      supplyDefaults(traceIn, traceOut, ctx) {
+        scatter.supplyDefaults(traceIn, traceOut, ctx);
+        requestRangeslider(ctx.fullLayout, String(traceOut['xaxis']));
+      },
+    });
+    const finance = { ...DATES, type: 'finance', xaxis: 'x2', yaxis: 'y2' };
+    const layout = (figure: FigureInput) => supplyDefaults(figure, registry, quiet).fullLayout;
+    const fl = layout({ data: [DATES, finance] });
+    expect(fl.xaxis).not.toHaveProperty('rangeslider');
+    expect(fl['xaxis2']).toMatchObject({ rangeslider: { visible: true, autorange: true } });
+    // Its y axis is fixed, as under any range slider (Plotly).
+    expect(fl['yaxis2']).toMatchObject({ fixedrange: true });
+    expect(fl['yaxis']).toMatchObject({ fixedrange: false });
+    // The input still decides.
+    const off = layout({
+      data: [finance],
+      layout: { xaxis2: { rangeslider: { visible: false } } },
+    });
+    expect(off['xaxis2']).toMatchObject({ rangeslider: { visible: false } });
+    // A hidden trace asks for nothing (its defaults don't run).
+    expect(layout({ data: [{ ...finance, visible: false }] })['xaxis2']).not.toHaveProperty(
+      'rangeslider',
+    );
   });
 
   it('is idempotent', () => {
