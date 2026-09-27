@@ -2138,7 +2138,9 @@ parts are lazy chunks). Open after M4 wave 0: bar widths across range breaks are
 implicit `x0`/`dx` repeat the first value; `minorloglabels: 'complete'` draws full-size labels
 (Plotly: 0.75×); `traceorder: 'grouped+reversed'` flips the group order (plotly.js reverses only
 items within a group); horizontal non-grouped legends don't use Plotly's `maxItemWidth` columns
-once they wrap; the visual rule's DOM-text exemption (E20.3) needs confirming on CI; style rules
+once they wrap; the visual rule's DOM-text exemption (E20.3) held on CI, but `demos/openrouter/categories`
+differs on Linux by 79 px around the top bar's end and outside label (the same diff as before the rule;
+it has `testTileTolerance: 96` until the cause is found); style rules
 can't come from templates and are deep-validated only at draw time; custom SDFs can't be given
 precomputed; `marker.image` isn't on box/violin; line decimation doesn't cover dashes, splines,
 stacks or non-monotonic x, and `marker.aggregate` (P2) is open; hyphens may be missing from some
