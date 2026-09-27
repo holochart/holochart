@@ -41,6 +41,7 @@
 import {
   ClampToEdgeWrapping,
   DataTexture,
+  DoubleSide,
   FloatType,
   Mesh,
   NearestFilter,
@@ -119,6 +120,11 @@ export interface HeatmapData {
   ygap: number;
   /** Multiplies alpha (uniform). Default 1. */
   opacity: number;
+  /**
+   * Finite `[min, max]` of `z` when the caller already knows it: saves a pass over the values
+   * on upload (large grids). Must be given again with each new `z`. Default: computed.
+   */
+  zRange?: readonly [number, number] | undefined;
 }
 
 /** Required fields of {@link HeatmapData}; the rest have defaults. */
@@ -571,6 +577,8 @@ export class HeatmapPrimitive implements Primitive<HeatmapData> {
       fragmentShader: HEATMAP_FRAGMENT_SHADER,
       uniforms: this.uniforms,
     });
+    // Descending edges and reversed axes mirror the quad: draw both faces.
+    this.material.side = DoubleSide;
     // Shared static unit quad placed by uniforms (released, not disposed, on dispose).
     const quad = context.resources.acquire(UNIT_QUAD_KEY, createUnitQuadTemplate);
     this.object = new Mesh(quad, this.material);
@@ -597,6 +605,8 @@ export class HeatmapPrimitive implements Primitive<HeatmapData> {
     if (patch.zmin !== undefined) this.autoZ.min = false;
     if (patch.zmax !== undefined) this.autoZ.max = false;
     this.data = { ...prev, ...definedOnly(patch) };
+    // A known range belongs to the values it came with.
+    if (patch.z !== undefined && patch.zRange === undefined) delete this.data.zRange;
     const shape = this.data.nx !== prev.nx || this.data.ny !== prev.ny;
     const valuesChanged = patch.z !== undefined || shape;
     if (patch.xEdges !== undefined || patch.yEdges !== undefined || shape) this.writeEdges();
@@ -664,7 +674,7 @@ export class HeatmapPrimitive implements Primitive<HeatmapData> {
   private writeValues(): void {
     const { z, nx, ny } = this.data;
     const count = Math.max(0, nx) * Math.max(0, ny);
-    const [lo, hi] = heatmapZRange(z, count);
+    const [lo, hi] = this.data.zRange ?? heatmapZRange(z, count);
     if (this.autoZ.min) this.data.zmin = lo;
     if (this.autoZ.max) this.data.zmax = hi;
     if (count === 0) return;
@@ -723,7 +733,9 @@ function definedOnly(patch: Partial<HeatmapData>): Partial<HeatmapData> {
 
 function withDefaults(d: HeatmapInput): HeatmapData {
   const needRange = d.zmin === undefined || d.zmax === undefined;
-  const [lo, hi] = needRange ? heatmapZRange(d.z, Math.max(0, d.nx) * Math.max(0, d.ny)) : [0, 1];
+  const [lo, hi] = needRange
+    ? (d.zRange ?? heatmapZRange(d.z, Math.max(0, d.nx) * Math.max(0, d.ny)))
+    : [0, 1];
   return {
     ...d,
     interpolation: d.interpolation ?? 'rgb',

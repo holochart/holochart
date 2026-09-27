@@ -341,6 +341,9 @@ importers:
       '@mk7s/holochart-traces-basic':
         specifier: workspace:*
         version: link:../traces-basic
+      '@mk7s/holochart-traces-sci':
+        specifier: workspace:*
+        version: link:../traces-sci
       '@mk7s/holochart-traces-stats':
         specifier: workspace:*
         version: link:../traces-stats
@@ -429,6 +432,37 @@ importers:
       '@mk7s/holochart-runtime':
         specifier: workspace:*
         version: link:../runtime
+    devDependencies:
+      '@types/three':
+        specifier: 'catalog:'
+        version: 0.186.0
+      three:
+        specifier: 'catalog:'
+        version: 0.186.0
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.0(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/traces-sci:
+    dependencies:
+      '@mk7s/holochart-core':
+        specifier: workspace:*
+        version: link:../core
+      '@mk7s/holochart-render':
+        specifier: workspace:*
+        version: link:../render
+      '@mk7s/holochart-runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@mk7s/holochart-traces-basic':
+        specifier: workspace:*
+        version: link:../traces-basic
+      '@mk7s/holochart-traces-stats':
+        specifier: workspace:*
+        version: link:../traces-stats
     devDependencies:
       '@types/three':
         specifier: 'catalog:'

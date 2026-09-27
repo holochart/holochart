@@ -1,18 +1,18 @@
 /**
  * The `histogram2dcontour` trace module (plan E10.3): samples binned like `histogram2d`, drawn as
  * density contours — filled bands (the lazily loaded fill primitive), a smoothed heatmap, or colored
- * lines — with smoothing, dashes and labels along the lines, per-bin hover and a banded colorbar.
- * Registered with `register(histogram2dcontour)` (ADR-019). The contouring itself lives in
- * `shared/contour.ts`, for the M4 `contour` trace.
- *
- * Deferred: constraint contours (`contours.type: 'constraint'`, E11.2).
+ * lines — with smoothing, dashes and labels along the lines, per-bin hover and a banded colorbar,
+ * or as constraint contours (E11.2). Registered with `register(histogram2dcontour)` (ADR-019). The
+ * contouring, drawing and colors are shared with the `contour` trace (`../contour/`).
  */
 import { coloraxisLayoutSchema } from '@mk7s/holochart-traces-basic';
-import type { FullTrace } from '@mk7s/holochart-core';
-import type { LegendGlyph, LegendIconContext, TraceModule } from '@mk7s/holochart-runtime';
+import type { TraceModule } from '@mk7s/holochart-runtime';
+import { createContourRenderer } from '../contour/plot.ts';
+import { contourColorbar, contourLegendIcon } from '../contour/style.ts';
 import { describeHistogram2d } from '../histogram2d/describe.ts';
 import { histogram2dHoverPoints } from '../histogram2d/hover.ts';
-import { heatmapLegendIcon, supplyHistogram2dLayoutDefaults } from '../histogram2d/index.ts';
+import { supplyHistogram2dLayoutDefaults } from '../histogram2d/index.ts';
+import { cellTexts } from '../histogram2d/text.ts';
 import { histogram2dcontourAttributes } from './attributes.ts';
 import {
   calcHistogram2dContour,
@@ -20,23 +20,6 @@ import {
   type Histogram2dContourCalc,
 } from './calc.ts';
 import { supplyHistogram2dContourDefaults } from './defaults.ts';
-import { histogram2dContourRenderer } from './plot.ts';
-import { contourColorbar } from './style.ts';
-
-/** Legend glyph: the line for `coloring: 'none'`, else a swatch of the colorscale. */
-function contourLegendIcon(trace: FullTrace, ctx?: LegendIconContext): LegendGlyph {
-  const contours = (trace['contours'] ?? {}) as Record<string, unknown>;
-  if (contours['coloring'] !== 'none') return heatmapLegendIcon(trace, ctx);
-  const line = (trace['line'] ?? {}) as Record<string, unknown>;
-  return {
-    kind: 'line',
-    line: {
-      color: typeof line['color'] === 'string' ? line['color'] : '#000',
-      width: typeof line['width'] === 'number' ? line['width'] : 0.5,
-      ...(typeof line['dash'] === 'string' ? { dash: line['dash'] } : {}),
-    },
-  };
-}
 
 export const histogram2dcontour: TraceModule<
   Histogram2dContourCalc,
@@ -56,7 +39,11 @@ export const histogram2dcontour: TraceModule<
   supplyLayoutDefaults: supplyHistogram2dLayoutDefaults,
   calc: calcHistogram2dContour,
   extremes: histogram2dContourExtremes,
-  plot: histogram2dContourRenderer,
+  // Cell labels skip the padding bins (Plotly).
+  plot: createContourRenderer<Histogram2dContourCalc>({
+    cellTexts: (ctx, mapping) =>
+      cellTexts(ctx.calc, ctx.trace, mapping, ctx, ctx.fullLayout, { skipBorder: true }),
+  }),
   hoverPoints: (calc, trace, query, ctx) =>
     histogram2dHoverPoints(calc, trace, query, ctx, { ranges: false }),
   legendIcon: contourLegendIcon,

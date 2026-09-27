@@ -92,7 +92,8 @@ register(...basicTraces, ...statsTraces, ...builtinComponents);
 
 `scatter`, `line`, `area`, `bar`, `timeline`, `pie` and `ecdf` use traces-basic; `histogram`,
 `box`, `violin`, `strip`, the densities, `scatterMatrix`, `parallelCoordinates`,
-`parallelCategories`, marginals and `ff.distplot` use traces-stats too. Facet labels, legends,
+`parallelCategories`, marginals and `ff.distplot` use traces-stats too; `imshow` uses the
+`heatmap` and `image` traces of traces-sci (`register(...sciTraces)`). Facet labels, legends,
 colorbars and animation controls are components.
 
 ## Functions
@@ -114,10 +115,11 @@ colorbars and animation controls are components.
 | [`parallelCoordinates`](/express/statistics#many-dimensions)     | `px.parallel_coordinates` | `parcoords`                   |
 | [`parallelCategories`](/express/statistics#many-dimensions)      | `px.parallel_categories`  | `parcats`                     |
 | [`ff.distplot`](/express/statistics#distplot)                    | `ff.create_distplot`      | `histogram`, `scatter`        |
+| [`imshow`](/express/imshow)                                      | `px.imshow`               | `heatmap`, `image`            |
 | [`data.fromCSV`](/express/data#csv)                              | `pd.read_csv`             | —                             |
 
-The rest of plotly.py's catalogue (polar, ternary, 3D, geo, hierarchical charts, `imshow`,
-funnels) and trendlines follow with their trace types (M4–M5).
+The rest of plotly.py's catalogue (polar, ternary, 3D, geo, hierarchical charts, funnels) and
+trendlines follow with their trace types (M4–M5).
 
 ## Options every function shares
 
@@ -163,5 +165,5 @@ or the `template` option. Pass `template: 'plotly-classic'` (or call
 - `parallelCoordinates` and `parallelCategories` put their colorscale on the trace
   (`line.colorscale`, `line.showscale`) instead of `layout.coloraxis`.
 - Fill patterns (`pattern`) group traces and name them, but patterns are drawn from plan E8.10.
-- Not yet: `trendline` (M5), `marginal` on `line` / `bar`, `text_auto`, `render_mode`,
-  `color_discrete_map` given as a Plotly `px.colors` object.
+- Not yet: `trendline` (M5), `marginal` on `line` / `bar`, `text_auto` (except on `imshow`),
+  `render_mode`, `color_discrete_map` given as a Plotly `px.colors` object.

@@ -146,6 +146,8 @@ const PACKAGES: readonly SizeEntry[] = [
     name: '@mk7s/holochart-traces-stats',
     imports: [{ pkg: 'traces-stats' }],
   },
+  // Report-only (M4): the scientific traces, never in `basic`.
+  { id: 'traces-sci', name: '@mk7s/holochart-traces-sci', imports: [{ pkg: 'traces-sci' }] },
   { id: 'themes', name: '@mk7s/holochart-themes', imports: [{ pkg: 'themes' }] },
   { id: 'express', name: '@mk7s/holochart-express', imports: [{ pkg: 'express' }] },
 ];

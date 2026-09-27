@@ -284,6 +284,21 @@ describe('triangulateFills — even-odd / nonzero (planar arrangement)', () => {
     expect(area(triangulateFills(fromRings([offset], 'evenodd')))).toBeCloseTo(8, 10);
   });
 
+  it('intersect: fills where two once-wound regions overlap (winding ≥ 2)', () => {
+    // Overlapping squares: only the 1×1 overlap.
+    const overlap = [square(0, 0, 2), square(1, 1, 2)];
+    expect(area(triangulateFills(fromRings([overlap], 'intersect')))).toBeCloseTo(1, 10);
+    // A region with a hole (clockwise) intersected with a mask square covering its right half.
+    const holed = [square(0, 0, 6), square(2, 2, 2, false), square(3, 0, 6)];
+    const tri = triangulateFills(fromRings([holed], 'intersect'));
+    expect(area(tri)).toBeCloseTo(18 - 2, 10);
+    expect(coverage(tri, 3.5, 3)).toBe(0);
+    expect(coverage(tri, 4.7, 1.3)).toBe(1);
+    expect(coverage(tri, 1, 1)).toBe(0);
+    // One ring alone is never filled.
+    expect(area(triangulateFills(fromRings([[square(0, 0, 2)]], 'intersect')))).toBe(0);
+  });
+
   it('is scale-free (anisotropic ms-timestamp x axis)', () => {
     const t0 = 1_700_000_000_000;
     const pts = pentagram(R);

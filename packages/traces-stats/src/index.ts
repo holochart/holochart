@@ -34,6 +34,53 @@ export type { SplomCalc } from './splom/index.ts';
 export { strip } from './strip/strip.ts';
 export type { StripData, StripFigure, StripOptions } from './strip/strip.ts';
 
+// Grid helpers shared with the `heatmap` and `image` traces of @mk7s/holochart-traces-sci (M4):
+// the `z` colorscale, cell labels, cell hover text and gap filling.
+export {
+  cssStops,
+  DEFAULT_Z_COLORSCALE,
+  recordZExtent,
+  supplyZColoraxisDefaults,
+  supplyZColorscaleDefaults,
+  zColorbar,
+  zColorMapping,
+  zColorscaleAttributes,
+  zDomain,
+} from './histogram2d/colorscale.ts';
+export type { ZColorMapping } from './histogram2d/colorscale.ts';
+export { heatmapLegendIcon } from './histogram2d/index.ts';
+export { cellTextFont } from './histogram2d/attributes.ts';
+export { supplyCellTextDefaults } from './histogram2d/defaults.ts';
+export { heatmapRenderOrder } from './histogram2d/plot.ts';
+export { autoCellFontSize, cellLabels } from './histogram2d/text.ts';
+export type { CellText, CellTextGrid } from './histogram2d/text.ts';
+export { axisHoverText, cellColor, dataValue, zText } from './histogram2d/hover.ts';
+export { fillGaps } from './shared/contour-gaps.ts';
+
+// The contouring shared by `histogram2dcontour` and the `contour` trace of
+// @mk7s/holochart-traces-sci (M4, E11.2): attributes, defaults, contouring (levels, constraints,
+// gap masks), colors, colorbar, legend glyph and the renderer.
+export { contourAttributes as contourCommonAttributes } from './contour/attributes.ts';
+export { supplyContourDefaults } from './contour/defaults.ts';
+export type { ContourStyleOptions } from './contour/defaults.ts';
+export { contourField, emptyContourField, levelsOf as contourLevelsOf } from './contour/field.ts';
+export type {
+  ContourBounds,
+  ContourConstraint,
+  ContourField,
+  ContourFieldGrid,
+} from './contour/field.ts';
+export { createContourRenderer, levelText as contourLevelText } from './contour/plot.ts';
+export type { ContourAxisGrid, ContourCalc, ContourRendererOptions } from './contour/plot.ts';
+export {
+  contourColorbar,
+  contourLegendIcon,
+  contourMapping,
+  isConstraint as isConstraintContour,
+} from './contour/style.ts';
+export { presenceField as contourPresenceField } from './shared/contour-mask.ts';
+export type { ContourLevels, ContourPath, ContourRegion } from './shared/contour.ts';
+
 /** Every statistical trace module, for `register(...statsTraces)`. */
 export const statsTraces: readonly Registrable[] = [
   histogram,

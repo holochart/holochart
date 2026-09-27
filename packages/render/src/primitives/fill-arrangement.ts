@@ -19,8 +19,9 @@
  * 5. Winding numbers: crossing edge `e` changes the winding by its weight, so a BFS over faces
  *    gives every face's winding relative to its component's outside; the outside of a component
  *    equals the winding of the smallest bounded face (of another component) containing it.
- * 6. Fill faces where the rule holds (`nonzero`: w ≠ 0, `evenodd`: w odd), triangulating each with
- *    earcut using the outer loops of components nested directly inside it as holes.
+ * 6. Fill faces where the rule holds (`nonzero`: w ≠ 0, `evenodd`: w odd, `intersect`: w ≥ 2),
+ *    triangulating each with earcut using the outer loops of components nested directly inside it
+ *    as holes.
  *
  * ## Limits
  * - O(E log E + K) for E edges and K crossings plus an O(C · F) nesting test for C components and F
@@ -34,7 +35,7 @@
 import earcut from 'earcut';
 
 /** Fill rules supported by the exact arrangement path. */
-export type FillWindingRule = 'nonzero' | 'evenodd';
+export type FillWindingRule = 'nonzero' | 'evenodd' | 'intersect';
 
 /** Vertex merge tolerance in bbox-normalized units (the polygon's bbox maps to [0, 1]²). */
 export const ARRANGEMENT_SNAP = 1e-10;
@@ -155,7 +156,7 @@ export function triangulateArrangement(
   for (let f = 0; f < graph.faceLoops.length; f++) {
     if (!(graph.faceArea[f]! > 0)) continue;
     const w = winding[f]!;
-    const filled = rule === 'nonzero' ? w !== 0 : (w & 1) !== 0;
+    const filled = rule === 'evenodd' ? (w & 1) !== 0 : rule === 'intersect' ? w >= 2 : w !== 0;
     if (!filled) continue;
     const loop = graph.faceLoops[f]!;
     const holes = holesOf.get(f) ?? [];
@@ -382,12 +383,12 @@ function accumulateEdges(
   const weight: number[] = [];
   for (const [key, w] of net) {
     const c = count.get(key)!;
-    // Even-odd only cares about parity; nonzero about the directed sum.
-    const keep = rule === 'nonzero' ? w !== 0 : (c & 1) !== 0;
+    // Even-odd only cares about parity; nonzero and intersect about the directed sum.
+    const keep = rule === 'evenodd' ? (c & 1) !== 0 : w !== 0;
     if (!keep) continue;
     edgeLo.push(Math.floor(key / vcount));
     edgeHi.push(key % vcount);
-    weight.push(rule === 'nonzero' ? w : 1);
+    weight.push(rule === 'evenodd' ? 1 : w);
   }
   return { edgeLo, edgeHi, weight };
 }

@@ -24,7 +24,10 @@
  * - linked axes and constraints (`matches`, `scaleanchor`, `constraintoward`, E3.9):
  *   `defaults/constraints.ts`;
  * - splom traces (E10.9) add their dimension axes and cell subplots, typed from the dimension
- *   values (`defaults/splom-axes.ts`).
+ *   values (`defaults/splom-axes.ts`);
+ * - `image` traces (M4, Plotly `cartesian/layout_defaults`): their axes default to
+ *   `constrain: 'domain'`, their y axis to `autorange: 'reversed'` (unless a non-image trace
+ *   shares it or a `range` is given) and to `scaleanchor` = its anchor (square pixels).
  *
  * Every rule reads the resolved input the same way it writes it, so the output fed back in is a
  * fixed point (supply-defaults idempotence).
@@ -325,6 +328,17 @@ function dependentDefaults(
 }
 
 /**
+ * Defaults of the axes of `image` traces (Plotly `cartesian/layout_defaults`): `constrain:
+ * 'domain'`, and on a y axis only images use (`reverse`), `autorange: 'reversed'` unless a
+ * `range` sets it.
+ */
+function imageAxisDefaults(resolve: Resolver, reverse: boolean): Record<string, unknown> {
+  const out: Record<string, unknown> = { constrain: 'domain' };
+  if (reverse && rangeAutorange(resolve('range'), false) === true) out['autorange'] = 'reversed';
+  return out;
+}
+
+/**
  * Range slider and selector defaults that are plain overrides (plan E5.9, `rangeslider.ts`): the
  * selector font inherits `layout.font`; a y axis anchored to an x axis with a visible range
  * slider is `fixedrange` by default (Plotly: the slider pans, the y axis stays put).
@@ -499,6 +513,9 @@ export function supplyCartesianAxes(
   const counterpart = { x: new Map<string, string>(), y: new Map<string, string>() };
   type First = { trace: FullTrace; data: unknown };
   const firstData = { x: new Map<string, First>(), y: new Map<string, First>() };
+  // Axes of image traces, and y axes shared with other traces (which must not reverse).
+  const imageAxes = new Set<string>();
+  const plainY = new Set<string>();
 
   for (const trace of fullData) {
     if (trace._module?.categories.includes('cartesian') !== true) continue;
@@ -510,6 +527,10 @@ export function supplyCartesianAxes(
     if (!counterpart.x.has(x)) counterpart.x.set(x, y);
     if (!counterpart.y.has(y)) counterpart.y.set(y, x);
     if (trace.visible === false) continue;
+    if (trace.type === 'image') {
+      imageAxes.add(x);
+      imageAxes.add(y);
+    } else plainY.add(y);
     for (const [letter, id] of [
       ['x', x],
       ['y', y],
@@ -598,6 +619,9 @@ export function supplyCartesianAxes(
               letter,
               extra?.get(id)?.['anchor'] ?? anchor,
             ),
+            ...(imageAxes.has(id)
+              ? imageAxisDefaults(resolve, letter === 'y' && !plainY.has(id))
+              : {}),
             ...extra?.get(id),
           },
         },
@@ -631,12 +655,19 @@ export function supplyCartesianAxes(
     supplyRangeControls(layoutIn, fullLayout, subplots, templateLayout, xNode);
   }
   supplyFreeAxes(fullLayout, subplots, resolvers);
+  // Image y axes keep square pixels with their anchor (Plotly's `scaleanchorDflt`).
+  const scaleanchorDefaults = new Map<string, string>();
+  for (const id of subplots.yaxis) {
+    const anchor = (fullLayout[keyForSubplotId(id, 'yaxis', 'y')] as FullAxis | undefined)?.anchor;
+    if (imageAxes.has(id) && typeof anchor === 'string') scaleanchorDefaults.set(id, anchor);
+  }
   supplyAxisConstraints(
     layoutIn,
     fullLayout,
     [...subplots.xaxis, ...subplots.yaxis],
     templateLayout,
     splomMatchDefaults(fullLayout),
+    scaleanchorDefaults,
   );
   return subplots;
 }

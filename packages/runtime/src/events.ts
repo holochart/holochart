@@ -19,10 +19,13 @@ export interface ChartPoint {
   readonly fullData: FullTrace;
   /** Trace index. */
   readonly curveNumber: number;
-  /** Index into the trace's data arrays. */
-  readonly pointNumber: number;
+  /**
+   * Index into the trace's data arrays; `[row, column]` for a cell of a 2D grid (`heatmap`,
+   * `image`), as in Plotly.
+   */
+  readonly pointNumber: number | readonly [number, number];
   /** Same as `pointNumber` (Plotly has both). */
-  readonly pointIndex: number;
+  readonly pointIndex: number | readonly [number, number];
   /** All data indices behind an aggregated point (histogram bins, stacked segments). */
   readonly pointNumbers?: readonly number[];
   /** Data values (numbers, date strings/ms, category names). */

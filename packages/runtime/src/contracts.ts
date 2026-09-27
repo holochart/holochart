@@ -375,8 +375,22 @@ export interface TraceModule<
    * (Plotly's `_piecolormap`) and `scalegroup` radii. Mutates the calcs in place, so it must be
    * idempotent; it reruns after every layout pass or recalc of a member, and the members' views
    * then get `plot: true`.
+   *
+   * Modules sharing one `crossTraceLayout` function are one group (M4 wave 1: `scatterpolar` and
+   * `barpolar` autorange their shared polar subplots together): it is called once with the
+   * members of every such module.
    */
   crossTraceLayout?(entries: readonly DomainTraceEntry<Calc>[], ctx: DomainLayoutContext): void;
+  /**
+   * Traces placed by a layout container instead of their own `domain` (M4 wave 1: polar traces,
+   * `layout[trace.subplot].domain`): the domain the trace draws in, or `undefined` when it has
+   * none. The runtime then treats the trace like a `domain` trace: it draws into the overlay with
+   * {@link TracePlotContext.domain}, takes part in `crossTraceLayout` and is hovered like one.
+   */
+  subplotDomain?(
+    trace: FullTrace,
+    fullLayout: FullLayout,
+  ): { readonly x: readonly [number, number]; readonly y: readonly [number, number] } | undefined;
   /**
    * Samples for the value-based `categoryorder`s (E3.6: `total descending`, `median ascending`, …;
    * Plotly's `sortAxisCategoriesByValue`): per point, the category index on `axis` (the linear
@@ -549,6 +563,13 @@ export interface HoverPoint {
   readonly pointIndex: number;
   /** All data indices behind an aggregated point (histogram bins, stacked segments). */
   readonly pointIndices?: readonly number[];
+  /**
+   * `[row, column]` of a grid cell (M4: `heatmap`, `image`; Plotly's `pointNumber` for them).
+   * Per-point attributes (`text`, `hovertext`, `hovertemplate`, `customdata`, `hoverinfo`) are
+   * then 2D arrays read at `[row][column]`, and events report the pair as `pointNumber` /
+   * `pointIndex`. `pointIndex` above stays a flat index (`row * columns + column`).
+   */
+  readonly cell?: readonly [number, number];
   /** Distance used to rank candidates: px from the pointer (`closest`) or along the axis (`x`/`y`). */
   readonly distance: number;
   /** Label anchor in viewport px (bottom-left origin). */

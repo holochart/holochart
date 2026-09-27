@@ -288,9 +288,10 @@ export function buildPoint(entry: HoverEntry, p: HoverPoint, withBbox: boolean):
   out['fullData'] = trace;
   out['curveNumber'] = entry.index;
   // `pointIndex < 0`: no data point behind the hover (a scatter fill); Plotly omits the index.
+  // Grid cells report `[row, column]`, as Plotly's heatmaps do.
   if (i >= 0) {
-    out['pointNumber'] = i;
-    out['pointIndex'] = i;
+    out['pointNumber'] = p.cell ? [...p.cell] : i;
+    out['pointIndex'] = p.cell ? [...p.cell] : i;
   }
   if (p.pointIndices) out['pointNumbers'] = p.pointIndices;
   // Domain traces have no x/y (pie reports label/value/percent through `fields`).
@@ -300,11 +301,11 @@ export function buildPoint(entry: HoverEntry, p: HoverPoint, withBbox: boolean):
   if (y !== undefined || entry.subplot) out['y'] = y;
   const z = p.fields?.['z'];
   if (z !== undefined) out['z'] = z;
-  const customdata = perPoint(traceAttr(trace, entry.input, 'customdata'), i);
+  const customdata = perPoint(traceAttr(trace, entry.input, 'customdata'), i, p.cell);
   if (customdata !== undefined) out['customdata'] = customdata;
-  const text = p.text ?? perPoint(trace['text'], i);
+  const text = p.text ?? perPoint(trace['text'], i, p.cell);
   if (text !== undefined) out['text'] = text;
-  const hovertext = perPoint(traceAttr(trace, entry.input, 'hovertext'), i);
+  const hovertext = perPoint(traceAttr(trace, entry.input, 'hovertext'), i, p.cell);
   if (hovertext !== undefined) out['hovertext'] = hovertext;
   if (entry.ctx.xaxis) out['xaxis'] = entry.ctx.xaxis;
   if (entry.ctx.yaxis) out['yaxis'] = entry.ctx.yaxis;
@@ -512,20 +513,20 @@ export function labelText(
   const xLabel = axisLabel(entry.ctx.xaxis, x);
   const yLabel = axisLabel(entry.ctx.yaxis, y);
   const name = String(trace['name'] ?? '');
-  const template = perPoint(traceAttr(trace, entry.input, 'hovertemplate'), i);
-  const hovertext = perPoint(traceAttr(trace, entry.input, 'hovertext'), i);
-  const text = hovertext ?? p.text ?? perPoint(trace['text'], i);
+  const template = perPoint(traceAttr(trace, entry.input, 'hovertemplate'), i, p.cell);
+  const hovertext = perPoint(traceAttr(trace, entry.input, 'hovertext'), i, p.cell);
+  const text = hovertext ?? p.text ?? perPoint(trace['text'], i, p.cell);
   const style = labelStyle(entry, i, '#000', fullLayout, false);
   // Templates read point data; a hover with no point behind it (a fill) never uses one (Plotly).
   if (typeof template === 'string' && template !== '' && i >= 0) {
     const values: Record<string, unknown> = { ...(p.fields ?? {}) };
     values['x'] = x;
     values['y'] = y;
-    values['pointNumber'] = i;
-    values['pointIndex'] = i;
+    values['pointNumber'] = p.cell ? [...p.cell] : i;
+    values['pointIndex'] = p.cell ? [...p.cell] : i;
     values['curveNumber'] = entry.index;
     if (text !== undefined) values['text'] = text;
-    const customdata = perPoint(traceAttr(trace, entry.input, 'customdata'), i);
+    const customdata = perPoint(traceAttr(trace, entry.input, 'customdata'), i, p.cell);
     if (customdata !== undefined) values['customdata'] = customdata;
     const filled = formatTemplate(
       template,
@@ -544,7 +545,7 @@ export function labelText(
       extra: split.extra ?? truncateName(name, style.namelength),
     };
   }
-  const info = perPoint(traceAttr(trace, entry.input, 'hoverinfo'), i);
+  const info = perPoint(traceAttr(trace, entry.input, 'hoverinfo'), i, p.cell);
   if (info === 'none' || info === 'skip') return { text: '', extra: undefined };
   const flags = hoverinfoFlags(info);
   if (p.hoverText !== undefined) {

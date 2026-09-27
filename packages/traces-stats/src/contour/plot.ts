@@ -1,15 +1,21 @@
 /**
- * `histogram2dcontour` renderer (plan E10.3): per `contours.coloring`,
+ * The contour renderer shared by `histogram2dcontour` (plan E10.3) and `contour` (E11.2): per
+ * `contours.coloring`,
  *
  * - `fill`: one lazily loaded {@link LazyFillPrimitive} (the fill code is its own chunk, E21.6)
  *   holding the background band and one polygon per level (its region, nonzero rule), painted in
  *   level order in a single draw call;
- * - `heatmap`: the bins as a smoothed {@link HeatmapPrimitive} (`zsmooth: 'best'`), with optional
+ * - `heatmap`: the grid as a smoothed {@link HeatmapPrimitive} (`zsmooth: 'best'`), with optional
  *   cell labels;
  * - lines: one {@link LinePrimitive} for every level (`line.width`, `line.dash`), colored per level
  *   for `coloring: 'lines'`;
  * - labels (`contours.showlabels`): one {@link TextPrimitive}, placed along the lines in px with the
  *   lines cut under them.
+ *
+ * Constraint contours (`contours.type: 'constraint'`) fill their shaded region in `fillcolor` (one
+ * polygon) under lines in `line.color`. With a gap mask (`contour` with `connectgaps: false`),
+ * every fill polygon also gets the mask's rings and is filled where both overlap
+ * (`fillRule: 'intersect'`).
  *
  * Fills, heatmap and unlabelled lines are in data space: zoom and pan set transforms only. Labels
  * (and the line gaps under them) are placed in px, so they are re-placed after a zoom.
@@ -42,10 +48,49 @@ import type {
 } from '@mk7s/holochart-runtime';
 import type { ZColorMapping } from '../histogram2d/colorscale.ts';
 import { heatmapRenderOrder } from '../histogram2d/plot.ts';
-import { autoCellFontSize, cellLabels, cellTexts } from '../histogram2d/text.ts';
-import { cutPath, placeContourLabels, type LabelPath, type LabelSize } from '../shared/contour.ts';
-import type { Histogram2dContourCalc } from './calc.ts';
-import { bandColors, contourMapping, levelLineColors } from './style.ts';
+import { autoCellFontSize, cellLabels, type CellText } from '../histogram2d/text.ts';
+import {
+  clipPolylineByBoxes,
+  placeContourLabels,
+  type ContourRegion,
+  type LabelPath,
+  type LabelSize,
+} from '../shared/contour.ts';
+import type { ContourField } from './field.ts';
+import { bandColors, contourMapping, isConstraint, levelLineColors } from './style.ts';
+
+/** One direction of a contour grid: point coordinates and cell edges (linear coordinates). */
+export interface ContourAxisGrid {
+  /** The grid points (bin centers of histogram2dcontour). */
+  readonly centers: ArrayLike<number>;
+  /** `n + 1` cell edges around the points (drawn by `coloring: 'heatmap'`). */
+  readonly edges: ArrayLike<number>;
+}
+
+/** What the contour renderer needs of a calc: the grid and its {@link ContourField}. */
+export interface ContourCalc extends ContourField {
+  readonly nx: number;
+  readonly ny: number;
+  readonly x: ContourAxisGrid;
+  readonly y: ContourAxisGrid;
+  /** Grid values for hover (row-major). */
+  readonly z: ArrayLike<number>;
+  /** Finite extent of the values. */
+  readonly zExtent: readonly [number, number];
+  /** Values `coloring: 'heatmap'` draws (default: `zFilled`); NaN cells are transparent. */
+  readonly heatmapZ?: ArrayLike<number> | undefined;
+  /**
+   * Where the data is (`contour` with `connectgaps: false`, Plotly's `clipGaps`): rings in linear
+   * coordinates for the nonzero rule. Fills are clipped to it; lines are already clipped.
+   */
+  readonly mask?: ContourRegion | undefined;
+}
+
+/** Hooks of {@link createContourRenderer}. */
+export interface ContourRendererOptions<C extends ContourCalc> {
+  /** Cell labels of `coloring: 'heatmap'` (`texttemplate`), in data space. */
+  cellTexts?(ctx: TracePlotContext<C>, mapping: ZColorMapping): CellText[];
+}
 
 /** Draw order within the trace: fills / heatmap, lines, labels. */
 const LAYER = { lines: 0.25, text: 0.5 } as const;
@@ -53,7 +98,7 @@ const LAYER = { lines: 0.25, text: 0.5 } as const;
 /** Label line height (a multiple of the font size). */
 const LINE_HEIGHT = 1.2;
 
-type Ctx = TracePlotContext<Histogram2dContourCalc>;
+type Ctx = TracePlotContext<ContourCalc>;
 
 function numberOr(v: unknown, dflt: number): number {
   return typeof v === 'number' && Number.isFinite(v) ? v : dflt;
@@ -67,19 +112,82 @@ function lineOf(trace: FullTrace): Record<string, unknown> {
   return (trace['line'] ?? {}) as Record<string, unknown>;
 }
 
-/** Whether lines are drawn (always, except `coloring: 'fill'` with `showlines: false`). */
+/**
+ * Whether lines are drawn: always, except with `showlines: false` for `coloring: 'fill'` and for
+ * shaded constraints (a `=` constraint is its line).
+ */
 export function showsLines(trace: FullTrace): boolean {
   const c = contoursOf(trace);
-  if (c['coloring'] === 'fill' && c['showlines'] === false) return false;
+  if ((c['coloring'] === 'fill' || isConstraint(trace)) && c['showlines'] === false) return false;
   return numberOr(lineOf(trace)['width'], 0.5) > 0;
 }
 
+/** Whether level labels are drawn (`contours.showlabels`, with or without the lines). */
+export function showsLabels(trace: FullTrace): boolean {
+  return contoursOf(trace)['showlabels'] === true;
+}
+
+/** Append the mask's rings to every polygon of a fill (see {@link ContourCalc.mask}). */
+function withMask(data: FillData, mask: ContourRegion | undefined): FillData {
+  if (!mask || mask.rings.length === 0) return data;
+  const polygons = data.polygons ?? new Uint32Array(0);
+  const rings = data.rings ?? new Uint32Array(0);
+  const nPoly = polygons.length;
+  const nv = data.x.length;
+  const mv = mask.x.length;
+  const x = new Float64Array(nv + nPoly * mv);
+  const y = new Float64Array(nv + nPoly * mv);
+  const outRings: number[] = [];
+  const outPolys = new Uint32Array(nPoly);
+  let v = 0;
+  for (let p = 0; p < nPoly; p++) {
+    const r0 = polygons[p]!;
+    const r1 = p + 1 < nPoly ? polygons[p + 1]! : rings.length;
+    outPolys[p] = outRings.length;
+    const v0 = r0 < rings.length ? rings[r0]! : nv;
+    const v1 = r1 < rings.length ? rings[r1]! : nv;
+    for (let r = r0; r < r1; r++) outRings.push(rings[r]! - v0 + v);
+    for (let k = v0; k < v1; k++) {
+      x[v] = data.x[k]!;
+      y[v] = data.y[k]!;
+      v++;
+    }
+    for (let r = 0; r < mask.rings.length; r++) outRings.push(mask.rings[r]! + v);
+    x.set(mask.x, v);
+    y.set(mask.y, v);
+    v += mv;
+  }
+  return {
+    ...data,
+    x: x.subarray(0, v),
+    y: y.subarray(0, v),
+    rings: Uint32Array.from(outRings),
+    polygons: outPolys,
+    fillRule: 'intersect',
+  };
+}
+
+/** The fill of a constraint contour: its shaded region in `fillcolor`, or undefined. */
+export function constraintFillData(calc: ContourCalc, trace: FullTrace): FillData | undefined {
+  const region = calc.regions?.[0];
+  const color = typeof trace['fillcolor'] === 'string' ? toRGBA(trace['fillcolor']) : null;
+  if (!region || region.rings.length === 0 || !color || color[3] === 0) return undefined;
+  return withMask(
+    {
+      x: region.x,
+      y: region.y,
+      rings: region.rings,
+      polygons: Uint32Array.of(0),
+      fillRule: 'nonzero',
+      color,
+      opacity: numberOr(trace['opacity'], 1),
+    },
+    calc.mask,
+  );
+}
+
 /** The fill primitive's data: background + one polygon per level, in paint order. */
-export function fillData(
-  calc: Histogram2dContourCalc,
-  mapping: ZColorMapping,
-  opacity: number,
-): FillData {
+export function fillData(calc: ContourCalc, mapping: ZColorMapping, opacity: number): FillData {
   const regions = calc.regions ?? [];
   const b = calc.bounds;
   let vertices = 4;
@@ -105,15 +213,18 @@ export function fillData(
   });
   // Levels without a region (entirely below) still need a polygon for the color layout: an
   // empty ring list is fine, the primitive skips empty polygons.
-  return {
-    x,
-    y,
-    rings,
-    polygons,
-    fillRule: 'nonzero',
-    color: bandColors(calc.levels, mapping),
-    opacity,
-  };
+  return withMask(
+    {
+      x,
+      y,
+      rings,
+      polygons,
+      fillRule: 'nonzero',
+      color: bandColors(calc.levels, mapping),
+      opacity,
+    },
+    calc.mask,
+  );
 }
 
 /** Level labels' text: `contours.labelformat`, else Plotly's automatic precision. */
@@ -130,7 +241,7 @@ interface LinePiece {
   readonly closed: boolean;
 }
 
-function pieces(calc: Histogram2dContourCalc): LinePiece[] {
+function pieces(calc: ContourCalc): LinePiece[] {
   const out: LinePiece[] = [];
   calc.paths.forEach((paths, level) => {
     for (const p of paths) out.push({ level, x: p.x, y: p.y, closed: p.closed });
@@ -165,7 +276,7 @@ function lineGeometry(
   return { x, y, starts, color };
 }
 
-function labelFont(trace: FullTrace, ctx: Ctx): TextFont {
+function labelFont(trace: FullTrace, ctx: Pick<Ctx, 'fullLayout'>): TextFont {
   const f = (contoursOf(trace)['labelfont'] ?? {}) as Record<string, unknown>;
   const lf = ctx.fullLayout.font;
   return {
@@ -177,11 +288,12 @@ function labelFont(trace: FullTrace, ctx: Ctx): TextFont {
 }
 
 /**
- * Labels and the lines cut under them, in px then back to linear coordinates: Plotly places
- * labels on screen, so this reruns after zooming.
+ * Labels (Plotly's optimizer, in px) and the lines clipped by the label boxes, back in linear
+ * coordinates: Plotly places labels on screen, so this reruns after zooming. Labels stay inside
+ * the plot ∩ the data extent (`calc.bounds`); every level's lines are clipped by every box.
  */
 export function labelLayout(
-  calc: Histogram2dContourCalc,
+  calc: ContourCalc,
   trace: FullTrace,
   transform: Readonly<DataTransform>,
   rect: { width: number; height: number },
@@ -191,51 +303,57 @@ export function labelLayout(
   const all = pieces(calc);
   const contours = contoursOf(trace);
   const t = transform;
+  const toPxX = (v: number): number => v * t.scaleX + t.offsetX;
+  const toPxY = (v: number): number => v * t.scaleY + t.offsetY;
   const px: LabelPath[] = all.map((p) => ({
-    x: Float64Array.from(p.x as ArrayLike<number>, (v) => v * t.scaleX + t.offsetX),
-    y: Float64Array.from(p.y as ArrayLike<number>, (v) => v * t.scaleY + t.offsetY),
+    x: Float64Array.from(p.x as ArrayLike<number>, toPxX),
+    y: Float64Array.from(p.y as ArrayLike<number>, toPxY),
     closed: p.closed,
+    level: p.level,
   }));
   const texts = calc.levels.levels.map((l) => levelText(l, contours['labelformat']));
   const sizes = calc.levels.levels.map((_, k): LabelSize => {
     const m = measureText(texts[k]!, font, LINE_HEIGHT);
-    return { width: m.width, height: m.height };
+    return { width: m.width, height: m.height, fontSize: font.size };
   });
+  const b = calc.bounds;
+  const bounds = [b.x0, b.x1, b.y0, b.y1].every(Number.isFinite)
+    ? { x0: toPxX(b.x0), x1: toPxX(b.x1), y0: toPxY(b.y0), y1: toPxY(b.y1) }
+    : undefined;
   const placed = placeContourLabels(
     px,
-    all.map((p) => sizes[p.level]),
+    sizes,
     { x0: 0, y0: 0, x1: rect.width, y1: rect.height },
+    { bounds },
   );
   const fixed = (() => {
     const f = contours['labelfont'] as { color?: unknown } | undefined;
     return typeof f?.color === 'string' ? toRGBA(f.color) : undefined;
   })();
-  const labels: TextLabel[] = placed.labels.map((l) => {
-    const piece = all[l.path]!;
-    return {
-      text: texts[piece.level]!,
-      x: (l.x - t.offsetX) / t.scaleX,
-      y: (l.y - t.offsetY) / t.scaleY,
-      angle: l.angle,
-      anchorX: 'center',
-      anchorY: 'middle',
-      font,
-      color: fixed ?? colors[piece.level] ?? [0, 0, 0, 1],
-    };
-  });
+  const labels: TextLabel[] = placed.labels.map((l) => ({
+    text: texts[l.level]!,
+    x: (l.x - t.offsetX) / t.scaleX,
+    y: (l.y - t.offsetY) / t.scaleY,
+    angle: l.angle,
+    anchorX: 'center',
+    anchorY: 'middle',
+    font,
+    color: fixed ?? colors[l.level] ?? [0, 0, 0, 1],
+  }));
+  if (placed.labels.length === 0) return { labels, lines: all };
   const lines: LinePiece[] = [];
   all.forEach((p, i) => {
-    const gaps = placed.gaps.get(i);
-    if (!gaps) {
+    const path = px[i]!;
+    const cut = clipPolylineByBoxes(path.x, path.y, path.closed, placed.labels);
+    if (cut.length === 1 && cut[0]!.x === path.x) {
       lines.push(p);
       return;
     }
-    const path = px[i]!;
-    for (const cut of cutPath(path.x, path.y, path.closed, gaps)) {
+    for (const c of cut) {
       lines.push({
         level: p.level,
-        x: cut.x.map((v) => (v - t.offsetX) / t.scaleX),
-        y: cut.y.map((v) => (v - t.offsetY) / t.scaleY),
+        x: Float64Array.from(c.x, (v) => (v - t.offsetX) / t.scaleX),
+        y: Float64Array.from(c.y, (v) => (v - t.offsetY) / t.scaleY),
         closed: false,
       });
     }
@@ -243,7 +361,8 @@ export function labelLayout(
   return { labels, lines };
 }
 
-class Histogram2dContourView implements TraceView<Histogram2dContourCalc> {
+class ContourView<C extends ContourCalc> implements TraceView<C> {
+  readonly #options: ContourRendererOptions<C>;
   #fill: LazyFillPrimitive | undefined;
   #heatmap: HeatmapPrimitive | undefined;
   #lines: LinePrimitive | undefined;
@@ -252,11 +371,12 @@ class Histogram2dContourView implements TraceView<Histogram2dContourCalc> {
   /** Transform the labels were placed for. */
   #labelTransform: DataTransform | undefined;
 
-  constructor(ctx: Ctx) {
+  constructor(ctx: TracePlotContext<C>, options: ContourRendererOptions<C>) {
+    this.#options = options;
     this.#sync(ctx);
   }
 
-  update(ctx: Ctx, plan: TraceUpdatePlan): void {
+  update(ctx: TracePlotContext<C>, plan: TraceUpdatePlan): void {
     if (plan.calc || plan.plot || plan.style) {
       this.#sync(ctx);
       return;
@@ -274,20 +394,27 @@ class Histogram2dContourView implements TraceView<Histogram2dContourCalc> {
     }
   }
 
-  #hasLabels(ctx: Ctx): boolean {
-    return contoursOf(ctx.trace)['showlabels'] === true && showsLines(ctx.trace);
+  #hasLabels(ctx: TracePlotContext<C>): boolean {
+    return showsLabels(ctx.trace);
   }
 
-  #sync(ctx: Ctx): void {
+  #sync(ctx: TracePlotContext<C>): void {
     const { calc, trace } = ctx;
     const coloring = calc.nx === 0 ? 'none' : calc.coloring;
     const mapping = calc.nx === 0 ? undefined : contourMapping(trace, ctx.fullLayout, calc.zExtent);
     const opacity = numberOr(trace['opacity'], 1);
     const order = heatmapRenderOrder(trace, ctx.index);
 
-    // Fills.
-    if (coloring === 'fill' && mapping) {
-      const data = fillData(calc, mapping, opacity);
+    // Fills: bands between levels, or the shaded region of a constraint.
+    const data =
+      calc.nx === 0
+        ? undefined
+        : calc.constraint
+          ? constraintFillData(calc, trace)
+          : coloring === 'fill' && mapping
+            ? fillData(calc, mapping, opacity)
+            : undefined;
+    if (data) {
       if (!this.#fill) {
         this.#fill = createLazyFillPrimitive(ctx.primitives, data);
         ctx.add(this.#fill);
@@ -301,8 +428,8 @@ class Histogram2dContourView implements TraceView<Histogram2dContourCalc> {
 
     // Heatmap coloring (and its optional cell labels).
     if (coloring === 'heatmap' && mapping) {
-      const data: HeatmapData = {
-        z: calc.zFilled,
+      const heatmap: HeatmapData = {
+        z: calc.heatmapZ ?? calc.zFilled,
         nx: calc.nx,
         ny: calc.ny,
         xEdges: calc.x.edges,
@@ -318,9 +445,9 @@ class Histogram2dContourView implements TraceView<Histogram2dContourCalc> {
         opacity,
       };
       if (!this.#heatmap) {
-        this.#heatmap = createHeatmapPrimitive(ctx.primitives, data);
+        this.#heatmap = createHeatmapPrimitive(ctx.primitives, heatmap);
         ctx.add(this.#heatmap);
-      } else this.#heatmap.update(data);
+      } else this.#heatmap.update(heatmap);
       this.#heatmap.object.renderOrder = order;
       this.#heatmap.setTransform(ctx.transform);
       this.#syncCells(ctx, mapping);
@@ -333,12 +460,14 @@ class Histogram2dContourView implements TraceView<Histogram2dContourCalc> {
     this.#syncLines(ctx);
   }
 
-  /** Cell labels of `coloring: 'heatmap'` (`texttemplate`), skipping the padding bins. */
-  #syncCells(ctx: Ctx, mapping: ZColorMapping): void {
+  /** Cell labels of `coloring: 'heatmap'` (`texttemplate`), from the renderer's hook. */
+  #syncCells(ctx: TracePlotContext<C>, mapping: ZColorMapping): void {
     const { trace, calc } = ctx;
     const texts =
-      typeof trace['texttemplate'] === 'string' && trace['texttemplate'] !== ''
-        ? cellTexts(calc, trace, mapping, ctx, ctx.fullLayout, { skipBorder: true })
+      typeof trace['texttemplate'] === 'string' &&
+      trace['texttemplate'] !== '' &&
+      this.#options.cellTexts
+        ? this.#options.cellTexts(ctx, mapping)
         : [];
     const sizeIn = (trace['textfont'] as { size?: unknown } | undefined)?.size;
     const size =
@@ -373,9 +502,10 @@ class Histogram2dContourView implements TraceView<Histogram2dContourCalc> {
   }
 
   /** Lines, and the labels along them (placed for the current transform). */
-  #syncLines(ctx: Ctx): void {
+  #syncLines(ctx: TracePlotContext<C>): void {
     const { calc, trace } = ctx;
-    if (calc.nx === 0 || !showsLines(trace)) {
+    const lines = showsLines(trace);
+    if (calc.nx === 0 || (!lines && !this.#hasLabels(ctx))) {
       if (this.#lines) ctx.remove(this.#lines);
       if (this.#text) ctx.remove(this.#text);
       this.#lines = this.#text = this.#labelTransform = undefined;
@@ -393,19 +523,24 @@ class Histogram2dContourView implements TraceView<Histogram2dContourCalc> {
       labels = layout.labels;
       this.#labelTransform = { ...ctx.transform };
     } else this.#labelTransform = undefined;
-    const data: Partial<LineData> = {
-      ...lineGeometry(list, colors, 1),
-      width: numberOr(line['width'], 0.5),
-      dash: (typeof line['dash'] === 'string' ? line['dash'] : 'solid') as LineDash,
-      join: 'round',
-      opacity: numberOr(trace['opacity'], 1),
-    };
-    if (!this.#lines) {
-      this.#lines = new LinePrimitive(ctx.primitives, data);
-      ctx.add(this.#lines);
-    } else this.#lines.update(data);
-    this.#lines.object.renderOrder = heatmapRenderOrder(trace, ctx.index) + LAYER.lines;
-    this.#lines.setTransform(ctx.transform);
+    if (lines) {
+      const data: Partial<LineData> = {
+        ...lineGeometry(list, colors, 1),
+        width: numberOr(line['width'], 0.5),
+        dash: (typeof line['dash'] === 'string' ? line['dash'] : 'solid') as LineDash,
+        join: 'round',
+        opacity: numberOr(trace['opacity'], 1),
+      };
+      if (!this.#lines) {
+        this.#lines = new LinePrimitive(ctx.primitives, data);
+        ctx.add(this.#lines);
+      } else this.#lines.update(data);
+      this.#lines.object.renderOrder = heatmapRenderOrder(trace, ctx.index) + LAYER.lines;
+      this.#lines.setTransform(ctx.transform);
+    } else if (this.#lines) {
+      ctx.remove(this.#lines);
+      this.#lines = undefined;
+    }
 
     if (labels.length === 0) {
       if (this.#text) ctx.remove(this.#text);
@@ -431,7 +566,9 @@ function sameTransform(a: DataTransform | undefined, b: Readonly<DataTransform>)
   );
 }
 
-/** The histogram2dcontour `plot` part. */
-export const histogram2dContourRenderer: TraceRenderer<Histogram2dContourCalc> = {
-  create: (ctx) => new Histogram2dContourView(ctx),
-};
+/** The `plot` part of a contour trace module. */
+export function createContourRenderer<C extends ContourCalc>(
+  options: ContourRendererOptions<C> = {},
+): TraceRenderer<C> {
+  return { create: (ctx) => new ContourView<C>(ctx, options) };
+}

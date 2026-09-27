@@ -21,7 +21,8 @@ Pick a different chart when:
   [2D histogram](/charts/statistical/histogram2d);
 - you have few samples: contours of a sparse grid are mostly noise, so use a
   [scatter](/charts/basic/scatter);
-- the values are already on a grid (one `z` per cell): use a contour plot (M4).
+- the values are already on a grid (one `z` per cell): use a
+  [contour plot](/charts/scientific/contour).
 
 ## Minimal example
 
@@ -89,9 +90,10 @@ createChart(document.getElementById('chart')!, {
 ### Lines with level labels
 
 `contours.coloring: 'lines'` colors each level's line from the colorscale and fills nothing.
-`contours.showlabels` writes the level along the lines, cutting the line under each label;
-`labelformat` (a d3 format) and `labelfont` style the labels. Here the levels are explicit and the
-lines are 1.5 px and smoothed (`line.smoothing`).
+`contours.showlabels` writes the level along the lines, placed like Plotly places them
+(preferably horizontal, away from the edges and from each other) and cutting the line under each
+label; `labelformat` (a d3 format) and `labelfont` style the labels. Here the levels are explicit
+and the lines are 1.5 px and smoothed (`line.smoothing`).
 
 <Example id="histogram2dcontour/lines-labels" />
 
@@ -124,6 +126,17 @@ segments between grid crossings.
 
 <Example id="histogram2dcontour/bands" />
 
+### Constraint regions
+
+`contours.type: 'constraint'` shades where the binned values satisfy `contours.operation`
+(`'='`, `'<'`, `'<='`, `'>'`, `'>='`, or an interval such as `'[]'` with `value: [lower, upper]`)
+and `contours.value`, in `fillcolor`, with the boundary as a 2 px line, like the
+[contour plot's constraints](/charts/scientific/contour#constraint-contours). Here it outlines
+where the density is above 0.5% of the samples per bin, over the samples themselves. Plotly's
+`histogram2dcontour` ignores `contours.type`; Holochart supports it.
+
+<Example id="histogram2dcontour/constraint" />
+
 ## Styling
 
 - **Coloring.** `contours.coloring`: `'fill'` (default: flat bands between levels), `'heatmap'`
@@ -133,7 +146,8 @@ segments between grid crossings.
   `line.dash`, and `line.smoothing` (0 to 1.3, default 1; 0 draws straight segments between grid
   crossings). `contours.showlines` hides the lines of filled contours.
 - **Labels.** `contours.showlabels`, `contours.labelformat` (d3 format) and `contours.labelfont`
-  (defaults to `layout.font`, colored like the lines).
+  (defaults to `layout.font`, colored like the lines). Labels are also drawn when the lines are
+  hidden.
 - **Colorscale.** `colorscale`, `zauto`, `zmin`, `zmax`, `zmid`, `reversescale`, or a shared
   `coloraxis`. Unlike the 2D histogram, `autocolorscale` defaults to `true` here (unless you set
   `colorscale`), so the layout's sequential scale is used: the neon plasma ramp in the default
@@ -198,7 +212,7 @@ attribute, its type, and its default. Shared color axes are under
   gaps and cell labels
 - [Scatter](/charts/basic/scatter): the individual samples; combine it with a density contour as
   in the [overlay recipe](#recipe-scatter-density-contour-overlay)
-- Contour (M4): contour levels of values already on a grid
+- [Contour](/charts/scientific/contour): contour levels of values already on a grid
 
 <Example id="histogram2d/basic" :height="320" />
 
@@ -209,12 +223,13 @@ attribute, its type, and its default. Shared color axes are under
   `coloring` / `showlines` / `showlabels` / `labelfont` / `labelformat`, `line.color` / `width` /
   `dash` / `smoothing`, the colorscale attributes (with `autocolorscale` on by default) and the
   hover formats.
-- Not supported: constraint contours (`contours.type: 'constraint'` with `operation` and `value`)
-  and `xcalendar` / `ycalendar`.
+- Beyond Plotly: constraint contours (`contours.type: 'constraint'` with `operation`, `value` and
+  `fillcolor`), which Plotly's `histogram2dcontour` ignores.
+- Not supported: `xcalendar` / `ycalendar`.
 - Differences:
   - A bin value exactly equal to a level counts as above it (Plotly: below).
-  - Label placement is a simplified version of Plotly's, so labels can sit at other points along
-    the lines.
+  - Label placement follows Plotly's optimizer on polylines; labels can land a few pixels away
+    from Plotly's on curvy lines.
   - With trace `opacity` below 1, filled contours show the band overlaps: bands are painted over
     each other, from the lowest level up.
   - For `coloring: 'lines'`, the colorbar is a continuous gradient; Plotly draws the level lines

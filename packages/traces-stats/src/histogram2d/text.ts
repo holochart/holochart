@@ -100,13 +100,21 @@ export function cellTexts(
   return out;
 }
 
+/** What {@link autoCellFontSize} reads of a grid: its size and cell edges (linear coordinates). */
+export interface CellTextGrid {
+  readonly nx: number;
+  readonly ny: number;
+  readonly x: { readonly edges: ArrayLike<number> };
+  readonly y: { readonly edges: ArrayLike<number> };
+}
+
 /**
  * Plotly's automatic cell-label size: the smallest cell (in px, less the gaps), divided by the
  * widest label's characters (× half the line spacing) and by its lines (× the line spacing),
  * capped at `layout.font.size`. 0 when labels cannot fit.
  */
 export function autoCellFontSize(
-  calc: Histogram2dCalc,
+  calc: CellTextGrid,
   texts: readonly CellText[],
   transform: Readonly<DataTransform>,
   gaps: { xgap: number; ygap: number },

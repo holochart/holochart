@@ -33,7 +33,7 @@ import { autoCellFontSize, cellLabels, cellTexts, type CellText } from './text.t
  * trace order. Ranks and steps match `traces-basic/src/shared/render-order.ts`.
  */
 export function heatmapRenderOrder(trace: FullTrace, index: number): number {
-  const rank = trace.type === 'histogram2dcontour' ? 3 : 1;
+  const rank = trace.type === 'histogram2dcontour' || trace.type === 'contour' ? 3 : 1;
   const z = typeof trace['zorder'] === 'number' ? trace['zorder'] : 0;
   return z * 1e6 + rank * 1e4 + index;
 }

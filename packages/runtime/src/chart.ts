@@ -2410,8 +2410,15 @@ export class Chart {
    * `undefined` for other traces. Supply-defaults already resolved `domain.row` / `column`.
    */
   #domainOf(trace: FullTrace): DomainInfo | undefined {
-    if (trace._module?.categories.includes('domain') !== true) return undefined;
-    const d = trace['domain'] as { x?: unknown; y?: unknown } | undefined;
+    const module = trace._module as TraceModule | undefined;
+    const d = (
+      module?.subplotDomain
+        ? module.subplotDomain(trace, this.#full?.fullLayout as FullLayout)
+        : module?.categories.includes('domain')
+          ? trace['domain']
+          : undefined
+    ) as { x?: unknown; y?: unknown } | undefined;
+    if (!d) return undefined;
     const pair = (v: unknown): [number, number] =>
       Array.isArray(v) && typeof v[0] === 'number' && typeof v[1] === 'number'
         ? [v[0], v[1]]
@@ -2433,21 +2440,23 @@ export class Chart {
     layoutRan: boolean,
     size: Size,
   ): void {
-    const groups = new Map<TraceModule, { entries: DomainTraceEntry[]; dirty: boolean }>();
+    // Grouped by function: modules sharing one `crossTraceLayout` run together (polar subplots).
+    type Layout = NonNullable<TraceModule['crossTraceLayout']>;
+    const groups = new Map<Layout, { entries: DomainTraceEntry[]; dirty: boolean }>();
     fullData.forEach((trace, i) => {
       const slot = this.#traces[i];
-      const module = slot?.module;
-      if (!module?.crossTraceLayout || trace.visible !== true || !slot?.hasCalc) return;
+      const fn = slot?.module?.crossTraceLayout;
+      if (!fn || trace.visible !== true || !slot?.hasCalc) return;
       const domain = this.#domainOf(trace);
       if (!domain) return;
-      let group = groups.get(module);
-      if (!group) groups.set(module, (group = { entries: [], dirty: layoutRan }));
+      let group = groups.get(fn);
+      if (!group) groups.set(fn, (group = { entries: [], dirty: layoutRan }));
       group.entries.push({ trace, index: i, calc: slot.calc, domain });
       if ((plans[i] as TraceUpdatePlan).plot) group.dirty = true;
     });
-    for (const [module, group] of groups) {
+    for (const [fn, group] of groups) {
       if (!group.dirty) continue;
-      module.crossTraceLayout?.(group.entries, {
+      fn(group.entries, {
         fullLayout,
         width: size.width,
         height: size.height,

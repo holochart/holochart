@@ -10,6 +10,7 @@ export * from './fill.ts';
 export * from './fill-loader.ts';
 export * from './rect.ts';
 export * from './heatmap.ts';
+export * from './raster.ts';
 export * from './arc.ts';
 export * from './text.ts';
 export * from './text-metrics.ts';

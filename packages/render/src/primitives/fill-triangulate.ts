@@ -38,8 +38,11 @@ import { triangulateArrangement } from './fill-arrangement.ts';
  *   see `fill-arrangement.ts` for cost and limits.
  * - `'nonzero'`: exact nonzero-winding rule (SVG default); same machinery as `'evenodd'`. Holes
  *   must be wound opposite to their outer ring to be cut.
+ * - `'intersect'`: filled where the winding number is at least 2, i.e. the intersection of two
+ *   nonzero regions whose outer rings run counter-clockwise and holes clockwise (each winding 0 or
+ *   1): contour fills clipped to a data mask. Same machinery as `'nonzero'`.
  */
-export type FillRule = 'simple' | 'evenodd' | 'nonzero';
+export type FillRule = 'simple' | 'evenodd' | 'nonzero' | 'intersect';
 
 /** Geometry-affecting fill inputs (changing any of these re-triangulates). */
 export interface FillGeometryInput {
