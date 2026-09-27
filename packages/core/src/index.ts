@@ -132,7 +132,12 @@ export {
 } from './defaults/container.ts';
 export type { CoerceContainerOptions } from './defaults/container.ts';
 export { autoType } from './defaults/axes.ts';
-export { contrastShade, isFullRange, RANGESELECTOR_Y_PAD } from './defaults/rangeslider.ts';
+export {
+  contrastShade,
+  isFullRange,
+  RANGESELECTOR_Y_PAD,
+  requestRangeslider,
+} from './defaults/rangeslider.ts';
 export {
   getSplomStash,
   stashSplomAxis,

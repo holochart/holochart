@@ -307,4 +307,6 @@ its default. The options shared with bars, such as [`barmode`](/reference/layout
 - With `textposition` `'auto'` or `'inside'`, a label on an empty bin between non-empty ones may
   still be shown outside the bar.
 - Not supported yet: `xbins.adaptive` / `ybins.adaptive` (rebinning on zoom), `xcalendar` /
-  `ycalendar` (non-Gregorian calendars), `xhoverformat` / `yhoverformat`, and `marker.pattern`.
+  `ycalendar` (non-Gregorian calendars), and `xhoverformat` / `yhoverformat`.
+- `marker.pattern` hatches the bars as on bar charts (see
+  [Patterns & textures](/customization/markers-patterns); `pattern.path` is not supported yet).

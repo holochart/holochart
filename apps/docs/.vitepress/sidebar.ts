@@ -167,6 +167,17 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
         'log-plots',
       ]),
     },
+    {
+      text: 'Financial',
+      items: pages('charts/financial/', [
+        'ohlc',
+        'candlestick',
+        'waterfall',
+        'funnel',
+        'funnelarea',
+        'indicator',
+      ]),
+    },
   ];
 
   const demos: Item[] = [{ text: 'Demos', items: pages('demos/', ['openrouter']) }];

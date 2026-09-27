@@ -26,13 +26,18 @@ import type {
 import { IDENTITY_TRANSFORM } from '../types.ts';
 import {
   applyTransformUniforms,
+  applyViewportUniforms,
   computeOrigin,
   createPrimitiveMaterial,
   createTransformUniforms,
+  createViewportUniforms,
+  syncViewportUniforms,
   type TransformUniforms,
   type Vec3,
+  type ViewportUniforms,
 } from './common.ts';
 import { FILL_FRAGMENT_GLSL, FILL_VERTEX_GLSL } from './fill.glsl.ts';
+import { patternsReady, setShaders, withPatterns, type PatternFill } from './pattern.ts';
 import {
   encodeFillPositions,
   triangulateFills,
@@ -55,8 +60,10 @@ export * from './fill-triangulate.ts';
  *   {@link FillData.opacity} still multiplies them. The colorscale is a shared LUT texture, so a
  *   colorscale change uploads one 256×1 texture and nothing else.
  *
- * Reserved for E8.10: `{ kind: 'pattern', ... }` (per-vertex pattern UVs plus a pattern texture,
- * same triangulation).
+ * - `'pattern'` (plan E8.10, Plotly `fillpattern`): per-polygon hatch patterns (see `pattern.ts`;
+ *   the polygons are its items), tiles anchored at the viewport's top-left corner; polygons without
+ *   a shape keep their {@link FillData.color}. The pattern code loads on first use
+ *   ({@link FillPrimitive.ready}).
  */
 export type FillPaint =
   | { kind: 'solid' }
@@ -67,7 +74,8 @@ export type FillPaint =
       /** Linear gradients: data coordinate of colorscale position 0 / 1 (default: the extent). */
       start?: number | undefined;
       stop?: number | undefined;
-    };
+    }
+  | { kind: 'pattern'; pattern: PatternFill };
 
 /** Data for {@link FillPrimitive}. */
 export interface FillData extends FillGeometryInput {
@@ -81,7 +89,7 @@ export interface FillData extends FillGeometryInput {
 
 const GEOMETRY_KEYS = ['x', 'y', 'z', 'rings', 'polygons', 'fillRule'] as const;
 
-interface FillUniforms extends TransformUniforms {
+interface FillUniforms extends TransformUniforms, ViewportUniforms {
   uOpacity: { value: number };
   /** 0 solid, 1 linear gradient, 2 radial gradient. */
   uGradient: { value: number };
@@ -123,6 +131,7 @@ export class FillPrimitive implements Primitive<FillData> {
     this.data = { ...data };
     this.uniforms = {
       ...createTransformUniforms(),
+      ...createViewportUniforms(),
       uOpacity: { value: data.opacity ?? 1 },
       uGradient: { value: 0 },
       uLut: { value: null },
@@ -156,6 +165,10 @@ export class FillPrimitive implements Primitive<FillData> {
     }
     // Buffers are RTC-encoded and transformed in the shader, so three's bounds are meaningless.
     this.object.frustumCulled = false;
+    // Pattern tiles are sized in screen px (see syncViewportUniforms).
+    this.object.onBeforeRender = (renderer) => {
+      syncViewportUniforms(this.uniforms, renderer);
+    };
     this.writeGeometry();
     this.writeColors();
     this.writePaint();
@@ -165,6 +178,11 @@ export class FillPrimitive implements Primitive<FillData> {
   /** Number of polygons (items addressed by per-polygon colors). */
   get polygonCount(): number {
     return this.tri.polygonCount;
+  }
+
+  /** Resolves once the pattern paint (if any) is drawn: its code loads on first use. */
+  get ready(): Promise<void> {
+    return this.data.paint?.kind === 'pattern' ? patternsReady() : RESOLVED;
   }
 
   /** Current triangulation (read-only; for picking and tests). */
@@ -198,9 +216,9 @@ export class FillPrimitive implements Primitive<FillData> {
     this.context.invalidate();
   }
 
-  /** Fills have no screen-space sizing yet (reserved for screen-space pattern fills). */
+  /** Screen-space sizing of pattern tiles. */
   setViewport(size: ViewportSize): void {
-    void size;
+    applyViewportUniforms(this.uniforms, size);
   }
 
   dispose(): void {
@@ -242,9 +260,37 @@ export class FillPrimitive implements Primitive<FillData> {
     markRange(this.colorAttr, this.tri.vertexCount * 4);
   }
 
-  /** Gradient coordinates and the colorscale LUT (acquired before the old one is released). */
+  /**
+   * Gradient coordinates and the colorscale LUT (acquired before the old one is released), or the
+   * pattern attributes and shaders (once the pattern code is in).
+   */
   private writePaint(): void {
     const paint = this.data.paint;
+    if (paint?.kind === 'pattern') {
+      withPatterns((m) => {
+        const p = this.data.paint;
+        if (this.disposed || p?.kind !== 'pattern') return;
+        const { vertexStarts, vertexCount, polygonCount } = this.tri;
+        const r = m.resolvePattern(p.pattern, polygonCount);
+        const inputs = [r.style, r.fg, r.bg];
+        m.PATTERN_ATTRIBUTES.forEach((name, k) => {
+          let a = this.geometry.getAttribute(name) as BufferAttribute | undefined;
+          const capacity = this.positionAttr.count;
+          if (!a || a.count < capacity) {
+            a = new BufferAttribute(new Float32Array(capacity * 4), 4);
+            this.geometry.setAttribute(name, a);
+          }
+          writeFillColors(inputs[k]!, vertexStarts, a.array as Float32Array);
+          markRange(a, vertexCount * 4);
+        });
+        setShaders(
+          this.material,
+          m.patternShader(FILL_VERTEX_GLSL, false),
+          m.patternShader(FILL_FRAGMENT_GLSL, true),
+        );
+        this.context.invalidate();
+      });
+    } else setShaders(this.material, FILL_VERTEX_GLSL, FILL_FRAGMENT_GLSL);
     if (paint?.kind !== 'gradient' || paint.colorscale.length === 0) {
       this.uniforms.uGradient.value = 0;
       this.uniforms.uLut.value = null;
@@ -266,6 +312,8 @@ export class FillPrimitive implements Primitive<FillData> {
     markRange(this.gradAttr, this.tri.vertexCount * 2);
   }
 }
+
+const RESOLVED: Promise<void> = Promise.resolve();
 
 /** Create a {@link FillPrimitive} (optionally drawing into `mesh`, see its constructor). */
 export function createFillPrimitive(

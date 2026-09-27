@@ -62,9 +62,10 @@ describe('LazyFillPrimitive', () => {
     expect(Array.from(color.slice(0, 4))).toEqual([0, 0, 1, 1]);
     expect(ctx.invalidate).toHaveBeenCalled();
 
-    // The same transform as a FillPrimitive given it directly.
+    // The same transform and viewport (pattern tiles, E8.10) as a FillPrimitive given them directly.
     const direct = new FillPrimitive(context(), { ...SQUARE, color: [0, 0, 1, 1], opacity: 0.5 });
     direct.setTransform(TRANSFORM);
+    direct.setViewport({ width: 300, height: 200, pixelRatio: 2 });
     const uniformsOf = (m: FillPrimitive): Record<string, unknown> =>
       Object.fromEntries(
         Object.entries(m.object.material.uniforms).map(([k, u]) => [k, u.value as unknown]),

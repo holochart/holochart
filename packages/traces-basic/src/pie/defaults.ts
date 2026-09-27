@@ -6,6 +6,7 @@ import {
   type LayoutDefaultsContext,
   type TraceDefaultsContext,
 } from '@mk7s/holochart-core';
+import { supplyPatternDefaults } from '../shared/pattern.ts';
 import { isNumeric } from './helpers.ts';
 
 /**
@@ -64,6 +65,8 @@ export function supplyPieDefaults(
   const lineWidth = ctx.coerce('marker.line.width');
   if (lineWidth) ctx.coerce('marker.line.color');
   ctx.coerce('marker.colors');
+  // Slice colors resolve across pies later: pattern colors default per slice when drawing.
+  supplyPatternDefaults(traceIn, ctx, 'marker.pattern');
 
   ctx.coerce('scalegroup');
 

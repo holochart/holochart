@@ -61,7 +61,7 @@ names are `@mk7s/holochart` and `@mk7s/holochart-*`
 | `tools/schema-gen`        | Schema to TS types, JSON Schema, attribute reference docs           | Exists  |
 | `packages/traces-stats`   | histogram(2d), box, violin, splom, parcoords, parcats               | Exists  |
 | `packages/traces-sci`     | heatmap, contour, image, polar, ternary, quiver, streamline, carpet | Exists  |
-| `packages/traces-finance` | ohlc, candlestick, waterfall, funnel, funnelarea, indicator         | Planned |
+| `packages/traces-finance` | ohlc, candlestick, waterfall, funnel, funnelarea, indicator         | Exists  |
 | `packages/traces-hier`    | sunburst, treemap, icicle, sankey                                   | Planned |
 | `packages/traces-3d`      | scatter3d, surface, mesh3d, cone, streamtube, volume, isosurface    | Planned |
 | `packages/traces-geo`     | Stretch: scattergeo, choropleth, globe, tile maps                   | Planned |

@@ -75,6 +75,17 @@ describe('labelText', () => {
     expect(labelText(entry({}), P, 'y', false, LAYOUT).text).toBe('2');
   });
 
+  it("appends a trace's extra lines after the value and text lines (Plotly's extraText)", () => {
+    const p: HoverPoint = { ...P, extraText: '5 ▲<br>Initial: 1' };
+    expect(labelText(entry({ text: 'note' }), p, 'closest', false, LAYOUT).text).toBe(
+      '(2, 4.00)<br>note<br>5 ▲<br>Initial: 1',
+    );
+    expect(labelText(entry({ hoverinfo: 'none' }), p, 'closest', false, LAYOUT).text).toBe('');
+    expect(labelText(entry({ hovertemplate: '%{y}' }), p, 'closest', false, LAYOUT).text).toBe(
+      '4.00',
+    );
+  });
+
   it('shows only the trace text for a hover with no data point (a scatter fill), like Plotly', () => {
     const fill: HoverPoint = {
       pointIndex: -1,

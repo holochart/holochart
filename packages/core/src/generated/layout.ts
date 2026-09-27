@@ -1351,7 +1351,7 @@ export interface LayoutXaxisTitleFont {
  */
 export interface LayoutXaxisRangeslider {
   /**
-   * Show the range slider. Defaults to `true` when `rangeslider` is given (`rangeslider: {}` is enough), else `false`.
+   * Show the range slider. Defaults to `true` when `rangeslider` is given (`rangeslider: {}` is enough) or the axis has an `ohlc` or `candlestick` trace, else `false`.
    */
   visible?: boolean;
   /**

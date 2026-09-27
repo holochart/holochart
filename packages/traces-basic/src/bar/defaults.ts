@@ -10,6 +10,7 @@ import {
 import { hasColorscale, supplyColorscaleDefaults } from '../shared/colorscale.ts';
 import { pointCount } from '../shared/data.ts';
 import { supplyErrorBarDefaults } from '../shared/error-bars/index.ts';
+import { supplyPatternDefaults } from '../shared/pattern.ts';
 
 /** Plotly's `Color.defaultLine`: the default bar outline color. */
 const DEFAULT_LINE = '#444';
@@ -153,6 +154,8 @@ export function supplyBarStyleDefaults(
     });
   }
   ctx.coerce('marker.line.width');
+  // Only traces (or templates) with a pattern: bar-like types without one share this function.
+  supplyPatternDefaults(traceIn, ctx, 'marker.pattern');
 
   // Error bars default to the outline color (Plotly), y first so x can copy its style.
   const lineColor = (traceOut['marker'] as { line?: { color?: unknown } } | undefined)?.line?.color;

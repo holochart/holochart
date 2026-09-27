@@ -984,11 +984,11 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] `layout.view3d: { enabled, tilt, rotation, perspective, interactive }` renders the 2D subplot in a 3D camera while keeping axes and hover working
 - [ ] Animated transition between flat and 3D views
 
-#### E8.10 — Patterns & texture fills   `P1` `M`   deps: E2.6, E2.7
+#### E8.10 — Patterns & texture fills   `P1` `M`   deps: E2.6, E2.7   · 🟡 Partial (M4 wave 2)
 > As a designer, I want hatch patterns and image textures on fills, so that charts work in print and grayscale and look distinctive.
-- [ ] `marker.pattern.{shape: '' | '/' | '\\' | 'x' | '-' | '|' | '+' | '.', bgcolor, fgcolor, fgopacity, size, solidity, fillmode: 'replace' | 'overlay'}` (arrayOk)
-- [ ] `fillpattern` for scatter fills
-- [ ] Custom texture fill: `marker.texture: { url, repeat, scale }`
+- [x] `marker.pattern.{shape: '' | '/' | '\\' | 'x' | '-' | '|' | '+' | '.', bgcolor, fgcolor, fgopacity, size, solidity, fillmode: 'replace' | 'overlay'}` (arrayOk) — bar, histogram, barpolar, pie, legend glyphs, Express `pattern`; procedural fragment-shader hatches in screen px with Plotly's tile geometry and colour rules, injected only when used (lazy chunk 2.0 kB) — *deferred: `pattern.path`, funnelarea*
+- [x] `fillpattern` for scatter fills
+- [ ] Custom texture fill: `marker.texture: { url, repeat, scale }` — *deferred: needs wrap-aware atlas sampling*
 
 #### E8.11 — Custom marker symbols   `P1` `M`   deps: E2.4   · ✅ Done (M4 wave 0)
 > As a designer, I want to register custom SVG-path or image markers, so that I can use icons as data points.
@@ -1277,43 +1277,43 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] Docs + examples: basic time series, range slider, range selector, range breaks, period alignment, unified hover, date formatting — "Working with dates & time series" page and `timeseries/*` examples
 - [ ] Performance: 10 years of 1-minute bars (~2.6M points) with min-max decimation at 60 fps pan — CPU per pan frame 0.5–0.6 ms and < 6k drawn segments (was 144k–2.6M segments, 50–190 ms rebuilds); 60 fps not yet measured on a real GPU (headless SwiftShader only)
 
-#### E12.2 — `ohlc`   `P1` `M`   deps: E2.5, E3.5
+#### E12.2 — `ohlc`   `P1` `M`   deps: E2.5, E3.5   · ✅ Done (M4 wave 2)
 > As a trader, I want OHLC charts, so that I can see price movements per period.
-- [ ] `x`, `open`, `high`, `low`, `close`, `tickwidth`, `increasing.line.{color, width, dash}`, `decreasing.line.{...}`, `line.{width, dash}`, `xperiod`, `xperiodalignment`
-- [ ] Hover shows all four values plus change %. Default rangeslider on.
+- [x] `x`, `open`, `high`, `low`, `close`, `tickwidth`, `increasing.line.{color, width, dash}`, `decreasing.line.{...}`, `line.{width, dash}`, `xperiod`, `xperiodalignment` — ≤ 2 draw calls per trace; split, unified and x hover; selection dimming
+- [x] Hover shows all four values plus change %. Default rangeslider on. — Plotly's label (▲/▼ after the close, no %); `%{change}` / `%{changepercent}` in templates; `requestRangeslider` turns the slider on for axes with ohlc/candlestick
 
-#### E12.3 — `candlestick`   `P1` `M`   deps: E2.7, E12.2
+#### E12.3 — `candlestick`   `P1` `M`   deps: E2.7, E12.2   · 🟡 Partial (M4 wave 2)
 > As a trader, I want candlestick charts, so that I can see open/close bodies with wicks.
-- [ ] `whiskerwidth`, `increasing.{fillcolor, line}`, `decreasing.{fillcolor, line}`
-- [ ] Instanced bodies + instanced wicks (2 draw calls regardless of count)
-- [ ] Recipe: candlestick + volume subplot + moving averages + buy/sell markers
+- [x] `whiskerwidth`, `increasing.{fillcolor, line}`, `decreasing.{fillcolor, line}`
+- [x] Instanced bodies + instanced wicks (2 draw calls regardless of count) — 100k candles: ~1 ms CPU per pan step; real-GPU fps unmeasured (headless SwiftShader ~1 fps); level of detail when zoomed far out deferred
+- [x] Recipe: candlestick + volume subplot + moving averages + buy/sell markers
 - [ ] 3D-native: extruded candles (`depth`), `P2`
 
-#### E12.4 — `waterfall`   `P1` `M`   deps: E9.9
+#### E12.4 — `waterfall`   `P1` `M`   deps: E9.9   · ✅ Done (M4 wave 2)
 > As a finance analyst, I want waterfall charts, so that I can show cumulative effects of changes.
-- [ ] `measure: 'relative' | 'total' | 'absolute'` (arrayOk), `base`, `orientation`
-- [ ] `increasing`/`decreasing`/`totals` `.marker.{color, line}`
-- [ ] `connector.{visible, mode: 'spanning' | 'between', line.{color, width, dash}}`
-- [ ] `textinfo` flags (`label`, `text`, `initial`, `delta`, `final`), `texttemplate`
-- [ ] `layout.waterfallmode: 'group' | 'overlay'`, `waterfallgap`, `waterfallgroupgap`
+- [x] `measure: 'relative' | 'total' | 'absolute'` (arrayOk), `base`, `orientation`
+- [x] `increasing`/`decreasing`/`totals` `.marker.{color, line}`
+- [x] `connector.{visible, mode: 'spanning' | 'between', line.{color, width, dash}}`
+- [x] `textinfo` flags (`label`, `text`, `initial`, `delta`, `final`), `texttemplate`
+- [x] `layout.waterfallmode: 'group' | 'overlay'`, `waterfallgap`, `waterfallgroupgap` — drawn by bar's renderer (calc, layout, text, hover, selection shared with bar); connectors in one line primitive — *deferred: `x/yhoverformat`, bar lengthening under `between` connectors*
 
-#### E12.5 — `funnel`   `P1` `M`   deps: E9.9
+#### E12.5 — `funnel`   `P1` `M`   deps: E9.9   · ✅ Done (M4 wave 2)
 > As a growth analyst, I want funnel charts, so that I can show stage conversion.
-- [ ] `x`/`y` stages, `orientation` (default `'h'`), `textinfo` flags (`value`, `percent initial`, `percent previous`, `percent total`, `label`, `text`)
-- [ ] `connector.{visible, fillcolor, line}`, `layout.funnelmode: 'stack' | 'group' | 'overlay'`, `funnelgap`, `funnelgroupgap`
+- [x] `x`/`y` stages, `orientation` (default `'h'`), `textinfo` flags (`value`, `percent initial`, `percent previous`, `percent total`, `label`, `text`)
+- [x] `connector.{visible, fillcolor, line}`, `layout.funnelmode: 'stack' | 'group' | 'overlay'`, `funnelgap`, `funnelgroupgap` — centered stacks; stage axis reversed and value axis hidden by default, as in plotly.js
 
-#### E12.6 — `funnelarea`   `P1` `M`   deps: E9.11
+#### E12.6 — `funnelarea`   `P1` `M`   deps: E9.11   · 🟡 Partial (M4 wave 2)
 > As a growth analyst, I want funnel-area charts, so that I can show proportional stages as a triangle.
-- [ ] Pie-like API (`values`, `labels`, `textinfo`, `marker.colors`, `domain`) plus `aspectratio`, `baseratio`, `title.position`
+- [x] Pie-like API (`values`, `labels`, `textinfo`, `marker.colors`, `domain`) plus `aspectratio`, `baseratio`, `title.position` — scalegroup, per-label legend and hover shared with pie — *deferred: patterns, `uniformtext`*
 - [ ] 3D-native: extruded pyramid option (`depth`, `shape: 'pyramid' | 'cone'`), `P2`
 
-#### E12.7 — `indicator` (number, delta, gauge, bullet)   `P1` `L`   deps: E2.8, E2.9
+#### E12.7 — `indicator` (number, delta, gauge, bullet)   `P1` `L`   deps: E2.8, E2.9   · ✅ Done (M4 wave 2)
 > As a dashboard developer, I want KPI indicators, so that I can show single values with context.
-- [ ] `mode` flaglist: `'number'`, `'delta'`, `'gauge'`
-- [ ] `value`, `number.{prefix, suffix, valueformat, font}`, `delta.{reference, relative, valueformat, increasing.{color, symbol}, decreasing.{…}, position: 'top' | 'bottom' | 'left' | 'right', prefix, suffix}`
-- [ ] `gauge.{shape: 'angular' | 'bullet', axis.{range, tickmode…}, bar.{color, thickness, line}, bgcolor, bordercolor, borderwidth, steps[{range, color, thickness, line}], threshold.{value, thickness, line}}`
-- [ ] `title.{text, align, font}`, `align`, `domain`
-- [ ] Transition animates the value (count-up) and the gauge needle/bar
+- [x] `mode` flaglist: `'number'`, `'delta'`, `'gauge'`
+- [x] `value`, `number.{prefix, suffix, valueformat, font}`, `delta.{reference, relative, valueformat, increasing.{color, symbol}, decreasing.{…}, position: 'top' | 'bottom' | 'left' | 'right', prefix, suffix}`
+- [x] `gauge.{shape: 'angular' | 'bullet', axis.{range, tickmode…}, bar.{color, thickness, line}, bgcolor, bordercolor, borderwidth, steps[{range, color, thickness, line}], threshold.{value, thickness, line}}`
+- [x] `title.{text, align, font}`, `align`, `domain` — Plotly's layout per mode, number fitting with a kept scale; angular gauge one instanced arc set, bullet one rect set, all text one batch — *deferred: `labelalias`*
+- [x] Transition animates the value (count-up) and the gauge needle/bar
 - [ ] 3D-native gauge (`depth`, `material`), `P2`
 
 ---
@@ -2127,10 +2127,10 @@ E16.3 and E16.4 were done in M0; keyboard and touch (E6.5, E6.6) stay deferred f
 | 1 | `heatmap` (annotated), `image`, `imshow` | E11.1 🟡 (real-GPU perf, periods), E11.3 ✅ |
 | 1 | `contour` with labels and constraint contours | E11.2 ✅ |
 | 1 | Polar subplot, `scatterpolar`, `barpolar`, wind rose | E11.4 ✅, E11.5 ✅ |
-| 2 | `ohlc`, `candlestick` | E12.2, E12.3 |
-| 2 | `waterfall`, `funnel`, `funnelarea` | E12.4–E12.6 |
-| 2 | `indicator` | E12.7 |
-| 2 | Patterns and texture fills | E8.10 |
+| 2 | `ohlc`, `candlestick` | E12.2 ✅, E12.3 🟡 (real-GPU perf, `depth` P2) |
+| 2 | `waterfall`, `funnel`, `funnelarea` | E12.4 ✅, E12.5 ✅, E12.6 🟡 (3D pyramid P2) |
+| 2 | `indicator` | E12.7 ✅ |
+| 2 | Patterns and texture fills | E8.10 🟡 (`marker.texture`) |
 
 The `basic` budget was raised to 238 kB after M4 wave 0 by decision (235.7 kB; the new code's heavy
 parts are lazy chunks). Open after M4 wave 0: bar widths across range breaks are still measured in compressed space
@@ -2152,6 +2152,15 @@ Open after M4 wave 1: heatmap `xperiod`, range breaks and calendars (also for co
 space; contour smoothing is in grid-index space and labels can sit a few px from Plotly's; polar
 box/lasso selection and modebar reset; `thetaunit: 'gradians'` is honoured (plotly.js treats it as
 radians).
+
+Open after M4 wave 2: `basic` was raised to 242 kB by decision (238.60 kB on CI, which measures ~0.3%
+more than a local run; patterns' plumbing ~1.3 kB); real-GPU
+performance for 100k candles (~1 ms CPU per pan; SwiftShader-bound) and candle level of detail
+when zoomed far out; waterfall/funnel aren't `bar-like` for spike preference; funnelarea patterns
+and `uniformtext`; `marker.texture` and `pattern.path`; indicator digits are formatted per
+in-between frame during transitions; core has no global Plotly `adjustFormat` for `tickformat`
+like `'2%'`; the default ohlc/candlestick hover label has no change % (Plotly's; `%{changepercent}`
+in templates).
 
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 

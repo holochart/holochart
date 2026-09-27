@@ -830,7 +830,7 @@ export const rangesliderSchema = attr.object(
   {
     visible: attr.boolean({
       description:
-        'Show the range slider. Defaults to `true` when `rangeslider` is given (`rangeslider: {}` is enough), else `false`.',
+        'Show the range slider. Defaults to `true` when `rangeslider` is given (`rangeslider: {}` is enough) or the axis has an `ohlc` or `candlestick` trace, else `false`.',
     }),
     thickness: attr.number({
       min: 0,

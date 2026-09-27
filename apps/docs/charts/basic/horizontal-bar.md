@@ -147,4 +147,6 @@ for `barmode` and `barnorm`.
 - Categories keep the order of the data, as in Plotly. Sort the data yourself, or use
   `yaxis.categoryorder`: `'category ascending'`, `'array'` with `categoryarray`, or a value-based
   order such as `'total ascending'` (also `min`, `max`, `sum`, `mean`, `median`).
-- Not supported yet: `marker.pattern` (E8.10) and the timeline helper (M2).
+- `marker.pattern` hatches bars as on vertical bars (see
+  [Patterns & textures](/customization/markers-patterns)).
+- Not supported yet: the timeline helper (M2).

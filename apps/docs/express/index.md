@@ -164,6 +164,7 @@ or the `template` option. Pass `template: 'plotly-classic'` (or call
   makes room for them.
 - `parallelCoordinates` and `parallelCategories` put their colorscale on the trace
   (`line.colorscale`, `line.showscale`) instead of `layout.coloraxis`.
-- Fill patterns (`pattern`) group traces and name them, but patterns are drawn from plan E8.10.
+- Fill patterns (`pattern`) group traces, name them and hatch their bars (see
+  [Patterns & textures](/customization/markers-patterns#express)).
 - Not yet: `trendline` (M5), `marginal` on `line` / `bar`, `text_auto` (except on `imshow`),
   `render_mode`, `color_discrete_map` given as a Plotly `px.colors` object.

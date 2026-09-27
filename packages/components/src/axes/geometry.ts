@@ -63,6 +63,17 @@ export interface RectItem {
   x1: number;
   y1: number;
   color: RGBA;
+  /**
+   * A hatch pattern drawn instead of `color` (legend glyphs, plan E8.10; see `RectBatch`): Plotly
+   * pattern attributes (their first item), the fill color they default to, an opacity and the
+   * CSS color behind the rect.
+   */
+  pattern?: {
+    attributes: Readonly<Record<string, unknown>>;
+    color: RGBA;
+    opacity: number;
+    background: unknown;
+  };
 }
 
 /** A dashed line segment in container px (center line). */

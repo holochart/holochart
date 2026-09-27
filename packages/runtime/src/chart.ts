@@ -2325,17 +2325,17 @@ export class Chart {
   /**
    * Run `crossTraceCalc` once per subplot and stack group (plan §4.4): with every visible trace of
    * the group on the subplot, in trace order, after calc and before extremes. A trace's group is
-   * the first of its module's `categories` listed in {@link STACK_GROUPS} (so bar, histogram,
-   * funnel and waterfall stack together as `bar-like`), else its trace type; the group's first
-   * module with a `crossTraceCalc` runs it. It reruns when any trace of the group (hidden ones
-   * included: hiding a bar restacks the others) was recalculated or declared a `crossTraceCalc`
-   * stage. The members the module reports as changed (its return value; all of them when it
-   * returns nothing) then re-upload: their plans get `calc`, `plot` and `style` and lose `append`
-   * (their calc was mutated in place). Unreported members keep their plans as they were, so a
-   * streaming append to one trace keeps its fast path when stacking elsewhere on the subplot
-   * reruns, and an unaffected trace is not redrawn. With `only`, just the groups with a member in
-   * it rerun (the second pass after a category reorder; the members in `only` already have full
-   * plans).
+   * the first of its module's `categories` listed in {@link STACK_GROUPS} (so bar and histogram
+   * stack together as `bar-like`), else its trace type (waterfall, funnel: Plotly lays each type
+   * out on its own); the group's first module with a `crossTraceCalc` runs it. It reruns when any
+   * trace of the group (hidden ones included: hiding a bar restacks the others) was recalculated
+   * or declared a `crossTraceCalc` stage. The members the module reports as changed (its return
+   * value; all of them when it returns nothing) then re-upload: their plans get `calc`, `plot` and
+   * `style` and lose `append` (their calc was mutated in place). Unreported members keep their
+   * plans as they were, so a streaming append to one trace keeps its fast path when stacking
+   * elsewhere on the subplot reruns, and an unaffected trace is not redrawn. With `only`, just the
+   * groups with a member in it rerun (the second pass after a category reorder; the members in
+   * `only` already have full plans).
    */
   #crossTraceCalc(
     fullLayout: FullLayout,

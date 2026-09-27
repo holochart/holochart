@@ -118,6 +118,14 @@ fade to transparent.
 
 <Example id="area/gradient" />
 
+### Pattern fills
+
+`fillpattern` hatches the fill with lines or dots (`shape`, `size`, `solidity`, colors and
+`fillmode`), drawn in `fillcolor` by default. Tiles are sized in screen pixels, so the pattern
+keeps its spacing when you zoom. See [Patterns & textures](/customization/markers-patterns).
+
+<Example id="area/pattern" />
+
 ### Closed shapes
 
 `fill: 'toself'` closes the line into a shape. Edges may cross: fills use the nonzero rule, like
@@ -148,11 +156,14 @@ linearly between its neighbors (constant beyond its ends). Set it on the first t
   opacity. Use an rgba color to control the transparency yourself.
 - `fillgradient`: `{ type, colorscale, start, stop }`, drawn instead of `fillcolor` (which still
   colors hover labels).
+- `fillpattern`: `{ shape, fillmode, fgcolor, bgcolor, fgopacity, size, solidity }`, a hatch
+  pattern drawn instead of `fillcolor` and of a gradient.
 - `line.color`, `line.width`, `line.dash`, and `line.shape`, as on the
   [line page](/charts/basic/line#styling). The fill follows the drawn line, including splines and
   steps. `line.width: 0` draws the fill alone.
 - `mode: 'lines+markers'` adds markers on top of the fill.
-- In the legend, a filled trace shows a filled swatch with a border in the line color.
+- In the legend, a filled trace shows a filled (or patterned) swatch with a border in the line
+  color.
 - `opacity` fades the whole trace, fill included, and `zorder` changes the drawing order.
 
 ## Interactivity
@@ -191,13 +202,14 @@ linearly between its neighbors (constant beyond its ends). Set it on the first t
 - **Keyboard:** there is no keyboard navigation yet.
 - **Color:** adjacent bands in a stack need enough contrast between them. Label bands directly where
   you can, keep the number of stacked series small, and keep the lines between bands visible. Fill
-  patterns (`fillpattern`) for grayscale printing are not supported yet.
+  patterns (`fillpattern`) tell bands apart in grayscale printing.
 
 ## Attribute reference
 
 Area charts use the scatter trace. See the [scatter attribute reference](/reference/scatter),
 especially [`fill`](/reference/scatter#fill), [`fillcolor`](/reference/scatter#fillcolor),
-[`fillgradient`](/reference/scatter#fillgradient), [`stackgroup`](/reference/scatter#stackgroup),
+[`fillgradient`](/reference/scatter#fillgradient),
+[`fillpattern`](/reference/scatter#fillpattern), [`stackgroup`](/reference/scatter#stackgroup),
 [`groupnorm`](/reference/scatter#groupnorm), [`stackgaps`](/reference/scatter#stackgaps), and
 [`hoveron`](/reference/scatter#hoveron).
 
@@ -213,7 +225,9 @@ especially [`fill`](/reference/scatter#fill), [`fillcolor`](/reference/scatter#f
   `fill`, `fillcolor`, `fillgradient`, `stackgroup`, `orientation`, `groupnorm`, `stackgaps`, and
   `hoveron` follow Plotly's semantics, with the differences below.
 - `scattergl` traces with `fill` become `scatter`.
-- Not supported yet: `fillpattern` (planned with patterns, E8.10) and `scattermode: 'group'`.
+- `fillpattern` follows Plotly (see the
+  [pattern differences](/customization/markers-patterns#differences-from-plotly)).
+- Not supported yet: `scattermode: 'group'`.
 - Drawing order: Plotly moves a trace down in the drawing order when it fills to a trace that is
   not directly before it. Holochart keeps `zorder` and trace order, and only places each
   `'tonext…'` fill just above the fill of the trace it fills to.

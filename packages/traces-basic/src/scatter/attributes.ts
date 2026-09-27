@@ -8,8 +8,8 @@
  * `plot`; colors, widths and opacities are `style` (buffer or uniform updates only).
  *
  * Not yet declared (deferred): `marker.gradient`, `marker.angleref`, `marker.standoff`,
- * `line.backoff`, `fillpattern` (patterns are E8.10) and `scattermode: 'group'` (`orientation` only
- * sets the stacking direction).
+ * `line.backoff` and `scattermode: 'group'` (`orientation` only sets the stacking direction).
+ * `fillpattern` is the shared pattern fill (E8.10).
  *
  * Fills link across traces (`tonext*` to the previous trace, stacking), so what changes a trace's
  * drawn path (`line.shape`, `line.smoothing`, `connectgaps`) also declares `crossTraceCalc`: the
@@ -18,6 +18,7 @@
 import { attr, type EditFlag, type Primitive } from '@mk7s/holochart-core';
 import { isCustomSymbol, MARKER_SYMBOLS, SYMBOL_VARIANTS } from '@mk7s/holochart-render';
 import { colorscaleAttributes } from '../shared/colorscale.ts';
+import { patternAttributes } from '../shared/pattern.ts';
 import { errorBarAttributes } from '../shared/error-bars/index.ts';
 import { TEXT_POSITIONS } from './text-position.ts';
 
@@ -269,7 +270,7 @@ export const scatterAttributes = attr.object(
       dflt: 'none',
       editType: 'calc',
       description:
-        "Area to fill with `fillcolor`. Default `'none'`, or `'tonexty'` (`'tonextx'` for `orientation: 'h'`) in a `stackgroup`. `'tozeroy'` / `'tozerox'` fill to y = 0 / x = 0; `'tonexty'` / `'tonextx'` fill to the previous trace on the subplot (in the same `stackgroup`), joining the end points with straight lines, and act like `'tozero…'` without one; `'toself'` closes the line (each segment when it has gaps) into a shape; `'tonext'` fills between this trace and the previous one when one encloses the other (like `'toself'` without one). Fills follow `line.shape`. `fillpattern` is not supported yet (E8.10).",
+        "Area to fill with `fillcolor`. Default `'none'`, or `'tonexty'` (`'tonextx'` for `orientation: 'h'`) in a `stackgroup`. `'tozeroy'` / `'tozerox'` fill to y = 0 / x = 0; `'tonexty'` / `'tonextx'` fill to the previous trace on the subplot (in the same `stackgroup`), joining the end points with straight lines, and act like `'tozero…'` without one; `'toself'` closes the line (each segment when it has gaps) into a shape; `'tonext'` fills between this trace and the previous one when one encloses the other (like `'toself'` without one). Fills follow `line.shape`.",
     }),
     fillcolor: attr.color({
       editType: 'style',
@@ -307,6 +308,7 @@ export const scatterAttributes = attr.object(
           'A color gradient drawn instead of `fillcolor` (which still colors hover labels).',
       },
     ),
+    fillpattern: patternAttributes('area', false),
     stackgroup: attr.string({
       dflt: '',
       editType: 'calc',

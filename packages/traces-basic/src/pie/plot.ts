@@ -15,8 +15,9 @@
  * Every update rebuilds the slice buffers (pies have few slices) but reuses the primitives.
  * Labels may be rich text with clickable links (E2.10); `layout.uniformtext` (E4.6) sizes the
  * slice labels of every pie of the chart alike (see `shared/uniform-text.ts`).
- * Deferred: animated re-flow when slices are hidden and pull transitions (E7.3), `marker.pattern`
- * (E8.10), `automargin`.
+ * `marker.pattern` (E8.10) hatches the slices (not the outline rims), with tiles anchored at the pie
+ * center. Deferred: animated re-flow when slices are hidden and pull transitions (E7.3),
+ * `automargin`.
  */
 import { toRGBA, uniformTextOf, type FullTrace, type UniformText } from '@mk7s/holochart-core';
 import {
@@ -25,6 +26,7 @@ import {
   LinePrimitive,
   type ArcData,
   type ArcPrimitive,
+  type PatternFill,
   type RGBA,
   type TextLabel,
   type TextLink,
@@ -39,7 +41,7 @@ import type {
 import { fadeRuns, handleLinkPointer, hasLink, labelLinkAt } from '../shared/rich-text.ts';
 import { negotiateUniformText, releaseUniformText } from '../shared/uniform-text.ts';
 import { sliceCenter, type PieCalc } from './calc.ts';
-import { castOption } from './helpers.ts';
+import { castOption, slicePattern } from './helpers.ts';
 import { layoutPieAreas, measureTitles, resolvePieColors } from './layout.ts';
 import { layoutPieText, LINE_HEIGHT, type PieTextLayout } from './text.ts';
 
@@ -66,6 +68,8 @@ export interface PieArcs {
   readonly fill: Float32Array;
   readonly borderColor: Float32Array;
   readonly borderWidth: Float32Array;
+  /** `marker.pattern` per instance (rims have none), or `null`. */
+  readonly pattern: PatternFill | null;
 }
 
 function lineStyle(trace: FullTrace, pts: readonly number[]): { color: RGBA; width: number } {
@@ -81,9 +85,10 @@ function lineStyle(trace: FullTrace, pts: readonly number[]): { color: RGBA; wid
 
 /**
  * Arc instances of a laid-out pie, in world px (`height` flips y). Hidden and empty slices get a
- * NaN center, which the primitive culls.
+ * NaN center, which the primitive culls. `paper` is the default pattern background (Plotly:
+ * `paper_bgcolor`).
  */
-export function pieArcs(trace: FullTrace, calc: PieCalc, height: number): PieArcs {
+export function pieArcs(trace: FullTrace, calc: PieCalc, height: number, paper?: unknown): PieArcs {
   const layout = calc.layout;
   const n = calc.slices.length;
   const hole = 1 - calc.ring;
@@ -98,6 +103,8 @@ export function pieArcs(trace: FullTrace, calc: PieCalc, height: number): PieArc
   const fill = new Float32Array(count * 4);
   const borderColor = new Float32Array(count * 4);
   const borderWidth = new Float32Array(count);
+  const markerPattern = (trace['marker'] as { pattern?: unknown } | undefined)?.pattern;
+  const patterns: (Record<string, unknown> | undefined)[] = [];
   if (layout && layout.r > 0) {
     const r = layout.r;
     calc.slices.forEach((slice, k) => {
@@ -120,6 +127,7 @@ export function pieArcs(trace: FullTrace, calc: PieCalc, height: number): PieArc
       };
       const base = k * perSlice;
       set(base, hole * r, r, toRGBA(slice.color) ?? GREY);
+      patterns[base] = slicePattern(markerPattern, slice.pts, paper);
       if (width > 0) {
         borderColor.set(lineColor, base * 4);
         borderWidth[base] = width / 2;
@@ -139,6 +147,9 @@ export function pieArcs(trace: FullTrace, calc: PieCalc, height: number): PieArc
     fill,
     borderColor,
     borderWidth,
+    pattern: patterns.some(Boolean)
+      ? { pattern: patterns, color: fill, background: paper, parse: toRGBA }
+      : null,
   };
 }
 
@@ -231,7 +242,7 @@ class PieView implements TraceView<PieCalc> {
     const height = calc.layout?.height ?? ctx.viewport.size.height;
     const opacity = traceOpacity(trace);
 
-    const arcs = pieArcs(trace, calc, height);
+    const arcs = pieArcs(trace, calc, height, ctx.fullLayout.paper_bgcolor);
     const data: Partial<ArcData> = {
       x: arcs.x,
       y: arcs.y,
@@ -242,6 +253,7 @@ class PieView implements TraceView<PieCalc> {
       fill: arcs.fill,
       borderColor: arcs.borderColor,
       borderWidth: arcs.borderWidth,
+      pattern: arcs.pattern,
       opacity,
     };
     if (!this.#arcs) {

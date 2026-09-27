@@ -31,6 +31,10 @@
  * exact for orthographic views, an interpolated approximation under perspective.
  *
  * `depth` is reserved for extruded boxes (plan E8.9) and is currently ignored.
+ *
+ * ## Patterns
+ * `pattern` (plan E8.10, see `pattern.ts`) hatches the fill of the rects that have a shape; its
+ * code loads on first use and {@link RectPrimitive.ready} covers it.
  */
 import {
   DoubleSide,
@@ -66,7 +70,11 @@ import {
   type NumericArray,
   type Vec3,
 } from './common.ts';
+import { patternsReady, syncInstancePattern, type PatternFill } from './pattern.ts';
 import { RECT_FRAGMENT_SHADER, RECT_VERTEX_SHADER } from './rect.glsl.ts';
+
+const SHADERS = [RECT_VERTEX_SHADER, RECT_FRAGMENT_SHADER] as const;
+const RESOLVED: Promise<void> = Promise.resolve();
 
 /** Where a rect's border sits relative to its geometric edge. */
 export type RectBorderAlign = 'inside' | 'center';
@@ -96,6 +104,8 @@ export interface RectData {
   borderAlign: RectBorderAlign;
   /** Multiplies every color's alpha. Default 1. */
   opacity: number;
+  /** Pattern fills per rect (plan E8.10), or `null` (the default) for plain fills. */
+  pattern: PatternFill | null;
 }
 
 const DEFAULTS: Omit<RectData, 'x0' | 'y0' | 'x1' | 'y1'> = {
@@ -107,6 +117,7 @@ const DEFAULTS: Omit<RectData, 'x0' | 'y0' | 'x1' | 'y1'> = {
   snap: false,
   borderAlign: 'inside',
   opacity: 1,
+  pattern: null,
 };
 
 const GEOMETRY_KEYS = ['x0', 'y0', 'x1', 'y1', 'z'] as const;
@@ -345,6 +356,11 @@ export class RectPrimitive implements Primitive<RectData> {
     return this.count;
   }
 
+  /** Resolves once the pattern (if any) is drawn: its code loads on first use. */
+  get ready(): Promise<void> {
+    return this.data.pattern ? patternsReady() : RESOLVED;
+  }
+
   update(patch: Partial<RectData>): void {
     if (this.disposed) return;
     const data = this.data as unknown as Record<string, unknown>;
@@ -386,6 +402,15 @@ export class RectPrimitive implements Primitive<RectData> {
         b.style.array as Float32Array,
       );
       markRange(b.style, count);
+    }
+    if (all || patch.pattern !== undefined) {
+      syncInstancePattern(
+        this.object,
+        SHADERS,
+        () => (this.disposed ? null : this.data.pattern),
+        () => this.count,
+        () => this.ctx.invalidate(),
+      );
     }
 
     const u = this.material.uniforms;

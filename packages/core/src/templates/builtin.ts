@@ -105,6 +105,9 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
     title: { font: { size: 9, color: TEXT }, standoff: 4 },
     automargin: true,
   };
+  // Rising and falling prices (`ohlc`, `candlestick`): the colorway's emerald and red.
+  const up = { line: { color: HOLOCHART_COLORWAY[3] } };
+  const down = { line: { color: HOLOCHART_COLORWAY[0] } };
   return {
     layout: {
       paper_bgcolor: BG,
@@ -221,6 +224,44 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
       // Thin outlines and small points, like scatter (Plotly's 2 px / 6 px read heavy when dense).
       box: [{ line: { width: 1 }, marker: { size: 3, line: { width: 0, color: BG } } }],
       violin: [{ line: { width: 1 }, marker: { size: 3, line: { width: 0, color: BG } } }],
+      // Financial traces: the colorway's luminance-matched emerald and red for rising and falling
+      // prices (Plotly's #3D9970 / #FF4136 are picked for white) and thin lines, like box. Candle
+      // bodies keep Plotly's default fill: the line color at half opacity.
+      ohlc: [{ line: { width: 1 }, increasing: up, decreasing: down }],
+      candlestick: [{ line: { width: 1 }, increasing: up, decreasing: down }],
+      // Waterfalls: the same emerald and red for changes and the colorway's blue for sums
+      // (Plotly's #3D9970 / #FF4136 / #4499FF), and thin connectors in the tick-label gray (Plotly's
+      // #444 on white; the grid colors vanish at 1 px). Funnels: borderless like bars, connector
+      // edges (when given a width) in the same gray. Funnel areas already outline their stages in
+      // the paper color.
+      waterfall: [
+        {
+          increasing: { marker: { color: HOLOCHART_COLORWAY[3] } },
+          decreasing: { marker: { color: HOLOCHART_COLORWAY[0] } },
+          totals: { marker: { color: HOLOCHART_COLORWAY[1] } },
+          connector: { line: { color: TICK, width: 1 } },
+        },
+      ],
+      funnel: [{ marker: { line: { width: 0 }, colorbar }, connector: { line: { color: TICK } } }],
+      // Indicators: a bright number, deltas in the same emerald and red, and a gauge with the axis
+      // look (a faint track and outline, short ticks, 8 px tick labels), a blue value bar (Plotly's
+      // green reads as a status) and a bright threshold (Plotly's #444 vanishes on dark).
+      indicator: [
+        {
+          number: { font: { color: TITLE } },
+          delta: {
+            increasing: { color: HOLOCHART_COLORWAY[3] },
+            decreasing: { color: HOLOCHART_COLORWAY[0] },
+          },
+          gauge: {
+            bgcolor: GRID,
+            bordercolor: AXIS,
+            bar: { color: HOLOCHART_COLORWAY[1] },
+            threshold: { line: { color: TITLE } },
+            axis: { ticklen: 3, tickcolor: AXIS, tickfont: { size: 8, color: TICK } },
+          },
+        },
+      ],
       // Scatter plot matrices are dense small multiples: small points, slim colorbars.
       splom: [{ marker: { size: 3, line: { width: 0, color: BG }, colorbar } }],
       // Heatmap-like traces don't pick automatic colorscales (Plotly): give them the sequential

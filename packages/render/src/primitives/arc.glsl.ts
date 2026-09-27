@@ -19,6 +19,7 @@ in vec3 iCorner;             // pad offset h (< 0: full ring), outer / inner cor
 in vec4 iFill;
 in vec4 iBorderColor;
 in float iBorderWidth;
+// @pattern-decl
 
 out vec2 vLocal;             // fragment offset from the center, CSS px, y-up
 flat out vec4 vShape;
@@ -41,6 +42,7 @@ void main() {
   vFill = iFill;
   vBorderColor = iBorderColor;
   vBorderWidth = max(iBorderWidth, 0.0);
+  // @pattern-vary
   gl_Position = hcOffsetClip(clip, offset);
 }
 `;
@@ -56,6 +58,8 @@ flat in vec3 vCorner;
 flat in vec4 vFill;
 flat in vec4 vBorderColor;
 flat in float vBorderWidth;
+#define HC_PATTERN_POINT vec2(vLocal.x, -vLocal.y)
+// @pattern-decl
 
 out highp vec4 fragColor;
 
@@ -107,8 +111,9 @@ void main() {
   float outer = clamp(0.5 - d / aa, 0.0, 1.0);
   float bw = vBorderWidth;
   float inner = bw > 0.0 ? clamp(0.5 - (d + bw) / aa, 0.0, 1.0) : 1.0;
-  float a = mix(vBorderColor.a, vFill.a, inner);
-  vec3 pm = mix(vBorderColor.rgb * vBorderColor.a, vFill.rgb * vFill.a, inner);
+  vec4 fill = vFill; // @pattern-fill
+  float a = mix(vBorderColor.a, fill.a, inner);
+  vec3 pm = mix(vBorderColor.rgb * vBorderColor.a, fill.rgb * fill.a, inner);
   float alpha = a * outer * uOpacity;
   if (alpha <= 0.0) discard;
   fragColor = vec4(pm / max(a, 1e-6), alpha);

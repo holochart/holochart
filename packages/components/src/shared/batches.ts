@@ -6,6 +6,7 @@
  * Geometry is given in container px; a {@link DataTransform} (see `host.ts`) maps it to the world
  * space of the viewport the primitive lives in.
  */
+import { toRGBA } from '@mk7s/holochart-core';
 import {
   createRectPrimitive,
   createTextPrimitive,
@@ -30,7 +31,7 @@ export const BELOW_TRACES_ORDER = -1e12;
 
 type Adder = Pick<ComponentDrawContext, 'add' | 'remove'>;
 
-function sameArray(a: ArrayLike<number> | undefined, b: ArrayLike<number>): boolean {
+function sameArray(a: ArrayLike<unknown> | undefined, b: ArrayLike<unknown>): boolean {
   if (!a || a.length !== b.length) return false;
   for (let i = 0; i < b.length; i++) if (a[i] !== b[i]) return false;
   return true;
@@ -72,6 +73,7 @@ export class RectBatch extends Batch<RectPrimitive> {
   #fill: Float32Array | undefined;
   #border: Float32Array | undefined;
   #borderWidth: Float32Array | undefined;
+  #patterned = false;
 
   constructor(ctx: Adder, primitives: PrimitiveContext, viewport: Viewport, renderOrder?: number) {
     super(
@@ -82,7 +84,10 @@ export class RectBatch extends Batch<RectPrimitive> {
     );
   }
 
-  /** Replace the rects. `borders` gives per-rect border color and width (inside the rect). */
+  /**
+   * Replace the rects. `borders` gives per-rect border color and width (inside the rect); rects
+   * with a `pattern` are hatched (plan E8.10).
+   */
   set(
     items: readonly RectItem[],
     borders?: readonly { color: readonly number[]; width: number }[],
@@ -93,6 +98,7 @@ export class RectBatch extends Batch<RectPrimitive> {
     const x1 = new Float64Array(n);
     const y1 = new Float64Array(n);
     const fill = new Float32Array(n * 4);
+    const patterned = items.some((r) => r.pattern);
     items.forEach((r, i) => {
       x0[i] = r.x0;
       y0[i] = r.y0;
@@ -117,8 +123,12 @@ export class RectBatch extends Batch<RectPrimitive> {
     const style =
       sameArray(this.#fill, fill) &&
       sameArray(this.#border, border) &&
-      sameArray(this.#borderWidth, borderWidth);
+      sameArray(this.#borderWidth, borderWidth) &&
+      // Patterns (legend glyphs) are few: always re-upload them.
+      !patterned &&
+      !this.#patterned;
     if (geometry && style) return;
+    this.#patterned = patterned;
     this.#x0 = x0;
     this.#y0 = y0;
     this.#x1 = x1;
@@ -126,10 +136,20 @@ export class RectBatch extends Batch<RectPrimitive> {
     this.#fill = fill;
     this.#border = border;
     this.#borderWidth = borderWidth;
+    const pattern = patterned
+      ? {
+          pattern: items.map((r) => r.pattern?.attributes),
+          color: Float32Array.from(items.flatMap((r) => r.pattern?.color ?? r.color)),
+          opacity: items.map((r) => r.pattern?.opacity ?? 1),
+          background: items.find((r) => r.pattern)?.pattern?.background,
+          parse: toRGBA,
+          legend: true,
+        }
+      : null;
     this.primitive.update(
       geometry
-        ? { fill, borderColor: border, borderWidth }
-        : { x0, y0, x1, y1, fill, borderColor: border, borderWidth },
+        ? { fill, borderColor: border, borderWidth, pattern }
+        : { x0, y0, x1, y1, fill, borderColor: border, borderWidth, pattern },
     );
   }
 }

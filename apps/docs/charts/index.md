@@ -69,12 +69,12 @@ types are added as their traces land.
 | Chart                                                                    | Trace type(s)                                | Milestone |
 | ------------------------------------------------------------------------ | -------------------------------------------- | --------- |
 | [Time Series](/fundamentals/dates-time-series)                           | `scatter`, `bar` on date axes                | M4        |
-| OHLC                                                                     | `ohlc`                                       | M4        |
-| Candlestick                                                              | `candlestick`                                | M4        |
-| Waterfall                                                                | `waterfall`                                  | M4        |
-| Funnel                                                                   | `funnel`                                     | M4        |
-| Funnel Area                                                              | `funnelarea`                                 | M4        |
-| Indicators                                                               | `indicator`                                  | M4        |
+| [OHLC](/charts/financial/ohlc)                                           | `ohlc`                                       | M4        |
+| [Candlestick](/charts/financial/candlestick)                             | `candlestick`                                | M4        |
+| [Waterfall](/charts/financial/waterfall)                                 | `waterfall`                                  | M4        |
+| [Funnel](/charts/financial/funnel)                                       | `funnel`                                     | M4        |
+| [Funnel Area](/charts/financial/funnelarea)                              | `funnelarea`                                 | M4        |
+| [Indicators](/charts/financial/indicator)                                | `indicator`                                  | M4        |
 | [Range Slider & Breaks](/fundamentals/layout-axes-subplots#range-breaks) | axis features (`rangeslider`, `rangebreaks`) | M3        |
 
 ## Hierarchical & Flow

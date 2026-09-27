@@ -1,9 +1,8 @@
 /**
  * `barpolar` attribute schema (plan E11.5, ADR-002), following plotly.js
  * `traces/barpolar/attributes.js`: `r` / `theta` like scatterpolar, the bar extent (`base`,
- * `offset`, `width`) and bar's marker and selection styles (without `cornerradius`).
- *
- * Not declared (deferred): `marker.pattern` (patterns are E8.10).
+ * `offset`, `width`) and bar's marker and selection styles (without `cornerradius`; with
+ * `marker.pattern`, E8.10).
  */
 import { attr } from '@mk7s/holochart-core';
 import { barAttributes } from '@mk7s/holochart-traces-basic';

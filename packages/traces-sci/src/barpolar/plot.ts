@@ -3,6 +3,8 @@
  * primitive) on circular grids, with the outline centered on the edges like Plotly's strokes;
  * bars clipped to the subplot (radial range, sector) by clamping their extents. On polygon grids
  * (`gridshape: 'linear'`) bars follow the grid's edges: batched polygon fills plus an outline.
+ * `marker.pattern` (E8.10) hatches the bars: tiles anchored at the pole on circular grids, at the
+ * subplot's top-left corner on polygon grids.
  */
 import {
   createArcPrimitive,
@@ -141,6 +143,7 @@ class BarpolarView implements TraceView<PolarCalc> {
       fill: style.fill,
       borderColor: style.border,
       borderWidth: border,
+      pattern: style.pattern,
     };
     if (!this.#arcs) {
       this.#arcs = createArcPrimitive(ctx.primitives, data);
@@ -166,6 +169,8 @@ class BarpolarView implements TraceView<PolarCalc> {
     const y: number[] = [];
     const rings: number[] = [];
     const colors: number[] = [];
+    /** Bars drawn as polygons, in polygon order (their patterns). */
+    const drawn: number[] = [];
     const lx: number[] = [];
     const ly: number[] = [];
     const lineColors: number[] = [];
@@ -186,6 +191,7 @@ class BarpolarView implements TraceView<PolarCalc> {
         y.push(vy);
       }
       colors.push(...style.fill.subarray(i * 4, i * 4 + 4));
+      drawn.push(i);
       const w = typeof bw === 'number' ? bw : (bw[i] ?? 0);
       if (w > 0) {
         lineWidth = Math.max(lineWidth, w);
@@ -210,6 +216,9 @@ class BarpolarView implements TraceView<PolarCalc> {
       y: Float64Array.from(y),
       rings,
       color: Float32Array.from(colors),
+      paint: style.pattern
+        ? { kind: 'pattern' as const, pattern: { ...style.pattern, index: drawn } }
+        : { kind: 'solid' as const },
     };
     if (!this.#fill) {
       this.#fill = createLazyFillPrimitive(ctx.primitives, data);

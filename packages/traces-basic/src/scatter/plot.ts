@@ -496,7 +496,7 @@ class ScatterView implements TraceView<ScatterCalc> {
       this.#fillBuilt = undefined;
       return;
     }
-    const style = fillStyle(trace, axes);
+    const style = fillStyle(trace, axes, ctx.fullLayout.plot_bgcolor);
     if (!this.#fill) {
       this.#fill = this.#add(
         ctx,
@@ -687,7 +687,9 @@ class ScatterView implements TraceView<ScatterCalc> {
   /** Style-only update: colors, widths, opacities, selection. Geometry is untouched. */
   #restyle(ctx: TracePlotContext<ScatterCalc>): void {
     const { trace, calc } = ctx;
-    this.#fill?.update(fillStyle(trace, { x: ctx.xaxis, y: ctx.yaxis }));
+    this.#fill?.update(
+      fillStyle(trace, { x: ctx.xaxis, y: ctx.yaxis }, ctx.fullLayout.plot_bgcolor),
+    );
     for (const letter of ['x', 'y'] as const) {
       this.#errors[letter]?.update({ style: errorBarStyle(trace, letter) });
     }

@@ -31,6 +31,7 @@ export type {
   HoverPoint,
   HoverQuery,
   LegendGlyph,
+  LegendGlyphPart,
   LegendIconContext,
   LegendItem,
   TraceDescription,

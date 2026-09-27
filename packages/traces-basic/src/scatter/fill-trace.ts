@@ -8,6 +8,7 @@ import { toRGBA, type FullTrace } from '@mk7s/holochart-core';
 import type { FillPaint, RGBA } from '@mk7s/holochart-render';
 import type { AxisInfo } from '@mk7s/holochart-runtime';
 import { resolveColorscale } from '../shared/colorscale.ts';
+import { patternFill } from '../shared/pattern.ts';
 import { drawnSeries, type ScatterCalc } from './calc.ts';
 import { buildFill, type FillGeometry, type FillMode } from './fill.ts';
 import { buildLinePath, needsRebuild, type LineShape } from './line-path.ts';
@@ -163,13 +164,17 @@ interface FullFillGradient {
 }
 
 /**
- * The fill paint: a `fillgradient` (with `start` / `stop` converted to linear coordinates of the
+ * The fill paint: a `fillpattern` with a shape (Plotly: before a gradient; `background` is the
+ * plot area color), a `fillgradient` (with `start` / `stop` converted to linear coordinates of the
  * gradient's axis) when it has a type and a valid colorscale, else solid.
  */
 export function fillPaint(
   trace: FullTrace,
   axes: { x?: AxisInfo | undefined; y?: AxisInfo | undefined },
+  background?: unknown,
 ): FillPaint {
+  const pattern = patternFill(trace['fillpattern'], fillColor(trace), 1, background);
+  if (pattern) return { kind: 'pattern', pattern };
   const g = trace['fillgradient'] as FullFillGradient | undefined;
   const type = g?.type;
   if (type !== 'horizontal' && type !== 'vertical' && type !== 'radial') return { kind: 'solid' };
@@ -194,6 +199,11 @@ export function fillPaint(
 export function fillStyle(
   trace: FullTrace,
   axes: { x?: AxisInfo | undefined; y?: AxisInfo | undefined },
+  background?: unknown,
 ): { color: RGBA; paint: FillPaint; opacity: number } {
-  return { color: fillColor(trace), paint: fillPaint(trace, axes), opacity: traceOpacity(trace) };
+  return {
+    color: fillColor(trace),
+    paint: fillPaint(trace, axes, background),
+    opacity: traceOpacity(trace),
+  };
 }

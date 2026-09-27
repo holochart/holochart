@@ -151,8 +151,8 @@ export interface LineDashOptions {
 }
 
 /**
- * Pattern grouping: one trace per value with `marker.pattern.shape` set. Holochart draws fill
- * patterns from plan E8.10; until then the traces, legend and names are there, the pattern is not.
+ * Pattern grouping: one trace per value with `marker.pattern.shape` set (bar, histogram, timeline),
+ * drawn as a hatch fill (plan E8.10).
  */
 export interface PatternOptions {
   /** Column whose values get different fill patterns. */

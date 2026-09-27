@@ -454,12 +454,16 @@ export function scatterLegendIcon(trace: FullTrace): LegendGlyph {
   if (hasFill(trace)) {
     // Plotly's legend shows the fill swatch edged with the line; the glyph contract has one kind.
     const fillcolor = trace['fillcolor'];
+    const pattern = (trace['fillpattern'] as { shape?: unknown } | undefined)?.shape
+      ? (trace['fillpattern'] as Readonly<Record<string, unknown>>)
+      : undefined;
     return strip({
       kind: 'fill' as const,
       fill: {
         color: typeof fillcolor === 'string' ? fillcolor : undefined,
         lineColor: lineGlyph?.color,
         lineWidth: lineGlyph ? Math.min(lineGlyph.width, 2) : 0,
+        ...(pattern ? { pattern } : {}),
       },
     });
   }

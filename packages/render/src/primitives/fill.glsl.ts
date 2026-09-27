@@ -1,4 +1,4 @@
-import { TRANSFORM_GLSL } from './common.glsl.ts';
+import { SCREEN_GLSL, TRANSFORM_GLSL } from './common.glsl.ts';
 
 /**
  * Fill vertex shader: RTC positions through the shared data → clip transform, flat per-vertex
@@ -13,10 +13,12 @@ in vec2 aGrad;
 uniform float uOpacity;
 out vec4 vColor;
 out vec2 vGrad;
+// @pattern-decl
 
 void main() {
   vColor = vec4(aColor.rgb, aColor.a * uOpacity);
   vGrad = aGrad;
+  // @pattern-vary
   gl_Position = hcDataToClip(position);
 }
 `;
@@ -25,8 +27,11 @@ void main() {
  * Fill fragment shader: straight-alpha sRGB color, written unconverted (see `types.ts`). With a
  * gradient paint (`uGradient` 1: linear, `t = vGrad.x`; 2: radial, `t = 2·|vGrad − ½|` in the
  * bounding box, like SVG's default `radialGradient`), the color comes from the colorscale LUT.
+ * With a pattern paint (plan E8.10) the pattern code is injected at the `@pattern` hooks (see
+ * `pattern-code.ts`).
  */
 export const FILL_FRAGMENT_GLSL = /* glsl */ `
+${SCREEN_GLSL}
 in vec4 vColor;
 in vec2 vGrad;
 uniform int uGradient;
@@ -34,9 +39,12 @@ uniform sampler2D uLut;
 uniform float uLutSize;
 uniform float uOpacity;
 out highp vec4 fragColor;
+// vColor has the opacity in; pattern colors get it here.
+#define HC_PATTERN_OPACITY uOpacity
+// @pattern-decl
 
 void main() {
-  vec4 color = vColor;
+  vec4 color = vColor; // @pattern-fill
   if (uGradient > 0) {
     float t = uGradient == 1 ? vGrad.x : 2.0 * length(vGrad - 0.5);
     t = clamp(t, 0.0, 1.0);

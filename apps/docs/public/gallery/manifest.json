@@ -735,6 +735,18 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "area/pattern",
+      "title": "Area: pattern fills",
+      "description": "Three stacked areas hatched with fillpattern: lines, dots and an overlaid cross-hatch.",
+      "tags": ["area", "fill", "scatter", "stacked", "pattern"],
+      "category": "area",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/area/pattern.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "area/percent",
       "title": "Area: 100% stacked",
       "description": "Shares of a total over time: a stack group normalized with groupnorm: 'percent' and a % tick suffix.",
@@ -888,6 +900,42 @@
       "size": { "width": 640, "height": 400 },
       "threeD": false,
       "thumbnail": "gallery/thumbs/bar/horizontal.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "bar/pattern-fillmode",
+      "title": "Bar: pattern fill modes",
+      "description": "Grouped bars with fillmode 'replace' and 'overlay', and per-bar pattern size and solidity.",
+      "tags": ["bar", "chart", "pattern", "grouped", "customization"],
+      "category": "bar",
+      "traceTypes": ["bar"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/bar/pattern-fillmode.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "bar/pattern-print",
+      "title": "Bar: print-friendly patterns",
+      "description": "Stacked bars in black and white on simple_white, told apart by hatch pattern alone.",
+      "tags": ["bar", "chart", "pattern", "stacked", "grayscale", "accessibility"],
+      "category": "bar",
+      "traceTypes": ["bar"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/bar/pattern-print.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "bar/patterns",
+      "title": "Bar: pattern shapes",
+      "description": "Every marker.pattern.shape, one per bar: diagonal, straight and crossed lines, dots.",
+      "tags": ["bar", "chart", "pattern", "customization"],
+      "category": "bar",
+      "traceTypes": ["bar"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/bar/patterns.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
@@ -1104,6 +1152,62 @@
       "size": { "width": 640, "height": 400 },
       "threeD": false,
       "thumbnail": "gallery/thumbs/bubble/sizeref.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "candlestick/basic",
+      "title": "Candlestick: basic",
+      "description": "Three months of daily candles with bodies from open to close and wicks to the high and low, and the default range slider.",
+      "tags": ["candlestick", "financial", "time-series", "date", "rangeslider", "basic"],
+      "category": "candlestick",
+      "traceTypes": ["candlestick"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/candlestick/basic.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "candlestick/intraday",
+      "title": "Candlestick: intraday with overnight breaks",
+      "description": "Fifteen-minute candles over three sessions with nights and the weekend hidden by range breaks.",
+      "tags": ["candlestick", "financial", "time-series", "date", "rangebreaks", "intraday"],
+      "category": "candlestick",
+      "traceTypes": ["candlestick"],
+      "size": { "width": 760, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/candlestick/intraday.webp",
+      "thumbnailSize": { "width": 640, "height": 354 }
+    },
+    {
+      "id": "candlestick/range-breaks",
+      "title": "Candlestick: range breaks and range selector",
+      "description": "A year of daily candles with weekends and holidays hidden, range selector buttons and the default range slider.",
+      "tags": [
+        "candlestick",
+        "financial",
+        "time-series",
+        "date",
+        "rangebreaks",
+        "rangeselector",
+        "rangeslider"
+      ],
+      "category": "candlestick",
+      "traceTypes": ["candlestick"],
+      "size": { "width": 760, "height": 440 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/candlestick/range-breaks.webp",
+      "thumbnailSize": { "width": 640, "height": 371 }
+    },
+    {
+      "id": "candlestick/styled",
+      "title": "Candlestick: fills, outlines and whisker caps",
+      "description": "Hollow rising and solid falling candles with custom outlines, whisker caps and a narrower gap between candles.",
+      "tags": ["candlestick", "financial", "time-series", "date", "styling"],
+      "category": "candlestick",
+      "traceTypes": ["candlestick"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/candlestick/styled.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
@@ -1383,6 +1487,18 @@
       "thumbnailSize": { "width": 640, "height": 404 }
     },
     {
+      "id": "express/bar-pattern",
+      "title": "Express: bar with pattern groups",
+      "description": "Medal counts stacked per nation, colored by nation and hatched by medal.",
+      "tags": ["express", "bar", "pattern", "grouping", "stacked"],
+      "category": "express",
+      "traceTypes": ["bar"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/express/bar-pattern.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
+    },
+    {
       "id": "express/density-heatmap",
       "title": "Express: density heatmap with marginal histograms",
       "description": "Counts of bills and tips in 2D bins, with a histogram of each on the sides.",
@@ -1525,6 +1641,126 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/express/scatter-matrix.webp",
       "thumbnailSize": { "width": 640, "height": 600 }
+    },
+    {
+      "id": "funnel/basic",
+      "title": "Funnel: basic",
+      "description": "Six stages of a sales funnel, centered bars with value and percent-of-initial labels and connector regions between stages.",
+      "tags": ["funnel", "financial", "chart", "text", "basic"],
+      "category": "funnel",
+      "traceTypes": ["funnel"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/funnel/basic.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "funnel/colorscale",
+      "title": "Funnel: colorscale and connector fill",
+      "description": "Stage colors mapped through a colorscale with a colorbar, value and percent-of-previous labels, and a custom connector fill.",
+      "tags": ["funnel", "financial", "chart", "colorscale", "colorbar", "style"],
+      "category": "funnel",
+      "traceTypes": ["funnel"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/funnel/colorscale.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "funnel/grouped",
+      "title": "Funnel: grouped years",
+      "description": "Two funnel traces side by side per stage with funnelmode group, funnelgap and funnelgroupgap, and a legend.",
+      "tags": ["funnel", "financial", "chart", "group", "funnelmode", "legend"],
+      "category": "funnel",
+      "traceTypes": ["funnel"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/funnel/grouped.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "funnel/stacked",
+      "title": "Funnel: stacked regions",
+      "description": "Three funnel traces stacked per stage and centered, each with its own connector regions and value labels, with a legend.",
+      "tags": ["funnel", "financial", "chart", "stack", "funnelmode", "legend"],
+      "category": "funnel",
+      "traceTypes": ["funnel"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/funnel/stacked.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "funnel/textinfo",
+      "title": "Funnel: textinfo and styles",
+      "description": "Label, value and percent-of-initial / previous / total labels on a horizontal and a vertical funnel, per-stage colors and outlined connectors.",
+      "tags": ["funnel", "financial", "chart", "text", "textinfo", "vertical", "style", "subplots"],
+      "category": "funnel",
+      "traceTypes": ["funnel"],
+      "size": { "width": 780, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/funnel/textinfo.webp",
+      "thumbnailSize": { "width": 640, "height": 345 }
+    },
+    {
+      "id": "funnelarea/basic",
+      "title": "Funnel area: basic",
+      "description": "Five stages as stacked trapezoids with areas proportional to their values, labeled with stage and value, with a per-stage legend and a title.",
+      "tags": ["funnelarea", "financial", "chart", "text", "legend", "basic"],
+      "category": "funnelarea",
+      "traceTypes": ["funnelarea"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/funnelarea/basic.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
+    },
+    {
+      "id": "funnelarea/colors",
+      "title": "Funnel area: stage colors",
+      "description": "Stage colors from layout.funnelareacolorway, extended with lighter copies for extra stages, with thick outlines.",
+      "tags": ["funnelarea", "financial", "chart", "colorway", "style", "legend"],
+      "category": "funnelarea",
+      "traceTypes": ["funnelarea"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/funnelarea/colors.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
+    },
+    {
+      "id": "funnelarea/domains",
+      "title": "Funnel area: domains and scalegroup",
+      "description": "Two funnel areas in layout.grid cells sized by their totals with a shared scalegroup, stage colors shared by label.",
+      "tags": ["funnelarea", "financial", "chart", "grid", "domain", "scalegroup", "legend"],
+      "category": "funnelarea",
+      "traceTypes": ["funnelarea"],
+      "size": { "width": 780, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/funnelarea/domains.webp",
+      "thumbnailSize": { "width": 640, "height": 345 }
+    },
+    {
+      "id": "funnelarea/ratios",
+      "title": "Funnel area: aspect and base ratios",
+      "description": "The same stages as three funnel areas with different aspectratio and baseratio, from a flat pointed funnel to a tall wide-based one.",
+      "tags": ["funnelarea", "financial", "chart", "aspectratio", "baseratio", "domain"],
+      "category": "funnelarea",
+      "traceTypes": ["funnelarea"],
+      "size": { "width": 780, "height": 380 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/funnelarea/ratios.webp",
+      "thumbnailSize": { "width": 640, "height": 312 }
+    },
+    {
+      "id": "funnelarea/texttemplate",
+      "title": "Funnel area: texttemplate",
+      "description": "Stage labels from a texttemplate with bold names, formatted values and percentages, in a larger font.",
+      "tags": ["funnelarea", "financial", "chart", "text", "texttemplate", "rich-text"],
+      "category": "funnelarea",
+      "traceTypes": ["funnelarea"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/funnelarea/texttemplate.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
     },
     {
       "id": "gantt/dependencies",
@@ -1743,6 +1979,18 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "histogram/patterns",
+      "title": "Histogram: patterns",
+      "description": "Two overlaid distributions hatched in opposite directions; the overlap cross-hatches.",
+      "tags": ["histogram", "chart", "overlay", "pattern", "statistical"],
+      "category": "histogram",
+      "traceTypes": ["histogram"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/histogram/patterns.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "histogram/stacked-bars",
       "title": "Histogram: stacked with bars",
       "description": "Web and app orders binned by hour (histograms) stacked with pre-counted phone orders (bars).",
@@ -1945,6 +2193,90 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/image/source.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "indicator/bullet",
+      "title": "Indicator: bullet gauges",
+      "description": "Three stacked bullet gauges with qualitative steps, a target threshold, the value bar and the number with its delta.",
+      "tags": ["indicator", "financial", "kpi", "gauge", "bullet"],
+      "category": "indicator",
+      "traceTypes": ["indicator"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/indicator/bullet.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "indicator/count-up",
+      "title": "Indicator: count-up transition",
+      "description": "React with layout.transition to a new value: the number counts up, the delta follows and the gauge bar sweeps to the new value.",
+      "tags": ["indicator", "financial", "gauge", "animation", "transitions"],
+      "category": "indicator",
+      "traceTypes": ["indicator"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/indicator/count-up.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "indicator/dashboard",
+      "title": "Indicator: KPI dashboard",
+      "description": "Number and delta cards, angular gauges and bullet gauges laid out on a grid by domain, each fitted to its cell.",
+      "tags": ["indicator", "financial", "kpi", "dashboard", "grid", "gauge", "bullet"],
+      "category": "indicator",
+      "traceTypes": ["indicator"],
+      "size": { "width": 760, "height": 460 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/indicator/dashboard.webp",
+      "thumbnailSize": { "width": 640, "height": 387 }
+    },
+    {
+      "id": "indicator/delta",
+      "title": "Indicator: number and delta",
+      "description": "Two KPIs with their change from a reference: a relative delta below the number, and an absolute one to its right.",
+      "tags": ["indicator", "financial", "kpi", "number", "delta"],
+      "category": "indicator",
+      "traceTypes": ["indicator"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/indicator/delta.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "indicator/gauge",
+      "title": "Indicator: angular gauge",
+      "description": "A half-ring gauge with colored steps, a threshold line and a ticked axis, the number and its delta in the middle.",
+      "tags": ["indicator", "financial", "kpi", "gauge", "angular"],
+      "category": "indicator",
+      "traceTypes": ["indicator"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/indicator/gauge.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "indicator/number",
+      "title": "Indicator: number",
+      "description": "One value as a big number with a prefix and a d3 format, sized to fit its domain, under a title.",
+      "tags": ["indicator", "financial", "kpi", "number", "basic"],
+      "category": "indicator",
+      "traceTypes": ["indicator"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/indicator/number.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "indicator/styled",
+      "title": "Indicator: styling",
+      "description": "Custom fonts, symbols, alignment, outlined bars and steps, borders, tick formats and named ticks on angular and bullet gauges.",
+      "tags": ["indicator", "financial", "kpi", "gauge", "styling"],
+      "category": "indicator",
+      "traceTypes": ["indicator"],
+      "size": { "width": 720, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/indicator/styled.webp",
+      "thumbnailSize": { "width": 640, "height": 373 }
     },
     {
       "id": "layout/climate-grid",
@@ -2151,6 +2483,66 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "ohlc/basic",
+      "title": "OHLC: basic",
+      "description": "Six months of daily open, high, low and close bars, colored by direction, with the default range slider.",
+      "tags": ["ohlc", "financial", "time-series", "date", "rangeslider", "basic"],
+      "category": "ohlc",
+      "traceTypes": ["ohlc"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/ohlc/basic.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "ohlc/indicators",
+      "title": "OHLC: moving average and Bollinger bands",
+      "description": "Daily bars under a 20-day moving average and a filled two-sigma Bollinger band drawn with scatter traces.",
+      "tags": ["ohlc", "financial", "time-series", "date", "scatter", "line", "area"],
+      "category": "ohlc",
+      "traceTypes": ["ohlc", "scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/ohlc/indicators.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "ohlc/monthly",
+      "title": "OHLC: monthly bars with period alignment",
+      "description": "Three years of monthly bars centered in their months with xperiod, next to the monthly ticks.",
+      "tags": ["ohlc", "financial", "time-series", "date", "period"],
+      "category": "ohlc",
+      "traceTypes": ["ohlc"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/ohlc/monthly.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "ohlc/range-breaks",
+      "title": "OHLC: range breaks and unified hover",
+      "description": "Daily bars with weekends and holidays removed by range breaks, unified hover and the default range slider.",
+      "tags": ["ohlc", "financial", "time-series", "date", "rangebreaks", "rangeslider", "hover"],
+      "category": "ohlc",
+      "traceTypes": ["ohlc"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/ohlc/range-breaks.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "ohlc/styled",
+      "title": "OHLC: colors, widths and ticks",
+      "description": "Bars with custom colors and widths per direction, dotted falling bars, longer ticks and no range slider.",
+      "tags": ["ohlc", "financial", "time-series", "date", "styling"],
+      "category": "ohlc",
+      "traceTypes": ["ohlc"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/ohlc/styled.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "parcats/basic",
       "title": "Parallel categories: basic",
       "description": "Hair, eye color and sex of eight people as bands and the paths between them.",
@@ -2307,6 +2699,18 @@
       "thumbnailSize": { "width": 640, "height": 472 }
     },
     {
+      "id": "pie/patterns",
+      "title": "Pie: patterns",
+      "description": "Six slices, each hatched with its own pattern shape in its slice color.",
+      "tags": ["pie", "chart", "pattern", "legend"],
+      "category": "pie",
+      "traceTypes": ["pie"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/pie/patterns.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "pie/pulled",
       "title": "Pie: pulled slices with outside labels",
       "description": "Per-slice pull to emphasize two slices, clockwise from 90°, with label+percent outside the pie.",
@@ -2364,6 +2768,18 @@
       "size": { "width": 640, "height": 400 },
       "threeD": false,
       "thumbnail": "gallery/thumbs/polar/barpolar-overlay.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "polar/barpolar-patterns",
+      "title": "Polar: bars with patterns",
+      "description": "Stacked barpolar traces hatched per trace, and per bar on a hexagonal grid.",
+      "tags": ["polar", "barpolar", "bars", "pattern", "subplots"],
+      "category": "polar",
+      "traceTypes": ["barpolar"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/polar/barpolar-patterns.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
@@ -2473,6 +2889,18 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/polar/wind-rose.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "recipes/candlestick-volume",
+      "title": "Recipe: candlesticks with volume, moving averages and signals",
+      "description": "Daily candles with 20/50-day moving averages, crossover buy and sell markers, and a volume subplot on a shared date axis.",
+      "tags": ["recipe", "candlestick", "financial", "time-series", "bar", "scatter", "subplots"],
+      "category": "recipes",
+      "traceTypes": ["bar", "candlestick", "scatter"],
+      "size": { "width": 760, "height": 520 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/recipes/candlestick-volume.webp",
+      "thumbnailSize": { "width": 640, "height": 438 }
     },
     {
       "id": "recipes/dot-plot",
@@ -3229,6 +3657,54 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/violin/split.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "waterfall/connector-modes",
+      "title": "Waterfall: connector modes",
+      "description": "Connector lines 'between' bars next to 'spanning' connectors with a dashed, thicker line style, on two subplots.",
+      "tags": ["waterfall", "financial", "chart", "connector", "subplots", "style"],
+      "category": "waterfall",
+      "traceTypes": ["waterfall"],
+      "size": { "width": 760, "height": 380 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/waterfall/connector-modes.webp",
+      "thumbnailSize": { "width": 640, "height": 320 }
+    },
+    {
+      "id": "waterfall/grouped",
+      "title": "Waterfall: grouped years",
+      "description": "Two waterfalls side by side per quarter with waterfallgap and waterfallgroupgap, a common base and per-trace direction colors.",
+      "tags": ["waterfall", "financial", "chart", "group", "waterfallmode", "base", "legend"],
+      "category": "waterfall",
+      "traceTypes": ["waterfall"],
+      "size": { "width": 720, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/waterfall/grouped.webp",
+      "thumbnailSize": { "width": 640, "height": 373 }
+    },
+    {
+      "id": "waterfall/horizontal",
+      "title": "Waterfall: horizontal cash bridge",
+      "description": "A horizontal waterfall from an absolute opening balance through inflows and outflows to the closing total, labeled with running totals.",
+      "tags": ["waterfall", "financial", "chart", "horizontal", "measure", "text"],
+      "category": "waterfall",
+      "traceTypes": ["waterfall"],
+      "size": { "width": 720, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/waterfall/horizontal.webp",
+      "thumbnailSize": { "width": 640, "height": 373 }
+    },
+    {
+      "id": "waterfall/pnl",
+      "title": "Waterfall: profit and loss",
+      "description": "Revenue, costs and taxes as relative bars with subtotal and total bars, connector lines and change labels outside the bars.",
+      "tags": ["waterfall", "financial", "chart", "measure", "totals", "text", "basic"],
+      "category": "waterfall",
+      "traceTypes": ["waterfall"],
+      "size": { "width": 720, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/waterfall/pnl.webp",
+      "thumbnailSize": { "width": 640, "height": 373 }
     }
   ]
 }
