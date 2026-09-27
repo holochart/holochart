@@ -5,7 +5,14 @@
  * counts up (formatted each frame), the delta follows, the gauge bar sweeps on the same
  * primitives, and the last frame is exactly the new figure.
  */
-import type { FrameScheduler, TextData } from '@mk7s/holochart-render';
+import {
+  createFallbackTextMeasurer,
+  createFontMetricsOracle,
+  registerFont,
+  setDefaultFontMetricsOracle,
+  type FrameScheduler,
+  type TextData,
+} from '@mk7s/holochart-render';
 import {
   createChart,
   createChartRegistry,
@@ -18,6 +25,8 @@ import { indicator } from './index.ts';
 
 /** Texts of every text-primitive update, in order. */
 const drawn: string[][] = [];
+/** Font sizes of every text-primitive update, in order. */
+const sizes: number[][] = [];
 
 // The text engine (troika) needs WebGL: record the labels with a stand-in primitive instead.
 vi.mock('@mk7s/holochart-render', async (importOriginal) => {
@@ -28,7 +37,10 @@ vi.mock('@mk7s/holochart-render', async (importOriginal) => {
       const primitive = {
         object: new Object3D(),
         update(patch: Partial<TextData>) {
-          if (patch.labels) drawn.push(patch.labels.map((l) => l.text));
+          if (patch.labels) {
+            drawn.push(patch.labels.map((l) => l.text));
+            sizes.push(patch.labels.map((l) => l.font?.size ?? 0));
+          }
         },
         setTransform() {},
         setViewport() {},
@@ -110,6 +122,7 @@ beforeEach(() => {
     renderRoot: { scheduler, createRenderer: fakeRenderer },
   };
   drawn.length = 0;
+  sizes.length = 0;
 });
 
 afterEach(() => {
@@ -218,5 +231,50 @@ describe('indicator transitions', () => {
     await chart.react(figure(380, 0));
     expect(shown()[0]).toBe('380');
     expect(drawn.length).toBe(before + 1);
+  });
+});
+
+describe('indicator fonts', () => {
+  afterEach(() => setDefaultFontMetricsOracle(null));
+
+  /** An oracle measuring `k` times as wide as the deterministic fallback table. */
+  const oracle = (k: number) => {
+    const table = createFallbackTextMeasurer();
+    return createFontMetricsOracle({
+      resolveFace: null,
+      measurer: {
+        kind: `fallback×${k}`,
+        width: (text, face) => k * table.width(text, face),
+        vertical: (face) => table.vertical(face),
+      },
+    });
+  };
+  const number = { data: [{ type: 'indicator', mode: 'number', value: 123456789 }] };
+
+  it('drops the kept number scale when a font finishes loading', async () => {
+    // Before the web font loads, text is measured with a wider fallback: the number shrinks to fit.
+    setDefaultFontMetricsOracle(oracle(4));
+    chart = createChart(container, number, options);
+    await chart.ready;
+    const fallback = sizes.at(-1)![0]!;
+
+    // The font arrives (any font change notifies), measurements get narrower: the chart re-runs
+    // layout and the number grows to the size a fresh layout gives, instead of keeping the
+    // smaller scale measured with the fallback.
+    setDefaultFontMetricsOracle(oracle(1));
+    const unregister = registerFont({ family: 'Test Face', url: 'data:,' }, { cssFontFace: false });
+    try {
+      await steps(3);
+      await chart.ready;
+      const loaded = sizes.at(-1)![0]!;
+      expect(loaded).toBeGreaterThan(fallback);
+
+      chart.destroy();
+      chart = createChart(container, number, options);
+      await chart.ready;
+      expect(sizes.at(-1)![0]).toBeCloseTo(loaded, 6);
+    } finally {
+      unregister();
+    }
   });
 });

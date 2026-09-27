@@ -16,6 +16,7 @@ import {
   createArcPrimitive,
   createRectPrimitive,
   createTextPrimitive,
+  subscribeFontChanges,
   type ArcData,
   type ArcPrimitive,
   type Primitive,
@@ -125,9 +126,19 @@ class IndicatorView implements TraceView<IndicatorCalc> {
   #text: TextPrimitive | undefined;
   /** Plotly's kept number scale and offsets (see `layout.ts`). */
   readonly #cache: IndicatorLayoutCache = new Map();
+  /**
+   * Until a web font (e.g. the default TeX Gyre Heros face) has loaded, text is measured with a
+   * fallback font; the chart re-runs layout when it arrives. Kept scales measured before then must
+   * go, or the smallest one (a wider fallback, e.g. on Linux) sticks.
+   */
+  readonly #unsubscribeFonts = subscribeFontChanges(() => this.#cache.clear());
 
   constructor(ctx: TracePlotContext<IndicatorCalc>) {
     this.#sync(ctx);
+  }
+
+  dispose(): void {
+    this.#unsubscribeFonts();
   }
 
   update(ctx: TracePlotContext<IndicatorCalc>): void {
