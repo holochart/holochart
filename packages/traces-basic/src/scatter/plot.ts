@@ -54,10 +54,11 @@ import {
   type RichLabel,
 } from '../shared/rich-text.ts';
 import { drawnSeries, type ScatterCalc } from './calc.ts';
+import type { LineLod, LodView, LodWindow } from './line-lod.ts';
 import { windowChange } from './calc-stream.ts';
 import { fillStyle, traceFill, type TraceFill } from './fill-trace.ts';
 import { hasLines, hasMarkers, hasText } from './defaults.ts';
-import { needsRebuild, pathDependsOnScale, type LineShape } from './line-path.ts';
+import { buildLinePath, needsRebuild, pathDependsOnScale, type LineShape } from './line-path.ts';
 import { LinePathStream } from './line-stream.ts';
 import { lineStyle, markerStyle, traceOpacity } from './style.ts';
 import { lineCount, plainText, textPlacement, TEXT_LINE_HEIGHT } from './text-position.ts';
@@ -80,6 +81,57 @@ const LAYER = {
 } as const;
 
 export { traceRenderOrder };
+
+// ---- Level of detail (E16.2) ------------------------------------------------------------------
+
+/**
+ * Lines with at least this many points draw through the min/max pyramid of `line-lod.ts`, which
+ * loads on first use: a pan or zoom then re-reads only the entries in view instead of the whole
+ * trace, and only the view (plus a margin) is uploaded.
+ */
+export const LOD_MIN_POINTS = 100_000;
+
+type LodModule = typeof import('./line-lod.ts');
+let lodModule: LodModule | undefined;
+let lodLoading: Promise<LodModule> | undefined;
+
+/** Load the pyramid code once (a failed load is retried by the next line that wants it). */
+function loadLod(): Promise<LodModule> {
+  lodLoading ??= import('./line-lod.ts').then(
+    (mod) => (lodModule = mod),
+    (error: unknown) => {
+      lodLoading = undefined;
+      throw error;
+    },
+  );
+  return lodLoading;
+}
+
+/**
+ * Whether the line of `ctx` draws through the pyramid: `line.simplify` (default on), enough
+ * points, a straight or step `line.shape`, a solid line (a dash pattern would restart at the
+ * window's edge), not stacked.
+ */
+function wantsLod(ctx: TracePlotContext<ScatterCalc>): boolean {
+  const line = (ctx.trace['line'] ?? {}) as FullLineShape & { dash?: unknown };
+  return (
+    ctx.calc.length >= LOD_MIN_POINTS &&
+    line.simplify !== false &&
+    line.shape !== 'spline' &&
+    (line.dash === undefined || line.dash === 'solid') &&
+    ctx.calc.stack === undefined &&
+    ctx.xaxis !== undefined
+  );
+}
+
+/** The visible x range (linear) and the x scale of `ctx`. */
+function lodView(ctx: TracePlotContext<ScatterCalc>): LodView {
+  const [a, b] = ctx.xaxis!.scale.range;
+  return { lo: Math.min(a, b), hi: Math.max(a, b), scaleX: ctx.transform.scaleX };
+}
+
+/** A line primitive with a `ready` promise (awaited by `chart.ready`) while the pyramid loads. */
+type LodLine = LinePrimitive & { ready?: Promise<void> };
 
 // ---- Lines ------------------------------------------------------------------------------------
 
@@ -322,6 +374,7 @@ function markerSlice(
     ...(style.lineColor !== undefined ? { lineColor: sliceColor(style.lineColor, a, b) } : {}),
     ...(style.lineWidth !== undefined ? { lineWidth: sliceOf(style.lineWidth, a, b) } : {}),
     ...(style.symbol !== undefined ? { symbol: sliceOf(style.symbol, a, b) } : {}),
+    ...(style.image != null ? { image: sliceOf(style.image, a, b) } : {}),
     ...(style.opacity !== undefined ? { opacity: sliceOf(style.opacity, a, b) } : {}),
     ...(style.angle !== undefined ? { angle: sliceOf(style.angle, a, b) } : {}),
   };
@@ -371,7 +424,12 @@ class ScatterView implements TraceView<ScatterCalc> {
   /** The calc last drawn: a streamed calc (`appendOf`) of it can take the streaming path. */
   #drawn: ScatterCalc | undefined;
   #errors: { x?: ErrorBarLayer; y?: ErrorBarLayer } = {};
-  #line: LinePrimitive | undefined;
+  #line: LodLine | undefined;
+  /** The line's min/max pyramid (E16.2) when the line draws through it, and what it drew. */
+  #lod: LineLod | undefined;
+  #lodWindow: LodWindow | undefined;
+  /** The context last drawn (the line is redrawn with it once the pyramid code loads). */
+  #lineCtx: TracePlotContext<ScatterCalc> | undefined;
   /** The line's vertex path, kept incrementally while streaming (E7.2). */
   #path = new LinePathStream();
   /** Scales the line path was built for, when it depends on them (spline, decimation). */
@@ -400,6 +458,7 @@ class ScatterView implements TraceView<ScatterCalc> {
   }
 
   update(ctx: TracePlotContext<ScatterCalc>, plan: TraceUpdatePlan): void {
+    this.#lineCtx = ctx;
     const previous = this.#drawn;
     this.#drawn = ctx.calc;
     // `crossTraceCalc` makes the runtime drop `plan.append` (the calc may have been rewritten);
@@ -502,7 +561,11 @@ class ScatterView implements TraceView<ScatterCalc> {
     this.#syncErrorBars(ctx, order);
 
     const line = this.#line;
-    if (line) {
+    // The pyramid rebuilds only its chunks at the edited ends; the window is re-read whole.
+    const lodBefore = this.#lod !== undefined;
+    if (line && (this.#lodOf(ctx) || lodBefore)) {
+      line.update(this.#linePath(ctx));
+    } else if (line) {
       const opts = lineOptions(trace, ctx.transform);
       const built = this.#lineScales;
       const stale =
@@ -571,6 +634,7 @@ class ScatterView implements TraceView<ScatterCalc> {
 
   /** Create, remove or fully refresh every primitive to match the trace. */
   #sync(ctx: TracePlotContext<ScatterCalc>): void {
+    this.#lineCtx = ctx;
     const { trace, calc } = ctx;
     const order = traceRenderOrder(trace, ctx.index);
     const mode = trace['mode'];
@@ -585,6 +649,7 @@ class ScatterView implements TraceView<ScatterCalc> {
     } else {
       this.#line = this.#drop(ctx, this.#line);
       this.#lineScales = undefined;
+      this.#lod = this.#lodWindow = undefined;
     }
 
     if (hasMarkers(mode)) {
@@ -654,7 +719,12 @@ class ScatterView implements TraceView<ScatterCalc> {
     if (this.#line) {
       const scales = { scaleX: Math.abs(t.scaleX), scaleY: Math.abs(t.scaleY) };
       const built = this.#lineScales;
-      if (!synced && built && needsRebuild(built, scales, { spline: built.spline })) {
+      if (this.#lod) {
+        const drawn = this.#lodWindow;
+        if (!synced && !(drawn && lodModule!.covers(drawn, lodView(ctx)))) {
+          this.#line.update(this.#linePath(ctx));
+        }
+      } else if (!synced && built && needsRebuild(built, scales, { spline: built.spline })) {
         this.#line.update(this.#linePath(ctx));
       }
       this.#line.setTransform(t);
@@ -665,10 +735,57 @@ class ScatterView implements TraceView<ScatterCalc> {
   }
 
   #linePath(ctx: TracePlotContext<ScatterCalc>): { x: Float64Array; y: Float64Array } {
+    const lod = this.#lodOf(ctx);
+    if (lod) {
+      this.#lineScales = undefined;
+      // The streaming path state is stale from here on (and would hold a copy of the line).
+      if (this.#path.options) this.#path = new LinePathStream();
+      const path = lod.path(lodView(ctx));
+      this.#lodWindow = path.window;
+      const opts = lineOptions(ctx.trace, ctx.transform);
+      // Step shapes are drawn through the decimated points.
+      return opts.shape === 'linear'
+        ? path
+        : buildLinePath(path.x, path.y, { ...opts, simplify: false, connectgaps: false });
+    }
+    this.#lodWindow = undefined;
     const series = drawnSeries(ctx.calc);
     this.#path.rebuild(series.x, series.y, lineOptions(ctx.trace, ctx.transform));
     this.#noteLineScales();
     return { x: this.#path.x, y: this.#path.y };
+  }
+
+  /**
+   * The pyramid the line draws through, (re)built for a new calc or `connectgaps`, or `undefined`
+   * (the line is then built whole by `LinePathStream`): not wanted, x not monotonic, or its code
+   * still loading — the line is redrawn through it once loaded.
+   */
+  #lodOf(ctx: TracePlotContext<ScatterCalc>): LineLod | undefined {
+    this.#lod = undefined;
+    if (!wantsLod(ctx)) return undefined;
+    if (!lodModule) {
+      const line = this.#line;
+      const redraw = (): void => {
+        const latest = this.#lineCtx;
+        if (this.#line !== line || !line || !latest || !wantsLod(latest)) return;
+        line.update(this.#linePath(latest));
+        latest.invalidate();
+      };
+      if (line) line.ready = loadLod().then(redraw, () => undefined);
+      return undefined;
+    }
+    const { calc } = ctx;
+    const from = calc.appendOf;
+    const lod = lodModule.lineLod(
+      calc,
+      calc.x,
+      calc.y,
+      ctx.trace['connectgaps'] === true,
+      from?.previous,
+      from && windowChange(from.append),
+    );
+    if (lod.valid) this.#lod = lod;
+    return this.#lod;
   }
 
   /** Remember the scales the path was built for when its shape depends on them. */

@@ -49,33 +49,33 @@ types are added as their traces land.
 
 ## Scientific
 
-| Chart      | Trace type(s)                               | Milestone |
-| ---------- | ------------------------------------------- | --------- |
-| Heatmap    | `heatmap`                                   | M4        |
-| Contour    | `contour`                                   | M4        |
-| Image      | `image`                                     | M4        |
-| Log Plots  | any cartesian trace with `type: 'log'` axes | M1        |
-| Polar      | `scatterpolar`                              | M4        |
-| Radar      | `scatterpolar` (`fill: 'toself'`)           | M4        |
-| Wind Rose  | `barpolar`                                  | M4        |
-| Ternary    | `scatterternary`                            | M7        |
-| Quiver     | `quiver`                                    | M7        |
-| Streamline | `streamline`                                | M7        |
-| Dendrogram | `scatter` (via a helper)                    | M7        |
-| Carpet     | `carpet`, `scattercarpet`, `contourcarpet`  | M8        |
+| Chart                                     | Trace type(s)                               | Milestone |
+| ----------------------------------------- | ------------------------------------------- | --------- |
+| Heatmap                                   | `heatmap`                                   | M4        |
+| Contour                                   | `contour`                                   | M4        |
+| Image                                     | `image`                                     | M4        |
+| [Log Plots](/charts/scientific/log-plots) | any cartesian trace with `type: 'log'` axes | M1        |
+| Polar                                     | `scatterpolar`                              | M4        |
+| Radar                                     | `scatterpolar` (`fill: 'toself'`)           | M4        |
+| Wind Rose                                 | `barpolar`                                  | M4        |
+| Ternary                                   | `scatterternary`                            | M7        |
+| Quiver                                    | `quiver`                                    | M7        |
+| Streamline                                | `streamline`                                | M7        |
+| Dendrogram                                | `scatter` (via a helper)                    | M7        |
+| Carpet                                    | `carpet`, `scattercarpet`, `contourcarpet`  | M8        |
 
 ## Financial
 
-| Chart                 | Trace type(s)                                | Milestone |
-| --------------------- | -------------------------------------------- | --------- |
-| Time Series           | `scatter`, `bar` on date axes                | M4        |
-| OHLC                  | `ohlc`                                       | M4        |
-| Candlestick           | `candlestick`                                | M4        |
-| Waterfall             | `waterfall`                                  | M4        |
-| Funnel                | `funnel`                                     | M4        |
-| Funnel Area           | `funnelarea`                                 | M4        |
-| Indicators            | `indicator`                                  | M4        |
-| Range Slider & Breaks | axis features (`rangeslider`, `rangebreaks`) | M3        |
+| Chart                                                                    | Trace type(s)                                | Milestone |
+| ------------------------------------------------------------------------ | -------------------------------------------- | --------- |
+| [Time Series](/fundamentals/dates-time-series)                           | `scatter`, `bar` on date axes                | M4        |
+| OHLC                                                                     | `ohlc`                                       | M4        |
+| Candlestick                                                              | `candlestick`                                | M4        |
+| Waterfall                                                                | `waterfall`                                  | M4        |
+| Funnel                                                                   | `funnel`                                     | M4        |
+| Funnel Area                                                              | `funnelarea`                                 | M4        |
+| Indicators                                                               | `indicator`                                  | M4        |
+| [Range Slider & Breaks](/fundamentals/layout-axes-subplots#range-breaks) | axis features (`rangeslider`, `rangebreaks`) | M3        |
 
 ## Hierarchical & Flow
 

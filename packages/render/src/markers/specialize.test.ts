@@ -33,7 +33,13 @@ describe('summarizeStyle', () => {
       0,
       2,
     );
-    expect(s).toEqual({ symbol: 0, anyAngle: false, anyStroke: false, anyOpen: false });
+    expect(s).toEqual({
+      symbol: 0,
+      anyAngle: false,
+      anyStroke: false,
+      anyOpen: false,
+      anyCustom: false,
+    });
     const mixed = summarizeStyle(
       style([
         [1, 0, 0],
@@ -42,7 +48,13 @@ describe('summarizeStyle', () => {
       0,
       2,
     );
-    expect(mixed).toEqual({ symbol: null, anyAngle: true, anyStroke: true, anyOpen: true });
+    expect(mixed).toEqual({
+      symbol: null,
+      anyAngle: true,
+      anyStroke: true,
+      anyOpen: true,
+      anyCustom: false,
+    });
   });
 
   it('normalizes invalid codes to circle like the vertex shader', () => {
@@ -72,12 +84,19 @@ describe('summarizeStyle', () => {
       anyAngle: false,
       anyStroke: false,
       anyOpen: false,
+      anyCustom: false,
     });
   });
 });
 
 describe('mergeStyleSummary', () => {
-  const base: StyleSummary = { symbol: 3, anyAngle: false, anyStroke: false, anyOpen: false };
+  const base: StyleSummary = {
+    symbol: 3,
+    anyAngle: false,
+    anyStroke: false,
+    anyOpen: false,
+    anyCustom: false,
+  };
 
   it('stays specialized when a patch agrees, and goes generic when it does not', () => {
     expect(mergeStyleSummary(base, { ...base })).toEqual(base);
@@ -126,6 +145,7 @@ describe('markerDefines', () => {
           anyAngle: false,
           anyStroke: false,
           anyOpen: false,
+          anyCustom: false,
         });
         const info = table.data.slice(def.code * 4, def.code * 4 + 4);
         const meta = table.data.slice((W + def.code) * 4, (W + def.code) * 4 + 4);
@@ -149,18 +169,37 @@ describe('markerDefines', () => {
       anyAngle: false,
       anyStroke: false,
       anyOpen: false,
+      anyCustom: false,
     });
     expect('NO_ROTATION' in plain && 'NO_STROKE' in plain).toBe(true);
     expect(
-      markerDefines({ symbol: circle, anyAngle: true, anyStroke: false, anyOpen: false }),
+      markerDefines({
+        symbol: circle,
+        anyAngle: true,
+        anyStroke: false,
+        anyOpen: false,
+        anyCustom: false,
+      }),
     ).not.toHaveProperty('NO_ROTATION');
     expect(
-      markerDefines({ symbol: circle, anyAngle: false, anyStroke: true, anyOpen: false }),
+      markerDefines({
+        symbol: circle,
+        anyAngle: false,
+        anyStroke: true,
+        anyOpen: false,
+        anyCustom: false,
+      }),
     ).not.toHaveProperty('NO_STROKE');
     // Open variants draw a 1 px stroke even at lineWidth 0.
     const open = resolveSymbol('circle-open');
     expect(
-      markerDefines({ symbol: open, anyAngle: false, anyStroke: false, anyOpen: true }),
+      markerDefines({
+        symbol: open,
+        anyAngle: false,
+        anyStroke: false,
+        anyOpen: true,
+        anyCustom: false,
+      }),
     ).not.toHaveProperty('NO_STROKE');
   });
 
@@ -170,9 +209,16 @@ describe('markerDefines', () => {
       anyAngle: true,
       anyStroke: true,
       anyOpen: false,
+      anyCustom: false,
     });
     expect(generic).toEqual({});
-    const all = markerDefines({ symbol: 2, anyAngle: false, anyStroke: false, anyOpen: false });
+    const all = markerDefines({
+      symbol: 2,
+      anyAngle: false,
+      anyStroke: false,
+      anyOpen: false,
+      anyCustom: false,
+    });
     for (const name of Object.keys(all)) expect(SPECIALIZATION_DEFINES).toContain(name);
   });
 

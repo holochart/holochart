@@ -119,6 +119,8 @@ export interface AnimationHost {
   figure(): { data: unknown[]; layout: Record<string, unknown>; frames: unknown };
   /** What is drawn now (the last pipeline run). */
   full(): SupplyDefaultsResult | undefined;
+  /** Supply-defaults as the chart runs it (style functions and style rules resolved, E8.5). */
+  defaults(figure: FigureInput): SupplyDefaultsResult;
   axes(): ReadonlyMap<string, AxisInfo>;
   /** Schedule a pipeline run (batched like every update call). */
   run(mutate: (plan: Plan) => void): Promise<Chart>;

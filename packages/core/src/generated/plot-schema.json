@@ -2623,6 +2623,11 @@
         "description": "Extra modebar buttons: names of built-in buttons or custom button objects.",
         "valType": "any"
       },
+      "displaylogo": {
+        "dflt": true,
+        "description": "Accepted for Plotly compatibility and ignored: the modebar has no logo.",
+        "valType": "boolean"
+      },
       "scrollZoom": {
         "flags": ["cartesian", "scene", "geo", "map"],
         "extras": [true, false],

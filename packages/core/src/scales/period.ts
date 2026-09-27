@@ -21,6 +21,7 @@ import {
   incrementMonth,
   monthStep,
 } from './date-math.ts';
+import type { BreakMap } from './breaks.ts';
 import { cleanNumber, dateToMs } from './scale.ts';
 
 /** Where a point sits within its period. */
@@ -48,6 +49,12 @@ export interface AlignPeriodOptions {
   isDate: boolean;
   /** Arrays to write into, reused when each has exactly `values.length` slots. */
   out?: AlignedPeriods;
+  /**
+   * Range breaks of the axis (`scale.breaks`): `values` are then compressed linear coordinates, as
+   * `d2l` gives them. Periods tile the raw values (Plotly aligns calc values, which the breaks
+   * only compress when drawn), and the outputs come back compressed.
+   */
+  breaks?: BreakMap | undefined;
 }
 
 /** A parsed period: a fixed length, or a number of calendar months. */
@@ -110,13 +117,14 @@ export function alignPeriod(
   if (!Number.isFinite(base)) base = defaultPeriod0(opts.period, opts.isDate);
 
   const alignment = opts.alignment ?? 'middle';
+  const breaks = opts.breaks;
   const n = values.length;
   const vals = outArray(opts.out?.vals, n);
   const starts = outArray(opts.out?.starts, n);
   const ends = outArray(opts.out?.ends, n);
 
   for (let i = 0; i < n; i++) {
-    const v = values[i] as number;
+    const v = breaks ? breaks.toRaw(values[i] as number) : (values[i] as number);
     let start = NaN;
     let end = NaN;
     if (Number.isFinite(v)) {
@@ -140,9 +148,10 @@ export function alignPeriod(
         end = start + p;
       }
     }
-    vals[i] = alignment === 'start' ? start : alignment === 'end' ? end : (start + end) / 2;
-    starts[i] = start;
-    ends[i] = end;
+    const val = alignment === 'start' ? start : alignment === 'end' ? end : (start + end) / 2;
+    vals[i] = breaks ? breaks.toLinear(val) : val;
+    starts[i] = breaks ? breaks.toLinear(start) : start;
+    ends[i] = breaks ? breaks.toLinear(end) : end;
   }
   return { vals, starts, ends };
 }

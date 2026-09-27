@@ -153,10 +153,14 @@ function faded(c: RGBA, hidden: boolean): RGBA {
 export interface LegendScene {
   /** Legend box in container px (hit region), or `undefined` when nothing is drawn. */
   box: { left: number; top: number; width: number; height: number } | undefined;
-  /** Item hit regions, container px (`key`: per-point items, see `LegendEntry.key`). */
+  /**
+   * Item hit regions, container px (`key`: per-point items, see `LegendEntry.key`; `group`: a
+   * group title, which toggles its `legendgroup`).
+   */
   hits: {
     index: number;
     key?: string;
+    group?: true;
     left: number;
     top: number;
     width: number;
@@ -172,6 +176,8 @@ export interface LegendScene {
     size: number;
     color: RGBA;
     symbol: string | number;
+    /** Image sprite (`marker.image`, E8.11), or null. */
+    image: string | null;
     lineColor: RGBA;
     lineWidth: number;
     opacity: number;
@@ -219,6 +225,7 @@ export function buildLegendScene(
     legend.traceorder,
     (t) => legendGlyphOf(t, fullLayout),
     itemsOf,
+    legend.grouptitlefont,
   );
   const maxWidth = legend.xref === 'paper' ? plotArea.width : size.width;
   const boxes: LegendBoxes = layoutLegend(legend, entries, {
@@ -253,6 +260,33 @@ export function buildLegendScene(
     const gy = top + item.glyphY;
     const half = legend.itemwidth / 2;
     const g = e.glyph;
+    const title = e.groupTitle;
+    if (title) {
+      // A group title (`legendgrouptitle`): text only, faded when its whole group is hidden.
+      scene.labels.push({
+        text: item.text.text,
+        x: left + item.textX,
+        y: top + item.textY,
+        anchorX: 'left',
+        anchorY: 'middle',
+        angle: 0,
+        font: item.text.font,
+        color: faded(rgba(title.font.color), hidden),
+        ...(item.text.runs ? { runs: fadeRuns(item.text.runs, hidden ? HIDDEN_ALPHA : 1) } : {}),
+      });
+      // Clickable with `groupclick: 'togglegroup'` only (plotly.js makes no toggle otherwise).
+      if (title.clickable && legend.groupclick === 'togglegroup') {
+        scene.hits.push({
+          index: e.index,
+          group: true,
+          left: left + item.x,
+          top: top + item.y,
+          width: item.width,
+          height: item.height,
+        });
+      }
+      continue;
+    }
     if ((g.kind === 'line' || g.kind === 'lines+markers') && g.line) {
       const width = Math.min(g.line.width ?? 2, MAX_LINE_WIDTH);
       if (width > 0) {
@@ -290,6 +324,7 @@ export function buildLegendScene(
         size: constant ? CONSTANT_MARKER_SIZE : Math.min(m.size ?? 6, MAX_MARKER_SIZE),
         color: rgba(m.color, [0, 0, 0, 1]),
         symbol: m.symbol ?? 'circle',
+        image: m.image ?? null,
         lineColor: rgba(m.lineColor),
         lineWidth: Math.min(m.lineWidth ?? 0, MAX_LINE_WIDTH),
         opacity: (m.opacity ?? 1) * (hidden ? HIDDEN_ALPHA : 1),
@@ -362,13 +397,18 @@ function emitLegendEvent(
   });
 }
 
-/** Click-dispatch id of a legend hit: the trace, or one per-point item of it. */
-function hitId(hit: { index: number; key?: string }): string {
+/**
+ * Click-dispatch id of a legend hit: the trace, one per-point item of it, or the title of the
+ * group whose first item it is.
+ */
+function hitId(hit: { index: number; key?: string; group?: true }): string {
+  if (hit.group) return `g${hit.index}`;
   return hit.key === undefined ? `t${hit.index}` : `k${hit.index}\u0000${hit.key}`;
 }
 
 function parseHitId(id: string): { index: number; key: string | undefined } {
-  if (id.startsWith('t')) return { index: Number(id.slice(1)), key: undefined };
+  if (id.startsWith('t') || id.startsWith('g'))
+    return { index: Number(id.slice(1)), key: undefined };
   const sep = id.indexOf('\u0000');
   return { index: Number(id.slice(1, sep)), key: id.slice(sep + 1) };
 }
@@ -460,6 +500,7 @@ class LegendView implements ComponentView {
         lineWidth: Float32Array.from(m, (d) => d.lineWidth),
         opacity: Float32Array.from(m, (d) => d.opacity),
         symbol: m.map((d) => d.symbol),
+        image: m.some((d) => d.image) ? m.map((d) => d.image) : null,
       };
       if (!this.#markers) {
         this.#markers = createMarkers(ctx.primitives, data, { renderOrder: ORDER.markers });
@@ -549,7 +590,10 @@ class LegendView implements ComponentView {
       if (next) fireAndForget(chart.relayout({ hiddenlabels: next }, { gui: true }));
       return;
     }
-    const changes = legendToggle(toggleTraces(this.#fullData), index, mode, legend.groupclick);
+    // A group title acts on its whole group (plotly.js: its pseudo-trace carries the group's
+    // first item's visibility).
+    const groupclick = id.startsWith('g') ? 'togglegroup' : legend.groupclick;
+    const changes = legendToggle(toggleTraces(this.#fullData), index, mode, groupclick);
     if (changes.size === 0) return;
     const indices = [...changes.keys()];
     fireAndForget(chart.restyle({ visible: indices.map((i) => changes.get(i)) }, indices));
@@ -578,6 +622,7 @@ export const legendComponent: ComponentModule = {
       legend.traceorder,
       (t) => legendGlyphOf(t, ctx.fullLayout),
       legendItemsFor(ctx),
+      legend.grouptitlefont,
     );
     const boxes = layoutLegend(legend, entries, {
       measure: oracleMeasure,

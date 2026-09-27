@@ -178,6 +178,23 @@ export function planLayoutEdit(paths: Iterable<string>, registry: Registry): Set
   return planUpdate(changes, { registry });
 }
 
+// ---- Conditional styling (E8.5, E8.6) -----------------------------------------------------------
+
+function hasFunction(v: unknown, depth: number): boolean {
+  if (typeof v === 'function') return true;
+  if (depth > 5 || !isPlainObject(v)) return false;
+  for (const key in v) if (hasFunction(v[key], depth + 1)) return true;
+  return false;
+}
+
+/**
+ * Whether a trace has style rules or style functions (`style/styles.ts` loads the first time one
+ * does). Data arrays are not walked.
+ */
+export function usesStyles(trace: unknown): boolean {
+  return isPlainObject(trace) && (trace['styleRules'] != null || hasFunction(trace, 0));
+}
+
 /** Stages after which the figure's layout (sizes, autorange, transforms) must be recomputed. */
 const LAYOUT_STAGES: readonly Stage[] = ['calc', 'crossTraceCalc', 'layout', 'ticks', 'plot'];
 

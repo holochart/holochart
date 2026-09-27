@@ -807,6 +807,18 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "axes/demand-temperature",
+      "title": "Axes: demand and temperature on overlaid y axes",
+      "description": "Daily power demand as an area and temperature on a secondary axis, with both grids and a zero line drawn under the traces.",
+      "tags": ["axes", "secondary-axis", "area", "line", "energy"],
+      "category": "axes",
+      "traceTypes": ["scatter"],
+      "size": { "width": 760, "height": 440 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/axes/demand-temperature.webp",
+      "thumbnailSize": { "width": 640, "height": 371 }
+    },
+    {
       "id": "axes/hr-diagram",
       "title": "Axes: Hertzsprung–Russell diagram",
       "description": "A reversed log temperature axis, an overlaying spectral-class axis with array minor ticks, and a power-of-ten luminosity axis.",
@@ -879,6 +891,18 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "bar/period",
+      "title": "Bar: period alignment",
+      "description": "Monthly bars drawn mid-month with xperiod M1 and xperiodalignment, with a scatter target line aligned the same way.",
+      "tags": ["bar", "chart", "date", "period", "scatter"],
+      "category": "bar",
+      "traceTypes": ["bar", "scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/bar/period.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "bar/relative",
       "title": "Bar: relative",
       "description": "Positive values stack above zero and negative values below it, per position.",
@@ -912,6 +936,18 @@
       "size": { "width": 640, "height": 400 },
       "threeD": false,
       "thumbnail": "gallery/thumbs/bar/stacked.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "bar/style-functions",
+      "title": "Bar: style functions and rules",
+      "description": "marker.color and text as functions of each point (evaluated into arrays), with a style rule outlining the best months.",
+      "tags": ["bar", "style-functions", "style-rules", "conditional-styling"],
+      "category": "bar",
+      "traceTypes": ["bar"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/bar/style-functions.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
@@ -1659,6 +1695,30 @@
       "thumbnailSize": { "width": 640, "height": 417 }
     },
     {
+      "id": "legends/group-titles",
+      "title": "Legend: group titles in a horizontal legend",
+      "description": "Generation by source, grouped by kind: legendgroup columns headed by legendgrouptitle, equal item widths (legendwidth), and a brighter grouptitlefont.",
+      "tags": ["legend", "line", "scatter"],
+      "category": "legends",
+      "traceTypes": ["scatter"],
+      "size": { "width": 720, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/legends/group-titles.webp",
+      "thumbnailSize": { "width": 640, "height": 373 }
+    },
+    {
+      "id": "legends/group-titles-vertical",
+      "title": "Legend: group titles in a vertical legend",
+      "description": "Grouped bars of six product lines in three divisions: a vertical legend with a title row per legendgroup, a styled grouptitlefont and tracegroupgap.",
+      "tags": ["legend", "bar"],
+      "category": "legends",
+      "traceTypes": ["bar"],
+      "size": { "width": 720, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/legends/group-titles-vertical.webp",
+      "thumbnailSize": { "width": 640, "height": 373 }
+    },
+    {
       "id": "legends/grouped-dashboard",
       "title": "Legend: grouped and ranked across a dashboard",
       "description": "Lines, stacked bars and a pie in one legend: legendgroup blocks ordered by legendrank, two-line entries, container-anchored placement and a styled heading.",
@@ -1764,6 +1824,54 @@
       "size": { "width": 640, "height": 400 },
       "threeD": false,
       "thumbnail": "gallery/thumbs/line/with-bars.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "log/colorbar",
+      "title": "Log: log-scaled colorbar",
+      "description": "Markers colored by the log of a value spanning five decades, with a colorbar labeled 10 to 1M via tickvals and ticktext.",
+      "tags": ["log", "colorbar", "colorscale", "scatter", "markers"],
+      "category": "log",
+      "traceTypes": ["scatter"],
+      "size": { "width": 680, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/log/colorbar.webp",
+      "thumbnailSize": { "width": 640, "height": 395 }
+    },
+    {
+      "id": "log/log-log",
+      "title": "Log: log–log power law",
+      "description": "City population against rank on log–log axes, where the power law of Zipf is a straight line, with a fitted line.",
+      "tags": ["log", "axes", "scatter", "markers"],
+      "category": "log",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/log/log-log.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "log/minor-grid",
+      "title": "Log: minor grid on a log axis",
+      "description": "Radioactive decay of three isotopes over five decades on a log y axis with decade ticks and a minor grid.",
+      "tags": ["log", "axes", "line", "scatter", "minor-ticks"],
+      "category": "log",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/log/minor-grid.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "log/semilog-y",
+      "title": "Log: semilog-y compound growth",
+      "description": "Compound growth at three rates over 50 years on a log y axis, where constant growth is a straight line.",
+      "tags": ["log", "axes", "line", "scatter"],
+      "category": "log",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/log/semilog-y.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
@@ -2091,6 +2199,18 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "scatter/custom-symbols",
+      "title": "Scatter: custom marker symbols",
+      "description": "SVG-path symbols registered with symbols.register: an anchored map pin, a sparkle and a bolt, with open/dot variants, outlines, per-point angles and mixed built-in symbols.",
+      "tags": ["scatter", "markers", "symbols"],
+      "category": "scatter",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/scatter/custom-symbols.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "scatter/error-bars",
       "title": "Scatter: error bars",
       "description": "error_y data (symmetric and asymmetric), percent and sqrt; error_x constant with copy_ystyle; custom thickness, width and color.",
@@ -2100,6 +2220,18 @@
       "size": { "width": 640, "height": 400 },
       "threeD": false,
       "thumbnail": "gallery/thumbs/scatter/error-bars.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "scatter/image-sprites",
+      "title": "Scatter: image sprites",
+      "description": "marker.image with embedded SVG data URIs: per-point images, sizes and angles, a translucent trace, and points without an image keeping their symbol.",
+      "tags": ["scatter", "markers", "images"],
+      "category": "scatter",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/scatter/image-sprites.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
@@ -2113,6 +2245,18 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/scatter/lines-shapes.webp",
       "thumbnailSize": { "width": 640, "height": 480 }
+    },
+    {
+      "id": "scatter/style-rules",
+      "title": "Scatter: style rules",
+      "description": "Serializable styleRules: per-point colors, sizes and symbols from conditions on y, customdata[1] and pointNumber; later rules win.",
+      "tags": ["scatter", "markers", "style-rules", "conditional-styling"],
+      "category": "scatter",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/scatter/style-rules.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
       "id": "scatter/text-labels",
@@ -2485,6 +2629,78 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/themes/ygridoff.webp",
       "thumbnailSize": { "width": 640, "height": 391 }
+    },
+    {
+      "id": "timeseries/business-hours",
+      "title": "Time series: business hours with range breaks",
+      "description": "Two weeks of 15-minute prices with weekends and nights hidden by range breaks, so trading sessions sit side by side.",
+      "tags": ["time-series", "date", "line", "scatter", "rangebreaks"],
+      "category": "timeseries",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/timeseries/business-hours.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "timeseries/date-formatting",
+      "title": "Time series: date formatting",
+      "description": "Daily orders with zoom-dependent tick formats (tickformatstops), period-centered month labels and a formatted hover date.",
+      "tags": ["time-series", "date", "line", "scatter", "axes"],
+      "category": "timeseries",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/timeseries/date-formatting.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "timeseries/minute-bars",
+      "title": "Time series: a year of 1-minute closes",
+      "description": "525,600 one-minute prices in one line, drawn through min/max decimation per pixel column, with full-resolution hover.",
+      "tags": ["time-series", "date", "line", "scatter", "performance"],
+      "category": "timeseries",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/timeseries/minute-bars.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "timeseries/period-alignment",
+      "title": "Time series: period alignment",
+      "description": "Daily visitors with monthly averages drawn mid-month via xperiod and xperiodalignment, and period-centered month labels.",
+      "tags": ["time-series", "date", "line", "scatter", "xperiod"],
+      "category": "timeseries",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/timeseries/period-alignment.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "timeseries/range-slider",
+      "title": "Time series: range slider and selector",
+      "description": "Three years of daily electricity demand with a range slider overview and 1m / 6m / YTD / 1y / all buttons.",
+      "tags": ["time-series", "date", "line", "scatter", "rangeslider", "rangeselector"],
+      "category": "timeseries",
+      "traceTypes": ["scatter"],
+      "size": { "width": 760, "height": 440 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/timeseries/range-slider.webp",
+      "thumbnailSize": { "width": 640, "height": 371 }
+    },
+    {
+      "id": "timeseries/unified-hover",
+      "title": "Time series: unified hover",
+      "description": "Hourly temperatures from three sensors with one hover label for all series at the hovered time (hovermode x unified).",
+      "tags": ["time-series", "date", "line", "scatter", "hover"],
+      "category": "timeseries",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/timeseries/unified-hover.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
       "id": "uncertainty/calibration-curve",

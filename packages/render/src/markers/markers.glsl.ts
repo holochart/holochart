@@ -47,6 +47,7 @@ uniform float uPixelRatio;
 #ifndef MARKER_SYMBOL
 uniform sampler2D uSymbols;
 #endif
+// @custom-decl
 
 out vec2 vLocal;
 #ifndef MARKER_SYMBOL
@@ -82,17 +83,20 @@ void main() {
   const float extent = SYM_EXTENT;
 #else
   int code = int(aStyle.y + 0.5);
+  // @custom-decode
   int base = code - (code / 100) * 100;
   int variant = code / 100;
   if (base < 0 || base >= SYMBOL_COUNT || variant > 3) { base = 0; variant = 0; }
   vec4 info = texelFetch(uSymbols, ivec2(base, 0), 0);
   vec4 meta = texelFetch(uSymbols, ivec2(base, 1), 0);
   float extent = meta.y;
+  // @custom-meta
 #endif
 
   float size = aSize;
   bool hidden = abs(aPos.x) > 1.0e37 || abs(aPos.y) > 1.0e37 || abs(aPos.z) > 1.0e37
     || !(size > 0.0) || !(aStyle.z > 0.0);
+  hidden = hidden || aStyle.y > 999.5; // @custom-hidden
 
 #ifdef NO_STROKE
   const float lw = 0.0; // every item: lineWidth 0 and a closed variant
@@ -100,6 +104,7 @@ void main() {
   bool open = variant == 1 || variant == 3;
   float lw = max(aStyle.x, 0.0);
   if (open) lw = max(lw, 1.0);
+  // @custom-stroke
 #endif
   float r = 0.5 * size;
 
@@ -157,6 +162,7 @@ void main() {
   float opacity = clamp(aStyle.z, 0.0, 1.0);
   vFill.a *= opacity;
   vLine.a *= opacity;
+  // @custom-varyings
 #ifdef PICKING
   // Silhouette, not appearance: a translucent marker is as pickable as an opaque one.
   vFill.a = vFill.a > 0.0 ? 1.0 : 0.0;
@@ -184,6 +190,7 @@ flat in ivec4 vMode;
 flat in vec4 vShape;
 flat in vec4 vFill;
 flat in vec4 vLine;
+// @custom-decl
 #ifdef PICKING
 flat in uint vPickId;
 ${PICK_ENCODE_GLSL}
@@ -270,6 +277,7 @@ void main() {
   float dArea = 1.0e20;
   if (areaKind == 1) dArea = (length(p) - 1.0) * r;
   else if (areaKind == 2) dArea = sdPolygon(p, poly.x, poly.y) * r;
+  // @custom-area
 #ifdef NO_STROKE
   const float dLines = 1.0e20; // only ever used as a stroke distance
 #else
@@ -300,6 +308,7 @@ void main() {
     float dm = cov(length(vLocal) - vShape.z, aa);
     color = over((variant == 2 ? lineP : fillP) * dm, color);
   }
+  // @custom-color
 
 #ifdef PICKING
   // Coverage >= 0.5 <=> the pixel centre is inside the drawn shape.

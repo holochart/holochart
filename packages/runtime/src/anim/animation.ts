@@ -32,7 +32,6 @@
  */
 import {
   getIn,
-  supplyDefaults,
   type FigureInput,
   type FullAxis,
   type Scale,
@@ -379,7 +378,7 @@ export class Animation {
       apply(plan);
       if (!from) return;
       const figure = host.figure();
-      const target = supplyDefaults(figure as FigureInput, host.core, { validate: false });
+      const target = host.defaults(figure as FigureInput);
       const tracks = this.#tracks(from, figure, target);
       if (tracks.length === 0) return;
       events = true;

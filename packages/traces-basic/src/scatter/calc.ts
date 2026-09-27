@@ -6,6 +6,8 @@
  */
 import {
   alignPeriod,
+  cleanNumber,
+  dateToMs,
   findExtremes,
   isArrayLike,
   toFloat64Array,
@@ -146,6 +148,12 @@ export function writeCoordinates(
     for (let i = start; i < end; i++) out[i - start] = scale.d2l(d0 + i * step);
     return;
   }
+  // Range breaks: step the raw values, then compress (and mask) each, as Plotly's `makeCalcdata`.
+  if (scale?.breaks !== undefined) {
+    const r0 = scale.type === 'date' ? dateToMs(s) : cleanNumber(s);
+    for (let i = start; i < end; i++) out[i - start] = scale.d2l(r0 + i * step);
+    return;
+  }
   const l0 = scale ? scale.d2l(s) : Number(s);
   for (let i = start; i < end; i++) out[i - start] = l0 + i * step;
 }
@@ -166,6 +174,7 @@ function aligned(
     period0: trace[`${letter}period0`],
     alignment: trace[`${letter}periodalignment`] as 'start' | 'middle' | 'end' | undefined,
     isDate: axis?.type === 'date',
+    breaks: axis?.scale.breaks,
   });
   return out ? out.vals : values;
 }

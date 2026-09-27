@@ -11,10 +11,10 @@ This page will show how to go beyond the built-in marker symbols and solid fills
 
 Planned topics:
 
-- Registering SVG-path marker symbols with `symbols.register`
-- Image sprites as markers (`marker.image`)
 - Hatch patterns on bars and fills: `marker.pattern.shape`, colors, size, and solidity
 - Image texture fills (`marker.texture`)
 - Patterns for print and color-blind readers
 
-See also the [marker symbols gallery](/reference/marker-symbols).
+Custom marker symbols (`symbols.register`) and image sprites (`marker.image`) have their own
+page: [Custom markers](/customization/custom-markers). See also the
+[marker symbols gallery](/reference/marker-symbols).

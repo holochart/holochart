@@ -44,6 +44,14 @@
  * approximations). Arrows have their tip at the anchor point, as in Plotly.
  */
 import { DataTexture, FloatType, NearestFilter, NoColorSpace, RGBAFormat } from 'three';
+import {
+  customMarkersReady,
+  customSymbolCode,
+  customSymbolNames,
+  defineCustomSymbol,
+  isCustomSymbol,
+  type CustomSymbolDefinition,
+} from './custom.ts';
 
 type Vec2 = readonly [number, number];
 type Segment = readonly [number, number, number, number];
@@ -323,15 +331,54 @@ for (const def of MARKER_SYMBOLS) {
 
 /**
  * Resolve a Plotly symbol (name like `'diamond-open-dot'`, numeric code, or numeric string) to its
- * numeric code. Unknown symbols resolve to 0 (`circle`), like Plotly's fallback.
+ * numeric code. Unknown symbols resolve to 0 (`circle`), like Plotly's fallback. Registered custom
+ * symbols ({@link symbols}) and `text:` glyphs resolve to internal codes of 1000 and up
+ * (`custom.ts`).
  */
 export function resolveSymbol(symbol: number | string): number {
   if (typeof symbol === 'number') return normalizeCode(symbol);
   const byName = BY_NAME.get(symbol.trim().toLowerCase());
   if (byName !== undefined) return byName;
+  const custom = customSymbolCode(symbol);
+  if (custom !== undefined) return custom;
   const n = Number(symbol);
   return symbol.trim() !== '' && Number.isFinite(n) ? normalizeCode(n) : 0;
 }
+
+/**
+ * Custom marker symbols (plan E8.11), exposed by the full bundle as `Holochart.symbols`.
+ *
+ * `register('pin', { path: 'M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z' })` makes
+ * `'pin'`, `'pin-open'`, `'pin-dot'` and `'pin-open-dot'` valid `marker.symbol` values everywhere
+ * markers are drawn (scatter, splom, box points, legends). Register before plotting: a figure
+ * validated before the name existed has already fallen back to `circle`. Registering a name again
+ * replaces its shape in every chart. The path is turned into a signed distance field
+ * asynchronously (by lazily loaded code); charts wait for it before `ready` resolves.
+ */
+export const symbols = {
+  /**
+   * Register (or replace) a custom symbol. Names are case-insensitive; built-in names, numbers,
+   * names ending in a variant suffix (`-open`, `-dot`) and `text:` names are rejected (`TypeError`).
+   */
+  register(name: string, definition: CustomSymbolDefinition): void {
+    const key = String(name).trim().toLowerCase();
+    if (
+      /^text:|-(?:open|dot)$/.test(key) ||
+      BY_NAME.has(key) ||
+      Number.isFinite(Number(key)) ||
+      !/\S/.test(String(definition?.path ?? ''))
+    ) {
+      throw new TypeError(`symbols.register: invalid or reserved symbol '${key}', or no path`);
+    }
+    defineCustomSymbol(key, definition);
+  },
+  /** Whether `symbol` is a registered custom symbol (with an optional variant suffix) or a `text:` glyph. */
+  has: isCustomSymbol,
+  /** Names of the registered custom symbols (lower case, in registration order). */
+  names: customSymbolNames,
+  /** Resolves once every registered symbol and requested marker image is ready to draw. */
+  ready: customMarkersReady,
+};
 
 function normalizeCode(code: number): number {
   if (!Number.isInteger(code) || code < 0) return 0;

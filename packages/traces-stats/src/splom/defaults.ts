@@ -112,6 +112,7 @@ function markerDefaults(traceIn: Readonly<Record<string, unknown>>, ctx: TraceDe
   ctx.coerce('marker.opacity', bubble ? 0.7 : 1);
   ctx.coerce('marker.size');
   ctx.coerce('marker.angle');
+  ctx.coerce('marker.image');
   ctx.coerce('marker.color', ctx.defaultColor);
   if (hasColorscale(markerIn)) {
     supplyColorscaleDefaults(markerIn, ctx.coerce, 'marker.', { inTrace: true, showscale: true });

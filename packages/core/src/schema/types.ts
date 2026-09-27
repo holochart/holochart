@@ -137,6 +137,11 @@ export interface AttrConstraints {
   readonly clamp?: boolean;
   /** Allowed values for `enumerated`. */
   readonly values?: readonly Primitive[];
+  /**
+   * `enumerated` only: also accept values this predicate approves, e.g. marker symbols registered
+   * at runtime (plan E8.11). Not serialized (`plot-schema.json` lists `values` only).
+   */
+  readonly accepts?: (value: unknown) => boolean;
   /** Flags for `flaglist`, joined with `+` (e.g. `lines+markers`). */
   readonly flags?: readonly string[];
   /**

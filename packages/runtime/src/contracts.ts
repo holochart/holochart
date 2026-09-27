@@ -635,6 +635,8 @@ export interface LegendGlyph {
   readonly kind: 'marker' | 'line' | 'lines+markers' | 'bar' | 'fill';
   readonly marker?: {
     readonly symbol?: string | number;
+    /** Image sprite drawn instead of the symbol (`marker.image`, plan E8.11). */
+    readonly image?: string;
     readonly size?: number;
     readonly color?: string;
     readonly lineColor?: string;

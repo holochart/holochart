@@ -2,7 +2,7 @@
  * `layout.legend` attributes and defaults (plan E5.2), following Plotly's legend model.
  *
  * Trace-level legend attributes (`legendrank`, `legendgrouptitle`, `legendwidth`) live in core's
- * common trace schema. Multiple legends (`legend: 'legend2'`) are not supported yet.
+ * common trace schema; a trace's `legendgrouptitle.font` falls back to `grouptitlefont`. Multiple legends (`legend: 'legend2'`) are not supported yet.
  */
 import {
   attr,
@@ -22,7 +22,9 @@ export const legendAttributes = attr.object(
     bordercolor: attr.color({ dflt: '#444', description: 'Border color.' }),
     borderwidth: attr.number({ min: 0, dflt: 0, description: 'Border width in px.' }),
     font: fontSchema('Item font. Defaults to `layout.font`.'),
-    grouptitlefont: fontSchema('Group title font. Defaults to the legend font.'),
+    grouptitlefont: fontSchema(
+      'Font of the group titles (`legendgrouptitle`). Defaults to `layout.font`, 10% larger.',
+    ),
     orientation: attr.enumerated({
       values: ['v', 'h'],
       dflt: 'v',
@@ -173,7 +175,11 @@ export function supplyLegendDefaults(
   legend.bgcolor ??= layoutOut.paper_bgcolor;
   const base = layoutOut.font as FullFont;
   legend.font = inheritFont(legend.font, base);
-  legend.grouptitlefont = inheritFont(legend.grouptitlefont, legend.font);
+  // Plotly: the global font, 10% larger (not the legend font).
+  legend.grouptitlefont = inheritFont(legend.grouptitlefont, {
+    ...base,
+    size: Math.round(base.size * 1.1),
+  });
   const title = (legend.title ??= { text: '', font: legend.font, side: h ? 'left' : 'top' });
   title.font = inheritFont(title.font, legend.font);
   title.side ??= h ? 'left' : 'top';

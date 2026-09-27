@@ -8,17 +8,20 @@
  *   from the pointer to the bar's center line, so the narrower of overlapping bars wins.
  * - Hover along the bars' position axis (`x` for vertical bars): every bar whose *slot* (the whole
  *   group at a position, Plotly's `bardelta`) contains the pointer; bars of one position tie, so
- *   unified labels show the whole group.
+ *   unified labels show the whole group. With `xperiod`, the slot is the bar's period length,
+ *   centered on its aligned position (Plotly).
  * - Hover along the length axis: the bars under the pointer, ranked along that axis.
  *
- * Labels anchor at the bar end (Plotly).
+ * Labels anchor at the bar end (Plotly). The position value is the bar's own, before period
+ * alignment (Plotly's `orig_p`); implicit `x0 + i·dx` positions step on the axis.
  */
 import { isArrayLike, type FullTrace } from '@mk7s/holochart-core';
 import { pointInPolygon } from '@mk7s/holochart-render';
 import type { HoverContext, HoverPoint, HoverQuery, SelectionQuery } from '@mk7s/holochart-runtime';
 import type { BarCalc } from './calc.ts';
+import { coordinateValue } from '../shared/data.ts';
 import { barStyle, cssColor } from './style.ts';
-import { barValues, coordinateAt } from './text.ts';
+import { barValues } from './text.ts';
 
 /** Smallest hit size (px) of a bar along either axis, so thin or zero-length bars stay hoverable. */
 export const MIN_HIT_PX = 4;
@@ -62,7 +65,7 @@ export function barHoverPoints(
     : [t.scaleY, t.offsetY, query.py];
   const posMode = query.mode === (horizontal ? 'y' : 'x');
   const floor = floorOf(calc, ctx);
-  const { bars } = calc;
+  const { bars, period } = calc;
   const hits: { i: number; distance: number }[] = [];
 
   for (let i = 0; i < calc.length; i++) {
@@ -75,11 +78,19 @@ export function barHoverPoints(
     if (posMode) {
       // The whole slot at this position (the group), or the bar itself if it is wider.
       const slotCenter = calc.pos[i]! * pm + pb;
-      const [lo, hi] = span(
-        Math.min((c - w / 2) * pm + pb, slotCenter - Math.abs(bars.slot * pm) / 2),
-        Math.max((c + w / 2) * pm + pb, slotCenter + Math.abs(bars.slot * pm) / 2),
-        MIN_HIT_PX,
-      );
+      // Plotly: with a period, the period's length around the position, else the whole slot.
+      const slot = period ? period.ends[i]! - period.starts[i]! : bars.slot;
+      const [lo, hi] = period
+        ? span(
+            slotCenter - Math.abs(slot * pm) / 2,
+            slotCenter + Math.abs(slot * pm) / 2,
+            MIN_HIT_PX,
+          )
+        : span(
+            Math.min((c - w / 2) * pm + pb, slotCenter - Math.abs(slot * pm) / 2),
+            Math.max((c + w / 2) * pm + pb, slotCenter + Math.abs(slot * pm) / 2),
+            MIN_HIT_PX,
+          );
       if (pp >= lo && pp <= hi) hits.push({ i, distance: Math.abs(pp - slotCenter) });
       continue;
     }
@@ -96,11 +107,13 @@ export function barHoverPoints(
   // With a `base`, the size-axis value is where the bar ends, not its length (Plotly's
   // `trace.base ? di.b + di.s : di.s`): a Gantt bar on a date axis reports its finish date.
   const withBase = Boolean(trace['base']);
+  const posAxis = horizontal ? ctx.yaxis : ctx.xaxis;
   return hits.map(({ i, distance }) => {
     const c = bars.center[i]! * pm + pb;
     const end = calc.s1[i]! * sm + sb;
     const { values, posLetter } = barValues(trace, calc, i);
-    const position = coordinateAt(trace, posLetter, i);
+    const position = coordinateValue(trace, posLetter, i, posAxis?.scale);
+    if (!calc.positionValues) values['label'] = values[posLetter] = position;
     const size = withBase ? bars.base[i]! + bars.value[i]! : bars.value[i];
     const hovertext = stringAt(trace['hovertext'], i) || stringAt(trace['text'], i);
     const point: HoverPoint = {

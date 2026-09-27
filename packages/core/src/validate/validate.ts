@@ -48,13 +48,19 @@ function checkAttr(spec: AttrSpec, value: unknown, path: string, issues: Issue[]
       severity: 'warning',
     });
   }
+  // A style function (E8.6, ADR-012): evaluated per point by the runtime.
+  if (spec.arrayOk === true && typeof value === 'function') return;
   const r = coerceValue(spec, value);
   const expected = describeExpected(spec);
   if (!r.ok) {
     const fallback = spec.dflt === undefined ? 'ignored' : 'using the default';
+    const hint =
+      typeof value === 'function' && spec.valType !== 'function'
+        ? '; style functions work only on per-point (arrayOk) attributes'
+        : '';
     issues.push({
       path,
-      message: `invalid value ${preview(value)}; expected ${expected} (${fallback})`,
+      message: `invalid value ${preview(value)}; expected ${expected} (${fallback}${hint})`,
       value,
       expected,
       code: 'invalid-value',

@@ -172,7 +172,7 @@ export function coerceValue(spec: AttrSpec, v: unknown): CoerceResult {
     case 'enumerated': {
       if (spec.arrayOk === true && isArrayLike(v)) return valid(v);
       const values = spec.values ?? [];
-      if (values.includes(v as Primitive)) return valid(v);
+      if (values.includes(v as Primitive) || spec.accepts?.(v) === true) return valid(v);
       // '1' for a numeric enum: same leniency as numeric attributes.
       const n = typeof v === 'string' ? toNumber(v) : undefined;
       return n !== undefined && values.includes(n) ? valid(n) : INVALID;

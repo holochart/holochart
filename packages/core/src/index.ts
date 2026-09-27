@@ -205,6 +205,18 @@ export type { DataArrayKind, ToFloat32Options, ToNumericOptions } from './data/a
 export { isColumnRef, resolveDataRefs } from './data/datasets.ts';
 export type { ResolvedTrace } from './data/datasets.ts';
 
+// Conditional styling (E8.5, E8.6): style rules and style functions
+export { pointSource } from './style/points.ts';
+export type { PointSource } from './style/points.ts';
+export type {
+  StyleCondition,
+  StyleFunction,
+  StyleOperators,
+  StylePoint,
+  StyleRule,
+  StyleValue,
+} from './style/types.ts';
+
 // JSON serialization (E18.3)
 export { decodeFigure, encodeFigure } from './serialize/serialize.ts';
 export type {

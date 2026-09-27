@@ -52,15 +52,18 @@ export type MarkerMatrixStyle = Omit<MarkerData, 'x' | 'y' | 'z' | 'origin'>;
 /** Style attributes the cells read from the shared style set. */
 const STYLE_ATTRIBUTES = ['aSize', 'aFill', 'aValue', 'aLine', 'aStyle'] as const;
 
-/** The marker vertex shader reading `aX` / `aY` columns instead of an interleaved `aPos`. */
-export const MARKER_MATRIX_VERTEX: string = (() => {
+/** A marker vertex shader reading `aX` / `aY` columns instead of an interleaved `aPos`. */
+function matrixVertex(vertex: string): string {
   const decl = /^in vec3 aPos;.*$/m;
-  if (!decl.test(MARKER_VERTEX)) throw new Error('marker shader: aPos declaration not found');
-  return MARKER_VERTEX.replace(
+  if (!decl.test(vertex)) throw new Error('marker shader: aPos declaration not found');
+  return vertex.replace(
     decl,
     'in float aX;       // RTC-encoded column values (HIDDEN sentinel for gaps)\nin float aY;\n#define aPos vec3(aX, aY, 0.0)',
   );
-})();
+}
+
+/** The marker vertex shader reading `aX` / `aY` columns instead of an interleaved `aPos`. */
+export const MARKER_MATRIX_VERTEX: string = matrixVertex(MARKER_VERTEX);
 
 interface Column {
   attribute: InstancedBufferAttribute;
@@ -265,6 +268,8 @@ export class MarkerMatrixCell implements Primitive<MarkerMatrixCellData> {
   #y: number;
   #transform: DataTransform = { ...IDENTITY_TRANSFORM };
   #drawn = false;
+  /** The style set's vertex shader this cell's is derived from. */
+  #vertexSource = MARKER_VERTEX;
   #disposed = false;
 
   /** @internal Use {@link MarkerMatrix.createCell}. */
@@ -318,6 +323,11 @@ export class MarkerMatrixCell implements Primitive<MarkerMatrixCellData> {
   /** Columns drawn along x and y. */
   get columns(): Readonly<MarkerMatrixCellData> {
     return { x: this.#x, y: this.#y };
+  }
+
+  /** Resolves once the custom symbols and images of the shared style are ready (plan E8.11). */
+  get ready(): Promise<void> {
+    return this.#m.style().ready;
   }
 
   /** Whether the cell has been rendered at least once (it then holds GPU buffers). */
@@ -418,9 +428,20 @@ export class MarkerMatrixCell implements Primitive<MarkerMatrixCellData> {
   }
 
   #syncDefines(): void {
-    const source = this.#m.style().material.defines as Record<string, string>;
+    const style = this.#m.style().material;
+    const source = style.defines as Record<string, string>;
     const defines = this.material.defines as Record<string, string>;
     let changed = false;
+    // The style set switches to the custom-marker shaders when it draws custom symbols (E8.11).
+    if (this.#vertexSource !== style.vertexShader) {
+      this.#vertexSource = style.vertexShader;
+      this.material.vertexShader =
+        style.vertexShader === MARKER_VERTEX
+          ? MARKER_MATRIX_VERTEX
+          : matrixVertex(style.vertexShader);
+      this.material.fragmentShader = style.fragmentShader;
+      changed = true;
+    }
     for (const name of Object.keys(defines)) {
       if (!(name in source)) {
         delete defines[name];

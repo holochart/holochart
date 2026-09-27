@@ -6,11 +6,13 @@ import type { InteractionHook } from './interaction-scatter.ts';
  * Legend groups (plan E5.2, plotly.js `legend/handle_click.js`): clicking a legend item toggles
  * every trace of its `legendgroup` — including traces with `showlegend: false`, which have no item
  * of their own (here the dotted projection follows its fit) — and double-clicking isolates the
- * group. Chart events are logged to `window.__interaction.events` for the interaction suite
+ * group; clicking the group's title (`legendgrouptitle`) toggles the group too. Chart events are
+ * logged to `window.__interaction.events` for the interaction suite
  * (tests/interaction/legend.spec.ts).
  *
  * Traces: 0 "fit" (red markers, group `fit`), 1 its projection (red, `showlegend: false`, group
- * `fit`), 2 "other" (blue markers). The legend glyphs have flat colors so tests can find them.
+ * `fit`), 2 "other" (blue markers). The legend glyphs and the group title (large, bold, green)
+ * have flat colors so tests can find them.
  *
  * Not a visual test: its point is the pointer behavior, covered by the interaction suite.
  */
@@ -32,6 +34,7 @@ export function run(el: HTMLElement): ExampleHandle {
         mode: 'markers',
         name: 'fit',
         legendgroup: 'fit',
+        legendgrouptitle: { text: 'FIT', font: { color: '#00c853', size: 20, weight: 'bold' } },
         x: [0, 1, 2, 3],
         y: [1, 2, 3, 4],
         marker: { size: 14, color: '#ea2a37' },

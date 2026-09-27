@@ -16,6 +16,10 @@ export const meta: ExampleMeta = {
   tags: ['demo', 'bar', 'horizontal', 'categoryorder', 'text', 'hover'],
   size: { width: 960, height: 440 },
   testTolerance: 0.004,
+  // CI (Linux) draws the top bar's end and its outside "24.2%" label slightly differently from the
+  // macOS baseline: 79 px in one 32 px window, the same diff before and after the window rule
+  // (E20.3). Allowed here until the platform difference is understood (plan §11.5).
+  testTileTolerance: 96,
 };
 
 const TOP = 15;

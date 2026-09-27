@@ -18,4 +18,7 @@ Planned topics:
   non-serializable
 - How each option is turned into per-point GPU data
 
+Style rules and style functions are covered in
+[Conditional styling](/fundamentals/conditional-styling).
+
 See also [Customization](/customization/).

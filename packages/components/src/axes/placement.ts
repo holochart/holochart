@@ -238,3 +238,28 @@ function overlayOf(axis: AxisLike): string | undefined {
   const o: unknown = axis.full.overlaying;
   return typeof o === 'string' && o !== '' && o !== 'free' && o !== axis.id ? o : undefined;
 }
+
+/** The id of the axis `axis` overlays, else its own (Plotly's `ax._mainAxis._id`). */
+export function mainAxisOf(axis: AxisLike): string {
+  return overlayOf(axis) ?? axis.id;
+}
+
+/**
+ * The main subplot of each subplot drawn on an `overlaying` axis (Plotly's `plotinfo.mainplot`,
+ * `makeSubplotData` in `cartesian/index.js`): the subplot of the axes its axes overlay, when that
+ * subplot exists. Such an overlay draws its grid, zero lines and below-traces axis items with its
+ * main subplot's, under every trace of the group. An overlay whose main subplot does not exist
+ * (no trace on it) is a regular subplot. Keyed by subplot id; regular subplots are absent.
+ */
+export function mainSubplots(
+  subplots: Iterable<Pick<SubplotLike, 'id' | 'xaxis' | 'yaxis'>>,
+): Map<string, string> {
+  const list = [...subplots];
+  const ids = new Set(list.map((sp) => sp.id));
+  const out = new Map<string, string>();
+  for (const sp of list) {
+    const main = `${mainAxisOf(sp.xaxis)}${mainAxisOf(sp.yaxis)}`;
+    if (main !== sp.id && ids.has(main)) out.set(sp.id, main);
+  }
+  return out;
+}

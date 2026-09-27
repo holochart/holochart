@@ -98,6 +98,30 @@ describe('first draw', () => {
     expect(c.three.viewports.map((v) => v.name)).toEqual(['subplot-xy', 'subplot-x2y2', 'overlay']);
   });
 
+  it('draws subplots on overlaying axes after the ones they overlay, without a background', async () => {
+    // The trace on the overlaying axis comes first: its subplot still draws over the main one.
+    const c = chart({
+      data: [{ ...XY, yaxis: 'y2' }, XY, { ...XY, yaxis: 'y3' }],
+      layout: {
+        plot_bgcolor: '#ff0000',
+        yaxis2: { overlaying: 'y', side: 'right' },
+        // Overlays `y4`, which has no subplot: a regular subplot (Plotly's `mainplot` is unset).
+        yaxis3: { overlaying: 'y4' },
+        yaxis4: {},
+      },
+    });
+    await c.ready;
+    expect(c.three.viewports.map((v) => v.name)).toEqual([
+      'subplot-xy',
+      'subplot-xy3',
+      'subplot-xy2',
+      'overlay',
+    ]);
+    expect(c.subplots.get('xy2')?.viewport.background).toBeNull();
+    expect(c.subplots.get('xy')?.viewport.background).toEqual([1, 0, 0, 1]);
+    expect(c.subplots.get('xy3')?.viewport.background).toEqual([1, 0, 0, 1]);
+  });
+
   it('falls back to layout defaults without a sized container', async () => {
     const s = setup();
     const c = chart({ data: [XY] }, s);

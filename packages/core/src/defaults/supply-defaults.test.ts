@@ -297,6 +297,13 @@ describe('supplyDefaults: config & validation', () => {
     expect(fullConfig.strict).toBe(false);
   });
 
+  it('accepts `displaylogo` (Plotly compatibility; no logo to show)', () => {
+    expect(run({}).fullConfig.displaylogo).toBe(true);
+    const { fullConfig, issues } = run({ config: { displaylogo: false } });
+    expect(fullConfig.displaylogo).toBe(false);
+    expect(issues).toEqual([]);
+  });
+
   it('reports issues; warns once per path by default', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const registry = fixtureRegistry();

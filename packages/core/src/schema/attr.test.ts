@@ -1,6 +1,7 @@
 import { describe, expect, expectTypeOf, it } from 'vitest';
 import { attr } from './attr.ts';
 import type { AttrSpec, InferFull, InferInput, TypedArray } from './types.ts';
+import type { StyleFunction } from '../style/types.ts';
 import { forEachAttr, getNodeAtPath, resolveChild, walkPath } from './walk.ts';
 
 const marker = attr.object(
@@ -39,10 +40,12 @@ describe('attr builders', () => {
 
   it('infer input types from the declaration', () => {
     type In = InferInput<typeof marker>;
-    expectTypeOf<In['size']>().toEqualTypeOf<number | readonly number[] | TypedArray | undefined>();
+    expectTypeOf<In['size']>().toEqualTypeOf<
+      number | readonly number[] | TypedArray | StyleFunction<number> | undefined
+    >();
     expectTypeOf<In['symbol']>().toEqualTypeOf<'circle' | 'square' | undefined>();
     expectTypeOf<NonNullable<In['line']>['color']>().toEqualTypeOf<
-      string | readonly string[] | undefined
+      string | readonly string[] | StyleFunction<string> | undefined
     >();
 
     const _mode = attr.flaglist({ flags: ['lines', 'markers'], extras: ['none'] });

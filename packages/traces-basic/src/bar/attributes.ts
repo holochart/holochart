@@ -2,10 +2,9 @@
  * `bar` attribute schema (plan E9.8, E9.9, ADR-002): the single source of truth for the trace's
  * types, validation, defaults, edit types and docs, following plotly.js' bar attributes.
  *
- * Error bars (`error_x` / `error_y`) come from the shared error-bar module (E9.7). Deferred:
- * `marker.pattern` (E8.10), period
- * alignment (`xperiod`…), `marker.colorbar` (E5.3: `showscale` is declared, the colorbar component
- * draws it).
+ * Error bars (`error_x` / `error_y`) come from the shared error-bar module (E9.7). Period
+ * alignment (`xperiod`…) follows scatter's (E3.5). Deferred: `marker.pattern` (E8.10),
+ * `marker.colorbar` (E5.3: `showscale` is declared, the colorbar component draws it).
  */
 import { attr } from '@mk7s/holochart-core';
 import { colorscaleAttributes } from '../shared/colorscale.ts';
@@ -27,6 +26,21 @@ const coordinate = (letter: 'x' | 'y') =>
       dflt: 1,
       editType: 'calc',
       description: `Step between implicit ${letter} coordinates (see \`${letter}0\`).`,
+    }),
+    period: attr.any({
+      editType: 'calc',
+      // Same text as scatter's (the strings compress together in bundles).
+      description: `Only on date or linear ${letter} axes: snap each ${letter} value to its period of this length (ms, or \`'M<n>'\` months on date axes), positioned per \`${letter}periodalignment\`.`,
+    }),
+    period0: attr.any({
+      editType: 'calc',
+      description: `A period boundary for \`${letter}period\`. Default: 2000-01-01 on date axes (a Sunday for weekly periods), 0 otherwise.`,
+    }),
+    periodalignment: attr.enumerated({
+      values: ['start', 'middle', 'end'],
+      dflt: 'middle',
+      editType: 'calc',
+      description: `Where points sit within their \`${letter}period\`.`,
     }),
   }) as const;
 
@@ -116,9 +130,15 @@ export const barAttributes = /* @__PURE__ */ (() =>
       x: X.data,
       x0: X.start,
       dx: X.step,
+      xperiod: X.period,
+      xperiod0: X.period0,
+      xperiodalignment: X.periodalignment,
       y: Y.data,
       y0: Y.start,
       dy: Y.step,
+      yperiod: Y.period,
+      yperiod0: Y.period0,
+      yperiodalignment: Y.periodalignment,
       orientation: attr.enumerated({
         values: ['v', 'h'],
         editType: 'calc',

@@ -10,6 +10,11 @@ export interface ExampleMeta {
   tags: string[];
   /** Max fraction of differing pixels tolerated by the visual test (default 0.001). */
   testTolerance?: number;
+  /**
+   * Max fraction of differing pixels in any 32 px window of the visual test (default 16 / 1024),
+   * so localized changes such as moved text fail (tests/visual/compare.ts).
+   */
+  testTileTolerance?: number;
   /** Fixed render size for visual tests, in CSS pixels (default 640×400). */
   size?: { width: number; height: number };
 }

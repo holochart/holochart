@@ -118,6 +118,7 @@ function coerceMarker(
   ctx.coerce('marker.opacity', bubble ? 0.7 : 1);
   ctx.coerce('marker.size');
   ctx.coerce('marker.angle');
+  ctx.coerce('marker.image');
   const color = ctx.coerce('marker.color', defaultColor);
   if (hasColorscale(markerIn)) {
     supplyColorscaleDefaults(markerIn, ctx.coerce, 'marker.', { inTrace: true, showscale: true });

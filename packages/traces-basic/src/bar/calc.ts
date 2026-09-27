@@ -9,7 +9,9 @@
  * - `extremes` reports the full position slots (unpadded) and the bar ends with `tozero` (Plotly).
  */
 import {
+  alignPeriod,
   cleanNumber,
+  dateToMs,
   findExtremes,
   isArrayLike,
   type AxisExtremes,
@@ -88,6 +90,12 @@ export interface BarCalc {
    * which share one layout.
    */
   readonly overlayAlone?: boolean;
+  /**
+   * With `xperiod` (`yperiod` for horizontal bars): the period of each bar on the position axis
+   * (linear), which `pos` is aligned within. Hover along that axis catches a bar over its period
+   * (Plotly's `bar/hover.js`). Unset without a period.
+   */
+  readonly period?: { readonly starts: Float64Array; readonly ends: Float64Array };
 }
 
 /** Linear positions from the data array or from `letter0 + i·dletter`. */
@@ -112,9 +120,38 @@ function positions(
     for (let i = 0; i < length; i++) out[i] = scale.d2l(d0 + i * step);
     return out;
   }
+  // Range breaks: step the raw values, then compress (and mask) each, as Plotly's `makeCalcdata`.
+  if (scale?.breaks !== undefined) {
+    const r0 = scale.type === 'date' ? dateToMs(start) : cleanNumber(start);
+    for (let i = 0; i < length; i++) out[i] = scale.d2l(r0 + i * step);
+    return out;
+  }
   const l0 = scale ? scale.d2l(start) : cleanNumber(start);
   for (let i = 0; i < length; i++) out[i] = l0 + i * step;
   return out;
+}
+
+/**
+ * Plotly's `alignPeriod` for `xperiod` / `yperiod` on the position axis (date and linear axes, as
+ * scatter): the aligned positions and each bar's period, or `undefined` without a period.
+ */
+function alignedPositions(
+  trace: FullTrace,
+  letter: 'x' | 'y',
+  values: Float64Array,
+  axis: AxisInfo | undefined,
+): ReturnType<typeof alignPeriod> {
+  const period = trace[`${letter}period`];
+  if (period === undefined || (axis && axis.type !== 'date' && axis.type !== 'linear')) {
+    return undefined;
+  }
+  return alignPeriod(values, {
+    period,
+    period0: trace[`${letter}period0`],
+    alignment: trace[`${letter}periodalignment`] as 'start' | 'middle' | 'end' | undefined,
+    isDate: axis?.type === 'date',
+    breaks: axis?.scale.breaks,
+  });
 }
 
 /** A data value of the size axis in calc space: numbers, ms for dates, raw values on log axes. */
@@ -237,10 +274,12 @@ export function calcBar(trace: FullTrace, ctx: CalcContext): BarCalc {
   const [pa, sa] = barAxes(orientation, ctx.xaxis, ctx.yaxis);
   const [pLetter, sLetter] = orientation === 'h' ? (['y', 'x'] as const) : (['x', 'y'] as const);
   const { base, hasBase } = bases(trace, length, sa?.scale);
+  const pos = positions(trace, pLetter, length, pa?.scale);
+  const period = alignedPositions(trace, pLetter, pos, pa);
   const calc: BarCalc = {
     length,
     orientation,
-    pos: positions(trace, pLetter, length, pa?.scale),
+    pos: period ? period.vals : pos,
     size: sizes(trace, sLetter, length, sa?.scale),
     base,
     hasBase,
@@ -254,6 +293,7 @@ export function calcBar(trace: FullTrace, ctx: CalcContext): BarCalc {
     ends: { x: new Float64Array(0), y: new Float64Array(0) },
     errorX: undefined,
     errorY: undefined,
+    ...(period ? { period: { starts: period.starts, ends: period.ends } } : {}),
   };
   layoutBarCalc(calc, trace, ctx);
   return calc;

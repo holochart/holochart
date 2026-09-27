@@ -92,7 +92,7 @@ and gallery, and is a visual regression test.
 
 An example lives at `examples/<category>/.../<slug>.ts` and exports:
 
-- `meta`: `{ title, description, tags, testTolerance?, size? }`
+- `meta`: `{ title, description, tags, testTolerance?, testTileTolerance?, size? }`
 - `run(el)`: renders into `el` and returns `{ ready?, renderer?, dispose }`
 
 The contract is defined in [examples/\_lib/types.ts](examples/_lib/types.ts). Rules:
@@ -160,8 +160,12 @@ plain regression test next to the property (see "regressions found by the E20.2 
 ### Visual regression tests
 
 `pnpm test:visual` renders every example in Chromium with SwiftShader (software GL, for
-deterministic output) and compares it with `tests/visual/__baselines__/<id>.png` using the
-example's `testTolerance`. On failure, look at:
+deterministic output) and compares it with `tests/visual/__baselines__/<id>.png`. Two limits
+apply: the fraction of differing pixels over the whole image (`meta.testTolerance`, default
+0.1%), and the differing pixels in every 32 px window (`meta.testTileTolerance`, default 16 of
+1,024), so a moved title or label fails although it changes few pixels overall. DOM-drawn parts
+(hover labels, menus, sliders) are exempt from the window limit: their text is rasterized by the
+OS, whose fonts differ between macOS and CI. On failure, look at:
 
 - `tests/visual/__actual__/`: what was rendered
 - `tests/visual/__diff__/`: pixel diffs

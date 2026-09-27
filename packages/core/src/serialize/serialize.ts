@@ -9,12 +9,12 @@
  * Style functions (ADR-012, E8.6) cannot be serialized: they are evaluated into per-point arrays
  * where that is well defined, and dropped otherwise, with a warning either way.
  */
-import { isArrayLike } from '../coerce/coerce.ts';
 import { resolveDataRefs } from '../data/datasets.ts';
 import type { FigureInput } from '../defaults/types.ts';
 import type { Registry } from '../registry/types.ts';
-import type { ObjectNode, SchemaNode, TypedArray } from '../schema/types.ts';
+import type { SchemaNode, TypedArray } from '../schema/types.ts';
 import { isAttr, isItemsNode, isObjectNode, resolveChild } from '../schema/walk.ts';
+import { pointSource, type PointSource } from '../style/points.ts';
 import { isPlainObject } from '../util/objects.ts';
 import {
   decodeTypedArray,
@@ -81,12 +81,6 @@ export interface EncodeFigureOptions {
 
 const DROP = Symbol('drop');
 type Encoded = JSONValue | typeof DROP;
-
-/** Per-point view of a trace's data arrays, used to call style functions. */
-interface PointSource {
-  readonly length: number;
-  point(i: number): Record<string, unknown>;
-}
 
 /** The trace a value sits in, for evaluating style functions. */
 interface TraceScope {
@@ -305,35 +299,6 @@ function encodeValue(v: unknown, path: string, ctx: Ctx, scope: Scope): Encoded 
   }
 }
 
-/**
- * Per-point access to a trace's data arrays: every top-level `data_array` attribute that holds an
- * array (`x`, `y`, `customdata`, …, after `'@column'` references are resolved). The length is the
- * shorter of `x` and `y` when either is present (what gets drawn), otherwise the length of the
- * first data array.
- */
-function pointSource(
-  trace: Readonly<Record<string, unknown>>,
-  schema: ObjectNode,
-): PointSource | null {
-  const columns: [string, ArrayLike<unknown>][] = [];
-  for (const [key, node] of Object.entries(schema.children)) {
-    const v = trace[key];
-    if (isAttr(node) && node.valType === 'data_array' && isArrayLike(v)) columns.push([key, v]);
-  }
-  const first = columns[0];
-  if (first === undefined) return null;
-  const xy = columns.filter(([k]) => k === 'x' || k === 'y').map(([, c]) => c.length);
-  const length = xy.length > 0 ? Math.min(...xy) : first[1].length;
-  return {
-    length,
-    point(i) {
-      const p: Record<string, unknown> = {};
-      for (const [k, c] of columns) setKey(p, k, c[i]);
-      return p;
-    },
-  };
-}
-
 /** Trace scope for `trace`; `base` is the figure trace a frame trace updates, if any. */
 function traceScope(
   trace: Readonly<Record<string, unknown>>,
@@ -439,8 +404,9 @@ function encodeFrames(frames: unknown, data: unknown, ctx: Ctx): Encoded {
  *   invalid Date becomes `null`.
  * - **Functions** (ADR-012). A function on an `arrayOk` attribute of a trace whose type is in
  *   `registry` is evaluated into a per-point array (E8.6): `fn(point, i, trace)` for each point
- *   `i`, where `point` holds the i-th element of each of the trace's top-level data arrays (`x`,
- *   `y`, `customdata`, …; `'@column'` references resolved) and `trace` is the input trace. The
+ *   `i`, where `point` holds `pointNumber: i` and the i-th element of each of the trace's top-level
+ *   data arrays (`x`, `y`, `customdata`, …) and per-point arrays (`text`, …; `'@column'`
+ *   references resolved), and `trace` is the input trace. The
  *   point count is the shorter of `x`/`y`, else the first data array's length; frame traces
  *   without data arrays use the figure trace they update. Every other function (config callbacks
  *   such as `renderHover`, non-`arrayOk` attributes, traces without data or registry) is dropped,

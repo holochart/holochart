@@ -64,6 +64,7 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
         'layout-axes-subplots',
         'shapes-images',
         'styling-themes',
+        'conditional-styling',
         'hover-text-templates',
         'interaction-events',
         'controls',
@@ -83,6 +84,7 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
         'themes-templates',
         'per-point-styling',
         'materials-lighting',
+        'custom-markers',
         'markers-patterns',
         'three-objects',
       ]),
@@ -145,6 +147,10 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
         'parallel-coordinates',
         'parallel-categories',
       ]),
+    },
+    {
+      text: 'Scientific',
+      items: pages('charts/scientific/', ['log-plots']),
     },
   ];
 
