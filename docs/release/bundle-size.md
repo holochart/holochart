@@ -20,7 +20,7 @@ Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's
 | `default font, bold face (lazy …)`      | the bold face chunk, loaded when bold text is drawn        | 95 kB  |
 | `default font, italic face (lazy …)`    | the italic face chunk, loaded when italic text is drawn    | 98 kB  |
 | `default font, bold italic face (…)`    | the bold italic face chunk                                 | 95 kB  |
-| `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 238 kB |
+| `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 242 kB |
 | `controls views (lazy chunks of basic)` | menus, sliders, range selector/slider, selections views    | 16 kB  |
 | `@mk7s/holochart (full, ESM)`           | everything the full bundle exports                         | 450 kB |
 | `@mk7s/holochart IIFE (includes three)` | `dist/holochart.iife.min.js` as shipped, **with** three.js | 650 kB |
@@ -143,6 +143,25 @@ entry measures the whole package instead and the report adds a footnote.
 In CI, the job writes the table to the job summary, uploads `size.json` as the `size-report`
 artifact, compares with the latest successful `main` run, and posts or updates one PR comment
 (same-repo PRs only; fork PRs get a read-only token, so they get the job summary only).
+
+## Sizes after M4 wave 2 (2026-09-28)
+
+The M4 trace types (`traces-sci`, `traces-finance`) sit outside `basic`; what reached `basic` in
+waves 1 and 2 is plumbing: pattern hooks in the rect, arc and fill primitives and bar, pie and
+scatter (the pattern code itself is a 2.0 kB lazy chunk), funnel axis defaults, legend `parts`
+glyphs, hover `extraText`, template entries.
+
+| Entry                   | CI (Linux) | Local (macOS) | Budget       |
+| ----------------------- | ---------- | ------------- | ------------ |
+| partial: core + scatter | 149.67 kB  | 149.10 kB     | 153 kB       |
+| partial: basic          | 238.60 kB  | 237.84 kB     | 238 → 242 kB |
+| full, ESM               | 408.90 kB  | 407.42 kB     | 450 kB       |
+| IIFE (includes three)   | 616.64 kB  | 613.52 kB     | 650 kB       |
+| pattern fills (lazy)    | 2.02 kB    | 2.00 kB       | 2.25 kB      |
+
+**CI is the reference.** The same tree measures about 0.3% larger on CI than in a local macOS run
+(gzip output differs between the environments), so a local result within ~1 kB of a budget can
+still fail CI. `basic` was raised to 242 kB by decision after it failed CI at 238.60 kB.
 
 ## Sizes after M4 wave 0 (2026-09-27)
 

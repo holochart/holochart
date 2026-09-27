@@ -2153,7 +2153,8 @@ space; contour smoothing is in grid-index space and labels can sit a few px from
 box/lasso selection and modebar reset; `thetaunit: 'gradians'` is honoured (plotly.js treats it as
 radians).
 
-Open after M4 wave 2: `basic` is at 237.84 of 238 kB (patterns' plumbing ~1.3 kB); real-GPU
+Open after M4 wave 2: `basic` was raised to 242 kB by decision (238.60 kB on CI, which measures ~0.3%
+more than a local run; patterns' plumbing ~1.3 kB); real-GPU
 performance for 100k candles (~1 ms CPU per pan; SwiftShader-bound) and candle level of detail
 when zoomed far out; waterfall/funnel aren't `bar-like` for spike preference; funnelarea patterns
 and `uniformtext`; `marker.texture` and `pattern.path`; indicator digits are formatted per

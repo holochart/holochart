@@ -274,8 +274,10 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     // M2 wave 2 (table, rich text, accessibility, export, timeline: 212.5 kB). M3 wave 2 keeps it:
     // the controls' views load on first use (the row below; 243.5 → 232.2 kB). Raised to 238 kB after
     // M4 wave 0 by decision (style rules, custom markers and line LOD hooks, legend group titles,
-    // bar periods: 235.7 kB; their heavy code is in the lazy rows above).
-    limit: '238 kB',
+    // bar periods: 235.7 kB; their heavy code is in the lazy rows above), and to 242 kB after M4
+    // wave 2 by decision (patterns' plumbing, funnel axis defaults, legend parts: 238.6 kB on CI,
+    // which measures ~0.3% more than a local macOS run; CI is the reference).
+    limit: '242 kB',
     imports: [
       { pkg: 'runtime' },
       { pkg: 'components' },
