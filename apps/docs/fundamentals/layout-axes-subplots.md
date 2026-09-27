@@ -128,6 +128,12 @@ ignored. A zoom box, pan, scroll or pinch on the plot area moves every axis draw
 secondary axis zooms with its primary one (each by the same pixels, as in Plotly); the drag strips
 beside an axis move that axis alone.
 
+As in Plotly, the traces on the overlaying axis draw over those of the axis it overlays, and every
+grid and zero line of the pair (the overlaying axis draws its own with `showgrid: true`) draws under
+all of their traces.
+
+<Example id="axes/demand-temperature" :height="440" />
+
 #### More than two y axes: free axes, `shift` and `autoshift`
 
 A third y axis needs a place outside the plot area: give it `anchor: 'free'` and a `position`
@@ -288,9 +294,11 @@ What to know:
 How it works: an axis with breaks maps data to a _compressed_ linear space in which each break has
 zero width, so the axis stays a straight line from data to pixels and the GPU transform that pans
 and zooms traces does not change.
-Because of that, per-point steps in data units are taken in that compressed space: `x0` + `dx`
-series and `xperiod` alignment across a break are not exact, and bar widths are measured without
-the hidden time.
+Positions stay exact across breaks: `x0` + `dx` series step in real time (a point that lands in a
+break is hidden), and `xperiod` alignment tiles the real calendar, as in Plotly. Bar widths are
+measured without the hidden time, though: the default width comes from the smallest spacing
+between bars on screen, and a bar straddling a break keeps its full width there (in Plotly it
+narrows by the hidden time).
 
 ## Range slider and range selector
 
@@ -473,3 +481,60 @@ createChart(el, {
 
 Spikes are drawn in the hover layer over the canvas, like hover labels: moving them never redraws
 a trace, and they are not part of image exports. Spike labels on the axis are not supported yet.
+
+## Legend groups and group titles
+
+Traces with the same [`legendgroup`](/reference/scatter#legendgroup) form a legend group: with
+the default `legend.traceorder` (`'grouped'` as soon as a trace has a group) their items sit
+together, and clicking one item toggles the whole group (`legend.groupclick: 'togglegroup'`, the
+default; `'toggleitem'` toggles only the item). Give a group a heading with
+[`legendgrouptitle.text`](/reference/scatter#legendgrouptitle.text) on any of its traces (the
+first titled trace, in legend order, names the group):
+
+```ts
+const x = ['Q1', 'Q2', 'Q3', 'Q4'];
+
+createChart(el, {
+  data: [
+    {
+      type: 'bar',
+      name: 'Phones',
+      x,
+      y: [42, 38, 45, 61],
+      legendgroup: 'consumer',
+      legendgrouptitle: { text: 'Consumer' },
+    },
+    { type: 'bar', name: 'Wearables', x, y: [12, 14, 15, 22], legendgroup: 'consumer' },
+    {
+      type: 'bar',
+      name: 'Servers',
+      x,
+      y: [30, 33, 35, 34],
+      legendgroup: 'enterprise',
+      legendgrouptitle: { text: 'Enterprise', font: { weight: 'bold' } },
+    },
+  ],
+  layout: { legend: { orientation: 'v', grouptitlefont: { color: '#eceef4' } } },
+});
+```
+
+As in Plotly:
+
+- A group title is a text-only row at the top of its group, drawn in `legendgrouptitle.font`,
+  whose unset fields come from `legend.grouptitlefont` (by default the global `layout.font`, 10%
+  larger). It fades when every trace of its group is hidden.
+- Clicking a title toggles its whole group, and double-clicking it isolates the group. With
+  `groupclick: 'toggleitem'`, titles don't react to clicks.
+- Vertical legends put `legend.tracegroupgap` px between groups. Horizontal legends (the default
+  look's) show each group as a column headed by its title; the columns fill rows, and
+  `tracegroupgap` separates the rows.
+- In horizontal legends, `legendwidth` sets one trace's item width, overriding
+  `legend.entrywidth`: px of text after the glyph, or a fraction of the plot width with
+  `entrywidthmode: 'fraction'`.
+- Without any `legendgroup`, the whole legend is one group, so a `legendgrouptitle` heads it.
+
+<Example id="legends/group-titles-vertical" :height="420" />
+
+<Example id="legends/group-titles" :height="420" />
+
+`table` traces never appear in the legend, as in Plotly (they have no `showlegend`).

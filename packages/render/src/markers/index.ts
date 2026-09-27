@@ -5,8 +5,10 @@ export {
   SYMBOL_VARIANTS,
   resolveSymbol,
   symbolName,
+  symbols,
   type SymbolDef,
 } from './symbols.ts';
+export { customMarkersReady, isCustomSymbol, type CustomSymbolDefinition } from './custom.ts';
 export {
   createMarkerMatrix,
   MARKER_MATRIX_VERTEX,

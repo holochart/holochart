@@ -374,6 +374,8 @@ const wild: fc.Arbitrary<unknown> = fc.oneof(
 );
 
 function isInvalid(spec: AttrSpec, v: unknown): boolean {
+  // Per-point attributes take style functions (E8.6): validation accepts them.
+  if (spec.arrayOk === true && typeof v === 'function') return false;
   return v !== undefined && v !== null && !coerceValue(spec, v).ok;
 }
 
@@ -521,7 +523,8 @@ function nearMisses(spec: AttrSpec, o: Resolved): fc.Arbitrary<unknown>[] {
 }
 
 /**
- * Values that coercion rejects for `spec` (`coerceValue(spec, v).ok === false`, never
+ * Values that coercion rejects for `spec` (`coerceValue(spec, v).ok === false`; no style functions
+ * on per-point attributes, which validation accepts; never
  * `null`/`undefined`): wrong types, out-of-range numbers, bad enum values, malformed flag lists,
  * colors, colorscales and subplot ids, NaN/Infinity, and so on. Returns `undefined` for specs that
  * accept every value (`any`).

@@ -1,5 +1,7 @@
 /** Attributes shared by every trace type, merged into each module's schema by the registry. */
 import { attr } from '../schema/attr.ts';
+import type { AttrSpec } from '../schema/types.ts';
+import type { StyleRule } from '../style/types.ts';
 
 /** Attributes every trace has. */
 export const commonTraceAttributes = {
@@ -114,22 +116,37 @@ export const commonTraceAttributes = {
     min: 0,
     editType: 'legend',
     description:
-      "Width in px of this trace's legend entry (horizontal legends). Default: sized to its text.",
+      "Width of this trace's item in horizontal legends, overriding `legend.entrywidth` (same units). Default: its text's.",
   }),
   legendgrouptitle: attr.object(
     {
       text: attr.string({
         dflt: '',
         editType: 'legend',
-        description: 'Title shown above this legend group.',
+        description: "Title heading this trace's legend group.",
       }),
       font: attr.object(
         {
           family: attr.string({ editType: 'legend', description: 'Font family.' }),
           size: attr.number({ min: 1, editType: 'legend', description: 'Font size in px.' }),
           color: attr.color({ editType: 'legend', description: 'Font color.' }),
+          weight: attr.integer({
+            min: 1,
+            max: 1000,
+            extras: ['normal', 'bold'],
+            editType: 'legend',
+            description: 'Font weight: a CSS numeric weight (1–1000), `normal` or `bold`.',
+          }),
+          style: attr.enumerated({
+            values: ['normal', 'italic'],
+            editType: 'legend',
+            description: 'Font style.',
+          }),
         },
-        { editType: 'legend', description: 'Group title font. Defaults to the legend title font.' },
+        {
+          editType: 'legend',
+          description: 'Group title font. Unset fields come from `legend.grouptitlefont`.',
+        },
       ),
     },
     { editType: 'legend', description: 'Title of the legend group this trace belongs to.' },
@@ -167,6 +184,13 @@ export const commonTraceAttributes = {
     description:
       'While unchanged, user interaction state for this trace (legend visibility, selections) is kept across updates.',
   }),
+  // Typed for users; validated and resolved into per-point arrays by the chart runtime.
+  styleRules: attr.any({
+    // The runtime plans the stages of the attributes the rules set instead (`styleRulePaths`).
+    editType: 'calc',
+    description:
+      "Conditional per-point styling as JSON (plan E8.5): `[{ when: { y: { gt: 10 } }, set: { 'marker.color': 'gold' } }]`. `when` tests fields of the point (`'y'`, `'customdata[1]'`, `'pointNumber'`, …) with `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`, `nin`, `between`, `regex`, `and`, `or` and `not`; `set` gives per-point (`arrayOk`) attributes a value on the matching points. Later rules win; other points keep the trace's own value.",
+  }) as AttrSpec<readonly StyleRule[], readonly StyleRule[] | undefined>,
 } as const;
 
 /** Attributes added to traces in the `cartesian` category. */

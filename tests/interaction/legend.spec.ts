@@ -18,6 +18,8 @@ const EXAMPLE = '_dev/interaction-legendgroup';
 type RGB = readonly [number, number, number];
 const RED: RGB = [0xea, 0x2a, 0x37];
 const BLUE: RGB = [0x5e, 0x74, 0xd5];
+/** The `fit` group's title (`legendgrouptitle.font.color`). */
+const GREEN: RGB = [0x00, 0xc8, 0x53];
 
 interface Pt {
   x: number;
@@ -123,6 +125,24 @@ test('a double-click isolates the item with its group; a second one restores all
 
   await events(page, true);
   await page.mouse.dblclick(other.x, other.y);
+  await waitForEvent(page, 'restyle');
+  expect(await visibility(page)).toEqual([true, true, true]);
+});
+
+test('a click on a group title toggles its group; the title stays clickable', async ({ page }) => {
+  const title = await legendGlyph(page, GREEN);
+  await events(page, true);
+  await page.mouse.click(title.x, title.y);
+  const restyle = await waitForEvent(page, 'restyle');
+  expect(restyle.payload).toEqual({
+    update: { visible: ['legendonly', 'legendonly'] },
+    traces: [0, 1],
+  });
+  expect(await visibility(page)).toEqual(['legendonly', 'legendonly', true]);
+
+  // Faded now, but in the same place and still toggling the group.
+  await events(page, true);
+  await page.mouse.click(title.x, title.y);
   await waitForEvent(page, 'restyle');
   expect(await visibility(page)).toEqual([true, true, true]);
 });

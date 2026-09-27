@@ -13,14 +13,16 @@ Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's
 | `text engine (lazy chunk …)`            | the SDF text engine chunk, loaded on first text use        | 49 kB  |
 | `fill primitive (lazy chunk …)`         | fill primitive + earcut + exact fill rules, on first fill  | 9.4 kB |
 | `animation (lazy chunk …)`              | transitions, frames and `animate`, on first animation      | 6.4 kB |
+| `line level of detail (lazy chunk …)`   | min/max pyramid for lines of 100k+ points, on first use    | 2.3 kB |
+| `custom marker symbols … (lazy chunk)`  | SVG-path SDFs, image and glyph atlases, on first use       | 3.9 kB |
+| `style rules and functions (lazy …)`    | `styleRules` and function-valued attributes, on first use  | 4 kB   |
 | `default font, regular face (lazy …)`   | TeX Gyre Heros Regular chunk, loaded on first text use     | 95 kB  |
 | `default font, bold face (lazy …)`      | the bold face chunk, loaded when bold text is drawn        | 95 kB  |
 | `default font, italic face (lazy …)`    | the italic face chunk, loaded when italic text is drawn    | 98 kB  |
 | `default font, bold italic face (…)`    | the bold italic face chunk                                 | 95 kB  |
-| `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 234 kB |
+| `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 238 kB |
 | `controls views (lazy chunks of basic)` | menus, sliders, range selector/slider, selections views    | 16 kB  |
 | `@mk7s/holochart (full, ESM)`           | everything the full bundle exports                         | 450 kB |
-| `@mk7s/holochart + …-express (ESM)`     | the full bundle plus every Express function (`hx.*`)       | 371 kB |
 | `@mk7s/holochart IIFE (includes three)` | `dist/holochart.iife.min.js` as shipped, **with** three.js | 650 kB |
 | each `@mk7s/holochart-*` package        | `export *` of that package                                 | report |
 
@@ -142,7 +144,28 @@ In CI, the job writes the table to the job summary, uploads `size.json` as the `
 artifact, compares with the latest successful `main` run, and posts or updates one PR comment
 (same-repo PRs only; fork PRs get a read-only token, so they get the job summary only).
 
-## Current sizes (2026-09-25, M3 wave 3: Express)
+## Sizes after M4 wave 0 (2026-09-27)
+
+Style rules and functions (E8.5, E8.6), custom marker symbols and image sprites (E8.11), line
+level of detail (E16.2), and the M3 carry-forward (legend group titles, bar periods, overlay grid
+order). Each workstream put its heavy code in a lazy chunk; what stays in the initial chunks is the
+glue that decides to load it, plus the carry-forward fixes.
+
+| Entry                                 | Before (M3 wave 3) | After     | Change   | Budget       |
+| ------------------------------------- | ------------------ | --------- | -------- | ------------ |
+| partial: core + scatter               | 145.90 kB          | 148.04 kB | +2.14 kB | 153 kB       |
+| partial: basic                        | 232.78 kB          | 235.74 kB | +2.96 kB | 234 → 238 kB |
+| full, ESM                             | 339.04 kB          | 342.40 kB | +3.36 kB | 450 kB       |
+| IIFE (includes three)                 | 535.69 kB          | 546.99 kB | +11.3 kB | 650 kB       |
+| line level of detail (lazy, new)      | —                  | 2.08 kB   | new      | 2.3 kB       |
+| custom markers and images (lazy, new) | —                  | 3.55 kB   | new      | 3.9 kB       |
+| style rules and functions (lazy, new) | —                  | 3.6 kB    | new      | 4 kB         |
+
+The `basic` budget was raised to 238 kB by decision instead of trimming further: the new trace
+types of M4 go into new packages (`traces-sci`, `traces-finance`) outside `basic`. The IIFE
+inlines the lazy chunks, hence its larger step.
+
+## Sizes after M3 wave 3: Express (2026-09-25)
 
 Measured on the M3 wave 3 working tree before and after the Express package (plan E23.1–E23.4,
 E10.7, E10.8) and the legend's room for facet labels landed, everything else equal. Initial

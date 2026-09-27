@@ -92,6 +92,8 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
     ticklen: 3,
     tickcolor: AXIS,
     tickfont: { size: 8, color: TICK },
+    // Log in-between labels (2, 5, …) at full size: Plotly's `small digits` would be 6 px here.
+    minorloglabels: 'complete',
     title: { font: { size: 9, color: TEXT }, standoff: 4 },
     automargin: true,
   };

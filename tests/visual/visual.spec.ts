@@ -2,9 +2,21 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync, existsSync } from 'node
 import path from 'node:path';
 import { expect, test, type TestInfo } from '@playwright/test';
 import type { ExampleTestResult } from '../../apps/sandbox/src/test-protocol.ts';
-import { comparePng, DEFAULT_TOLERANCE, type CompareResult } from './compare.ts';
+import {
+  comparePng,
+  DEFAULT_TILE_TOLERANCE,
+  DEFAULT_TOLERANCE,
+  domMask,
+  type CompareResult,
+} from './compare.ts';
 import { listExampleIds } from './examples.ts';
-import { BOOT_TIMEOUT_MS, openExample, parkPointer, screenshotExample } from './harness.ts';
+import {
+  BOOT_TIMEOUT_MS,
+  openExample,
+  parkPointer,
+  screenshotDomLayers,
+  screenshotExample,
+} from './harness.ts';
 import { DIFF_REPORT_DIR, reportFileFor, type DiffRecord } from './report-data.ts';
 
 /**
@@ -13,8 +25,14 @@ import { DIFF_REPORT_DIR, reportFileFor, type DiffRecord } from './report-data.t
  * Example ids come from the filesystem (Node can't evaluate the Vite registry). Each example is
  * its own test: open `?example=<id>&test=1` in the sandbox, await `window.__exampleReady`, and
  * screenshot the container (steps shared with the gallery generator in `harness.ts`). Meta
- * (tolerance, `no-visual-test` tag) is read in the page, where the sandbox has imported the
+ * (tolerances, `no-visual-test` tag) is read in the page, where the sandbox has imported the
  * module, so example code never runs in Node.
+ *
+ * Two limits gate each example (`compare.ts`): the fraction of differing pixels over the whole
+ * image, and in every 32 px window, so a moved title or label fails although it changes few
+ * pixels overall. DOM-drawn parts (hover labels, menus, sliders), whose text the OS rasterizes,
+ * are exempt from the window limit: they are found with two more screenshots, with the canvases
+ * hidden and with everything hidden.
  */
 const ROOT = path.resolve(import.meta.dirname, '../..');
 const EXAMPLES_DIR = path.join(ROOT, 'examples');
@@ -39,21 +57,29 @@ function writeFile(file: string, data: Buffer | string): void {
  * Records the pixelmatch count and the exact diff (plan E20.9) as an annotation and as a JSON
  * record that `tests/visual/report.ts` turns into the CI job summary.
  */
-function recordDiff(testInfo: TestInfo, id: string, tolerance: number, c: CompareResult): void {
+function recordDiff(
+  testInfo: TestInfo,
+  id: string,
+  tolerance: number,
+  tileTolerance: number,
+  c: CompareResult,
+): void {
   const percent = (c.ratio * 100).toFixed(4);
   testInfo.annotations.push({
     type: 'diff',
     description:
-      `pixelmatch ${c.diffPixels} px (${percent}%, tolerance ${(tolerance * 100).toFixed(4)}%); ` +
-      `exact ${c.exactPixels} px, max Δ ${c.maxDelta}`,
+      `pixelmatch ${c.diffPixels} px (${percent}%, tolerance ${(tolerance * 100).toFixed(4)}%), ` +
+      `worst window ${c.tileDiffPixels} px; exact ${c.exactPixels} px, max Δ ${c.maxDelta}`,
   });
   const record: DiffRecord = {
     id,
     pass: c.pass,
     tolerance,
+    tileTolerance,
     totalPixels: c.totalPixels,
     diffPixels: c.diffPixels,
     ratio: c.ratio,
+    tileDiffPixels: c.tileDiffPixels,
     exactPixels: c.exactPixels,
     maxDelta: c.maxDelta,
   };
@@ -101,9 +127,19 @@ for (const id of exampleIds) {
     rmSync(diffPath, { force: true });
 
     const tolerance = result.meta.testTolerance ?? DEFAULT_TOLERANCE;
+    const tileTolerance = result.meta.testTileTolerance ?? DEFAULT_TILE_TOLERANCE;
     const baseline = existsSync(baselinePath) ? readFileSync(baselinePath) : undefined;
-    const comparison = baseline ? comparePng(screenshot, baseline, tolerance) : undefined;
-    if (comparison) recordDiff(testInfo, id, tolerance, comparison);
+    let comparison: CompareResult | undefined;
+    if (baseline) {
+      const layers = await screenshotDomLayers(page);
+      const exempt = domMask(layers.withoutCanvas, layers.withoutAnything);
+      comparison = comparePng(screenshot, baseline, {
+        tolerance,
+        tileTolerance,
+        ...(exempt ? { exempt } : {}),
+      });
+      recordDiff(testInfo, id, tolerance, tileTolerance, comparison);
+    }
 
     if (isUpdateMode(testInfo)) {
       // Only rewrite when something changed, so unrelated baselines don't churn.

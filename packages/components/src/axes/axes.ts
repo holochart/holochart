@@ -9,7 +9,8 @@
  *   and one batched text primitive for every tick label and title.
  * - Per subplot viewport (below traces, `renderOrder` far below any trace): one rect batch for the
  *   grid, minor grid and zero lines (plus the in-plot ticks and lines of `layer: 'below traces'`
- *   axes), and one line batch per dash pattern for dashed grids.
+ *   axes), and one line batch per dash pattern for dashed grids. Subplots on `overlaying` axes
+ *   draw these in their main subplot's viewport, under the traces of both.
  *
  * All geometry is in container px; each batch maps it with a transform, so zoom/pan re-computes
  * ticks (tens of items) and re-uploads small buffers into the same primitives, and text labels that
@@ -44,7 +45,7 @@ import {
   type RectItem,
 } from './geometry.ts';
 import { axisMarginNeeds, marginPushOf } from './margins.ts';
-import { AxisShifts, axisPlacement, lineCrossings } from './placement.ts';
+import { AxisShifts, axisPlacement, lineCrossings, mainAxisOf, mainSubplots } from './placement.ts';
 
 /** Stages after which the axes redraw (anything that can move ticks, labels or colors). */
 const REDRAW_STAGES = new Set(['calc', 'crossTraceCalc', 'layout', 'ticks', 'plot', 'style']);
@@ -76,7 +77,8 @@ function inside(r: RectItem, rect: { x: number; y: number; width: number; height
 /**
  * Compute everything the axes draw (pure given `measure`): per axis its lines, ticks and labels;
  * per subplot the grid of both its axes, then zero lines, then in-plot items of `below traces`
- * axes.
+ * axes. A subplot on an `overlaying` axis gets none: its items go to its main subplot's (see
+ * {@link mainSubplots}), in axis order within each of the three groups.
  */
 export function buildAxesScene(
   ctx: Pick<
@@ -95,6 +97,16 @@ export function buildAxesScene(
     dashed.set(id, []);
   }
   const subplots = [...ctx.subplots.values()];
+  // Subplots on `overlaying` axes draw what goes under traces with their main subplot's, under
+  // every trace of the group (Plotly's shared `gridlayer` / `zerolinelayer` / `overlinesBelow`):
+  // their own viewport is drawn after the main one and would cover its traces.
+  const mains = mainSubplots(subplots);
+  const slotOf = (id: string): string => mains.get(id) ?? id;
+  // Main subplots first, so an axis' grid is measured against the main counter axis.
+  const gridOrder = [
+    ...subplots.filter((sp) => !mains.has(sp.id)),
+    ...subplots.filter((sp) => mains.has(sp.id)),
+  ];
   const placements = new Map<string, ReturnType<typeof axisPlacement>>();
   for (const axis of ctx.axes.values()) {
     placements.set(axis.id, axisPlacement(axis, ctx.axes, subplots, ctx.plotArea, pad));
@@ -136,23 +148,29 @@ export function buildAxesScene(
           )
         : undefined;
     for (const r of geo.rects) {
-      if (home && inside(r, home.rect)) grids.get(home.id)?.below.push(r);
+      if (home && inside(r, home.rect)) grids.get(slotOf(home.id))?.below.push(r);
       else over.push(r);
     }
 
-    for (const sp of subplots) {
+    // One grid per main counter axis: overlaying subplots share their area (Plotly's
+    // `finishedGrids` in `axes.drawOne`).
+    const gridded = new Set<string>();
+    for (const sp of gridOrder) {
       const mine = axis.letter === 'x' ? sp.xaxis : sp.yaxis;
       if (mine.id !== axis.id) continue;
       const counter = axis.letter === 'x' ? sp.yaxis : sp.xaxis;
+      const key = mainAxisOf(counter);
+      if (gridded.has(key)) continue;
+      gridded.add(key);
       // Grid lines under an axis line of the counter axis would only thicken it: skip them.
       const cp = placements.get(counter.id);
       const edges =
         cp && counter.full.visible && counter.full.showline ? lineCrossings(cp, pad) : [];
       const g = gridGeometry(axis, ticks, counter.start, counter.end, edges);
-      const slot = grids.get(sp.id);
+      const slot = grids.get(slotOf(sp.id));
       slot?.rects.push(...g.rects);
       slot?.zero.push(...g.zero);
-      dashed.get(sp.id)?.push(...g.dashed);
+      dashed.get(slotOf(sp.id))?.push(...g.dashed);
     }
   }
 

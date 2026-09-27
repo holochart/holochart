@@ -1,4 +1,4 @@
-import { createScale, supplyDefaults, type FullTrace } from '@mk7s/holochart-core';
+import { createBreakMap, createScale, supplyDefaults, type FullTrace } from '@mk7s/holochart-core';
 import {
   createChartRegistry,
   type AxisInfo,
@@ -195,5 +195,94 @@ describe('scatter legendIcon', () => {
       marker: { color: ['red', 'blue'], symbol: ['square', 'circle'], opacity: [0.8, 1] },
     });
     expect(glyph.marker).toMatchObject({ color: 'red', symbol: 'square', opacity: 0.4 });
+  });
+});
+
+describe('scatter hover at implicit positions (x0 + dx)', () => {
+  const DAY = 86_400_000;
+
+  function hoverAt(input: Record<string, unknown>, x: AxisInfo, y: AxisInfo) {
+    const [trace] = supplyDefaults({ data: [input], layout: {} }, registry.core).fullData;
+    const calc = scatter.calc!(trace!, {
+      fullLayout: {} as never,
+      index: 0,
+      xaxis: x,
+      yaxis: y,
+    }) as ScatterCalc;
+    const ctx: HoverContext = {
+      fullLayout: {} as never,
+      xaxis: x,
+      yaxis: y,
+      transform: { scaleX: 1, scaleY: 1, offsetX: 0, offsetY: 0 },
+    };
+    return (i: number) => {
+      const q: HoverQuery = {
+        xl: calc.x[i]!,
+        yl: calc.y[i]!,
+        px: calc.x[i]!,
+        py: calc.y[i]!,
+        mode: 'closest',
+        distance: 20,
+      };
+      return scatter.hoverPoints!(calc, trace as FullTrace, q, ctx)[0];
+    };
+  }
+  const axis = (type: 'linear' | 'date' | 'category', categories?: string[]) =>
+    ({
+      scale: createScale({ type, ...(categories ? { categories } : {}) }),
+      type,
+    }) as unknown as AxisInfo;
+
+  it('steps a date x0 by dx for each point', () => {
+    const at = hoverAt(
+      { x0: '2024-01-01', dx: DAY, y: [100, 200, 300], mode: 'markers' },
+      axis('date'),
+      axis('linear'),
+    );
+    expect(at(0)).toMatchObject({ pointIndex: 0, x: '2024-01-01', y: 100 });
+    expect(at(2)).toMatchObject({ pointIndex: 2, x: '2024-01-03', y: 300 });
+  });
+
+  it('steps numbers, numeric strings and category indices (y0 + dy too)', () => {
+    const linear = hoverAt(
+      { x: [100, 200, 300], y0: '5', dy: 0.5, mode: 'markers' },
+      axis('linear'),
+      axis('linear'),
+    );
+    expect(linear(2)).toMatchObject({ pointIndex: 2, x: 300, y: 6 });
+    const category = hoverAt(
+      { x0: 'b', dx: 1, y: [100, 200], mode: 'markers' },
+      axis('category', ['a', 'b', 'c']),
+      axis('linear'),
+    );
+    expect(category(1)).toMatchObject({ pointIndex: 1, x: 'c' });
+  });
+
+  it('steps raw dates across range breaks, masking points inside one (Plotly)', () => {
+    const breaks = createBreakMap([{ bounds: ['sat', 'mon'] }], 'date')!;
+    const x = { scale: createScale({ type: 'date', breaks }), type: 'date' } as unknown as AxisInfo;
+    const [trace] = supplyDefaults(
+      { data: [{ x0: '2024-01-05', dx: DAY, y: [1, 2, 3, 4], mode: 'markers' }], layout: {} },
+      registry.core,
+    ).fullData;
+    const calc = scatter.calc!(trace!, {
+      fullLayout: {} as never,
+      index: 0,
+      xaxis: x,
+      yaxis: axis('linear'),
+    }) as ScatterCalc;
+    // Friday the 5th, the weekend (hidden), Monday the 8th.
+    expect(Array.from(calc.x, (l) => breaks.toRaw(l))).toEqual([
+      Date.UTC(2024, 0, 5),
+      NaN,
+      NaN,
+      Date.UTC(2024, 0, 8),
+    ]);
+    const at = hoverAt(
+      { x0: '2024-01-05', dx: DAY, y: [1, 2, 3, 4], mode: 'markers' },
+      x,
+      axis('linear'),
+    );
+    expect(at(3)).toMatchObject({ pointIndex: 3, x: '2024-01-08' });
   });
 });

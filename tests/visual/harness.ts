@@ -53,3 +53,26 @@ export function screenshotExample(page: Page): Promise<Buffer> {
     scale: 'css',
   });
 }
+
+/**
+ * Screenshots of the example container with its canvases hidden, and with everything in it
+ * hidden: where they differ, DOM elements (hover labels, menus, sliders) drew (see `domMask` in
+ * `compare.ts`). The page is left as it was.
+ */
+export async function screenshotDomLayers(
+  page: Page,
+): Promise<{ withoutCanvas: Buffer; withoutAnything: Buffer }> {
+  const shot = async (css: string): Promise<Buffer> => {
+    const style = await page.addStyleTag({ content: css });
+    try {
+      return await screenshotExample(page);
+    } finally {
+      await style.evaluate((el) => (el as Element).remove());
+    }
+  };
+  const scope = `#${TEST_CONTAINER_ID}`;
+  return {
+    withoutCanvas: await shot(`${scope} canvas { visibility: hidden !important; }`),
+    withoutAnything: await shot(`${scope} * { visibility: hidden !important; }`),
+  };
+}

@@ -148,7 +148,9 @@ All line shapes, dash styles, and `connectgaps` on the same eight points:
   cost more; use them for a few series, not for large ones.
 - `line.simplify` (on by default) decimates dense lines with increasing x to at most four
   vertices per pixel column, keeping the minimum and maximum. It is visually lossless and is
-  recomputed when you zoom.
+  recomputed when you zoom. Lines of 100,000 points or more read their columns from a cached
+  multi-resolution pyramid and upload only the view, so millions of points pan smoothly (see
+  [long and dense series](/fundamentals/dates-time-series#long-and-dense-series)).
 - Pass typed arrays (`Float64Array`) for long series. Date strings have to be parsed, so for very
   long time series pass milliseconds since the epoch and set the axis to `type: 'date'`.
 - `line.shape: 'spline'` is tessellated on the CPU, so it costs more than straight lines on large

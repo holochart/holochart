@@ -32,7 +32,13 @@ single broken example must not take down the whole suite.
   `no-visual-test` examples are not run (the test is skipped).
 - **Comparison:** the container is screenshotted and compared with
   `tests/visual/__baselines__/<id>.png` using `pixelmatch`. The test fails when the fraction of
-  differing pixels exceeds `meta.testTolerance` (default 0.001). A missing baseline is a failure.
+  differing pixels exceeds `meta.testTolerance` (default 0.001), or when any 32 px window (windows
+  overlap by half) has more differing pixels than `meta.testTileTolerance` allows (default 16 of
+  1,024): thin text that moves changes few pixels overall, so the whole-image fraction alone let a
+  title move from left to centre pass (plan E20.3). Windows touching DOM-drawn parts of the
+  example (hover labels, menus, sliders; found with two extra screenshots, canvases hidden and
+  everything hidden) are exempt from the window check, because the OS rasterizes their text and
+  fonts differ between macOS and the Linux CI image. A missing baseline is a failure.
 - **Output:** on failure, actual and diff PNGs go to `tests/visual/__actual__/` and
   `tests/visual/__diff__/` and are attached to the Playwright HTML report (a CI artifact).
 - **Updating:** `UPDATE_BASELINES=1` (`pnpm test:visual:update`) or Playwright's `--update-snapshots`

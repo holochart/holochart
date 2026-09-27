@@ -8,13 +8,17 @@ export const DIFF_REPORT_DIR = 'test-results/visual/diff-report';
 
 export interface DiffRecord {
   id: string;
-  /** Pixelmatch verdict against the tolerance. */
+  /** Pixelmatch verdict against the tolerances. */
   pass: boolean;
   tolerance: number;
+  /** Max fraction of differing pixels in a window (`compare.ts`). */
+  tileTolerance: number;
   totalPixels: number;
   /** Pixelmatch count (YIQ threshold, anti-aliasing ignored): what the test gates on. */
   diffPixels: number;
   ratio: number;
+  /** Pixelmatch count in the worst 32 px window outside DOM-drawn parts: gated too. */
+  tileDiffPixels: number;
   /** Pixels whose RGBA differs at all: reported, never gated. */
   exactPixels: number;
   /** Largest per-channel difference (0–255). */

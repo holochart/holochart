@@ -13,6 +13,11 @@
  * | `aLine`   | u8 × 4 (norm.)  | lineColor                                 |
  * | `aStyle`  | float32 × 4     | lineWidth, symbol, opacity, angle         |
  *
+ * Custom symbols and image sprites (plan E8.11, `custom.ts`) are symbol codes too: `image` URLs
+ * replace an item's symbol code, and a set that uses any switches to the marker shaders with the
+ * custom-marker code injected once that lazily loaded code is in ({@link MarkerSet.ready} covers the
+ * load, the SDFs and the images).
+ *
  * Updates write into CPU arrays and register `updateRanges` covering only the touched items; the
  * arrays are kept so three.js can re-upload them after a context restore. Sizes are CSS px and
  * markers are screen-space sized, so the same primitive works in 2D pixel space and in 3D.
@@ -67,6 +72,8 @@ import {
 } from './specialize.ts';
 import { HIDDEN_POSITION, rtcAxisOrigin, rtcEncodePositions, rtcOffset } from '../precision.ts';
 import { createSymbolTexture, resolveSymbol, SYMBOL_TEXTURE_KEY } from './symbols.ts';
+import { customImageCode, customMarkersReady, customShader, withCustomMarkers } from './custom.ts';
+import type { CustomMarkerUniforms } from './custom-markers.ts';
 
 /** Symbol per marker set or per item: names (`'diamond-open'`) or Plotly numeric codes. */
 export type SymbolInput = number | string | ArrayLike<number | string>;
@@ -101,6 +108,12 @@ export interface MarkerData {
   opacity: ScalarInput;
   /** Rotation in degrees, clockwise on screen (Plotly `marker.angle`). Default 0. */
   angle: ScalarInput;
+  /**
+   * Image sprites (plan E8.11): a URL or data URI per set or per item (`null` / `''` items keep
+   * their symbol). An image replaces the symbol: drawn in a `size` × `size` square keeping its aspect
+   * ratio, with `opacity`; `color` and the line are ignored. Loaded asynchronously (see `ready`).
+   */
+  image: string | ArrayLike<string | null | undefined> | null;
 }
 
 /** Fields accepted by {@link MarkerSet.patch} (arrays indexed from the patch start). */
@@ -118,6 +131,7 @@ export type MarkerPatch = Partial<
     | 'symbol'
     | 'opacity'
     | 'angle'
+    | 'image'
   >
 >;
 
@@ -156,6 +170,7 @@ export const MARKER_DEFAULTS: Readonly<MarkerData> = Object.freeze({
   symbol: 0,
   opacity: 1,
   angle: 0,
+  image: null,
 });
 
 type Group = 'position' | 'size' | 'fill' | 'value' | 'line' | 'style';
@@ -173,6 +188,7 @@ const FIELD_GROUP: Partial<Record<keyof MarkerData, Group>> = {
   symbol: 'style',
   opacity: 'style',
   angle: 'style',
+  image: 'style',
 };
 const ITEM_SIZE: Record<Group, number> = {
   position: 3,
@@ -191,7 +207,7 @@ const ATTRIBUTE: Record<Group, string> = {
   style: 'aStyle',
 };
 
-interface MarkerUniforms {
+interface MarkerUniforms extends CustomMarkerUniforms {
   [name: string]: IUniform;
   uScale: IUniform<Vector3>;
   uOffset: IUniform<Vector3>;
@@ -290,7 +306,15 @@ export class MarkerSet implements Primitive<MarkerData>, PickablePrimitive {
   #positionVersion = 0;
   #disposed = false;
   #specialize: boolean;
-  #styleSummary: StyleSummary = { symbol: null, anyAngle: false, anyStroke: false, anyOpen: false };
+  #styleSummary: StyleSummary = {
+    symbol: null,
+    anyAngle: false,
+    anyStroke: false,
+    anyOpen: false,
+    anyCustom: false,
+  };
+  /** Detaches from the custom-marker atlases (set while the set uses custom symbols). */
+  #detachCustom: (() => void) | null = null;
 
   constructor(
     context: PrimitiveContext,
@@ -310,6 +334,9 @@ export class MarkerSet implements Primitive<MarkerData>, PickablePrimitive {
       uCRange: { value: new Vector2(0, 1) },
       uReverse: { value: 0 },
       uNanColor: { value: new Vector4() },
+      uCustomSdf: { value: null },
+      uCustomImages: { value: null },
+      uCustomMeta: { value: null },
     };
     this.material = new ShaderMaterial({
       name: 'holochart:markers',
@@ -335,6 +362,14 @@ export class MarkerSet implements Primitive<MarkerData>, PickablePrimitive {
     this.object.frustumCulled = false;
     if (options.renderOrder !== undefined) this.object.renderOrder = options.renderOrder;
     this.update(data);
+  }
+
+  /**
+   * Resolves once the custom symbols and images this set draws are ready (plan E8.11); resolved
+   * at once for built-in symbols. The runtime waits for it before `chart.ready` resolves.
+   */
+  get ready(): Promise<void> {
+    return this.#styleSummary.anyCustom ? customMarkersReady() : RESOLVED;
   }
 
   /** Number of drawn markers. */
@@ -427,6 +462,11 @@ export class MarkerSet implements Primitive<MarkerData>, PickablePrimitive {
         // transparent bucket (so occlusion and draw order match).
         const defines = material.defines as Record<string, string>;
         const sourceDefines = source.defines as Record<string, string>;
+        if (material.vertexShader !== source.vertexShader) {
+          material.vertexShader = source.vertexShader;
+          material.fragmentShader = source.fragmentShader;
+          material.needsUpdate = true;
+        }
         for (const name of ['USE_COLORSCALE', ...SPECIALIZATION_DEFINES]) {
           if (defines[name] === sourceDefines[name]) continue;
           if (name in sourceDefines) defines[name] = sourceDefines[name]!;
@@ -563,6 +603,8 @@ export class MarkerSet implements Primitive<MarkerData>, PickablePrimitive {
     this.material.dispose();
     this.#colorscale?.release();
     this.#colorscale = null;
+    this.#detachCustom?.();
+    this.#detachCustom = null;
     this.#context.resources.release(SYMBOL_TEXTURE_KEY);
   }
 
@@ -719,10 +761,14 @@ export class MarkerSet implements Primitive<MarkerData>, PickablePrimitive {
       }
       case 'style': {
         const out = this.#arrays.style as Float32Array;
+        const image = src.image;
+        const constantImage = typeof image === 'string' ? imageCode(image) : undefined;
         const constantSymbol =
-          typeof src.symbol === 'number' || typeof src.symbol === 'string'
+          constantImage ??
+          (typeof src.symbol === 'number' || typeof src.symbol === 'string'
             ? resolveSymbol(src.symbol)
-            : -1;
+            : -1);
+        const images = image !== null && typeof image !== 'string' ? image : null;
         for (let i = start; i < end; i++) {
           const j = i - srcOffset;
           const k = i * 4;
@@ -730,7 +776,9 @@ export class MarkerSet implements Primitive<MarkerData>, PickablePrimitive {
           const op = scalarAtIndex(src.opacity, j, 1);
           const angle = scalarAtIndex(src.angle, j, 0);
           out[k] = lw > 0 && lw < Infinity ? lw : 0;
-          out[k + 1] = constantSymbol >= 0 ? constantSymbol : symbolAt(src.symbol, j);
+          const itemImage = images && j < images.length ? imageCode(images[j]) : undefined;
+          out[k + 1] =
+            itemImage ?? (constantSymbol >= 0 ? constantSymbol : symbolAt(src.symbol, j));
           out[k + 2] = op >= 0 ? Math.min(op, 1) : op === op ? 0 : 1;
           out[k + 3] = Number.isFinite(angle) ? angle : 0;
         }
@@ -758,7 +806,36 @@ export class MarkerSet implements Primitive<MarkerData>, PickablePrimitive {
       changed = true;
     }
     if (changed) this.material.needsUpdate = true;
+    if (this.#styleSummary.anyCustom && !this.#detachCustom) {
+      this.#detachCustom = () => {};
+      withCustomMarkers((m) => {
+        if (this.#disposed) return;
+        this.#detachCustom = m.attach(this.#uniforms, () => {
+          this.#syncShaders();
+          this.#context.invalidate();
+        });
+      });
+    }
+    this.#syncShaders();
   }
+
+  /** Marker shaders with the custom-marker code while the set uses custom symbols (and it has loaded). */
+  #syncShaders(): void {
+    const custom = this.#styleSummary.anyCustom;
+    const vertex = (custom && customShader(MARKER_VERTEX, false)) || MARKER_VERTEX;
+    if (this.material.vertexShader === vertex) return;
+    this.material.vertexShader = vertex;
+    this.material.fragmentShader =
+      (custom && customShader(MARKER_FRAGMENT, true)) || MARKER_FRAGMENT;
+    this.material.needsUpdate = true;
+  }
+}
+
+const RESOLVED: Promise<void> = Promise.resolve();
+
+/** Symbol code of an item's image, or `undefined` for none (the item keeps its symbol). */
+function imageCode(source: string | null | undefined): number | undefined {
+  return typeof source === 'string' && source !== '' ? customImageCode(source) : undefined;
 }
 
 function stripUndefined<T extends object>(value: T | undefined): Partial<T> {

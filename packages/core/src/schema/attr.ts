@@ -28,6 +28,7 @@ import type {
   Primitive,
   TypedArray,
 } from './types.ts';
+import type { StyleFunction } from '../style/types.ts';
 
 type HasDflt<O> = O extends { dflt: infer D } ? (undefined extends D ? false : true) : false;
 type Full<T, O> = HasDflt<O> extends true ? T : T | undefined;
@@ -35,8 +36,13 @@ type Extras<O> = O extends { extras: readonly (infer E)[] } ? E : never;
 type NumArrayOk<T, O> = O extends { arrayOk: true } ? T | readonly T[] | TypedArray : T;
 type ArrayOk<T, O> = O extends { arrayOk: true } ? T | readonly T[] : T;
 
+/** Per-point attributes also take a style function (E8.6), resolved to an array by the runtime. */
+type Accessor<T, O> = O extends { arrayOk: true }
+  ? StyleFunction<Exclude<T, readonly unknown[] | TypedArray>>
+  : never;
+
 /** Shorthand for an attribute whose input and full types are derived from options `O`. */
-type Attr<T, O> = AttrSpec<T, Full<T, O>>;
+type Attr<T, O> = AttrSpec<T | Accessor<T, O>, Full<T, O>>;
 
 /** Options for `number`, `integer` and `angle`. */
 export interface NumberOptions extends NodeMeta {
@@ -71,6 +77,8 @@ export interface EnumeratedOptions extends NodeMeta {
   readonly values: readonly Primitive[];
   readonly dflt?: Primitive;
   readonly arrayOk?: boolean;
+  /** Also accept values this predicate approves (values registered at runtime). */
+  readonly accepts?: (value: unknown) => boolean;
 }
 
 /** Options for `flaglist`. */

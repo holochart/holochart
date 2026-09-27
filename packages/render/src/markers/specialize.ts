@@ -7,6 +7,7 @@
  * The summary is maintained incrementally from the packed `aStyle` array (lineWidth, symbol,
  * opacity, angle per item) so a `patch()` only scans the patched range.
  */
+import { CUSTOM_CODE_BASE } from './custom.ts';
 import { MARKER_SYMBOLS, SYMBOL_COUNT, symbolLayout, type SymbolLayoutEntry } from './symbols.ts';
 
 /** What the items of a marker set have in common, as far as the shaders care. */
@@ -19,11 +20,17 @@ export interface StyleSummary {
   anyStroke: boolean;
   /** Some item uses an `-open` / `-open-dot` variant (those always draw a stroke). */
   anyOpen: boolean;
+  /** Some item is a custom symbol or image (plan E8.11: needs the custom-marker shader code). */
+  anyCustom: boolean;
 }
 
-/** Normalize a code the way the vertex shader does: unknown bases or variants fall back to 0. */
+/**
+ * Normalize a code the way the vertex shader does: unknown bases or variants fall back to 0. Custom
+ * symbol and image codes (`custom.ts`, internal, always valid) are kept.
+ */
 export function normalizeSymbolCode(code: number): number {
   const c = Math.round(code);
+  if (c >= CUSTOM_CODE_BASE) return c;
   const base = c % 100;
   const variant = Math.floor(c / 100);
   return base < 0 || base >= SYMBOL_COUNT || variant > 3 || variant < 0 ? 0 : c;
@@ -36,6 +43,7 @@ export function summarizeStyle(style: ArrayLike<number>, start: number, end: num
   let anyAngle = false;
   let anyStroke = false;
   let anyOpen = false;
+  let anyCustom = false;
   for (let i = start; i < end; i++) {
     const k = i * 4;
     const code = normalizeSymbolCode(style[k + 1]!);
@@ -43,10 +51,12 @@ export function summarizeStyle(style: ArrayLike<number>, start: number, end: num
     else if (code !== symbol) mixed = true;
     if (style[k]! > 0) anyStroke = true;
     if (style[k + 3]! !== 0) anyAngle = true;
-    const variant = Math.floor(code / 100);
+    const custom = code >= CUSTOM_CODE_BASE;
+    if (custom) anyCustom = true;
+    const variant = custom ? (code - CUSTOM_CODE_BASE) % 8 : Math.floor(code / 100);
     if (variant === 1 || variant === 3) anyOpen = true;
   }
-  return { symbol: mixed ? null : symbol, anyAngle, anyStroke, anyOpen };
+  return { symbol: mixed ? null : symbol, anyAngle, anyStroke, anyOpen, anyCustom };
 }
 
 /**
@@ -60,6 +70,7 @@ export function mergeStyleSummary(prev: StyleSummary, range: StyleSummary): Styl
     anyAngle: prev.anyAngle || range.anyAngle,
     anyStroke: prev.anyStroke || range.anyStroke,
     anyOpen: prev.anyOpen || range.anyOpen,
+    anyCustom: prev.anyCustom || range.anyCustom,
   };
 }
 
@@ -77,7 +88,8 @@ function glslFloat(v: number): string {
  */
 export function markerDefines(summary: StyleSummary): Record<string, string> {
   const defines: Record<string, string> = {};
-  if (summary.symbol !== null) {
+  // Custom symbols have no symbol-table layout to bake: they take the generic program.
+  if (summary.symbol !== null && summary.symbol < CUSTOM_CODE_BASE) {
     layoutCache ??= symbolLayout(MARKER_SYMBOLS).entries;
     const base = summary.symbol % 100;
     const e = layoutCache[base]!;

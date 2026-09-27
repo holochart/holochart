@@ -2,7 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { defaults, layoutAxes, measure } from '../__testing__/fixtures.ts';
 import { buildAxesScene } from './axes.ts';
 import { axisMarginNeeds, marginPushOf, unmetNeeds } from './margins.ts';
-import { automarginAllows, axisMarginSide, axisPlacement, lineCrossings } from './placement.ts';
+import type { RectItem } from './geometry.ts';
+import {
+  automarginAllows,
+  axisMarginSide,
+  axisPlacement,
+  lineCrossings,
+  mainSubplots,
+} from './placement.ts';
 
 const AREA = { x: 80, y: 40, width: 400, height: 300 };
 
@@ -186,6 +193,72 @@ describe('buildAxesScene', () => {
     expect(scene.over).toEqual([]);
     expect(scene.labels).toEqual([]);
     expect(scene.under.get('xy')?.rects).toEqual([]);
+  });
+});
+
+describe('buildAxesScene on overlaying axes', () => {
+  const RANGES = { x: [0, 10], y: [-5, 10], y2: [-2, 20] } as const;
+
+  function scene(layout: Record<string, unknown>, data: Record<string, unknown>[]) {
+    const { fullLayout } = defaults(layout, data);
+    const { axes, subplots } = layoutAxes(fullLayout, AREA, RANGES);
+    const s = buildAxesScene(
+      {
+        axes: axes as never,
+        subplots: subplots as never,
+        plotArea: AREA,
+        fullLayout,
+        width: 560,
+        height: 420,
+      },
+      measure,
+    );
+    return { ...s, axes, mains: mainSubplots(subplots.values()) };
+  }
+  const horizontal = (r: RectItem): boolean => r.x0 <= AREA.x + 1 && r.x1 >= AREA.x + 399;
+  const vertical = (r: RectItem): boolean => r.y0 <= AREA.y + 1 && r.y1 >= AREA.y + 299;
+  const mid = (r: RectItem): number => (r.y0 + r.y1) / 2;
+  const GRIDS = {
+    xaxis: { showgrid: true, zeroline: false },
+    yaxis: { showgrid: true, zeroline: true },
+    yaxis2: { overlaying: 'y', side: 'right', showgrid: true, zeroline: true, griddash: 'dot' },
+  };
+
+  it('draws their grids and zero lines with the main subplot, under every trace', () => {
+    const s = scene(GRIDS, [{}, { yaxis: 'y2' }]);
+    expect(s.mains).toEqual(new Map([['xy2', 'xy']]));
+    expect(s.under.get('xy2')).toEqual({ rects: [], dashed: [] });
+    const main = s.under.get('xy');
+    if (!main) throw new Error('no xy');
+    // y2's dotted grid, then the zero lines of y and y2 after every solid grid line.
+    expect(main.dashed.length).toBeGreaterThan(0);
+    expect(main.dashed.every((d) => d.y0 === d.y1)).toBe(true);
+    const zeros = [s.axes.get('y')?.l2c(0), s.axes.get('y2')?.l2c(0)];
+    const rows = main.rects.filter(horizontal).map(mid);
+    expect(rows.slice(-2).map(Math.round)).toEqual(zeros.map((z) => Math.round(z ?? NaN)));
+    // One x grid for the pair, not one per subplot (Plotly's `finishedGrids`).
+    const single = scene({ xaxis: GRIDS.xaxis }, [{}]);
+    expect(main.rects.filter(vertical)).toEqual(single.under.get('xy')?.rects.filter(vertical));
+  });
+
+  it('keeps them in their own subplot when the overlaid axis has no subplot', () => {
+    const s = scene(GRIDS, [{ yaxis: 'y2' }]);
+    expect(s.mains.size).toBe(0);
+    expect(s.under.has('xy')).toBe(false);
+    expect(s.under.get('xy2')?.rects.filter(vertical).length).toBeGreaterThan(0);
+    expect(s.under.get('xy2')?.dashed.length).toBeGreaterThan(0);
+  });
+
+  it('draws the in-plot items of a `below traces` overlaying axis with the main subplot', () => {
+    const s = scene(
+      { yaxis2: { overlaying: 'y', side: 'right', layer: 'below traces', ticks: 'inside' } },
+      [{}, { yaxis: 'y2' }],
+    );
+    // y2's inside ticks point left from the right edge of the plot area.
+    const ticks = (r: RectItem): boolean => r.x1 === AREA.x + 400 && r.x0 === AREA.x + 395;
+    expect(s.under.get('xy')?.rects.some(ticks)).toBe(true);
+    expect(s.under.get('xy2')?.rects).toEqual([]);
+    expect(s.over.some(ticks)).toBe(false);
   });
 });
 

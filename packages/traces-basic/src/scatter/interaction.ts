@@ -20,7 +20,7 @@ import type { ScatterCalc } from './calc.ts';
 import { hasFill, hasLines, hasMarkers, hasText, isBubble } from './defaults.ts';
 import { fillContains, fillLabelPosition } from './fill.ts';
 import { fillMode, traceFill } from './fill-trace.ts';
-import { dataValue } from './plot.ts';
+import { coordinateValue } from '../shared/data.ts';
 import { markerOf, pointColor } from './style.ts';
 
 /** Plotly's minimum hover radius (px): small markers still catch the pointer this far out. */
@@ -294,8 +294,15 @@ function hoverPoint(
     distance: hit.d,
     px: calc.x[i]! * t.scaleX + t.offsetX,
     py: calc.y[i]! * t.scaleY + t.offsetY,
-    x: sizeLetter === 'x' && size !== undefined ? size : dataValue(trace, 'x', i),
-    y: sizeLetter === 'y' && size !== undefined ? size : dataValue(trace, 'y', i),
+    // Implicit `x0 + i·dx` positions step on the axis (a date `x0` gives a date per point).
+    x:
+      sizeLetter === 'x' && size !== undefined
+        ? size
+        : coordinateValue(trace, 'x', i, ctx.xaxis?.scale),
+    y:
+      sizeLetter === 'y' && size !== undefined
+        ? size
+        : coordinateValue(trace, 'y', i, ctx.yaxis?.scale),
     ...(text !== undefined ? { text } : {}),
     ...(color !== undefined ? { color } : {}),
     fields,
@@ -427,6 +434,7 @@ export function scatterLegendIcon(trace: FullTrace): LegendGlyph {
     const mo = first(m.opacity);
     markerGlyph = {
       symbol: typeof symbol === 'string' || typeof symbol === 'number' ? symbol : 'circle',
+      ...(typeof first(m.image) === 'string' ? { image: first(m.image) as string } : {}),
       size: isBubble(trace) ? 12 : clamp(mean(m.size, 6), 2, 16),
       color: pointColor(trace, 0),
       lineColor: typeof lineColor === 'string' ? lineColor : undefined,

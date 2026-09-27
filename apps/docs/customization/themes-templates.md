@@ -28,7 +28,9 @@ for dashboards, monitoring and multi-panel views:
 - **Text:** `'Helvetica Neue', Helvetica, Arial, sans-serif` at 9 px in `#a4a7b5` (legend, axis
   titles and hover labels too), 8 px `#80838f` tick labels, and an 11 px `#eceef4` figure title at
   the top left. Unless you register one of those families, text is drawn with the bundled
-  [default font](/fundamentals/styling-themes#default-font), TeX Gyre Heros.
+  [default font](/fundamentals/styling-themes#default-font), TeX Gyre Heros. Log axes label the
+  ticks between powers of ten in full, at tick label size (`minorloglabels: 'complete'`: `200mHz`,
+  `5×10⁻⁴`), rather than with Plotly's small digits, which would be 6 px here.
 - **Colorway:** eight colors, red `#ea2a37`, blue `#5e74d5`, indigo `#9962c0`, emerald `#118e36`,
   orange `#cc540a`, teal `#128b8b`, gold `#997600` and magenta `#b8267e`, ordered so neighbors
   differ in hue.

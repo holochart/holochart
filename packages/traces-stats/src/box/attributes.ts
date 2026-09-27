@@ -6,6 +6,7 @@
  * Deferred: period alignment (`xperiod`…), `xcalendar` / `ycalendar`, `selected.marker.size`.
  */
 import { attr } from '@mk7s/holochart-core';
+import { isCustomSymbol } from '@mk7s/holochart-render';
 import { SCATTER_SYMBOLS } from '@mk7s/holochart-traces-basic';
 
 type TraceKind = 'box' | 'violin';
@@ -136,9 +137,11 @@ export function markerAttributes() {
       }),
       symbol: attr.enumerated({
         values: SCATTER_SYMBOLS,
+        accepts: isCustomSymbol,
         dflt: 'circle',
         editType: 'style',
-        description: "Point symbol: a name (`'diamond-open'`) or a Plotly numeric code.",
+        description:
+          "Point symbol: a name (`'diamond-open'`), a Plotly numeric code, a registered custom symbol or a `'text:…'` glyph.",
       }),
       opacity: attr.number({
         min: 0,

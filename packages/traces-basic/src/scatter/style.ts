@@ -37,6 +37,7 @@ export interface FullMarker {
   symbol?: unknown;
   opacity?: unknown;
   angle?: unknown;
+  image?: unknown;
   maxdisplayed?: unknown;
   line?: { color?: unknown; width?: unknown };
 }
@@ -81,6 +82,15 @@ function symbolInput(value: unknown): SymbolInput {
   if (typeof value === 'string' || typeof value === 'number') return value;
   if (isArrayLike(value)) return value as ArrayLike<number | string>;
   return 0;
+}
+
+/** `marker.image` (plan E8.11): a URL, one per point, or none. */
+function imageInput(value: unknown): MarkerData['image'] {
+  if (typeof value === 'string') return value === '' ? null : value;
+  if (isArrayLike(value)) {
+    return Array.from(value as ArrayLike<unknown>, (v) => (typeof v === 'string' ? v : null));
+  }
+  return null;
 }
 
 function at(input: ScalarInput, i: number, fallback: number): number {
@@ -136,6 +146,7 @@ export function markerStyle(
   const style: Partial<MarkerData> = {
     size: options.calc ? options.calc.markerSize : scalarInput(marker.size, 6),
     symbol: symbolInput(marker.symbol),
+    image: imageInput(marker.image),
     opacity: scalarInput(marker.opacity, 1, opacity),
     angle: scalarInput(marker.angle, 0),
     lineColor: lineMapping

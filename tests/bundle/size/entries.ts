@@ -63,9 +63,20 @@ export const FONT_PARTS = ['font-regular', 'font-bold', 'font-italic', 'font-bol
  * when all its modules do, see {@link lazyPartOf}): the fill primitive (plan E21.6: render's
  * `dist/fill-lazy.js` and earcut, which only it uses), the controls' views (E21.6: components'
  * `dist/controls-*.js`, one chunk per component, summed), the animation code (E7.3, E7.4:
- * runtime's `dist/animation-*.js`) and the {@link FONT_PARTS}.
+ * runtime's `dist/animation-*.js`), the line level of detail (E16.2: traces-basic's
+ * `dist/line-lod-*.js`), the custom marker symbols and image sprites (E8.11: render's
+ * `dist/custom-markers-*.js`), the style rules and functions (E8.5, E8.6: runtime's
+ * `dist/styles-*.js`) and the {@link FONT_PARTS}.
  */
-export const LAZY_PARTS = ['fill', 'controls', 'animation', ...FONT_PARTS] as const;
+export const LAZY_PARTS = [
+  'fill',
+  'controls',
+  'animation',
+  'lod',
+  'markers',
+  'style',
+  ...FONT_PARTS,
+] as const;
 
 const FONT_MODULE = /[\\/]texgyreheros-(regular|bold|italic|bolditalic)(?:-[\w-]+)?\.(?:js|ts)$/;
 /** render's lazily loaded fill chunk (built or from sources), and earcut. */
@@ -86,11 +97,35 @@ const CONTROLS_MODULE =
 const ANIMATION_MODULE =
   /[\\/]runtime[\\/](?:dist[\\/]animation-[\w-]+\.js|src[\\/]anim[\\/](?:animation|easing|frames|interpolate)\.ts)$/;
 
+/**
+ * traces-basic's lazily loaded line level of detail (the min/max pyramid of big lines, E16.2):
+ * built (`dist/line-lod-*.js`), or from sources.
+ */
+const LOD_MODULE =
+  /[\\/]traces-basic[\\/](?:dist[\\/]line-lod-[\w-]+\.js|src[\\/]scatter[\\/]line-lod\.ts)$/;
+
+/**
+ * render's lazily loaded custom-marker code (E8.11: the SDF generator, the symbol and image atlases
+ * and their shader code): built (`dist/custom-markers-*.js`), or from sources.
+ */
+const MARKERS_MODULE =
+  /[\\/]render[\\/](?:dist[\\/]custom-markers-[\w-]+\.js|src[\\/]markers[\\/]custom-(?:markers|sdf)\.ts)$/;
+
+/**
+ * runtime's lazily loaded style rules and style functions (E8.5, E8.6: compiling, validating and
+ * applying rules, evaluating functions): built (`dist/styles-*.js`), or from sources.
+ */
+const STYLE_MODULE =
+  /[\\/]runtime[\\/](?:dist[\\/]styles-[\w-]+\.js|src[\\/]style[\\/]styles\.ts)$/;
+
 /** The {@link LAZY_PARTS} entry a module belongs to, if any. */
 export function lazyPartOf(moduleId: string): string | undefined {
   if (FILL_MODULE.test(moduleId)) return 'fill';
   if (CONTROLS_MODULE.test(moduleId)) return 'controls';
   if (ANIMATION_MODULE.test(moduleId)) return 'animation';
+  if (LOD_MODULE.test(moduleId)) return 'lod';
+  if (MARKERS_MODULE.test(moduleId)) return 'markers';
+  if (STYLE_MODULE.test(moduleId)) return 'style';
   const face = FONT_MODULE.exec(moduleId)?.[1];
   return face ? `font-${face}` : undefined;
 }
@@ -166,6 +201,38 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     lazyOf: 'partial-core-scatter',
     lazyPart: 'animation',
   },
+  {
+    // Plan E16.2 (M4 wave 0): the min/max pyramid of big scatter lines (100k points or more),
+    // loaded with a dynamic import() the first time a chart draws one; the same chunk for every
+    // entry with scatter. Measured 2.08 kB when split out (2026-09-27); budget = measured + ~10%.
+    id: 'lod-lazy',
+    name: 'line level of detail (lazy chunk of core + scatter)',
+    limit: '2.3 kB',
+    lazyOf: 'partial-core-scatter',
+    lazyPart: 'lod',
+  },
+  {
+    // Plan E8.11 (M4 wave 0): custom marker symbols and image sprites — the SVG-path SDF generator,
+    // the symbol and image atlases, image and glyph loading and their shader code — loaded with a
+    // dynamic import() the first time a custom symbol is registered or a marker image is drawn.
+    // Measured 3.55 kB when split out (2026-09-27); budget = measured + ~10%.
+    id: 'custom-markers-lazy',
+    name: 'custom marker symbols and images (lazy chunk of core + scatter)',
+    limit: '3.9 kB',
+    lazyOf: 'partial-core-scatter',
+    lazyPart: 'markers',
+  },
+  {
+    // Plan E8.5 / E8.6 (M4 wave 0): style rules (compiling and validating `when` / `set`, applying
+    // them per point) and style functions, loaded with a dynamic import() the first time a trace
+    // has `styleRules` or a function-valued attribute. Budget = measured + ~10% when split out
+    // (see the M4 wave 0 report).
+    id: 'style-lazy',
+    name: 'style rules and functions (lazy chunk of core + scatter)',
+    limit: '4 kB',
+    lazyOf: 'partial-core-scatter',
+    lazyPart: 'style',
+  },
   ...fontRows(),
   {
     // The future `holochart-basic` CDN variant: runtime, components, and the basic traces.
@@ -175,8 +242,10 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     // to measured + ~10% after the E21.5 diet (M2 wave 0: 154.1 kB), then raised to measured + ~10%
     // after M2 wave 1 by decision (pie, shapes, images, themes and colors: 192.9 kB), and again after
     // M2 wave 2 (table, rich text, accessibility, export, timeline: 212.5 kB). M3 wave 2 keeps it:
-    // the controls' views load on first use (the row below; 243.5 → 232.2 kB).
-    limit: '234 kB',
+    // the controls' views load on first use (the row below; 243.5 → 232.2 kB). Raised to 238 kB after
+    // M4 wave 0 by decision (style rules, custom markers and line LOD hooks, legend group titles,
+    // bar periods: 235.7 kB; their heavy code is in the lazy rows above).
+    limit: '238 kB',
     imports: [
       { pkg: 'runtime' },
       { pkg: 'components' },

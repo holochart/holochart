@@ -60,6 +60,11 @@ export * as themes from '@mk7s/holochart-themes';
 export * as express from '@mk7s/holochart-express';
 /** Web fonts for chart text (plan E8.3): `fonts.register('Inter', { regular, bold, … })`. */
 export { fonts } from '@mk7s/holochart-render';
+/**
+ * Custom marker symbols (plan E8.11): `symbols.register('pin', { path: 'M…' })` makes `'pin'` (and
+ * `'pin-open'`, …) a `marker.symbol` value.
+ */
+export { symbols } from '@mk7s/holochart-render';
 
 /**
  * Low-level GPU primitives and the render root, for plugin authors and custom traces (plan E22).

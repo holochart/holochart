@@ -14,7 +14,8 @@ Planned topics:
 
 - `responsive` and container sizing
 - Interaction settings: `scrollZoom`, `doubleClick`, `staticPlot`, `editable`
-- Modebar settings: `displayModeBar`, adding and removing buttons
+- Modebar settings: `displayModeBar`, adding and removing buttons; `displaylogo` is accepted for
+  Plotly compatibility and ignored (Holochart's modebar has no logo)
 - Rendering settings: `pixelRatio`, `antialias`, `powerPreference`, `textRenderer`
 - `locale` and `strict` validation
 

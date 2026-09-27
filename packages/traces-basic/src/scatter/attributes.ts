@@ -16,7 +16,7 @@
  * trace filled to this one redraws too.
  */
 import { attr, type EditFlag, type Primitive } from '@mk7s/holochart-core';
-import { MARKER_SYMBOLS, SYMBOL_VARIANTS } from '@mk7s/holochart-render';
+import { isCustomSymbol, MARKER_SYMBOLS, SYMBOL_VARIANTS } from '@mk7s/holochart-render';
 import { colorscaleAttributes } from '../shared/colorscale.ts';
 import { errorBarAttributes } from '../shared/error-bars/index.ts';
 import { TEXT_POSITIONS } from './text-position.ts';
@@ -379,11 +379,19 @@ export const scatterAttributes = attr.object(
         }),
         symbol: attr.enumerated({
           values: SCATTER_SYMBOLS,
+          accepts: isCustomSymbol,
           dflt: 'circle',
           arrayOk: true,
           editType: 'style',
           description:
-            "Marker symbol: a name (`'diamond-open'`), a Plotly numeric code, or one per point.",
+            "Marker symbol: a name (`'diamond-open'`), a Plotly numeric code, a custom symbol registered with `symbols.register` (with the same `-open` / `-dot` variants), a `'text:…'` glyph such as `'text:🚀'`, or one per point.",
+        }),
+        image: attr.string({
+          strict: true,
+          arrayOk: true,
+          editType: 'style',
+          description:
+            'Image sprites: a URL or data URI drawn instead of the symbol in a `size` × `size` square (keeping its aspect ratio), or one per point (empty entries keep the symbol). `opacity` applies; `color` and `line` do not. Cross-origin URLs need CORS headers.',
         }),
         opacity: attr.number({
           min: 0,

@@ -32,6 +32,29 @@ describe('validate', () => {
     ).toEqual([]);
   });
 
+  it('accepts style functions and style rules on traces (E8.5, E8.6)', () => {
+    const color = (p: { y: number }): string => (p.y > 1 ? 'red' : 'blue');
+    const issues = validate(
+      [
+        {
+          type: 'scatter',
+          y: [1, 2],
+          marker: { color },
+          mode: () => 'lines',
+          styleRules: [{ when: { y: { gt: 1 } }, set: { 'marker.size': 9 } }],
+        },
+      ],
+      {},
+      registry,
+    );
+    expect(issues.map((i) => [i.path, i.message])).toEqual([
+      [
+        'data[0].mode',
+        "invalid value a function; expected any combination of 'lines', 'markers', 'text' joined with '+', or 'none' (ignored; style functions work only on per-point (arrayOk) attributes)",
+      ],
+    ]);
+  });
+
   it('reports invalid values with path, value and expected', () => {
     const issues = validate(
       [{ mode: 'line', opacity: 2 }],

@@ -50,6 +50,7 @@ const PER_POINT = [
   'marker.color',
   'marker.size',
   'marker.symbol',
+  'marker.image',
   'marker.opacity',
   'marker.angle',
   'marker.line.color',

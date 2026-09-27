@@ -1,6 +1,7 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { EPOCH_2000, ONEDAY, ONEHOUR, ONEWEEK, incrementMonth } from './date-math.ts';
+import { createBreakMap } from './breaks.ts';
 import { alignPeriod, defaultPeriod0 } from './period.ts';
 
 const utc = (y: number, m: number, d = 1, h = 0): number => Date.UTC(y, m - 1, d, h);
@@ -197,5 +198,33 @@ describe('defaultPeriod0', () => {
     expect(defaultPeriod0(3 * ONEWEEK, true)).toBe(EPOCH_2000 + ONEDAY);
     expect(defaultPeriod0('bad', true)).toBe(EPOCH_2000);
     expect(defaultPeriod0(ONEWEEK, false)).toBe(0);
+  });
+});
+
+describe('alignPeriod: range breaks', () => {
+  it('tiles raw values and returns compressed coordinates', () => {
+    // [10, 13) hidden: raw 35 is linear 32; its period is raw [30, 40) = linear [27, 37).
+    const breaks = createBreakMap([{ bounds: [10, 13] }], 'linear')!;
+    const values = [5, breaks.toLinear(35), NaN];
+    const r = alignPeriod(values, { period: 10, isDate: false, breaks })!;
+    expect(Array.from(r.starts)).toEqual([0, 27, NaN]);
+    expect(Array.from(r.vals)).toEqual([5, 32, NaN]);
+    // Raw 10 starts the break: its linear point.
+    expect(Array.from(r.ends)).toEqual([10, 37, NaN]);
+    // Aligned in compressed space instead, the period would be [30, 40) there (raw [33, 43)).
+    expect(Array.from(alignPeriod(values, { period: 10, isDate: false })!.vals)).toEqual([
+      5,
+      35,
+      NaN,
+    ]);
+  });
+
+  it('keeps weekly periods on the calendar across weekend breaks', () => {
+    const breaks = createBreakMap([{ bounds: ['sat', 'mon'] }], 'date')!;
+    // Wednesday 2024-01-10, in week Sunday 7th to Sunday 14th (the default period0 is a Sunday).
+    const wed = breaks.toLinear(utc(2024, 1, 10));
+    const r = alignPeriod([wed], { period: ONEWEEK, isDate: true, alignment: 'start', breaks })!;
+    expect(breaks.toRaw(r.vals[0]!)).toBe(utc(2024, 1, 8)); // Sunday 7th is hidden: Monday
+    expect(r.ends[0]! - r.starts[0]!).toBe(5 * ONEDAY); // a week less its weekend
   });
 });

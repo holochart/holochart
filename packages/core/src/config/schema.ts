@@ -31,6 +31,10 @@ export const configSchema = attr.object(
       dflt: [],
       description: 'Extra modebar buttons: names of built-in buttons or custom button objects.',
     }),
+    displaylogo: attr.boolean({
+      dflt: true,
+      description: 'Accepted for Plotly compatibility and ignored: the modebar has no logo.',
+    }),
     scrollZoom: attr.flaglist({
       flags: ['cartesian', 'scene', 'geo', 'map'],
       extras: [true, false],

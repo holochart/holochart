@@ -156,6 +156,7 @@ import {
   maxPointsFor,
   spliceArray,
   tracePlan,
+  usesStyles,
   withRangeImplications,
   type AttributeUpdate,
   type MaxPoints,
@@ -271,6 +272,8 @@ export interface Plan {
    * mirror throttles like streaming.
    */
   tween: boolean;
+  /** Trace edits a transition writes in this run: style rules leave them alone (E8.5). */
+  tweened?: ReadonlyMap<number, AttributeUpdate>;
 }
 
 /**
@@ -597,6 +600,9 @@ export class Chart {
   #a11y: A11yMirror | undefined;
   /** Frames and transitions (E7.3, E7.4): their code loads on first use. */
   #animation: Promise<Animation> | undefined;
+  /** Style rules and functions (E8.5, E8.6): their code loads when a trace first uses them. */
+  #styles: Promise<unknown> | undefined;
+  #style: typeof import('./style/styles.ts') | null | undefined;
   /** The animation frame shown last (Plotly's `fullLayout._currentFrame`). */
   #currentFrame: string | null = null;
   #onRemap: ((order: readonly (number | undefined)[]) => void) | undefined;
@@ -1078,7 +1084,14 @@ export class Chart {
       }
       classifyLayoutPaths(plan, layoutPaths, rangeValues(effective.layout, layoutPaths));
       for (const s of planLayoutEdit(layoutPaths, this.#registry.core)) plan.layout.add(s);
-      for (const [i, { type, paths }] of byTrace) {
+      const from = new Map(t.matched.map((m) => [m.to, m.from]));
+      for (const [i, { type, paths: edited }] of byTrace) {
+        const was = from.get(i);
+        const paths = this.#rulePaths(
+          edited,
+          was === undefined ? undefined : current.data[was],
+          effective.data[i],
+        );
         addStages(plan, i, planTraceEdit(paths, type, i, this.#registry.core, this.#fullFor(plan)));
       }
     };
@@ -1291,8 +1304,10 @@ export class Chart {
         full: () => this.#full,
         axes: () => this.#axes,
         run: (mutate) => this.#schedule(mutate),
+        defaults: (figure) => this.#defaults(figure, false),
         patch: (plan, traces, layout) => {
           for (const [i, edits] of traces) this.#editTraceInto(plan, i, edits);
+          plan.tweened = traces;
           this.#relayoutInto(plan, layout, null);
         },
         react: (figure) => this.#reactPlan(figure),
@@ -1354,11 +1369,12 @@ export class Chart {
   #editTraceInto(plan: Plan, index: number, edits: AttributeUpdate): void {
     const paths = Object.keys(edits).filter((p) => edits[p] !== undefined);
     if (paths.length === 0) return;
-    const trace = applyEdits(this.#figure.data[index], edits);
+    const before = this.#figure.data[index];
+    const trace = applyEdits(before, edits);
     this.#figure.data[index] = trace;
     if (paths.some((p) => p.startsWith('selectedpoints'))) this.#followInputSelection(plan, index);
     const stages = planTraceEdit(
-      paths,
+      this.#rulePaths(paths, before, trace),
       inputTraceType(trace),
       index,
       this.#registry.core,
@@ -1476,6 +1492,18 @@ export class Chart {
 
   #drain(): void {
     this.#scheduled = false;
+    if (this.#style === undefined && !this.#destroyed && this.#figure.data.some(usesStyles)) {
+      // Draw styled from the first frame: wait for the style code (the plan keeps collecting).
+      this.#styles ??= import('./style/styles.ts').then(
+        (m) => (this.#style = m),
+        (error: unknown) => {
+          this.#style = null;
+          console.warn('holochart: loading style rules failed', error);
+        },
+      );
+      void this.#styles.then(() => this.#drain());
+      return;
+    }
     const plan = this.#plan;
     const waiters = this.#waiters;
     this.#plan = null;
@@ -1664,6 +1692,27 @@ export class Chart {
 
   // ---- pipeline -----------------------------------------------------------------------------------
 
+  /**
+   * Edited trace paths, with `styleRules` edits planned as the attributes the rules set (E8.5).
+   * Before the style code loads, a rules edit plans `calc` (its schema edit type).
+   */
+  #rulePaths(paths: readonly string[], before: unknown, after: unknown): readonly string[] {
+    return this.#style ? this.#style.styleRulePaths(paths, before, after) : paths;
+  }
+
+  /** Supply-defaults with style functions evaluated and style rules applied (E8.5, E8.6). */
+  #defaults(figure: FigureInput, validate: boolean, plan?: Plan): SupplyDefaultsResult {
+    const core = this.#registry.core;
+    const style = this.#style;
+    if (!style) return supplyDefaults(figure, core, { validate });
+    const full = supplyDefaults(style.withStyleFunctions(figure, core), core, { validate });
+    const tweened = plan?.tween ? plan.tweened : undefined;
+    style.applyStyleRules(full, core, {
+      skip: tweened && ((i, path) => tweened.get(i)?.[path] !== undefined),
+    });
+    return full;
+  }
+
   #run(plan: Plan): void {
     const registry = this.#registry;
     this.#altered = plan.rangesAltered;
@@ -1672,7 +1721,7 @@ export class Chart {
       plan.validate ||
       (!plan.tween &&
         (plan.layout.has('calc') || [...plan.traces.values()].some((s) => s.has('calc'))));
-    const full = supplyDefaults(this.#figure, registry.core, { validate });
+    const full = this.#defaults(this.#figure, validate, plan);
     this.#full = full;
     const { fullData, fullLayout, fullConfig } = full;
     // Kept across runs like Plotly (update menus and sliders follow it, E5.11).
@@ -1837,10 +1886,11 @@ export class Chart {
     // Backgrounds are cheap to set: do it on every run (`paper_bgcolor` is a style edit).
     root.setBackground(toRGBA(fullLayout.paper_bgcolor) ?? null);
     const plotBg = toRGBA(fullLayout.plot_bgcolor) ?? null;
+    const mains = mainSubplotIds([...this.#subplots.keys()], this.#axes);
     for (const sp of this.#subplots.values()) {
       // A subplot on an `overlaying` axis shares its area with the one it overlays: painting its
       // background would hide that subplot's traces (Plotly draws no background there either).
-      sp.viewport.background = overlays(sp) ? null : plotBg;
+      sp.viewport.background = mains.has(sp.id) ? null : plotBg;
     }
 
     this.#reselect(plan, fullLayout, fullData);
@@ -2064,7 +2114,13 @@ export class Chart {
     }
 
     const next = new Map<string, SubplotSlot>();
-    fullLayout._subplots.cartesian.forEach((id, order) => {
+    const ids = fullLayout._subplots.cartesian;
+    const mains = mainSubplotIds(ids, this.#axes);
+    // Subplots on `overlaying` axes draw after all others (Plotly's `makeSubplotData`), so their
+    // traces lie over those of the subplot they overlay, and that one's grid lies under both.
+    const drawOrder = [...ids.filter((id) => !mains.has(id)), ...ids.filter((id) => mains.has(id))];
+    ids.forEach((id) => {
+      const order = drawOrder.indexOf(id);
       const pair = splitSubplotId(id);
       const xa = pair && this.#axes.get(pair[0]);
       const ya = pair && this.#axes.get(pair[1]);
@@ -3105,13 +3161,28 @@ function rangeValues(
   return out;
 }
 
-/** Does this subplot sit on an axis that `overlaying`s another one (a secondary axis)? */
-function overlays(sp: SubplotSlot): boolean {
-  const over = (axis: AxisSlot): boolean => {
-    const o = (axis.full as { overlaying?: unknown }).overlaying;
-    return typeof o === 'string' && o !== '' && o !== 'free' && o !== axis.id;
+/**
+ * The main subplot of each subplot on an `overlaying` axis (Plotly's `plotinfo.mainplot`): the
+ * subplot of the axes its axes overlay, when it is one of `ids`. Such a subplot shares its area
+ * with its main subplot; one whose main subplot does not exist (no trace on it) is a regular
+ * subplot, as in Plotly. The axes component groups grids the same way (`mainSubplots`).
+ */
+function mainSubplotIds(
+  ids: readonly string[],
+  axes: ReadonlyMap<string, AxisSlot>,
+): Map<string, string> {
+  const mainAxis = (id: string): string => {
+    const o = (axes.get(id)?.full as { overlaying?: unknown } | undefined)?.overlaying;
+    return typeof o === 'string' && o !== '' && o !== 'free' ? o : id;
   };
-  return over(sp.xaxis) || over(sp.yaxis);
+  const out = new Map<string, string>();
+  for (const id of ids) {
+    const pair = splitSubplotId(id);
+    if (!pair) continue;
+    const main = mainAxis(pair[0]) + mainAxis(pair[1]);
+    if (main !== id && ids.includes(main)) out.set(id, main);
+  }
+  return out;
 }
 
 /**

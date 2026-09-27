@@ -223,7 +223,11 @@ describe('style functions (ADR-012, E8.6)', () => {
     // The point count is the shorter of x and y.
     expect(marker).toEqual({ color: ['gray0', 'gold', 'gray2'], size: [2, 4, 6] });
     expect(color).toHaveBeenCalledTimes(3);
-    expect(color.mock.calls[1]).toEqual([{ x: 2, y: 20, customdata: 'b' }, 1, trace]);
+    expect(color.mock.calls[1]).toEqual([
+      { pointNumber: 1, x: 2, y: 20, customdata: 'b' },
+      1,
+      trace,
+    ]);
     // Once per path, however many points.
     expect(warnings.map((w) => [w.path, w.code])).toEqual([
       ['data[0].marker.color', 'function-evaluated'],

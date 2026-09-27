@@ -43,7 +43,10 @@ adds a negative value, outlines, and rounded corners:
 - Values can be negative. Bars then extend below (or left of) the base.
 - `base`, `width`, and `offset` set each bar's start, thickness (in axis units), and shift. Each
   takes one value or one per bar. On a date axis, `width` is in milliseconds.
-- `x0`/`dx` (or `y0`/`dy`) give implicit positions when you leave out `x` (or `y`).
+- `x0`/`dx` (or `y0`/`dy`) give implicit positions when you leave out `x` (or `y`). On a date
+  axis, `x0` is a date and `dx` is in milliseconds.
+- `xperiod` (`yperiod` for horizontal bars) snaps each position to its period, such as a month
+  (`'M1'`), placed by `xperiodalignment` (see [monthly bars](#monthly-bars-with-periods)).
 - `text` and `customdata`: per-bar labels and extra data for templates.
 - A `null` or `NaN` value draws no bar.
 - Categories appear in the order of the data unless the axis sets `categoryorder` (see
@@ -106,6 +109,17 @@ Plotly. Numeric `marker.color` maps through a colorscale. More in
 [Horizontal bar](/charts/basic/horizontal-bar).
 
 <Example id="bar/horizontal" />
+
+### Monthly bars with periods
+
+When each value covers a period, give its date and the period: `xperiod: 'M1'` (a number of
+months, or a length in milliseconds) with `xperiodalignment: 'middle'` draws each bar in the
+middle of its month (`'start'` and `'end'` also work, and `xperiod0` sets a period boundary).
+Give a `scatter` trace the same period to line its points up with the bars. With
+`ticklabelmode: 'period'` the month labels sit under their months. Hover shows the date as given,
+not the aligned position, as in Plotly.
+
+<Example id="bar/period" />
 
 ## Styling
 
@@ -178,5 +192,7 @@ Bar layout options such as [`barmode`](/reference/layout#barmode) and
   without values sort last for `min`/`max`/`mean`/`median`. `'geometric mean …'` is not supported.
 - Draw order matches Plotly: bars draw below scatter traces whatever their order in `data`, and
   a higher `zorder` (on bars too) draws a trace on top of lower ones.
-- Not supported yet: `marker.pattern` (E8.10) and `xperiod` alignment for bars.
+- `xperiod`, `xperiod0` and `xperiodalignment` (and the `y` ones for horizontal bars) work as in
+  Plotly, and also on linear axes (Plotly only aligns periods on date axes).
+- Not supported yet: `marker.pattern` (E8.10).
 - Bar extrusion (`depth`, `bevel`, `material`) is a planned Holochart extension (M6).

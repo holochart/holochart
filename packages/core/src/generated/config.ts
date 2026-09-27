@@ -38,6 +38,12 @@ export interface Config {
    */
   modeBarButtonsToAdd?: unknown;
   /**
+   * Accepted for Plotly compatibility and ignored: the modebar has no logo.
+   *
+   * @defaultValue `true`
+   */
+  displaylogo?: boolean;
+  /**
    * Which subplot kinds zoom on mouse wheel. `true`/`false` enable/disable all of them.
    *
    * @defaultValue `"scene+geo+map"`

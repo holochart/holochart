@@ -37,16 +37,17 @@ const lines = [
 const drifted = records.filter((r) => r.exactPixels > 0);
 if (drifted.length) {
   lines.push(
-    '| Example | pixelmatch px | ratio | tolerance | exact px | max Δ | |',
-    '| --- | ---: | ---: | ---: | ---: | ---: | --- |',
+    '| Example | pixelmatch px | ratio | tolerance | worst window px | exact px | max Δ | |',
+    '| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |',
     ...drifted.map(
       (r) =>
         `| \`${r.id}\` | ${r.diffPixels} | ${pct(r.ratio)} | ${pct(r.tolerance)} | ` +
-        `${r.exactPixels} | ${r.maxDelta} | ${r.pass ? '✅' : '❌'} |`,
+        `${r.tileDiffPixels} | ${r.exactPixels} | ${r.maxDelta} | ${r.pass ? '✅' : '❌'} |`,
     ),
     '',
-    'Exact counts are informational: tests gate on pixelmatch only (ADR-018). Non-zero exact ' +
-      'diffs mean a baseline is no longer bit-exact (plan E20.9).',
+    'Exact counts are informational: tests gate on pixelmatch only (ADR-018), over the whole ' +
+      'image and in every 32 px window outside DOM-drawn parts (E20.3). Non-zero exact diffs ' +
+      'mean a baseline is no longer bit-exact (plan E20.9).',
     '',
   );
 }

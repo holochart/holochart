@@ -53,6 +53,18 @@ function coerceCoordinates(ctx: TraceDefaultsContext): number {
 }
 
 /**
+ * Plotly's `handlePeriodDefaults` (both letters, as Plotly's bar; calc aligns the position axis):
+ * `period0`/`periodalignment` only matter with a period.
+ */
+function coercePeriods(ctx: TraceDefaultsContext): void {
+  for (const letter of ['x', 'y'] as const) {
+    if (ctx.coerce(`${letter}period`) === undefined) continue;
+    ctx.coerce(`${letter}period0`);
+    ctx.coerce(`${letter}periodalignment`);
+  }
+}
+
+/**
  * Supply bar defaults. Sets `_length` (the bar count). Text styling is only coerced when some bar
  * can show text; colorscale attributes only for colorscaled containers (Plotly's `hasColorscale`).
  */
@@ -67,6 +79,7 @@ export function supplyBarDefaults(
     return;
   }
   traceOut['_length'] = length;
+  coercePeriods(ctx);
 
   ctx.coerce('base');
   ctx.coerce('offset');
