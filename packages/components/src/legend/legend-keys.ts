@@ -9,7 +9,9 @@
  *
  * Loaded by the legend view once an interactive chart draws a legend (`config.a11y.keyboard`),
  * and mounted where the legend's DOM would be in the chart's tab order: after the plot area's focus
- * target, before the update menus, sliders, modebar and range selectors.
+ * target, before the update menus, sliders, modebar and range selectors. Each legend (`legend2`, …)
+ * is a toolbar of its own, named "Legend" / "Legend 2" (with its title after a colon). Focusing
+ * an item of a scrolling legend scrolls it into view.
  */
 import { localize, type FullLayout } from '@mk7s/holochart-core';
 import { ensureStyle } from '../shared/dom.ts';
@@ -41,13 +43,21 @@ const CSS =
 export class LegendKeys {
   readonly root: HTMLDivElement;
   readonly #act: (id: string, double: boolean) => void;
+  readonly #reveal: ((id: string) => void) | undefined;
   #buttons: HTMLButtonElement[] = [];
   #ids: string[] = [];
   /** The item holding the tab stop. */
   #current = '';
 
-  /** Mount in place of `anchor` (the legend's place in the chart's tab order). */
-  constructor(anchor: ChildNode, act: (id: string, double: boolean) => void) {
+  /**
+   * Mount in place of `anchor` (the legend's place in the chart's tab order). `reveal` runs when an
+   * item gets the focus (to scroll it into view).
+   */
+  constructor(
+    anchor: ChildNode,
+    act: (id: string, double: boolean) => void,
+    reveal?: (id: string) => void,
+  ) {
     const doc = anchor.ownerDocument as Document;
     const root = doc.createElement('div');
     root.className = 'hc-legend-keys';
@@ -58,15 +68,23 @@ export class LegendKeys {
     ensureStyle(root, STYLE_ID, CSS);
     this.root = root;
     this.#act = act;
+    this.#reveal = reveal;
   }
 
-  /** Match the drawn items (`[]` removes the buttons); focus stays on an item that remains. */
-  update(items: readonly LegendKeyItem[], fullLayout: FullLayout | undefined): void {
+  /**
+   * Match the drawn items of legend `id` (`[]` removes the buttons); focus stays on an item that
+   * remains.
+   */
+  update(items: readonly LegendKeyItem[], fullLayout: FullLayout | undefined, id = 'legend'): void {
     const root = this.root;
     const doc = root.ownerDocument;
+    const legend = fullLayout?.[id] as LegendLike | undefined;
     root.hidden = items.length === 0;
-    root.setAttribute('aria-label', localize(fullLayout, 'Legend'));
-    root.style.setProperty('--hc-legend-focus', String(getLegendColor(fullLayout)));
+    const name = localize(fullLayout, 'Legend') + (id === 'legend' ? '' : ` ${id.slice(6)}`);
+    const title = plain(legend?.title?.text);
+    root.setAttribute('aria-label', title ? `${name}: ${title}` : name);
+    const color = legend?.font?.color ?? fullLayout?.font.color ?? '#444';
+    root.style.setProperty('--hc-legend-focus', String(color));
     const byId = new Map(this.#ids.map((id, k) => [id, this.#buttons[k] as HTMLButtonElement]));
     const buttons = items.map((item) => {
       let b = byId.get(item.id);
@@ -111,7 +129,7 @@ export class LegendKeys {
     const i = ((k % n) + n) % n;
     this.#current = this.#ids[i] as string;
     this.#buttons.forEach((b, j) => (b.tabIndex = j === i ? 0 : -1));
-    this.#buttons[i]?.focus();
+    this.#buttons[i]?.focus({ preventScroll: true });
   }
 
   readonly #onKey = (e: KeyboardEvent): void => {
@@ -142,11 +160,22 @@ export class LegendKeys {
     if (k < 0) return;
     this.#current = this.#ids[k] as string;
     this.#buttons.forEach((b, j) => (b.tabIndex = j === k ? 0 : -1));
+    this.#reveal?.(this.#current);
   };
 }
 
-/** The legend's text color: the focus ring's. */
-function getLegendColor(fullLayout: FullLayout | undefined): unknown {
-  const legend = fullLayout?.['legend'] as { font?: { color?: unknown } } | undefined;
-  return legend?.font?.color ?? fullLayout?.font.color ?? '#444';
+/** What the toolbar reads of its legend: the title (its name) and the text color (focus ring). */
+interface LegendLike {
+  readonly title?: { readonly text?: unknown };
+  readonly font?: { readonly color?: unknown };
+}
+
+/** A title as plain text (markup dropped, whitespace collapsed). */
+function plain(text: unknown): string {
+  return typeof text === 'string'
+    ? text
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+    : '';
 }

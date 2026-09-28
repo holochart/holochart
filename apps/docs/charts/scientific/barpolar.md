@@ -149,7 +149,10 @@ leaves the middle free:
   chart.on('click', (e) => console.log(e.points[0]?.theta, e.points[0]?.r));
   ```
 
-- **Selection.** Box and lasso selection don't select polar bars yet.
+- **Selection.** With `dragmode: 'select'` or `'lasso'`, a bar is selected when the middle of
+  its outer edge is inside the box or lasso (Plotly's rule); Shift adds, a double-click clears.
+  `selected` / `unselected` style the bars, and `selected` points carry `r` and `theta`. See
+  [scatterpolar selection](/charts/scientific/polar#interactivity).
 - **Transitions.** Transitions and `animate` don't interpolate polar bars, as in Plotly.
 
 ## Performance notes
@@ -201,4 +204,5 @@ layout reference.
 - Transitions don't interpolate polar bars; Plotly doesn't either.
 - `marker.pattern` hatches the bars as on bar charts, with tiles anchored at the pole on
   circular grids (see [Patterns & textures](/customization/markers-patterns)).
-- Not supported yet: box or lasso selection on polar subplots.
+- Polar selections aren't stored in `layout.selections`, as in Plotly, and their events have no
+  `range` / `lassoPoints`.

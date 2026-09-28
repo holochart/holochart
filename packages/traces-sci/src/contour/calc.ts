@@ -7,7 +7,10 @@
  *
  * Coordinates are linear (log10 on log axes); contour crossings are interpolated between grid
  * points in linear coordinates (Plotly interpolates in calc space, so on log axes its lines between
- * grid points are straight in data units and bend on screen).
+ * grid points are straight in data units and bend on screen). Periods and range breaks come with
+ * the grid: on a break axis the contours are traced in its compressed space (Plotly interpolates
+ * crossings in real time and maps them piecewise, so crossings between grid points on either side
+ * of a break land elsewhere).
  */
 import { isArrayLike, type FullTrace } from '@mk7s/holochart-core';
 import {
@@ -24,7 +27,13 @@ import {
   recordZExtent,
   type ContourCalc,
 } from '@mk7s/holochart-traces-stats';
-import { calcHeatmapGrid, emptyHeatmapCalc, type HeatmapCalc } from '../heatmap/calc.ts';
+import {
+  alignedCoordinates,
+  calcHeatmapGrid,
+  emptyHeatmapCalc,
+  type HeatmapAxisCells,
+  type HeatmapCalc,
+} from '../heatmap/calc.ts';
 import { isColumnZ } from '../heatmap/defaults.ts';
 
 /**
@@ -35,31 +44,36 @@ export type ContourTraceCalc = HeatmapCalc & ContourCalc;
 
 /**
  * The grid points of one direction. Plotly's `makeBoundArray` for contours: an `x` array gives
- * the points (only the first `n` values: more is not read as cell edges, unlike heatmaps); else
- * the cell centers of the heatmap grid (`x0` + i·`dx`, category indices, or extended arrays).
+ * the points (only the first `n` values: more is not read as cell edges, unlike heatmaps), aligned
+ * to `xperiod` (hover then shows them as given); else the cell centers of the heatmap grid
+ * (`x0` + i·`dx`, category indices, or extended arrays). On range-break axes the heatmap grid's
+ * centers are used throughout (extra values are read as its cell edges there).
  */
 function gridPoints(
   trace: FullTrace,
   letter: 'x' | 'y',
   axis: AxisInfo | undefined,
-  centers: Float64Array,
-): Float64Array {
+  cells: HeatmapAxisCells,
+): HeatmapAxisCells {
   const v = trace[letter];
-  const n = centers.length;
+  const n = cells.centers.length;
   if (
     !axis ||
     axis.type === 'category' ||
+    axis.scale.breaks ||
     isColumnZ(trace['z']) ||
     trace[`${letter}type`] === 'scaled' ||
     !isArrayLike(v) ||
     (v as ArrayLike<unknown>).length <= n
   ) {
-    return centers;
+    return cells;
   }
   const values = v as ArrayLike<unknown>;
-  const out = new Float64Array(n);
-  for (let i = 0; i < n; i++) out[i] = axis.scale.d2l(values[i]);
-  return out.every(Number.isFinite) ? out : centers;
+  const given = new Float64Array(n);
+  for (let i = 0; i < n; i++) given[i] = axis.scale.d2l(values[i]);
+  const out = alignedCoordinates(trace, letter, axis, given);
+  if (!(out ?? given).every(Number.isFinite)) return cells;
+  return out ? { ...cells, centers: out, hoverAt: given } : { ...cells, centers: given };
 }
 
 /** Finite extent of an array (`[NaN, NaN]` without finite values). */
@@ -120,8 +134,10 @@ export function calcContour(trace: FullTrace, ctx: CalcContext): ContourTraceCal
   const { nx, ny } = grid;
   // A single row or column can't be contoured (Plotly draws nothing either).
   if (nx < 2 || ny < 2) return emptyContourCalc();
-  const xc = gridPoints(trace, 'x', ctx.xaxis, grid.x.centers);
-  const yc = gridPoints(trace, 'y', ctx.yaxis, grid.y.centers);
+  const x = gridPoints(trace, 'x', ctx.xaxis, grid.x);
+  const y = gridPoints(trace, 'y', ctx.yaxis, grid.y);
+  const xc = x.centers;
+  const yc = y.centers;
   const raw = grid.z;
   const presence = trace['connectgaps'] === true ? undefined : contourPresenceField(raw);
   const zFilled = fillGaps(raw, nx, ny);
@@ -134,8 +150,8 @@ export function calcContour(trace: FullTrace, ctx: CalcContext): ContourTraceCal
   return {
     ...grid,
     ...field,
-    x: { ...grid.x, centers: xc },
-    y: { ...grid.y, centers: yc },
+    x,
+    y,
     z: hover,
     zExtent,
     heatmapZ: hover,

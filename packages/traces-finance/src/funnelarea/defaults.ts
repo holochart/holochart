@@ -6,6 +6,7 @@ import {
   type LayoutDefaultsContext,
   type TraceDefaultsContext,
 } from '@mk7s/holochart-core';
+import { supplyPatternDefaults } from '@mk7s/holochart-traces-basic';
 
 function isNumeric(v: unknown): boolean {
   if (typeof v === 'number') return Number.isFinite(v);
@@ -59,6 +60,9 @@ export function supplyFunnelareaDefaults(
     ctx.coerce('marker.line.color', ctx.fullLayout.paper_bgcolor);
   }
   ctx.coerce('marker.colors');
+  // As pie's: stage colors resolve across funnel areas later, so pattern colors default per stage
+  // when drawing (and the background to the paper color, Plotly's `paper_bgcolor` default).
+  supplyPatternDefaults(traceIn, ctx, 'marker.pattern');
   ctx.coerce('scalegroup');
 
   const text = ctx.coerce('text');

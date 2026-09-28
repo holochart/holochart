@@ -130,6 +130,42 @@ createChart(document.getElementById('chart')!, {
 
 <Example id="funnelarea/colors" />
 
+### Pattern fills
+
+`marker.pattern` hatches the stages as it does pie slices: `shape`, `size`, `solidity`, `fgcolor`
+and `bgcolor` take one value per stage. With the default `fillmode: 'replace'` each hatch is drawn
+in its stage color on the paper color; with `'overlay'` it is drawn over the stage color in a
+contrasting color (see [Patterns & textures](/customization/markers-patterns)). The legend shows
+the patterns too:
+
+```ts
+import { createChart } from '@mk7s/holochart';
+
+createChart(document.getElementById('chart')!, {
+  data: [
+    {
+      type: 'funnelarea',
+      labels: ['Leads', 'Qualified', 'Proposal', 'Won'],
+      values: [300, 180, 90, 30],
+      marker: { pattern: { shape: ['/', '.', 'x', '+'], solidity: 0.45 } },
+    },
+  ],
+});
+```
+
+<Example id="funnelarea/patterns" />
+
+### Uniform text
+
+Stage labels shrink to fit their stage, so the narrow stages end up with smaller labels.
+`layout.uniformtext` draws every stage label of every funnel area in the chart at one size, the
+size of the smallest label that still fits, as in Plotly (and as for
+[bars and pies](/fundamentals/hover-text-templates#uniform-text-size)). With `mode: 'hide'`,
+labels that would have to shrink below `minsize` to fit are hidden; with `'show'` they are drawn
+at the common size. `minsize` also raises smaller label fonts:
+
+<Example id="funnelarea/uniformtext" />
+
 ## Styling
 
 - **Colors.** `marker.colors` (one per stage) or `layout.funnelareacolorway` by label. With
@@ -143,6 +179,9 @@ createChart(document.getElementById('chart')!, {
   `texttemplate`, and `textposition`: `'inside'` (the default: centered in the largest rectangle
   inside the stage, shrunk to fit) or `'none'`. `textfont` and `insidetextfont` style them; unless
   you set a text color, labels take a color that contrasts with their stage.
+  `layout.uniformtext` draws them all at one size.
+- **Patterns.** `marker.pattern` hatches the stages: `shape`, `size`, `solidity` and colors per
+  stage, and `fillmode` (see [Patterns & textures](/customization/markers-patterns)).
 - **Title.** `title.text` and `title.font`, and `title.position`: `'top left'`,
   `'top center'` (the default) or `'top right'`. The title sits above the funnel and shrinks to
   fit the domain's width.
@@ -194,7 +233,8 @@ createChart(document.getElementById('chart')!, {
 - **Keyboard:** there is no keyboard navigation between stages yet.
 - **Color:** the stages are in order from top to bottom, so label them directly
   (`textinfo: 'label+percent'`) rather than asking readers to match legend colors, and keep the
-  outlines in the background color to separate neighbors.
+  outlines in the background color to separate neighbors. Pattern fills (`marker.pattern`) tell
+  stages apart in print and for color-blind readers.
 
 ## Attribute reference
 
@@ -213,13 +253,17 @@ and its default. [`funnelareacolorway`](/reference/layout#funnelareacolorway),
 ## Plotly migration notes
 
 - Attribute names and defaults match Plotly's `funnelarea`: `labels`, `values`, `label0` /
-  `dlabel`, `text`, `hovertext`, `marker.colors`, `marker.line`, `scalegroup`, `textinfo`,
-  `texttemplate`, `textposition`, `textfont`, `insidetextfont`, `title` (`text`, `font`,
-  `position`), `domain`, `aspectratio`, `baseratio`, `hoverinfo`, `hovertemplate`, and the
-  layout's `funnelareacolorway`, `extendfunnelareacolors` and `hiddenlabels`. Plotly funnel area
-  figures carry over unchanged.
+  `dlabel`, `text`, `hovertext`, `marker.colors`, `marker.line`, `marker.pattern`, `scalegroup`,
+  `textinfo`, `texttemplate`, `textposition`, `textfont`, `insidetextfont`, `title` (`text`,
+  `font`, `position`), `domain`, `aspectratio`, `baseratio`, `hoverinfo`, `hovertemplate`, and
+  the layout's `funnelareacolorway`, `extendfunnelareacolors`, `hiddenlabels` and `uniformtext`.
+  Plotly funnel area figures carry over unchanged.
 - The stage geometry, the order (sorted only when labels were merged), shared colors by label,
-  `scalegroup` sizing, legend toggling and hover text follow Plotly.
-- Not supported yet: `marker.pattern` (E8.10), `layout.uniformtext`,
-  `texttemplatefallback` / `hovertemplatefallback`, keyboard navigation between stages.
+  `scalegroup` sizing, legend toggling, hover text and `uniformtext` sizing (negotiated among
+  funnel areas only, not with pies, as in Plotly) follow Plotly.
+- Patterns differ from Plotly's as pie's do: default colors are computed per stage when drawing
+  (so they don't appear in `chart.fullData`), and with `fillmode: 'overlay'` each stage overlays
+  its own color (see [the differences](/customization/markers-patterns#differences-from-plotly)).
+- Not supported yet: `marker.pattern.path`, `texttemplatefallback` / `hovertemplatefallback`,
+  keyboard navigation between stages.
 - An extruded 3D pyramid (`depth`, `shape`) is a planned Holochart extension.

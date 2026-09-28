@@ -32,6 +32,12 @@ export const commonTraceAttributes = {
     editType: ['legend', 'layout'],
     description: 'Whether this trace has a legend entry.',
   }),
+  legend: attr.subplotId({
+    dflt: 'legend',
+    editType: ['legend', 'layout'],
+    description:
+      "The legend this trace's item is shown in: `'legend'` (`layout.legend`), `'legend2'` (`layout.legend2`), ….",
+  }),
   legendgroup: attr.string({
     dflt: '',
     editType: 'legend',

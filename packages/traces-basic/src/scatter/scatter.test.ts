@@ -19,7 +19,8 @@ import {
 import { describe, expect, it, vi } from 'vitest';
 import { scatter, type ScatterCalc } from './index.ts';
 import { textLabels, traceRenderOrder } from './plot.ts';
-import { markerStyle } from './style.ts';
+import { rgbaToCss } from '../shared/colorscale.ts';
+import { markerStyle, pointColor } from './style.ts';
 
 // troika typesets in a worker with browser globals; the view tests only need its object graph.
 // Mocked by path: traces-basic does not depend on troika, render does.
@@ -297,6 +298,22 @@ describe('scatter calc', () => {
 });
 
 describe('scatter style', () => {
+  it("never writes into the caller's Float32Arrays (opacity scaling, non-finite widths)", () => {
+    const opacity = new Float32Array([1, 0.5]);
+    const width = new Float32Array([2, Number.NaN]);
+    const [trace] = defaults([
+      { y: [1, 2], mode: 'markers', opacity: 0.5, marker: { opacity, line: { width } } },
+    ]);
+    const first = markerStyle(trace!);
+    const second = markerStyle(trace!);
+    expect([...(first.opacity as Float32Array)]).toEqual([0.5, 0.25]);
+    expect([...(second.opacity as Float32Array)]).toEqual([0.5, 0.25]); // not halved again
+    expect([...(first.lineWidth as Float32Array)]).toEqual([2, 0]);
+    expect([...opacity]).toEqual([1, 0.5]);
+    expect(width[0]).toBe(2);
+    expect(Number.isNaN(width[1])).toBe(true);
+  });
+
   it('converts colors, sizes and opacities to render inputs', () => {
     const [trace] = defaults([
       {
@@ -329,6 +346,40 @@ describe('scatter style', () => {
     expect(style.cmax).toBe(10);
     expect(style.reversescale).toBe(true);
     expect(style.colorscale?.[0]?.[1]).toEqual([0, 0, 0, 1]);
+  });
+
+  it('draws CSS colors among colorscaled numbers as given (Plotly), per point off the LUT', () => {
+    const [trace] = defaults([
+      {
+        y: [1, 2, 3, 4],
+        mode: 'markers',
+        marker: { color: [0, 'gold', 10, 'nope'], colorscale: 'Greys' },
+        selected: { marker: { color: 'red' } },
+      },
+    ]);
+    const css = (c: unknown, n: number) =>
+      Array.from({ length: n }, (_, i) =>
+        rgbaToCss((c as Float32Array).subarray(4 * i, 4 * i + 4)),
+      );
+    const style = markerStyle(trace!, { calc: calcOf(trace!) });
+    expect(style.colorValues).toBeNull();
+    expect(style.colorscale).toBeNull();
+    expect(css(style.color, 4)).toEqual([
+      'rgb(0, 0, 0)',
+      'rgb(255, 215, 0)',
+      'rgb(255, 255, 255)',
+      'rgb(128, 128, 128)',
+    ]);
+    // Hover and legend colors agree with what is drawn.
+    expect([0, 1, 2, 3].map((i) => pointColor(trace!, i))).toEqual([
+      'rgb(0, 0, 0)',
+      'gold',
+      'rgb(255, 255, 255)',
+      'rgb(128, 128, 128)',
+    ]);
+    // A selection recolors on top of the per-point colors.
+    const selected = markerStyle(trace!, { calc: calcOf(trace!), selectedPoints: [2] });
+    expect(css(selected.color, 4).slice(1, 3)).toEqual(['rgb(255, 215, 0)', 'rgb(255, 0, 0)']);
   });
 
   it('dims unselected points and applies selected styles', () => {

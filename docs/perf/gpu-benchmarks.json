@@ -1,0 +1,986 @@
+{
+  "machine": {
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+    "browser": "Chromium 153.0.8010.12 (Playwright, headless)",
+    "os": "macOS 26.6.2 (Darwin 25.6.0, arm64)",
+    "cpu": "Apple M1 Max (10 cores)",
+    "memoryGB": 64,
+    "loadBefore": [14.61279296875, 25.0341796875, 38.0712890625],
+    "loadAfter": [9.28955078125, 20.5380859375, 34.9609375],
+    "commit": "fdffd51 (with uncommitted changes)",
+    "date": "2026-09-28T19:08:00Z"
+  },
+  "settings": {
+    "runs": 3,
+    "warmupMs": 500,
+    "durationMs": 3000,
+    "dpr": 1,
+    "flags": [
+      "--use-angle=metal",
+      "--enable-gpu",
+      "--ignore-gpu-blocklist",
+      "--disable-renderer-backgrounding",
+      "--disable-background-timer-throttling",
+      "--disable-backgrounding-occluded-windows"
+    ]
+  },
+  "notes": [
+    "rerun after the carry-forward agents finished (no other suites running)",
+    "The machine was busy (1-minute load average up to 14.6 on 10 cores): frame times and first draws are pessimistic. Rerun on an idle machine."
+  ],
+  "scenarios": [
+    {
+      "scenario": {
+        "example": "_dev/timeseries-2m6",
+        "label": "Time series, 2.6M points (line, date axis)",
+        "drive": { "kind": "ranges" },
+        "pan": { "axes": ["x"], "window": 0.008212428141253765 },
+        "zoom": { "axes": ["x"], "min": 0.0002737476047084588 },
+        "targets": [{ "story": "E12.1", "goal": "pan at 60 fps", "metric": "panFps", "value": 60 }]
+      },
+      "runs": [
+        {
+          "example": "_dev/timeseries-2m6",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+          "canvas": { "width": 640, "height": 400, "dpr": 1 },
+          "mountMs": 432.30000001192093,
+          "firstDrawMs": null,
+          "generateMs": null,
+          "finishMs": 0,
+          "heapMB": 177,
+          "pan": {
+            "frames": 180,
+            "durationMs": 3016.5,
+            "fps": 60.00400026668444,
+            "frameMs": {
+              "mean": 16.665555555555542,
+              "p50": 16.699999999999818,
+              "p95": 16.799999999999727,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.33482512846014,
+            "updateCpuMs": {
+              "mean": 2.4104972356590775,
+              "p50": 2.399999976158142,
+              "p95": 2.800000011920929,
+              "max": 3.200000047683716
+            },
+            "renderCpuMs": {
+              "mean": 0.3642857186086885,
+              "p50": 0.3999999761581421,
+              "p95": 0.5,
+              "max": 0.6000000238418579
+            },
+            "gpuMs": {
+              "mean": 0.8898115164835168,
+              "p50": 0.7879149999999999,
+              "p95": 1.708624,
+              "max": 2.947958
+            },
+            "drawCalls": 7
+          },
+          "zoom": {
+            "frames": 180,
+            "durationMs": 3016.600000023842,
+            "fps": 60.00200006666889,
+            "frameMs": {
+              "mean": 16.66611111111111,
+              "p50": 16.699999999999818,
+              "p95": 16.800000000000182,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.332825034330554,
+            "updateCpuMs": {
+              "mean": 2.0486187875600153,
+              "p50": 1.899999976158142,
+              "p95": 4.199999988079071,
+              "max": 4.600000023841858
+            },
+            "renderCpuMs": {
+              "mean": 0.31208791313590584,
+              "p50": 0.30000001192092896,
+              "p95": 0.40000003576278687,
+              "max": 0.5
+            },
+            "gpuMs": {
+              "mean": 1.2244740604395599,
+              "p50": 1.092665,
+              "p95": 2.291665,
+              "max": 2.832832
+            },
+            "drawCalls": 7
+          }
+        },
+        {
+          "example": "_dev/timeseries-2m6",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+          "canvas": { "width": 640, "height": 400, "dpr": 1 },
+          "mountMs": 415.7999999523163,
+          "firstDrawMs": null,
+          "generateMs": null,
+          "finishMs": 0,
+          "heapMB": 177,
+          "pan": {
+            "frames": 179,
+            "durationMs": 3000.2999999523163,
+            "fps": 60.00268168409761,
+            "frameMs": {
+              "mean": 16.66592178770949,
+              "p50": 16.699999999999818,
+              "p95": 16.799999999999955,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.32730060423179,
+            "updateCpuMs": {
+              "mean": 2.149444442987442,
+              "p50": 2.199999988079071,
+              "p95": 2.5,
+              "max": 2.699999988079071
+            },
+            "renderCpuMs": {
+              "mean": 0.371270719154105,
+              "p50": 0.3999999761581421,
+              "p95": 0.5,
+              "max": 0.6000000238418579
+            },
+            "gpuMs": {
+              "mean": 0.8291189060773482,
+              "p50": 0.7765409999999999,
+              "p95": 1.096457,
+              "max": 8.103249
+            },
+            "drawCalls": 7
+          },
+          "zoom": {
+            "frames": 180,
+            "durationMs": 3014.899999976158,
+            "fps": 60.00200006666889,
+            "frameMs": {
+              "mean": 16.66611111111111,
+              "p50": 16.699999999999818,
+              "p95": 16.799999999999272,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.36684467194244,
+            "updateCpuMs": {
+              "mean": 2.138121546961326,
+              "p50": 1.899999976158142,
+              "p95": 4.199999988079071,
+              "max": 4.599999964237213
+            },
+            "renderCpuMs": {
+              "mean": 0.3208791236956041,
+              "p50": 0.30000001192092896,
+              "p95": 0.40000003576278687,
+              "max": 0.6000000238418579
+            },
+            "gpuMs": {
+              "mean": 0.9239909505494501,
+              "p50": 0.896998,
+              "p95": 1.4160819999999998,
+              "max": 1.8774160000000002
+            },
+            "drawCalls": 7
+          }
+        },
+        {
+          "example": "_dev/timeseries-2m6",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+          "canvas": { "width": 640, "height": 400, "dpr": 1 },
+          "mountMs": 412.30000001192093,
+          "firstDrawMs": null,
+          "generateMs": null,
+          "finishMs": 0,
+          "heapMB": 177,
+          "pan": {
+            "frames": 179,
+            "durationMs": 2999.899999976158,
+            "fps": 60.00268168409761,
+            "frameMs": {
+              "mean": 16.665921787709483,
+              "p50": 16.699999999999818,
+              "p95": 16.799999999999727,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.335344511963235,
+            "updateCpuMs": {
+              "mean": 2.0105555560853747,
+              "p50": 2,
+              "p95": 2.300000011920929,
+              "max": 2.400000035762787
+            },
+            "renderCpuMs": {
+              "mean": 0.36022099473858404,
+              "p50": 0.3999999761581421,
+              "p95": 0.5,
+              "max": 0.5
+            },
+            "gpuMs": {
+              "mean": 0.9590309944751378,
+              "p50": 0.8074570000000001,
+              "p95": 2.120374,
+              "max": 2.52979
+            },
+            "drawCalls": 7
+          },
+          "zoom": {
+            "frames": 179,
+            "durationMs": 3000.800000011921,
+            "fps": 60.002681684097624,
+            "frameMs": {
+              "mean": 16.665921787709497,
+              "p50": 16.699999999999818,
+              "p95": 16.800000000000182,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.317248733431406,
+            "updateCpuMs": {
+              "mean": 2.1133333332008784,
+              "p50": 1.9000000357627869,
+              "p95": 4.099999964237213,
+              "max": 4.5
+            },
+            "renderCpuMs": {
+              "mean": 0.3187845290036491,
+              "p50": 0.30000001192092896,
+              "p95": 0.40000003576278687,
+              "max": 0.6000000238418579
+            },
+            "gpuMs": {
+              "mean": 1.0337659723756905,
+              "p50": 0.883749,
+              "p95": 2.236666,
+              "max": 2.618582
+            },
+            "drawCalls": 7
+          }
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "example": "heatmap/large",
+        "label": "Heatmap, 4096 × 4096",
+        "drive": { "kind": "ranges" },
+        "pan": { "axes": ["x", "y"], "window": 0.125 },
+        "zoom": { "axes": ["x", "y"], "min": 0.00390625 },
+        "perfGlobal": "__heatmapPerf",
+        "targets": [
+          { "story": "E11.1", "goal": "renders < 100 ms", "metric": "firstDraw", "value": 100 },
+          { "story": "E11.1", "goal": "pan at 60 fps", "metric": "panFps", "value": 60 },
+          { "story": "E11.1", "goal": "zoom at 60 fps", "metric": "zoomFps", "value": 60 }
+        ]
+      },
+      "runs": [
+        {
+          "example": "heatmap/large",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+          "canvas": { "width": 800, "height": 600, "dpr": 1 },
+          "mountMs": 1500.2000000476837,
+          "firstDrawMs": 778.0999999642372,
+          "generateMs": 721.6999999880791,
+          "finishMs": 0,
+          "heapMB": 386,
+          "pan": {
+            "frames": 180,
+            "durationMs": 3015.100000023842,
+            "fps": 60.00400026668446,
+            "frameMs": {
+              "mean": 16.665555555555553,
+              "p50": 16.699999999999818,
+              "p95": 16.700000000000728,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.0311764115846,
+            "updateCpuMs": {
+              "mean": 0.87679558333771,
+              "p50": 0.8999999761581421,
+              "p95": 1.100000023841858,
+              "max": 1.300000011920929
+            },
+            "renderCpuMs": {
+              "mean": 0.400552482894771,
+              "p50": 0.3999999761581421,
+              "p95": 0.5999999642372131,
+              "max": 0.800000011920929
+            },
+            "gpuMs": {
+              "mean": 0.4675070994475137,
+              "p50": 0.45504,
+              "p95": 0.5532900000000001,
+              "max": 1.80125
+            },
+            "drawCalls": 9
+          },
+          "zoom": {
+            "frames": 179,
+            "durationMs": 2999.699999988079,
+            "fps": 60.000670398551954,
+            "frameMs": {
+              "mean": 16.66648044692737,
+              "p50": 16.699999999999818,
+              "p95": 16.700000000000728,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.33936727030013,
+            "updateCpuMs": {
+              "mean": 0.7216666658719381,
+              "p50": 0.699999988079071,
+              "p95": 0.9000000357627869,
+              "max": 1.2000000476837158
+            },
+            "renderCpuMs": {
+              "mean": 0.3215469606014905,
+              "p50": 0.30000001192092896,
+              "p95": 0.5,
+              "max": 0.5
+            },
+            "gpuMs": {
+              "mean": 0.4809556906077351,
+              "p50": 0.47341500000000003,
+              "p95": 0.610541,
+              "max": 0.87354
+            },
+            "drawCalls": 9
+          }
+        },
+        {
+          "example": "heatmap/large",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+          "canvas": { "width": 800, "height": 600, "dpr": 1 },
+          "mountMs": 1418.800000011921,
+          "firstDrawMs": 696.3999999761581,
+          "generateMs": 722.1000000238419,
+          "finishMs": 0,
+          "heapMB": 386,
+          "pan": {
+            "frames": 179,
+            "durationMs": 2999.7000000476837,
+            "fps": 60.00268168409761,
+            "frameMs": {
+              "mean": 16.6659217877095,
+              "p50": 16.699999999999818,
+              "p95": 16.700000000000728,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.00600059910614,
+            "updateCpuMs": {
+              "mean": 0.9655555572774676,
+              "p50": 1,
+              "p95": 1.199999988079071,
+              "max": 1.7000000476837158
+            },
+            "renderCpuMs": {
+              "mean": 0.4022222210963567,
+              "p50": 0.3999999761581421,
+              "p95": 0.5999999642372131,
+              "max": 0.9000000357627869
+            },
+            "gpuMs": {
+              "mean": 0.527066777777778,
+              "p50": 0.46999900000000006,
+              "p95": 1.130623,
+              "max": 2.2972900000000003
+            },
+            "drawCalls": 9
+          },
+          "zoom": {
+            "frames": 179,
+            "durationMs": 2999.7999999523163,
+            "fps": 60.000670398551954,
+            "frameMs": {
+              "mean": 16.66648044692737,
+              "p50": 16.699999999999818,
+              "p95": 16.700000000000728,
+              "max": 16.80000000000109
+            },
+            "rendersPerSecond": 60.00400026763825,
+            "updateCpuMs": {
+              "mean": 0.832777777645323,
+              "p50": 0.800000011920929,
+              "p95": 1.0999999642372131,
+              "max": 1.2999999523162842
+            },
+            "renderCpuMs": {
+              "mean": 0.3433333357175191,
+              "p50": 0.30000001192092896,
+              "p95": 0.5,
+              "max": 0.6000000238418579
+            },
+            "gpuMs": {
+              "mean": 0.4937105666666667,
+              "p50": 0.45925000000000005,
+              "p95": 0.568707,
+              "max": 3.8215
+            },
+            "drawCalls": 9
+          }
+        },
+        {
+          "example": "heatmap/large",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+          "canvas": { "width": 800, "height": 600, "dpr": 1 },
+          "mountMs": 1436.5999999642372,
+          "firstDrawMs": 701.6000000238419,
+          "generateMs": 734.6999999880791,
+          "finishMs": 0,
+          "heapMB": 386,
+          "pan": {
+            "frames": 180,
+            "durationMs": 3016.600000023842,
+            "fps": 60.00400026668446,
+            "frameMs": {
+              "mean": 16.665555555555553,
+              "p50": 16.699999999999818,
+              "p95": 16.700000000000728,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.332825034330554,
+            "updateCpuMs": {
+              "mean": 0.8734806647616855,
+              "p50": 0.800000011920929,
+              "p95": 1.5,
+              "max": 2
+            },
+            "renderCpuMs": {
+              "mean": 0.4032967061131865,
+              "p50": 0.3999999761581421,
+              "p95": 0.699999988079071,
+              "max": 1
+            },
+            "gpuMs": {
+              "mean": 0.48091935164835165,
+              "p50": 0.472998,
+              "p95": 0.588583,
+              "max": 0.762833
+            },
+            "drawCalls": 9
+          },
+          "zoom": {
+            "frames": 180,
+            "durationMs": 3016.699999988079,
+            "fps": 60.00400026668443,
+            "frameMs": {
+              "mean": 16.66555555555556,
+              "p50": 16.699999999999818,
+              "p95": 16.799999999999272,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.3308250739945,
+            "updateCpuMs": {
+              "mean": 1.0530386764700241,
+              "p50": 0.9000000357627869,
+              "p95": 1.899999976158142,
+              "max": 2.400000035762787
+            },
+            "renderCpuMs": {
+              "mean": 0.4736263715958857,
+              "p50": 0.3999999761581421,
+              "p95": 1.0999999642372131,
+              "max": 1.800000011920929
+            },
+            "gpuMs": {
+              "mean": 0.4784143296703299,
+              "p50": 0.470833,
+              "p95": 0.56679,
+              "max": 0.859332
+            },
+            "drawCalls": 9
+          }
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "example": "candlestick/large",
+        "label": "Candlestick, 100k candles (range breaks)",
+        "drive": { "kind": "ranges" },
+        "pan": { "axes": ["x"], "window": 0.05 },
+        "zoom": { "axes": ["x"], "min": 0.002 },
+        "perfGlobal": "__candlePerf",
+        "targets": [
+          {
+            "story": "E12.3",
+            "goal": "pan at 60 fps (instanced)",
+            "metric": "panFps",
+            "value": 60
+          },
+          {
+            "story": "E12.3",
+            "goal": "zoom at 60 fps (instanced)",
+            "metric": "zoomFps",
+            "value": 60
+          }
+        ]
+      },
+      "runs": [
+        {
+          "example": "candlestick/large",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+          "canvas": { "width": 900, "height": 520, "dpr": 1 },
+          "mountMs": 833.3000000119209,
+          "firstDrawMs": 536.3999999761581,
+          "generateMs": 296.60000002384186,
+          "finishMs": 0,
+          "heapMB": 123,
+          "pan": {
+            "frames": 180,
+            "durationMs": 3016.699999988079,
+            "fps": 60.00400026668444,
+            "frameMs": {
+              "mean": 16.665555555555535,
+              "p50": 16.699999999999818,
+              "p95": 16.799999999999727,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 59.99933702413738,
+            "updateCpuMs": {
+              "mean": 0.8408839804691505,
+              "p50": 0.7000000476837158,
+              "p95": 1.5,
+              "max": 2.199999988079071
+            },
+            "renderCpuMs": {
+              "mean": 0.5668508314954642,
+              "p50": 0.5,
+              "p95": 1.100000023841858,
+              "max": 1.399999976158142
+            },
+            "gpuMs": {
+              "mean": 9.805961906077346,
+              "p50": 10.244541,
+              "p95": 12.561041,
+              "max": 17.882956999999998
+            },
+            "drawCalls": 9
+          },
+          "zoom": {
+            "frames": 180,
+            "durationMs": 3016.600000023842,
+            "fps": 60.00200006666889,
+            "frameMs": {
+              "mean": 16.66611111111111,
+              "p50": 16.699999999999818,
+              "p95": 16.799999999999272,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.332825034330554,
+            "updateCpuMs": {
+              "mean": 0.6867403345213411,
+              "p50": 0.6000000238418579,
+              "p95": 1.300000011920929,
+              "max": 3.799999952316284
+            },
+            "renderCpuMs": {
+              "mean": 0.3510988983479175,
+              "p50": 0.30000001192092896,
+              "p95": 0.699999988079071,
+              "max": 1.300000011920929
+            },
+            "gpuMs": {
+              "mean": 12.265649587912081,
+              "p50": 9.695498,
+              "p95": 27.049958,
+              "max": 45.144207
+            },
+            "drawCalls": 9
+          }
+        },
+        {
+          "example": "candlestick/large",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+          "canvas": { "width": 900, "height": 520, "dpr": 1 },
+          "mountMs": 856.1000000238419,
+          "firstDrawMs": 556.3000000119209,
+          "generateMs": 299.30000001192093,
+          "finishMs": 0,
+          "heapMB": 123,
+          "pan": {
+            "frames": 180,
+            "durationMs": 3016.599999964237,
+            "fps": 60.002000066668884,
+            "frameMs": {
+              "mean": 16.6661111111111,
+              "p50": 16.699999999999818,
+              "p95": 16.799999999999727,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.33282503552267,
+            "updateCpuMs": {
+              "mean": 0.7497237565109084,
+              "p50": 0.699999988079071,
+              "p95": 1.300000011920929,
+              "max": 2
+            },
+            "renderCpuMs": {
+              "mean": 0.46923076909977,
+              "p50": 0.40000003576278687,
+              "p95": 0.800000011920929,
+              "max": 2.5
+            },
+            "gpuMs": {
+              "mean": 9.493323851648354,
+              "p50": 10.093164999999999,
+              "p95": 12.492623,
+              "max": 20.187624
+            },
+            "drawCalls": 9
+          },
+          "zoom": {
+            "frames": 179,
+            "durationMs": 3000.800000011921,
+            "fps": 60.00469310448862,
+            "frameMs": {
+              "mean": 16.665363128491624,
+              "p50": 16.699999999999818,
+              "p95": 16.700000000000728,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.317248733431406,
+            "updateCpuMs": {
+              "mean": 0.6338888873656591,
+              "p50": 0.5999999642372131,
+              "p95": 1.199999988079071,
+              "max": 3.300000011920929
+            },
+            "renderCpuMs": {
+              "mean": 0.3718232034978287,
+              "p50": 0.30000001192092896,
+              "p95": 0.6000000238418579,
+              "max": 1.2000000476837158
+            },
+            "gpuMs": {
+              "mean": 11.676089243093925,
+              "p50": 9.39604,
+              "p95": 25.296498999999997,
+              "max": 33.755999
+            },
+            "drawCalls": 9
+          }
+        },
+        {
+          "example": "candlestick/large",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+          "canvas": { "width": 900, "height": 520, "dpr": 1 },
+          "mountMs": 867.6999999880791,
+          "firstDrawMs": 564,
+          "generateMs": 303.30000001192093,
+          "finishMs": 0,
+          "heapMB": 123,
+          "pan": {
+            "frames": 179,
+            "durationMs": 2999.599999964237,
+            "fps": 60.002681684097624,
+            "frameMs": {
+              "mean": 16.665921787709486,
+              "p50": 16.699999999999818,
+              "p95": 16.700000000000273,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.341378851232825,
+            "updateCpuMs": {
+              "mean": 0.7133333322074679,
+              "p50": 0.6000000238418579,
+              "p95": 1.300000011920929,
+              "max": 1.600000023841858
+            },
+            "renderCpuMs": {
+              "mean": 0.48121547303805695,
+              "p50": 0.40000003576278687,
+              "p95": 0.8999999761581421,
+              "max": 1.4000000357627869
+            },
+            "gpuMs": {
+              "mean": 10.558259629834248,
+              "p50": 10.776665,
+              "p95": 14.155332000000001,
+              "max": 18.190415
+            },
+            "drawCalls": 9
+          },
+          "zoom": {
+            "frames": 179,
+            "durationMs": 3000.300000011921,
+            "fps": 60.00268168409764,
+            "frameMs": {
+              "mean": 16.66592178770949,
+              "p50": 16.699999999999818,
+              "p95": 16.700000000000728,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.32730060303331,
+            "updateCpuMs": {
+              "mean": 0.6033333331346512,
+              "p50": 0.5999999642372131,
+              "p95": 1,
+              "max": 1.5
+            },
+            "renderCpuMs": {
+              "mean": 0.3817679572500577,
+              "p50": 0.30000001192092896,
+              "p95": 0.699999988079071,
+              "max": 1.600000023841858
+            },
+            "gpuMs": {
+              "mean": 11.665249265193374,
+              "p50": 9.300874,
+              "p95": 26.284541,
+              "max": 33.348624
+            },
+            "drawCalls": 9
+          }
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "example": "treemap/large",
+        "label": "Treemap, 100k nodes",
+        "drive": { "kind": "none" },
+        "perfGlobal": "__treemapPerf",
+        "targets": [
+          { "story": "E13.3", "goal": "renders < 500 ms", "metric": "firstDraw", "value": 500 }
+        ]
+      },
+      "runs": [
+        {
+          "example": "treemap/large",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+          "canvas": { "width": 900, "height": 600, "dpr": 1 },
+          "mountMs": 425.60000002384186,
+          "firstDrawMs": 413.7999999523163,
+          "generateMs": 11.5,
+          "finishMs": 0,
+          "heapMB": 109,
+          "pan": null,
+          "zoom": null
+        },
+        {
+          "example": "treemap/large",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+          "canvas": { "width": 900, "height": 600, "dpr": 1 },
+          "mountMs": 435.89999997615814,
+          "firstDrawMs": 423.89999997615814,
+          "generateMs": 11.899999976158142,
+          "finishMs": 0,
+          "heapMB": 139,
+          "pan": null,
+          "zoom": null
+        },
+        {
+          "example": "treemap/large",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+          "canvas": { "width": 900, "height": 600, "dpr": 1 },
+          "mountMs": 432.5,
+          "firstDrawMs": 420.19999998807907,
+          "generateMs": 12,
+          "finishMs": 0,
+          "heapMB": 109,
+          "pan": null,
+          "zoom": null
+        }
+      ]
+    },
+    {
+      "scenario": {
+        "example": "_dev/markers-1m",
+        "label": "1M markers (render package)",
+        "drive": { "kind": "button", "label": "Pan" },
+        "targets": [{ "story": "E2.4", "goal": "pan ≥ 50 fps", "metric": "panFps", "value": 50 }]
+      },
+      "runs": [
+        {
+          "example": "_dev/markers-1m",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+          "canvas": { "width": 640, "height": 400, "dpr": 1 },
+          "mountMs": 131,
+          "firstDrawMs": null,
+          "generateMs": null,
+          "finishMs": 0.10000002384185791,
+          "heapMB": 81.4,
+          "pan": {
+            "frames": 179,
+            "durationMs": 2999.899999976158,
+            "fps": 60.002681684097624,
+            "frameMs": {
+              "mean": 16.665921787709472,
+              "p50": 16.699999999999818,
+              "p95": 16.700000000000273,
+              "max": 16.800000000000068
+            },
+            "rendersPerSecond": 60.335344511963235,
+            "updateCpuMs": null,
+            "renderCpuMs": {
+              "mean": 0.11933701901146061,
+              "p50": 0.10000002384185791,
+              "p95": 0.2999999523162842,
+              "max": 0.5
+            },
+            "gpuMs": {
+              "mean": 8.175935458563536,
+              "p50": 8.056374,
+              "p95": 12.759833,
+              "max": 15.915166
+            },
+            "drawCalls": 1
+          },
+          "zoom": null
+        },
+        {
+          "example": "_dev/markers-1m",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+          "canvas": { "width": 640, "height": 400, "dpr": 1 },
+          "mountMs": 130.0999999642372,
+          "firstDrawMs": null,
+          "generateMs": null,
+          "finishMs": 0,
+          "heapMB": 81.4,
+          "pan": {
+            "frames": 180,
+            "durationMs": 3016.400000035763,
+            "fps": 60.002000066668884,
+            "frameMs": {
+              "mean": 16.666111111111086,
+              "p50": 16.699999999999818,
+              "p95": 16.700000000000273,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.00530433558349,
+            "updateCpuMs": null,
+            "renderCpuMs": {
+              "mean": 0.10276243074164206,
+              "p50": 0.10000002384185791,
+              "p95": 0.20000004768371582,
+              "max": 0.3999999761581421
+            },
+            "gpuMs": {
+              "mean": 7.501575209944752,
+              "p50": 7.290999,
+              "p95": 9.471624,
+              "max": 14.600958
+            },
+            "drawCalls": 1
+          },
+          "zoom": null
+        },
+        {
+          "example": "_dev/markers-1m",
+          "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+          "canvas": { "width": 640, "height": 400, "dpr": 1 },
+          "mountMs": 130.69999998807907,
+          "firstDrawMs": null,
+          "generateMs": null,
+          "finishMs": 0,
+          "heapMB": 81.4,
+          "pan": {
+            "frames": 179,
+            "durationMs": 3000.600000023842,
+            "fps": 60.002681684097624,
+            "frameMs": {
+              "mean": 16.665921787709483,
+              "p50": 16.699999999999818,
+              "p95": 16.799999999999955,
+              "max": 16.800000000000182
+            },
+            "rendersPerSecond": 60.32126907903814,
+            "updateCpuMs": null,
+            "renderCpuMs": {
+              "mean": 0.14033149388613622,
+              "p50": 0.10000002384185791,
+              "p95": 0.30000001192092896,
+              "max": 1.0999999642372131
+            },
+            "gpuMs": {
+              "mean": 7.755277817679562,
+              "p50": 7.561374,
+              "p95": 9.638958,
+              "max": 12.286083
+            },
+            "drawCalls": 1
+          },
+          "zoom": null
+        }
+      ]
+    }
+  ],
+  "targets": [
+    {
+      "target": { "story": "E12.1", "goal": "pan at 60 fps", "metric": "panFps", "value": 60 },
+      "example": "_dev/timeseries-2m6",
+      "measured": 60.00268168409761,
+      "unit": "fps",
+      "met": true
+    },
+    {
+      "target": {
+        "story": "E11.1",
+        "goal": "renders < 100 ms",
+        "metric": "firstDraw",
+        "value": 100
+      },
+      "example": "heatmap/large",
+      "measured": 701.6000000238419,
+      "unit": "ms",
+      "met": false,
+      "basis": "createChart → ready + gl.finish"
+    },
+    {
+      "target": { "story": "E11.1", "goal": "pan at 60 fps", "metric": "panFps", "value": 60 },
+      "example": "heatmap/large",
+      "measured": 60.00400026668446,
+      "unit": "fps",
+      "met": true
+    },
+    {
+      "target": { "story": "E11.1", "goal": "zoom at 60 fps", "metric": "zoomFps", "value": 60 },
+      "example": "heatmap/large",
+      "measured": 60.000670398551954,
+      "unit": "fps",
+      "met": true
+    },
+    {
+      "target": {
+        "story": "E12.3",
+        "goal": "pan at 60 fps (instanced)",
+        "metric": "panFps",
+        "value": 60
+      },
+      "example": "candlestick/large",
+      "measured": 60.002681684097624,
+      "unit": "fps",
+      "met": true
+    },
+    {
+      "target": {
+        "story": "E12.3",
+        "goal": "zoom at 60 fps (instanced)",
+        "metric": "zoomFps",
+        "value": 60
+      },
+      "example": "candlestick/large",
+      "measured": 60.00268168409764,
+      "unit": "fps",
+      "met": true
+    },
+    {
+      "target": {
+        "story": "E13.3",
+        "goal": "renders < 500 ms",
+        "metric": "firstDraw",
+        "value": 500
+      },
+      "example": "treemap/large",
+      "measured": 420.19999998807907,
+      "unit": "ms",
+      "met": true,
+      "basis": "createChart → ready + gl.finish"
+    },
+    {
+      "target": { "story": "E2.4", "goal": "pan ≥ 50 fps", "metric": "panFps", "value": 50 },
+      "example": "_dev/markers-1m",
+      "measured": 60.002681684097624,
+      "unit": "fps",
+      "met": true
+    }
+  ]
+}

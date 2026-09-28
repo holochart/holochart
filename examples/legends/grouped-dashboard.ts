@@ -18,7 +18,8 @@ import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
  *
  * The legend is a vertical column (`orientation: 'v'`; the default look's is a row above the plot)
  * pinned to the figure's right edge rather than to the plot (`xref` / `yref:
- * 'container'`, right / middle anchors) in a margin reserved for it, with items indented under a
+ * 'container'`, right / middle anchors, the whole figure height with `maxheight: 1`) in a margin
+ * reserved for it, with items indented under a
  * centered small-caps heading (`indentation`, `title.side: 'top center'`, `title.font`) and
  * slightly larger, brighter item text (`font`).
  */
@@ -114,6 +115,9 @@ export function run(el: HTMLElement): ExampleHandle {
         yref: 'container',
         y: 0.5,
         yanchor: 'middle',
+        // Container-referenced legends may take half the figure height before they scroll
+        // (Plotly's default); this one may use all of it.
+        maxheight: 1,
         traceorder: 'grouped',
         tracegroupgap: 8,
         valign: 'top',

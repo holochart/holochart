@@ -156,6 +156,25 @@ centers, so the bands are evenly tall:
 
 <Example id="heatmap/dates" />
 
+### Monthly columns with period alignment
+
+Values that stand for a whole period are often stamped with its first day. `xperiod` gives the
+period length (ms, or `'M<n>'` months on date axes) and `xperiodalignment` where to draw each
+column in it (`'start'`, `'middle'` or `'end'`); `xperiod0` sets where periods start. Here each
+month's column is centered in its month, under its `ticklabelmode: 'period'` label. Hover shows
+the dates as given. `yperiod` does the same for rows.
+
+<Example id="heatmap/period" />
+
+### Range breaks
+
+On an axis with [`rangebreaks`](/fundamentals/layout-axes-subplots#range-breaks), columns whose
+date falls in a break are dropped, as in Plotly, and the others share the remaining axis: every
+trading day keeps a full-width column and Friday meets Monday. Here weekends and two holidays are
+hidden from daily data:
+
+<Example id="heatmap/rangebreaks" />
+
 ### Column data on a category axis
 
 A 1D `z` with `x` and `y` columns, listed in any order, is placed on the grid of their distinct
@@ -306,6 +325,13 @@ reference.
   Plotly, falls back to flat cells on log axes and uneven grids. `'best'` interpolates in data
   space. Next to a gap, only the neighbors with a value take part (Plotly extrapolates the
   missing ones).
-- Not supported yet: `xperiod` / `yperiod` (period alignment), range breaks (Plotly drops the
-  cells that fall on a break), and `xcalendar` / `ycalendar`. Grids larger than 4096 × 4096 cells
-  are not drawn, and grids larger than 65,536 cells get no `texttemplate` labels.
+- `xperiod` / `yperiod` align the given `x` / `y` (and column data) as in Plotly, and on date
+  and linear axes (Plotly: date axes only), like Holochart's bar and scatter. Hover shows the
+  values as given; with column data it shows the aligned values, as in Plotly.
+- Range breaks: columns and rows centered in a break are dropped, as in Plotly. The cell edges
+  are halfway between the centers on the compressed axis, so the cells beside a break keep their
+  width (Plotly halves in real time, which narrows or even collapses them). `x0` / `dx` step in
+  real time and hide the columns that land in a break (Plotly draws nothing when an axis has
+  breaks and `x` or `y` is not an array); given cell edges are clamped to the breaks.
+- Not supported yet: `xcalendar` / `ycalendar`. Grids larger than 4096 × 4096 cells are not
+  drawn, and grids larger than 65,536 cells get no `texttemplate` labels.

@@ -126,6 +126,21 @@ describe('range slider defaults (E5.9)', () => {
       layout: { xaxis: { rangeslider: { thickness: 0.2, yaxis2: { rangemode: 'auto' } } } },
     });
   });
+
+  it("does not let a partial thumbnail range hide the template's full one", () => {
+    // Nightly regression (seed 360598440): `range: []` shadowed the template's range, then was
+    // dropped, so the output fed back in took the template's.
+    const figure: FigureInput = {
+      data: [DATES],
+      layout: {
+        template: { layout: { xaxis: { rangeslider: { yaxis: { range: [0, 9] } } } } },
+        xaxis: { rangeslider: { yaxis: { rangemode: 'auto', range: [] } } },
+      },
+    };
+    const rs = run(figure).xaxis?.['rangeslider'] as Record<string, unknown>;
+    expect(rs['yaxis']).toEqual({ rangemode: 'auto', range: [0, 9] });
+    idempotent(figure);
+  });
 });
 
 describe('range selector defaults (E5.9)', () => {

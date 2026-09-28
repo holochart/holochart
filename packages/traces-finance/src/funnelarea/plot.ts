@@ -6,21 +6,33 @@
  * world units are container px with a bottom-left origin, so container `(x, y)` is world
  * `(x, height − y)`. Stages are few, so every update rebuilds the buffers, in place.
  *
- * Deferred: `uniformtext` (E4.6), label links, `marker.pattern` (E8.10).
+ * `marker.pattern` (E8.10) hatches the stages as pie's slices (the fill's pattern paint, whose code
+ * loads on first use), with tiles anchored at the container's top-left corner, where Plotly's
+ * `userSpaceOnUse` tiles of the funnel paths start too. `layout.uniformtext` (E4.6) sizes the
+ * stage labels of every funnel area of the chart alike (traces-basic's negotiation, per trace
+ * type as in Plotly).
+ *
+ * Deferred: label links.
  */
-import { toRGBA, type FullTrace } from '@mk7s/holochart-core';
+import { toRGBA, uniformTextOf, type FullTrace, type UniformText } from '@mk7s/holochart-core';
 import {
   createLazyFillPrimitive,
   createTextPrimitive,
   fadeTextRuns,
   LinePrimitive,
   type LazyFillPrimitive,
+  type PatternFill,
   type RGBA,
   type TextLabel,
   type TextPrimitive,
 } from '@mk7s/holochart-render';
 import type { TracePlotContext, TraceRenderer, TraceView } from '@mk7s/holochart-runtime';
-import { castOption } from '@mk7s/holochart-traces-basic';
+import {
+  castOption,
+  negotiateUniformText,
+  releaseUniformText,
+  slicePattern,
+} from '@mk7s/holochart-traces-basic';
 import { traceOpacity } from '../shared/style.ts';
 import {
   layoutFunnelareas,
@@ -29,7 +41,7 @@ import {
   resolveFunnelareaColors,
   type FunnelareaCalc,
 } from './calc.ts';
-import { funnelareaLabels } from './text.ts';
+import { layoutFunnelareaText, type FunnelareaTextLayout } from './text.ts';
 
 const GREY: RGBA = [0.5, 0.5, 0.5, 1];
 const DEFAULT_LINE: RGBA = [68 / 255, 68 / 255, 68 / 255, 1];
@@ -49,6 +61,8 @@ export interface FunnelareaShapes {
   readonly rings: number[];
   /** One RGBA per stage. */
   readonly fill: Float32Array;
+  /** `marker.pattern` per stage (the fill's pattern paint), or `null` without a shape. */
+  readonly pattern: PatternFill | null;
   /** Closed outlines, NaN-separated, with per-vertex colors and widths (none without width). */
   readonly outline: {
     readonly x: Float64Array;
@@ -58,11 +72,15 @@ export interface FunnelareaShapes {
   };
 }
 
-/** The stage fills and outlines of a laid-out funnel area, in world px (`height` flips y). */
+/**
+ * The stage fills and outlines of a laid-out funnel area, in world px (`height` flips y). `paper`
+ * is the default pattern background (Plotly: `paper_bgcolor`, as for pies).
+ */
 export function funnelareaShapes(
   trace: FullTrace,
   calc: FunnelareaCalc,
   height: number,
+  paper?: unknown,
 ): FunnelareaShapes {
   const x: number[] = [];
   const y: number[] = [];
@@ -73,8 +91,10 @@ export function funnelareaShapes(
   const lc: number[] = [];
   const lw: number[] = [];
   const layout = calc.layout;
-  const line = (trace['marker'] as { line?: { color?: unknown; width?: unknown } } | undefined)
-    ?.line;
+  const marker = trace['marker'] as
+    { line?: { color?: unknown; width?: unknown }; pattern?: unknown } | undefined;
+  const line = marker?.line;
+  const patterns: (Record<string, unknown> | undefined)[] = [];
   if (layout) {
     for (const slice of calc.slices) {
       const c = slice.corners;
@@ -88,6 +108,7 @@ export function funnelareaShapes(
         y.push(py);
       }
       fill.push(...((slice.color ? toRGBA(slice.color) : null) ?? GREY));
+      patterns.push(slicePattern(marker?.pattern, slice.pts, paper));
       // Plotly's `styleOne`: the first filled entry among the stage's points.
       const width = Number(castOption(line?.width, slice.pts)) || 0;
       if (!(width > 0)) continue;
@@ -107,11 +128,15 @@ export function funnelareaShapes(
       }
     }
   }
+  const colors = Float32Array.from(fill);
   return {
     x: Float64Array.from(x),
     y: Float64Array.from(y),
     rings,
-    fill: Float32Array.from(fill),
+    fill: colors,
+    pattern: patterns.some(Boolean)
+      ? { pattern: patterns, color: colors, background: paper, parse: toRGBA }
+      : null,
     outline: {
       x: Float64Array.from(lx),
       y: Float64Array.from(ly),
@@ -139,10 +164,32 @@ function ensureLayout(ctx: TracePlotContext<FunnelareaCalc>): void {
   });
 }
 
+/** Text labels for the text primitive, in world px (`height` flips y). */
+function textLabels(text: FunnelareaTextLayout, height: number, opacity: number): TextLabel[] {
+  return text.labels.map((l) => {
+    const label: TextLabel = {
+      text: l.text,
+      x: l.x,
+      y: height - l.y,
+      font: l.font,
+      color: [l.color[0], l.color[1], l.color[2], l.color[3] * opacity],
+      anchorX: l.anchorX,
+      anchorY: l.anchorY,
+      align: l.anchorX,
+      angle: 0,
+      lineHeight: LINE_HEIGHT,
+    };
+    if (l.runs) label.runs = fadeTextRuns(l.runs, opacity);
+    return label;
+  });
+}
+
 class FunnelareaView implements TraceView<FunnelareaCalc> {
   #fill: LazyFillPrimitive | undefined;
   #lines: LinePrimitive | undefined;
   #text: TextPrimitive | undefined;
+  /** The last context (uniformtext refreshes). */
+  #ctx: TracePlotContext<FunnelareaCalc> | undefined;
 
   constructor(ctx: TracePlotContext<FunnelareaCalc>) {
     this.#sync(ctx);
@@ -153,18 +200,34 @@ class FunnelareaView implements TraceView<FunnelareaCalc> {
     this.#sync(ctx);
   }
 
+  dispose(): void {
+    // Other funnel areas are being updated or disposed too: no refresh from here.
+    const ctx = this.#ctx;
+    if (ctx) releaseUniformText(ctx.primitives, ctx.trace.type, this, false);
+  }
+
   #sync(ctx: TracePlotContext<FunnelareaCalc>): void {
+    this.#ctx = ctx;
     ensureLayout(ctx);
     const { trace, calc } = ctx;
     const height = calc.layout?.height ?? ctx.viewport.size.height;
     const opacity = traceOpacity(trace);
-    const shapes = funnelareaShapes(trace, calc, height);
+    const shapes = funnelareaShapes(trace, calc, height, ctx.fullLayout.paper_bgcolor);
 
     if (shapes.rings.length === 0) {
       if (this.#fill) ctx.remove(this.#fill);
       this.#fill = undefined;
     } else {
-      const data = { x: shapes.x, y: shapes.y, rings: shapes.rings, color: shapes.fill, opacity };
+      const data = {
+        x: shapes.x,
+        y: shapes.y,
+        rings: shapes.rings,
+        color: shapes.fill,
+        opacity,
+        paint: shapes.pattern
+          ? { kind: 'pattern' as const, pattern: shapes.pattern }
+          : { kind: 'solid' as const },
+      };
       if (!this.#fill) {
         this.#fill = createLazyFillPrimitive(ctx.primitives, data);
         ctx.add(this.#fill);
@@ -187,22 +250,28 @@ class FunnelareaView implements TraceView<FunnelareaCalc> {
       this.#lines.setTransform(ctx.transform);
     }
 
-    const labels: TextLabel[] = funnelareaLabels(trace, calc, ctx.fullLayout).map((l) => {
-      const label: TextLabel = {
-        text: l.text,
-        x: l.x,
-        y: height - l.y,
-        font: l.font,
-        color: [l.color[0], l.color[1], l.color[2], l.color[3] * opacity],
-        anchorX: l.anchorX,
-        anchorY: l.anchorY,
-        align: l.anchorX,
-        angle: 0,
-        lineHeight: LINE_HEIGHT,
-      };
-      if (l.runs) label.runs = fadeTextRuns(l.runs, opacity);
-      return label;
-    });
+    this.#syncText(ctx, uniformTextOf(ctx.fullLayout));
+  }
+
+  /**
+   * The labels and title, with `layout.uniformtext` (E4.6) as negotiated with the other funnel
+   * areas of the chart (Plotly's `_funnelareaText_minsize`); `uniform` overrides the layout's when
+   * another view asks for a refresh.
+   */
+  #syncText(ctx: TracePlotContext<FunnelareaCalc>, uniform: UniformText): void {
+    const { trace, calc } = ctx;
+    const height = calc.layout?.height ?? ctx.viewport.size.height;
+    let text = layoutFunnelareaText(trace, calc, ctx.fullLayout, { uniformText: uniform });
+    const size = negotiateUniformText(ctx.primitives, trace.type, this, text.items, uniform, (u) =>
+      this.#refresh(u),
+    );
+    if (size !== text.uniformSize) {
+      text = layoutFunnelareaText(trace, calc, ctx.fullLayout, {
+        uniformText: uniform,
+        ...(size !== undefined ? { uniformSize: size } : {}),
+      });
+    }
+    const labels = textLabels(text, height, traceOpacity(trace));
     if (labels.length === 0) {
       if (this.#text) ctx.remove(this.#text);
       this.#text = undefined;
@@ -214,6 +283,11 @@ class FunnelareaView implements TraceView<FunnelareaCalc> {
     } else this.#text.update({ labels });
     this.#text.object.renderOrder = orderOf(ORDER.text, ctx.index);
     this.#text.setTransform(ctx.transform);
+  }
+
+  /** Redraw the labels from the last context with another funnel area's negotiation. */
+  #refresh(uniform: UniformText): void {
+    if (this.#ctx) this.#syncText(this.#ctx, uniform);
   }
 }
 

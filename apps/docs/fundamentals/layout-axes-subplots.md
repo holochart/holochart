@@ -574,3 +574,70 @@ As in Plotly:
 <Example id="legends/group-titles" :height="420" />
 
 `table` traces never appear in the legend, as in Plotly (they have no `showlegend`).
+
+## Multiple legends
+
+A trace names the legend its item goes to with
+[`legend`](/reference/scatter#legend): `'legend'` (the default) for `layout.legend`, `'legend2'`
+for `layout.legend2`, and so on. Each numbered legend is a complete legend with every attribute
+of `layout.legend` — its own position, orientation, title, fonts, colors, `traceorder`, groups,
+`maxheight` and click behavior — and each pushes the margins on its own:
+
+```ts
+const x = ['Jan', 'Feb', 'Mar', 'Apr'];
+
+createChart(el, {
+  data: [
+    { type: 'scatter', name: 'Lisbon', x, y: [11, 12, 14, 16] },
+    { type: 'scatter', name: 'Oslo', x, y: [-2, -1, 2, 6] },
+    { type: 'bar', name: 'Lisbon', x, y: [96, 81, 55, 60], yaxis: 'y2', legend: 'legend2' },
+    { type: 'bar', name: 'Oslo', x, y: [49, 36, 47, 41], yaxis: 'y2', legend: 'legend2' },
+  ],
+  layout: {
+    yaxis: { domain: [0.55, 1] },
+    yaxis2: { domain: [0, 0.45] },
+    legend: { orientation: 'v', x: 1.02, y: 1, yanchor: 'top', title: { text: 'Temperature' } },
+    legend2: { x: 1.02, y: 0.45, yanchor: 'top', title: { text: 'Rainfall' } },
+  },
+});
+```
+
+As in Plotly:
+
+- The legends are `legend` plus those the traces use; a `legend2` container that no trace
+  references is ignored.
+- Numbered legends default like `legend` (a vertical legend at `x: 1.02`, `y: 1`), so give each
+  one a position. With the default look, a numbered legend takes the look of the template's
+  `legend` (fonts, colors, item width) but not its place above the plot (Plotly gives it nothing
+  of the template's `legend`); a template can style `legend2` itself.
+- `layout.showlegend` shows or hides every legend. By default the legends show when `legend` has
+  two items or any other legend has one; `legend2.visible: false` hides one legend.
+- Legend groups and group titles are per legend. Double-clicking an item isolates it among its
+  own legend's items and leaves the other legends as they are; a click with
+  `groupclick: 'togglegroup'` toggles the item's whole `legendgroup`, in every legend.
+- Each legend is its own keyboard toolbar (one tab stop each), named "Legend", "Legend 2", … and
+  its title.
+
+<Example id="legends/multiple" :height="460" />
+
+## Scrolling legends
+
+A legend taller than its `maxheight` keeps that height and its content — items and title —
+scrolls inside it, with a scrollbar at its right edge. `maxheight` is in px, or, up to 1, a
+fraction of a reference height: the plot height for a vertical legend beside the plot (with
+`yref: 'paper'`), the figure height otherwise. It defaults to `1` for such vertical legends (at
+most as tall as the plot) and `0.5` for the others (at most half the figure), as in Plotly, and
+is never less than 30 px.
+
+- The wheel over the legend scrolls it and never zooms the plot beneath (at either end of the
+  content, the page scrolls instead).
+- The scrollbar can be dragged with the mouse, a pen or a finger; a finger dragged over the items
+  scrolls them along with it (a tap still toggles an item).
+- Moving the keyboard focus through the items scrolls the focused item into view.
+- The scroll position survives redraws (a click toggling an item, `restyle`, `relayout`) and
+  resets when the content fits again. Static plots (`staticPlot`) show the top of the content,
+  without a scrollbar.
+
+<Example id="legends/scrolling" :height="420" />
+
+<Example id="legends/scrolling-horizontal" :height="420" />

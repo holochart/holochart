@@ -3,12 +3,12 @@
  * areas are proportional to their values, placed by `domain` (E4.5) and shaped by `aspectratio`
  * and `baseratio`, with pie's label aggregation, shared stage colors (`funnelareacolorway`),
  * `scalegroup` sizing, inside labels (`textinfo` / `texttemplate`), a title above the funnel,
- * per-label legend items (toggling `layout.hiddenlabels`) and per-stage hover. Drawn as one
- * batched polygon fill, one outline line primitive and one SDF text batch. Registered with
- * `register(funnelarea)` (ADR-019).
+ * per-label legend items (toggling `layout.hiddenlabels`) and per-stage hover. `marker.pattern`
+ * hatches the stages and their legend glyphs (E8.10) and `layout.uniformtext` sizes the stage
+ * labels of all funnel areas alike (E4.6), both as pie's. Drawn as one batched polygon fill, one
+ * outline line primitive and one SDF text batch. Registered with `register(funnelarea)` (ADR-019).
  *
- * Deferred: the extruded 3D pyramid (`depth` / `shape`, P2), `uniformtext` (E4.6), label links,
- * `marker.pattern` (E8.10).
+ * Deferred: the extruded 3D pyramid (`depth` / `shape`, P2), label links.
  */
 import { type DescribeContext, type TraceModule } from '@mk7s/holochart-runtime';
 import {

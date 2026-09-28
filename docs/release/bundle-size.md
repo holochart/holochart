@@ -7,24 +7,29 @@ Plan E21.1 and §5 ("Size tracking"). Budgets are checked in CI by the `bundle s
 Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's unit), and
 **exclude three.js** unless stated.
 
-| Entry                                   | What it measures                                           | Budget |
-| --------------------------------------- | ---------------------------------------------------------- | ------ |
-| `partial: core + scatter`               | `createChart` + `register` from runtime, `scatter` trace   | 157 kB |
-| `text engine (lazy chunk …)`            | the SDF text engine chunk, loaded on first text use        | 49 kB  |
-| `fill primitive (lazy chunk …)`         | fill primitive + earcut + exact fill rules, on first fill  | 9.4 kB |
-| `animation (lazy chunk …)`              | transitions, frames and `animate`, on first animation      | 6.4 kB |
-| `line level of detail (lazy chunk …)`   | min/max pyramid for lines of 100k+ points, on first use    | 2.3 kB |
-| `custom marker symbols … (lazy chunk)`  | SVG-path SDFs, image and glyph atlases, on first use       | 3.9 kB |
-| `style rules and functions (lazy …)`    | `styleRules` and function-valued attributes, on first use  | 4 kB   |
-| `default font, regular face (lazy …)`   | TeX Gyre Heros Regular chunk, loaded on first text use     | 95 kB  |
-| `default font, bold face (lazy …)`      | the bold face chunk, loaded when bold text is drawn        | 95 kB  |
-| `default font, italic face (lazy …)`    | the italic face chunk, loaded when italic text is drawn    | 98 kB  |
-| `default font, bold italic face (…)`    | the bold italic face chunk                                 | 95 kB  |
-| `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 248 kB |
-| `controls views (lazy chunks of basic)` | menus, sliders, range selector/slider, selections views    | 16 kB  |
-| `@mk7s/holochart (full, ESM)`           | everything the full bundle exports                         | 475 kB |
-| `@mk7s/holochart IIFE (includes three)` | `dist/holochart.iife.min.js` as shipped, **with** three.js | 690 kB |
-| each `@mk7s/holochart-*` package        | `export *` of that package                                 | report |
+| Entry                                        | What it measures                                                                            | Budget  |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------- | ------- |
+| `partial: core + scatter`                    | `createChart` + `register` from runtime, `scatter` trace                                    | 157 kB  |
+| `text engine (lazy chunk …)`                 | the SDF text engine chunk, loaded on first text use                                         | 49 kB   |
+| `fill primitive (lazy chunk …)`              | fill primitive + earcut + exact fill rules, on first fill                                   | 9.4 kB  |
+| `animation (lazy chunk …)`                   | transitions, frames and `animate`, on first animation                                       | 6.4 kB  |
+| `line level of detail (lazy chunk …)`        | min/max pyramid for lines of 100k+ points, on first use                                     | 2.3 kB  |
+| `custom marker symbols … (lazy chunk)`       | SVG-path SDFs, image and glyph atlases, on first use                                        | 3.9 kB  |
+| `pattern fills (lazy chunk …)`               | Plotly's pattern rules, shader code and attribute writer, on first pattern                  | 2.25 kB |
+| `style rules and functions (lazy …)`         | `styleRules` and function-valued attributes, on first use                                   | 4 kB    |
+| `chart summaries and data table (…)`         | generated summaries and the visible data table (two chunks, summed)                         | 5.8 kB  |
+| `default font, regular face (lazy …)`        | TeX Gyre Heros Regular chunk, loaded on first text use                                      | 95 kB   |
+| `default font, bold face (lazy …)`           | the bold face chunk, loaded when bold text is drawn                                         | 95 kB   |
+| `default font, italic face (lazy …)`         | the italic face chunk, loaded when italic text is drawn                                     | 98 kB   |
+| `default font, bold italic face (…)`         | the bold italic face chunk                                                                  | 95 kB   |
+| `partial: basic`                             | runtime + components + traces-basic + themes (all exports)                                  | 248 kB  |
+| `controls views (lazy chunks of basic)`      | menus, sliders, range selector/slider, selections views                                     | 16 kB   |
+| `keyboard navigation and legend keys (…)`    | data keyboard navigation (first focus) and legend keys (two chunks)                         | 5.5 kB  |
+| `legend scrolling (lazy chunk of basic)`     | scrolled legend viewport, scrollbar, wheel/drag/touch/keyboard scrolling, on first overflow | 1.8 kB  |
+| `@mk7s/holochart (full, ESM)`                | everything the full bundle exports                                                          | 475 kB  |
+| `sankey flow particles (lazy chunk of full)` | the `link.flow` particle primitive, on first sankey flow                                    | 3.6 kB  |
+| `@mk7s/holochart IIFE (includes three)`      | `dist/holochart.iife.min.js` as shipped, **with** three.js                                  | 690 kB  |
+| each `@mk7s/holochart-*` package             | `export *` of that package                                                                  | report  |
 
 The IIFE budget is the full budget plus a 200 kB allowance for the bundled three.js (about
 170–190 kB min + gzip on its own; ADR-015). Per-package entries are reported but not gated.
@@ -143,6 +148,35 @@ entry measures the whole package instead and the report adds a footnote.
 In CI, the job writes the table to the job summary, uploads `size.json` as the `size-report`
 artifact, compares with the latest successful `main` run, and posts or updates one PR comment
 (same-repo PRs only; fork PRs get a read-only token, so they get the job summary only).
+
+## Sizes after M5 wave 2 (2026-09-28)
+
+M5 wave 2 adds keyboard access (E6.5, E17.4: navigating the data and the legend; the code is two
+lazy chunks of `basic`, loaded on the chart's first focus and with the first legend of an
+interactive chart), touch and pen input through one Pointer Events pipeline (E6.6), focus
+handling and the carry-forward fixes. Measured with `pnpm size` locally (macOS) at the wave 2
+merge, and again with M5 wave 3's legends (multiple legends, scrolling: a new 1.62 kB lazy chunk),
+P1 parity work and `supplyDefaults` fixes in. CI (Linux) measures about 0.3% (basic) to 0.5%
+(IIFE) more, and CI is the reference: the estimate column applies the ratios measured after M4
+wave 2 (core + scatter +0.38%, basic +0.32%, full +0.36%, IIFE +0.51%) to the wave 3 numbers.
+
+| Entry                           | Wave 1    | Wave 2    | Wave 3 (in progress) | Est. CI (wave 3) | Budget |
+| ------------------------------- | --------- | --------- | -------------------- | ---------------- | ------ |
+| partial: core + scatter         | 151.63 kB | 152.83 kB | 153.35 kB            | ≈ 153.9 kB       | 157 kB |
+| partial: basic                  | 240.93 kB | 242.62 kB | 244.50 kB            | ≈ 245.3 kB       | 248 kB |
+| full, ESM                       | 450.25 kB | 453.24 kB | 456.33 kB            | ≈ 458.0 kB       | 475 kB |
+| IIFE (includes three)           | 664.85 kB | 671.96 kB | 676.59 kB            | ≈ 680.0 kB       | 690 kB |
+| keyboard and legend keys (lazy) | —         | 5.03 kB   | 5.13 kB              |                  | 5.5 kB |
+| legend scrolling (lazy)         | —         | —         | 1.62 kB              |                  | 1.8 kB |
+| chart summaries and table       | 5.24 kB   | 5.24 kB   | 5.24 kB              |                  | 5.8 kB |
+| sankey flow particles           | 3.21 kB   | 3.21 kB   | 3.21 kB              |                  | 3.6 kB |
+
+Headroom on CI (estimated, wave 3): ~3.1 kB for core + scatter, ~2.7 kB for `basic`, ~17 kB for
+the full bundle and ~10 kB for the IIFE; `basic` is now the tightest budget. Other lazy rows: text
+engine 46.62 kB, fill 8.88 kB, controls views 14.55 kB, pattern fills 2.00 kB, style rules
+3.62 kB. The wave 3 `supplyDefaults` fixes from the nightly property run (match-group range
+breaks, range slider thumbnail ranges, scaled font sizes) account for about 0.2 kB of each entry
+that includes core.
 
 ## Sizes after M5 wave 1 (2026-09-28)
 

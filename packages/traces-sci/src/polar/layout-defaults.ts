@@ -17,6 +17,7 @@ import {
   isArrayLike,
   isPlainObject,
   resolveWithTemplate,
+  scaledFontSize,
   setIn,
   toRGBA,
   type AttrSpec,
@@ -331,7 +332,7 @@ function supplySubplot(
         c('title.text');
         for (const [k, v] of [
           ['family', font.family],
-          ['size', Math.round(font.size * 1.2)],
+          ['size', scaledFontSize(font.size, 1.2)],
           ['color', fontColor],
           ['weight', font.weight],
           ['style', font.style],

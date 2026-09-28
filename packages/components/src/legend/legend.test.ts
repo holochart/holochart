@@ -189,7 +189,7 @@ describe('layoutLegend', () => {
     ]);
   });
 
-  it('uses entrywidth for horizontal items and drops items past maxheight', () => {
+  it('uses entrywidth for horizontal items and scrolls content past maxheight', () => {
     const { fullData, legend } = setup(
       { legend: { orientation: 'h', entrywidth: 0.25, entrywidthmode: 'fraction' } },
       [{ name: 'a' }, { name: 'b' }],
@@ -211,7 +211,9 @@ describe('layoutLegend', () => {
       figureHeight: 450,
     });
     expect(cut.height).toBe(40);
-    expect(cut.items).toHaveLength(1);
+    // Every item stays (the content scrolls), with room for the scrollbar.
+    expect(cut.items).toHaveLength(3);
+    expect(cut.contentHeight).toBe(2 * ITEM_GAP + 3 * ROW);
   });
 });
 

@@ -1,4 +1,11 @@
-import { createScale, supplyDefaults, type FullAxis, type FullLayout } from '@mk7s/holochart-core';
+import {
+  createBreakMap,
+  createScale,
+  supplyDefaults,
+  type FullAxis,
+  type FullLayout,
+  type RangeBreakInput,
+} from '@mk7s/holochart-core';
 import {
   createResourceManager,
   HeatmapPrimitive,
@@ -55,8 +62,19 @@ vi.mock('../../../render/node_modules/troika-three-text', async () => {
 
 const registry = createChartRegistry().register(contour);
 
-function axis(fullLayout: FullLayout, id: 'x' | 'y', type = 'linear'): AxisInfo {
-  const scale = createScale({ type: type as 'linear', range: [-5, 5], length: 400 });
+function axis(
+  fullLayout: FullLayout,
+  id: 'x' | 'y',
+  type = 'linear',
+  rangebreaks?: RangeBreakInput[],
+): AxisInfo {
+  const breaks = createBreakMap(rangebreaks, type as 'linear');
+  const scale = createScale({
+    type: type as 'linear',
+    range: [-5, 5],
+    length: 400,
+    ...(breaks ? { breaks } : {}),
+  });
   const full = { ...(fullLayout[`${id}axis`] as FullAxis), type } as FullAxis;
   return { id, name: `${id}axis`, letter: id, type, scale, full } as unknown as AxisInfo;
 }
@@ -77,12 +95,16 @@ function ramp(xs: number[]): number[][] {
   return [0, 1, 2].map(() => xs.slice());
 }
 
-function setup(trace: Record<string, unknown>, layout: Record<string, unknown> = {}) {
+function setup(
+  trace: Record<string, unknown>,
+  layout: Record<string, unknown> = {},
+  x: { type?: string; rangebreaks?: RangeBreakInput[] } = {},
+) {
   const { fullData, fullLayout } = supplyDefaults(
     { data: [{ type: 'contour', ...trace }], layout },
     registry.core,
   );
-  const xaxis = axis(fullLayout, 'x');
+  const xaxis = axis(fullLayout, 'x', x.type, x.rangebreaks);
   const yaxis = axis(fullLayout, 'y');
   const ctx: CalcContext = { fullLayout, index: 0, xaxis, yaxis };
   const t = fullData[0]!;
@@ -279,6 +301,53 @@ describe('contour calc', () => {
     }).calc;
     expect(eq.regions).toBeUndefined();
     expect(eq.paths[0]!.length).toBe(1);
+  });
+});
+
+describe('contour periods and range breaks', () => {
+  const utc = (d: string) => Date.parse(`${d}T00:00:00Z`);
+
+  it('aligns the grid points to xperiod and hovers the values as given', () => {
+    const s = setup({
+      z: ramp([0, 1, 2]),
+      x: [0.5, 2.5, 4.5],
+      xperiod: 2,
+      xperiodalignment: 'start',
+    });
+    expect(s.trace['xperiodalignment']).toBe('start');
+    expect(Array.from(s.calc.x.centers)).toEqual([0, 2, 4]);
+    const ctx: HoverContext = {
+      fullLayout: s.fullLayout,
+      xaxis: s.xaxis,
+      yaxis: s.yaxis,
+      transform: IDENTITY_TRANSFORM,
+    };
+    const [p] = contour.hoverPoints!(
+      s.calc,
+      s.trace,
+      { px: 0, py: 0, xl: 2.2, yl: 1, mode: 'closest', distance: 20 },
+      ctx,
+    );
+    expect(p!.labels!['x']).toBe('2.5');
+    expect(p!.px).toBe(2);
+    // Only the first n values are points (Plotly), aligned too.
+    const long = setup({ z: ramp([0, 1, 2]), x: [0.5, 2.5, 4.5, 9], xperiod: 2 }).calc;
+    expect(Array.from(long.x.centers)).toEqual([1, 3, 5]);
+    expect(Array.from(long.x.hoverAt!)).toEqual([0.5, 2.5, 4.5]);
+  });
+
+  it('drops grid columns in a break and contours in compressed space', () => {
+    const weekends = [{ bounds: ['sat', 'mon'] }];
+    const L = (d: string) => createBreakMap(weekends, 'date')!.toLinear(utc(d));
+    const { calc } = setup(
+      { z: ramp([1, 2, 3, 4]), x: ['2024-01-05', '2024-01-06', '2024-01-08', '2024-01-09'] },
+      {},
+      { type: 'date', rangebreaks: weekends },
+    );
+    expect(calc.nx).toBe(3);
+    expect(Array.from(calc.x.centers)).toEqual([L('2024-01-05'), L('2024-01-08'), L('2024-01-09')]);
+    expect(calc.bounds.x0).toBe(L('2024-01-05'));
+    expect(calc.bounds.x1).toBe(L('2024-01-09'));
   });
 });
 

@@ -10,8 +10,8 @@ A pattern fill draws a hatch of lines or dots instead of a plain color. Patterns
 without relying on color alone, so charts survive black-and-white printing and photocopies, and
 read for color-blind readers. Holochart draws Plotly's patterns:
 
-- `marker.pattern` on `bar`, `histogram`, `barpolar` and `pie` (each bar or slice can have its
-  own),
+- `marker.pattern` on `bar`, `histogram`, `barpolar`, `pie` and `funnelarea` (each bar, slice
+  or stage can have its own), and on the sectors and tiles of `sunburst`, `treemap` and `icicle`,
 - `fillpattern` on filled `scatter` traces (areas).
 
 Legend entries show the patterns too. Express draws them from its `pattern` argument.
@@ -135,6 +135,11 @@ color:
 
 <Example id="pie/patterns" />
 
+Funnel area stages take pie's `marker.pattern`, with the same defaults: one pattern per stage, on
+the paper color unless `fillmode` is `'overlay'`:
+
+<Example id="funnelarea/patterns" />
+
 ## Filled areas
 
 `fillpattern` hatches a scatter fill (`fill: 'tozeroy'`, stacked areas, `'toself'`…). The
@@ -196,8 +201,10 @@ and fills keep drawing each trace in one call.
   are anti-aliased over one device pixel; lines thinner than a pixel draw fainter instead of
   disappearing.
 - **Anchoring.** Tiles line up with the top-left corner of the plot area for bars, histograms and
-  areas, and with the center of the pie (or of the polar subplot) for pie slices and polar bars on
-  circular grids. Neighboring bars and stacked areas continue the same pattern.
+  areas, with the top-left corner of the chart for funnel area stages, and with the center of the
+  pie (or of the polar subplot) for pie slices and polar bars on circular grids. Sunburst sectors
+  are anchored like pie slices, treemap and icicle tiles like bars. Neighboring bars and stacked
+  areas continue the same pattern.
 - **Loading.** The pattern code is about 2 kB and loads the first time a chart draws a pattern;
   charts without patterns never load it. Until it arrives, patterned items draw their plain fill
   for a frame. `chart.ready`, the promise an update returns, and image export wait for it.
@@ -206,8 +213,6 @@ and fills keep drawing each trace in one call.
 
 - `pattern.path` (a custom SVG path as the tile) is not supported yet. Neither is Holochart's
   planned image texture fill, `marker.texture`.
-- `funnelarea` doesn't draw patterns yet (`sunburst` does, anchored at its center like pie;
-  `treemap` and `icicle` tiles do, anchored like bars).
 - Plotly computes the default `fgcolor`, `bgcolor` and `fgopacity` when it fills in the figure's
   defaults. Holochart computes them per bar when drawing, so they don't appear in `chart.fullData`
   unless you set them. With `fillmode: 'overlay'` and per-bar colors each bar gets its own contrast

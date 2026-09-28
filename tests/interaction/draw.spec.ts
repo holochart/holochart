@@ -208,8 +208,11 @@ test.describe('touch', () => {
     if (!canvas) throw new Error('no canvas');
     await page.touchscreen.tap(canvas.x + canvas.width / 2, canvas.y + canvas.height / 2);
     await expect.poll(() => modebarOpacity(page)).toBe(1);
-    // A tap outside the chart hides it again.
-    await page.touchscreen.tap(canvas.x + canvas.width / 2, canvas.y + canvas.height + 40);
+    // A tap outside the chart hides it again: below it, inside the 600 px viewport (the sandbox
+    // header above the chart uses the system font, so its height differs between OSes).
+    const below = Math.min(canvas.y + canvas.height + 40, 600 - 4);
+    expect(below).toBeGreaterThan(canvas.y + canvas.height);
+    await page.touchscreen.tap(canvas.x + canvas.width / 2, below);
     await expect.poll(() => modebarOpacity(page)).toBe(0);
   });
 });

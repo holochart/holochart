@@ -591,6 +591,8 @@ export class Chart {
   #focus: FocusTarget | undefined;
   #hoverEntries: Map<string, HoverEntry[]> | null = null;
   #domainHover: DomainHover | null = null;
+  /** Select areas (non-cartesian subplots) handed to the interaction layer (E6.3). */
+  readonly #areas = new WeakSet<SubplotInfo>();
   #componentOrder: ComponentSlot[] = [];
   /** `#subplots` as an array, for per-frame pointer work (no iterator allocations). */
   #subplotList: SubplotSlot[] = [];
@@ -2676,8 +2678,30 @@ export class Chart {
       settings: () => this.interaction,
       size: () => this.#size,
       subplots: () => this.#subplotList,
-      entries: (sp) => this.#entries(sp.id),
+      entries: (sp) =>
+        this.#areas.has(sp)
+          ? this.#domainEntries().entries.filter((e) => e.trace['subplot'] === sp.id)
+          : this.#entries(sp.id),
       domainEntries: () => this.#domainEntries(),
+      selectArea: (x, y) => {
+        for (const slot of this.#componentOrder) {
+          const area = slot.view?.selectArea?.(x, y);
+          if (!area) continue;
+          // Mock axes (like Plotly's polar ones): selection queries come out in container px.
+          const r = area.rect;
+          const axis = (p2l: (p: number) => number): AxisInfo =>
+            ({ id: '', scale: { p2l } }) as unknown as AxisInfo;
+          const sp = {
+            id: area.id,
+            rect: r,
+            xaxis: axis((p) => p + r.x),
+            yaxis: axis((p) => r.y + r.height - p),
+          } as unknown as SubplotInfo;
+          this.#areas.add(sp);
+          return sp;
+        }
+        return undefined;
+      },
       fullLayout: () => this.#full?.fullLayout,
       traceCount: () => this.#full?.fullData.length ?? 0,
       isFixed: (axis) => this.#isFixed(axis),
@@ -2702,8 +2726,16 @@ export class Chart {
       plotArea: () => this.#plotArea,
       traceTouchAction: () => {
         let out: 'pan-y' | 'none' | undefined;
+        // Selecting on a polar subplot takes every swipe, as on cartesian ones.
+        const selecting = /^(select|lasso)$/.test(String(this.interaction.dragmode));
         this.#full?.fullData.forEach((trace, i) => {
-          const need = trace.visible === true ? this.#traces[i]?.module?.touchAction : undefined;
+          const m = this.#traces[i]?.module;
+          const need =
+            trace.visible !== true
+              ? undefined
+              : selecting && m?.selectPoints
+                ? 'none'
+                : m?.touchAction;
           if (need && out !== 'none') out = need;
         });
         return out;
@@ -3051,6 +3083,8 @@ export class Chart {
     query: SelectionQuery,
     shift: boolean,
   ): readonly Record<string, unknown>[] | undefined {
+    // Plotly keeps no layout selections for non-cartesian subplots.
+    if (this.#areas.has(sp)) return undefined;
     const sel = selectionFromQuery(query, sp.xaxis, sp.yaxis);
     if (!sel) return undefined;
     const current = this.#figure.layout['selections'];

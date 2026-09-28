@@ -1,5 +1,12 @@
-import { holochartTemplate } from '@mk7s/holochart-core';
-import { LazyFillPrimitive, LinePrimitive, TextPrimitive } from '@mk7s/holochart-render';
+import { holochartTemplate, uniformTextSize, type UniformText } from '@mk7s/holochart-core';
+import {
+  createResourceManager,
+  LazyFillPrimitive,
+  LinePrimitive,
+  TextPrimitive,
+  type PrimitiveContext,
+  type TextLabel,
+} from '@mk7s/holochart-render';
 import type { DomainInfo } from '@mk7s/holochart-runtime';
 import * as fc from 'fast-check';
 import { describe, expect, it, vi } from 'vitest';
@@ -9,7 +16,7 @@ import { funnelareaHoverPoints, stageAt } from './hover.ts';
 import { funnelarea } from './index.ts';
 import { funnelareaLegendIcon, funnelareaLegendItems } from './legend.ts';
 import { funnelareaShapes } from './plot.ts';
-import { funnelareaLabels } from './text.ts';
+import { funnelareaLabels, layoutFunnelareaText } from './text.ts';
 
 // troika typesets in a worker with browser globals; the view tests only need its object graph.
 // Mocked by path, like bar's and pie's tests: traces-finance does not depend on troika, render does.
@@ -317,6 +324,171 @@ describe('funnelarea view', () => {
       { calc: false, plot: true, style: true, transform: false },
     );
     expect(added).toHaveLength(1);
+  });
+});
+
+describe('funnelarea patterns', () => {
+  it('coerces marker.pattern only with a shape, as pie', () => {
+    const [plain] = figure([AREA]).fullData;
+    expect((plain!['marker'] as Record<string, unknown>)['pattern']).toBeUndefined();
+    const [noShape] = figure([{ ...AREA, marker: { pattern: { size: 4 } } }]).fullData;
+    expect((noShape!['marker'] as Record<string, unknown>)['pattern']).toEqual({ shape: '' });
+    const [t] = figure([
+      { ...AREA, marker: { pattern: { shape: ['/', '.'], fgcolor: ['red'], solidity: [0.5] } } },
+    ]).fullData;
+    expect((t!['marker'] as Record<string, unknown>)['pattern']).toEqual({
+      shape: ['/', '.'],
+      fillmode: 'replace',
+      fgcolor: ['red'],
+      size: 8,
+      solidity: [0.5],
+    });
+  });
+
+  it('gives each drawn stage its pattern, on the paper color unless overlaid', () => {
+    const { fullData, calcs } = laidOut(
+      [
+        {
+          ...AREA,
+          marker: { pattern: { shape: ['/', '', 'x', '.'], size: [4, 5, 6, 7], solidity: 0.6 } },
+        },
+      ],
+      { paper_bgcolor: '#101010', hiddenlabels: ['Qualified'] },
+    );
+    const shapes = funnelareaShapes(fullData[0]!, calcs[0]!, 500, '#101010');
+    // One pattern per ring (the hidden stage has neither), array attributes cast per stage.
+    expect(shapes.rings).toHaveLength(3);
+    const fill = shapes.pattern!;
+    expect(fill.pattern).toEqual([
+      { shape: '/', fillmode: 'replace', size: 4, solidity: 0.6, bgcolor: '#101010' },
+      { shape: 'x', fillmode: 'replace', size: 6, solidity: 0.6, bgcolor: '#101010' },
+      { shape: '.', fillmode: 'replace', size: 7, solidity: 0.6, bgcolor: '#101010' },
+    ]);
+    // The stage colors are the pattern's default colors.
+    expect(fill.color).toBe(shapes.fill);
+    expect(fill.background).toBe('#101010');
+
+    const overlay = laidOut([
+      { ...AREA, marker: { pattern: { shape: '+', fillmode: 'overlay' } } },
+    ]);
+    const o = funnelareaShapes(overlay.fullData[0]!, overlay.calcs[0]!, 500, 'white').pattern!;
+    expect((o.pattern as Record<string, unknown>[])[0]).toEqual({
+      shape: '+',
+      fillmode: 'overlay',
+      size: 8,
+      solidity: 0.3,
+    });
+    // Without a shape on any stage the fill stays plain.
+    const none = laidOut([{ ...AREA, marker: { pattern: { shape: ['', ''] } } }]);
+    expect(funnelareaShapes(none.fullData[0]!, none.calcs[0]!, 500).pattern).toBeNull();
+  });
+
+  it('shows the stage patterns in the legend glyphs', () => {
+    const { fullData, fullLayout, calcs } = laidOut([
+      { ...AREA, marker: { pattern: { shape: ['/', '', 'x'] } } },
+    ]);
+    const items = funnelareaLegendItems(calcs[0]!, fullData[0]!, { fullLayout });
+    expect(items.map((i) => i.glyph.fill?.pattern?.['shape'])).toEqual([
+      '/',
+      undefined,
+      'x',
+      undefined,
+    ]);
+    expect(items[0]!.glyph.fill!.pattern).toMatchObject({ bgcolor: fullLayout.paper_bgcolor });
+    expect(funnelareaLegendIcon(fullData[0]!, { fullLayout }).fill!.pattern).toMatchObject({
+      shape: '/',
+    });
+  });
+});
+
+describe('funnelarea uniformtext', () => {
+  // A long label in the thin bottom stage has to shrink much more than the others.
+  const TALL = {
+    ...AREA,
+    labels: ['Leads', 'Qualified', 'Proposals', 'Closed won deals this quarter'],
+    values: [40, 30, 20, 4],
+    textinfo: 'label',
+  };
+  const texts = (u: UniformText, size?: number) => {
+    const { fullData, fullLayout, calcs } = laidOut([TALL], { uniformtext: u });
+    return layoutFunnelareaText(fullData[0]!, calcs[0]!, fullLayout, {
+      uniformText: u,
+      ...(size !== undefined ? { uniformSize: size } : {}),
+    });
+  };
+
+  it('is off without a mode', () => {
+    const { fullData, fullLayout, calcs } = laidOut([TALL]);
+    const text = layoutFunnelareaText(fullData[0]!, calcs[0]!, fullLayout);
+    expect(text.items).toEqual([]);
+    expect(text.uniformSize).toBeUndefined();
+    const sizes = text.labels.map((l) => l.font.size);
+    expect(sizes[0]).toBe(12);
+    expect(sizes[3]).toBeLessThan(12);
+  });
+
+  it('draws every stage label at the smallest fitted size (show)', () => {
+    const u: UniformText = { mode: 'show', minsize: 2 };
+    const text = texts(u);
+    expect(text.items).toHaveLength(4);
+    const size = uniformTextSize(text.items, u)!;
+    expect(text.uniformSize).toBe(size);
+    expect(size).toBeLessThan(12);
+    expect(text.labels.map((l) => l.font.size)).toEqual(
+      Array.from({ length: 4 }, () => Math.floor(size * 4) / 4),
+    );
+  });
+
+  it('hides labels that would be smaller than minsize (hide)', () => {
+    const u: UniformText = { mode: 'hide', minsize: 11 };
+    const text = texts(u);
+    expect(text.labels.map((l) => l.text)).toEqual(['Leads', 'Qualified', 'Proposals']);
+    expect(text.labels.map((l) => l.font.size)).toEqual([12, 12, 12]);
+  });
+
+  it('raises fonts to minsize, before the fit', () => {
+    const u: UniformText = { mode: 'hide', minsize: 14 };
+    const text = texts(u);
+    expect(text.items.map((i) => i.fontSize)).toEqual([14, 14, 14, 14]);
+    expect(text.labels[0]!.font.size).toBe(14);
+  });
+
+  it('negotiates one size across funnel areas, refreshing those drawn earlier', () => {
+    const { fullData, fullLayout, calcs } = laidOut(
+      [
+        { ...AREA, textinfo: 'label', domain: { x: [0, 0.5] } },
+        { ...TALL, domain: { x: [0.5, 1] } },
+      ],
+      { uniformtext: { mode: 'show', minsize: 2 } },
+      [
+        { ...RECT, width: 200 },
+        { ...RECT, x: 300, width: 200 },
+      ],
+    );
+    const primitives: PrimitiveContext = {
+      resources: createResourceManager(),
+      invalidate: vi.fn(),
+    };
+    const labelsOf = (added: unknown[]): TextLabel[] =>
+      (
+        added.find((p) => p instanceof TextPrimitive) as unknown as {
+          data: { labels: TextLabel[] };
+        }
+      ).data.labels;
+    const first = plotCtx(fullData[0]!, calcs[0]!, fullLayout, { primitives });
+    const view0 = funnelarea.plot!.create(first.ctx);
+    const own = labelsOf(first.added).map((l) => l.font!.size!);
+    const second = plotCtx(fullData[1]!, calcs[1]!, fullLayout, { primitives, index: 1 });
+    const view1 = funnelarea.plot!.create(second.ctx);
+    const size = labelsOf(second.added)[0]!.font!.size!;
+    expect(size).toBeLessThan(Math.min(...own));
+    expect(labelsOf(second.added).map((l) => l.font!.size)).toEqual([size, size, size, size]);
+    expect(labelsOf(first.added).map((l) => l.font!.size)).toEqual([size, size, size, size]);
+    // Once the second one goes, the first one is back to its own size.
+    view1.dispose?.();
+    view0.update(first.ctx, { calc: false, plot: true, style: true, transform: false });
+    expect(labelsOf(first.added).map((l) => l.font!.size)).toEqual(own);
+    view0.dispose?.();
   });
 });
 

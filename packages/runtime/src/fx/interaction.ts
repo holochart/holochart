@@ -134,6 +134,12 @@ export interface InteractionHost {
   ): readonly Record<string, unknown>[] | undefined;
   /** Offer a shape-drawing gesture to component views (draw `dragmode`s, E5.5). */
   drawShape?(gesture: DrawGesture): void;
+  /**
+   * A component view's non-cartesian subplot under `(x, y)` for box / lasso selection (polar,
+   * `ComponentView.selectArea`), as a subplot whose axes map px to container px; `entries` and
+   * `commitSelection` recognize it.
+   */
+  selectArea?(x: number, y: number): SubplotInfo | undefined;
   /** `config.renderHover(points)`: a custom label element, if configured. */
   renderHover?(points: readonly ChartPoint[]): HTMLElement | null | undefined;
   /**
@@ -484,6 +490,14 @@ export class Interaction {
       if (drag.action === 'draw' && isDrawDragmode(s.dragmode)) {
         drag.draw = s.dragmode;
         drag.lasso.push(this.#px, this.#py);
+      }
+    } else if (s.dragmode === 'select' || s.dragmode === 'lasso') {
+      const area = this.#host.selectArea?.(this.#px, this.#py);
+      if (area) {
+        drag.subplot = area;
+        drag.zone = 'plot';
+        drag.action = s.dragmode;
+        if (s.dragmode === 'lasso') drag.lasso.push(this.#px, this.#py);
       }
     }
     this.#drag = drag;
@@ -1474,8 +1488,10 @@ export class Interaction {
     for (const [index, list] of selection) {
       const entry = this.#entryFor(index);
       if (!entry) continue;
-      for (const i of list)
-        points.push(buildPoint(entry, { pointIndex: i, distance: 0, px: 0, py: 0 }, false));
+      for (const i of list) {
+        const fields = entry.module.eventData?.(entry.calc, entry.trace, i) ?? {};
+        points.push(buildPoint(entry, { pointIndex: i, distance: 0, px: 0, py: 0, fields }, false));
+      }
     }
     return points;
   }
@@ -1487,6 +1503,8 @@ export class Interaction {
     const sp = drag.subplot as SubplotInfo;
     const xa = sp.xaxis;
     const ya = sp.yaxis;
+    // A select area's px (polar): no axes to report (Plotly's are internal mock axes).
+    if (!xa.id) return {};
     if (query.kind === 'lasso' && query.polygon) {
       return {
         lassoPoints: {

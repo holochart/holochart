@@ -24,7 +24,7 @@ import {
   type HoverQuery,
   type SelectionQuery,
 } from '@mk7s/holochart-runtime';
-import { markerStyle, rgbaToCss } from '@mk7s/holochart-traces-basic';
+import { markerStyle, resolveColorMapping, rgbaToCss } from '@mk7s/holochart-traces-basic';
 import type { SplomCalc } from './calc.ts';
 import { dimensionOfAxis, dimensionsOf } from './defaults.ts';
 
@@ -77,7 +77,10 @@ interface ColorLookup {
   (i: number): string | undefined;
 }
 
-/** Per-trace hover colors (the marker color of each sample, colorscale-mapped when numeric). */
+/**
+ * Per-trace hover colors (the marker color of each sample, colorscale-mapped when numeric, as
+ * given when a CSS color).
+ */
 const colorCache = new WeakMap<FullTrace, ColorLookup>();
 
 function colorLookup(trace: FullTrace, ctx: HoverContext): ColorLookup {
@@ -93,6 +96,14 @@ function colorLookup(trace: FullTrace, ctx: HoverContext): ColorLookup {
       const t = colorscaleT(values[i] ?? NaN, lo, hi, reverse);
       return Number.isNaN(t) ? undefined : rgbaToCss(sampleColorscale(scale, t));
     };
+  } else if (
+    style.color instanceof Float32Array &&
+    resolveColorMapping(trace['marker'] as Record<string, unknown> | undefined, ctx.fullLayout)
+  ) {
+    // CSS colors among numeric ones: the per-point colors drawn (see `markerStyle`).
+    const drawn = style.color;
+    lookup = (i) =>
+      4 * i < drawn.length ? rgbaToCss(drawn.subarray(4 * i, 4 * i + 4)) : undefined;
   } else {
     const color = (trace['marker'] as { color?: unknown } | undefined)?.color;
     lookup = (i) => stringAt(color, i);

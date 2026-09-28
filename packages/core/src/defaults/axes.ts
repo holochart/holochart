@@ -38,6 +38,7 @@
 import { canonicalColor, toRGBA } from '../coerce/color.ts';
 import { coerceValue, isArrayLike } from '../coerce/coerce.ts';
 import { formatDate, isDateString, isValidDate } from '../data/dates.ts';
+import { scaledFontSize } from '../layout/font-attributes.ts';
 import { getIn } from '../path/path.ts';
 import { dateTick0, ONEDAY, ONEWEEK } from '../scales/date-math.ts';
 import { cleanNumber, dateToMs } from '../scales/scale.ts';
@@ -318,7 +319,7 @@ function dependentDefaults(
     ['title.font', 1.2],
   ] as const) {
     out[`${prefix}.family`] = font.family;
-    out[`${prefix}.size`] = Math.round(font.size * scale);
+    out[`${prefix}.size`] = scaledFontSize(font.size, scale);
     out[`${prefix}.color`] = fontColor;
     out[`${prefix}.weight`] = font.weight;
     out[`${prefix}.style`] = font.style;
@@ -442,6 +443,16 @@ function supplyOverlaying(
       delete (ax as { overlaying?: unknown }).overlaying;
     }
   }
+}
+
+/** The layout schema's `xaxis` and `yaxis` nodes (for synced match-group attributes). */
+function axisNodes(layoutSchema: ObjectNode): Partial<Record<'x' | 'y', ObjectNode>> {
+  const out: Partial<Record<'x' | 'y', ObjectNode>> = {};
+  for (const letter of ['x', 'y'] as const) {
+    const node = layoutSchema.children[`${letter}axis`];
+    if (node?.kind === 'object') out[letter] = node;
+  }
+  return out;
 }
 
 /** fast-isnumeric: a finite number or a numeric string. */
@@ -689,6 +700,7 @@ export function supplyCartesianAxes(
     templateLayout,
     splomMatchDefaults(fullLayout),
     scaleanchorDefaults,
+    axisNodes(layoutSchema),
   );
   return subplots;
 }

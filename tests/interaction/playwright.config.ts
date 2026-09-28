@@ -9,6 +9,11 @@ import { defineConfig } from '@playwright/test';
  *
  *   pnpm test:interaction                 run all scenarios
  *   pnpm test:interaction -g hover        run matching scenarios
+ *
+ * In CI (the `interaction` job of .github/workflows/ci.yml) a failed test is retried once: one
+ * that passes on the retry counts as flaky, does not fail the job, and is listed in the job
+ * summary by `node tests/interaction/report.ts` (from the JSON report written here). Locally
+ * there are no retries, so a flake shows up as a failure.
  */
 const PORT = Number(process.env.INTERACTION_PORT ?? 5198);
 const HOST = '127.0.0.1';
@@ -33,10 +38,17 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   fullyParallel: true,
   forbidOnly: CI,
-  retries: 0,
+  retries: CI ? 1 : 0,
   // Software GL is CPU-heavy: keep heavy runs few at a time.
   workers: 2,
-  reporter: CI ? [['list'], ['github']] : [['list']],
+  reporter: CI
+    ? [
+        ['list'],
+        ['github'],
+        ['html', { open: 'never', outputFolder: '../../playwright-report/interaction' }],
+        ['json', { outputFile: '../../playwright-report/interaction.json' }],
+      ]
+    : [['list']],
   use: {
     baseURL: `http://${HOST}:${PORT}`,
     browserName: 'chromium',

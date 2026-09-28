@@ -10,6 +10,9 @@
  *   (`angularaxis.rotation`; polygon grids turn the radial axis with it).
  * - **Zoom box** (`dragmode: 'zoom'`) in the plot area: a ring between the press and the pointer
  *   radius becomes the new radial range.
+ * - **Box / lasso selection** (`dragmode: 'select' | 'lasso'`) in the plot area: run by the
+ *   runtime's selection (events, shift to add, double-click to deselect) through
+ *   {@link PolarView.selectArea}; the traces' `selectPoints` are in `select.ts`.
  * - **Double-click** in the plot area: back to the first drawn view (`doubleclick` event).
  *
  * Drags preview through {@link PolarSubplot.setView} (views redraw without a pipeline run), emit
@@ -37,6 +40,7 @@ import type {
   ComponentModule,
   ComponentPointerEvent,
   ComponentView,
+  SelectArea,
 } from '@mk7s/holochart-runtime';
 import { buildPolarScene, type AxisLayer, type Strokes } from './axes.ts';
 import { MINDRAG, radialDragMode, rerange, zoomRing } from './drag.ts';
@@ -369,6 +373,17 @@ class PolarView implements ComponentView {
   #inPlot(sp: PolarSubplot, x: number, y: number): boolean {
     const [gx, gy] = sp.toGeometric(x, y);
     return sp.inside(gx, gy);
+  }
+
+  /**
+   * Box / lasso selection starts in a subplot's plot area and is clamped to its box (the sector's
+   * bounding box: plotly.js' mock cartesian axes); see `select.ts`.
+   */
+  selectArea(x: number, y: number): SelectArea | undefined {
+    for (const sp of [...this.#subplots.values()].reverse()) {
+      if (this.#inPlot(sp, x, y)) return { id: sp.id, rect: sp.placement.box };
+    }
+    return undefined;
   }
 
   // ---- Pointer ------------------------------------------------------------------------------------

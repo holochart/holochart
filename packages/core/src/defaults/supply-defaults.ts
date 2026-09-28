@@ -18,6 +18,7 @@
  */
 import { configSchema } from '../config/schema.ts';
 import { resolveDataRefs } from '../data/datasets.ts';
+import { scaledFontSize } from '../layout/font-attributes.ts';
 import { layoutSchema } from '../layout/schema.ts';
 import { localize, resolveLocale, type LocaleDefinitions } from '../locale/locale.ts';
 import { getIn, setIn } from '../path/path.ts';
@@ -152,6 +153,7 @@ function supplyTrace(
   for (const key of [
     'uid',
     'showlegend',
+    'legend',
     'legendgroup',
     'legendrank',
     'legendwidth',
@@ -216,7 +218,7 @@ export function supplyDefaults(
     only: EARLY_LAYOUT_KEYS,
     overrides: {
       'title.font.family': font.family,
-      'title.font.size': Math.round(font.size * 1.4),
+      'title.font.size': scaledFontSize(font.size, 1.4),
       'title.font.color': font.color,
       'title.font.weight': font.weight,
       'title.font.style': font.style,
@@ -303,19 +305,20 @@ export function supplyDefaults(
     if (AXIS_KEY.test(key) && isPlainObject(axis)) axis['_locale'] = locale;
   }
 
-  // Pie-like traces count twice (Plotly): one pie shows its per-label legend by default.
-  const legendEntries = fullData
-    .filter(
-      (t) =>
-        t.visible !== false &&
-        t['showlegend'] !== false &&
-        t._module?.categories.includes('showLegend') === true,
-    )
-    .reduce((n, t) => n + (t._module?.categories.includes('pie-like') === true ? 2 : 1), 0);
+  // Pie-like traces count twice (Plotly): one pie shows its per-label legend by default. Counted
+  // per legend (`trace.legend`): the main legend needs two entries, `legend2`, … one.
+  const legendEntries = new Map<unknown, number>();
+  for (const t of fullData) {
+    if (t.visible === false || t['showlegend'] === false) continue;
+    if (t._module?.categories.includes('showLegend') !== true) continue;
+    const n = t._module.categories.includes('pie-like') ? 2 : 1;
+    legendEntries.set(t['legend'], (legendEntries.get(t['legend']) ?? 0) + n);
+  }
+  const showlegend = [...legendEntries].some(([id, n]) => n > (id === 'legend' ? 1 : 0));
   coerceContainer(schema, layoutIn, fullLayout, {
     template: tLayout,
     only: new Set(['showlegend']),
-    overrides: { showlegend: legendEntries > 1 },
+    overrides: { showlegend },
   });
 
   return { fullData, fullLayout, fullConfig, issues };

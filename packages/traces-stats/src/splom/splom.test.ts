@@ -315,6 +315,36 @@ describe('splom hover and selection per cell', () => {
     ).toEqual([]);
   });
 
+  it('colors hover labels like the drawn markers: CSS colors among numbers as given', () => {
+    const mixed = defaults({
+      dimensions: [
+        { label: 'alpha', values: [0, 10, 20] },
+        { label: 'beta', values: [0, 10, 20] },
+      ],
+      marker: { color: [0, 'gold', 20], colorscale: 'Greys' },
+    });
+    const t = mixed.fullData[0] as FullTrace;
+    const cellAxes = new Map<string, AxisInfo>(
+      ['x', 'x2', 'y', 'y2'].map((id) => [id, axisInfo(id, 'linear')]),
+    );
+    const c = splom.calc!(t, {
+      fullLayout: mixed.fullLayout,
+      index: 0,
+      xaxis: undefined,
+      yaxis: undefined,
+      axes: cellAxes,
+    }) as SplomCalc;
+    const ctx = cellContext(mixed.fullLayout, cellAxes.get('x')!, cellAxes.get('y2')!);
+    const colorAt = (v: number) =>
+      splom.hoverPoints!(c, t, { px: v, py: v, xl: v, yl: v, mode: 'closest', distance: 5 }, ctx)[0]
+        ?.color;
+    expect([0, 10, 20].map(colorAt)).toEqual([
+      'rgb(0, 0, 0)',
+      'rgb(255, 215, 0)',
+      'rgb(255, 255, 255)',
+    ]);
+  });
+
   it('selects the samples inside a box or lasso of one cell', () => {
     const ctx = cellContext(fullLayout, axes.get('x')!, axes.get('y2')!);
     // alpha in [5, 25], beta in [-1, 60] → samples 1 (10, 50) and 2 (20, 0).

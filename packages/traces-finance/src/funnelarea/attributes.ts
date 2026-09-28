@@ -3,13 +3,18 @@
  * `funnelarea/attributes.js` and `layout_attributes.js`: pie's labels, values, colors, text and
  * `scalegroup`, inside labels only, a title above the funnel, `aspectratio` and `baseratio`, and
  * `layout.funnelareacolorway` / `extendfunnelareacolors` (plus pie's `hiddenlabels`, shared with
- * pies). `domain` comes from the registry (the trace is in the `domain` category).
+ * pies). `marker.pattern` is the shared pattern fill (E8.10), as pie's. `domain` comes from the
+ * registry (the trace is in the `domain` category).
  *
- * Deferred: `marker.pattern` (E8.10), `texttemplatefallback` / `hovertemplatefallback`, the
- * extruded 3D pyramid (`depth` / `shape`, P2).
+ * Deferred: `texttemplatefallback` / `hovertemplatefallback`, the extruded 3D pyramid (`depth` /
+ * `shape`, P2).
  */
 import { attr } from '@mk7s/holochart-core';
-import { pieAttributes, pieLayoutAttributes } from '@mk7s/holochart-traces-basic';
+import {
+  patternAttributes,
+  pieAttributes,
+  pieLayoutAttributes,
+} from '@mk7s/holochart-traces-basic';
 
 /** The funnelarea schema. */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
@@ -46,6 +51,7 @@ export const funnelareaAttributes = /* @__PURE__ */ (() => {
             },
             { editType: 'calc', description: 'Stage outlines.' },
           ),
+          pattern: patternAttributes('stage'),
         },
         { editType: 'calc', description: 'Stage style.' },
       ),

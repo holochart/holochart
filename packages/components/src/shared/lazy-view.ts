@@ -72,7 +72,7 @@ export function nonEmpty(value: unknown): boolean {
  * A primitive that draws nothing and whose `ready` is a pending view load: the hook through which
  * chart readiness waits for the load (see the module comment).
  */
-class PendingViewPrimitive implements Primitive<never> {
+export class PendingViewPrimitive implements Primitive<never> {
   readonly object = new Object3D();
   readonly ready: Promise<void>;
   constructor(ready: Promise<void>) {

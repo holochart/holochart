@@ -63,6 +63,9 @@ createChart(el, {
   that setting its `selectedpoints` yourself wins over the layout selections for that trace.
 - The `selected` event carries `points`, `range` (box) or `lassoPoints` (lasso), and the new
   `selections`.
+- **Polar subplots** select too (scatterpolar markers, barpolar bars), with points carrying `r`
+  and `theta`; as in Plotly, their selections aren't stored in `layout.selections` (see
+  [polar interactivity](/charts/scientific/polar#interactivity)).
 
 <Example id="_dev/selections-lasso" />
 
@@ -113,8 +116,9 @@ and Holochart sets it to the least the chart needs:
   and sankey and polar charts: a swipe that **starts vertically scrolls the page**; one that
   starts sideways is the chart's (a zoom box may then grow in any direction). Pinches and taps are
   the chart's.
-- **`none`** for `dragmode: 'pan'`, `'select'`, `'lasso'` and the drawing modes, and for tables,
-  parcoords and parcats: every gesture is the chart's, so the page doesn't scroll over it.
+- **`none`** for `dragmode: 'pan'`, `'select'`, `'lasso'` (polar charts included) and the drawing
+  modes, and for tables, parcoords and parcats: every gesture is the chart's, so the page doesn't
+  scroll over it.
 - **`manipulation`** for `dragmode: false`, charts whose axes are all `fixedrange`, and charts
   without cartesian axes (pie, sunburst, treemap, …): swipes and pinches are the page's; taps
   still hover, click and drill.

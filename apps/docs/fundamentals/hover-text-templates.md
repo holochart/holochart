@@ -82,9 +82,10 @@ A click on a link doesn't zoom, toggle a legend item or emit a chart `click` eve
 
 ## Uniform text size
 
-Labels inside bars and pie slices shrink to fit, so neighbors end up with different sizes.
-`layout.uniformtext` draws them all at one size per trace type (every bar trace together, every
-pie trace together), the smallest size any label had to shrink to:
+Labels inside bars, pie slices and funnel area stages shrink to fit, so neighbors end up with
+different sizes. `layout.uniformtext` draws them all at one size per trace type (every bar trace
+together, every pie trace together, every funnel area together), the smallest size any label had
+to shrink to:
 
 ```ts
 chart.relayout({ uniformtext: { mode: 'hide', minsize: 8 } });

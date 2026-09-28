@@ -69,7 +69,8 @@ export const FONT_PARTS = ['font-regular', 'font-bold', 'font-italic', 'font-bol
  * `dist/styles-*.js`), the pattern fills (E8.10: render's `dist/pattern-code-*.js`), the sankey
  * flow particles (E13.5c: traces-hier's `dist/flow-*.js`), the accessibility code (E17.2, E17.3:
  * runtime's `dist/summary-*.js` and `dist/table-view-*.js`), the keyboard access (E6.5, E17.4:
- * runtime's `dist/keyboard-*.js`, components' `dist/legend-keys-*.js`) and the {@link FONT_PARTS}.
+ * runtime's `dist/keyboard-*.js`, components' `dist/legend-keys-*.js`), the legend scrolling
+ * (E5.2: components' `dist/legend-scroll-*.js`) and the {@link FONT_PARTS}.
  */
 export const LAZY_PARTS = [
   'fill',
@@ -82,6 +83,7 @@ export const LAZY_PARTS = [
   'flow',
   'a11y',
   'keyboard',
+  'legend-scroll',
   ...FONT_PARTS,
 ] as const;
 
@@ -154,6 +156,14 @@ const A11Y_MODULE =
 const KEYBOARD_MODULE =
   /[\\/](?:runtime[\\/](?:dist[\\/]keyboard-[\w-]+\.js|src[\\/]fx[\\/]keyboard\.ts)|components[\\/](?:dist[\\/]legend-keys-[\w-]+\.js|src[\\/]legend[\\/]legend-keys\.ts))$/;
 
+/**
+ * The lazily loaded legend scrolling (E5.2: the scrolled legend's viewport, scrollbar and scroll
+ * input, loaded the first time a legend is taller than its `maxheight`): built
+ * (`dist/legend-scroll-*.js`), or from sources.
+ */
+const LEGEND_SCROLL_MODULE =
+  /[\\/]components[\\/](?:dist[\\/]legend-scroll-[\w-]+\.js|src[\\/]legend[\\/]legend-scroll\.ts)$/;
+
 /** The {@link LAZY_PARTS} entry a module belongs to, if any. */
 export function lazyPartOf(moduleId: string): string | undefined {
   if (FILL_MODULE.test(moduleId)) return 'fill';
@@ -166,6 +176,7 @@ export function lazyPartOf(moduleId: string): string | undefined {
   if (FLOW_MODULE.test(moduleId)) return 'flow';
   if (A11Y_MODULE.test(moduleId)) return 'a11y';
   if (KEYBOARD_MODULE.test(moduleId)) return 'keyboard';
+  if (LEGEND_SCROLL_MODULE.test(moduleId)) return 'legend-scroll';
   const face = FONT_MODULE.exec(moduleId)?.[1];
   return face ? `font-${face}` : undefined;
 }
@@ -360,6 +371,17 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     limit: '5.5 kB',
     lazyOf: 'partial-basic',
     lazyPart: 'keyboard',
+  },
+  {
+    // Plan E5.2 (M5 wave 3): scrolling legends — the scrolled content's viewport, the scrollbar,
+    // wheel, drag, touch and keyboard scrolling — loaded with a dynamic import() the first time a
+    // legend is taller than its `maxheight`. Measured 1.62 kB when split out
+    // (2026-09-28); budget = measured + ~10%.
+    id: 'legend-scroll-lazy',
+    name: 'legend scrolling (lazy chunk of basic)',
+    limit: '1.8 kB',
+    lazyOf: 'partial-basic',
+    lazyPart: 'legend-scroll',
   },
   {
     id: 'full',

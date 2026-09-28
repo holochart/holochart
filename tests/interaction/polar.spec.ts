@@ -1,13 +1,20 @@
 import { expect, test, type Page } from '@playwright/test';
 import pngjs from 'pngjs';
-import { dragBetween, events, openInteraction, waitForEvent } from './helpers.ts';
+import {
+  callChart,
+  dragBetween,
+  events,
+  openInteraction,
+  touchGesture,
+  waitForEvent,
+} from './helpers.ts';
 
 const { PNG } = pngjs;
 
 /**
  * Polar pointer scenarios on `_dev/interaction-polar` (plan E11.4, E20.4): hover labels and events,
  * the radial drag (re-ranges the radial axis), the angular drag (rotates the angular axis), the
- * radial zoom box, double-click reset and legend toggling.
+ * radial zoom box, double-click reset, legend toggling and box / lasso selection (mouse and touch).
  *
  * The example: 640×400 px, 20 px margins, one polar subplot over the whole plot area, so the circle
  * has radius 180 px around container (320, 200); `radialaxis.range: [0, 10]` along 0°, angles
@@ -252,4 +259,79 @@ test('clicking a legend item hides its trace; the subplot stays', async ({ page 
   await page.waitForTimeout(300);
   const hovers = (await events(page)).filter((e) => e.name === 'hover');
   expect(hovers.every((h) => h.payload.points?.every((p) => p.curveNumber !== 1))).toBe(true);
+});
+
+/** Selected points as `[curveNumber, pointNumber, r, theta]`. */
+function picked(e: { payload: { points?: unknown[] } }): unknown[][] {
+  return (
+    e.payload.points as { curveNumber: number; pointNumber: number; r: number; theta: number }[]
+  ).map((p) => [p.curveNumber, p.pointNumber, p.r, p.theta]);
+}
+
+test('box select picks the points inside; shift adds; double-click deselects', async ({ page }) => {
+  const o = await origin(page);
+  await callChart(page, 'relayout', { dragmode: 'select' });
+  await events(page, true);
+  // Around A (5, 45°) and B (7, 90°), not A (8, 135°).
+  await dragBetween(page, { x: o.x + 300, y: o.y + 60 }, { x: o.x + 400, y: o.y + 150 }, 8);
+  const selected = await waitForEvent(page, 'selected');
+  expect(picked(selected)).toEqual([
+    [0, 0, 5, 45],
+    [1, 0, 7, 90],
+  ]);
+  expect((await events(page)).some((e) => e.name === 'selecting')).toBe(true);
+  // Plotly keeps no layout selection for polar subplots.
+  expect(
+    await page.evaluate(
+      () =>
+        (window as unknown as { __interaction: { chart: { layout: Record<string, unknown> } } })
+          .__interaction.chart.layout['selections'],
+    ),
+  ).toBeUndefined();
+  // Away from the points (no hover label over them).
+  await page.mouse.move(o.x + 5, o.y + 395);
+  await settle(page);
+  // Unselected points are dimmed.
+  expect(near(await pixel(page, point(o, 5, 45)), RED)).toBe(true);
+  expect(near(await pixel(page, point(o, 8, 135)), RED)).toBe(false);
+
+  // Shift adds A (3, 225°).
+  await events(page, true);
+  const p = point(o, 3, 225);
+  await page.keyboard.down('Shift');
+  await dragBetween(page, { x: p.x - 12, y: p.y - 12 }, { x: p.x + 12, y: p.y + 12 }, 6);
+  await page.keyboard.up('Shift');
+  expect(picked(await waitForEvent(page, 'selected'))).toEqual([
+    [0, 0, 5, 45],
+    [0, 2, 3, 225],
+    [1, 0, 7, 90],
+  ]);
+
+  await events(page, true);
+  const c = at(o, 100, 330);
+  await page.mouse.dblclick(c.x, c.y);
+  await waitForEvent(page, 'deselect');
+  await settle(page);
+  expect(near(await pixel(page, point(o, 8, 135)), RED)).toBe(true);
+});
+
+test.describe('touch', () => {
+  test.use({ hasTouch: true });
+
+  test('a one-finger lasso selects on a polar subplot', async ({ page }) => {
+    const o = await origin(page);
+    await callChart(page, 'relayout', { dragmode: 'lasso' });
+    await events(page, true);
+    // A triangle starting straight down (a page scroll under `pan-y`) around A (6, 300°).
+    const q = point(o, 6, 300);
+    await touchGesture(page, [
+      [
+        { x: q.x - 15, y: q.y - 20 },
+        { x: q.x - 15, y: q.y + 20 },
+        { x: q.x + 25, y: q.y + 20 },
+        { x: q.x - 15, y: q.y - 20 },
+      ],
+    ]);
+    expect(picked(await waitForEvent(page, 'selected'))).toEqual([[0, 3, 6, 300]]);
+  });
 });

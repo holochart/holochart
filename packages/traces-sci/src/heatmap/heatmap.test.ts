@@ -1,6 +1,8 @@
 import {
+  createBreakMap,
   createScale,
   supplyDefaults,
+  type RangeBreakInput,
   type AxisType,
   type FullAxis,
   type FullLayout,
@@ -32,6 +34,7 @@ import {
   isEvenlySpaced,
   makeBoundArray,
   MAX_CELLS,
+  sourceCell,
   type HeatmapCalc,
 } from './calc.ts';
 import { heatmap } from './index.ts';
@@ -74,14 +77,17 @@ const registry = createChartRegistry().register(heatmap);
 interface AxisSpec {
   type?: AxisType;
   categories?: string[];
+  rangebreaks?: RangeBreakInput[];
 }
 
 function axis(fullLayout: FullLayout, id: 'x' | 'y', spec: AxisSpec = {}): AxisInfo {
   const type = spec.type ?? 'linear';
+  const breaks = createBreakMap(spec.rangebreaks, type);
   const scale = createScale({
     type,
     range: [-5, 5],
     ...(spec.categories ? { categories: spec.categories } : {}),
+    ...(breaks ? { breaks } : {}),
   });
   const full = { ...(fullLayout[`${id}axis`] as FullAxis), type } as FullAxis;
   return { id, name: `${id}axis`, letter: id, type, scale, full } as unknown as AxisInfo;
@@ -114,6 +120,7 @@ function calcOf(
   return { ...s, trace: s.fullData[0]!, calc };
 }
 
+const sourceCellOf = (calc: HeatmapCalc, i: number) => sourceCell(calc, i, 0);
 const nan = (a: ArrayLike<number>) => Array.from(a, (v) => (Number.isNaN(v) ? null : v));
 const round = (a: ArrayLike<number>, d = 9) => Array.from(a, (v) => +v.toFixed(d));
 
@@ -397,6 +404,150 @@ describe('heatmap calc', () => {
       ),
     ).toEqual([1, 2, null, null, null, null]);
     expect(distinctValues([3, 1, 2, 1, 1 + 1e-12])).toEqual({ vals: [1, 2, 3], minDiff: 1 });
+  });
+});
+
+const DAY = 86_400_000;
+const utc = (d: string) => Date.parse(`${d}T00:00:00Z`);
+
+describe('heatmap periods (xperiod)', () => {
+  it('coerces xperiod0 / xperiodalignment only with a period, for both kinds of z', () => {
+    const { fullData } = setup([
+      { z: [[1]] },
+      { z: [[1]], x: [1], xperiod: 2, yperiod: 'M1' },
+      { z: [1], x: [1], y: [1], xperiod: 2 },
+    ]);
+    expect(fullData[0]!['xperiod']).toBeUndefined();
+    expect(fullData[0]!['xperiodalignment']).toBeUndefined();
+    expect(fullData[1]!['xperiod']).toBe(2);
+    expect(fullData[1]!['xperiodalignment']).toBe('middle');
+    expect(fullData[1]!['xperiod0']).toBeUndefined();
+    expect(fullData[1]!['yperiodalignment']).toBe('middle');
+    expect(fullData[2]!['xperiodalignment']).toBe('middle');
+  });
+
+  it.each([
+    ['start', [0, 2, 6]],
+    ['middle', [1, 3, 7]],
+    ['end', [2, 4, 8]],
+  ] as const)('snaps cell centers to the %s of their period', (alignment, centers) => {
+    const { calc } = calcOf({
+      z: [[1, 2, 3]],
+      x: [1.2, 3.7, 6],
+      xperiod: 2,
+      xperiodalignment: alignment,
+    });
+    expect([...calc.x.centers]).toEqual(centers);
+    const [a, b, c] = centers;
+    expect([...calc.x.edges]).toEqual([a - (b - a) / 2, (a + b) / 2, (b + c) / 2, c + (c - b) / 2]);
+    // Hover reads the values as given.
+    expect([...calc.x.hoverAt!]).toEqual([1.2, 3.7, 6]);
+    // Uneven after alignment: no 'fast' smoothing.
+    expect(calc.fastSmoothing).toBe(false);
+  });
+
+  it('aligns monthly dates from xperiod0, and given edges (hover: their middle)', () => {
+    const { calc } = calcOf(
+      { z: [[1, 2]], x: ['2024-01-10', '2024-02-20'], xperiod: 'M1', xperiodalignment: 'start' },
+      { x: { type: 'date' } },
+    );
+    expect([...calc.x.centers]).toEqual([utc('2024-01-01'), utc('2024-02-01')]);
+    const edges = calcOf({
+      z: [[1]],
+      x: [10, 20],
+      xperiod: 4,
+      xperiod0: 1,
+      xperiodalignment: 'end',
+    }).calc;
+    expect([...edges.x.edges]).toEqual([13, 21]);
+    expect([...edges.x.hoverAt!]).toEqual([15]);
+  });
+
+  it('aligns column data before placing it (hover shows the aligned values, as Plotly)', () => {
+    const { calc } = calcOf({ z: [1, 2, 3], x: [0.5, 1.5, 2.5], y: [0, 0, 0], xperiod: 2 });
+    expect([...calc.x.centers]).toEqual([1, 3]);
+    expect(nan(calc.z)).toEqual([2, 3]);
+    expect(calc.x.hoverAt).toBeUndefined();
+  });
+
+  it('labels hover with the value before alignment', () => {
+    const s = calcOf(
+      { z: [[1, 2]], x: ['2024-01-10', '2024-02-20'], xperiod: 'M1' },
+      { x: { type: 'date' } },
+    );
+    const ctx: HoverContext = {
+      fullLayout: s.fullLayout,
+      xaxis: s.xaxis,
+      yaxis: s.yaxis,
+      transform: IDENTITY_TRANSFORM,
+    };
+    const mid = (utc('2024-02-01') + utc('2024-03-01')) / 2;
+    const query: HoverQuery = { px: 0, py: 0, xl: mid, yl: 0, mode: 'closest', distance: 1 };
+    const [p] = heatmap.hoverPoints!(s.calc, s.trace, query, ctx);
+    expect(p!.x).toBe(utc('2024-02-20'));
+    expect(p!.labels!['x']).toContain('Feb 20');
+    // Anchored on the drawn (aligned) cell.
+    expect(p!.px).toBe(mid);
+  });
+});
+
+describe('heatmap range breaks', () => {
+  const weekends = { type: 'date' as const, rangebreaks: [{ bounds: ['sat', 'mon'] }] };
+  const L = (d: string) => createBreakMap(weekends.rangebreaks, 'date')!.toLinear(utc(d));
+
+  it('drops columns whose center is in a break and tiles the compressed axis', () => {
+    const s = calcOf(
+      {
+        z: [[1, 2, 3, 4]],
+        x: ['2024-01-04', '2024-01-05', '2024-01-06', '2024-01-08'],
+        text: [['a', 'b', 'c', 'd']],
+      },
+      { x: weekends },
+    );
+    const { calc } = s;
+    expect(calc.nx).toBe(3);
+    expect(nan(calc.z)).toEqual([1, 2, 4]);
+    // Friday and Monday are a day apart in compressed space: every cell is a day wide.
+    expect(L('2024-01-08') - L('2024-01-05')).toBe(DAY);
+    expect([...calc.x.edges]).toEqual([
+      L('2024-01-04') - DAY / 2,
+      L('2024-01-04') + DAY / 2,
+      L('2024-01-05') + DAY / 2,
+      L('2024-01-08') + DAY / 2,
+    ]);
+    // Per-cell text follows its value.
+    expect(sourceCellOf(calc, 2)).toEqual([0, 3]);
+  });
+
+  it('steps x0 + i·dx in real time, hiding the cells in breaks (as scatter)', () => {
+    const { calc } = calcOf({ z: [[1, 2, 3, 4, 5]], x0: '2024-01-05', dx: DAY }, { x: weekends });
+    expect(nan(calc.z)).toEqual([1, 4, 5]);
+    expect([...calc.x.centers]).toEqual([L('2024-01-05'), L('2024-01-08'), L('2024-01-09')]);
+  });
+
+  it('clamps given edges to the breaks and drops the cells they swallow', () => {
+    const { calc } = calcOf(
+      {
+        z: [[1, 2, 3, 4]],
+        x: ['2024-01-05', '2024-01-06', '2024-01-07', '2024-01-08', '2024-01-09'],
+      },
+      { x: weekends },
+    );
+    expect(nan(calc.z)).toEqual([1, 4]);
+    expect([...calc.x.edges]).toEqual([L('2024-01-05'), L('2024-01-08'), L('2024-01-09')]);
+  });
+
+  it('leaves column data points in breaks out, and axes without breaks alone', () => {
+    const col = calcOf(
+      { z: [1, 2, 3], x: ['2024-01-05', '2024-01-06', '2024-01-08'], y: [0, 0, 0] },
+      { x: weekends },
+    ).calc;
+    expect(nan(col.z)).toEqual([1, 3]);
+    const plain = calcOf(
+      { z: [[1, 2]], x: ['2024-01-05', '2024-01-06'] },
+      { x: { type: 'date' } },
+    ).calc;
+    expect(plain.nx).toBe(2);
   });
 });
 

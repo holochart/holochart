@@ -141,6 +141,15 @@ data (left); 1.3 is the smoothest (right).
 
 <Example id="contour/smoothing" />
 
+### Monthly grid with period alignment
+
+`xperiod` / `yperiod`, `xperiod0` and `xperiodalignment` / `yperiodalignment` move the grid points
+within their periods, as for [heatmaps](/charts/scientific/heatmap#monthly-columns-with-period-alignment).
+Here monthly temperature profiles stamped with the first of each month are drawn mid-month;
+hover shows the dates as given:
+
+<Example id="contour/period" />
+
 ### Gaps
 
 `null` values leave holes with `connectgaps: false`: each hole reaches 90% of the way from a
@@ -240,7 +249,11 @@ reference.
   `labelfont` / `labelformat` / `type` / `operation` / `value`, `fillcolor`, `line.color` /
   `width` / `dash` / `smoothing`, `texttemplate` / `textfont`, the colorscale attributes and the
   hover formats.
-- Not supported yet: `xperiod` / `yperiod` alignment, `xcalendar` / `ycalendar`, and range breaks.
+- `xperiod` / `yperiod` alignment and range breaks work as for
+  [heatmaps](/charts/scientific/heatmap#plotly-migration-notes): grid columns or rows in a break
+  are dropped, and on a break axis the contours are traced in its compressed space, so a crossing
+  between grid points on either side of a break can land elsewhere than in Plotly.
+- Not supported yet: `xcalendar` / `ycalendar`.
 - Differences:
   - A value exactly equal to a level counts as above it (Plotly: below).
   - Smoothing is applied in grid-index space, and on log axes crossings are interpolated in log

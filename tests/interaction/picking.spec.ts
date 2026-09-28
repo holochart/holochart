@@ -9,11 +9,21 @@ import { expect, test, type Page } from '@playwright/test';
 const BOOT_TIMEOUT_MS = 30_000;
 
 async function openPicking(page: Page): Promise<void> {
-  await page.goto('/?example=_dev/picking-3d&test=1', { waitUntil: 'load' });
-  await page.waitForFunction(() => window.__exampleReady !== undefined, undefined, {
-    timeout: BOOT_TIMEOUT_MS,
-  });
-  await page.evaluate(() => window.__exampleReady);
+  for (let attempt = 1; ; attempt++) {
+    await page.goto('/?example=_dev/picking-3d&test=1', { waitUntil: 'load' });
+    try {
+      await page.waitForFunction(() => window.__exampleReady !== undefined, undefined, {
+        timeout: BOOT_TIMEOUT_MS,
+      });
+      await page.evaluate(() => window.__exampleReady);
+      return;
+    } catch (error) {
+      // Vite may reload the page once after optimizing a newly discovered dependency (a cold
+      // dependency cache, as in CI), like `openInteraction` in helpers.ts.
+      const message = error instanceof Error ? error.message : String(error);
+      if (!/Execution context was destroyed|navigation/i.test(message) || attempt >= 2) throw error;
+    }
+  }
 }
 
 /** The readout text once no pick is pending (the example flags `data-pick-pending`). */
@@ -28,7 +38,9 @@ async function settledReadout(page: Page): Promise<string> {
 test('the pick readout keeps updating during a sweep and ends on a fresh pick', async ({
   page,
 }) => {
-  test.setTimeout(180_000);
+  // ~25 s alone, ~1.5 min next to other SwiftShader work on a loaded machine; the inner waits
+  // (boot, sweep, two settles) add up to more than 3 min in the worst case.
+  test.setTimeout(300_000);
   await openPicking(page);
   const box = await page.locator('#example-root canvas').boundingBox();
   if (!box) throw new Error('no canvas');

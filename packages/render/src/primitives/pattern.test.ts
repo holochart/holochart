@@ -16,8 +16,9 @@ import { createRectPrimitive } from './rect.ts';
 
 /**
  * Pattern fills (plan E8.10): the shader math (through its CPU mirror), Plotly's per-item rules,
- * the hook injection and the lazy loading. The tests share the loader's module state (vitest
- * isolates it per file) and run in order: the first ones see the pattern code not loaded yet.
+ * the hook injection and the lazy loading. The loader's state is module-level: the loading test
+ * imports a fresh instance of the module, and the other tests do not depend on whether the code
+ * has loaded yet, so they pass in any order and under `--repeats` (the nightly property run).
  */
 
 function context(): PrimitiveContext & { invalidate: ReturnType<typeof vi.fn<() => void>> } {
@@ -49,12 +50,15 @@ const parse = (css: string): RGBA | null => COLORS[css] ?? null;
 
 describe('pattern loading', () => {
   it('loads the pattern code on first use; patternsReady covers it, then work runs at once', async () => {
+    // A fresh module instance, whose code has not loaded yet whatever ran before in this file.
+    vi.resetModules();
+    const fresh = await import('./pattern.ts');
     const order: string[] = [];
-    withPatterns(() => order.push('first'));
+    fresh.withPatterns(() => order.push('first'));
     expect(order).toEqual([]);
-    await patternsReady();
+    await fresh.patternsReady();
     expect(order).toEqual(['first']);
-    withPatterns(() => order.push('second'));
+    fresh.withPatterns(() => order.push('second'));
     expect(order).toEqual(['first', 'second']);
   });
 });
@@ -362,7 +366,10 @@ describe('primitives with patterns', () => {
     arcs.dispose();
   });
 
-  it('applies patterns at once once the code is in, and never after dispose', () => {
+  it('applies patterns at once once the code is in, and never after dispose', async () => {
+    // Load the code first, whether or not an earlier test did.
+    withPatterns(() => undefined);
+    await patternsReady();
     const rects = createRectPrimitive(context(), { x0: [0], y0: [0], x1: [1], y1: [1] });
     const material = rects.object.material as ShaderMaterial;
     rects.update({ pattern: pattern() });

@@ -14,6 +14,11 @@ export interface ToggleTrace {
    * `legendgroup`; without a group they stay shown when another item is isolated.
    */
   inLegend: boolean;
+  /**
+   * The trace's legend (`trace.legend`, default `'legend'`): isolating (`toggleothers`) acts on the
+   * clicked item's legend only (plotly.js).
+   */
+  legend?: string;
 }
 
 /** The visibility changes of one legend action: trace index → new `visible`. */
@@ -28,7 +33,8 @@ export type VisibilityChanges = Map<number, true | 'legendonly'>;
  * - `toggleothers` (default double-click): isolate the item and its `legendgroup` (whatever
  *   `groupclick` says, as in Plotly) — unless it is already the only one shown, in which case
  *   everything comes back. A hidden item brings everything back. Traces without a legend item
- *   and without a group are always shown; grouped ones follow their group.
+ *   and without a group are always shown; grouped ones follow their group. With several legends
+ *   (`legend2`, …) this happens within the clicked item's legend; other legends are untouched.
  *
  * Traces with `visible: false` are never touched.
  */
@@ -54,15 +60,17 @@ export function legendToggle(
     else for (const t of traces) if (inGroup(t)) set(t, next);
     return changes;
   }
+  const legend = clicked.legend ?? 'legend';
+  const here = traces.filter((t) => (t.legend ?? 'legend') === legend);
   if (clicked.visible === 'legendonly') {
-    for (const t of traces) set(t, true);
+    for (const t of here) set(t, true);
     return changes;
   }
   // Isolated already: no other shown item outside the group.
-  const isolated = !traces.some(
+  const isolated = !here.some(
     (t) => t !== clicked && t.inLegend && !inGroup(t) && t.visible === true,
   );
-  for (const t of traces) {
+  for (const t of here) {
     const free = !t.inLegend && t.legendgroup === '';
     set(t, isolated || free || inGroup(t) ? true : 'legendonly');
   }
