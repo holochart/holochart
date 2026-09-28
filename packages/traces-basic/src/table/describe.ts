@@ -2,8 +2,8 @@
  * Accessible description of a `table` (plan E17.1, E9.13): the header and the cells as plain text,
  * in display order, formatted exactly as drawn (prefix, d3 `format`, suffix; tags stripped), for
  * the runtime's visually hidden `<table>` (screen readers, copy and paste). Only the first
- * `ctx.maxRows` rows are built, so describing a 100k-row table stays cheap; `total` tells the
- * runtime how many there are.
+ * `ctx.maxRows` rows are built up front, so describing a 100k-row table stays cheap; `total` tells
+ * the runtime how many there are and `row` formats any other on demand (E17.3).
  */
 import {
   accessibleText,
@@ -40,17 +40,15 @@ export function describeTable(ctx: DescribeContext<TableCalc>): TraceDescription
     }
     return parts.join(' ') || `Column ${col + 1}`;
   });
+  const row = (r: number): string[] =>
+    calc.order.map((col) => plain(cellText(cells, cellValue(calc, 'cells', col, r), col, r)));
   const shown = Math.max(0, Math.min(calc.rowCount, ctx.maxRows));
   const rows: string[][] = [];
-  for (let r = 0; r < shown; r++) {
-    rows.push(
-      calc.order.map((col) => plain(cellText(cells, cellValue(calc, 'cells', col, r), col, r))),
-    );
-  }
+  for (let r = 0; r < shown; r++) rows.push(row(r));
   const name = traceNameText(trace.name, ctx.index);
   return {
     kind: 'table',
     summary: `Table "${name}": ${countText(columns.length, 'column')} (${listText(columns)}), ${countText(calc.rowCount, 'row')}.`,
-    table: { caption: name, columns, rows, total: calc.rowCount },
+    table: { caption: name, columns, rows, total: calc.rowCount, row },
   };
 }

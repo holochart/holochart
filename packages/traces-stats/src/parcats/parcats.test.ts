@@ -679,6 +679,10 @@ describe('parcats view and description', () => {
         ['x', 'q', '1', '1'],
       ],
       total: 3,
+      row: expect.any(Function),
     });
+    // Every path on demand (the visible data table, E17.3).
+    expect(d.table?.row?.(1)).toEqual(['x', 'q', '1', '1']);
+    expect(d.table?.row?.(2)).toEqual(['y', 'p', '2', '2']);
   });
 });

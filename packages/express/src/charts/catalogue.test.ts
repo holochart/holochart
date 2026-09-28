@@ -347,4 +347,49 @@ describe('px parity: polar charts', () => {
     };
     expect(chart.figure.data).toHaveLength(1);
   });
+
+  describe('animated radial range (a Holochart default; px leaves it to range_r)', () => {
+    const hourly = [
+      { hour: 0, direction: 'N', strength: 'a', frequency: 1 },
+      { hour: 0, direction: 'N', strength: 'b', frequency: 2 },
+      { hour: 1, direction: 'N', strength: 'a', frequency: 0.5 },
+      { hour: 1, direction: 'E', strength: 'b', frequency: 2.5 },
+    ];
+    const base = { r: 'frequency', theta: 'direction', animationFrame: 'hour' } as const;
+    const radial = (f: { layout: Record<string, unknown> }): Record<string, unknown> =>
+      (f.layout['polar'] as { radialaxis: Record<string, unknown> }).radialaxis;
+    const range = (f: { layout: Record<string, unknown> }): number[] =>
+      radial(f)['range'] as number[];
+
+    it('scatterPolar / linePolar: every frame radii from zero, plus 5% (10% sized)', () => {
+      const f = scatterPolar(hourly, { ...base, color: 'strength' });
+      expect(f.frames).toHaveLength(2);
+      expect(range(f)[0]).toBe(0);
+      expect(range(f)[1]).toBeCloseTo(2.625);
+      expect(range(linePolar(hourly, base))[1]).toBeCloseTo(2.625);
+      expect(range(scatterPolar(hourly, { ...base, size: 'frequency' }))[1]).toBeCloseTo(2.75);
+    });
+
+    it('barPolar: from zero to the largest stacked total of any frame', () => {
+      const f = barPolar(hourly, { ...base, color: 'strength' });
+      expect(range(f)[0]).toBe(0);
+      expect(range(f)[1]).toBeCloseTo(3.15);
+      const o = barPolar(hourly, { ...base, color: 'strength', barmode: 'overlay' });
+      expect(range(o)[1]).toBeCloseTo(2.625);
+    });
+
+    it('log radial axes span every frame in log units', () => {
+      const [lo, hi] = range(scatterPolar(hourly, { ...base, logR: true }));
+      const span = Math.log10(2.5) - Math.log10(0.5);
+      expect(lo).toBeCloseTo(Math.log10(0.5) - span * 0.05);
+      expect(hi).toBeCloseTo(Math.log10(2.5) + span * 0.05);
+    });
+
+    it('an explicit rangeR wins; unanimated charts keep autorange', () => {
+      expect(range(scatterPolar(hourly, { ...base, rangeR: [0, 10] }))).toEqual([0, 10]);
+      expect(range(barPolar(hourly, { ...base, rangeR: [1, 100], logR: true }))).toEqual([0, 2]);
+      expect(radial(scatterPolar(hourly, { r: 'frequency', theta: 'direction' }))).toEqual({});
+      expect(radial(barPolar(hourly, { r: 'frequency', theta: 'direction' }))).toEqual({});
+    });
+  });
 });

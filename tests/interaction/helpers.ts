@@ -139,3 +139,40 @@ export async function dragBetween(
   await page.mouse.move(to.x, to.y, { steps });
   await page.mouse.up();
 }
+
+/**
+ * A touch gesture through CDP `Input.dispatchTouchEvent` (Playwright's `touchscreen` only taps;
+ * the context needs `hasTouch: true`): one finger per path of page positions. The fingers land
+ * together on their first positions, move together through each next position in `steps` moves
+ * (the browser sees them as they would come from a real touch screen, `touch-action` included),
+ * then lift together — or, with `liftOneByOne`, one at a time from the last.
+ */
+export async function touchGesture(
+  page: Page,
+  paths: readonly (readonly { x: number; y: number }[])[],
+  { steps = 6, liftOneByOne = false }: { steps?: number; liftOneByOne?: boolean } = {},
+): Promise<void> {
+  const cdp = await page.context().newCDPSession(page);
+  const points = (seg: number, t: number) =>
+    paths.map((path, id) => {
+      const a = path[Math.min(seg, path.length - 1)] as { x: number; y: number };
+      const b = path[Math.min(seg + 1, path.length - 1)] as { x: number; y: number };
+      return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t, id };
+    });
+  const send = (
+    type: 'touchStart' | 'touchMove' | 'touchEnd',
+    touchPoints: { x: number; y: number; id: number }[],
+  ) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints });
+  await send('touchStart', points(0, 0));
+  const segments = Math.max(...paths.map((p) => p.length)) - 1;
+  for (let seg = 0; seg < segments; seg++) {
+    for (let i = 1; i <= steps; i++) await send('touchMove', points(seg, i / steps));
+  }
+  if (liftOneByOne) {
+    const last = points(segments, 0);
+    for (let n = last.length - 1; n >= 0; n--) await send('touchEnd', last.slice(0, n));
+  } else {
+    await send('touchEnd', []);
+  }
+  await cdp.detach();
+}

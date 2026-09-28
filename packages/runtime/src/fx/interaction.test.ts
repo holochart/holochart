@@ -694,3 +694,205 @@ describe('trace view pointer hook', () => {
     expect(c.axes.get('x')?.scale.range).toEqual([0, 10]);
   });
 });
+
+describe('touch (E6.6)', () => {
+  const touch = (id = 1): Partial<PointerEventInit> => ({ pointerType: 'touch', pointerId: id });
+
+  function tap(c: Chart, x: number, y: number): void {
+    fire(c, 'pointerdown', x, y, touch());
+    fire(c, 'pointerup', x + 4, y - 4, touch());
+    // A lifted finger leaves the element.
+    fire(c, 'pointerleave', x + 4, y - 4, touch());
+  }
+
+  /** Two fingers from `from` to `to` (container px pairs), one frame, then both lift. */
+  async function pinch(
+    c: Chart,
+    from: [number, number, number, number],
+    to: [number, number, number, number],
+  ): Promise<void> {
+    fire(c, 'pointerdown', from[0], from[1], touch(1));
+    fire(c, 'pointerdown', from[2], from[3], touch(2));
+    fire(c, 'pointermove', to[0], to[1], touch(1));
+    fire(c, 'pointermove', to[2], to[3], touch(2));
+    frame();
+    fire(c, 'pointerup', to[0], to[1], touch(1));
+    fire(c, 'pointerup', to[2], to[3], touch(2));
+    await c.relayout({});
+  }
+
+  it('sets touch-action from the dragmode, fixed axes and the traces', async () => {
+    const c = await chart([DOTS]);
+    // Default zoom: a vertical swipe scrolls the page.
+    expect(canvas(c).style.touchAction).toBe('pan-y');
+    await c.relayout({ dragmode: false });
+    expect(canvas(c).style.touchAction).toBe('manipulation');
+    await c.relayout({ dragmode: 'select' });
+    expect(canvas(c).style.touchAction).toBe('none');
+    await c.relayout({ dragmode: 'pan', 'yaxis.fixedrange': true });
+    expect(canvas(c).style.touchAction).toBe('pan-y');
+    await c.relayout({ dragmode: 'zoom', 'xaxis.fixedrange': true });
+    expect(canvas(c).style.touchAction).toBe('manipulation');
+
+    const s = setup({ width: 640, height: 400 });
+    const dots = createDotsModule(createLog(), { cross: false });
+    s.registry.register({ ...dots, type: 'scroller', touchAction: 'none' } as TraceModule);
+    t = s;
+    const d = await chart([DOTS, { ...DOTS, type: 'scroller' }], { dragmode: false }, {}, s);
+    expect(canvas(d).style.touchAction).toBe('none');
+    await d.restyle({ visible: false }, 1);
+    expect(canvas(d).style.touchAction).toBe('manipulation');
+  });
+
+  it('a tap hovers and clicks; the hover stays until a tap elsewhere', async () => {
+    const c = await chart([DOTS]);
+    const log = record(c, 'hover', 'unhover', 'click');
+    tap(c, cx(5), cy(50));
+    expect(log.map((l) => l.name)).toEqual(['hover', 'click']);
+    expect(labels(c)).toEqual(['(5, 50)']);
+    // Moving fingers don't hover.
+    fire(c, 'pointermove', cx(10), cy(100), touch());
+    frame();
+    expect(labels(c)).toEqual(['(5, 50)']);
+    tap(c, cx(2.5), cy(10));
+    expect(log.map((l) => l.name)).toEqual(['hover', 'click', 'unhover']);
+    expect(labels(c)).toEqual([]);
+    tap(c, cx(10) - 8, cy(100) + 8);
+    expect(labels(c)).toEqual(['(10, 100)']);
+    // A press elsewhere on the page hides it too.
+    document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    expect(labels(c)).toEqual([]);
+    expect(log.at(-1)?.name).toBe('unhover');
+  });
+
+  it('a double tap resets the view; taps farther apart do not', async () => {
+    const c = await chart([DOTS]);
+    await c.relayout({ 'xaxis.range': [2, 3] });
+    const log = record(c, 'doubleclick');
+    tap(c, cx(1), cy(1));
+    tap(c, cx(1) + 45, cy(1));
+    expect(log).toHaveLength(0);
+    // Within the double-tap distance (fingers land less precisely than a mouse).
+    tap(c, cx(1) + 45 + 20, cy(1) + 15);
+    await c.relayout({});
+    expect(log).toHaveLength(1);
+    expect(c.axes.get('x')?.scale.range).toEqual([0, 10]);
+  });
+
+  it('pinch zooms around the midpoint, previewing then committing one relayout', async () => {
+    const c = await chart([DOTS]);
+    const log = record(c, 'relayout', 'relayouting');
+    // Fingers 116 px apart around (5, 50), spread to 232 px.
+    await pinch(c, [cx(4), cy(50), cx(6), cy(50)], [cx(3), cy(50), cx(7), cy(50)]);
+    expect(log.map((l) => l.name)).toEqual(['relayouting', 'relayout']);
+    const e = log[1]?.payload as Record<string, number>;
+    expect(e['xaxis.range[0]']).toBeCloseTo(2.5);
+    expect(e['xaxis.range[1]']).toBeCloseTo(7.5);
+    // Isotropic: y zooms by the same factor around the midpoint's y.
+    expect(e['yaxis.range[0]']).toBeCloseTo(25);
+    expect(e['yaxis.range[1]']).toBeCloseTo(75);
+  });
+
+  it('two fingers moving together pan; fixed axes stay', async () => {
+    const c = await chart([DOTS], { yaxis: { range: [0, 100], fixedrange: true } });
+    await pinch(c, [cx(4), cy(40), cx(6), cy(60)], [cx(5), cy(30), cx(7), cy(50)]);
+    const [x0, x1] = c.axes.get('x')?.scale.range ?? [];
+    expect(x0).toBeCloseTo(-1);
+    expect(x1).toBeCloseTo(9);
+    expect(c.axes.get('y')?.scale.range).toEqual([0, 100]);
+  });
+
+  it('a second finger cancels a zoom box; lifting one finger ends the pinch', async () => {
+    const c = await chart([DOTS]);
+    const log = record(c, 'relayout', 'click', 'hover');
+    fire(c, 'pointerdown', cx(2), cy(80), touch(1));
+    fire(c, 'pointermove', cx(4), cy(80), touch(1));
+    frame();
+    fire(c, 'pointerdown', cx(4), cy(20), touch(2));
+    const overlay = c.element.querySelector<SVGElement>('.holochart-dragoverlay');
+    expect(overlay?.style.display).toBe('none');
+    fire(c, 'pointerup', cx(4), cy(20), touch(2));
+    // The remaining finger neither drags nor taps.
+    fire(c, 'pointermove', cx(8), cy(20), touch(1));
+    frame();
+    fire(c, 'pointerup', cx(8), cy(20), touch(1));
+    await c.relayout({});
+    expect(log).toHaveLength(0);
+    expect(c.axes.get('x')?.scale.range).toEqual([0, 10]);
+    // Fingers lifted: the next tap is a tap again.
+    tap(c, cx(5), cy(50));
+    expect(log.map((l) => l.name)).toEqual(['hover', 'click']);
+  });
+
+  it('pointercancel during a pinch restores the ranges', async () => {
+    const c = await chart([DOTS]);
+    const log = record(c, 'relayout');
+    fire(c, 'pointerdown', cx(4), cy(50), touch(1));
+    fire(c, 'pointerdown', cx(6), cy(50), touch(2));
+    fire(c, 'pointermove', cx(2), cy(50), touch(1));
+    frame();
+    expect(c.axes.get('x')?.scale.range[0]).not.toBeCloseTo(0);
+    fire(c, 'pointercancel', cx(2), cy(50), touch(1));
+    fire(c, 'pointercancel', cx(6), cy(50), touch(2));
+    await c.relayout({});
+    expect(log).toHaveLength(0);
+    expect(c.axes.get('x')?.scale.range).toEqual([0, 10]);
+  });
+
+  it('under pan-y a vertical-first swipe is the page’s; a sideways one zooms', async () => {
+    const c = await chart([DOTS]);
+    const log = record(c, 'relayout', 'unhover');
+    tap(c, cx(5), cy(50));
+    fire(c, 'pointerdown', cx(2), cy(80), touch());
+    fire(c, 'pointermove', cx(2) + 5, cy(80) + 30, touch());
+    frame();
+    fire(c, 'pointermove', cx(6), cy(20), touch());
+    frame();
+    fire(c, 'pointerup', cx(6), cy(20), touch());
+    await c.relayout({});
+    // No zoom, and the tap's hover stays.
+    expect(log).toHaveLength(0);
+    expect(labels(c)).toEqual(['(5, 50)']);
+    fire(c, 'pointerdown', cx(2), cy(80), touch());
+    fire(c, 'pointermove', cx(2) + 30, cy(80) + 5, touch());
+    frame();
+    fire(c, 'pointermove', cx(6), cy(20), touch());
+    frame();
+    fire(c, 'pointerup', cx(6), cy(20), touch());
+    await c.relayout({});
+    expect(log.map((l) => l.name)).toEqual(['unhover', 'relayout']);
+    const [x0, x1] = c.axes.get('x')?.scale.range ?? [];
+    expect(x0).toBeCloseTo(2);
+    expect(x1).toBeCloseTo(6);
+  });
+
+  it('a view that owns a touch drag keeps it when a second finger lands', async () => {
+    const seen: string[] = [];
+    const handle: ComponentModule = {
+      name: 'handle-test',
+      draw: {
+        create: () => ({
+          update: () => undefined,
+          handlePointer(e) {
+            if (e.type !== 'move' || seen.at(-1) !== 'move') seen.push(e.type);
+            return e.type !== 'leave' && e.x < 300;
+          },
+        }),
+      },
+    };
+    const s = setup({ width: 640, height: 400, components: [handle] });
+    t = s;
+    const c = await chart([DOTS], {}, {}, s);
+    const log = record(c, 'relayout', 'relayouting');
+    fire(c, 'pointerdown', cx(2), cy(50), touch(1));
+    fire(c, 'pointermove', cx(3), cy(50), touch(1));
+    fire(c, 'pointerdown', cx(6), cy(50), touch(2));
+    fire(c, 'pointermove', cx(9), cy(50), touch(2));
+    fire(c, 'pointermove', cx(3), cy(60), touch(1));
+    frame();
+    fire(c, 'pointerup', cx(9), cy(50), touch(2));
+    fire(c, 'pointerup', cx(3), cy(60), touch(1));
+    expect(seen).toEqual(['down', 'move', 'up']);
+    expect(log).toHaveLength(0);
+  });
+});

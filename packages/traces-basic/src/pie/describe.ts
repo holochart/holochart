@@ -38,13 +38,23 @@ export function describePie(ctx: DescribeContext<PieCalc>): TraceDescription {
   }
   if (hidden > 0) summary += ` ${countText(hidden, 'slice')} hidden.`;
 
-  const shown = visible.slice(0, ctx.maxRows);
-  const rows = shown.map((s) => [label(s), formatPieValue(s.v), share(s)]);
+  const row = (i: number): string[] => {
+    const s = visible[i]!;
+    return [label(s), formatPieValue(s.v), share(s)];
+  };
+  const rows: string[][] = [];
+  for (let i = 0; i < Math.min(visible.length, ctx.maxRows); i++) rows.push(row(i));
   const slices = calc.slices;
   return {
     kind,
     summary,
-    table: { caption: name, columns: ['Label', 'Value', 'Percent'], rows, total: visible.length },
+    table: {
+      caption: name,
+      columns: ['Label', 'Value', 'Percent'],
+      rows,
+      total: visible.length,
+      row,
+    },
     insight: {
       kind: 'shares',
       part: 'slice',

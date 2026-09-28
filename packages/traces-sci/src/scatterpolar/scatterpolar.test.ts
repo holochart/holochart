@@ -3,6 +3,8 @@ import type { HoverQuery } from '@mk7s/holochart-runtime';
 import { describe, expect, it } from 'vitest';
 import { barpolar } from '../barpolar/index.ts';
 import { layoutFigure } from '../polar/__testing__/figure.ts';
+import type { PolarCalc } from '../polar/cross-trace.ts';
+import { describePolar } from '../polar/describe.ts';
 import { linePath, polarFillGeometry } from '../polar/fill.ts';
 import { polarPositions } from '../polar/positions.ts';
 import type { ScatterpolarCalc } from './calc.ts';
@@ -130,5 +132,30 @@ describe('scatterpolar fills', () => {
     expect(g.fillRule).toBe('evenodd');
     expect(g.rings).toEqual([0, 3]);
     expect(g.polygons).toEqual([0]);
+  });
+});
+
+describe('polar description', () => {
+  it('lists every point on demand past the first rows (E17.3)', () => {
+    const n = 150;
+    const r = Float64Array.from({ length: n }, (_, i) => i + 1);
+    const theta = Float64Array.from({ length: n }, (_, i) => i * 2);
+    const text = Array.from({ length: n }, (_, i) => `p${i}`);
+    const calc = { coords: { r, theta, length: n }, subplot: undefined } as unknown as PolarCalc;
+    const d = describePolar({
+      trace: { type: 'scatterpolar', mode: 'markers', text } as unknown as FullTrace,
+      calc,
+      index: 0,
+      fullLayout: {} as never,
+      xaxis: undefined,
+      yaxis: undefined,
+      maxRows: 100,
+    });
+    const table = d.table!;
+    expect(table.columns).toEqual(['r', 'θ', 'text']);
+    expect(table.rows).toHaveLength(100);
+    expect(table.total).toBe(n);
+    for (let k = 0; k < 100; k++) expect(table.row!(k)).toEqual(table.rows[k]);
+    expect(table.row!(149)).toEqual(['150', '298', 'p149']);
   });
 });

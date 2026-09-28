@@ -38,4 +38,14 @@ describe('pie describe()', () => {
     expect(d.summary).toBe('Donut "trace 0": 1 slice, total 3. Slice: b 100% (3). 1 slice hidden.');
     expect(d.table?.rows).toEqual([['b', '3', '100%']]);
   });
+
+  it('formats every visible slice on demand, past maxRows (the visible data table, E17.3)', () => {
+    const labels = Array.from({ length: 150 }, (_, i) => `s${i}`);
+    const d = described({ labels, values: labels.map((_, i) => 150 - i) });
+    expect(d.table?.rows).toHaveLength(100);
+    expect(d.table?.total).toBe(150);
+    expect(d.table?.row?.(0)).toEqual(d.table?.rows[0]);
+    expect(d.table?.row?.(99)).toEqual(d.table?.rows[99]);
+    expect(d.table?.row?.(149)).toEqual(['s149', '1', '0.00883%']);
+  });
 });

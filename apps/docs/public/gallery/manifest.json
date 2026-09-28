@@ -699,6 +699,18 @@
       "thumbnailSize": { "width": 640, "height": 700 }
     },
     {
+      "id": "accessibility/keyboard-focus",
+      "title": "Accessibility: keyboard navigation",
+      "description": "Two monthly series with the plot area focused from the keyboard: the focus ring, and the hover label of the point selected with the arrow keys and Page Down.",
+      "tags": ["a11y", "keyboard", "line", "config"],
+      "category": "accessibility",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/accessibility/keyboard-focus.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "accessibility/patterns",
       "title": "Accessibility: pattern encoding",
       "description": "Grouped bars and a pie with config.a11y.patterns: true — a distinct hatch per bar trace and per slice, in addition to color.",
@@ -2387,6 +2399,18 @@
       "thumbnailSize": { "width": 640, "height": 354 }
     },
     {
+      "id": "icicle/uniformtext",
+      "title": "Icicle: uniform text",
+      "description": "A store's sales by department and category as an icicle with every cell label at one size; labels under 10 px are hidden.",
+      "tags": ["icicle", "hierarchical", "chart", "text", "uniformtext"],
+      "category": "icicle",
+      "traceTypes": ["icicle"],
+      "size": { "width": 640, "height": 520 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/icicle/uniformtext.webp",
+      "thumbnailSize": { "width": 640, "height": 520 }
+    },
+    {
       "id": "icicle/vertical",
       "title": "Icicle: vertical",
       "description": "Levels stacked from the top down, cells as wide as their values, with gaps between them.",
@@ -3707,6 +3731,18 @@
       "thumbnailSize": { "width": 640, "height": 604 }
     },
     {
+      "id": "sunburst/uniformtext",
+      "title": "Sunburst: uniform text",
+      "description": "A store's sales by department and category with every label at one size; labels under 10 px are hidden.",
+      "tags": ["sunburst", "hierarchical", "chart", "text", "uniformtext"],
+      "category": "sunburst",
+      "traceTypes": ["sunburst"],
+      "size": { "width": 560, "height": 480 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/sunburst/uniformtext.webp",
+      "thumbnailSize": { "width": 560, "height": 480 }
+    },
+    {
       "id": "table/basic",
       "title": "Table: basic",
       "description": "A header and four columns of cells: text, integers and decimals, one wrapped note.",
@@ -4137,6 +4173,18 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/treemap/tilings.webp",
       "thumbnailSize": { "width": 640, "height": 427 }
+    },
+    {
+      "id": "treemap/uniformtext",
+      "title": "Treemap: uniform text",
+      "description": "A store's sales by department and category with every tile label at one size; labels under 11 px are hidden.",
+      "tags": ["treemap", "hierarchical", "chart", "text", "uniformtext"],
+      "category": "treemap",
+      "traceTypes": ["treemap"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/treemap/uniformtext.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
     },
     {
       "id": "uncertainty/calibration-curve",

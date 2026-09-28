@@ -18,7 +18,20 @@
  *   once per frame); the gesture's end commits them with one `relayout`.
  * - **down → up** without moving: `click` (and `doubleclick` within `config.doubleClickDelay`).
  * - **wheel** with `config.scrollZoom`: zoom at the cursor, committed after the wheel rests.
- * - **two touch pointers**: pinch zoom and pan.
+ * - **two touch pointers**: pinch zoom and pan around the fingers' midpoint (a runtime drag in
+ *   progress is cancelled; a view's drag keeps its gesture and extra fingers are ignored). The
+ *   gesture stays two-finger until every finger lifts.
+ *
+ * ## Touch (E6.6)
+ *
+ * Mouse, pen and touch share the handlers above (Pointer Events). Touch differs where fingers do:
+ * a press is a tap within `TAP_TOLERANCE` (`gestures.ts`); a tap is a hover at that point (as if
+ * a mouse moved there) followed by the click, and the hover stays until a tap elsewhere — on the
+ * chart or off it; lifting a finger (`pointerleave`) keeps it. Two taps within
+ * `config.doubleClickDelay` and `DOUBLE_TAP_DISTANCE` are a double click. The canvas
+ * `touch-action` (see `gestures.ts`) leaves page scrolling to the browser where the chart does not
+ * need the gesture; under `pan-y`, a swipe that starts vertically is the page's and the chart
+ * ignores it.
  */
 import type { FullLayout } from '@mk7s/holochart-core';
 import type { FrameScheduler } from '@mk7s/holochart-render';
@@ -32,7 +45,6 @@ import type {
 import type { ChartEmitter, ChartPoint } from '../events.ts';
 import type { AttributeUpdate } from '../plan.ts';
 import {
-  CLICK_TOLERANCE,
   dragZoneAt,
   limitRange,
   panBy,
@@ -42,6 +54,15 @@ import {
   type DragZone,
   type LinearRange,
 } from './geometry.ts';
+import {
+  isDoubleTap,
+  isPageScroll,
+  isTap,
+  pinchFactor,
+  pinchRange,
+  touchActionFor,
+  type TouchAction,
+} from './gestures.ts';
 import {
   anchorOf,
   axisLabel,
@@ -115,6 +136,11 @@ export interface InteractionHost {
   drawShape?(gesture: DrawGesture): void;
   /** `config.renderHover(points)`: a custom label element, if configured. */
   renderHover?(points: readonly ChartPoint[]): HTMLElement | null | undefined;
+  /**
+   * The most restrictive `TraceModule.touchAction` of the visible traces (E6.6, see
+   * `gestures.ts`). Default: none.
+   */
+  traceTouchAction?(): TouchAction | undefined;
   /** Every cartesian axis by id (spike lines reach anchor axes). Default: the subplots' axes. */
   axes?(): ReadonlyMap<string, AxisInfo>;
   /** The plot area in container px (free-axis spike positions). Default: the figure. */
@@ -159,8 +185,6 @@ interface Pinch {
   d0: number;
   mx0: number;
   my0: number;
-  rx: LinearRange;
-  ry: LinearRange;
   starts: Map<string, LinearRange>;
   last: Map<string, LinearRange>;
 }
@@ -217,6 +241,12 @@ export class Interaction {
   #drag: Drag | null = null;
   #pinch: Pinch | null = null;
   readonly #touches = new Map<number, { x: number; y: number }>();
+  /** Several fingers landed: one-finger handling is off until every finger lifts. */
+  #multiTouch = false;
+  /** The canvas `touch-action` (set on refresh). */
+  #touchAction: TouchAction = 'none';
+  /** A tap hovered: presses elsewhere on the page are watched (see `#onOutside`). */
+  #outside = false;
   #lastClick = { time: -Infinity, x: 0, y: 0 };
   #wheel: Map<string, LinearRange> | null = null;
   #wheelTimer: ReturnType<typeof setTimeout> | undefined;
@@ -238,6 +268,7 @@ export class Interaction {
     t.addEventListener('pointercancel', this.#onCancel);
     t.addEventListener('pointerleave', this.#onLeave);
     t.addEventListener('wheel', this.#onWheel, { passive: false });
+    t.style.setProperty('-webkit-tap-highlight-color', 'transparent');
     this.refresh();
   }
 
@@ -253,6 +284,7 @@ export class Interaction {
     t.removeEventListener('wheel', this.#onWheel);
     if (this.#frame) this.#host.scheduler.cancel(this.#frame);
     if (this.#wheelTimer !== undefined) clearTimeout(this.#wheelTimer);
+    t.ownerDocument.removeEventListener('pointerdown', this.#onOutside, true);
   }
 
   /**
@@ -261,11 +293,22 @@ export class Interaction {
    */
   refresh(): void {
     const s = (this.#settings = this.#host.settings());
-    // Page scrolling on touch keeps working when dragging does nothing (E6.6).
-    this.#host.target.style.touchAction = s.dragmode === false ? 'auto' : 'none';
-    this.#spikesOn = this.#host
-      .subplots()
-      .some((sp) => showsSpikes(sp.xaxis) || showsSpikes(sp.yaxis));
+    const subplots = this.#host.subplots();
+    // Touch gestures the chart doesn't use stay with the page (E6.6, see gestures.ts).
+    let x = false;
+    let y = false;
+    for (const sp of subplots) {
+      x ||= !this.#host.isFixed(sp.xaxis);
+      y ||= !this.#host.isFixed(sp.yaxis);
+    }
+    this.#host.target.style.touchAction = this.#touchAction = touchActionFor(
+      s.dragmode,
+      subplots.length > 0,
+      x,
+      y,
+      this.#host.traceTouchAction?.(),
+    );
+    this.#spikesOn = subplots.some((sp) => showsSpikes(sp.xaxis) || showsSpikes(sp.yaxis));
     if (!this.#spikesOn) this.#host.layer.hideSpikes();
     if (this.#programmatic) {
       const target = this.#programmaticTarget;
@@ -390,8 +433,12 @@ export class Interaction {
     const pointerId = e.pointerId ?? 1;
     if (e.pointerType === 'touch') {
       this.#touches.set(pointerId, { x: this.#px, y: this.#py });
-      if (this.#touches.size === 2) {
-        this.#startPinch();
+      if (this.#touches.size > 1) {
+        // Fingers pinch, unless a view's drag owns the gesture (it ignores extra fingers).
+        if (!this.#drag?.component && !this.#pinch) {
+          this.#multiTouch = true;
+          this.#startPinch(e);
+        }
         return;
       }
     }
@@ -478,15 +525,26 @@ export class Interaction {
         this.#request('drag');
         return;
       }
+      if (this.#multiTouch) return;
     }
     const drag = this.#drag;
     if (drag) {
       if (drag.pointerId !== pointerId) return;
       drag.x = this.#px;
       drag.y = this.#py;
-      if (!drag.moved && Math.hypot(drag.x - drag.x0, drag.y - drag.y0) > CLICK_TOLERANCE) {
+      const dx = drag.x - drag.x0;
+      const dy = drag.y - drag.y0;
+      if (!drag.moved && !isTap(dx, dy, e.pointerType)) {
         drag.moved = true;
-        if (!drag.component) this.#unhover(e);
+        if (!drag.component) {
+          // Under `pan-y`, a swipe that starts vertically is the page's: the browser scrolls it
+          // (and cancels the pointer).
+          if (e.pointerType === 'touch' && isPageScroll(this.#touchAction, dx, dy)) {
+            drag.action = 'none';
+          } else {
+            this.#unhover(e);
+          }
+        }
       }
       if (drag.component) {
         this.#component('move', e, drag.component);
@@ -501,7 +559,8 @@ export class Interaction {
       if (drag.moved) this.#request('drag');
       return;
     }
-    // Plain move: components first, then hover.
+    // Plain move: components first, then hover. Fingers only hover by tapping.
+    if (e.pointerType === 'touch') return;
     if (this.#component('move', e)) {
       this.#setCursor(this.#cev.cursor ?? '');
       if (this.#finder.count > 0) this.#unhover(e);
@@ -516,11 +575,19 @@ export class Interaction {
     this.#local(e);
     const pointerId = e.pointerId ?? 1;
     if (e.pointerType === 'touch') {
+      // A frame still pending has newer finger positions than the last preview.
+      if (this.#pinch && this.#dragPending) {
+        this.#dragPending = false;
+        this.#pinchFrame();
+      }
       this.#touches.delete(pointerId);
+      const multi = this.#multiTouch;
+      if (this.#touches.size === 0) this.#multiTouch = false;
       if (this.#pinch) {
         this.#endPinch();
         return;
       }
+      if (multi) return;
     }
     const drag = this.#drag;
     if (!drag || drag.pointerId !== pointerId) return;
@@ -553,15 +620,23 @@ export class Interaction {
       this.#drag = null;
       this.#host.layer.hideOverlay();
     }
-    this.#request('hover');
+    if (e.pointerType !== 'touch') this.#request('hover');
   };
 
   readonly #onCancel = (e: PointerEvent): void => {
     this.#touches.delete(e.pointerId ?? 1);
+    if (this.#touches.size === 0) this.#multiTouch = false;
+    const pinch = this.#pinch;
     this.#pinch = null;
+    // Undo previews: back to the ranges the gesture started from.
+    if (pinch && pinch.last.size > 0) this.#host.preview(new Map(pinch.starts));
     const drag = this.#drag;
     this.#drag = null;
-    if (!drag) return;
+    if (drag) this.#cancelDrag(drag, e);
+  };
+
+  /** End a gesture without committing it (pointer cancelled, or a pinch took over). */
+  #cancelDrag(drag: Drag, e: PointerEvent): void {
     if (drag.component) {
       // The gesture's view must hear that it ended (`leave`: no `up` or click follows).
       this.#component('leave', e, drag.component);
@@ -569,12 +644,12 @@ export class Interaction {
     }
     this.#host.layer.hideOverlay();
     if (drag.action === 'draw' && drag.moved) this.#drawGesture(drag, 'cancel');
-    // Undo previews: back to the ranges the gesture started from.
     if (drag.last.size > 0 && drag.subplot) this.#host.preview(new Map(drag.starts));
-  };
+  }
 
   readonly #onLeave = (e: PointerEvent): void => {
-    if (this.#drag) return;
+    // A lifted finger leaves too: a tap's hover stays (a tap elsewhere replaces it).
+    if (this.#drag || e.pointerType === 'touch') return;
     this.#pointerInside = false;
     this.#hoverPending = false;
     this.#component('leave', e);
@@ -584,24 +659,61 @@ export class Interaction {
     if (!this.#programmatic) this.#unhover(e);
   };
 
-  #componentClick(e: MouseEvent, view: unknown): void {
-    const now = e.timeStamp || performance.now();
-    const s = this.#settings;
-    const last = this.#lastClick;
-    const double =
-      now - last.time < s.doubleClickDelay &&
-      Math.abs(this.#px - last.x) <= CLICK_TOLERANCE &&
-      Math.abs(this.#py - last.y) <= CLICK_TOLERANCE;
+  #componentClick(e: PointerEvent, view: unknown): void {
+    if (e.pointerType === 'touch') this.#tap(e);
+    const double = this.#isDouble(e);
     this.#component('click', e, view);
-    if (double) {
-      this.#component('dblclick', e, view);
+    if (double) this.#component('dblclick', e, view);
+  }
+
+  /** Whether a click completes a double click (else it is recorded as the first one). */
+  #isDouble(e: PointerEvent): boolean {
+    const now = e.timeStamp || performance.now();
+    const last = this.#lastClick;
+    const px = this.#px;
+    const py = this.#py;
+    if (
+      isDoubleTap(
+        now - last.time,
+        px - last.x,
+        py - last.y,
+        this.#settings.doubleClickDelay,
+        e.pointerType,
+      )
+    ) {
       last.time = -Infinity;
+      return true;
+    }
+    last.time = now;
+    last.x = px;
+    last.y = py;
+    return false;
+  }
+
+  /**
+   * A tap's hover (E6.6): what a mouse moving to the tap would show — component views first (their
+   * highlights), else the points there. It stays until a tap elsewhere, on the chart or off it.
+   */
+  #tap(e: PointerEvent): void {
+    this.#lastEvent = e;
+    if (this.#component('move', e)) {
+      if (this.#finder.count > 0) this.#unhover(e);
     } else {
-      last.time = now;
-      last.x = this.#px;
-      last.y = this.#py;
+      this.#hoverAt(this.#px, this.#py, true);
+    }
+    if (!this.#outside) {
+      this.#outside = true;
+      this.#host.target.ownerDocument.addEventListener('pointerdown', this.#onOutside, true);
     }
   }
+
+  /** A press off the chart after a tap: hide the tap's hover, like the pointer leaving. */
+  readonly #onOutside = (e: PointerEvent): void => {
+    if (this.#drag || e.composedPath().includes(this.#host.target)) return;
+    this.#pointerInside = false;
+    this.#component('leave', e);
+    if (!this.#programmatic) this.#unhover(e);
+  };
 
   // ---- hover -------------------------------------------------------------------------------------
 
@@ -907,6 +1019,24 @@ export class Interaction {
     this.#unhover(undefined);
   }
 
+  /**
+   * {@link hover} for points the caller already resolved (keyboard navigation, E6.5, `keyboard.ts`),
+   * so domain traces' points (pie slices) get their labels where the trace put them.
+   */
+  hoverFound(found: readonly Found[]): void {
+    const mode = this.#hovermode() ?? 'closest';
+    this.#programmaticTarget = found.map((f) => ({
+      curveNumber: f.entry.index,
+      pointNumber: f.point.pointIndex,
+    }));
+    const changed = this.#finder.set(found);
+    this.#programmatic = true;
+    const first = found[0];
+    const a = first ? anchorOf(first.entry, first.point) : { x: 0, y: 0 };
+    this.#afterFind(changed, mode, undefined, a.x, a.y);
+    if (this.#spikesOn) this.#drawSpikes(mode, a.x, a.y, false);
+  }
+
   #entryFor(index: number): HoverEntry | undefined {
     for (const sp of this.#host.subplots()) {
       for (const e of this.#host.entries(sp)) if (e.index === index) return e;
@@ -938,16 +1068,12 @@ export class Interaction {
   #click(e: PointerEvent, drag: Drag): void {
     const host = this.#host;
     const s = this.#settings;
-    const now = e.timeStamp || performance.now();
-    const last = this.#lastClick;
-    const double =
-      now - last.time < s.doubleClickDelay &&
-      Math.abs(this.#px - last.x) <= CLICK_TOLERANCE &&
-      Math.abs(this.#py - last.y) <= CLICK_TOLERANCE;
+    // A tap hovers where it lands first, like a mouse moving there (E6.6).
+    if (e.pointerType === 'touch') this.#tap(e);
+    const double = this.#isDouble(e);
     const clickHandled = this.#component('click', e);
     if (!clickHandled) this.#emitClick(e, drag, s);
     if (double) {
-      last.time = -Infinity;
       if (this.#component('dblclick', e)) return;
       if (drag.zone === undefined) return;
       if ((s.dragmode === 'select' || s.dragmode === 'lasso') && host.clearSelection()) {
@@ -956,13 +1082,7 @@ export class Interaction {
         host.resetView(s.doubleClick);
       }
       host.events.emit('doubleclick', undefined);
-      return;
     }
-    last.time = now;
-    last.x = this.#px;
-    last.y = this.#py;
-    // Tap to hover on touch screens (E6.6).
-    if (e.pointerType === 'touch') this.#hoverAt(this.#px, this.#py, true);
   }
 
   #emitClick(e: PointerEvent, drag: Drag, s: FxSettings): void {
@@ -1429,7 +1549,10 @@ export class Interaction {
     }, WHEEL_COMMIT_MS);
   };
 
-  #startPinch(): void {
+  #startPinch(e: PointerEvent): void {
+    const drag = this.#drag;
+    this.#drag = null;
+    if (drag) this.#cancelDrag(drag, e);
     const [a, b] = [...this.#touches.values()] as [
       { x: number; y: number },
       { x: number; y: number },
@@ -1437,22 +1560,22 @@ export class Interaction {
     const mx = (a.x + b.x) / 2;
     const my = (a.y + b.y) / 2;
     const hit = this.#zoneAt(mx, my) ? this.#hitSubplot : undefined;
-    this.#drag = null;
-    this.#host.layer.hideOverlay();
-    if (!hit || this.#hitZone !== 'plot' || this.#settings.dragmode === false) return;
-    this.#unhover(undefined);
+    const mode = this.#settings.dragmode;
+    // `orbit` / `turntable` are 3D modes: no dragging in 2D.
+    const off = mode === false || mode === 'orbit' || mode === 'turntable';
+    if (!hit || this.#hitZone !== 'plot' || off) return;
+    this.#unhover(e);
     this.#pinch = {
       subplot: hit,
-      d0: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)),
+      d0: Math.hypot(a.x - b.x, a.y - b.y),
       mx0: mx,
       my0: my,
-      rx: range(hit.xaxis),
-      ry: range(hit.yaxis),
       starts: this.#startRanges(hit),
       last: new Map(),
     };
   }
 
+  /** Pinch zoom and two-finger pan of the pinched subplot's movable axes (and their overlays). */
   #pinchFrame(): void {
     const pinch = this.#pinch;
     if (!pinch || this.#touches.size < 2) return;
@@ -1461,34 +1584,24 @@ export class Interaction {
       { x: number; y: number },
     ];
     const host = this.#host;
-    const sp = pinch.subplot;
-    const r = sp.rect;
-    const factor = pinch.d0 / Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
+    const r = pinch.subplot.rect;
+    const bottom = r.y + r.height;
+    const factor = pinchFactor(pinch.d0, Math.hypot(a.x - b.x, a.y - b.y));
     const mx = (a.x + b.x) / 2;
     const my = (a.y + b.y) / 2;
-    pinch.last.clear();
-    const axisRange = (axis: AxisInfo, r0: LinearRange, p0: number, dp: number): void => {
-      if (host.isFixed(axis)) return;
-      const anchor = r0[0] + (p0 / axis.scale.length) * (r0[1] - r0[0]);
-      const zoomed = zoomAround(r0, anchor, factor);
+    const last = pinch.last;
+    last.clear();
+    const move = (axis: AxisInfo, p0: number, p1: number): void => {
+      const start = pinch.starts.get(axis.id) ?? range(axis);
       const [lo, hi] = host.limits(axis);
-      pinch.last.set(
+      last.set(
         axis.id,
-        limitRange(panBy(zoomed, -dp / pxPerUnit(axis, zoomed)), lo, hi, false),
+        limitRange(pinchRange(start, axis.scale.length, p0, p1, factor), lo, hi, false),
       );
     };
-    for (const a of this.#family(sp.xaxis)) {
-      axisRange(a, pinch.starts.get(a.id) ?? range(a), pinch.mx0 - r.x, mx - pinch.mx0);
-    }
-    for (const a of this.#family(sp.yaxis)) {
-      axisRange(
-        a,
-        pinch.starts.get(a.id) ?? range(a),
-        r.y + r.height - pinch.my0,
-        -(my - pinch.my0),
-      );
-    }
-    this.#preview(pinch.last);
+    for (const x of this.#family(pinch.subplot.xaxis)) move(x, pinch.mx0 - r.x, mx - r.x);
+    for (const y of this.#family(pinch.subplot.yaxis)) move(y, bottom - pinch.my0, bottom - my);
+    this.#preview(last);
   }
 
   #endPinch(): void {

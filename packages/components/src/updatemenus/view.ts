@@ -238,11 +238,17 @@ export function createUpdatemenusView<Ctx extends UpdatemenusViewContext>(
     press(m, index, event);
   };
 
-  const onPointerOver = (event: PointerEvent): void => {
+  // The pointer highlights an option when it moves, not on `pointerover`: a list opened under a
+  // resting pointer (from the keyboard, after a mouse choice) gets a `pointerover` from the browser
+  // a frame or more later, possibly after arrow keys moved the highlight, and Enter would then
+  // choose the option under the pointer instead.
+  const onPointerMove = (event: PointerEvent): void => {
     const m = menuOf(event.target);
     if (!m?.open) return;
     const index = itemIndex(m, event.target);
-    if (index !== undefined) highlight(m, m.order.indexOf(index));
+    if (index === undefined) return;
+    const at = m.order.indexOf(index);
+    if (at !== m.cursor) highlight(m, at);
   };
 
   const nextKeys = (m: MenuDom): { next: string[]; prev: string[] } =>
@@ -350,7 +356,7 @@ export function createUpdatemenusView<Ctx extends UpdatemenusViewContext>(
     el.addEventListener('keydown', onKeydown);
     el.addEventListener('focusin', onFocusin);
     el.addEventListener('focusout', onFocusout);
-    el.addEventListener('pointerover', onPointerOver);
+    el.addEventListener('pointermove', onPointerMove);
     doc.addEventListener('pointerdown', onDocPointer, true);
     unshield = shieldEvents(el);
     host.appendChild(el);
@@ -363,7 +369,7 @@ export function createUpdatemenusView<Ctx extends UpdatemenusViewContext>(
     root.removeEventListener('keydown', onKeydown);
     root.removeEventListener('focusin', onFocusin);
     root.removeEventListener('focusout', onFocusout);
-    root.removeEventListener('pointerover', onPointerOver);
+    root.removeEventListener('pointermove', onPointerMove);
     root.ownerDocument.removeEventListener('pointerdown', onDocPointer, true);
     unshield?.();
     unshield = undefined;

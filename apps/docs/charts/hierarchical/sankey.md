@@ -270,7 +270,8 @@ they hold still, spread evenly along the links.
 - **Events.** `hover`, `unhover` and `click` points carry Plotly's node fields (`label`, `value`,
   `color`, `customdata`, `sourceLinks`, `targetLinks`, `group`, `childrenNodes`) or link fields
   (`label`, `value`, `color`, `customdata`, `source` and `target` nodes, `flow`), with
-  `curveNumber` and `pointNumber` (the node or link index).
+  `curveNumber` and `pointNumber` (the node or link index). See
+  [Sankey nodes and links](/reference/events#sankey-nodes-and-links) in the events reference.
 
 ## Performance notes
 

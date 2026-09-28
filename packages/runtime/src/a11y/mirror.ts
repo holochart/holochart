@@ -14,8 +14,8 @@
  *   `role="application"`, but ARIA practice reserves it for widgets that implement their whole
  *   keyboard model (it switches screen readers out of browse mode, so the description and the data
  *   tables could no longer be read line by line). A figure keeps its content browsable — the
- *   modebar toolbar, the description list and the tables. Revisit with keyboard navigation (E6.5,
- *   E17.4).
+ *   modebar toolbar, the description list and the tables. Keyboard navigation of the data (E6.5)
+ *   has its own small `role="application"` focus target over the plot area (`fx/focus.ts`).
  *
  * Attributes the page already set on the element (`role`, `aria-label`, `aria-describedby`) are
  * left alone, and everything the mirror set is restored on destroy.

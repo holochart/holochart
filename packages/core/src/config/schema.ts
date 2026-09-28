@@ -111,6 +111,11 @@ export const configSchema = attr.object(
           description:
             "Snap transitions and drill-down tweens instead of animating them: `'auto'` when the user's system asks for reduced motion (the `prefers-reduced-motion` media query), `true` always, `false` never. Holochart only (plan E17.5).",
         }),
+        keyboard: attr.boolean({
+          dflt: true,
+          description:
+            'Keyboard access: Tab reaches the plot area (the arrows step through the data, `+` / `-` zoom) and the legend items. Holochart only (plan E6.5, E17.4).',
+        }),
       },
       { description: 'Accessibility options (plan E17). Holochart only.' },
     ),

@@ -60,7 +60,8 @@ hx.icicle(rows, { path: [rows.map(() => 'World'), 'continent', 'country'], value
 A numeric `color` goes through a colorscale: leaves take their row's value and every branch the
 mean of its children's rows, weighted by `values` (by row count without `values`). The colorscale
 (`colorContinuousScale`, `rangeColor`, `colorContinuousMidpoint`) and its colorbar, titled with
-the column's label, are on the trace's `marker`.
+the column's label, are on `layout.coloraxis` (the trace's `marker.coloraxis` refers to it), as
+in px.
 
 Any other `color` column colors nodes by category, from the colorway (or
 `colorDiscreteSequence`) or `colorDiscreteMap`. A branch takes its rows' value when they all
@@ -131,9 +132,6 @@ traces-hier (`register(...hierTraces)`), or the `@mk7s/holochart` bundle.
 
 ## Differences from plotly.express
 
-- The colorscale of a numeric `color` is on the trace's `marker` (`marker.colorscale`,
-  `showscale`, `colorbar`) rather than `layout.coloraxis`: Holochart's hierarchy traces don't read
-  `marker.coloraxis` yet.
 - Aggregated `hoverName`, `hoverData` and `customData` values keep their type (numbers stay
   numbers, so hover formats apply); px turns them into strings.
 - Without `values`, the count column is `count`, or `count_1`, … when the data has a `count`

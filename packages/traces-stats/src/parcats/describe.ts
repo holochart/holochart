@@ -21,12 +21,15 @@ export function describeParcats(ctx: DescribeContext<ParcatsCalc>): TraceDescrip
   const dims = defaultOrder(calc).dims.map((d) => calc.dimensions[d]!);
   const columns = dims.map((d) => accessibleText(d.label) || `Dimension ${d.container + 1}`);
   const paths = calc.paths.filter((p) => p.count > 0);
-  const rows = paths.slice(0, Math.max(0, ctx.maxRows)).map((p) => {
-    const row = dims.map((d) => accessibleText(d.categories[p.categories[d.index]!]!.label));
-    row.push(String(p.count));
-    if (calc.numeric) row.push(String(p.rawColor));
-    return row;
-  });
+  const row = (i: number): string[] => {
+    const p = paths[i]!;
+    const cells = dims.map((d) => accessibleText(d.categories[p.categories[d.index]!]!.label));
+    cells.push(String(p.count));
+    if (calc.numeric) cells.push(String(p.rawColor));
+    return cells;
+  };
+  const rows: string[][] = [];
+  for (let i = 0; i < Math.min(paths.length, ctx.maxRows); i++) rows.push(row(i));
   const name = traceNameText(trace.name, ctx.index);
   return {
     kind: 'parallel categories',
@@ -36,6 +39,7 @@ export function describeParcats(ctx: DescribeContext<ParcatsCalc>): TraceDescrip
       columns: [...columns, 'Count', ...(calc.numeric ? ['Color'] : [])],
       rows,
       total: paths.length,
+      row,
     },
   };
 }

@@ -55,6 +55,7 @@ import {
   type LegendEntry,
 } from './layout.ts';
 import { legendAttributes, supplyLegendDefaults, type FullLegend } from './schema.ts';
+import type { LegendKeys } from './legend-keys.ts';
 import { ClickDispatcher, hiddenLabelsToggle, legendToggle, type ToggleTrace } from './toggle.ts';
 
 /** Marker size used for every item with `itemsizing: 'constant'`, px (Plotly). */
@@ -162,6 +163,9 @@ export interface LegendScene {
     index: number;
     key?: string;
     group?: true;
+    /** Item text, and whether the item is hidden (for keyboard access, E17.4). */
+    label: string;
+    hidden: boolean;
     left: number;
     top: number;
     width: number;
@@ -280,6 +284,8 @@ export function buildLegendScene(
         scene.hits.push({
           index: e.index,
           group: true,
+          label: item.text.text,
+          hidden,
           left: left + item.x,
           top: top + item.y,
           width: item.width,
@@ -384,6 +390,8 @@ export function buildLegendScene(
     scene.hits.push({
       index: e.index,
       ...(e.key === undefined ? {} : { key: e.key }),
+      label: item.text.text,
+      hidden,
       left: left + item.x,
       top: top + item.y,
       width: item.width,
@@ -466,6 +474,10 @@ class LegendView implements ComponentView {
     (id) => this.#act(id, 'single'),
     (id) => this.#act(id, 'double'),
   );
+  /** Keyboard access (E17.4): buttons over the items, their code loaded with the first legend. */
+  #keys: LegendKeys | undefined;
+  #keysLoad: Promise<void> | undefined;
+  #disposed = false;
 
   constructor(ctx: ComponentDrawContext) {
     this.#ctx = ctx;
@@ -549,6 +561,36 @@ class LegendView implements ComponentView {
     }
     this.#markerKey = markerKey;
     this.#markers?.setTransform(t);
+    this.#syncKeys();
+  }
+
+  /** Keep the items' key targets in step (interactive charts with `config.a11y.keyboard`). */
+  #syncKeys(): void {
+    const chart = findChart(this.#ctx);
+    const config = chart?.fullConfig;
+    const on = config?.staticPlot !== true && config?.a11y.keyboard !== false;
+    const items = on
+      ? (this.#scene?.hits ?? []).map((h) => ({ ...h, id: hitId(h), pressed: !h.hidden }))
+      : [];
+    if (this.#keys) this.#keys.update(items, this.#fullLayout);
+    else if (items.length > 0 && chart && !this.#keysLoad) {
+      // Hold the legend's place in the tab order while the code loads.
+      const anchor = chart.element.ownerDocument.createComment('holochart: legend keys');
+      chart.element.appendChild(anchor);
+      this.#keysLoad = import('./legend-keys.ts').then(
+        (m) => {
+          if (this.#disposed) return anchor.remove();
+          this.#keys = new m.LegendKeys(anchor, (id, double) =>
+            this.#act(id, double ? 'double' : 'single'),
+          );
+          this.#syncKeys();
+        },
+        (error: unknown) => {
+          anchor.remove();
+          console.warn('holochart: loading legend keys failed', error);
+        },
+      );
+    }
   }
 
   /** Is the container point inside the legend box? (For the runtime's pointer routing.) */
@@ -638,7 +680,9 @@ class LegendView implements ComponentView {
   }
 
   dispose(): void {
+    this.#disposed = true;
     this.#clicks.cancel();
+    this.#keys?.destroy();
   }
 }
 

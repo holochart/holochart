@@ -781,6 +781,11 @@ describe('sankey view and description', () => {
         ['B', 'C', '2', ''],
       ],
       total: 4,
+      row: expect.any(Function),
     });
+    // Every link on demand, past maxRows (the visible data table, E17.3).
+    expect(d.table?.row?.(0)).toEqual(d.table?.rows[0]);
+    expect(d.table?.row?.(2)).toEqual(['C', 'D', '5', '']);
+    expect(d.table?.row?.(3)).toEqual(['C', 'E', '1', '']);
   });
 });

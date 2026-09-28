@@ -12,6 +12,7 @@ import type { ComponentPointerEvent, TracePlotContext } from '@mk7s/holochart-ru
 import { describe, expect, it, vi } from 'vitest';
 import { labelContent } from '@mk7s/holochart-traces-basic';
 import { nodeContext, nodeHoverText } from '../hierarchy/format.ts';
+import type { NodeLabel } from '../hierarchy/view.ts';
 import { rectGeometry, type RectCalc } from './geometry.ts';
 import { rectClick, rectHoverPoints } from './hover.ts';
 import { treemap } from './index.ts';
@@ -203,6 +204,33 @@ describe('treemap colors', () => {
   });
 });
 
+describe('treemap coloraxis', () => {
+  it('colors tiles and icicle cells through layout.coloraxis, one colorbar for both', () => {
+    const b = build(
+      [
+        { ...EVE, marker: { colors: [0, 1, 2, 3, 4, 5, 6, 7, 8], coloraxis: 'coloraxis2' } },
+        { ...EVE, type: 'icicle', marker: { coloraxis: 'coloraxis2' } },
+      ],
+      {
+        coloraxis2: {
+          colorscale: [
+            [0, '#000000'],
+            [1, '#ffffff'],
+          ],
+          showscale: false,
+        },
+      },
+    );
+    expect(b.fullLayout['coloraxis2']).toMatchObject({ _min: 0, _max: 14 });
+    expect(b.calcs[0]!.hierarchy!.nodes[0]!.color).toBe('rgb(0, 0, 0)');
+    // The icicle's Cain is colored by its value (14), the top of the shared domain.
+    const cain = b.calcs[1]!.hierarchy!.nodes.find((n) => n.id === 'Cain')!;
+    expect(cain.color).toBe('rgb(255, 255, 255)');
+    expect(b.traces[0]!['marker']).not.toHaveProperty('depthfade');
+    expect(treemap.colorbar!(b.traces[0]!, { fullLayout: b.fullLayout })).toBeNull();
+  });
+});
+
 describe('treemap labels', () => {
   const spot = textSpot('top left');
 
@@ -276,6 +304,38 @@ describe('treemap labels', () => {
     ).map((l) => l.text);
     expect(texts).not.toContain('Seth');
   });
+});
+
+describe('treemap uniformtext', () => {
+  const labelsOf = (layout: Record<string, unknown>, type = 'treemap') => {
+    const b = build([{ ...TREE, type, level: 'Seth', textfont: { size: 30 } }], layout);
+    return layoutRectText(b.traces[0]!, b.calcs[0]!, geometryOf(b), b.fullLayout);
+  };
+  const sizeOf = (l: NodeLabel): number => l.font?.size ?? 0;
+
+  for (const type of ['treemap', 'icicle']) {
+    it(`sizes ${type} labels alike, path bar labels included, and hides small ones`, () => {
+      const free = labelsOf({}, type);
+      const sizes = [...new Set(free.map(sizeOf))].sort((a, b) => a - b);
+      expect(sizes.length).toBeGreaterThan(1);
+      expect(free.some((l) => l.align === 'left')).toBe(true);
+      const shown = labelsOf({ uniformtext: { mode: 'show', minsize: 0 } }, type);
+      expect(shown.map((l) => l.text)).toEqual(free.map((l) => l.text));
+      expect(new Set(shown.map(sizeOf))).toEqual(new Set([sizes[0]]));
+      // A left-aligned label resized smaller keeps its left edge: its center moves left.
+      const b = build([{ ...TREE, type, level: 'Seth', textfont: { size: 30 } }]);
+      const pass = { uniform: { mode: 'show', minsize: 0 } as const, size: 4, items: [] };
+      const small = layoutRectText(b.traces[0]!, b.calcs[0]!, geometryOf(b), b.fullLayout, pass);
+      const eve = (ls: typeof free) => ls.find((l) => l.text === 'Eve')!;
+      expect(sizeOf(eve(small))).toBe(4);
+      expect(eve(small).x).toBeLessThan(eve(free).x);
+      expect(pass.items).toHaveLength(free.length);
+      const minsize = sizes[1]!;
+      const hidden = labelsOf({ uniformtext: { mode: 'hide', minsize } }, type);
+      expect(hidden.length).toBeLessThan(free.length);
+      expect(new Set(hidden.map(sizeOf))).toEqual(new Set([minsize]));
+    });
+  }
 });
 
 describe('treemap path bar', () => {
@@ -561,5 +621,25 @@ describe('treemap view', () => {
     ).toEqual([0x44, 0x44, 0x44, 255]);
     view.handlePointer!({ ...move, type: 'leave' } as ComponentPointerEvent);
     expect(patch.borderWidth[cain]).toBe(1);
+  });
+});
+
+describe('treemap description', () => {
+  it('formats every node on demand, past maxRows (the visible data table, E17.3)', () => {
+    const b = build([EVE]);
+    const describeWith = (maxRows: number) =>
+      treemap.describe!({
+        ...b.entries[0]!,
+        fullLayout: b.fullLayout,
+        xaxis: undefined,
+        yaxis: undefined,
+        maxRows,
+      })!.table!;
+    const all = describeWith(100);
+    const t = describeWith(3);
+    expect(t.rows).toEqual(all.rows.slice(0, 3));
+    expect(t.total).toBe(9);
+    expect(Array.from({ length: 9 }, (_, i) => t.row!(i))).toEqual(all.rows);
+    expect(t.row!(8)?.[0]).toBe('Enoch');
   });
 });

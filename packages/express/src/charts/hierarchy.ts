@@ -283,7 +283,6 @@ function buildHierarchyFigure(
     ],
     groupers: [],
     continuousColor: 'pie',
-    inlineColorscale: true,
     subplotType: 'domain',
     ...(options.colorDiscreteSequence
       ? { layoutPatch: { [`${type}colorway`]: [...options.colorDiscreteSequence] } }
@@ -295,8 +294,8 @@ function buildHierarchyFigure(
 /**
  * A sunburst chart (`px.sunburst`): one `sunburst` trace, from `names` / `parents` / `ids` /
  * `values` columns or built from `path` (with `branchvalues: 'total'`); `color` colors the
- * sectors, through a colorscale when numeric (values-weighted means on inner nodes), else from the
- * colorway or `colorDiscreteMap` (`'(?)'` for nodes whose rows differ).
+ * sectors, through `layout.coloraxis` when numeric (values-weighted means on inner nodes), else
+ * from the colorway or `colorDiscreteMap` (`'(?)'` for nodes whose rows differ).
  *
  * @example
  * ```ts

@@ -36,20 +36,35 @@ export function describeHistogram2d(ctx: DescribeContext<Histogram2dCalc>): Trac
     const j = Math.floor(best / calc.nx);
     summary += ` Highest value ${formatPlainNumber(calc.z[best]!)} at x ${xr(i)}, y ${yr(j)}.`;
   }
+  const { nx, z } = calc;
+  const size = nx * calc.ny;
+  const listed = (v: number): boolean => Number.isFinite(v) && v !== 0;
+  const cell = (c: number): string[] => [
+    xr(c % nx),
+    yr(Math.floor(c / nx)),
+    formatPlainNumber(z[c]!),
+  ];
   const rows: string[][] = [];
   let total = 0;
-  for (let j = 0; j < calc.ny; j++) {
-    for (let i = 0; i < calc.nx; i++) {
-      const v = calc.z[j * calc.nx + i]!;
-      if (!Number.isFinite(v) || v === 0) continue;
-      total++;
-      if (rows.length < ctx.maxRows) rows.push([xr(i), yr(j), formatPlainNumber(v)]);
-    }
+  for (let c = 0; c < size; c++) {
+    if (!listed(z[c]!)) continue;
+    total++;
+    if (rows.length < ctx.maxRows) rows.push(cell(c));
   }
+  // Row `k` of all `total` rows: the grid index of every listed cell, built on first use.
+  let cells: Int32Array | undefined;
+  const row = (k: number): string[] => {
+    if (total === size) return cell(k);
+    if (!cells) {
+      cells = new Int32Array(total);
+      for (let c = 0, m = 0; c < size; c++) if (listed(z[c]!)) cells[m++] = c;
+    }
+    return cell(cells[k]!);
+  };
   return {
     kind,
     summary,
-    table: { caption: name, columns: ['x', 'y', 'z'], rows, total },
+    table: { caption: name, columns: ['x', 'y', 'z'], rows, total, row },
     insight: {
       kind: 'grid',
       nx: calc.nx,

@@ -411,6 +411,15 @@ export interface TraceModule<
   ): CategorySamples | undefined;
   readonly plot?: TraceRenderer<Calc>;
   /**
+   * Touch gestures the trace's own pointer handling ({@link TraceView.handlePointer}) needs from
+   * the browser (E6.6), whatever the `dragmode`: `'pan-y'` when its drags work starting sideways
+   * (a swipe that starts vertically still scrolls the page: sankey node drags, polar axis drags),
+   * `'none'` when a drag in any direction is the trace's (table scrolling, parcoords brushing).
+   * The chart canvas' `touch-action` is the most restrictive of its visible traces' and what its
+   * `dragmode` needs. Default: taps only (the page keeps swipes and pinches).
+   */
+  readonly touchAction?: 'pan-y' | 'none';
+  /**
    * Points near the pointer for hover (E6.1). Empty when nothing is within `query.distance`.
    * Domain traces (M2 wave 1) are asked on every hover, wherever the pointer is: they return the
    * point under `query.cx` / `query.cy` (container px) with distance 0, or nothing.
@@ -418,6 +427,12 @@ export interface TraceModule<
   hoverPoints?(calc: Calc, trace: FullTrace, query: HoverQuery, ctx: HoverContext): HoverPoint[];
   /** Indices of the points inside a box or lasso selection (E6.3). */
   selectPoints?(calc: Calc, trace: FullTrace, query: SelectionQuery, ctx: HoverContext): number[];
+  /**
+   * Every point keyboard navigation (E6.5) visits, in reading order (pie: its slices in drawing
+   * order), shaped like {@link hoverPoints}' results. Cartesian traces don't need it (they are
+   * navigated along their `x` / `y` data); domain traces without it are skipped.
+   */
+  keyboardPoints?(calc: Calc, trace: FullTrace, ctx: HoverContext): readonly HoverPoint[];
   /**
    * What the legend draws for this trace (E5.2). `ctx` (M1 wave 2, optional for callers) gives
    * `fullLayout`, e.g. to resolve colors linked to a `coloraxis`.

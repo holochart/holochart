@@ -21,6 +21,8 @@ import { parcatsRenderer } from './plot.ts';
 export const parcats: TraceModule<ParcatsCalc, typeof parcatsAttributes.children> = {
   type: 'parcats',
   categories: ['domain', 'noOpacity'],
+  // Categories drag vertically, dimensions sideways (E6.6).
+  touchAction: 'none',
   schema: parcatsAttributes,
   meta: {
     description:

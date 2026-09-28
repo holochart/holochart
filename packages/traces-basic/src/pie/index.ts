@@ -12,7 +12,7 @@ import type { TraceModule } from '@mk7s/holochart-runtime';
 import { pieAttributes, pieLayoutAttributes } from './attributes.ts';
 import { calcPie, type PieCalc } from './calc.ts';
 import { supplyPieDefaults, supplyPieLayoutDefaults } from './defaults.ts';
-import { pieHoverPoints } from './hover.ts';
+import { pieHoverPoints, pieKeyboardPoints } from './hover.ts';
 import { crossTraceLayoutPie } from './layout.ts';
 import { pieLegendIcon, pieLegendItems } from './legend.ts';
 import { pieRenderer } from './plot.ts';
@@ -35,6 +35,7 @@ export const pie: TraceModule<PieCalc, typeof pieAttributes.children> = {
   crossTraceLayout: crossTraceLayoutPie,
   plot: pieRenderer,
   hoverPoints: pieHoverPoints,
+  keyboardPoints: pieKeyboardPoints,
   legendIcon: pieLegendIcon,
   legendItems: pieLegendItems,
   describe: describePie,

@@ -223,6 +223,10 @@ Name controls with `name` on the menu or slider; it becomes the accessible name 
 ring in the text color. With `showactive: false`, buttons are plain action buttons without
 `aria-pressed`. The slider's handle glide is turned off when the user prefers reduced motion.
 
+The chart's data, the legend, the modebar and the range selectors are reachable from the keyboard
+too: see [Keyboard access](/guides/accessibility#keyboard-access) for their keys and the chart's
+tab order (plot area, legend, update menus, sliders, modebar, range selectors).
+
 ## Styling
 
 `bgcolor`, `bordercolor`, `borderwidth` and `font` style menus. Sliders also have

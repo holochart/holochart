@@ -377,6 +377,30 @@ describe('histogram2d hover', () => {
   });
 });
 
+describe('histogram2d description', () => {
+  it('lists every non-empty cell on demand past the first rows (E17.3)', () => {
+    // Bins of 1 over x 0..9: the odd x bins stay empty and are left out of the table.
+    const { calc, fullData, fullLayout, xaxis, yaxis } = calcOf([
+      {
+        x: [0, 0, 2, 4, 6, 8],
+        y: [0, 0, 0, 0, 1, 1],
+        xbins: { start: -0.5, end: 9.5, size: 1 },
+        ybins: { start: -0.5, end: 1.5, size: 1 },
+      },
+    ]);
+    const ctx = { trace: fullData[0]!, calc, index: 0, fullLayout, xaxis, yaxis };
+    const d = histogram2d.describe!({ ...ctx, maxRows: 2 })!;
+    const table = d.table!;
+    expect(table.rows).toHaveLength(2);
+    expect(table.total).toBe(5);
+    expect([0, 1].map((k) => table.row!(k))).toEqual(table.rows);
+    const all = histogram2d.describe!({ ...ctx, maxRows: 100 })!.table!.rows;
+    expect(all).toHaveLength(5);
+    expect(all.map((_, k) => table.row!(k))).toEqual(all);
+    expect(table.row!(4)![2]).toBe('1');
+  });
+});
+
 describe('histogram2d colorbar', () => {
   it('reports the aggregated value range once calc has run', () => {
     const x = [1, 2, 2, 3, 3, 3];

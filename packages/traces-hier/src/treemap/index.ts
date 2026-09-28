@@ -9,10 +9,14 @@
  * a path bar segment goes up, animated (`treemapclick` / `click` listeners may cancel). Drawn as
  * one instanced GPU rect set and one SDF text batch. Registered with `register(treemap)` (ADR-019).
  *
- * Deferred: the "city" 3D treemap (P2), `uniformtext` (E4.6), `marker.coloraxis`, transitions of
- * `level` changes made by `animate` / `react`.
+ * Colorscales may be shared through `marker.coloraxis`, and `layout.uniformtext` (E4.6) sizes the
+ * labels of every treemap of the chart alike.
+ *
+ * Deferred: the "city" 3D treemap (P2), transitions of `level` changes made by `animate` /
+ * `react`.
  */
 import type { TraceModule } from '@mk7s/holochart-runtime';
+import { coloraxisLayoutSchema } from '@mk7s/holochart-traces-basic';
 import { hierarchyColorbar } from '../hierarchy/colors.ts';
 import { describeHierarchy } from '../hierarchy/describe.ts';
 import { treemapAttributes, treemapLayoutAttributes } from './attributes.ts';
@@ -26,7 +30,11 @@ export const treemap: TraceModule<RectCalc, typeof treemapAttributes.children> =
   type: 'treemap',
   categories: ['domain', 'treemap'],
   schema: treemapAttributes,
-  layoutSchema: treemapLayoutAttributes,
+  // Wrapped so the schema tree-shakes out of bundles without treemap (E21.6).
+  layoutSchema: /* @__PURE__ */ (() => ({
+    ...treemapLayoutAttributes,
+    ...coloraxisLayoutSchema,
+  }))(),
   meta: {
     description:
       'Treemaps: a hierarchy as nested rectangles sized by value, placed by `domain`, with a path bar and animated drill-down, drawn as one instanced GPU rect set with batched SDF labels.',

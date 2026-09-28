@@ -72,10 +72,73 @@ export function frameControls(figure: ExpressFigure, prefix: string): void {
   ];
 }
 
-/** Finite numbers of an array (skipping everything else). */
-function numbers(values: unknown): number[] {
-  if (!Array.isArray(values)) return [];
-  return values.filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
+/**
+ * How a trace counts toward an animated axis' range: the `[positions, subplot]` attributes of a
+ * value bar (stacked per subplot and position), `true` for other points, `false` for none.
+ */
+export type RangeRole = readonly [string, string] | boolean;
+
+/**
+ * The range holding an animated axis still: the extent of `key` over every frame's traces plus
+ * 5% on each side (10% with sized markers), in log units when `log`. Bars (whose values stack per
+ * position when `stacked`) and `tozero` axes span zero, padded on the data side only. `undefined`
+ * without a finite value.
+ */
+export function frameRange(
+  frames: NonNullable<ExpressFigure['frames']>,
+  key: string,
+  role: (trace: Record<string, unknown>) => RangeRole,
+  log: boolean,
+  stacked: boolean,
+  tozero = false,
+): [number, number] | undefined {
+  let lo = Infinity;
+  let hi = -Infinity;
+  let bars = false;
+  let sized = false;
+  const add = (v: unknown): void => {
+    if (typeof v !== 'number') return;
+    const u = log ? (v > 0 ? Math.log10(v) : NaN) : v;
+    if (!Number.isFinite(u)) return;
+    lo = Math.min(lo, u);
+    hi = Math.max(hi, u);
+  };
+  for (const frame of frames) {
+    const totals = new Map<string, [number, number]>();
+    for (const trace of frame.data) {
+      const kind = role(trace);
+      const values = trace[key];
+      if (kind && kind !== true) bars = true;
+      if (!kind || !Array.isArray(values)) continue;
+      if (kind !== true) {
+        const positions = trace[kind[0]];
+        values.forEach((v, i) => {
+          if (typeof v !== 'number' || !Number.isFinite(v)) return;
+          const at = `${String(trace[kind[1]])}|${String(Array.isArray(positions) ? positions[i] : i)}`;
+          const t = totals.get(at) ?? [0, 0];
+          if (stacked) t[v < 0 ? 0 : 1] += v;
+          else {
+            t[0] = Math.min(t[0], v);
+            t[1] = Math.max(t[1], v);
+          }
+          totals.set(at, t);
+        });
+        continue;
+      }
+      if (trace['marker'] && (trace['marker'] as Record<string, unknown>)['size']) sized = true;
+      values.forEach(add);
+    }
+    for (const t of totals.values()) t.forEach(add);
+  }
+  if (!(lo <= hi)) return undefined;
+  if ((bars || tozero) && !log) {
+    lo = Math.min(lo, 0);
+    hi = Math.max(hi, 0);
+    const pad = (hi - lo || 1) * (sized && !bars ? 0.1 : 0.05);
+    return [lo < 0 ? lo - pad : 0, hi > 0 ? hi + pad : 0];
+  }
+  const pad = (hi - lo || Math.abs(hi) || 1) * (sized ? 0.1 : 0.05);
+  return [lo - pad, hi + pad];
 }
 
 /**
@@ -91,65 +154,32 @@ export function fixAnimationRanges(
   figure: ExpressFigure,
   grid: Grid,
 ): void {
-  const frames = figure.frames ?? [];
   const barmode = figure.layout['barmode'];
   const stacked = barmode === 'relative' || barmode === 'stack' || barmode === undefined;
   for (const letter of ['x', 'y'] as const) {
     if (args.options[letter === 'x' ? 'rangeX' : 'rangeY'] !== undefined) continue;
     const log = args.options[letter === 'x' ? 'logX' : 'logY'] === true;
-    let lo = Infinity;
-    let hi = -Infinity;
     let bars = false;
-    let sized = false;
-    for (const frame of frames) {
-      const totals = new Map<string, [number, number]>();
-      for (const trace of frame.data) {
+    const range = frameRange(
+      figure.frames ?? [],
+      letter,
+      (trace) => {
         const type = trace['type'];
         const orientation = trace['orientation'] === 'h' ? 'h' : 'v';
-        const valueLetter = orientation === 'v' ? 'y' : 'x';
-        if (type === 'bar' && valueLetter === letter && trace['base'] === undefined) {
+        if (
+          type === 'bar' &&
+          (orientation === 'v') === (letter === 'y') &&
+          trace['base'] === undefined
+        ) {
           bars = true;
-          const positions = trace[orientation === 'v' ? 'x' : 'y'];
-          const values = trace[letter];
-          if (!Array.isArray(values)) continue;
-          values.forEach((v, i) => {
-            if (typeof v !== 'number' || !Number.isFinite(v)) return;
-            const key = `${String(trace[`${letter === 'y' ? 'x' : 'y'}axis`])}|${String(Array.isArray(positions) ? positions[i] : i)}`;
-            const t = totals.get(key) ?? [0, 0];
-            if (stacked) t[v < 0 ? 0 : 1] += v;
-            else {
-              t[0] = Math.min(t[0], v);
-              t[1] = Math.max(t[1], v);
-            }
-            totals.set(key, t);
-          });
-          continue;
+          return [orientation === 'v' ? 'x' : 'y', `${letter === 'y' ? 'x' : 'y'}axis`];
         }
-        if (type !== 'scatter' && type !== 'bar') continue;
-        if (trace['marker'] && (trace['marker'] as Record<string, unknown>)['size']) sized = true;
-        for (const v of numbers(trace[letter])) {
-          const u = log ? (v > 0 ? Math.log10(v) : NaN) : v;
-          if (!Number.isFinite(u)) continue;
-          lo = Math.min(lo, u);
-          hi = Math.max(hi, u);
-        }
-      }
-      for (const [neg, pos] of totals.values()) {
-        lo = Math.min(lo, neg);
-        hi = Math.max(hi, pos);
-      }
-    }
-    if (!(lo <= hi)) continue;
-    let range: [number, number];
-    if (bars && !log) {
-      lo = Math.min(lo, 0);
-      hi = Math.max(hi, 0);
-      const pad = (hi - lo || 1) * 0.05;
-      range = [lo < 0 ? lo - pad : 0, hi > 0 ? hi + pad : 0];
-    } else {
-      const pad = (hi - lo || Math.abs(hi) || 1) * (sized ? 0.1 : 0.05);
-      range = [lo - pad, hi + pad];
-    }
+        return type === 'scatter' || type === 'bar';
+      },
+      log,
+      stacked,
+    );
+    if (range === undefined) continue;
     const column = args.cols[letter];
     if (!bars && (column === undefined || args.table.type(column) !== 'numeric')) continue;
     for (let row = 1; row <= grid.nrows; row++) {

@@ -15,7 +15,7 @@ Planned topics:
 - The modebar and its buttons
 - Subscribing with `chart.on` and unsubscribing with `chart.off`
 - Click, hover, selection, and relayout events and their payloads
-- Keyboard and touch support
+- Keyboard support (see [Keyboard](#keyboard); for touch, see [Touch](#touch) below)
 
 See also the [events reference](/reference/events).
 
@@ -65,3 +65,72 @@ createChart(el, {
   `selections`.
 
 <Example id="_dev/selections-lasso" />
+
+## Keyboard
+
+Tab moves into the chart's plot area; the arrow keys then move between data points, with their
+hover labels and screen-reader announcements, Page Up / Page Down switch traces, Enter clicks the
+point (`click`), `+` / `-` zoom, Shift + arrows pan and `0` resets the view (`relayout`, with the
+same keys as a drag). The legend, update menus, sliders, modebar and range selector follow in the
+tab order. The [accessibility guide](/guides/accessibility#keyboard-access) lists every key, the
+cursor rules and the tab order.
+
+<Example id="_dev/keyboard-navigation" :height="460" />
+
+## Touch
+
+Mouse, pen and touch all go through the same
+[Pointer Events](https://developer.mozilla.org/docs/Web/API/Pointer_events) handling, so every
+chart works on phones and tablets without configuration:
+
+- **Tap**: hovers the points under the finger (labels, spike lines, the `hover` event) and emits
+  `click`, as a mouse moving there and clicking would. The labels stay after the finger lifts.
+- **Tap elsewhere**: moves the hover there, or hides it (`unhover`) on empty space or anywhere off
+  the chart.
+- **Double tap**: like a double-click, it resets the axes (`config.doubleClick`) and emits
+  `doubleclick`. The two taps may be up to 30 px apart.
+- **Pinch**: zooms every movable axis of the subplot around the fingers' midpoint, in every 2D
+  `dragmode` except `false`.
+- **Two-finger drag**: pans; together with a pinch, the data under the fingers follows them.
+- **One-finger drag**: what the `dragmode` does with a mouse (a zoom box, a pan, a box or lasso
+  selection, a shape). It starts after 10 px of travel; a mouse needs 3.
+
+A pinch or two-finger drag previews the new ranges at the display's frame rate (`relayouting`)
+and commits them with one `relayout` when a finger lifts, like a mouse drag; `fixedrange`,
+`minallowed` / `maxallowed`, `matches` and `scaleanchor` apply. A second finger cancels a zoom box
+or selection in progress; once two fingers were down, the gesture stays a two-finger one until
+every finger lifts. Views that take drags (a sankey node, a range slider, a table) keep a drag
+their first finger started and ignore extra fingers.
+
+### Page scrolling
+
+A chart on a phone is often as wide as the screen, so it must not swallow the swipes that scroll
+the page. The browser decides who gets a touch gesture from the canvas' CSS
+[`touch-action`](https://developer.mozilla.org/docs/Web/CSS/touch-action) when the finger lands,
+and Holochart sets it to the least the chart needs:
+
+- **`pan-y`** for `dragmode: 'zoom'` (the default), `'pan'` when every y axis is `fixedrange`,
+  and sankey and polar charts: a swipe that **starts vertically scrolls the page**; one that
+  starts sideways is the chart's (a zoom box may then grow in any direction). Pinches and taps are
+  the chart's.
+- **`none`** for `dragmode: 'pan'`, `'select'`, `'lasso'` and the drawing modes, and for tables,
+  parcoords and parcats: every gesture is the chart's, so the page doesn't scroll over it.
+- **`manipulation`** for `dragmode: false`, charts whose axes are all `fixedrange`, and charts
+  without cartesian axes (pie, sunburst, treemap, …): swipes and pinches are the page's; taps
+  still hover, click and drill.
+
+So to keep a chart from ever trapping the page on phones, set `dragmode: false` (or `fixedrange`
+on its axes): taps keep working, and the modebar, which appears after a tap, switches modes on
+demand. With a coarse pointer its buttons grow to 32 px tap targets. Custom trace types whose
+views take drags declare what they need with `touchAction` on their module.
+
+<Example id="_dev/interaction-touch" />
+
+### Differences from Plotly
+
+- Plotly has no pinch zoom on cartesian subplots. Holochart pinches whatever `config.scrollZoom`
+  says (that one is about the mouse wheel).
+- Plotly blocks page scrolling over any chart whose `dragmode` isn't `false`. Holochart leaves
+  vertical swipes to the page in zoom mode, the default.
+- Not yet: pinch zoom on polar subplots (their axes drag with one finger), and touch drags of the
+  range slider and editable shapes or annotations under `dragmode: false` (the page takes them).

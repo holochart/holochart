@@ -20,6 +20,8 @@ import { scatterpolarRenderer } from './plot.ts';
 export const scatterpolar: TraceModule<ScatterpolarCalc, typeof scatterpolarAttributes.children> = {
   type: 'scatterpolar',
   categories: ['polar', 'symbols', 'showLegend', 'scatter-like'],
+  // Polar axis drags and the zoom box (E6.6).
+  touchAction: 'pan-y',
   schema: scatterpolarAttributes,
   layoutSchema: /* @__PURE__ */ (() => ({ ...polarLayoutSchema, ...coloraxisLayoutSchema }))(),
   meta: {

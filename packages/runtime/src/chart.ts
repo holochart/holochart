@@ -123,6 +123,7 @@ import type { DomainHover, HoverEntry } from './fx/hover.ts';
 import { buildPoint } from './fx/hover.ts';
 import { selectionFromQuery, selectionQuery, selectionsOf } from './fx/selections.ts';
 import { SubplotMirrors } from './mirror.ts';
+import { FocusTarget } from './fx/focus.ts';
 import { Interaction } from './fx/interaction.ts';
 import { HoverLayer } from './fx/labels.ts';
 import {
@@ -586,6 +587,8 @@ export class Chart {
   #waiters: Waiter[] = [];
   #layer: HoverLayer | undefined;
   #fx: Interaction | undefined;
+  /** Keyboard access to the data (E6.5): the plot area's focus target. */
+  #focus: FocusTarget | undefined;
   #hoverEntries: Map<string, HoverEntry[]> | null = null;
   #domainHover: DomainHover | null = null;
   #componentOrder: ComponentSlot[] = [];
@@ -1680,13 +1683,24 @@ export class Chart {
     }
     if (config.staticPlot !== true) {
       this.#layer = new HoverLayer(this.element);
-      this.#fx = new Interaction(this.#interactionHost(root, this.#layer));
+      const host = this.#interactionHost(root, this.#layer);
+      const fx = (this.#fx = new Interaction(host));
+      if (config.a11y.keyboard) {
+        this.#focus = new FocusTarget(this.element, root.canvas.nextSibling, {
+          fx: host,
+          hover: (found) => fx.hoverFound(found),
+          unhover: () => fx.unhover(),
+          clickTrace: (index, x, y, event) => this.#clickTrace(index, x, y, event),
+        });
+      }
     }
   }
 
   #unmount(): void {
     this.#a11y?.destroy();
     this.#a11y = undefined;
+    this.#focus?.destroy();
+    this.#focus = undefined;
     this.#fx?.destroy();
     this.#fx = undefined;
     this.#layer?.destroy();
@@ -1946,6 +1960,7 @@ export class Chart {
     this.#hoverEntries = null;
     this.#domainHover = null;
     this.#fx?.refresh();
+    this.#focus?.refresh(this.#plotArea, fullLayout);
   }
 
   /** A trace's calc for components, or `undefined` when it has none (hidden, not calculated yet). */
@@ -2685,6 +2700,14 @@ export class Chart {
       commitSelection: (sp, query, shift) => this.#commitSelection(sp, query, shift),
       axes: () => this.#axes,
       plotArea: () => this.#plotArea,
+      traceTouchAction: () => {
+        let out: 'pan-y' | 'none' | undefined;
+        this.#full?.fullData.forEach((trace, i) => {
+          const need = trace.visible === true ? this.#traces[i]?.module?.touchAction : undefined;
+          if (need && out !== 'none') out = need;
+        });
+        return out;
+      },
       renderHover: (points: readonly ChartPoint[]) => {
         const fn = isPlainObject(this.#figure.config)
           ? this.#figure.config['renderHover']
@@ -2768,6 +2791,25 @@ export class Chart {
       this.#domainHover = { entries, height: this.#size.height };
     }
     return this.#domainHover;
+  }
+
+  /** A click at container `(x, y)` offered to trace `index`'s view (keyboard Enter, E6.5). */
+  #clickTrace(index: number, x: number, y: number, native: KeyboardEvent): boolean {
+    const view = this.#traces[index]?.view;
+    return (
+      view?.handlePointer?.({
+        type: 'click',
+        x,
+        y,
+        button: 0,
+        shiftKey: native.shiftKey,
+        altKey: false,
+        ctrlKey: false,
+        metaKey: false,
+        native,
+        cursor: undefined,
+      }) === true
+    );
   }
 
   #dispatchPointer(event: ComponentPointerEvent, only: unknown): unknown {

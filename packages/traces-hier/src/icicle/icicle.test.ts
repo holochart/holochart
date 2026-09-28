@@ -7,6 +7,7 @@ import { rectStyles } from '../treemap/style.ts';
 import { layoutRectText } from '../treemap/text.ts';
 import { planRectTween, rectKey } from '../treemap/tween.ts';
 import { build, defaults, EVE, type Built } from '../treemap/__testing__/build.ts';
+import { icicle } from './index.ts';
 import { iciclePartition } from './partition.ts';
 
 const TREE = {
@@ -160,5 +161,25 @@ describe('icicle styles, labels and clicks', () => {
       icicle: { orientation: 'h', flipX: false, flipY: false },
     });
     expect(plan.update[0]!.from).toMatchObject({ x0: 0, x1: 0 });
+  });
+});
+
+describe('icicle description', () => {
+  it('formats every node on demand, past maxRows (the visible data table, E17.3)', () => {
+    const b = build([TREE]);
+    const describeWith = (maxRows: number) =>
+      icicle.describe!({
+        ...b.entries[0]!,
+        fullLayout: b.fullLayout,
+        xaxis: undefined,
+        yaxis: undefined,
+        maxRows,
+      })!.table!;
+    const all = describeWith(100);
+    const t = describeWith(3);
+    expect(t.rows).toEqual(all.rows.slice(0, 3));
+    expect(t.total).toBe(8);
+    expect(Array.from({ length: 8 }, (_, i) => t.row!(i))).toEqual(all.rows);
+    expect(t.row!(7)?.[0]).toBe('Enoch');
   });
 });

@@ -1,6 +1,7 @@
 /**
  * Accessible descriptions of the bar-like financial traces (plan E17.1): a summary line and a
- * table of the first bars (position and value columns), formatted like the axes' hover labels.
+ * table of the first bars (position and value columns; every bar on demand), formatted like the
+ * axes' hover labels.
  */
 import { getIn } from '@mk7s/holochart-core';
 import {
@@ -50,10 +51,9 @@ export function describeBarLike(
   const letter = calc.orientation === 'h' ? 'y' : 'x';
   const f = describeFormatters(ctx);
   const label = kind.charAt(0).toUpperCase() + kind.slice(1);
+  const fullRow = (i: number): string[] => [f.position(calc.pos[i]!), ...row(i)];
   const rows: string[][] = [];
-  for (let i = 0; i < Math.min(calc.length, ctx.maxRows); i++) {
-    rows.push([f.position(calc.pos[i]!), ...row(i)]);
-  }
+  for (let i = 0; i < Math.min(calc.length, ctx.maxRows); i++) rows.push(fullRow(i));
   return {
     kind,
     summary: `${label} "${name}": ${countText(calc.length, 'bar')}.${summary ? ` ${summary}` : ''}`,
@@ -62,6 +62,7 @@ export function describeBarLike(
       columns: [axisTitle(pa, letter), ...columns],
       rows,
       total: calc.length,
+      row: fullRow,
     },
   };
 }

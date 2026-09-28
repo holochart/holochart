@@ -185,7 +185,5 @@ or the `template` option. Pass `template: 'plotly-classic'` (or call
 - `barPolar`'s `barmode: 'overlay'` sets `layout.polar.barmode` (plotly.js ignores px's top-level
   `barmode` on polar bars, which always stack there); `barnorm` isn't offered, as polar bars
   don't read it.
-- `sunburst`, `treemap` and `icicle` put a numeric color's colorscale on the trace's `marker`
-  instead of `layout.coloraxis` ([more](/express/hierarchy#differences-from-plotly-express)).
 - Not yet: `marginal` on `line` / `bar`, `text_auto` (except on `imshow`), `render_mode`,
   `color_discrete_map` given as a Plotly `px.colors` object, `px.Constant`.

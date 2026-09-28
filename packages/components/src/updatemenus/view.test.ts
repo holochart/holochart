@@ -277,6 +277,33 @@ describe('update menus view: dropdown', () => {
     expect(chart.relayout).toHaveBeenCalledWith({ 'updatemenus[0].active': 1 }, { gui: true });
   });
 
+  it('a late pointerover from a resting pointer does not undo the keyboard highlight', () => {
+    const chart = fakeChart();
+    const view = createUpdatemenusView(chart, context(dropdown()), { measure });
+    const header = view.root?.querySelector('button') as HTMLButtonElement;
+    const list = view.root?.querySelector('[role="listbox"]') as HTMLElement;
+    const options = [...list.querySelectorAll<HTMLElement>('[role="option"]')];
+    // Choose "First" with the mouse (the pointer stays over it), then the figure updates.
+    header.click();
+    options[1]?.querySelector('span')?.click();
+    view.update(context(dropdown({ active: 1 })));
+    // Reopen from the keyboard (under the resting pointer) and move down to "Second"...
+    header.focus();
+    key(header, 'ArrowDown');
+    key(list, 'ArrowDown');
+    expect(list.getAttribute('aria-activedescendant')).toBe(options[2]?.id);
+    // ...before the browser gets to the `pointerover` for the option under the pointer.
+    options[1]?.firstElementChild?.dispatchEvent(new MouseEvent('pointerover', { bubbles: true }));
+    expect(list.getAttribute('aria-activedescendant')).toBe(options[2]?.id);
+    key(list, 'Enter');
+    expect(chart.relayout).toHaveBeenLastCalledWith({ 'updatemenus[0].active': 2 }, { gui: true });
+    expect(header.textContent).toBe('Second');
+    // Moving the pointer does highlight.
+    key(header, 'ArrowDown');
+    options[0]?.firstElementChild?.dispatchEvent(new MouseEvent('pointermove', { bubbles: true }));
+    expect(list.getAttribute('aria-activedescendant')).toBe(options[0]?.id);
+  });
+
   it('a press outside closes the list', () => {
     const view = createUpdatemenusView(fakeChart(), context(dropdown()), { measure });
     const header = view.root?.querySelector('button') as HTMLButtonElement;

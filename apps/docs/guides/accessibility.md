@@ -1,6 +1,6 @@
 ---
 title: Accessibility guide
-description: How Holochart describes a canvas chart to screen readers — names, generated summaries, data tables — and its high-contrast themes, colorblind-safe palette, pattern encoding and reduced motion.
+description: How Holochart describes a canvas chart to screen readers — names, generated summaries, data tables — how keyboards explore its data and controls, and its high-contrast themes, colorblind-safe palette, pattern encoding and reduced motion.
 status: complete
 ---
 
@@ -11,8 +11,9 @@ A chart is drawn on a WebGL canvas, which assistive technology cannot see into. 
 description of the chart that screen readers read like any other page content. You get it on every
 chart without doing anything; this guide shows what it contains and how to make it better. It
 also covers the **generated summaries** of trends and extremes, the **data table** you can show
-under a chart, and the options for **low vision, color-vision deficiency and motion
-sensitivity**: high-contrast themes, the `Safe` palette, pattern encoding and reduced motion.
+under a chart, **keyboard access** to the data points and every control, and the options for
+**low vision, color-vision deficiency and motion sensitivity**: high-contrast themes, the `Safe`
+palette, pattern encoding and reduced motion.
 
 All accessibility options live in [`config.a11y`](/reference/config):
 
@@ -22,6 +23,7 @@ All accessibility options live in [`config.a11y`](/reference/config):
 | `a11y.dataTable`     | `'hidden'` | [Data tables](#data-tables): `'hidden'`, `'visible'` or `false`.     |
 | `a11y.patterns`      | `false`    | [Pattern encoding](#patterns-as-redundant-encoding) of bars, slices. |
 | `a11y.reducedMotion` | `'auto'`   | [Reduced motion](#reduced-motion): `'auto'`, `true` or `false`.      |
+| `a11y.keyboard`      | `true`     | [Keyboard access](#keyboard-access) to the data and the legend.      |
 
 <Example id="_dev/a11y-description" :height="400" />
 
@@ -42,7 +44,9 @@ The element you pass to `createChart` gets three attributes:
 browse mode and hand every key to the page. That only helps widgets that implement their whole
 keyboard model, and it would stop users from reading the description and data tables line by
 line. A `figure` keeps its content browsable: the description, the tables and the modebar
-toolbar. A static chart has no controls, so it is exposed as one image with a long description.
+toolbar. Keyboard navigation of the data has its own small `application` inside the figure (see
+[Keyboard access](#keyboard-access)). A static chart has no controls, so it is exposed as one
+image with a long description.
 
 The canvas and the hover labels are `aria-hidden`: the canvas has no content of its own, and hover
 labels come and go with the mouse. Everything they show is in the description.
@@ -247,6 +251,97 @@ formatted only when it scrolls into view. A table of a million points costs a fe
 ones it is reading. With visible tables, the hidden copies are left out of the description, so
 screen readers don't meet every table twice.
 
+## Keyboard access
+
+Every interactive chart can be explored and operated from the keyboard. **Tab** moves into the
+chart's **plot area**, which gets a focus ring in the text color; the arrow keys then move a cursor
+between the data points. Each point shows its hover label, as if the mouse were on it, and is
+announced to screen readers ("Revenue: (Mar 1, 2024, 11), point 3 of 6."). The legend, the update
+menus, the sliders, the modebar and the range selectors follow in the tab order.
+
+<Example id="accessibility/keyboard-focus" :height="400" />
+
+### Keys in the plot area
+
+| Key                 | Action                                                                    |
+| ------------------- | ------------------------------------------------------------------------- |
+| ← / →               | Previous / next point of the trace, along x.                              |
+| ↑ / ↓               | The trace drawn next above / below at the same x (lines, stacked bars).   |
+| Page Up / Page Down | Previous / next trace, in legend order, keeping the x position.           |
+| Home / End          | First / last point of the trace.                                          |
+| Enter / Space       | Click the point: the `click` event (with `clickmode: 'select'`, selects). |
+| Escape              | Clear the cursor and its label.                                           |
+| `+` / `-`           | Zoom in / out around the point (around the plot center without one).      |
+| Shift + ← → ↑ ↓     | Pan by a tenth of the range.                                              |
+| `0`                 | Reset the view, like a double-click (`config.doubleClick`).               |
+
+The first arrow key starts at the first point of the first trace. Details:
+
+- **What is visited**: visible traces in legend order (`legendrank`, then trace order, reversed
+  with a `reversed` `legend.traceorder`), skipping `hoverinfo: 'skip'`; only points whose x lies
+  inside the x range, so after zooming in the cursor stays in view. For horizontal traces
+  (`orientation: 'h'`) the roles turn with the chart: ↑ / ↓ step through the points along y, and
+  ← / → move between traces.
+- **Pie slices** are visited in drawing order (← / ↑ previous, → / ↓ next). Scatter, line, bar,
+  waterfall, funnel, OHLC and candlestick traces are navigated; histograms, box and violin plots,
+  2D maps (heatmap, contour, histogram2d), polar, 3D and hierarchy traces are not yet.
+- **Events**: moving emits `hover` (like `chart.hover()`, without a DOM event), Escape `unhover`,
+  Enter `click` with the same Plotly-shaped point as a mouse click and the `KeyboardEvent` as
+  `event`. Zoom, pan and reset emit one `relayout` with the keys a drag emits
+  (`'xaxis.range[0]'`, …) and respect `fixedrange` and `minallowed` / `maxallowed`.
+- **Announcements** go to a polite live region inside the plot area's focus target, with the text
+  of the hover label; zoom, pan and reset are announced too. They are localized like the modebar:
+  the English sentence is the locale dictionary key (`'{name}: {text}, point {n} of {count}.'`,
+  `'Zoomed in.'`, …).
+- Keys with Ctrl, Alt or Meta are left to the browser, and keys pressed while a control inside the
+  chart has focus stay with that control.
+
+The plot area's focus target is `role="application"`, so screen readers in browse mode hand it
+the arrow keys; the rest of the figure stays browsable. Its code loads the first time the chart
+gets focus.
+
+### The controls
+
+| Control               | Keyboard                                                                                                                                                           |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Legend                | A `toolbar` named "Legend", one tab stop: arrows, Home and End move between items; Enter or Space toggles (like a click), Shift + Enter isolates (a double-click). |
+| Update menus, sliders | See [Controls](/fundamentals/controls#keyboard-and-screen-readers): toolbars, listboxes and `slider`s with the usual keys.                                         |
+| Modebar               | A `toolbar`, one tab stop: arrows, Home and End move; Enter or Space press. It shows while a button has keyboard focus.                                            |
+| Range selector        | A `group` of buttons, each its own tab stop.                                                                                                                       |
+
+Toggles say whether they are on with `aria-pressed`: legend items while their trace (or label, or
+group) is shown, the modebar's drag mode, hover mode and spike line buttons, update menu buttons
+(with `showactive`) and range selector buttons while their range is in view. Every control has a
+visible focus ring in its text color in the default look and in `plotly-classic`; nothing shows a
+ring until it has keyboard focus. The legend is drawn on the canvas: its keyboard targets are
+transparent buttons laid over the items that only draw the focus ring, and the mouse keeps going to
+the canvas.
+
+### Tab order
+
+Inside the chart element, Tab visits:
+
+1. the plot area (data navigation);
+2. the legend (one stop);
+3. the update menus, in `layout.updatemenus` order (a button menu is one stop, a dropdown one);
+4. the sliders, in `layout.sliders` order;
+5. the modebar (one stop, while it is shown: `displayModeBar` is not `false`);
+6. the range selectors' buttons, one stop each;
+7. after the chart element: its visible data tables (`dataTable: 'visible'`).
+
+A control that appears only after the first draw (added by `react` or `relayout`) is placed at the
+end of this order.
+
+### Turning it off
+
+`config.a11y.keyboard: false` removes the plot area's tab stop and the legend's keyboard targets
+(the other controls stay reachable, being real buttons). Static charts (`config.staticPlot`) have
+neither.
+
+```ts
+createChart(el, { data, layout, config: { a11y: { keyboard: false } } });
+```
+
 ## Visual accessibility
 
 ### High-contrast themes
@@ -381,8 +476,9 @@ chart.
 
 ## What's next
 
-Keyboard navigation of points and legend items with focus and live announcements (plan E6.5,
-E17.4) comes next. [Locales](/fundamentals/locales) (E17.6) translate the modebar, format numbers
-and dates, and translate the generated summaries; the rest of the description (axes, trace lines,
-table captions) is English for now. Summaries don't announce changes as they happen (no live
+Keyboard navigation of histograms, box plots, 2D maps, polar charts and hierarchies (with Enter
+drilling down), and keys for the range slider's handles and for editing selections, come later.
+[Locales](/fundamentals/locales) (E17.6) translate the modebar, format numbers and dates, and
+translate the generated summaries and keyboard announcements; the rest of the description (axes,
+trace lines, table captions) is English for now. Summaries don't announce changes as they happen (no live
 region) and don't detect seasonality.

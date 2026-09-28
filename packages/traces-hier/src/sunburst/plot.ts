@@ -18,7 +18,14 @@
  * sector, or to the level above for the center. When that `level` arrives, the sectors tween from
  * where they were to the new layout (see `tween.ts`), and labels fade in at the end.
  */
-import { toRGBA, type FullTrace, type RGBA } from '@mk7s/holochart-core';
+import {
+  toRGBA,
+  uniformTextOf,
+  uniformTextSize,
+  type FullTrace,
+  type RGBA,
+  type UniformText,
+} from '@mk7s/holochart-core';
 import {
   createArcPrimitive,
   createTextPrimitive,
@@ -28,6 +35,7 @@ import {
   type TextLabel,
   type TextPrimitive,
 } from '@mk7s/holochart-render';
+import { negotiateUniformText, releaseUniformText } from '@mk7s/holochart-traces-basic';
 import type {
   Chart,
   ComponentPointerEvent,
@@ -38,6 +46,7 @@ import type {
 import { DEFAULT_LINE } from '../hierarchy/colors.ts';
 import { nodeAttr } from '../hierarchy/format.ts';
 import { isLeaf } from '../hierarchy/levels.ts';
+import type { UniformTextPass } from '../hierarchy/text.ts';
 import {
   canAnimate,
   chartOf,
@@ -264,8 +273,7 @@ class SunburstView implements TraceView<SunburstCalc> {
     const layout = calc.layout;
     const sectors = geometry?.sectors ?? [];
     const styles = sectorStyles(trace, sectors, ctx.fullLayout.paper_bgcolor);
-    this.#labels =
-      geometry && layout ? layoutSunburstText(trace, calc, geometry, layout, ctx.fullLayout) : [];
+    this.#labels = this.#layoutLabels(ctx, geometry);
 
     const entryId = geometry?.entry.id;
     const animate =
@@ -306,6 +314,45 @@ class SunburstView implements TraceView<SunburstCalc> {
 
   dispose(): void {
     this.#clock.stop();
+    const ctx = this.#ctx;
+    if (ctx) releaseUniformText(ctx.primitives, ctx.trace.type, this, false);
+  }
+
+  /**
+   * The labels of the last context, sized with `layout.uniformtext` (E4.6) as negotiated with the
+   * other sunbursts of the chart (Plotly's `_sunburstText_minsize`).
+   */
+  #layoutLabels(
+    ctx: TracePlotContext<SunburstCalc>,
+    geometry: ReturnType<typeof sunburstGeometry>,
+    uniform = uniformTextOf(ctx.fullLayout),
+  ): SectorLabel[] {
+    const { trace, calc, fullLayout } = ctx;
+    const layout = calc.layout;
+    if (!geometry || !layout) {
+      if (uniform.mode) releaseUniformText(ctx.primitives, trace.type, this);
+      return [];
+    }
+    const pass: UniformTextPass = { uniform, items: [] };
+    const labels = layoutSunburstText(trace, calc, geometry, layout, fullLayout, pass);
+    const size = negotiateUniformText(ctx.primitives, trace.type, this, pass.items, uniform, (u) =>
+      this.#refresh(u),
+    );
+    if (size === uniformTextSize(pass.items, uniform)) return labels;
+    return layoutSunburstText(trace, calc, geometry, layout, fullLayout, {
+      uniform,
+      size,
+      items: [],
+    });
+  }
+
+  /** Redraw the labels with another sunburst's `uniformtext` negotiation. */
+  #refresh(uniform: UniformText): void {
+    const ctx = this.#ctx;
+    if (!ctx) return;
+    this.#labels = this.#layoutLabels(ctx, sunburstGeometry(ctx.calc, ctx.trace), uniform);
+    if (!this.#clock.running) this.#draw(this.#drawn, this.#drawnStyles, 1);
+    ctx.invalidate();
   }
 
   /**

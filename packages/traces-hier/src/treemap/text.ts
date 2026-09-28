@@ -10,11 +10,13 @@
  *   headers in their padding band (on top, or at the bottom for the `bottom` positions), path bar
  *   labels on the left.
  * - **Size**: shrunk (never grown) to fit. Unlike Plotly, a label that is too wide first wraps at
- *   spaces when that lets it stay larger (headers and path bar labels keep one line).
+ *   spaces when that lets it stay larger (headers and path bar labels keep one line). With
+ *   `layout.uniformtext` (E4.6), every label, path bar labels included, is then resized to the
+ *   size negotiated across the traces of the type.
  *
  * Pure and in domain px (y down); text sizes come from the render layer's synchronous metrics.
  */
-import type { FullLayout, FullTrace } from '@mk7s/holochart-core';
+import type { FullLayout, FullTrace, UniformTextItem } from '@mk7s/holochart-core';
 import {
   layoutTextRuns,
   scaleTextRuns,
@@ -25,7 +27,15 @@ import {
 import { labelContent, measureLabel } from '@mk7s/holochart-traces-basic';
 import type { HierarchyCalc } from '../hierarchy/calc.ts';
 import { nodeContext, nodeText } from '../hierarchy/format.ts';
-import { LINE_HEIGHT, MIN_FONT_SIZE, nodeFont } from '../hierarchy/text.ts';
+import {
+  LINE_HEIGHT,
+  MIN_FONT_SIZE,
+  nodeFont,
+  uniformFont,
+  uniformScales,
+  uniformTextPass,
+  type UniformTextPass,
+} from '../hierarchy/text.ts';
 import type { NodeLabel } from '../hierarchy/view.ts';
 import { TEXTPAD } from './defaults.ts';
 import { numberIn, type RectGeometry, type Segment, type Tile } from './geometry.ts';
@@ -88,7 +98,13 @@ export function placeInRect(
   width: number,
   height: number,
   spot: TextSpot,
-  opts: { readonly header?: boolean; readonly onPathbar?: boolean; readonly pads?: Pads } = {},
+  opts: {
+    readonly header?: boolean;
+    readonly onPathbar?: boolean;
+    readonly pads?: Pads;
+    /** Scale to place at instead of the fit's (`uniformtext` resizing). */
+    readonly scale?: number;
+  } = {},
 ): Placement {
   let { x0, x1, y0, y1 } = rect;
   const top = spot.top || (opts.header === true && !spot.bottom);
@@ -111,7 +127,7 @@ export function placeInRect(
   const pad = lx > 2 * TEXTPAD && ly > 2 * TEXTPAD ? TEXTPAD : 0;
   lx -= 2 * pad;
   ly -= 2 * pad;
-  const scale = Math.min(1, lx / width, ly / height);
+  const scale = opts.scale ?? Math.min(1, lx / width, ly / height);
   const w = (scale * width) / 2;
   const h = (scale * height) / 2;
   return {
@@ -192,13 +208,15 @@ function labelAt(
 
 /**
  * Place the labels of the tiles and path bar segments of `geometry` (domain px). Tiles without
- * text, or whose label would shrink below 1 px, get none.
+ * text, or whose label would shrink below 1 px, get none. `pass` applies `layout.uniformtext` (see
+ * {@link UniformTextPass}).
  */
 export function layoutRectText(
   trace: FullTrace,
   calc: HierarchyCalc,
   geometry: RectGeometry,
   fullLayout: FullLayout,
+  pass: UniformTextPass = uniformTextPass(fullLayout),
 ): NodeLabel[] {
   const hierarchy = calc.hierarchy;
   if (!hierarchy) return [];
@@ -208,32 +226,40 @@ export function layoutRectText(
   const treemap = trace.type === 'treemap';
   const noHeaders = spot.bottom ? !pads.b : !pads.t;
   const align = spot.right ? 'right' : spot.left ? 'left' : 'center';
-  const labels: NodeLabel[] = [];
+  const placed: {
+    item: Tile | Segment;
+    content: Content;
+    box: { width: number; height: number };
+    opts: { header: boolean; onPathbar: boolean; pads: Pads };
+    at: Placement;
+    color: NodeLabel['color'];
+  }[] = [];
+  const fits: UniformTextItem[] = [];
 
   const add = (item: Tile | Segment, raw: string, onPathbar: boolean, header: boolean): void => {
     if (!raw || !(item.x1 > item.x0 && item.y1 > item.y0)) return;
     const { font, color } = nodeFont(trace, calc.colorscale, item.node, fullLayout, onPathbar);
-    let content = labelContent(raw, font);
+    let content = labelContent(raw, uniformFont(font, pass));
     if (!content.text) return;
     let box = sizeOf(content);
     if (!(box.width > 0 && box.height > 0)) return;
     const opts = { header, onPathbar, pads };
-    let placed = placeInRect(item, box.width, box.height, spot, opts);
-    if (placed.scale < 1 && !header && !onPathbar && /\s/.test(content.text)) {
+    let at = placeInRect(item, box.width, box.height, spot, opts);
+    if (at.scale < 1 && !header && !onPathbar && /\s/.test(content.text)) {
       const lx = item.x1 - item.x0 - 2 * TEXTPAD;
       const ly = item.y1 - item.y0 - 2 * TEXTPAD;
       // Wrapping helps labels that are short of width, not of height.
       if (lx > 0 && ly / box.height > lx / box.width) {
-        const fit = wrapToFit(content, lx, ly, placed.scale);
+        const fit = wrapToFit(content, lx, ly, at.scale);
         if (fit) {
           content = fit.content;
           box = fit;
-          placed = placeInRect(item, box.width, box.height, spot, opts);
+          at = placeInRect(item, box.width, box.height, spot, opts);
         }
       }
     }
-    const label = labelAt(content, content.font, placed, color, onPathbar ? 'left' : align);
-    if (label) labels.push(label);
+    placed.push({ item, content, box, opts, at, color });
+    fits.push({ fontSize: content.font.size, scale: Math.min(1, at.scale) });
   };
 
   for (const tile of geometry.tiles) {
@@ -243,5 +269,17 @@ export function layoutRectText(
     add(tile, raw, false, header);
   }
   for (const s of geometry.pathbar) add(s, s.node.label.split('<br>').join(' '), true, false);
+
+  const scales = uniformScales(fits, pass);
+  const labels: NodeLabel[] = [];
+  placed.forEach(({ item, content, box, opts, at, color }, k) => {
+    const scale = scales[k]!;
+    const where =
+      scale === fits[k]!.scale
+        ? at
+        : placeInRect(item, box.width, box.height, spot, { ...opts, scale });
+    const label = labelAt(content, content.font, where, color, opts.onPathbar ? 'left' : align);
+    if (label) labels.push(label);
+  });
   return labels;
 }

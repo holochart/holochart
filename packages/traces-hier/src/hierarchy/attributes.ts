@@ -7,8 +7,8 @@
  * uses into its own schema; builders are called inside the modules' pure IIFEs, so bundles without
  * a hierarchy trace drop them.
  *
- * Deferred: `marker.coloraxis` (shared color axes), `texttemplatefallback` /
- * `hovertemplatefallback`, and the font `variant` / `textcase` / `lineposition` / `shadow` fields.
+ * Deferred: `texttemplatefallback` / `hovertemplatefallback`, and the font `variant` / `textcase` /
+ * `lineposition` / `shadow` fields.
  */
 import { attr, type AttrSpec } from '@mk7s/holochart-core';
 import { colorscaleAttributes, patternAttributes } from '@mk7s/holochart-traces-basic';
@@ -100,13 +100,13 @@ export function hierarchyDataAttributes(what: string) {
 
 /**
  * `marker` of a hierarchy trace: colors (with colorscale attributes, which recolor through calc as
- * in Plotly), outline (`lineWidth` default) and pattern.
+ * in Plotly, or a shared `coloraxis`), outline (`lineWidth` default) and pattern.
  */
 export function hierarchyMarkerAttributes(what: string, lineWidth: number) {
   const scale = colorscaleAttributes({
     colorAttr: 'marker.colors',
     showscale: true,
-    coloraxis: false,
+    coloraxis: true,
   });
   // Node colors are resolved in calc (Plotly: `editType: 'calc'`), unlike GPU-mapped markers.
   const calcEdits = Object.fromEntries(
@@ -237,7 +237,10 @@ export function hierarchyTextAttributes(what: string) {
   } as const;
 }
 
-/** Layout attributes of a hierarchy type (`<type>colorway`, `extend<type>colors`). */
+/**
+ * Layout attributes of a hierarchy type (`<type>colorway`, `extend<type>colors`). The modules add
+ * the color axes `marker.coloraxis` refers to (`coloraxisLayoutSchema`).
+ */
 export function hierarchyLayoutAttributes(type: string) {
   return {
     [`${type}colorway`]: attr.colorlist({

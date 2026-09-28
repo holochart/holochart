@@ -11,7 +11,13 @@
  * bar segment. When the new `level` arrives, tiles and segments tween over 750 ms (`tween.ts`) and
  * labels fade in at the end.
  */
-import { toRGBA, type FullTrace } from '@mk7s/holochart-core';
+import {
+  toRGBA,
+  uniformTextOf,
+  uniformTextSize,
+  type FullTrace,
+  type UniformText,
+} from '@mk7s/holochart-core';
 import {
   createLazyFillPrimitive,
   createRectPrimitive,
@@ -24,6 +30,7 @@ import {
   type RectPrimitive,
   type TextPrimitive,
 } from '@mk7s/holochart-render';
+import { negotiateUniformText, releaseUniformText } from '@mk7s/holochart-traces-basic';
 import type {
   Chart,
   ComponentPointerEvent,
@@ -32,6 +39,7 @@ import type {
   TraceView,
 } from '@mk7s/holochart-runtime';
 import type { HierNode } from '../hierarchy/build.ts';
+import type { UniformTextPass } from '../hierarchy/text.ts';
 import {
   canAnimate,
   chartOf,
@@ -243,14 +251,7 @@ class RectView implements TraceView<RectCalc> {
     const segmentStyles = geometry
       ? rectStyles(trace, segments, geometry, paper, { ...options, onPathbar: true })
       : [];
-    this.#labels =
-      geometry && layout
-        ? layoutRectText(trace, calc, geometry, fullLayout).map((l) => ({
-            ...l,
-            x: l.x + layout.x,
-            y: l.y + layout.y,
-          }))
-        : [];
+    this.#labels = this.#layoutLabels(ctx, geometry);
 
     const prev = this.#drawn;
     const entry = geometry ? rectKey(geometry.entry) : undefined;
@@ -314,6 +315,42 @@ class RectView implements TraceView<RectCalc> {
 
   dispose(): void {
     this.#clock.stop();
+    const ctx = this.#ctx;
+    if (ctx) releaseUniformText(ctx.primitives, ctx.trace.type, this, false);
+  }
+
+  /**
+   * The labels of `geometry` in container px, sized with `layout.uniformtext` (E4.6) as negotiated
+   * with the other traces of the type in the chart (Plotly's `_treemapText_minsize`).
+   */
+  #layoutLabels(
+    ctx: TracePlotContext<RectCalc>,
+    geometry: RectGeometry | undefined,
+    uniform = uniformTextOf(ctx.fullLayout),
+  ): NodeLabel[] {
+    const { trace, calc, fullLayout } = ctx;
+    const layout = calc.layout;
+    if (!geometry || !layout) {
+      if (uniform.mode) releaseUniformText(ctx.primitives, trace.type, this);
+      return [];
+    }
+    const pass: UniformTextPass = { uniform, items: [] };
+    let labels = layoutRectText(trace, calc, geometry, fullLayout, pass);
+    const size = negotiateUniformText(ctx.primitives, trace.type, this, pass.items, uniform, (u) =>
+      this.#refresh(u),
+    );
+    if (size !== uniformTextSize(pass.items, uniform)) {
+      labels = layoutRectText(trace, calc, geometry, fullLayout, { uniform, size, items: [] });
+    }
+    return labels.map((l) => ({ ...l, x: l.x + layout.x, y: l.y + layout.y }));
+  }
+
+  /** Redraw the labels with another trace's `uniformtext` negotiation. */
+  #refresh(uniform: UniformText): void {
+    const ctx = this.#ctx;
+    if (!ctx) return;
+    this.#labels = this.#layoutLabels(ctx, this.#geometry, uniform);
+    if (!this.#clock.running) this.#drawFinal();
   }
 
   /**

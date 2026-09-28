@@ -25,7 +25,8 @@ import type {
   TraceModule,
 } from '../contracts.ts';
 import type { ChartPoint } from '../events.ts';
-import { perPoint, traceAttr, type Hovermode } from './settings.ts';
+import { perPoint, traceAttr } from './point-values.ts';
+import type { Hovermode } from './settings.ts';
 import { formatTemplate, splitExtra } from './template.ts';
 
 /**

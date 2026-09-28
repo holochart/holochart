@@ -23,9 +23,9 @@ export function supplyIcicleDefaults(
 
 /** Layout defaults for icicles: `iciclecolorway` defaults to `colorway`. */
 export function supplyIcicleLayoutDefaults(
-  _layoutIn: Readonly<Record<string, unknown>>,
+  layoutIn: Readonly<Record<string, unknown>>,
   layoutOut: FullLayout,
   ctx: LayoutDefaultsContext,
 ): void {
-  supplyHierarchyLayoutDefaults('icicle', layoutOut, ctx);
+  supplyHierarchyLayoutDefaults('icicle', layoutIn, layoutOut, ctx);
 }

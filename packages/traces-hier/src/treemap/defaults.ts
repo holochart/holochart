@@ -62,9 +62,9 @@ export function supplyTreemapDefaults(
 
 /** Layout defaults for treemaps: `treemapcolorway` defaults to `colorway`. */
 export function supplyTreemapLayoutDefaults(
-  _layoutIn: Readonly<Record<string, unknown>>,
+  layoutIn: Readonly<Record<string, unknown>>,
   layoutOut: FullLayout,
   ctx: LayoutDefaultsContext,
 ): void {
-  supplyHierarchyLayoutDefaults('treemap', layoutOut, ctx);
+  supplyHierarchyLayoutDefaults('treemap', layoutIn, layoutOut, ctx);
 }

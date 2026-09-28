@@ -10,7 +10,7 @@ import {
   type TraceDefaultsContext,
 } from '@mk7s/holochart-core';
 import { supplyColorscaleDefaults, supplyPatternDefaults } from '@mk7s/holochart-traces-basic';
-import { hierarchyHasColorscale } from './colors.ts';
+import { hierarchyHasColorscale, supplyHierarchyColoraxisDefaults } from './colors.ts';
 
 function nonEmpty(v: unknown): boolean {
   return isArrayLike(v) && v.length > 0;
@@ -100,12 +100,17 @@ export function supplyHierarchyTextDefaults(
   ctx.coerceContainer('outsidetextfont', inherited);
 }
 
-/** Layout defaults of a hierarchy type: `<type>colorway` defaults to `colorway`. */
+/**
+ * Layout defaults of a hierarchy type: `<type>colorway` defaults to `colorway`; the color axes
+ * `marker.coloraxis` refers to.
+ */
 export function supplyHierarchyLayoutDefaults(
   type: string,
+  layoutIn: Readonly<Record<string, unknown>>,
   layoutOut: FullLayout,
   ctx: LayoutDefaultsContext,
 ): void {
   ctx.coerce(`${type}colorway`, layoutOut.colorway);
   ctx.coerce(`extend${type}colors`);
+  supplyHierarchyColoraxisDefaults(layoutIn, layoutOut, ctx);
 }

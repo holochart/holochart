@@ -46,13 +46,14 @@ export function describeParcoords(ctx: DescribeContext<ParcoordsCalc>): TraceDes
   }
   const colors = calc.colors;
   const shown = Math.max(0, Math.min(calc.length, ctx.maxRows));
+  const row = (r: number): string[] => {
+    const cells = calc.dimensions.map((d) => num(d.values[r]));
+    if (colors) cells.push(num(colors[r]));
+    if (mask) cells.push(mask[r] ? 'yes' : 'no');
+    return cells;
+  };
   const rows: string[][] = [];
-  for (let r = 0; r < shown; r++) {
-    const row = calc.dimensions.map((d) => num(d.values[r]));
-    if (colors) row.push(num(colors[r]));
-    if (mask) row.push(mask[r] ? 'yes' : 'no');
-    rows.push(row);
-  }
+  for (let r = 0; r < shown; r++) rows.push(row(r));
   return {
     kind: 'parallel coordinates',
     summary,
@@ -61,6 +62,7 @@ export function describeParcoords(ctx: DescribeContext<ParcoordsCalc>): TraceDes
       columns: [...names, ...(colors ? ['Color value'] : []), ...(mask ? ['Selected'] : [])],
       rows,
       total: calc.length,
+      row,
     },
   };
 }

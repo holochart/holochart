@@ -3,8 +3,6 @@
  * `traces/icicle/attributes.js` and `layout_attributes.js`: the hierarchy attributes shared with
  * sunburst and treemap (`../hierarchy/attributes.ts`) plus `tiling` (orientation, flip, pad), the
  * path bar and `textposition` of treemaps. `domain` comes from the registry.
- *
- * Deferred: `uniformtext` sizing (E4.6), `marker.coloraxis`.
  */
 import { attr } from '@mk7s/holochart-core';
 import {

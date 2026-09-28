@@ -6,7 +6,9 @@ import {
   type Primitive,
   type Viewport,
 } from '@mk7s/holochart-render';
-import type { TracePlotContext } from '@mk7s/holochart-runtime';
+import { supplyDefaults } from '@mk7s/holochart-core';
+import { createChartRegistry, type TracePlotContext } from '@mk7s/holochart-runtime';
+import { scatter } from '@mk7s/holochart-traces-basic';
 import { describe, expect, it, vi } from 'vitest';
 import { layoutSectors, sectorAt, sunburstGeometry, type SunburstCalc } from './geometry.ts';
 import { sunburstClick, sunburstHoverPoints } from './hover.ts';
@@ -15,6 +17,8 @@ import { sectorArcs, sectorStyles } from './plot.ts';
 import { contrastColor, layoutSunburstText } from './text.ts';
 import { lerpState, planTween, stateOf } from './tween.ts';
 import { build, defaults, EVE, type Built } from './__testing__/build.ts';
+import type { UniformTextPass } from '../hierarchy/text.ts';
+import { canAnimate } from '../hierarchy/view.ts';
 
 // troika typesets in a worker with browser globals; the view tests only need its object graph.
 // Mocked by path, like pie's tests: traces-hier does not depend on troika, render does.
@@ -241,6 +245,59 @@ describe('sunburst colors', () => {
     // Colored by leaf counts: 1 (a leaf) to 6 (the root).
     expect(bar).toMatchObject({ cmin: 1, cmax: 6 });
   });
+
+  it('shares layout.coloraxis across traces with marker.coloraxis (colored by values)', () => {
+    const b = build(
+      [
+        { ...EVE, marker: { coloraxis: 'coloraxis' }, domain: { x: [0, 0.5] } },
+        {
+          ...EVE,
+          marker: { colors: [0, 100, 50, 50, 50, 50, 50, 50, 50], coloraxis: 'coloraxis' },
+          domain: { x: [0.5, 1] },
+        },
+      ],
+      {
+        coloraxis: {
+          colorscale: [
+            [0, '#000000'],
+            [1, '#ffffff'],
+          ],
+          colorbar: { len: 0.5 },
+        },
+      },
+    );
+    const axis = b.fullLayout['coloraxis'] as Record<string, unknown>;
+    expect(axis).toMatchObject({ _min: 0, _max: 100, showscale: true });
+    expect(b.traces[0]!['_hasColorscale']).toBe(true);
+    expect(b.traces[0]!['leaf']).toEqual({ opacity: 1 });
+    // Trace 0 is colored by its values on the shared domain: Eve (10) is 10% of the way.
+    const eve = b.calcs[0]!.hierarchy!.nodes.find((n) => n.id === 'Eve')!;
+    expect(eve.color).toBe('rgb(26, 26, 26)');
+    const cain = b.calcs[1]!.hierarchy!.nodes.find((n) => n.id === 'Cain')!;
+    expect(cain.color).toBe('rgb(255, 255, 255)');
+    // One colorbar for the axis, whichever trace reports it.
+    for (const trace of b.traces) {
+      expect(sunburst.colorbar!(trace, { fullLayout: b.fullLayout })).toMatchObject({
+        coloraxis: 'coloraxis',
+        cmin: 0,
+        cmax: 100,
+        attributes: { len: 0.5 },
+      });
+    }
+  });
+
+  it('merges its coloraxis extent with scatter markers on the same axis, in any order', () => {
+    const registry = createChartRegistry().register(sunburst, scatter);
+    const sun = { type: 'sunburst', ...EVE, marker: { coloraxis: 'coloraxis' } };
+    const dots = { type: 'scatter', y: [1], marker: { color: [-5], coloraxis: 'coloraxis' } };
+    for (const data of [
+      [sun, dots],
+      [dots, sun],
+    ]) {
+      const { fullLayout } = supplyDefaults({ data }, registry.core);
+      expect(fullLayout['coloraxis']).toMatchObject({ _min: -5, _max: 14 });
+    }
+  });
 });
 
 describe('sunburst labels', () => {
@@ -287,6 +344,58 @@ describe('sunburst labels', () => {
     expect(labels.some((l) => l.font.size < 40)).toBe(true);
     const tiny = build([{ labels: ['R', 'a', 'b'], parents: ['', 'R', 'R'], values: [0, 1e6, 1] }]);
     expect(labelsOf(tiny).map((l) => l.text)).not.toContain('b');
+  });
+});
+
+describe('sunburst uniformtext', () => {
+  const sizesOf = (layout: Record<string, unknown>) => {
+    const b = build([{ ...EVE, textfont: { size: 30 } }], layout);
+    const g = sunburstGeometry(b.calcs[0]!, b.traces[0]!)!;
+    return layoutSunburstText(b.traces[0]!, b.calcs[0]!, g, b.calcs[0]!.layout!, b.fullLayout).map(
+      (l) => [l.text, l.font.size] as const,
+    );
+  };
+
+  it('sizes every label alike in show mode, and hides those under minsize in hide mode', () => {
+    const free = sizesOf({});
+    const fitted = new Set(free.map(([, size]) => size));
+    expect(fitted.size).toBeGreaterThan(1);
+    const shown = sizesOf({ uniformtext: { mode: 'show', minsize: 0 } });
+    expect(shown).toHaveLength(free.length);
+    const smallest = Math.min(...free.map(([, size]) => size));
+    expect(new Set(shown.map(([, size]) => size))).toEqual(new Set([smallest]));
+    // Labels that would be drawn under minsize are hidden candidates: gone in hide mode, at the
+    // uniform size (the smallest of the others) in show mode.
+    const minsize = [...fitted].sort((a, b) => a - b)[1]!;
+    const hidden = sizesOf({ uniformtext: { mode: 'hide', minsize } });
+    expect(hidden.length).toBeLessThan(free.length);
+    expect(new Set(hidden.map(([, size]) => size))).toEqual(new Set([minsize]));
+    const all = sizesOf({ uniformtext: { mode: 'show', minsize } });
+    expect(new Set(all.map(([, size]) => size))).toEqual(new Set([minsize]));
+    expect(all).toHaveLength(free.length);
+  });
+
+  it('negotiates one size across the sunbursts of a pass and turns drill-down tweens off', () => {
+    const pass: UniformTextPass = { uniform: { mode: 'show', minsize: 0 }, size: 5, items: [] };
+    const b = build([EVE], { uniformtext: { mode: 'show' } });
+    const g = sunburstGeometry(b.calcs[0]!, b.traces[0]!)!;
+    const labels = layoutSunburstText(
+      b.traces[0]!,
+      b.calcs[0]!,
+      g,
+      b.calcs[0]!.layout!,
+      b.fullLayout,
+      pass,
+    );
+    expect(new Set(labels.map((l) => l.font.size))).toEqual(new Set([5]));
+    expect(pass.items).toHaveLength(labels.length);
+    vi.stubGlobal('requestAnimationFrame', () => 0);
+    try {
+      expect(canAnimate(b.fullLayout)).toBe(false);
+      expect(canAnimate(build([EVE]).fullLayout)).toBe(true);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 
@@ -409,7 +518,7 @@ describe('sunburst drill-down transition', () => {
 });
 
 describe('sunburst view', () => {
-  function plotContext(built: Built, index = 0) {
+  function plotContext(built: Built, index = 0, primitives?: TracePlotContext['primitives']) {
     const added: Primitive<unknown>[] = [];
     const ctx: TracePlotContext<SunburstCalc> = {
       trace: built.traces[index]!,
@@ -422,7 +531,7 @@ describe('sunburst view', () => {
       transform: IDENTITY_TRANSFORM,
       viewport: { size: { width: 600, height: 400, pixelRatio: 1 } } as unknown as Viewport,
       domain: built.entries[index]!.domain,
-      primitives: { resources: createResourceManager(), invalidate: vi.fn() },
+      primitives: primitives ?? { resources: createResourceManager(), invalidate: vi.fn() },
       add: (p) => {
         added.push(p as Primitive<unknown>);
         return p;
@@ -450,6 +559,35 @@ describe('sunburst view', () => {
     }
     view.update(ctx, { calc: false, plot: true, style: true, transform: false });
     expect(added).toHaveLength(2);
+  });
+
+  it('negotiates uniformtext across the sunbursts of a chart, refreshing earlier ones', () => {
+    const built = build(
+      [
+        { ...EVE, textfont: { size: 40 }, domain: { x: [0, 0.5] } },
+        { ...EVE, domain: { x: [0.5, 1] } },
+      ],
+      { uniformtext: { mode: 'show', minsize: 0 } },
+    );
+    const primitives = { resources: createResourceManager(), invalidate: vi.fn() };
+    const first = plotContext(built, 0, primitives);
+    const second = plotContext(built, 1, primitives);
+    const sizes = (added: Primitive<unknown>[]) => {
+      const text = added.find((p) => p instanceof TextPrimitive) as unknown as {
+        data: { labels: { font: { size: number } }[] };
+      };
+      return new Set(text.data.labels.map((l) => l.font.size));
+    };
+    const a = sunburst.plot!.create(first.ctx);
+    const own = [...sizes(first.added)];
+    expect(own).toHaveLength(1);
+    const b = sunburst.plot!.create(second.ctx);
+    // The second's 12 px labels are smaller than the first's fitted 40 px ones: it follows.
+    const [size] = [...sizes(second.added)];
+    expect(size).toBeLessThan(own[0]!);
+    expect(sizes(first.added)).toEqual(new Set([size]));
+    b.dispose?.();
+    a.dispose?.();
   });
 
   it('places wedges in world px with half-width borders and outer rims', () => {
@@ -481,5 +619,25 @@ describe('sunburst view', () => {
     expect(patterns[4]).toMatchObject({ shape: '/', bgcolor: 'white' });
     expect(patterns[0]).toBeUndefined();
     expect(patterns[5]).toBeUndefined();
+  });
+});
+
+describe('sunburst description', () => {
+  it('formats every node on demand, past maxRows (the visible data table, E17.3)', () => {
+    const b = build([EVE]);
+    const describeWith = (maxRows: number) =>
+      sunburst.describe!({
+        ...b.entries[0]!,
+        fullLayout: b.fullLayout,
+        xaxis: undefined,
+        yaxis: undefined,
+        maxRows,
+      })!.table!;
+    const all = describeWith(100);
+    const t = describeWith(3);
+    expect(t.rows).toEqual(all.rows.slice(0, 3));
+    expect(t.total).toBe(9);
+    expect(Array.from({ length: 9 }, (_, i) => t.row!(i))).toEqual(all.rows);
+    expect(t.row!(8)?.[0]).toBe('Enoch');
   });
 });

@@ -73,12 +73,12 @@ describe('path (px process_dataframe_hierarchy)', () => {
       domain,
     });
     // Values-weighted means: Asia (70·10 + 60·30) / 40, Europe (80·4 + 75·6) / 10.
-    expect(marker).toMatchObject({
-      colors: [70, 80, 60, 75, 62.5, 77],
-      showscale: true,
-      colorbar: { title: { text: 'lifeExp' } },
+    // The colorscale and colorbar on layout.coloraxis, as px.
+    expect(marker).toEqual({ colors: [70, 80, 60, 75, 62.5, 77], coloraxis: 'coloraxis' });
+    expect(f.layout).toEqual({
+      coloraxis: { colorbar: { title: { text: 'lifeExp' } }, colorscale: expect.anything() },
+      legend: { tracegroupgap: 0 },
     });
-    expect(f.layout).toEqual({ legend: { tracegroupgap: 0 } });
     const classic = sunburst(rows, { path: ['continent'], template: 'plotly-classic' });
     expect(classic.layout).toMatchObject({ margin: { t: 60 } });
   });
@@ -292,21 +292,23 @@ describe('without path', () => {
       ids: ['1', '2', '3'],
       branchvalues: 'remainder',
       maxdepth: 2,
-      marker: {
-        colors: [3, 1, 2],
+      marker: { colors: [3, 1, 2], coloraxis: 'coloraxis' },
+      hovertemplate:
+        'label=%{label}<br>value=%{value}<br>parent=%{parent}<br>id=%{id}<br>color=%{color}<extra></extra>',
+    });
+    expect(f.layout).toMatchObject({
+      title: { text: 'Tree' },
+      width: 300,
+      coloraxis: {
         colorscale: [
           [0, 'white'],
           [1, 'black'],
         ],
         cmin: 0,
         cmax: 4,
-        showscale: true,
         colorbar: { title: { text: 'color' } },
       },
-      hovertemplate:
-        'label=%{label}<br>value=%{value}<br>parent=%{parent}<br>id=%{id}<br>color=%{color}<extra></extra>',
     });
-    expect(f.layout).toMatchObject({ title: { text: 'Tree' }, width: 300 });
   });
 
   it('renders when given an element', async () => {

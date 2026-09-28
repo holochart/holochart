@@ -69,8 +69,7 @@ export interface Config {
   readonly continuousColor?: 'marker' | 'line' | 'pie' | 'sectors';
   /**
    * Put a numeric color's colorscale and colorbar on the trace (`line.colorscale`, `showscale`)
-   * rather than on `layout.coloraxis`: Holochart's `parcoords` / `parcats` have no `line.coloraxis`,
-   * and its hierarchy traces no `marker.coloraxis` yet.
+   * rather than on `layout.coloraxis`: Holochart's `parcoords` / `parcats` have no `line.coloraxis`.
    */
   readonly inlineColorscale?: boolean;
   /**

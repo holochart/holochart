@@ -5,7 +5,7 @@
  * and `cornerradius` of `marker`, the path bar (`pathbar`, shared with icicle) and 9-way
  * `textposition`. `domain` comes from the registry (the trace is in the `domain` category).
  *
- * Deferred: the "city" 3D treemap (P2), `uniformtext` sizing (E4.6), `marker.coloraxis`.
+ * Deferred: the "city" 3D treemap (P2).
  */
 import { attr } from '@mk7s/holochart-core';
 import {
