@@ -202,6 +202,8 @@ export class PolarSubplot {
     this.layout = layout;
     this.radialAxis = (layout['radialaxis'] ?? {}) as Container;
     this.angularAxis = (layout['angularaxis'] ?? {}) as Container;
+    // The tick machinery reads the chart's locale from the axis (plan E17.6), as on cartesian ones.
+    this.radialAxis['_locale'] = this.angularAxis['_locale'] = fullLayout._locale;
     this.plotWidth = plotArea.width;
     this.sectorDeg = normalizeSector(layout['sector'] as unknown[] | undefined);
     this.sector = [deg2rad(this.sectorDeg[0]), deg2rad(this.sectorDeg[1])];

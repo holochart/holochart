@@ -12,7 +12,15 @@
  * over the legend or the plot (M2 carry-forward: the always-shown touch toolbar covered the top
  * legend of the default look).
  */
-import { attr, isPlainObject, toRGBA, type FullLayout, type FullTrace } from '@mk7s/holochart-core';
+import {
+  attr,
+  isPlainObject,
+  localeOf,
+  toRGBA,
+  type FullLayout,
+  type FullTrace,
+  type Locale,
+} from '@mk7s/holochart-core';
 import type {
   Chart,
   ComponentDrawContext,
@@ -444,7 +452,11 @@ export function createModebarView<Ctx extends ModebarViewContext>(
     releaseHost = undefined;
   };
 
-  const build = (bar: HTMLDivElement, groups: readonly ModebarButtonGroup[]): void => {
+  const build = (
+    bar: HTMLDivElement,
+    groups: readonly ModebarButtonGroup[],
+    locale: Locale,
+  ): void => {
     const doc = bar.ownerDocument;
     const hadFocus = bar.contains(doc.activeElement);
     bar.replaceChildren();
@@ -456,8 +468,10 @@ export function createModebarView<Ctx extends ModebarViewContext>(
         const el = doc.createElement('button');
         el.type = 'button';
         el.className = 'hc-modebar-btn';
-        el.title = button.title;
-        el.setAttribute('aria-label', button.title);
+        // Built-in titles are Plotly's dictionary keys (plan E17.6); custom ones are the user's.
+        const title = button.builtin ? locale._(button.title) : button.title;
+        el.title = title;
+        el.setAttribute('aria-label', title);
         el.dataset['button'] = button.name;
         el.tabIndex = -1;
         el.appendChild(iconElement(doc, button.icon));
@@ -524,12 +538,13 @@ export function createModebarView<Ctx extends ModebarViewContext>(
       allAxesFixed: axisList.length > 0 && axisList.every(modebarAxisFixed),
       warn,
     });
-    const nextKey = modebarButtonsKey(groups);
+    const locale = localeOf(c.fullLayout);
+    const nextKey = `${modebarButtonsKey(groups)}|${locale.name}`;
     const nextCustoms = groups.flatMap((g) => g.flatMap((b) => (b.custom ? [b.custom] : [])));
     const sameCustoms =
       nextCustoms.length === customs.length && nextCustoms.every((b, i) => b === customs[i]);
     if (nextKey !== key || !sameCustoms) {
-      build(toolbar, groups);
+      build(toolbar, groups, locale);
       key = nextKey;
       customs = nextCustoms;
     }

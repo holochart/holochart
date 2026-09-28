@@ -24,15 +24,15 @@ Holochart implements the Plotly figure format, and parts of its behavior follow 
 (attribute defaults, pie layout, shapes, autorange, stacking, hover). The color data is taken
 from plotly.py's `plotly.colors`, which collects it from the sources below.
 
-| Work                                                                                                  | License      | Where                                                       |
-| ----------------------------------------------------------------------------------------------------- | ------------ | ----------------------------------------------------------- |
-| [plotly.js](https://github.com/plotly/plotly.js), [plotly.py](https://github.com/plotly/plotly.py)    | MIT          | behavior and algorithms ported; color lists (`core/colors`) |
-| [ColorBrewer](https://colorbrewer2.org) by Cynthia Brewer, Mark Harrower and Penn State               | Apache-2.0   | `core/colors/data/colorbrewer.ts`, `qualitative.ts`         |
-| [CARTOColors](https://github.com/CartoDB/CartoColor) by CARTO                                         | CC BY 3.0    | `core/colors/data/carto.ts`, `qualitative.ts`               |
-| [cmocean](https://matplotlib.org/cmocean/) by Kristen Thyng et al.                                    | MIT          | `core/colors/data/cmocean.ts`                               |
-| matplotlib colormaps (Viridis, Cividis, Inferno, Magma, Plasma, Twilight)                             | CC0          | `core/colors/data/sequential.ts`, `cyclical.ts`             |
-| [Turbo](https://research.google/blog/turbo-an-improved-rainbow-colormap-for-visualization/) by Google | Apache-2.0   | `core/colors/data/sequential.ts`                            |
-| [seaborn](https://github.com/mwaskom/seaborn) IceFire                                                 | BSD-3-Clause | `core/colors/data/cyclical.ts`                              |
+| Work                                                                                                  | License      | Where                                                                                                                |
+| ----------------------------------------------------------------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------- |
+| [plotly.js](https://github.com/plotly/plotly.js), [plotly.py](https://github.com/plotly/plotly.py)    | MIT          | behavior and algorithms ported; color lists (`core/colors`); locale data (`locales`, see its THIRD_PARTY_NOTICES.md) |
+| [ColorBrewer](https://colorbrewer2.org) by Cynthia Brewer, Mark Harrower and Penn State               | Apache-2.0   | `core/colors/data/colorbrewer.ts`, `qualitative.ts`                                                                  |
+| [CARTOColors](https://github.com/CartoDB/CartoColor) by CARTO                                         | CC BY 3.0    | `core/colors/data/carto.ts`, `qualitative.ts`                                                                        |
+| [cmocean](https://matplotlib.org/cmocean/) by Kristen Thyng et al.                                    | MIT          | `core/colors/data/cmocean.ts`                                                                                        |
+| matplotlib colormaps (Viridis, Cividis, Inferno, Magma, Plasma, Twilight)                             | CC0          | `core/colors/data/sequential.ts`, `cyclical.ts`                                                                      |
+| [Turbo](https://research.google/blog/turbo-an-improved-rainbow-colormap-for-visualization/) by Google | Apache-2.0   | `core/colors/data/sequential.ts`                                                                                     |
+| [seaborn](https://github.com/mwaskom/seaborn) IceFire                                                 | BSD-3-Clause | `core/colors/data/cyclical.ts`                                                                                       |
 
 ## Bundled fonts
 

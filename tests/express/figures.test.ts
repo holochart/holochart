@@ -102,6 +102,70 @@ const figures: Record<string, () => hx.ExpressFigure> = {
     hx.pie(rows, { names: 'day', values: 'pop', color: 'day', hole: 0.3, facetCol: 'smoker' }),
   distplot: () =>
     hx.distplot([rows.map((r) => r.life), rows.map((r) => r.life + 5)], ['a', 'b'], { binSize: 2 }),
+  trendlineOls: () =>
+    hx.scatter(rows, {
+      x: 'gdp',
+      y: 'life',
+      color: 'continent',
+      facetCol: 'smoker',
+      trendline: 'ols',
+      trendlineOptions: { logX: true },
+      marginalX: 'box',
+    }),
+  trendlineOverall: () =>
+    hx.scatter(rows, {
+      x: 'start',
+      y: 'life',
+      color: 'smoker',
+      trendline: 'rolling',
+      trendlineOptions: { window: '5D' },
+      trendlineScope: 'overall',
+      animationFrame: 'year',
+    }),
+  trendlineContour: () =>
+    hx.densityContour(rows, { x: 'gdp', y: 'life', color: 'smoker', trendline: 'lowess' }),
+  barAgg: () => hx.bar(rows, { x: 'day', y: 'pop', color: 'continent', agg: 'avg' }),
+  lineAgg: () => hx.line(rows, { x: 'year', y: 'life', color: 'continent', agg: 'median' }),
+  funnel: () =>
+    hx.funnel(rows, {
+      x: 'pop',
+      y: 'day',
+      color: 'smoker',
+      text: 'country',
+      facetCol: 'continent',
+    }),
+  funnelArea: () =>
+    hx.funnelArea(rows, { names: 'day', values: 'pop', color: 'day', opacity: 0.9 }),
+  scatterPolar: () =>
+    hx.scatterPolar(rows, {
+      r: 'life',
+      theta: 'day',
+      color: 'pop',
+      symbol: 'smoker',
+      size: 'gdp',
+      rangeR: [0, 100],
+      categoryOrders: { day: ['Thu', 'Fri', 'Sat', 'Sun'] },
+    }),
+  linePolar: () =>
+    hx.linePolar(rows, {
+      r: 'life',
+      theta: 'day',
+      color: 'continent',
+      lineDash: 'smoker',
+      lineClose: true,
+      lineShape: 'spline',
+      markers: true,
+    }),
+  barPolar: () =>
+    hx.barPolar(rows, {
+      r: 'pop',
+      theta: 'day',
+      color: 'continent',
+      pattern: 'smoker',
+      barmode: 'overlay',
+      logR: true,
+      animationFrame: 'year',
+    }),
 };
 
 describe('Express figures validate against the full bundle', () => {

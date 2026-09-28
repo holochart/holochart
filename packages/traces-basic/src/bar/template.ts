@@ -7,7 +7,14 @@
  * as ''. The hover workstream's `hovertemplate` (E5.7) is the full implementation; this helper can
  * move to a shared module once that lands.
  */
-import { dateToMs, formatDateLabel, formatNumber, getIn } from '@mk7s/holochart-core';
+import {
+  dateToMs,
+  DEFAULT_LOCALE,
+  formatDateLabel,
+  formatNumber,
+  getIn,
+  type Locale,
+} from '@mk7s/holochart-core';
 
 const VARIABLE = /%\{([^}:|]+)(?:([:|])([^}]*))?\}/g;
 
@@ -19,28 +26,37 @@ export interface TemplateScope {
   readonly labels?: Readonly<Record<string, string>>;
 }
 
-function formatOne(value: unknown, kind: string | undefined, format: string | undefined): string {
+function formatOne(
+  value: unknown,
+  kind: string | undefined,
+  format: string | undefined,
+  locale: Locale,
+): string {
   if (value === undefined || value === null) return '';
   if (kind === ':' && format) {
     const n = typeof value === 'number' ? value : Number(value);
-    return Number.isFinite(n) ? formatNumber(n, { tickformat: format }) : String(value);
+    return Number.isFinite(n) ? formatNumber(n, { tickformat: format, locale }) : String(value);
   }
   if (kind === '|' && format) {
     const ms = typeof value === 'number' ? value : dateToMs(value);
-    return Number.isFinite(ms) ? formatDateLabel(ms, format, null) : String(value);
+    return Number.isFinite(ms) ? formatDateLabel(ms, format, null, locale) : String(value);
   }
   return String(value);
 }
 
 /**
- * Fill a template for one bar.
+ * Fill a template for one bar; `locale` (the chart's, plan E17.6) formats numbers and dates.
  *
  * @example
  * ```ts
  * formatTemplate('%{label}: %{value:.1f}', { values: { label: 'A', value: 3.14159 } }); // 'A: 3.1'
  * ```
  */
-export function formatTemplate(template: string, scope: TemplateScope): string {
+export function formatTemplate(
+  template: string,
+  scope: TemplateScope,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
   if (!template.includes('%{')) return template;
   return template.replace(VARIABLE, (_match, rawName: string, kind?: string, format?: string) => {
     const name = rawName.trim();
@@ -55,6 +71,6 @@ export function formatTemplate(template: string, scope: TemplateScope): string {
       // A malformed path (`%{a[}`) renders as '' like an unknown variable.
       value = undefined;
     }
-    return formatOne(value, kind, format);
+    return formatOne(value, kind, format, locale);
   });
 }

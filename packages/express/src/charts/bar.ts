@@ -21,7 +21,15 @@ import type {
   PatternOptions,
   XYOptions,
 } from '../options.ts';
-import { defined, inferOrientation, opacityPatch, tailRoles } from './shared.ts';
+import {
+  aggConfig,
+  aggOrientation,
+  defined,
+  inferOrientation,
+  opacityPatch,
+  tailRoles,
+  type AggFunction,
+} from './shared.ts';
 
 /** Options of {@link bar}: px.bar's arguments in camelCase. */
 export interface BarOptions
@@ -44,6 +52,13 @@ export interface BarOptions
   readonly barmode?: 'relative' | 'group' | 'overlay' | 'stack';
   /** Bar opacity, 0–1. */
   readonly opacity?: number;
+  /**
+   * Aggregate the rows of each group that share an x (y when horizontal): `'sum'`, `'avg'`,
+   * `'count'`, `'min'`, `'max'`, `'median'` or a function of the values — one bar per position.
+   * A Holochart extension (px.bar draws every row); with only `x` (or `y`) and `'count'`, bars
+   * count the rows.
+   */
+  readonly agg?: AggFunction;
 }
 
 /** Options of {@link timeline}: px.timeline's arguments in camelCase. */
@@ -112,11 +127,11 @@ function barConfig(
 
 function buildBar(data: DataInput | null | undefined, options: BarOptions): ExpressFigure {
   const args = prepare('bar', data, options as Record<string, unknown>);
-  const orientation = inferOrientation(args, 'category');
-  return buildFigure(
-    args,
-    barConfig(args, orientation, { barmode: options.barmode ?? 'relative' }),
-  );
+  const orientation = aggOrientation(args, () => inferOrientation(args, 'category'));
+  return buildFigure(args, {
+    ...barConfig(args, orientation, { barmode: options.barmode ?? 'relative' }),
+    ...aggConfig(args, orientation),
+  });
 }
 
 function buildTimeline(

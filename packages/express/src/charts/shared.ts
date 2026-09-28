@@ -3,7 +3,9 @@
  * trace attributes px always writes.
  */
 import type { Args } from '../core/args.ts';
-import type { Role, TraceSpec } from '../core/config.ts';
+import type { Config, GroupData, Role, TraceSpec } from '../core/config.ts';
+import { groupValue } from '../core/labels.ts';
+import { isMissing } from '../data/table.ts';
 import type { MarginalKind } from '../options.ts';
 
 /** Whether `color` is numeric, so it maps to a colorscale (px's `color_is_continuous`). */
@@ -130,4 +132,125 @@ export function groupMode(args: Args, orientation: 'v' | 'h', given: unknown): s
     if (x === color && orientation === 'v') return 'overlay';
   }
   return 'group';
+}
+
+/**
+ * `agg` (a Holochart extension, plan E23.5): how `bar`, `line` and `area` aggregate the rows of a
+ * group that share a position — `'sum'`, `'avg'`, `'count'`, `'min'`, `'max'`, `'median'`, or a
+ * function of the present values.
+ */
+export type AggFunction =
+  'count' | 'sum' | 'avg' | 'min' | 'max' | 'median' | ((values: number[]) => number);
+
+const AGGS = new Set(['count', 'sum', 'avg', 'min', 'max', 'median']);
+
+/** Orientation with `agg`: a lone `x` is the position axis (vertical), a lone `y` horizontal. */
+export function aggOrientation(args: Args, fallback: () => 'v' | 'h'): 'v' | 'h' {
+  const given = args.options['orientation'];
+  if (args.options['agg'] === undefined || given === 'v' || given === 'h') return fallback();
+  const { x, y } = args.cols;
+  if (x !== undefined && y === undefined) return 'v';
+  if (y !== undefined && x === undefined) return 'h';
+  return fallback();
+}
+
+/** Aggregate the present values of one position (pandas' groupby semantics for empty groups). */
+export function aggregate(agg: AggFunction, values: number[], rows: number): number | null {
+  let out: number;
+  if (typeof agg === 'function') out = agg(values);
+  else {
+    const n = values.length;
+    switch (agg) {
+      case 'count':
+        out = rows;
+        break;
+      case 'sum':
+        out = values.reduce((s, v) => s + v, 0);
+        break;
+      case 'avg':
+        out = n ? values.reduce((s, v) => s + v, 0) / n : NaN;
+        break;
+      case 'min':
+        out = n ? Math.min(...values) : NaN;
+        break;
+      case 'max':
+        out = n ? Math.max(...values) : NaN;
+        break;
+      default: {
+        const sorted = [...values].sort((a, b) => a - b);
+        const mid = n >> 1;
+        out =
+          n === 0
+            ? NaN
+            : n % 2
+              ? (sorted[mid] as number)
+              : ((sorted[mid - 1] as number) + (sorted[mid] as number)) / 2;
+      }
+    }
+  }
+  return Number.isFinite(out) ? out : null;
+}
+
+/**
+ * The config of `agg`: within each group (color, facet, frame, …), the rows with the same
+ * position (x of a vertical chart, y of a horizontal one) become one point at their first row,
+ * whose value is the aggregate of the value column (missing values skipped; `'count'` counts the
+ * present values, or the rows without a value column). Positions keep their first appearance's
+ * order; missing positions are dropped. The value axis is titled like a histogram's (`sum of tip`,
+ * `count`).
+ */
+export function aggConfig(args: Args, orientation: 'v' | 'h'): Partial<Config> {
+  const agg = args.options['agg'] as AggFunction | undefined;
+  if (agg === undefined || agg === null) return {};
+  if (typeof agg !== 'function' && !AGGS.has(agg)) {
+    throw new Error(
+      `${args.fn}: agg must be 'count', 'sum', 'avg', 'min', 'max', 'median' or a function (got '${String(agg)}').`,
+    );
+  }
+  const valueLetter = orientation === 'v' ? 'y' : 'x';
+  const positionLetter = orientation === 'v' ? 'x' : 'y';
+  const position = args.cols[positionLetter];
+  const value = args.cols[valueLetter];
+  if (position === undefined) {
+    throw new Error(`${args.fn}: agg needs '${positionLetter}', the column to aggregate by.`);
+  }
+  if (value === undefined && agg !== 'count') {
+    throw new Error(
+      `${args.fn}: agg '${String(typeof agg === 'function' ? 'function' : agg)}' needs '${valueLetter}', the column to aggregate.`,
+    );
+  }
+  const positions = args.table.column(position);
+  const values = value === undefined ? undefined : args.table.column(value);
+  const name = typeof agg === 'function' ? agg.name || 'agg' : agg;
+  const transform = (rows: readonly number[]): GroupData => {
+    const buckets = new Map<string, number[]>();
+    for (const i of rows) {
+      const key = groupValue(positions[i]);
+      if (isMissing(key)) continue;
+      const k = JSON.stringify([key]);
+      let bucket = buckets.get(k);
+      if (!bucket) buckets.set(k, (bucket = []));
+      bucket.push(i);
+    }
+    const out: number[] = [];
+    const aggregated: (number | null)[] = [];
+    for (const bucket of buckets.values()) {
+      out.push(bucket[0] as number);
+      const present: number[] = [];
+      if (values) {
+        for (const i of bucket) {
+          const v = values[i];
+          const n = typeof v === 'bigint' ? Number(v) : v;
+          if (typeof n === 'number' && Number.isFinite(n)) present.push(n);
+        }
+      }
+      aggregated.push(aggregate(agg, present, values ? present.length : bucket.length));
+    }
+    return { rows: out, values: { [valueLetter]: aggregated } };
+  };
+  return {
+    transform,
+    aggregation: { histfunc: name },
+    ...(value === undefined ? { valueLabels: { [valueLetter]: 'count' } } : {}),
+  };
 }

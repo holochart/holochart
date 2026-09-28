@@ -17,6 +17,6 @@ Planned topics:
 - Modebar settings: `displayModeBar`, adding and removing buttons; `displaylogo` is accepted for
   Plotly compatibility and ignored (Holochart's modebar has no logo)
 - Rendering settings: `pixelRatio`, `antialias`, `powerPreference`, `textRenderer`
-- `locale` and `strict` validation
+- `locale` (see [Locales](/fundamentals/locales)) and `strict` validation
 
 The full list of options is in the [config reference](/reference/config).

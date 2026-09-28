@@ -14,7 +14,7 @@
  * (`d2l`), elsewhere range values (`r2l`: category names or fractional indices, dates or ms).
  */
 import type { RGBA } from '@mk7s/holochart-render';
-import type { AxisExtremes } from '@mk7s/holochart-core';
+import { localeOf, type AxisExtremes } from '@mk7s/holochart-core';
 import { formatTemplate, linearExtremes, type AxisInfo } from '@mk7s/holochart-runtime';
 import { parseRef } from '../annotations/layout.ts';
 import type { LabelItem } from '../axes/geometry.ts';
@@ -326,7 +326,12 @@ function shapeLabel(
   const l = s.label;
   const raw =
     l.texttemplate !== '' && ends
-      ? formatTemplate(l.texttemplate, { values: templateValues(s, src, x, y, ends) })
+      ? formatTemplate(
+          l.texttemplate,
+          { values: templateValues(s, src, x, y, ends) },
+          // The chart's locale (plan E17.6), carried by the axes.
+          { locale: localeOf((x.owner ?? y.owner)?.full) },
+        )
       : l.text;
   if (!raw) return undefined;
   const frame = labelFrame(x, y, rings, ends);

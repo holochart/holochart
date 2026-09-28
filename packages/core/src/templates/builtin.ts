@@ -289,6 +289,15 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
           tickfont: { size: 8, color: TEXT },
         },
       ],
+      // Sankey links in a translucent light gray (Plotly's white at 0.6 glares on dark; hover
+      // brightens them to 0.5), nodes with a thin background-colored rim that separates them from
+      // the links; labels use the 9 px layout font with the automatic halo.
+      sankey: [
+        {
+          node: { line: { color: BG, width: 0.5 } },
+          link: { color: 'rgba(164, 167, 181, 0.3)' },
+        },
+      ],
       // A raised header (the hover-label background) over background-colored cells, both with
       // faint 1 px rules; bright header text, 9 px throughout.
       table: [

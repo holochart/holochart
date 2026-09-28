@@ -284,3 +284,22 @@ describe('multi-label hover (box statistics, M3)', () => {
     expect(labelText(e, stat(20, true), 'closest', true, LAYOUT).extra).toBe('Group A');
   });
 });
+
+describe('trace-chosen secondary box and point kinds (M5: sankey)', () => {
+  it('shows the trace’s own secondary-box text with a hoverText label', () => {
+    const p: HoverPoint = { pointIndex: 0, distance: 0, px: 0, py: 0, hoverText: 'A' };
+    const e = entry({ name: 'Flows' });
+    expect(labelText(e, { ...p, extra: '12 t' }, 'closest', false, LAYOUT).extra).toBe('12 t');
+    expect(labelText(e, p, 'closest', false, LAYOUT).extra).toBeUndefined();
+  });
+
+  it('counts a new kind at the same index as a new hover', () => {
+    let points: HoverPoint[] = [{ pointIndex: 2, kind: 'node', distance: 0, px: 50, py: 50 }];
+    const e = { ...entry({}), module: { hoverPoints: () => points } as unknown as TraceModule };
+    const finder = new HoverFinder();
+    expect(finder.find([e.subplot!], () => [e], 60, 70, 'closest', 20)).toBe(true);
+    expect(finder.find([e.subplot!], () => [e], 60, 70, 'closest', 20)).toBe(false);
+    points = [{ pointIndex: 2, kind: 'link', distance: 0, px: 50, py: 50 }];
+    expect(finder.find([e.subplot!], () => [e], 60, 70, 'closest', 20)).toBe(true);
+  });
+});

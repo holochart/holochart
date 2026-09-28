@@ -13,11 +13,13 @@
 import {
   createTickFormatter,
   isArrayLike,
+  localeOf,
   toRGBA,
   uniformFontSize,
   uniformTextScale,
   uniformTextSize,
   type FullTrace,
+  type Locale,
   type RGBA,
   type UniformText,
   type UniformTextItem,
@@ -240,6 +242,8 @@ export function fontAt(font: unknown, i: number): { font: TextFont; color: RGBA 
 export interface ValueFormatters {
   readonly position?: (l: number) => string;
   readonly size?: (l: number) => string;
+  /** The chart's locale (the axes'), for formats in `texttemplate` (plan E17.6). */
+  readonly locale?: Locale;
 }
 
 /** Hover-precision formatters of the bar's position and size axes. */
@@ -256,7 +260,9 @@ export function valueFormatters(
   };
   const size = make(sa);
   const position = make(pa);
+  const axis = sa ?? pa;
   return {
+    ...(axis ? { locale: localeOf(axis.full) } : {}),
     ...(position ? { position } : {}),
     ...(size
       ? {
@@ -327,7 +333,7 @@ export function barLabel(
   if (formatters.position && Number.isFinite(pos)) {
     labels['label'] = labels[posLetter] = formatters.position(pos);
   }
-  return formatTemplate(template, { values, labels });
+  return formatTemplate(template, { values, labels }, formatters.locale);
 }
 
 /**

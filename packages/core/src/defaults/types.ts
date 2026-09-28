@@ -2,6 +2,7 @@
 import type { configSchema } from '../config/schema.ts';
 import type { gridSchema } from '../layout/grid.ts';
 import type { layoutSchema, xaxisSchema } from '../layout/schema.ts';
+import type { Locale } from '../locale/locale.ts';
 import type { TraceModule } from '../registry/types.ts';
 import type { InferFull } from '../schema/types.ts';
 import type { Template } from '../templates/templates.ts';
@@ -40,6 +41,8 @@ export type FullAxis = InferFull<typeof xaxisSchema> & {
   _id: string;
   /** Layout key, e.g. `'xaxis2'`. */
   _name: string;
+  /** The chart's locale (plan E17.6; `fullLayout._locale`), which labels use. Set by supply-defaults. */
+  _locale?: Locale;
 };
 
 /** Subplots discovered during supply-defaults (plan E1.4). */
@@ -84,6 +87,11 @@ export type FullLayout = BaseFullLayout & {
   /** Only for a grid of more than one cell. */
   grid?: FullGrid;
   _subplots: Subplots;
+  /**
+   * The chart's resolved locale (plan E17.6): `config.locale` with `separators`. Format numbers and
+   * dates and translate UI strings through it (`localeOf`, `localize`). Set by supply-defaults.
+   */
+  _locale?: Locale;
   /**
    * Axes linked by `matches` (plan E3.9, `defaults/constraints.ts`): one object per group, axis id
    * → 1, e.g. `[{ x: 1, x2: 1 }]`. Axes of a group share their range. Set by supply-defaults.

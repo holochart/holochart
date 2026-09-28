@@ -5,7 +5,7 @@
  * group's peak, as Plotly shows it), and the nearest point (`'points'`), combined like box hover.
  * Plotly also draws a line across the violin at the hovered value; that line is not drawn here.
  */
-import type { FullTrace } from '@mk7s/holochart-core';
+import { localeOf, type FullTrace } from '@mk7s/holochart-core';
 import {
   formatAxisValue,
   type HoverContext,
@@ -42,10 +42,12 @@ export function violinHoverPoints(
   const hoveron = trace['hoveron'] ?? 'violins+points+kde';
   const side = violinSide(trace);
   const meanline = trace['meanline'] as { visible?: unknown } | undefined;
+  const locale = localeOf(ctx.fullLayout);
   const options: BoxHoverOptions = {
     hasMean: meanline?.visible === true,
     side,
     range: (b) => [calc.span0[b]!, calc.span1[b]!],
+    locale,
   };
   const out: HoverPoint[] = [];
   if (has(hoveron, 'violins') || has(hoveron, 'kde')) {
@@ -73,7 +75,7 @@ export function violinHoverPoints(
         // Plotly's `getKdeValue`: density over `scale · bdPos` (the peak of the scale group is 1).
         const kde = density / (calc.scale[b]! * calc.offsets.bdPos);
         const valueText = formatAxisValue(axes.va, vVal);
-        const text = `${letter}: ${valueText}, kde: ${kde.toFixed(3)}`;
+        const text = `${letter}: ${valueText}, ${locale._('kde:')} ${kde.toFixed(3)}`;
         const posLabel = formatAxisValue(axes.pa, calc.pos[b]!);
         const posData = axes.pa ? axes.pa.scale.l2d(calc.pos[b]!) : calc.pos[b]!;
         const valData = axes.va ? axes.va.scale.l2d(vVal) : vVal;

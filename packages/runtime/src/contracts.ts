@@ -30,6 +30,7 @@ import type {
   FullConfig,
   FullLayout,
   FullTrace,
+  LocaleModule,
   Scale,
   Stage,
   Template,
@@ -614,6 +615,16 @@ export interface HoverPoint {
   readonly multi?: boolean;
   /** `false` leaves the trace name out of this label (Plotly names one label of a multi-label hover). */
   readonly showName?: boolean;
+  /**
+   * Secondary-box text the trace chose, replacing the trace name when the label comes from
+   * {@link hoverText} (M5: a sankey node's or link's value).
+   */
+  readonly extra?: string;
+  /**
+   * The kind of element, for traces whose indices restart per kind (M5: sankey `'node'` /
+   * `'link'`): the same `pointIndex` of another kind is a new hover.
+   */
+  readonly kind?: string;
 }
 
 /** A box or lasso selection in one subplot, in the trace's linear coordinates. */
@@ -961,5 +972,8 @@ export interface TemplateModule {
   readonly default?: boolean;
 }
 
-/** Anything `register(...)` accepts. */
-export type Registrable = TraceModule | ComponentModule | TemplateModule;
+/**
+ * Anything `register(...)` accepts. Locale modules (plan E17.6) are plotly.js's shape, so Plotly
+ * locale files register as they are.
+ */
+export type Registrable = TraceModule | ComponentModule | TemplateModule | LocaleModule;

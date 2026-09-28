@@ -1239,6 +1239,12 @@ export const layoutSchema = attr.object(
       editType: 'calc',
       description: 'Change this to force data arrays to be re-read when they are mutated in place.',
     }),
+    separators: attr.string({
+      noBlank: true,
+      editType: 'plot',
+      description:
+        "Decimal then thousands separator of numbers, e.g. `', '` for `1 234,5`. Default: the locale's (`config.locale`), `'.,'` in English.",
+    }),
     meta: attr.any({
       arrayOk: true,
       editType: 'plot',

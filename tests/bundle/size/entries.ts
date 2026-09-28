@@ -164,8 +164,16 @@ const PACKAGES: readonly SizeEntry[] = [
     name: '@mk7s/holochart-traces-finance',
     imports: [{ pkg: 'traces-finance' }],
   },
+  // Report-only (M5 wave 0): the hierarchical and flow traces, never in `basic`.
+  {
+    id: 'traces-hier',
+    name: '@mk7s/holochart-traces-hier',
+    imports: [{ pkg: 'traces-hier' }],
+  },
   { id: 'themes', name: '@mk7s/holochart-themes', imports: [{ pkg: 'themes' }] },
   { id: 'express', name: '@mk7s/holochart-express', imports: [{ pkg: 'express' }] },
+  // Report-only (M5 wave 0): every locale module at once; never in `basic` or the full bundle.
+  { id: 'locales', name: '@mk7s/holochart-locales', imports: [{ pkg: 'locales' }] },
 ];
 
 export const SIZE_ENTRIES: readonly SizeEntry[] = [

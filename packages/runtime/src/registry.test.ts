@@ -57,6 +57,7 @@ describe('createChartRegistry', () => {
       ],
       templates: ['dark'],
       defaultTemplate: 'dark',
+      locales: [],
     });
   });
 

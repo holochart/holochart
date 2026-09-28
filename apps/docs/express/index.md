@@ -90,36 +90,45 @@ import { builtinComponents } from '@mk7s/holochart-components';
 register(...basicTraces, ...statsTraces, ...builtinComponents);
 ```
 
-`scatter`, `line`, `area`, `bar`, `timeline`, `pie` and `ecdf` use traces-basic; `histogram`,
-`box`, `violin`, `strip`, the densities, `scatterMatrix`, `parallelCoordinates`,
+`scatter`, `line`, `area`, `bar`, `timeline`, `pie`, `ecdf` and trendlines use traces-basic;
+`histogram`, `box`, `violin`, `strip`, the densities, `scatterMatrix`, `parallelCoordinates`,
 `parallelCategories`, marginals and `ff.distplot` use traces-stats too; `imshow` uses the
-`heatmap` and `image` traces of traces-sci (`register(...sciTraces)`). Facet labels, legends,
-colorbars and animation controls are components.
+`heatmap` and `image` traces of traces-sci, and `scatterPolar`, `linePolar` and `barPolar` its
+polar traces (`register(...sciTraces)`); `funnel` and `funnelArea` use traces-finance
+(`register(...financeTraces)`). Facet labels, legends, colorbars and animation controls are
+components.
 
 ## Functions
 
-| Function                                                         | plotly.py                 | Traces                        |
-| ---------------------------------------------------------------- | ------------------------- | ----------------------------- |
-| [`scatter`](/express/mappings)                                   | `px.scatter`              | `scatter` (markers)           |
-| [`line`](/express/mappings#lines-and-areas)                      | `px.line`                 | `scatter` (lines)             |
-| [`area`](/express/mappings#lines-and-areas)                      | `px.area`                 | `scatter` (stacked, filled)   |
-| [`bar`](/express/mappings#bars-and-timelines)                    | `px.bar`                  | `bar`                         |
-| [`timeline`](/express/mappings#bars-and-timelines)               | `px.timeline`             | `bar` (horizontal, date axis) |
-| [`pie`](/express/mappings#pie)                                   | `px.pie`                  | `pie`                         |
-| [`histogram`](/express/statistics#histograms)                    | `px.histogram`            | `histogram`                   |
-| [`box`, `violin`, `strip`](/express/statistics#box-violin-strip) | `px.box`, `px.violin`, …  | `box`, `violin`               |
-| [`ecdf`](/express/statistics#ecdf)                               | `px.ecdf`                 | `scatter` (steps)             |
-| [`densityHeatmap`](/express/statistics#densities)                | `px.density_heatmap`      | `histogram2d`                 |
-| [`densityContour`](/express/statistics#densities)                | `px.density_contour`      | `histogram2dcontour`          |
-| [`scatterMatrix`](/express/statistics#many-dimensions)           | `px.scatter_matrix`       | `splom`                       |
-| [`parallelCoordinates`](/express/statistics#many-dimensions)     | `px.parallel_coordinates` | `parcoords`                   |
-| [`parallelCategories`](/express/statistics#many-dimensions)      | `px.parallel_categories`  | `parcats`                     |
-| [`ff.distplot`](/express/statistics#distplot)                    | `ff.create_distplot`      | `histogram`, `scatter`        |
-| [`imshow`](/express/imshow)                                      | `px.imshow`               | `heatmap`, `image`            |
-| [`data.fromCSV`](/express/data#csv)                              | `pd.read_csv`             | —                             |
+| Function                                                         | plotly.py                  | Traces                        |
+| ---------------------------------------------------------------- | -------------------------- | ----------------------------- |
+| [`scatter`](/express/mappings)                                   | `px.scatter`               | `scatter` (markers)           |
+| [`scatter` + `trendline`](/express/statistics#trendlines)        | `px.scatter(trendline=…)`  | `scatter` (lines)             |
+| [`line`](/express/mappings#lines-and-areas)                      | `px.line`                  | `scatter` (lines)             |
+| [`area`](/express/mappings#lines-and-areas)                      | `px.area`                  | `scatter` (stacked, filled)   |
+| [`bar`](/express/mappings#bars-and-timelines)                    | `px.bar`                   | `bar`                         |
+| [`timeline`](/express/mappings#bars-and-timelines)               | `px.timeline`              | `bar` (horizontal, date axis) |
+| [`pie`](/express/mappings#pie)                                   | `px.pie`                   | `pie`                         |
+| [`funnel`](/express/mappings#funnels)                            | `px.funnel`                | `funnel`                      |
+| [`funnelArea`](/express/mappings#funnels)                        | `px.funnel_area`           | `funnelarea`                  |
+| [`histogram`](/express/statistics#histograms)                    | `px.histogram`             | `histogram`                   |
+| [`box`, `violin`, `strip`](/express/statistics#box-violin-strip) | `px.box`, `px.violin`, …   | `box`, `violin`               |
+| [`ecdf`](/express/statistics#ecdf)                               | `px.ecdf`                  | `scatter` (steps)             |
+| [`densityHeatmap`](/express/statistics#densities)                | `px.density_heatmap`       | `histogram2d`                 |
+| [`densityContour`](/express/statistics#densities)                | `px.density_contour`       | `histogram2dcontour`          |
+| [`scatterMatrix`](/express/statistics#many-dimensions)           | `px.scatter_matrix`        | `splom`                       |
+| [`parallelCoordinates`](/express/statistics#many-dimensions)     | `px.parallel_coordinates`  | `parcoords`                   |
+| [`parallelCategories`](/express/statistics#many-dimensions)      | `px.parallel_categories`   | `parcats`                     |
+| [`ff.distplot`](/express/statistics#distplot)                    | `ff.create_distplot`       | `histogram`, `scatter`        |
+| [`imshow`](/express/imshow)                                      | `px.imshow`                | `heatmap`, `image`            |
+| [`scatterPolar`](/express/mappings#polar-charts)                 | `px.scatter_polar`         | `scatterpolar` (markers)      |
+| [`linePolar`](/express/mappings#polar-charts)                    | `px.line_polar`            | `scatterpolar` (lines)        |
+| [`barPolar`](/express/mappings#polar-charts)                     | `px.bar_polar`             | `barpolar`                    |
+| [`getTrendlineResults`](/express/statistics#fit-results)         | `px.get_trendline_results` | —                             |
+| [`data.fromCSV`](/express/data#csv)                              | `pd.read_csv`              | —                             |
 
-The rest of plotly.py's catalogue (polar, ternary, 3D, geo, hierarchical charts, funnels) and
-trendlines follow with their trace types (M4–M5).
+The rest of plotly.py's catalogue (hierarchical charts, ternary, 3D, geo) follows with its trace
+types (M5–M8).
 
 ## Options every function shares
 
@@ -166,5 +175,13 @@ or the `template` option. Pass `template: 'plotly-classic'` (or call
   (`line.colorscale`, `line.showscale`) instead of `layout.coloraxis`.
 - Fill patterns (`pattern`) group traces, name them and hatch their bars (see
   [Patterns & textures](/customization/markers-patterns#express)).
-- Not yet: `trendline` (M5), `marginal` on `line` / `bar`, `text_auto` (except on `imshow`),
-  `render_mode`, `color_discrete_map` given as a Plotly `px.colors` object.
+- `agg` on `bar`, `line` and `area` is a Holochart extension; px draws every row there.
+- Trendline fit results live beside the figure object (`getTrendlineResults`), not in its JSON,
+  and are an array of typed results rather than a DataFrame of statsmodels objects. An `overall`
+  trendline skips marginal subplots (px also draws it there).
+- `barPolar`'s `barmode: 'overlay'` sets `layout.polar.barmode` (plotly.js ignores px's top-level
+  `barmode` on polar bars, which always stack there); `barnorm` isn't offered, as polar bars
+  don't read it.
+- Not yet: `marginal` on `line` / `bar`, `text_auto` (except on `imshow`), `render_mode`,
+  `color_discrete_map` given as a Plotly `px.colors` object, `sunburst` / `treemap` / `icicle`
+  (with the hierarchy traces).

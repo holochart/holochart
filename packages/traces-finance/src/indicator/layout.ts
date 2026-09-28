@@ -30,6 +30,7 @@ import {
   richTextLabel,
   type FullAxis,
   type FullTrace,
+  type Locale,
 } from '@mk7s/holochart-core';
 import {
   layoutTextRuns,
@@ -258,16 +259,22 @@ export interface IndicatorLayoutOptions {
   readonly plotWidth: number;
   /** Kept state across redraws (see {@link IndicatorLayoutCache}); default: none. */
   readonly cache?: IndicatorLayoutCache;
+  /** The chart's locale (plan E17.6), for numbers and gauge ticks; default en-US. */
+  readonly locale?: Locale;
 }
 
 /** The gauge axis as a loose cartesian axis for the core tick functions. */
-function gaugeAxis(trace: FullTrace): Obj {
-  return { ...obj(obj(trace['gauge'])['axis']), _id: 'x', type: 'linear' };
+function gaugeAxis(trace: FullTrace, locale: Locale | undefined): Obj {
+  return { ...obj(obj(trace['gauge'])['axis']), _id: 'x', type: 'linear', _locale: locale };
 }
 
 /** Major tick values and labels of the gauge axis, `length` px long. */
-export function gaugeTicks(trace: FullTrace, length: number): { l: number; text: string }[] {
-  const axis = gaugeAxis(trace);
+export function gaugeTicks(
+  trace: FullTrace,
+  length: number,
+  locale?: Locale,
+): { l: number; text: string }[] {
+  const axis = gaugeAxis(trace, locale);
   const range = valueRange(trace);
   const scale = createScale({ type: 'linear', range, length: Math.max(1, length) });
   return computeTicks(scale, axis as unknown as FullAxis)
@@ -365,7 +372,7 @@ export function layoutIndicator(
           color: str(obj(delta['decreasing'])['color']),
         },
       };
-      const format = valueFormatter(str(delta['valueformat']), range, plotWidth);
+      const format = valueFormatter(str(delta['valueformat']), range, plotWidth, options.locale);
       const value = delta['relative'] === true ? calc.relativeDelta : calc.delta;
       deltaSource = deltaText(value, format, style);
       deltaFill = deltaColor(calc.delta, style);
@@ -376,7 +383,7 @@ export function layoutIndicator(
     }
     const number = obj(trace['number']);
     if (hasNumber) {
-      const format = valueFormatter(str(number['valueformat']), range, plotWidth);
+      const format = valueFormatter(str(number['valueformat']), range, plotWidth, options.locale);
       numberSource = numberText(calc.value, format, str(number['prefix']), str(number['suffix']));
       const font = obj(number['font']);
       bn = measure(numberSource, textFont(font), anchor);
@@ -548,7 +555,7 @@ export function layoutIndicator(
 
     // Axis: radial tick marks and labels around the outer edge.
     if (axis['visible'] === false) return centerY - radius / 2;
-    const ticks = gaugeTicks(trace, options.plotWidth);
+    const ticks = gaugeTicks(trace, options.plotWidth, options.locale);
     let top = Infinity;
     const tickSide = axis['ticks'];
     const ticklen = num(axis['ticklen'], 5);
@@ -672,7 +679,7 @@ export function layoutIndicator(
 
     // Axis along the bottom edge.
     if (axis['visible'] === false) return;
-    const ticks = gaugeTicks(trace, length);
+    const ticks = gaugeTicks(trace, length, options.locale);
     const tickSide = axis['ticks'];
     const ticklen = num(axis['ticklen'], 5);
     const tickwidth = num(axis['tickwidth'], 1);

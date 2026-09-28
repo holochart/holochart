@@ -8,7 +8,7 @@
  * Positions are container px (y down); the view flips them into the overlay.
  */
 import type { FullLayout, FullTrace } from '@mk7s/holochart-core';
-import { toRGBA, type RGBA } from '@mk7s/holochart-core';
+import { localeOf, toRGBA, type RGBA } from '@mk7s/holochart-core';
 import { scaleTextRuns, type TextFont, type TextRunLines } from '@mk7s/holochart-render';
 import {
   castOption,
@@ -65,7 +65,7 @@ export function funnelareaLabels(
     const c = slice.corners;
     if (slice.hidden || !c) return;
     if (castOption(trace['textposition'], slice.pts) === 'none') return;
-    const raw = sliceText(trace, calc, slice);
+    const raw = sliceText(trace, calc, slice, localeOf(fullLayout));
     if (!raw) return;
     const font = insideFont(trace, slice, fullLayout);
     const content = labelContent(raw, font.font);

@@ -9,8 +9,10 @@ import {
   createRegistry,
   DEFAULT_TEMPLATE_NAME,
   holochartTemplate,
+  isLocaleModule,
   noneTemplate,
   plotlyClassicTemplate,
+  type LocaleModule,
   type Registry,
 } from '@mk7s/holochart-core';
 import type { ComponentModule, Registrable, TemplateModule, TraceModule } from './contracts.ts';
@@ -27,14 +29,18 @@ export interface RegistryListing {
   readonly components: readonly { readonly name: string; readonly draws: boolean }[];
   readonly templates: readonly string[];
   readonly defaultTemplate: string | undefined;
+  /** Registered locale names (plan E17.6), languages included (`de-CH` also serves `de`). */
+  readonly locales: readonly string[];
 }
 
 export interface ChartRegistry {
   /** The core registry: schemas, templates, defaults and edit-type planning. */
   readonly core: Registry;
   /**
-   * Register trace modules, components and templates, in any mix. Registering the same object
-   * again is a no-op; registering a different module under a taken name replaces it and warns.
+   * Register trace modules, components, templates and locales, in any mix. Registering the same
+   * object again is a no-op; registering a different module under a taken name replaces it and
+   * warns. Locales (`{ moduleType: 'locale', name, dictionary, format }`, plotly.js's shape) merge
+   * silently as in Plotly: a module without a dictionary or format keeps the earlier one.
    */
   register(...modules: readonly Registrable[]): ChartRegistry;
   getTrace(type: string): TraceModule | undefined;
@@ -61,11 +67,12 @@ export interface ChartRegistryOptions {
   warn?: (message: string) => void;
 }
 
-type Kind = 'trace' | 'component' | 'template';
+type Kind = 'trace' | 'component' | 'template' | 'locale';
 
 function kindOf(m: Registrable): Kind {
   const rec = m as unknown as Record<string, unknown>;
   if (rec['kind'] === 'template') return 'template';
+  if (isLocaleModule(m)) return 'locale';
   if (typeof rec['type'] === 'string') {
     if (typeof rec['schema'] !== 'object' || typeof rec['supplyDefaults'] !== 'function') {
       throw new TypeError(
@@ -76,7 +83,7 @@ function kindOf(m: Registrable): Kind {
   }
   if (typeof rec['name'] === 'string') return 'component';
   throw new TypeError(
-    'register(): expected a trace module ({ type, schema, … }), a component ({ name, … }) or a template ({ kind: "template", name, template }).',
+    'register(): expected a trace module ({ type, schema, … }), a component ({ name, … }), a template ({ kind: "template", name, template }) or a locale ({ moduleType: "locale", name, … }).',
   );
 }
 
@@ -135,6 +142,9 @@ export function createChartRegistry(options: ChartRegistryOptions = {}): ChartRe
             if (t.default === true) core.setDefaultTemplate(t.name);
             break;
           }
+          case 'locale':
+            core.registerLocale(m as LocaleModule);
+            break;
         }
       }
       return chartRegistry;
@@ -169,6 +179,7 @@ export function createChartRegistry(options: ChartRegistryOptions = {}): ChartRe
         })),
         templates: core.templateNames(),
         defaultTemplate: core.defaultTemplate,
+        locales: [...core.locales.locales.keys()],
       };
     },
   };

@@ -52,3 +52,17 @@ export { aggregateSlices } from './pie/calc.ts';
 export { castOption, extendColors } from './pie/helpers.ts';
 export { pieHoverText } from './pie/hover.ts';
 export { insideFont, sliceLabels, sliceText, sliceValues } from './pie/text.ts';
+// For the hierarchy traces (traces-hier, M5 wave 0): sunburst sectors fit their labels as pie
+// slices do, and hierarchy nodes are colorscaled by their `marker.colors` or values.
+export {
+  transformInsideText,
+  type InsideOrientation,
+  type SliceShape,
+  type SliceTextTransform,
+} from './pie/text.ts';
+export {
+  colorscaleAttributes,
+  mapColor,
+  markerColorbar,
+  resolveColorMapping,
+} from './shared/colorscale.ts';

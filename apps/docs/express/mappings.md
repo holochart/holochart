@@ -1,6 +1,6 @@
 ---
 title: Mappings & colors
-description: Map columns to positions, colors, symbols, dashes, sizes and hover text; grouping, legends and colorscales in Express.
+description: Map columns to positions, colors, symbols, dashes, sizes and hover text; grouping, legends, colorscales and aggregation in Express; funnels and polar charts.
 status: complete
 ---
 
@@ -27,8 +27,8 @@ hx.scatter(iris, {
 
 ## Positions and orientation
 
-`x` and `y` name the position columns. Functions with an orientation (`bar`, `histogram`, `box`,
-`violin`, `strip`, `ecdf`, `scatter`, `line`, `area`) decide it as px does: an explicit
+`x` and `y` name the position columns. Functions with an orientation (`bar`, `funnel`,
+`histogram`, `box`, `violin`, `strip`, `ecdf`, `scatter`, `line`, `area`) decide it as px does: an explicit
 `orientation: 'v' | 'h'` wins; with only one of `x` / `y`, a histogram or ECDF of `y` and a bar or
 box of `x` are horizontal; with both, the chart is horizontal when `x` is numeric and `y` is not.
 
@@ -78,8 +78,8 @@ hx.scatter(tips, {
 
 ## Continuous color
 
-When `color` is numeric (on `scatter`, `bar`, `timeline`, `pie`, `scatterMatrix`, and the
-parallel charts), it maps through a colorscale instead of grouping: the values go to
+When `color` is numeric (on `scatter`, `bar`, `timeline`, `pie`, `scatterPolar`, `barPolar`,
+`scatterMatrix`, and the parallel charts), it maps through a colorscale instead of grouping: the values go to
 `marker.color` with `coloraxis: 'coloraxis'`, and `layout.coloraxis` holds the colorscale and a
 colorbar titled with the column's label, as px writes it.
 
@@ -148,12 +148,103 @@ draws px's Gantt chart: a horizontal bar per row from `xStart` to `xEnd` on a da
 (`base` = the start, `x` = the duration in ms), `barmode: 'overlay'`. Unlike the
 [`timeline()` helper](/charts/basic/gantt), rows keep Plotly's bottom-up order.
 
+## Aggregating rows
+
+`agg` on `bar`, `line` and `area` aggregates the rows of each group that share a position — the
+x of a vertical chart, the y of a horizontal one — into one bar or point, so row-level data needs
+no grouping first. It is a Holochart extension: px's `bar` and `line` draw every row as given
+(`px.histogram`'s `histfunc` aggregates over bins instead).
+
+<Example id="express/bar-agg" :height="400" />
+
+```ts
+import hx from '@mk7s/holochart-express';
+
+declare const tips: object[];
+hx.bar(tips, { x: 'day', y: 'tip', color: 'sex', agg: 'avg', barmode: 'group' });
+hx.bar(tips, { x: 'day', agg: 'count' }); // rows per day
+hx.line(tips, { x: 'size', y: 'total_bill', agg: 'median' });
+```
+
+| `agg`      | Each position gets                                                                |
+| ---------- | --------------------------------------------------------------------------------- |
+| `'sum'`    | The sum of the values (0 when all are missing)                                    |
+| `'avg'`    | Their mean                                                                        |
+| `'count'`  | The number of values present; without a value column, of rows                     |
+| `'min'`    | The smallest value                                                                |
+| `'max'`    | The largest value                                                                 |
+| `'median'` | The median                                                                        |
+| a function | `fn(values)` of the values present, e.g. `(v) => Math.max(...v) - Math.min(...v)` |
+
+Groups are split by `color`, `pattern`, `lineDash`, facets and frames as usual, and aggregated
+within each. Missing values are skipped, and rows without a position are dropped. Positions keep
+the order they first appear in (sort the rows first for lines). The value axis and hover label are
+titled like a histogram's: `sum of tip`, `avg of tip`, `count`, or the function's name. With only
+`x` (or only `y`) and `agg: 'count'`, the bars count rows, vertical for `x`. Other per-row columns
+(`text`, `hoverName`, `hoverData`) show the first row of each position.
+
 ## Pie
 
 `pie` takes `names` (sector labels) and `values` (sizes; rows with the same name add up), with
 `hole` for a donut. `color` colors the sectors, from the colorway or `colorDiscreteMap`, or through
 a colorscale when numeric. A `categoryOrders` entry for `names` orders the sectors clockwise.
 Facets give one pie per cell.
+
+## Funnels
+
+`funnel` is `px.funnel`: one `funnel` trace per `color` group, with the stages on the category
+axis and the counts as bar widths, stacked per stage; the orientation follows px (horizontal when
+x holds the numbers). It takes facets and animation frames like `bar`, and `text` and `opacity`.
+
+<Example id="express/funnel" :height="400" />
+
+```ts
+import hx from '@mk7s/holochart-express';
+
+declare const rows: object[]; // [{ stage: 'Website visit', office: 'Montreal', number: 39 }, …]
+hx.funnel(rows, { x: 'number', y: 'stage', color: 'office' });
+```
+
+`funnelArea` is `px.funnel_area`: one `funnelarea` trace with a stage per `names` value sized by
+`values`, like a pie. `color` colors the stages, always as categories (px has no colorscale
+here), from the colorway or `colorDiscreteMap`, and is listed in the hover label;
+`colorDiscreteSequence` also becomes `layout.funnelareacolorway`. Draw both with traces-finance.
+
+<Example id="express/funnel-area" :height="400" />
+
+## Polar charts
+
+`scatterPolar`, `linePolar` and `barPolar` are `px.scatter_polar`, `px.line_polar` and
+`px.bar_polar`: `r` and `theta` columns on one `polar` subplot, grouped as `scatter`, `line` and
+`bar` are (`color`, `symbol`, `size` and a continuous `color`; `lineDash`, `lineGroup`, `markers`,
+`lineShape`; `pattern` and `base`), with animation frames. As in px, the angular axis runs
+clockwise from the top; `theta` can be degrees or categories such as compass points. Draw them
+with traces-sci.
+
+<Example id="express/bar-polar" :height="480" />
+
+```ts
+import hx from '@mk7s/holochart-express';
+
+declare const wind: object[]; // [{ direction: 'NNE', strength: '0-1', frequency: 0.5 }, …]
+hx.barPolar(wind, { r: 'frequency', theta: 'direction', color: 'strength' });
+hx.scatterPolar(wind, { r: 'frequency', theta: 'direction', color: 'strength', size: 'frequency' });
+hx.linePolar(wind, { r: 'frequency', theta: 'direction', color: 'strength', lineClose: true });
+```
+
+| Option       | px            | What it does                                                                 |
+| ------------ | ------------- | ---------------------------------------------------------------------------- |
+| `direction`  | `direction`   | `'clockwise'` (default) or `'counterclockwise'`                              |
+| `startAngle` | `start_angle` | Where the angular axis starts, degrees from east (default 90: top)           |
+| `rangeR`     | `range_r`     | Radial range (data units, also on a log axis)                                |
+| `rangeTheta` | `range_theta` | The sector drawn, `[start, end]` in degrees                                  |
+| `logR`       | `log_r`       | Log radial axis                                                              |
+| `lineClose`  | `line_close`  | `linePolar`: close each line back to its first point                         |
+| `barmode`    | `barmode`     | `barPolar`: `'relative'` (default) and `'stack'` stack, `'overlay'` overlaps |
+
+<Example id="express/scatter-polar" :height="480" />
+
+<Example id="express/line-polar" :height="480" />
 
 ## Templates
 

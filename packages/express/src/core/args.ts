@@ -39,6 +39,8 @@ export const COLUMN_KEYS = [
   'values',
   'xStart',
   'xEnd',
+  'r',
+  'theta',
 ] as const;
 
 /** Options that name a list of columns. */

@@ -1,13 +1,139 @@
 ---
 title: Statistical charts
-description: Histograms, box, violin and strip plots, ECDFs, densities, marginal plots, scatter matrices and distplot with Express.
+description: Trendlines, histograms, box, violin and strip plots, ECDFs, densities, marginal plots, scatter matrices and distplot with Express.
 status: complete
 ---
 
 # Statistical charts
 
-Express builds px's statistical charts from a table: distributions per group, empirical CDFs,
-2D densities, marginal distributions alongside a plot, and plotly.py's `create_distplot`.
+Express builds px's statistical charts from a table: trendlines through scatter plots,
+distributions per group, empirical CDFs, 2D densities, marginal distributions alongside a plot,
+and plotly.py's `create_distplot`.
+
+## Trendlines
+
+`trendline` on `scatter` (and `densityContour`) fits a line through each group's points, as
+`px.scatter(trendline=…)` does: per group, the rows are sorted by x and a `scatter` line
+(`mode: 'lines'`) is drawn through the fitted values, in the group's color, in the group's legend
+entry (the line itself is hidden from the legend). Hovering the line shows the fit.
+
+<Example id="express/trendline-ols" :height="440" />
+
+```ts
+import hx from '@mk7s/holochart-express';
+
+declare const tips: object[];
+const figure = hx.scatter(tips, {
+  x: 'total_bill',
+  y: 'tip',
+  color: 'smoker',
+  facetCol: 'time',
+  trendline: 'ols',
+});
+```
+
+| `trendline`   | Fit                                 | `trendlineOptions`                                                                        |
+| ------------- | ----------------------------------- | ----------------------------------------------------------------------------------------- |
+| `'ols'`       | Ordinary least squares line         | `addConstant` (default `true`; `false` fits through the origin), `logX`, `logY`           |
+| `'lowess'`    | Locally weighted regression curve   | `frac`: share of the points in each local fit (default 0.6666666)                         |
+| `'rolling'`   | A statistic of a moving window      | `window` (required), `minPeriods`, `center`, `winType`, `function`, `functionArgs`        |
+| `'expanding'` | A statistic of every point so far   | `minPeriods` (default 1), `function`, `functionArgs`                                      |
+| `'ewm'`       | An exponentially weighted statistic | one of `com`, `span`, `halflife`, `alpha`; `minPeriods`, `adjust`, `ignoreNa`, `function` |
+
+Options follow plotly.py's `trendline_options` in camelCase; keys that don't apply to the kind are
+rejected, as in px.
+
+- **OLS** is statsmodels' `OLS(y, x)` with `add_constant`: the hover header reads
+  `<b>OLS trendline</b>`, then `tip = 0.105025 * total_bill + 0.92027` and `R²=0.456617`, with
+  plotly.py's number formats (six significant digits for the coefficients). R² is centered with an
+  intercept and uncentered without, as in statsmodels. `logX` / `logY` fit against log10 of the
+  values (they must be positive) and draw `10^fit` for `logY`, labelled `log10(tip) = …`.
+- **LOWESS** is statsmodels' `lowess` (Cleveland's algorithm): at each point, a weighted line
+  through the `⌊frac · n⌋` nearest points with tricube weights, then three robustifying passes
+  that downweight points by the bisquare of their residuals. It matches R's `lowess` to 10⁻⁷ on
+  statsmodels' reference data.
+- **rolling**, **expanding** and **ewm** follow pandas (`series.rolling(**options).mean()`):
+  `function` is `'mean'` (default), `'sum'`, `'median'`, `'min'`, `'max'`, `'std'`, `'var'` or
+  `'count'` (`ewm`: `'mean'`, `'sum'`, `'std'`, `'var'`), or for `rolling` / `expanding` a function
+  of each window's values. A rolling `window` is a number of points (`minPeriods` defaults to it,
+  so the line starts at the window's end) or, over dates, a time span such as `'7D'`, `'12h'` or
+  `'30min'`. `winType: 'triang' | 'gaussian'` weights the window (`functionArgs: { std: 2 }` for a
+  gaussian). `ewm` uses pandas' `adjust=True` weights by default: the mean at t is
+  Σ(1 − α)ⁱ·yₜ₋ᵢ / Σ(1 − α)ⁱ. Missing y values keep their place in the window, as in pandas.
+
+<Example id="express/trendline-rolling" :height="440" />
+
+```ts
+import hx from '@mk7s/holochart-express';
+
+declare const prices: object[]; // [{ date: '2025-01-02', ticker: 'ALPHA', close: 98.2 }, …]
+hx.scatter(prices, {
+  x: 'date',
+  y: 'close',
+  color: 'ticker',
+  trendline: 'rolling',
+  trendlineOptions: { window: 20 },
+});
+hx.scatter(prices, { x: 'date', y: 'close', trendline: 'ewm', trendlineOptions: { halflife: 5 } });
+```
+
+Dates on x are fit as Unix seconds (an OLS slope is per second, as in px) and drawn at the dates.
+Rows missing x or y are left out of the line; a group with fewer than two complete rows gets an
+empty trendline trace.
+
+### One trendline for all rows
+
+`trendlineScope: 'overall'` fits one line through every row instead of one per group, and draws it
+in every subplot as `Overall Trendline` with a single legend entry, in the next color of the
+sequence. `trendlineColorOverride` gives every trendline one color.
+
+<Example id="express/trendline-lowess" :height="440" />
+
+```ts
+import hx from '@mk7s/holochart-express';
+
+declare const countries: object[];
+hx.scatter(countries, {
+  x: 'gdpPercap',
+  y: 'lifeExp',
+  color: 'continent',
+  logX: true,
+  trendline: 'lowess',
+  trendlineOptions: { frac: 0.5 },
+  trendlineScope: 'overall',
+});
+```
+
+### Fit results
+
+`getTrendlineResults(figure)` is plotly.py's `px.get_trendline_results(fig)`: one entry per OLS
+trendline, with the group it was fit on and the fit — coefficients, R², standard errors,
+t statistics and p-values, as statsmodels' `OLSResults` names them.
+
+```ts
+import hx from '@mk7s/holochart-express';
+
+declare const tips: object[];
+const figure = hx.scatter(tips, { x: 'total_bill', y: 'tip', color: 'sex', trendline: 'ols' });
+for (const { groups, fit, traceIndex } of hx.getTrendlineResults(figure)) {
+  const [intercept, slope] = fit.params;
+  console.log(groups['sex'], slope, intercept, fit.rsquared, fit.pvalues[1], traceIndex);
+}
+```
+
+| Field          | What it holds                                                                                                      |
+| -------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `groups`       | The group's values by column label (`{ sex: 'Female' }`); `{}` for `'overall'`                                     |
+| `traceIndex`   | Index of the trendline trace in `figure.data` (and in each frame)                                                  |
+| `frame`        | The frame's name, for animated figures                                                                             |
+| `fit`          | `params`, `paramNames`, `rsquared`, `rsquaredAdj`, `bse`, `tvalues`, `pvalues`, `nobs`, `dfResid`, `ssr`, `fitted` |
+| `logX`, `logY` | Whether x / y were fit on their logarithms                                                                         |
+
+The results are kept beside the figure object, not inside it: the figure stays plain Plotly JSON,
+and like plotly.py (which keeps them on the Python figure only) they don't survive `toJSON`,
+`structuredClone` or a copy. Pass the figure Express returned, or the chart it rendered
+(`const chart = await hx.scatter(el, …)`). LOWESS and the moving-window kinds have no fit results,
+as in px. The fitting functions are exported too: `ols`, `lowess`, `rolling`, `expanding`, `ewm`.
 
 ## Histograms
 

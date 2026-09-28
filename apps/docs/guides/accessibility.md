@@ -146,5 +146,6 @@ logged and replaced by the generic line, so it can never break the chart.
 
 Keyboard navigation of points and legend items with focus and live announcements (plan E6.5,
 E17.4), trend summaries ("rises from 1.2 M in January to 3.4 M in December", E17.2), a visible data
-table option (E17.3), a high-contrast theme and patterns (E17.5), and locales (E17.6) come in later
-milestones.
+table option (E17.3) and a high-contrast theme and patterns (E17.5) come in later milestones.
+[Locales](/fundamentals/locales) (E17.6) translate the modebar and format numbers and dates, but
+the descriptions are English for now.

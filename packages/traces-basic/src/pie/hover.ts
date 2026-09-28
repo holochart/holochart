@@ -7,7 +7,7 @@
  * out — using the arc primitive's own geometry (`computeArcShape` + `arcSDF`). The label anchors
  * on the slice's bisector, `1 − rInscribed` of the radius out (Plotly).
  */
-import type { FullTrace } from '@mk7s/holochart-core';
+import { localeOf, type FullTrace, type Locale } from '@mk7s/holochart-core';
 import { arcSDF, computeArcShape } from '@mk7s/holochart-render';
 import type { HoverContext, HoverPoint, HoverQuery } from '@mk7s/holochart-runtime';
 import { sliceCenter, type PieCalc, type PieLayout, type PieSlice } from './calc.ts';
@@ -58,6 +58,7 @@ export function pieHoverText(
   calc: PieCalc,
   slice: PieSlice,
   hovertext: unknown,
+  locale?: Locale,
 ): string {
   let info = castOption(trace['hoverinfo'], slice.pts);
   if (info === undefined || info === 'all') info = ALL_FLAGS;
@@ -66,7 +67,7 @@ export function pieHoverText(
   const lines: string[] = [];
   if (flags.has('label')) lines.push(slice.label);
   if (flags.has('text') && isValidTextValue(hovertext)) lines.push(String(hovertext));
-  const labels = sliceLabels(calc, slice);
+  const labels = sliceLabels(calc, slice, locale);
   if (flags.has('value')) lines.push(labels['value']!);
   if (flags.has('percent') && labels['percent']) lines.push(labels['percent']);
   return lines.join('<br>');
@@ -77,7 +78,7 @@ export function pieHoverPoints(
   calc: PieCalc,
   trace: FullTrace,
   query: HoverQuery,
-  _ctx: HoverContext,
+  ctx: HoverContext,
 ): HoverPoint[] {
   const layout = calc.layout;
   if (!layout) return [];
@@ -89,6 +90,7 @@ export function pieHoverPoints(
   if (!slice) return [];
 
   const [ax, ay] = hoverAnchor(slice, layout);
+  const locale = localeOf(ctx.fullLayout);
   const hovertext = castOption(trace['hovertext'] || trace['text'], slice.pts);
   const values = sliceValues(trace, calc, slice);
   const fields: Record<string, unknown> = {
@@ -109,8 +111,8 @@ export function pieHoverPoints(
       ...(isValidTextValue(hovertext) ? { text: String(hovertext) } : {}),
       color: slice.color,
       fields,
-      labels: sliceLabels(calc, slice),
-      hoverText: pieHoverText(trace, calc, slice, hovertext),
+      labels: sliceLabels(calc, slice, locale),
+      hoverText: pieHoverText(trace, calc, slice, hovertext, locale),
     },
   ];
 }

@@ -6,6 +6,7 @@ import { prepare } from '../core/args.ts';
 import type { Config, Grouper, Role } from '../core/config.ts';
 import { buildFigure } from '../core/engine.ts';
 import { expressFunction } from '../core/render.ts';
+import { trendlineConfig, type TrendlineArgs } from '../core/trendline.ts';
 import type {
   AnimationOptions,
   AxisOptions,
@@ -23,7 +24,16 @@ import type {
   XYOptions,
 } from '../options.ts';
 import type { DataInput } from '../data/table.ts';
-import { defined, inferOrientation, marginalSpecs, opacityPatch, tailRoles } from './shared.ts';
+import {
+  aggConfig,
+  aggOrientation,
+  defined,
+  inferOrientation,
+  marginalSpecs,
+  opacityPatch,
+  tailRoles,
+  type AggFunction,
+} from './shared.ts';
 
 /** Options of {@link scatter}: px.scatter's arguments in camelCase. */
 export interface ScatterOptions
@@ -38,7 +48,8 @@ export interface ScatterOptions
     AxisOptions,
     SymbolOptions,
     ErrorBarOptions,
-    MarginalOptions {
+    MarginalOptions,
+    TrendlineArgs {
   /** Column of marker sizes (area-proportional, the largest `sizeMax` px across). */
   readonly size?: ColumnRef;
   /** Diameter of the largest marker with `size`, in px. Default 20. */
@@ -70,6 +81,12 @@ export interface LineOptions
   readonly markers?: boolean;
   /** `line.shape`: `'linear'` (default), `'spline'`, `'hv'`, `'vh'`, `'hvh'`, `'vhv'`. */
   readonly lineShape?: string;
+  /**
+   * Aggregate the rows of each line that share an x (y when horizontal): `'sum'`, `'avg'`,
+   * `'count'`, `'min'`, `'max'`, `'median'` or a function of the values — one point per position,
+   * in order of first appearance. A Holochart extension (px.line draws every row).
+   */
+  readonly agg?: AggFunction;
 }
 
 /** Options of {@link area}. */
@@ -101,6 +118,7 @@ function sizeref(values: readonly unknown[], sizeMax: number): number {
 function buildScatter(data: DataInput | null | undefined, options: ScatterOptions): ExpressFigure {
   const args = prepare('scatter', data, options as Record<string, unknown>);
   const orientation = inferOrientation(args, 'value');
+  const trend = trendlineConfig(args);
   const attrs: Role[] = [
     'x',
     'y',
@@ -128,10 +146,12 @@ function buildScatter(data: DataInput | null | undefined, options: ScatterOption
         patch: { mode: modes(args, ['markers']), orientation, ...opacityPatch(args) },
       },
       ...marginalSpecs(options.marginalX, options.marginalY),
+      ...trend.specs,
     ],
     groupers,
     continuousColor: 'marker',
     orientation,
+    ...(trend.overallTrendline ? { overallTrendline: true } : {}),
     marginalX: options.marginalX,
     marginalY: options.marginalY,
     ...(args.cols.size !== undefined
@@ -147,7 +167,7 @@ function buildLine(
   options: LineOptions & AreaOptions,
 ): ExpressFigure {
   const args = prepare(fn, data, options as Record<string, unknown>);
-  const orientation = inferOrientation(args, 'value');
+  const orientation = aggOrientation(args, () => inferOrientation(args, 'value'));
   const attrs: Role[] = [
     'x',
     'y',
@@ -180,6 +200,7 @@ function buildLine(
     specs: [{ type: 'scatter', attrs, patch }],
     groupers,
     orientation,
+    ...aggConfig(args, orientation),
   };
   return buildFigure(args, config);
 }
@@ -187,7 +208,9 @@ function buildLine(
 /**
  * A scatter plot (`px.scatter`): one `scatter` trace (`mode: 'markers'`) per group of `color` /
  * `symbol` values, per facet and per frame. A numeric `color` is a colorscale on `coloraxis`
- * instead; `size` scales marker areas; `marginalX` / `marginalY` add distributions above / right.
+ * instead; `size` scales marker areas; `marginalX` / `marginalY` add distributions above / right;
+ * `trendline` adds a fitted line per group (`'ols'`, `'lowess'`, `'rolling'`, `'ewm'`,
+ * `'expanding'`), with OLS fits in `getTrendlineResults(figure)`.
  *
  * @example
  * ```ts

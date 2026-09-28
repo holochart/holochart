@@ -72,6 +72,7 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
         'transitions-animation',
         'colors-colorscales',
         'dates-time-series',
+        'locales',
         'data-formats',
         'configuration',
       ]),
@@ -178,6 +179,7 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
         'indicator',
       ]),
     },
+    { text: 'Hierarchical', items: pages('charts/hierarchical/', ['sunburst', 'sankey']) },
   ];
 
   const demos: Item[] = [{ text: 'Demos', items: pages('demos/', ['openrouter']) }];

@@ -79,12 +79,12 @@ types are added as their traces land.
 
 ## Hierarchical & Flow
 
-| Chart    | Trace type(s) | Milestone |
-| -------- | ------------- | --------- |
-| Sunburst | `sunburst`    | M5        |
-| Treemap  | `treemap`     | M5        |
-| Icicle   | `icicle`      | M5        |
-| Sankey   | `sankey`      | M5        |
+| Chart                                     | Trace type(s) | Milestone |
+| ----------------------------------------- | ------------- | --------- |
+| [Sunburst](/charts/hierarchical/sunburst) | `sunburst`    | M5        |
+| Treemap                                   | `treemap`     | M5        |
+| Icicle                                    | `icicle`      | M5        |
+| [Sankey](/charts/hierarchical/sankey)     | `sankey`      | M5        |
 
 ## 3D
 

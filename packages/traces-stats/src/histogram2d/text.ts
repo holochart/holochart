@@ -8,7 +8,7 @@
  * Pure: labels are in data space (linear coordinates), so zoom only moves them; the automatic
  * size depends on the cell size in px and is recomputed by the view when that changes.
  */
-import { toRGBA, type FullLayout, type FullTrace, type RGBA } from '@mk7s/holochart-core';
+import { localeOf, toRGBA, type FullLayout, type FullTrace, type RGBA } from '@mk7s/holochart-core';
 import {
   sampleColorscale,
   textContrastColor,
@@ -51,6 +51,7 @@ export function cellTexts(
   const background = toRGBA(String(fullLayout.plot_bgcolor ?? '#fff')) ?? [1, 1, 1, 1];
   const span = mapping.zmax - mapping.zmin;
   const out: CellText[] = [];
+  const locale = localeOf(fullLayout);
   const { nx, ny } = calc;
   // histogram2dcontour skips its padding bins (Plotly).
   const b = options.skipBorder === true ? 1 : 0;
@@ -71,11 +72,11 @@ export function cellTexts(
           labels: {
             x: axisHoverText(axes.xaxis, xl, trace['xhoverformat']),
             y: axisHoverText(axes.yaxis, yl, trace['yhoverformat']),
-            z: zText(z, trace['zhoverformat']),
+            z: zText(z, trace['zhoverformat'], locale),
           },
           fullData: trace,
         },
-        { fallback: '' },
+        { fallback: '', locale },
       );
       if (!text) continue;
       let color: RGBA;

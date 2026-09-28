@@ -5,6 +5,7 @@
  * `hoverPoints`, …) are typed `unknown` until their stages land, so core never depends on three.js.
  */
 import type { FullLayout, FullTrace } from '../defaults/types.ts';
+import type { LocaleModule, LocaleStore } from '../locale/locale.ts';
 import type { Children, ObjectNode } from '../schema/types.ts';
 import type { Template, TemplateSource } from '../templates/templates.ts';
 import type { Issue } from '../validate/issues.ts';
@@ -148,6 +149,13 @@ export interface Registry extends TemplateSource {
   /** Template applied when `layout.template` is unset (`undefined` to apply none). */
   setDefaultTemplate(name: string | undefined): Registry;
   readonly defaultTemplate: string | undefined;
+  /**
+   * Register locale modules (plan E17.6), plotly.js's shape (`{ moduleType: 'locale', name, … }`).
+   * `config.locale` looks them up by name.
+   */
+  registerLocale(...modules: LocaleModule[]): Registry;
+  /** The registered locales. */
+  readonly locales: LocaleStore;
   /** Report an issue through `console.warn`, at most once per path and code. */
   warnOnce(issue: Issue): void;
 }

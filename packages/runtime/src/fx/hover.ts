@@ -8,7 +8,13 @@
  * ones before any event object or label is built. (Trace modules return fresh arrays from
  * `hoverPoints`; that part is theirs.)
  */
-import { formatValue, toRGBA, type FullLayout, type FullTrace } from '@mk7s/holochart-core';
+import {
+  formatValue,
+  localeOf,
+  toRGBA,
+  type FullLayout,
+  type FullTrace,
+} from '@mk7s/holochart-core';
 import type { ViewportRect } from '@mk7s/holochart-render';
 import type {
   AxisInfo,
@@ -100,6 +106,8 @@ export class HoverFinder {
   readonly #prevPoint: number[] = [];
   /** Subplot of each previous point: a multi-subplot trace (splom) shows one point in many. */
   readonly #prevSubplot: (SubplotInfo | undefined)[] = [];
+  /** Kind of each previous point (sankey nodes and links share indices). */
+  readonly #prevKind: (string | undefined)[] = [];
 
   #push(entry: HoverEntry, point: HoverPoint): void {
     const slot = this.found[this.count];
@@ -117,6 +125,7 @@ export class HoverFinder {
     this.#prevTrace.length = 0;
     this.#prevPoint.length = 0;
     this.#prevSubplot.length = 0;
+    this.#prevKind.length = 0;
   }
 
   /**
@@ -243,7 +252,8 @@ export class HoverFinder {
         if (
           f.entry.index !== this.#prevTrace[i] ||
           f.point.pointIndex !== this.#prevPoint[i] ||
-          f.entry.subplot !== this.#prevSubplot[i]
+          f.entry.subplot !== this.#prevSubplot[i] ||
+          f.point.kind !== this.#prevKind[i]
         ) {
           changed = true;
           break;
@@ -254,11 +264,13 @@ export class HoverFinder {
       this.#prevTrace.length = n;
       this.#prevPoint.length = n;
       this.#prevSubplot.length = n;
+      this.#prevKind.length = n;
       for (let i = 0; i < n; i++) {
         const f = this.found[i] as Found;
         this.#prevTrace[i] = f.entry.index;
         this.#prevPoint[i] = f.point.pointIndex;
         this.#prevSubplot[i] = f.entry.subplot;
+        this.#prevKind[i] = f.point.kind;
       }
     }
     return changed;
@@ -537,7 +549,10 @@ export function labelText(
         data: entry.input,
         pointIndex: i,
       },
-      { fallback: String(traceAttr(trace, entry.input, 'hovertemplatefallback') ?? '-') },
+      {
+        fallback: String(traceAttr(trace, entry.input, 'hovertemplatefallback') ?? '-'),
+        locale: localeOf(fullLayout),
+      },
     );
     const split = splitExtra(filled);
     return {
@@ -550,11 +565,13 @@ export function labelText(
   const flags = hoverinfoFlags(info);
   if (p.hoverText !== undefined) {
     // The trace built its own lines from its `hoverinfo` flags (pie: label, value, percent; a
-    // scatter fill: its text or name). The name box is left out when it would repeat the label.
+    // scatter fill: its text or name). The name box is left out when it would repeat the label;
+    // a trace may fill it itself (sankey: the value).
     const extra =
-      flags.has('name') && showName && p.showName !== false && p.hoverText !== name
+      p.extra ??
+      (flags.has('name') && showName && p.showName !== false && p.hoverText !== name
         ? truncateName(name, style.namelength)
-        : undefined;
+        : undefined);
     return { text: p.hoverText, extra };
   }
   const lines: string[] = [];

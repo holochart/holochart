@@ -1,0 +1,48 @@
+{
+  "name": "@mk7s/holochart-locales",
+  "version": "0.0.0",
+  "description": "Locale modules for Holochart (plotly.js's locales): UI strings, month and day names, number separators and date formats, one module per locale.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holochart/holochart.git",
+    "directory": "packages/locales"
+  },
+  "homepage": "https://mk7s.dev/holochart",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./scripts/*": "./dist/scripts/*"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@mk7s/holochart-core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./scripts/*": "./dist/scripts/*"
+    }
+  }
+}

@@ -10,7 +10,7 @@
  * Heatmaps report the largest hover distance, so markers or lines drawn over them win the
  * `closest` hover (Plotly's `maxHoverDistance`).
  */
-import type { FullTrace } from '@mk7s/holochart-core';
+import { localeOf, type FullTrace } from '@mk7s/holochart-core';
 import { heatmapAxisCell } from '@mk7s/holochart-render';
 import type { HoverContext, HoverPoint, HoverQuery } from '@mk7s/holochart-runtime';
 import {
@@ -93,7 +93,7 @@ export function heatmapCellHoverPoint(
   const yl = calc.y.centers[j]!;
   const xLabel = axisHoverText(ctx.xaxis, xl, trace['xhoverformat']);
   const yLabel = axisHoverText(ctx.yaxis, yl, trace['yhoverformat']);
-  const zLabel = zText(z, trace['zhoverformat']);
+  const zLabel = zText(z, trace['zhoverformat'], localeOf((ctx.xaxis ?? ctx.yaxis)?.full));
   const flags = hoverFlags(trace);
   const lines: string[] = [];
   if (flags.has('x')) lines.push(`x: ${xLabel}`);

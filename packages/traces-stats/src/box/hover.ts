@@ -12,7 +12,7 @@
  *
  * `violin` reuses both (see `violin/hover.ts`).
  */
-import { isArrayLike, type FullTrace } from '@mk7s/holochart-core';
+import { isArrayLike, localeOf, type FullTrace, type Locale } from '@mk7s/holochart-core';
 import { pointInPolygon } from '@mk7s/holochart-render';
 import {
   formatAxisValue,
@@ -85,6 +85,8 @@ export interface BoxHoverOptions {
   readonly side?: 'both' | 'positive' | 'negative';
   /** Whether the mean is a hover statistic (box: `boxmean` or sd mode; violin: `meanline`). */
   readonly hasMean: boolean;
+  /** Translates the statistic labels (plan E17.6). Default: English. */
+  readonly locale?: Locale;
 }
 
 /** The box under the pointer, or -1 (Plotly's `hoverOnBoxes` + `Fx.getClosest`). */
@@ -155,9 +157,12 @@ export function statPoints(
   if (horizontal !== axes.vm < 0) keys.reverse();
   const withSd = trace['boxmean'] === 'sd' || trace['sizemode'] === 'sd';
   const sdmultiple = typeof trace['sdmultiple'] === 'number' ? trace['sdmultiple'] : 1;
+  const _ = (text: string): string => options.locale?._(text) ?? text;
   const meanLabel = withSd
-    ? `mean ± ${sdmultiple === 1 ? 'σ' : `${sdmultiple}σ`}:`
-    : STAT_LABELS.mean;
+    ? sdmultiple === 1
+      ? _('mean ± σ:')
+      : `mean ± ${sdmultiple}σ:`
+    : _(STAT_LABELS.mean);
   const center = calc.pos[b]! + bPos;
   const edge = center + (side === 'negative' ? 0 : bdPos);
   const edgePx = edge * axes.pm + axes.pb;
@@ -188,7 +193,7 @@ export function statPoints(
       const sd = stats.sd[b]!;
       valueText += ` ± ${calc.valType === 'date' ? String(Math.round(sd)) : formatAxisValue(undefined, sd)}`;
     }
-    const label = `${key === 'mean' ? meanLabel : STAT_LABELS[key]} ${valueText}`;
+    const label = `${key === 'mean' ? meanLabel : _(STAT_LABELS[key])} ${valueText}`;
     const vPx = l * axes.vm + axes.vb;
     const posData = dataOf(axes.pa, calc.pos[b]!);
     const valData = dataOf(axes.va, l);
@@ -307,6 +312,7 @@ export function boxHoverPoints(
   const hoveron = trace['hoveron'] ?? 'boxes+points';
   const options: BoxHoverOptions = {
     hasMean: Boolean(trace['boxmean']) || trace['sizemode'] === 'sd',
+    locale: localeOf(ctx.fullLayout),
   };
   let boxes: HoverPoint[] = [];
   if (has(hoveron, 'boxes')) {
