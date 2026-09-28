@@ -17,6 +17,10 @@ export const meta: ExampleMeta = {
     'Monthly revenue and costs as lines, with the generated summary ("Revenue rises from … It peaks at …") shown under the chart.',
   tags: ['dev', 'chart', 'a11y', 'line', 'summary'],
   size: { width: 640, height: 460 },
+  // The summary paragraph is DOM text, rasterized by the OS: Linux CI draws it with other fonts than
+  // the macOS baseline (0.27% of pixels; the window rule skips DOM text, the whole-image fraction
+  // doesn't).
+  testTolerance: 0.006,
 };
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => `2024-${String(i + 1).padStart(2, '0')}-01`);
