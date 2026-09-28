@@ -1487,6 +1487,18 @@
       "thumbnailSize": { "width": 640, "height": 404 }
     },
     {
+      "id": "express/bar-agg",
+      "title": "Express: bars aggregated with agg",
+      "description": "Average tip per day and sex from row-level data, one grouped bar per pair.",
+      "tags": ["express", "bar", "aggregation", "grouped", "agg"],
+      "category": "express",
+      "traceTypes": [],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/express/bar-agg.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "express/bar-pattern",
       "title": "Express: bar with pattern groups",
       "description": "Medal counts stacked per nation, colored by nation and hatched by medal.",
@@ -1497,6 +1509,18 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/express/bar-pattern.webp",
       "thumbnailSize": { "width": 640, "height": 420 }
+    },
+    {
+      "id": "express/bar-polar",
+      "title": "Express: wind rose with barPolar",
+      "description": "A wind rose from long-form rows: frequency per direction, stacked by strength bin from calm to strong.",
+      "tags": ["express", "barpolar", "polar", "wind rose", "stacked"],
+      "category": "express",
+      "traceTypes": ["barpolar"],
+      "size": { "width": 640, "height": 480 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/express/bar-polar.webp",
+      "thumbnailSize": { "width": 640, "height": 480 }
     },
     {
       "id": "express/density-heatmap",
@@ -1545,6 +1569,30 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/express/facet-grid.webp",
       "thumbnailSize": { "width": 640, "height": 409 }
+    },
+    {
+      "id": "express/funnel",
+      "title": "Express: funnel by group",
+      "description": "A sales funnel of two offices, stacked per stage, from long-form rows.",
+      "tags": ["express", "funnel", "grouping", "stacked"],
+      "category": "express",
+      "traceTypes": ["funnel"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/express/funnel.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "express/funnel-area",
+      "title": "Express: funnel area",
+      "description": "Recruiting stages as a funnel area: one trapezoid per stage sized by its count.",
+      "tags": ["express", "funnelarea", "funnel", "pie-like"],
+      "category": "express",
+      "traceTypes": ["funnelarea"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/express/funnel-area.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
       "id": "express/gapminder",
@@ -1607,6 +1655,18 @@
       "thumbnailSize": { "width": 640, "height": 440 }
     },
     {
+      "id": "express/line-polar",
+      "title": "Express: closed polar lines",
+      "description": "Wind frequency around the compass for three strength bins, one closed line each.",
+      "tags": ["express", "scatterpolar", "polar", "lines", "wind"],
+      "category": "express",
+      "traceTypes": ["scatterpolar"],
+      "size": { "width": 640, "height": 480 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/express/line-polar.webp",
+      "thumbnailSize": { "width": 640, "height": 480 }
+    },
+    {
       "id": "express/marginals",
       "title": "Express: scatter with box and violin marginals",
       "description": "Tips against bills by smoker, with a box plot of bills above and a violin of tips at the right.",
@@ -1641,6 +1701,54 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/express/scatter-matrix.webp",
       "thumbnailSize": { "width": 640, "height": 600 }
+    },
+    {
+      "id": "express/scatter-polar",
+      "title": "Express: polar scatter of wind data",
+      "description": "Wind frequency by compass direction and strength bin, colored and shaped by strength, sized by frequency.",
+      "tags": ["express", "scatterpolar", "polar", "wind", "grouping"],
+      "category": "express",
+      "traceTypes": ["scatterpolar"],
+      "size": { "width": 640, "height": 480 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/express/scatter-polar.webp",
+      "thumbnailSize": { "width": 640, "height": 480 }
+    },
+    {
+      "id": "express/trendline-lowess",
+      "title": "Express: LOWESS trendline over all groups",
+      "description": "Life expectancy against GDP per capita on a log axis, colored by continent, with one LOWESS curve through all countries.",
+      "tags": ["express", "scatter", "trendline", "lowess", "smoothing", "log axis"],
+      "category": "express",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/express/trendline-lowess.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
+    },
+    {
+      "id": "express/trendline-ols",
+      "title": "Express: OLS trendlines with facets",
+      "description": "Tips against bill totals per smoker group, faceted by meal time, with a least-squares line per group.",
+      "tags": ["express", "scatter", "trendline", "ols", "facets", "regression"],
+      "category": "express",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/express/trendline-ols.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
+    },
+    {
+      "id": "express/trendline-rolling",
+      "title": "Express: rolling and EWM trendlines on a time series",
+      "description": "Daily closes of two tickers with a 20-day rolling mean and a dashed exponentially weighted mean (halflife 5).",
+      "tags": ["express", "scatter", "trendline", "rolling", "ewm", "time series", "dates"],
+      "category": "express",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/express/trendline-rolling.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
     },
     {
       "id": "funnel/basic",
@@ -2435,6 +2543,30 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "locales/french-bars",
+      "title": "Locales: French number formatting",
+      "description": "Revenue by region with config.locale \"fr\": thousands separated by spaces and decimal commas in tick labels and bar text.",
+      "tags": ["locales", "bar", "text", "config"],
+      "category": "locales",
+      "traceTypes": ["bar"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/locales/french-bars.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "locales/german-time-series",
+      "title": "Locales: German time series",
+      "description": "A daily exchange rate with config.locale \"de\": German month names on the date axis and a decimal comma in tick and hover labels.",
+      "tags": ["locales", "time-series", "date", "line", "config"],
+      "category": "locales",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/locales/german-time-series.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "log/colorbar",
       "title": "Log: log-scaled colorbar",
       "description": "Markers colored by the log of a value spanning five decades, with a colorbar labeled 10 to 1M via tickvals and ticktext.",
@@ -3023,6 +3155,90 @@
       "thumbnailSize": { "width": 640, "height": 297 }
     },
     {
+      "id": "sankey/arrows",
+      "title": "Sankey: arrows",
+      "description": "Support tickets moving through triage and resolution, with arrowheads on links.",
+      "tags": ["sankey", "hierarchical", "flow", "domain", "arrows"],
+      "category": "sankey",
+      "traceTypes": ["sankey"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/sankey/arrows.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "sankey/basic",
+      "title": "Sankey: basic",
+      "description": "Energy flows from primary sources through conversion to final uses and losses.",
+      "tags": ["sankey", "hierarchical", "flow", "domain", "basic"],
+      "category": "sankey",
+      "traceTypes": ["sankey"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/sankey/basic.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "sankey/circular",
+      "title": "Sankey: circular links",
+      "description": "A circular economy with recycling and rework drawn as loops around the diagram.",
+      "tags": ["sankey", "hierarchical", "flow", "domain", "circular"],
+      "category": "sankey",
+      "traceTypes": ["sankey"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/sankey/circular.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "sankey/colorscales",
+      "title": "Sankey: link colorscales",
+      "description": "Students moving from school tracks to fields of study, colored by share of women.",
+      "tags": ["sankey", "hierarchical", "flow", "domain", "colorscale"],
+      "category": "sankey",
+      "traceTypes": ["sankey"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/sankey/colorscales.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "sankey/fixed-positions",
+      "title": "Sankey: fixed node positions",
+      "description": "A supply chain with node positions set by node.x and node.y.",
+      "tags": ["sankey", "hierarchical", "flow", "domain", "layout"],
+      "category": "sankey",
+      "traceTypes": ["sankey"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/sankey/fixed-positions.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "sankey/groups",
+      "title": "Sankey: node groups",
+      "description": "The energy balance with wind, solar and hydro merged into one group node.",
+      "tags": ["sankey", "hierarchical", "flow", "domain", "groups"],
+      "category": "sankey",
+      "traceTypes": ["sankey"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/sankey/groups.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "sankey/vertical",
+      "title": "Sankey: vertical",
+      "description": "A monthly household budget flowing top to bottom, from income to spending.",
+      "tags": ["sankey", "hierarchical", "flow", "domain", "orientation"],
+      "category": "sankey",
+      "traceTypes": ["sankey"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/sankey/vertical.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "scatter/basic",
       "title": "Scatter: markers and lines",
       "description": "Default modes (lines+markers under 20 points, lines above), a marker cloud, per-point symbols and zorder.",
@@ -3237,6 +3453,90 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/strip/with-box.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "sunburst/basic",
+      "title": "Sunburst: basic",
+      "description": "Plotly's Eve family tree as rings around the root, sized by value, with inherited colors and faded leaves.",
+      "tags": ["sunburst", "hierarchical", "chart", "text", "basic"],
+      "category": "sunburst",
+      "traceTypes": ["sunburst"],
+      "size": { "width": 560, "height": 480 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/sunburst/basic.webp",
+      "thumbnailSize": { "width": 560, "height": 480 }
+    },
+    {
+      "id": "sunburst/branchvalues",
+      "title": "Sunburst: branchvalues",
+      "description": "branchvalues 'remainder' and 'total' side by side on the same values, labeled with each sector's percent of its parent.",
+      "tags": ["sunburst", "hierarchical", "chart", "text", "domain", "annotations"],
+      "category": "sunburst",
+      "traceTypes": ["sunburst"],
+      "size": { "width": 720, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/sunburst/branchvalues.webp",
+      "thumbnailSize": { "width": 640, "height": 373 }
+    },
+    {
+      "id": "sunburst/colorscale",
+      "title": "Sunburst: colorscale",
+      "description": "Departments sized by headcount and colored by growth on a diverging colorscale centered on zero, with a colorbar.",
+      "tags": ["sunburst", "hierarchical", "chart", "colorscale", "colorbar"],
+      "category": "sunburst",
+      "traceTypes": ["sunburst"],
+      "size": { "width": 640, "height": 480 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/sunburst/colorscale.webp",
+      "thumbnailSize": { "width": 640, "height": 480 }
+    },
+    {
+      "id": "sunburst/ids",
+      "title": "Sunburst: ids and repeated labels",
+      "description": "Regions and their product lines keyed by ids, so the product names repeat, under an implied root; radial labels with values.",
+      "tags": ["sunburst", "hierarchical", "chart", "text", "hovertemplate"],
+      "category": "sunburst",
+      "traceTypes": ["sunburst"],
+      "size": { "width": 560, "height": 480 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/sunburst/ids.webp",
+      "thumbnailSize": { "width": 560, "height": 480 }
+    },
+    {
+      "id": "sunburst/levels",
+      "title": "Sunburst: maxdepth and level",
+      "description": "A four-level taxonomy cut to two levels, and the same tree entered at one branch with three levels and a rotation.",
+      "tags": ["sunburst", "hierarchical", "chart", "text", "domain", "annotations"],
+      "category": "sunburst",
+      "traceTypes": ["sunburst"],
+      "size": { "width": 760, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/sunburst/levels.webp",
+      "thumbnailSize": { "width": 640, "height": 354 }
+    },
+    {
+      "id": "sunburst/patterns",
+      "title": "Sunburst: patterns",
+      "description": "Each branch hatched with its own pattern shape over its colors.",
+      "tags": ["sunburst", "hierarchical", "chart", "pattern"],
+      "category": "sunburst",
+      "traceTypes": ["sunburst"],
+      "size": { "width": 560, "height": 480 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/sunburst/patterns.webp",
+      "thumbnailSize": { "width": 560, "height": 480 }
+    },
+    {
+      "id": "sunburst/text-orientation",
+      "title": "Sunburst: inside text orientation",
+      "description": "insidetextorientation 'horizontal', 'radial', 'tangential' and 'auto' side by side on the same hierarchy.",
+      "tags": ["sunburst", "hierarchical", "chart", "text", "grid", "annotations"],
+      "category": "sunburst",
+      "traceTypes": ["sunburst"],
+      "size": { "width": 720, "height": 680 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/sunburst/text-orientation.webp",
+      "thumbnailSize": { "width": 640, "height": 604 }
     },
     {
       "id": "table/basic",

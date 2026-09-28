@@ -108,6 +108,10 @@ export interface Layout {
    */
   datarevision?: unknown;
   /**
+   * Decimal then thousands separator of numbers, e.g. `', '` for `1 234,5`. Default: the locale's (`config.locale`), `'.,'` in English.
+   */
+  separators?: string;
+  /**
    * Arbitrary user data, available in text templates as `%{meta}`.
    */
   meta?: unknown;

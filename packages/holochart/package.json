@@ -43,6 +43,7 @@
     "@mk7s/holochart-themes": "workspace:*",
     "@mk7s/holochart-traces-basic": "workspace:*",
     "@mk7s/holochart-traces-finance": "workspace:*",
+    "@mk7s/holochart-traces-hier": "workspace:*",
     "@mk7s/holochart-traces-sci": "workspace:*",
     "@mk7s/holochart-traces-stats": "workspace:*"
   },

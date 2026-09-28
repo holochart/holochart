@@ -7,6 +7,7 @@ import type { Config, Grouper, Role } from '../core/config.ts';
 import { buildFigure, colorscaleAttributes } from '../core/engine.ts';
 import { decoratedLabel } from '../core/labels.ts';
 import { expressFunction } from '../core/render.ts';
+import { trendlineConfig, type TrendlineArgs } from '../core/trendline.ts';
 import type { DataInput } from '../data/table.ts';
 import type {
   AnimationOptions,
@@ -51,7 +52,8 @@ interface DensityOptions
 export interface DensityHeatmapOptions extends DensityOptions, ContinuousColorOptions {}
 
 /** Options of {@link densityContour}: px.density_contour's arguments in camelCase. */
-export interface DensityContourOptions extends DensityOptions, DiscreteColorOptions {}
+export interface DensityContourOptions
+  extends DensityOptions, DiscreteColorOptions, TrendlineArgs {}
 
 function build(
   kind: 'densityHeatmap' | 'densityContour',
@@ -74,6 +76,8 @@ function build(
   });
   if (heatmap) patch['coloraxis'] = 'coloraxis';
   else patch['contours'] = { coloring: 'none' };
+  // px.density_contour takes trendlines (px.density_heatmap does not).
+  const trend: ReturnType<typeof trendlineConfig> = heatmap ? { specs: [] } : trendlineConfig(args);
   const config: Config = {
     specs: [
       { type: heatmap ? 'histogram2d' : 'histogram2dcontour', attrs, patch },
@@ -83,7 +87,9 @@ function build(
         options.marginalY,
         heatmap || args.cols.color === undefined ? args.colorway[0] : undefined,
       ),
+      ...trend.specs,
     ],
+    ...(trend.overallTrendline ? { overallTrendline: true } : {}),
     groupers,
     aggregation: defined({ histfunc: histfunc ?? 'count', histnorm: options.histnorm }),
     marginalX: options.marginalX,

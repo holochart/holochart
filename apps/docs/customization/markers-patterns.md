@@ -206,8 +206,8 @@ and fills keep drawing each trace in one call.
 
 - `pattern.path` (a custom SVG path as the tile) is not supported yet. Neither is Holochart's
   planned image texture fill, `marker.texture`.
-- `funnelarea` and the hierarchy traces (`sunburst`, `treemap`, `icicle`) don't draw patterns
-  yet.
+- `funnelarea`, `treemap` and `icicle` don't draw patterns yet (`sunburst` does, anchored at its
+  center like pie).
 - Plotly computes the default `fgcolor`, `bgcolor` and `fgopacity` when it fills in the figure's
   defaults. Holochart computes them per bar when drawing, so they don't appear in `chart.fullData`
   unless you set them. With `fillmode: 'overlay'` and per-bar colors each bar gets its own contrast

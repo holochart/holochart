@@ -155,6 +155,9 @@ importers:
       '@mk7s/holochart-express':
         specifier: workspace:*
         version: link:../../packages/express
+      '@mk7s/holochart-locales':
+        specifier: workspace:*
+        version: link:../../packages/locales
       '@mk7s/holochart-render':
         specifier: workspace:*
         version: link:../../packages/render
@@ -217,6 +220,9 @@ importers:
       '@mk7s/holochart-express':
         specifier: workspace:*
         version: link:../packages/express
+      '@mk7s/holochart-locales':
+        specifier: workspace:*
+        version: link:../packages/locales
       '@mk7s/holochart-render':
         specifier: workspace:*
         version: link:../packages/render
@@ -344,6 +350,9 @@ importers:
       '@mk7s/holochart-traces-finance':
         specifier: workspace:*
         version: link:../traces-finance
+      '@mk7s/holochart-traces-hier':
+        specifier: workspace:*
+        version: link:../traces-hier
       '@mk7s/holochart-traces-sci':
         specifier: workspace:*
         version: link:../traces-sci
@@ -357,6 +366,19 @@ importers:
       three:
         specifier: 'catalog:'
         version: 0.186.0
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.0(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/locales:
+    dependencies:
+      '@mk7s/holochart-core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
       tsdown:
         specifier: 'catalog:'
         version: 0.23.0(typescript@6.0.3)
@@ -450,6 +472,34 @@ importers:
         version: 6.0.3
 
   packages/traces-finance:
+    dependencies:
+      '@mk7s/holochart-core':
+        specifier: workspace:*
+        version: link:../core
+      '@mk7s/holochart-render':
+        specifier: workspace:*
+        version: link:../render
+      '@mk7s/holochart-runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@mk7s/holochart-traces-basic':
+        specifier: workspace:*
+        version: link:../traces-basic
+    devDependencies:
+      '@types/three':
+        specifier: 'catalog:'
+        version: 0.186.0
+      three:
+        specifier: 'catalog:'
+        version: 0.186.0
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.0(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/traces-hier:
     dependencies:
       '@mk7s/holochart-core':
         specifier: workspace:*

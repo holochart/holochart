@@ -10,12 +10,12 @@
  * On axes with range breaks, the spec and labels are computed in raw space (`rawScale`), as Plotly
  * does; formatters take linear (compressed) values and expand them before formatting.
  *
- * Everything is en-US and UTC: `.` decimal point, `,` thousands, `−` (U+2212) for negatives,
- * d3-time-format in UTC. Locales and display time zones are later stories.
+ * Numbers and dates follow the axis' locale (`_locale`, plan E17.6; en-US by default): its
+ * separators (`layout.separators`), month and day names and default date formats. Negatives use
+ * `−` (U+2212); dates are formatted in UTC. Display time zones are a later story.
  */
-import { format as d3Format } from 'd3-format';
-import { utcFormat } from 'd3-time-format';
 import type { FullAxis } from '../defaults/types.ts';
+import { DEFAULT_LOCALE, localeOf, type Locale } from '../locale/locale.ts';
 import { rawRange, rawScale } from './breaks.ts';
 import {
   dateTick0,
@@ -171,12 +171,6 @@ export const ROUND_LOG_2: readonly number[] = [-0.301, 0, 0.301, 0.699, 1];
 
 /** Largest seconds value shown per number of fractional digits (never round up to `:60`). */
 const MAX_SECONDS = [59, 59.9, 59.99, 59.999, 59.9999];
-
-// en-US date formats (Plotly's `locale-en` `_extraFormat`).
-const YEAR_FORMAT = '%Y';
-const MONTH_FORMAT = '%b %Y';
-const DAY_MONTH_FORMAT = '%b %-d';
-const DAY_MONTH_YEAR_FORMAT = '%b %-d, %Y';
 
 // ---------------------------------------------------------------------------------------------
 // Axis attributes
@@ -717,33 +711,19 @@ function parseTick0(scale: Scale, tick0: unknown, dtick: Dtick): number | undefi
 // ---------------------------------------------------------------------------------------------
 // Numbers
 
-const numberFormats = new Map<string, ((n: number) => string) | null>();
-
-function d3NumberFormat(specifier: string): ((n: number) => string) | null {
-  let f = numberFormats.get(specifier);
-  if (f === undefined) {
-    try {
-      f = d3Format(specifier);
-    } catch {
-      // Invalid specifier: Plotly warns and prints the raw number.
-      f = null;
-    }
-    numberFormats.set(specifier, f);
-  }
-  return f;
-}
-
 /**
- * Plotly's `numSeparate` for en-US: thousands separators when the number has more than four
- * integer digits (so years stay `2024`), a decimal part, or `separatethousands`.
+ * Plotly's `numSeparate`: write the decimal separator (first of `separators`) and thousands
+ * separators (second) when the number has more than four integer digits (so years stay `2024`), a
+ * decimal part, or `separatethousands`.
  */
-function numSeparate(value: string, separatethousands: boolean): string {
-  const thousands = /(\d+)(\d{3})/;
+export function numSeparate(value: string, separators = '.,', separatethousands = false): string {
+  const thousandsRe = /(\d+)(\d{3})/;
+  const thousands = separators.charAt(1);
   const parts = value.split('.');
   let x1 = parts[0] as string;
-  const x2 = parts.length > 1 ? `.${parts[1] as string}` : '';
-  if (parts.length > 1 || x1.length > 4 || separatethousands) {
-    while (thousands.test(x1)) x1 = x1.replace(thousands, '$1,$2');
+  const x2 = parts.length > 1 ? separators.charAt(0) + (parts[1] as string) : '';
+  if (thousands && (parts.length > 1 || x1.length > 4 || separatethousands)) {
+    while (thousandsRe.test(x1)) x1 = x1.replace(thousandsRe, `$1${thousands}$2`);
   }
   return x1 + x2;
 }
@@ -766,6 +746,8 @@ export interface NumberFormatOptions {
   tickexponent?: number;
   /** Factor out the exponent but don't print it (`showexponent` first/last on other ticks). */
   hideExponent?: boolean;
+  /** Separators and d3-format locale (plan E17.6). Default en-US (`.,`). */
+  locale?: Locale;
 }
 
 /**
@@ -781,8 +763,9 @@ export interface NumberFormatOptions {
  * ```
  */
 export function formatNumber(v: number, options: NumberFormatOptions = {}): string {
+  const locale = options.locale ?? DEFAULT_LOCALE;
   if (options.tickformat) {
-    const f = d3NumberFormat(options.tickformat);
+    const f = locale.numberFormat(options.tickformat);
     return (f ? f(v) : String(v)).replace(/-/g, MINUS_SIGN);
   }
   const minexponent = options.minexponent ?? 3;
@@ -827,7 +810,7 @@ export function formatNumber(v: number, options: NumberFormatOptions = {}): stri
       const dp = s.indexOf('.') + 1;
       if (dp) s = s.slice(0, dp + tickRound).replace(/\.?0+$/, '');
     }
-    s = numSeparate(s, options.separatethousands === true);
+    s = numSeparate(s, locale.separators, options.separatethousands === true);
   }
 
   if (exponent && exponentFormat !== 'hide') {
@@ -847,17 +830,6 @@ export function formatNumber(v: number, options: NumberFormatOptions = {}): stri
 // ---------------------------------------------------------------------------------------------
 // Dates
 
-const timeFormats = new Map<string, (d: Date) => string>();
-
-function d3TimeFormat(specifier: string): (d: Date) => string {
-  let f = timeFormats.get(specifier);
-  if (f === undefined) {
-    f = utcFormat(specifier);
-    timeFormats.set(specifier, f);
-  }
-  return f;
-}
-
 function lpad(v: number, len: number): string {
   return String(v).padStart(len, '0');
 }
@@ -867,7 +839,7 @@ function lpad(v: number, len: number): string {
  * digits of fractional seconds (`%f` alone: up to 6, trailing zeros dropped) and `%h` for the half
  * year (1 or 2).
  */
-function modDateFormat(fmt: string, x: number): string {
+function modDateFormat(fmt: string, x: number, locale: Locale): string {
   const d = new Date(Math.floor(x + 0.05));
   const f = fmt
     .replace(/%(?:\{(\d+)\}|(\d))?f/g, (_m, braced?: string, bare?: string) => {
@@ -876,7 +848,7 @@ function modDateFormat(fmt: string, x: number): string {
       return frac.toFixed(digits).slice(2).replace(/0+$/, '') || '0';
     })
     .replace(/%h/g, () => (d.getUTCMonth() < 6 ? '1' : '2'));
-  return d3TimeFormat(f)(d);
+  return locale.timeFormat(f)(d);
 }
 
 /** `HH:MM[:SS[.fff]]` of a date (Plotly's `formatTime`). */
@@ -898,16 +870,23 @@ function formatTime(x: number, tr: TickRound): string {
  * Format a date (UTC ms) with `format`, or — when `format` is empty — Plotly's default for the
  * rounding level: `2024` (`y`), `Mar 2024` (`m`), `Mar 5\n2024` (`d`), `12:30\nMar 5, 2024` (`M`),
  * `12:30:05\n…` (`S`), `12:30:05.25\n…` (digits). The part after `\n` is the "head" that
- * multi-level tick labels show on a second line.
+ * multi-level tick labels show on a second line. Names and default formats come from `locale`
+ * (its `year`, `month`, `dayMonth` and `dayMonthYear` formats).
  */
-export function formatDateLabel(ms: number, format: string, tickround: TickRound): string {
-  if (format) return modDateFormat(format, ms);
-  if (tickround === 'y') return modDateFormat(YEAR_FORMAT, ms);
-  if (tickround === 'm') return modDateFormat(MONTH_FORMAT, ms);
+export function formatDateLabel(
+  ms: number,
+  format: string,
+  tickround: TickRound,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
+  const f = locale.format;
+  if (format) return modDateFormat(format, ms, locale);
+  if (tickround === 'y') return modDateFormat(f.year, ms, locale);
+  if (tickround === 'm') return modDateFormat(f.month, ms, locale);
   if (tickround === 'd') {
-    return `${modDateFormat(DAY_MONTH_FORMAT, ms)}\n${modDateFormat(YEAR_FORMAT, ms)}`;
+    return `${modDateFormat(f.dayMonth, ms, locale)}\n${modDateFormat(f.year, ms, locale)}`;
   }
-  return `${formatTime(ms, tickround)}\n${modDateFormat(DAY_MONTH_YEAR_FORMAT, ms)}`;
+  return `${formatTime(ms, tickround)}\n${modDateFormat(f.dayMonthYear, ms, locale)}`;
 }
 
 // Extra precision (hover, array ticks without text) shows one more field.
@@ -986,6 +965,7 @@ export function createTickFormatter(
 /** The formatter of a scale without breaks (values are formatted as they are). */
 function rawTickFormatter(scale: Scale, axis: FullAxis, spec: TickSpec): TickFormatter {
   const o = tickOptions(axis);
+  const locale = localeOf(axis);
   const type = scale.type;
 
   const numFormat = (
@@ -1016,6 +996,7 @@ function rawTickFormatter(scale: Scale, axis: FullAxis, spec: TickSpec): TickFor
       tickround,
       tickexponent,
       hideExponent: hideexp === 'hide',
+      locale,
     });
   };
 
@@ -1084,7 +1065,7 @@ function rawTickFormatter(scale: Scale, axis: FullAxis, spec: TickSpec): TickFor
     // Extra precision only when no explicit format was given.
     const extra = !fmt && extraPrecision;
     if (extra) tr = typeof tr === 'number' ? 4 : (NEXT_ROUND[String(tr)] ?? 4);
-    let dateStr = formatDateLabel(x, fmt, tr);
+    let dateStr = formatDateLabel(x, fmt, tr, locale);
     let headStr: string | undefined;
     const split = dateStr.indexOf('\n');
     if (split !== -1) {

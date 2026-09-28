@@ -11,7 +11,7 @@
  * number counts up, formatted each frame, and the gauge bar sweeps (see `layout.ts` for the kept
  * number scale that stops the digits from jittering).
  */
-import { toRGBA } from '@mk7s/holochart-core';
+import { localeOf, toRGBA } from '@mk7s/holochart-core';
 import {
   createArcPrimitive,
   createRectPrimitive,
@@ -153,6 +153,7 @@ class IndicatorView implements TraceView<IndicatorCalc> {
           domain: rect,
           plotWidth: ctx.plotArea?.width ?? rect.width,
           cache: this.#cache,
+          locale: localeOf(ctx.fullLayout),
         })
       : undefined;
     const arcs = layout?.arcs ?? [];

@@ -11,8 +11,14 @@ import type { ExpressFigure } from '../options.ts';
 import type { Args, ColumnKey } from './args.ts';
 import { animationControls, fixAnimationRanges } from './animation.ts';
 import type { Config, GroupData, Grouper, TraceSpec } from './config.ts';
-import { configureAxes, layoutGrid, type GridPlan } from './grid.ts';
+import { configureAxes, layoutGrid, type Grid, type GridPlan } from './grid.ts';
 import { decoratedLabel, groupValue, valueText } from './labels.ts';
+import {
+  fitTrendline,
+  setTrendlineResults,
+  type TrendlineFit,
+  type TrendlineResult,
+} from './trendline.ts';
 
 type ValMap = Map<string, unknown> | 'identity';
 
@@ -101,6 +107,7 @@ function traceKwargs(
   spec: TraceSpec,
   group: GroupData,
   mappingLabels: Map<string, string>,
+  onTrendline?: (fit: TrendlineFit) => void,
 ): Record<string, unknown> {
   const { table, cols } = args;
   const rows = group.rows;
@@ -131,6 +138,17 @@ function traceKwargs(
       }
       case 'customData':
         continue;
+      case 'trendline': {
+        // px: x sorted, the fitted y, and the fit in the hover header.
+        const fit = fitTrendline(args, rows);
+        if (fit === undefined) continue;
+        Object.assign(patch, fit.patch);
+        header = fit.header;
+        mappingLabels.set(args.label(cols.x as string), '%{x}');
+        mappingLabels.set(args.label(cols.y as string), '%{y} <b>(trend)</b>');
+        onTrendline?.(fit);
+        continue;
+      }
       case 'hoverData': {
         if (HISTOGRAMS.has(spec.type)) continue;
         const skip = new Set([cols.x, cols.y, cols.z, cols.base]);
@@ -183,9 +201,9 @@ function traceKwargs(
         if (header === '') header = '<b>%{hovertext}</b><br><br>';
         break;
       case 'color': {
-        if (config.continuousColor === 'pie') {
+        if (config.continuousColor === 'pie' || config.continuousColor === 'sectors') {
           const marker = (patch['marker'] ??= {}) as Record<string, unknown>;
-          if (args.table.type(column) === 'numeric') {
+          if (config.continuousColor === 'pie' && args.table.type(column) === 'numeric') {
             marker['colors'] = values;
             marker['coloraxis'] = 'coloraxis';
             mappingLabels.set(label, '%{color}');
@@ -299,6 +317,7 @@ export function buildFigure(args: Args, config: Config): ExpressFigure {
   const { table, options } = args;
   const continuous =
     config.continuousColor !== undefined &&
+    config.continuousColor !== 'sectors' &&
     args.cols.color !== undefined &&
     table.type(args.cols.color) === 'numeric';
   const mappings = config.groupers.map((g) => makeMapping(args, g, continuous));
@@ -455,6 +474,7 @@ export function buildFigure(args: Args, config: Config): ExpressFigure {
   if (config.marginalY) ncols += 1;
 
   let lastTraceNameLabels: string[] = [];
+  const trendlineResults: TrendlineResult[] = [];
   const frames: { name: string; data: Record<string, unknown>[] }[] = [];
   /** Per frame, the cell of each trace: row from the top and column, 1-based. */
   const frameCells: [number, number][][] = [];
@@ -519,7 +539,19 @@ export function buildFigure(args: Args, config: Config): ExpressFigure {
           setPath(trace, spec.marginal ? 'marker.color' : m.grouper.path, style);
         });
         cells.push([row, col]);
-        const patch = traceKwargs(args, config, spec, groupData, new Map(mappingLabels));
+        const traceIndex = data.length;
+        const patch = traceKwargs(args, config, spec, groupData, new Map(mappingLabels), (t) => {
+          // px's `get_trendline_results` rows: the group's labels and the OLS fit.
+          if (!t.fit) return;
+          trendlineResults.push({
+            groups: Object.fromEntries(mappingLabels),
+            traceIndex,
+            ...(frameColumn !== undefined ? { frame: valueText(frameValue) } : {}),
+            fit: t.fit,
+            logX: t.logX,
+            logY: t.logY,
+          });
+        });
         data.push(deepMerge(trace, patch) as Record<string, unknown>);
       }
     }
@@ -581,7 +613,81 @@ export function buildFigure(args: Args, config: Config): ExpressFigure {
     fixAnimationRanges(args, config, figure, grid);
     animationControls(args, figure);
   }
+  if (config.overallTrendline) {
+    const colorMapping = continuous
+      ? undefined
+      : mappings.find((m) => m.grouper.variable === 'color');
+    overallTrendline(
+      args,
+      config,
+      figure,
+      grid,
+      frameCells[0] ?? [],
+      colorMapping,
+      trendlineResults,
+    );
+  }
+  if (trendlineResults.length > 0) setTrendlineResults(figure, trendlineResults);
   return figure;
+}
+
+/**
+ * `trendlineScope: 'overall'` (px's `make_figure` tail): one fit over all rows, added after the
+ * traces to every subplot that has some (the marginals' excepted), named `Overall Trendline` and
+ * shown once in the legend (the last copy), in `trendlineColorOverride` or the color sequence's
+ * next unused color. Frames keep only the groups' traces (as px).
+ */
+function overallTrendline(
+  args: Args,
+  config: Config,
+  figure: ExpressFigure,
+  grid: Grid,
+  cells: readonly [number, number][],
+  colorMapping: Mapping | undefined,
+  results: TrendlineResult[],
+): void {
+  const override = args.options['trendlineColorOverride'];
+  const patch: Record<string, unknown> = { mode: 'lines' };
+  if (typeof override === 'string') patch['line'] = { color: override };
+  else if (colorMapping) {
+    const { valMap, sequence } = colorMapping;
+    const size = valMap === 'identity' ? 0 : valMap.size;
+    patch['line'] = { color: sequence[size % sequence.length] };
+  }
+  const spec: TraceSpec = { type: 'scatter', attrs: ['trendline'], patch };
+  const rows = Array.from({ length: args.table.length }, (_, i) => i);
+  let fitted: TrendlineFit | undefined;
+  const kwargs = traceKwargs(args, config, spec, { rows }, new Map(), (t) => (fitted = t));
+  // Main cells with traces, bottom row first, left to right (plotly.py's `row='all', col='all'`).
+  const used = new Set<string>();
+  cells.forEach(([row, col], i) => {
+    if (config.specs[i % config.specs.length]?.marginal === undefined) used.add(`${row},${col}`);
+  });
+  const targets: [number, number][] = [];
+  for (let row = grid.nrows; row >= 1; row--) {
+    for (let col = 1; col <= grid.ncols; col++)
+      if (used.has(`${row},${col}`)) targets.push([row, col]);
+  }
+  const first = figure.data.length;
+  // A new array: `figure.data` is the first frame's, which keeps the groups' traces only.
+  figure.data = [...figure.data];
+  for (const [row, col] of targets) {
+    const trace: Record<string, unknown> = {
+      type: 'scatter',
+      name: 'Overall Trendline',
+      legendgroup: 'Overall Trendline',
+      showlegend: false,
+      ...structuredClone(kwargs),
+    };
+    grid.place(trace, row, col);
+    figure.data.push(trace);
+  }
+  const last = figure.data[figure.data.length - 1];
+  if (last && targets.length > 0) last['showlegend'] = true;
+  const fit = fitted as TrendlineFit | undefined;
+  if (fit?.fit && targets.length > 0) {
+    results.push({ groups: {}, traceIndex: first, fit: fit.fit, logX: fit.logX, logY: fit.logY });
+  }
 }
 
 /** Traces px gives no `legendgroup` / `showlegend`. */

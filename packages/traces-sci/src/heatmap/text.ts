@@ -9,7 +9,7 @@
  * Pure: labels are in data space (linear coordinates), so zoom only moves them. Grids of more than
  * {@link MAX_LABELLED_CELLS} cells get no labels (they could not be read at any size anyway).
  */
-import { toRGBA, type FullLayout, type FullTrace, type RGBA } from '@mk7s/holochart-core';
+import { localeOf, toRGBA, type FullLayout, type FullTrace, type RGBA } from '@mk7s/holochart-core';
 import { sampleColorscale, textContrastColor } from '@mk7s/holochart-render';
 import { formatTemplate, type AxisInfo } from '@mk7s/holochart-runtime';
 import {
@@ -42,6 +42,7 @@ export function heatmapCellTexts(
   const background = toRGBA(String(fullLayout.plot_bgcolor ?? '#fff')) ?? [1, 1, 1, 1];
   const span = mapping.zmax - mapping.zmin;
   const out: CellText[] = [];
+  const locale = localeOf(fullLayout);
   for (let j = 0; j < ny; j++) {
     const yl = calc.y.centers[j]!;
     for (let i = 0; i < nx; i++) {
@@ -61,11 +62,11 @@ export function heatmapCellTexts(
           labels: {
             x: axisHoverText(axes.xaxis, xl, trace['xhoverformat']),
             y: axisHoverText(axes.yaxis, yl, trace['yhoverformat']),
-            z: zText(z, trace['zhoverformat']),
+            z: zText(z, trace['zhoverformat'], locale),
           },
           fullData: trace,
         },
-        { fallback: '' },
+        { fallback: '', locale },
       );
       if (!text) continue;
       let color: RGBA;

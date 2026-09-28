@@ -19,6 +19,7 @@
 import { configSchema } from '../config/schema.ts';
 import { resolveDataRefs } from '../data/datasets.ts';
 import { layoutSchema } from '../layout/schema.ts';
+import { localize, resolveLocale, type LocaleDefinitions } from '../locale/locale.ts';
 import { getIn, setIn } from '../path/path.ts';
 import type { LayoutDefaultsContext, Registry, TraceDefaultsContext } from '../registry/types.ts';
 import { getNodeAtPath } from '../schema/walk.ts';
@@ -56,7 +57,8 @@ export interface SupplyDefaultsResult {
 }
 
 const BASE_LAYOUT_KEYS = new Set(Object.keys(layoutSchema.children));
-const LATE_LAYOUT_KEYS = new Set(['font', 'showlegend', 'template', 'grid']);
+const LATE_LAYOUT_KEYS = new Set(['font', 'showlegend', 'template', 'grid', 'separators']);
+const AXIS_KEY = /^[xy]axis\d*$/;
 const EARLY_LAYOUT_KEYS = new Set([...BASE_LAYOUT_KEYS].filter((k) => !LATE_LAYOUT_KEYS.has(k)));
 
 /** Per-axis overrides of two sources, key by key (the second wins on the same key). */
@@ -138,7 +140,7 @@ function supplyTrace(
   };
 
   const visible = ctx.coerce<FullTrace['visible']>('visible');
-  ctx.coerce('name', `trace ${index}`);
+  ctx.coerce('name', `${localize(fullLayout, 'trace')} ${index}`);
   for (const key of [
     'uid',
     'showlegend',
@@ -217,6 +219,22 @@ export function supplyDefaults(
     },
   });
   fullLayout.template = template;
+  // Locale (plan E17.6): `separators` default to the locale's; the resolved locale formats numbers
+  // and dates and translates UI strings for every later stage (`_locale`, also on each axis).
+  const defs = fullConfig.locales as LocaleDefinitions | undefined;
+  let locale = resolveLocale(fullConfig.locale, registry.locales, { defs });
+  const separators = coerceAtPath(
+    schema,
+    layoutIn,
+    fullLayout,
+    tLayout,
+    'separators',
+    locale.separators,
+  ) as string;
+  if (separators !== locale.separators) {
+    locale = resolveLocale(fullConfig.locale, registry.locales, { defs, separators });
+  }
+  fullLayout._locale = locale;
   supplySelectionDefaults(fullLayout);
   // Grid cells first: domain traces are placed in them (`domain.row` / `domain.column`).
   supplyGridSizing(layoutIn, fullLayout, tLayout, schema);
@@ -268,6 +286,10 @@ export function supplyDefaults(
   fullLayout._subplots = supplyCartesianAxes(layoutIn, fullLayout, fullData, tLayout, schema, (s) =>
     mergeOverrides(splomAxisOverrides(fullLayout), gridAxisOverrides(fullLayout, s)),
   );
+  for (const key of Object.keys(fullLayout)) {
+    const axis = fullLayout[key];
+    if (AXIS_KEY.test(key) && isPlainObject(axis)) axis['_locale'] = locale;
+  }
 
   // Pie-like traces count twice (Plotly): one pie shows its per-label legend by default.
   const legendEntries = fullData

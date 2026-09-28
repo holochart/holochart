@@ -94,6 +94,7 @@ export type {
   ChartListener,
   ChartPoint,
   AnnotationEventData,
+  HierarchyClickEventData,
   LegendEventData,
   PointerEventData,
   SelectionEventData,

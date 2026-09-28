@@ -9,6 +9,7 @@ import {
   createTickFormatter,
   type FullAxis,
   type FullTrace,
+  type Locale,
 } from '@mk7s/holochart-core';
 
 /**
@@ -39,15 +40,22 @@ export function valueRange(trace: FullTrace): [number, number] {
 
 /**
  * A formatter of values like Plotly's indicator `mockAxis`: `valueformat` (adjusted) when set,
- * else tick-label rounding on a linear axis over `range`, `width` px long.
+ * else tick-label rounding on a linear axis over `range`, `width` px long, in `locale` (the
+ * chart's, plan E17.6; default en-US).
  */
 export function valueFormatter(
   valueformat: string,
   range: readonly [number, number],
   width: number,
+  locale?: Locale,
 ): (v: number) => string {
   const scale = createScale({ type: 'linear', range: [range[0], range[1]], length: width });
-  const axis = { _id: 'x', type: 'linear', tickformat: adjustFormat(valueformat) };
+  const axis = {
+    _id: 'x',
+    type: 'linear',
+    tickformat: adjustFormat(valueformat),
+    _locale: locale,
+  };
   const fmt = createTickFormatter(scale, axis as unknown as FullAxis);
   return (v) => fmt.label(v).text;
 }

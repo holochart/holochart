@@ -21,16 +21,18 @@ function trimZeros(v: string): string {
 }
 
 /**
- * Plotly's `Lib.numSeparate` with the default `separators` (`'.,'`): thousands are separated only
- * when the integer part has more than 4 digits (`1234` stays, `12345` → `12,345`).
+ * Plotly's `Lib.numSeparate` with `separators` (`layout.separators`, decimal then thousands;
+ * default `'.,'`): thousands are separated only when the integer part has more than 4 digits
+ * (`1234` stays, `12345` → `12,345`).
  */
-export function numSeparate(value: string): string {
+export function numSeparate(value: string, separators = '.,'): string {
   const [int = '', ...rest] = value.split('.');
-  const frac = rest.length > 0 ? `.${rest.join('.')}` : '';
-  if (int.replace(/^[-−]/, '').length <= 4) return int + frac;
+  const frac = rest.length > 0 ? separators.charAt(0) + rest.join('.') : '';
+  const thousands = separators.charAt(1);
+  if (!thousands || int.replace(/^[-−]/, '').length <= 4) return int + frac;
   const re = /(\d+)(\d{3})/;
   let x = int;
-  while (re.test(x)) x = x.replace(re, '$1,$2');
+  while (re.test(x)) x = x.replace(re, `$1${thousands}$2`);
   return x + frac;
 }
 
@@ -43,13 +45,16 @@ export function numSeparate(value: string): string {
  * formatPiePercent(0.5); // '50%'
  * ```
  */
-export function formatPiePercent(v: number): string {
-  return `${numSeparate(trimZeros((v * 100).toPrecision(3)))}%`;
+export function formatPiePercent(v: number, separators?: string): string {
+  return `${numSeparate(trimZeros((v * 100).toPrecision(3)), separators)}%`;
 }
 
-/** A slice value with 10 significant digits, trailing zeros dropped (Plotly's `formatPieValue`). */
-export function formatPieValue(v: number): string {
-  return numSeparate(trimZeros(v.toPrecision(10)));
+/**
+ * A slice value with 10 significant digits, trailing zeros dropped (Plotly's `formatPieValue`),
+ * written with `separators` (`layout.separators`, default `'.,'`).
+ */
+export function formatPieValue(v: number, separators?: string): string {
+  return numSeparate(trimZeros(v.toPrecision(10)), separators);
 }
 
 // ---- Per-slice attribute lookup -----------------------------------------------------------------

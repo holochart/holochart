@@ -258,6 +258,24 @@ export type { GuiEdit, GuiTarget, UiState } from './diff/uirevision.ts';
 // Scales, autorange, ticks, formatting, categories, periods (E3) — contract in scales/types.ts
 export * from './scales/index.ts';
 
+// Locales: UI strings, number and date formats (E17.6)
+export {
+  DEFAULT_LOCALE,
+  isLocaleModule,
+  localeOf,
+  localize,
+  normalizeLocaleName,
+  resolveLocale,
+} from './locale/locale.ts';
+export type {
+  Locale,
+  LocaleDefinition,
+  LocaleDefinitions,
+  LocaleFormat,
+  LocaleModule,
+  LocaleStore,
+} from './locale/locale.ts';
+
 // Rich text (E2.10) and uniform text sizing (E4.6)
 export {
   decodeEntities,

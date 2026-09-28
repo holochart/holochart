@@ -15,8 +15,10 @@
       "@mk7s/holochart-traces-stats",
       "@mk7s/holochart-traces-sci",
       "@mk7s/holochart-traces-finance",
+      "@mk7s/holochart-traces-hier",
       "@mk7s/holochart-themes",
-      "@mk7s/holochart-express"
+      "@mk7s/holochart-express",
+      "@mk7s/holochart-locales"
     ]
   ],
   "linked": [],

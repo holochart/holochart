@@ -6,7 +6,13 @@
  * Heatmap-like traces report the largest hover distance, so markers or lines drawn over them win
  * the `closest` hover (Plotly's `maxHoverDistance`).
  */
-import { formatNumber, formatValue, type FullTrace } from '@mk7s/holochart-core';
+import {
+  formatNumber,
+  formatValue,
+  localeOf,
+  type FullTrace,
+  type Locale,
+} from '@mk7s/holochart-core';
 import type { AxisInfo, HoverContext, HoverPoint, HoverQuery } from '@mk7s/holochart-runtime';
 import type { Histogram2dAxisBins, Histogram2dCalc } from './calc.ts';
 import { zColorMapping, type ZColorMapping } from './colorscale.ts';
@@ -51,11 +57,17 @@ export function binRangeText(
   return lo === hi ? a : `${a} - ${axisHoverText(axis, hi, hoverformat)}`;
 }
 
-/** A cell value's label (`zhoverformat`, else Plotly's hover precision). Empty cells give `''`. */
-export function zText(z: number, zhoverformat: unknown): string {
+/**
+ * A cell value's label (`zhoverformat`, else Plotly's hover precision) in `locale` (the chart's,
+ * plan E17.6; default en-US). Empty cells give `''`.
+ */
+export function zText(z: number, zhoverformat: unknown, locale?: Locale): string {
   if (!Number.isFinite(z)) return '';
   const format = typeof zhoverformat === 'string' && zhoverformat !== '' ? zhoverformat : undefined;
-  return formatNumber(z, format ? { tickformat: format } : {});
+  return formatNumber(z, {
+    ...(format ? { tickformat: format } : {}),
+    ...(locale ? { locale } : {}),
+  });
 }
 
 /** The data value of a linear coordinate (dates as strings, categories by name). */
@@ -109,7 +121,7 @@ export function cellHoverPoint(
   const yLabel = options.ranges
     ? binRangeText(calc.y, j, ctx.yaxis, trace['yhoverformat'])
     : axisHoverText(ctx.yaxis, yl, trace['yhoverformat']);
-  const zLabel = zText(z, trace['zhoverformat']);
+  const zLabel = zText(z, trace['zhoverformat'], localeOf((ctx.xaxis ?? ctx.yaxis)?.full));
   const flags = hoverFlags(trace);
   const lines: string[] = [];
   if (flags.has('x')) lines.push(`x: ${xLabel}`);

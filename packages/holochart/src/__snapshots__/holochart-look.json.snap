@@ -77,6 +77,7 @@
    "easing": "cubic-in-out",
    "ordering": "layout first"
   },
+  "separators": ".,",
   "colorscale": {
    "sequential": [
     [

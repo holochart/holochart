@@ -74,7 +74,13 @@ export const configSchema = attr.object(
     locale: attr.string({
       dflt: 'en-US',
       noBlank: true,
-      description: 'BCP 47 locale for number/date formatting and UI strings.',
+      description:
+        "Locale of UI strings and number and date formats, e.g. `'de'` or `'de-CH'` (which falls back to `de`, then English). Locales come from `locales` or `register()` (`@mk7s/holochart-locales` ships plotly.js's).",
+    }),
+    locales: attr.any({
+      dflt: {},
+      description:
+        "Locales for this chart only, by name: `{ de: { dictionary, format } }`, in plotly.js's locale shape. Looked up before registered ones.",
     }),
     ariaLabel: attr.string({
       dflt: '',

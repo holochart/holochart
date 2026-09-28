@@ -6,6 +6,7 @@
 import { newPlot, type Chart } from '@mk7s/holochart-runtime';
 import type { DataInput } from '../data/table.ts';
 import type { ExpressFigure } from '../options.ts';
+import { getTrendlineResults, setTrendlineResults } from './trendline.ts';
 
 /**
  * An Express function: builds a figure from data, or renders it when given an element first.
@@ -41,7 +42,13 @@ export function expressFunction<O>(
   function fn(a: unknown, b?: unknown, c?: unknown): ExpressFigure | Promise<Chart> {
     if (isElement(a)) {
       try {
-        return newPlot(a, build(b as DataInput | null | undefined, (c ?? {}) as O));
+        const figure = build(b as DataInput | null | undefined, (c ?? {}) as O);
+        const results = getTrendlineResults(figure);
+        return newPlot(a, figure).then((chart) => {
+          // `getTrendlineResults(chart)` works on the rendered chart too.
+          if (results.length > 0) setTrendlineResults(chart, results);
+          return chart;
+        });
       } catch (error) {
         return Promise.reject(error);
       }

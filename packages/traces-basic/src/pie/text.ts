@@ -18,7 +18,9 @@
  * and every label is drawn at the size negotiated across the chart's pies ({@link PieTextLayout}).
  */
 import {
+  DEFAULT_LOCALE,
   isArrayLike,
+  localeOf,
   toRGBA,
   uniformFontSize,
   uniformTextOf,
@@ -26,6 +28,7 @@ import {
   uniformTextSize,
   type FullLayout,
   type FullTrace,
+  type Locale,
   type RGBA,
   type UniformText,
   type UniformTextItem,
@@ -87,11 +90,19 @@ export function sliceValues(
   };
 }
 
-/** Formatted `value` and `percent` (Plotly's `valueLabel` / `percentLabel`). */
-export function sliceLabels(calc: PieCalc, slice: PieSlice): Record<string, string> {
+/**
+ * Formatted `value` and `percent` (Plotly's `valueLabel` / `percentLabel`), with the chart's
+ * separators (`locale`, plan E17.6; default en-US).
+ */
+export function sliceLabels(
+  calc: PieCalc,
+  slice: PieSlice,
+  locale: Locale = DEFAULT_LOCALE,
+): Record<string, string> {
+  const sep = locale.separators;
   return {
-    value: formatPieValue(slice.v),
-    percent: calc.vTotal > 0 ? formatPiePercent(slice.v / calc.vTotal) : '',
+    value: formatPieValue(slice.v, sep),
+    percent: calc.vTotal > 0 ? formatPiePercent(slice.v / calc.vTotal, sep) : '',
   };
 }
 
@@ -99,15 +110,21 @@ export function sliceLabels(calc: PieCalc, slice: PieSlice): Record<string, stri
  * The label of a slice (Plotly's `formatSliceLabel`), in pseudo-HTML: `texttemplate` when set,
  * else the `textinfo` parts (label, text, value, percent) joined with `<br>`.
  */
-export function sliceText(trace: FullTrace, calc: PieCalc, slice: PieSlice): string {
+export function sliceText(
+  trace: FullTrace,
+  calc: PieCalc,
+  slice: PieSlice,
+  locale: Locale = DEFAULT_LOCALE,
+): string {
   const template = trace['texttemplate'];
   if (template && (typeof template === 'string' || isArrayLike(template))) {
     const txt = isArrayLike(template) ? template[slice.i] : template;
     if (typeof txt !== 'string' || !txt) return '';
-    return formatTemplate(txt, {
-      values: sliceValues(trace, calc, slice),
-      labels: sliceLabels(calc, slice),
-    });
+    return formatTemplate(
+      txt,
+      { values: sliceValues(trace, calc, slice), labels: sliceLabels(calc, slice, locale) },
+      locale,
+    );
   }
   const info = trace['textinfo'];
   if (typeof info !== 'string' || !info || info === 'none') return '';
@@ -118,8 +135,10 @@ export function sliceText(trace: FullTrace, calc: PieCalc, slice: PieSlice): str
     const tx = getFirstFilled(trace['text'], slice.pts);
     if (isValidTextValue(tx)) parts.push(String(tx));
   }
-  if (flags.has('value')) parts.push(formatPieValue(slice.v));
-  if (flags.has('percent') && calc.vTotal > 0) parts.push(formatPiePercent(slice.v / calc.vTotal));
+  if (flags.has('value')) parts.push(formatPieValue(slice.v, locale.separators));
+  if (flags.has('percent') && calc.vTotal > 0) {
+    parts.push(formatPiePercent(slice.v / calc.vTotal, locale.separators));
+  }
   return parts.join('<br>');
 }
 
@@ -724,7 +743,7 @@ export function layoutPieText(
 
     const position = slicePosition(trace, slice);
     if (position === 'none') return;
-    const raw = sliceText(trace, calc, slice);
+    const raw = sliceText(trace, calc, slice, localeOf(fullLayout));
     if (!raw) return;
     // Plotly's `ensureUniformFontSize` (no-op without `uniformtext`), before the fit tests.
     let font = ensureFont(

@@ -19,11 +19,12 @@
   "dependencies": {
     "@mk7s/holochart": "workspace:*",
     "@mk7s/holochart-core": "workspace:*",
+    "@mk7s/holochart-examples": "workspace:*",
+    "@mk7s/holochart-express": "workspace:*",
+    "@mk7s/holochart-locales": "workspace:*",
     "@mk7s/holochart-render": "workspace:*",
     "@mk7s/holochart-runtime": "workspace:*",
-    "@mk7s/holochart-examples": "workspace:*",
-    "three": "catalog:",
-    "@mk7s/holochart-express": "workspace:*"
+    "three": "catalog:"
   },
   "devDependencies": {
     "@types/three": "catalog:",

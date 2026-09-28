@@ -20,7 +20,14 @@
  * Fills, heatmap and unlabelled lines are in data space: zoom and pan set transforms only. Labels
  * (and the line gaps under them) are placed in px, so they are re-placed after a zoom.
  */
-import { formatNumber, toRGBA, type FullTrace, type RGBA } from '@mk7s/holochart-core';
+import {
+  formatNumber,
+  localeOf,
+  toRGBA,
+  type FullTrace,
+  type Locale,
+  type RGBA,
+} from '@mk7s/holochart-core';
 import {
   createHeatmapPrimitive,
   createLazyFillPrimitive,
@@ -227,10 +234,16 @@ export function fillData(calc: ContourCalc, mapping: ZColorMapping, opacity: num
   );
 }
 
-/** Level labels' text: `contours.labelformat`, else Plotly's automatic precision. */
-export function levelText(level: number, labelformat: unknown): string {
+/**
+ * Level labels' text: `contours.labelformat`, else Plotly's automatic precision, in `locale` (the
+ * chart's, plan E17.6; default en-US).
+ */
+export function levelText(level: number, labelformat: unknown, locale?: Locale): string {
   const format = typeof labelformat === 'string' && labelformat !== '' ? labelformat : undefined;
-  return formatNumber(level, format ? { tickformat: format } : {});
+  return formatNumber(level, {
+    ...(format ? { tickformat: format } : {}),
+    ...(locale ? { locale } : {}),
+  });
 }
 
 /** One contour line: its level and linear coordinates. */
@@ -299,6 +312,7 @@ export function labelLayout(
   rect: { width: number; height: number },
   colors: readonly RGBA[],
   font: TextFont,
+  locale?: Locale,
 ): { labels: TextLabel[]; lines: LinePiece[] } {
   const all = pieces(calc);
   const contours = contoursOf(trace);
@@ -311,7 +325,7 @@ export function labelLayout(
     closed: p.closed,
     level: p.level,
   }));
-  const texts = calc.levels.levels.map((l) => levelText(l, contours['labelformat']));
+  const texts = calc.levels.levels.map((l) => levelText(l, contours['labelformat'], locale));
   const sizes = calc.levels.levels.map((_, k): LabelSize => {
     const m = measureText(texts[k]!, font, LINE_HEIGHT);
     return { width: m.width, height: m.height, fontSize: font.size };
@@ -518,7 +532,15 @@ class ContourView<C extends ContourCalc> implements TraceView<C> {
     let labels: TextLabel[] = [];
     if (this.#hasLabels(ctx)) {
       const rect = ctx.subplot?.rect ?? { width: 0, height: 0 };
-      const layout = labelLayout(calc, trace, ctx.transform, rect, colors, labelFont(trace, ctx));
+      const layout = labelLayout(
+        calc,
+        trace,
+        ctx.transform,
+        rect,
+        colors,
+        labelFont(trace, ctx),
+        localeOf(ctx.fullLayout),
+      );
       list = layout.lines;
       labels = layout.labels;
       this.#labelTransform = { ...ctx.transform };

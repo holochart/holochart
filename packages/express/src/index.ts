@@ -3,7 +3,8 @@
  * M3): one call turns rows, columns, an Arrow table or CSV into a figure with one trace per group,
  * a legend, facets, animation frames and marginals, following plotly.py's `px` and
  * `figure_factory.create_distplot`. `imshow` (M4) draws arrays rather than tables: matrices as
- * heatmaps, RGB / RGBA arrays and `ImageData` as images.
+ * heatmaps, RGB / RGBA arrays and `ImageData` as images. M5 adds trendlines (OLS, LOWESS, rolling,
+ * EWM, expanding) with `getTrendlineResults`, `agg` on bars and lines, funnels and polar charts.
  *
  * ```ts
  * import hx from '@mk7s/holochart-express';
@@ -21,9 +22,12 @@ import { bar, timeline } from './charts/bar.ts';
 import { box, histogram, strip, violin } from './charts/distribution.ts';
 import { densityContour, densityHeatmap } from './charts/density.ts';
 import { ecdf } from './charts/ecdf.ts';
+import { funnel, funnelArea } from './charts/funnel.ts';
 import { imshow } from './charts/imshow.ts';
 import { parallelCategories, parallelCoordinates, scatterMatrix } from './charts/multidim.ts';
 import { pie } from './charts/pie.ts';
+import { barPolar, linePolar, scatterPolar } from './charts/polar.ts';
+import { getTrendlineResults } from './core/trendline.ts';
 import { fromCSV } from './data/csv.ts';
 import { columnTypes, inferColumnType, Table, toTable } from './data/table.ts';
 import { distplot } from './ff/distplot.ts';
@@ -31,18 +35,24 @@ import { distplot } from './ff/distplot.ts';
 export {
   area,
   bar,
+  barPolar,
   box,
   densityContour,
   densityHeatmap,
   ecdf,
+  funnel,
+  funnelArea,
+  getTrendlineResults,
   histogram,
   imshow,
   line,
+  linePolar,
   parallelCategories,
   parallelCoordinates,
   pie,
   scatter,
   scatterMatrix,
+  scatterPolar,
   strip,
   timeline,
   violin,
@@ -50,6 +60,19 @@ export {
 export { ecdfValues } from './charts/ecdf.ts';
 export { fitNormal, gaussianKde, normalPdf } from './stats/kde.ts';
 export type { GaussianKde } from './stats/kde.ts';
+export { ols } from './stats/regression.ts';
+export type { OlsFit } from './stats/regression.ts';
+export { lowess } from './stats/lowess.ts';
+export type { LowessOptions } from './stats/lowess.ts';
+export { ewm, expanding, rolling } from './stats/window.ts';
+export type { EwmFunction, EwmOptions, RollingOptions, WindowFunction } from './stats/window.ts';
+export type {
+  TrendlineArgs,
+  TrendlineKind,
+  TrendlineOptions,
+  TrendlineResult,
+} from './core/trendline.ts';
+export type { AggFunction } from './charts/shared.ts';
 export { fromCSV, parseCSVRecords } from './data/csv.ts';
 export type { CSVOptions } from './data/csv.ts';
 export { columnTypes, inferColumnType, isMissing, Table, toTable } from './data/table.ts';
@@ -81,6 +104,13 @@ export type {
   ScatterMatrixOptions,
 } from './charts/multidim.ts';
 export type { PieOptions } from './charts/pie.ts';
+export type { FunnelAreaOptions, FunnelOptions } from './charts/funnel.ts';
+export type {
+  BarPolarOptions,
+  LinePolarOptions,
+  PolarOptions,
+  ScatterPolarOptions,
+} from './charts/polar.ts';
 export type {
   ImageDataLike,
   ImshowArray,
@@ -116,6 +146,12 @@ const hx = {
   parallelCoordinates,
   parallelCategories,
   pie,
+  funnel,
+  funnelArea,
+  scatterPolar,
+  linePolar,
+  barPolar,
+  getTrendlineResults,
   data,
   ff,
 } as const;

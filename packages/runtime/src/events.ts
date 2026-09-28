@@ -58,6 +58,14 @@ export interface PointerEventData {
   readonly yvals?: readonly unknown[];
 }
 
+/**
+ * Payload of `sunburstclick` (M5, E13.2; Plotly's `plotly_sunburstclick`): the clicked sector and
+ * the `level` the click drills to, absent when it does not drill (the root, leaves).
+ */
+export interface HierarchyClickEventData extends PointerEventData {
+  readonly nextLevel?: string;
+}
+
 /** Payload of `selecting` and `selected` (E6.3). */
 export interface SelectionEventData {
   readonly points: readonly ChartPoint[];
@@ -127,6 +135,12 @@ export interface ChartEvents {
   unhover: PointerEventData;
   /** A click on data points (E6.4). Not emitted when nothing is under the pointer. */
   click: PointerEventData;
+  /**
+   * A click on a sunburst sector (E13.2), emitted before `click`. A listener returning `false`
+   * cancels the drill-down and the `click` event (Plotly's `plotly_sunburstclick`); so does a
+   * `click` listener returning `false`.
+   */
+  sunburstclick: HierarchyClickEventData;
   /** A double-click on the plot area (after `doubleClick` reset/autosize ran). */
   doubleclick: undefined;
   /** Box / lasso selection in progress (E6.3), throttled to animation frames. */

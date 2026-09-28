@@ -1,5 +1,6 @@
 /** Registry implementation (plan §4.4, E22). */
 import { layoutSchema } from '../layout/schema.ts';
+import { addLocale, createLocaleStore } from '../locale/locale.ts';
 import { attr } from '../schema/attr.ts';
 import type { Children, ObjectNode } from '../schema/types.ts';
 import type { Template } from '../templates/templates.ts';
@@ -29,6 +30,7 @@ export function createRegistry(): Registry {
   const warned = new Set<string>();
   let layout: ObjectNode | undefined;
   let defaultTemplate: string | undefined;
+  const locales = createLocaleStore();
 
   const invalidate = (): void => {
     traceSchemas.clear();
@@ -100,6 +102,12 @@ export function createRegistry(): Registry {
     get defaultTemplate() {
       return defaultTemplate;
     },
+
+    registerLocale(...mods) {
+      for (const m of mods) addLocale(locales, m);
+      return registry;
+    },
+    locales,
 
     warnOnce(issue: Issue) {
       const key = `${issue.code}:${issue.path}`;

@@ -5,7 +5,7 @@
  * edge. Funnel areas are domain traces: the runtime asks them on every hover with the pointer in
  * container px.
  */
-import type { FullTrace } from '@mk7s/holochart-core';
+import { localeOf, type FullTrace } from '@mk7s/holochart-core';
 import type { HoverContext, HoverPoint, HoverQuery } from '@mk7s/holochart-runtime';
 import { castOption, pieHoverText, sliceLabels, sliceValues } from '@mk7s/holochart-traces-basic';
 import type { Corner, FunnelareaCalc, FunnelareaSlice } from './calc.ts';
@@ -44,7 +44,7 @@ export function funnelareaHoverPoints(
   calc: FunnelareaCalc,
   trace: FullTrace,
   query: HoverQuery,
-  _ctx: HoverContext,
+  ctx: HoverContext,
 ): HoverPoint[] {
   const layout = calc.layout;
   if (!layout) return [];
@@ -54,6 +54,7 @@ export function funnelareaHoverPoints(
   if (!slice?.corners) return [];
   const { tr, br } = slice.corners;
   const hovertext = castOption(trace['hovertext'] || trace['text'], slice.pts);
+  const locale = localeOf(ctx.fullLayout);
   const fields: Record<string, unknown> = {
     ...sliceValues(trace, calc, slice),
     text: hovertext,
@@ -73,8 +74,8 @@ export function funnelareaHoverPoints(
       ...(text !== '' ? { text: String(text) } : {}),
       color: slice.color,
       fields,
-      labels: sliceLabels(calc, slice),
-      hoverText: pieHoverText(trace, calc, slice, hovertext),
+      labels: sliceLabels(calc, slice, locale),
+      hoverText: pieHoverText(trace, calc, slice, hovertext, locale),
     },
   ];
 }

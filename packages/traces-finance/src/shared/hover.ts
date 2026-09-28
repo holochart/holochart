@@ -22,6 +22,7 @@ import {
   formatNumber,
   formatValue,
   isArrayLike,
+  localize,
   type FullTrace,
 } from '@mk7s/holochart-core';
 import { pointInPolygon } from '@mk7s/holochart-render';
@@ -185,7 +186,7 @@ export function priceHoverPoints(
     const labels = new Map<number, { text: string; close: boolean }>();
     for (const key of SPLIT_ORDER) {
       const l = value[key][i]!;
-      const line = `${key}: ${yText(l)}`;
+      const line = `${localize(ctx.fullLayout, `${key}:`)} ${yText(l)}`;
       const same = labels.get(l);
       if (same) same.text += `<br>${line}`;
       else labels.set(l, { text: line, close: false });
@@ -206,7 +207,7 @@ export function priceHoverPoints(
   if (flags.has('y')) {
     const symbol = DIRECTION_SYMBOL[increasing ? 'increasing' : 'decreasing'];
     for (const key of PRICES) {
-      const line = `${key}: ${yText(value[key][i]!)}`;
+      const line = `${localize(ctx.fullLayout, `${key}:`)} ${yText(value[key][i]!)}`;
       lines.push(key === 'close' ? `${line}  ${symbol}` : line);
     }
   }

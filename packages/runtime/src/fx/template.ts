@@ -20,6 +20,7 @@ import {
   formatNumber,
   getIn,
   parsePath,
+  type Locale,
   type PathSegment,
 } from '@mk7s/holochart-core';
 
@@ -49,6 +50,11 @@ export interface TemplateOptions {
    * `%{…}` placeholder as written, so typos stay visible.
    */
   readonly fallback?: string;
+  /**
+   * Locale of `%{v:…}` numbers and `%{v|…}` dates (plan E17.6): the chart's (`localeOf(fullLayout)`).
+   * Default en-US.
+   */
+  readonly locale?: Locale;
 }
 
 const VARIABLE = /%\{([^}]*)\}/g;
@@ -103,14 +109,21 @@ function plain(v: unknown): string {
   return String(v);
 }
 
-function formatOne(value: unknown, spec: string | undefined, dateSpec: string | undefined): string {
+function formatOne(
+  value: unknown,
+  spec: string | undefined,
+  dateSpec: string | undefined,
+  locale: Locale | undefined,
+): string {
   if (dateSpec !== undefined) {
     const ms = dateToMs(value);
-    return Number.isFinite(ms) ? formatDateLabel(ms, dateSpec, null) : plain(value);
+    return Number.isFinite(ms) ? formatDateLabel(ms, dateSpec, null, locale) : plain(value);
   }
   if (spec !== undefined && spec !== '') {
     const n = toNumber(value);
-    return Number.isFinite(n) ? formatNumber(n, { tickformat: spec }) : plain(value);
+    return Number.isFinite(n)
+      ? formatNumber(n, locale ? { tickformat: spec, locale } : { tickformat: spec })
+      : plain(value);
   }
   return plain(value);
 }
@@ -159,7 +172,7 @@ export function formatTemplate(
       const label = ctx.labels?.[name];
       if (label !== undefined) return label;
     }
-    return formatOne(value, spec, dateSpec);
+    return formatOne(value, spec, dateSpec, options.locale);
   });
 }
 

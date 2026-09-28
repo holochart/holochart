@@ -249,9 +249,15 @@ export function gradientRects(
 }
 
 /** A hand-built full axis for the colorbar's tick machinery (a linear axis over the color domain). */
-function colorbarAxis(cb: FullColorbar, tickfont: FullFont, vertical: boolean): FullAxis {
+function colorbarAxis(
+  cb: FullColorbar,
+  tickfont: FullFont,
+  vertical: boolean,
+  locale: FullLayout['_locale'],
+): FullAxis {
   return {
     ...cb,
+    _locale: locale,
     _id: vertical ? 'y' : 'x',
     type: 'linear',
     showline: false,
@@ -272,7 +278,8 @@ function colorbarAxis(cb: FullColorbar, tickfont: FullFont, vertical: boolean): 
 
 /** The inputs of a colorbar layout that do not come from the spec. */
 export interface ColorbarEnv {
-  fullLayout: Pick<FullLayout, 'font'>;
+  /** The figure font, and the locale tick labels use (plan E17.6). */
+  fullLayout: Pick<FullLayout, 'font' | '_locale'>;
   size: { width: number; height: number };
   plotArea: Readonly<ViewportRect>;
   measure: MeasureLine;
@@ -318,7 +325,7 @@ function sizeColorbar(spec: ColorbarSpec, cb: FullColorbar, env: ColorbarEnv): S
   const ow = cb.outlinewidth;
   const padAlong = vertical ? cb.ypad : cb.xpad;
   const padCross = vertical ? cb.xpad : cb.ypad;
-  const full = colorbarAxis(cb, tickfont, vertical);
+  const full = colorbarAxis(cb, tickfont, vertical, env.fullLayout._locale);
   const scale = createScale({ type: 'linear', range: [spec.cmin, spec.cmax], length: 1 });
 
   // Along the bar (local, from the box start): title before / after the bar takes its room.

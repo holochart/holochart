@@ -107,3 +107,90 @@ export function samples(): { values: number[][]; labels: string[] } {
   const c = Array.from({ length: 200 }, (_, i) => (i % 2 ? -2 : 1) + 0.5 * normal());
   return { values: [a, b, c], labels: ['Group 1', 'Group 2', 'Group 3'] };
 }
+
+/** One row of the wind-like table: how often wind of a strength blows from a direction. */
+export interface WindRow {
+  direction: string;
+  strength: string;
+  frequency: number;
+}
+
+const DIRECTIONS = [
+  'N',
+  'NNE',
+  'NE',
+  'ENE',
+  'E',
+  'ESE',
+  'SE',
+  'SSE',
+  'S',
+  'SSW',
+  'SW',
+  'WSW',
+  'W',
+  'WNW',
+  'NW',
+  'NNW',
+] as const;
+const STRENGTHS = ['0-1', '1-2', '2-3', '3-4', '4-5', '5-6', '6+'] as const;
+
+/**
+ * A wind rose table in long form (like `px.data.wind()`): for each of 16 compass directions and 7
+ * strength bins (m/s), the share of the time (%) the wind blew that way, with prevailing winds
+ * from the west-southwest and stronger winds rarer.
+ */
+export function wind(): WindRow[] {
+  const random = rng(16);
+  const rows: WindRow[] = [];
+  for (const [s, strength] of STRENGTHS.entries()) {
+    DIRECTIONS.forEach((direction, d) => {
+      // Prevailing direction WSW (index 11): a smooth bump around it plus a weaker easterly.
+      const angle = ((d - 11) / 16) * 2 * Math.PI;
+      const east = ((d - 4) / 16) * 2 * Math.PI;
+      const shape =
+        0.35 + Math.exp(2 * (Math.cos(angle) - 1)) + 0.35 * Math.exp(3 * (Math.cos(east) - 1));
+      const share = shape * Math.exp(-0.45 * s) * (0.8 + 0.4 * random());
+      rows.push({ direction, strength, frequency: Math.round(share * 100) / 100 });
+    });
+  }
+  return rows;
+}
+
+/** One row of the daily prices table. */
+export interface PriceRow {
+  date: string;
+  ticker: string;
+  close: number;
+}
+
+/**
+ * Daily closing prices of two tickers over 200 weekdays from January 2025 (like
+ * `px.data.stocks()` in long form): geometric random walks with drift.
+ */
+export function prices(): PriceRow[] {
+  const rows: PriceRow[] = [];
+  const tickers = [
+    { ticker: 'ALPHA', start: 100, drift: 0.0012, vol: 0.018, seed: 21 },
+    { ticker: 'BETA', start: 80, drift: -0.0004, vol: 0.024, seed: 22 },
+  ];
+  for (const t of tickers) {
+    const normal = gaussian(rng(t.seed));
+    let price = t.start;
+    const day = new Date(Date.UTC(2025, 0, 1));
+    for (let n = 0; n < 200;) {
+      const weekday = day.getUTCDay();
+      if (weekday !== 0 && weekday !== 6) {
+        price *= Math.exp(t.drift + t.vol * normal());
+        rows.push({
+          date: day.toISOString().slice(0, 10),
+          ticker: t.ticker,
+          close: Math.round(price * 100) / 100,
+        });
+        n++;
+      }
+      day.setUTCDate(day.getUTCDate() + 1);
+    }
+  }
+  return rows;
+}

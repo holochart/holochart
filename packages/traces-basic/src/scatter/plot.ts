@@ -10,6 +10,7 @@
 import {
   createTickFormatter,
   isArrayLike,
+  localeOf,
   mayContainRichText,
   type FullTrace,
 } from '@mk7s/holochart-core';
@@ -238,6 +239,7 @@ export function textLabels(
   const text = trace['text'];
   const template = trace['texttemplate'];
   const position = trace['textposition'];
+  const locale = localeOf((axes.x ?? axes.y)?.full);
   const opacity = traceOpacity(trace);
   const markers = hasMarkers(trace['mode']);
   const sizes = calc.markerSize;
@@ -258,6 +260,7 @@ export function textLabels(
       // texttemplate drops unknown variables (hovertemplate keeps them visible).
       raw = formatTemplate(tpl, pointTemplateContext(trace, calc, i, tpl, labelers), {
         fallback: '',
+        locale,
       });
     } else {
       const t = valueAt(text, i);

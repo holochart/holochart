@@ -24,7 +24,10 @@ export type Role =
   | 'hoverData'
   | 'color'
   | 'marginalX'
-  | 'marginalY';
+  | 'marginalY'
+  | 'r'
+  | 'theta'
+  | 'trendline';
 
 /** One trace per group: its type, data roles and constant attributes (px's `TraceSpec`). */
 export interface TraceSpec {
@@ -56,18 +59,22 @@ export interface Config {
   readonly groupers: readonly Grouper[];
   /** Layout attributes (unset values are skipped). */
   readonly layoutPatch?: Readonly<Record<string, unknown>>;
-  /** Where a numeric `color` goes (`marker` / `line` colorscale on `coloraxis`), if supported. */
-  readonly continuousColor?: 'marker' | 'line' | 'pie';
+  /**
+   * Where a numeric `color` goes (`marker` / `line` colorscale on `coloraxis`, or the sectors'
+   * `marker.colors` of a pie), if supported. `'sectors'`: per-sector colors that are always
+   * discrete (`funnelArea`).
+   */
+  readonly continuousColor?: 'marker' | 'line' | 'pie' | 'sectors';
   /**
    * Put a numeric color's colorscale and colorbar on the trace (`line.colorscale`, `showscale`)
    * rather than on `layout.coloraxis`: Holochart's `parcoords` / `parcats` have no `line.coloraxis`.
    */
   readonly inlineColorscale?: boolean;
   /**
-   * `'domain'` for pie-like traces, `'splom'` for a scatter matrix (which lays out its own axes);
-   * default `'xy'`.
+   * `'domain'` for pie-like traces, `'splom'` for a scatter matrix (which lays out its own axes),
+   * `'polar'` for polar traces (one `layout.polar`); default `'xy'`.
    */
-  readonly subplotType?: 'xy' | 'domain' | 'splom';
+  readonly subplotType?: 'xy' | 'domain' | 'splom' | 'polar';
   /** `'v'` / `'h'` for functions with an orientation (histogram labels depend on it). */
   readonly orientation?: 'v' | 'h';
   /** Histogram / density aggregation. */
@@ -87,6 +94,8 @@ export interface Config {
   readonly ecdf?: boolean;
   /** Marker `sizeref` for `size` (px: `2 * max / sizeMax²`). */
   readonly sizeref?: number;
+  /** `trendlineScope: 'overall'`: one trendline over all rows, added after the groups' traces. */
+  readonly overallTrendline?: boolean;
 }
 
 /** Rows of a group and replacement values of some roles (ECDF's cumulative values). */

@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   createRegistry,
+  resolveLocale,
   supplyDefaults,
   type FullLayout,
   type FullTrace,
@@ -208,6 +209,29 @@ describe('modebar view', () => {
     await modebarDownloadImage(chart);
     expect(log).toHaveBeenCalledWith('holochart: image export failed', error);
     log.mockRestore();
+  });
+
+  it('translates built-in titles into the chart locale, not custom ones (plan E17.6)', () => {
+    const registry = createRegistry().registerLocale(
+      {
+        moduleType: 'locale',
+        name: 'de',
+        dictionary: { Zoom: 'Vergrößern', 'Reset axes': 'Achsen zurücksetzen' },
+      },
+      { moduleType: 'locale', name: 'fr', dictionary: { 'Reset axes': 'Réinitialiser les axes' } },
+    );
+    const chart = fakeChart({ modeBarButtonsToAdd: [{ name: 'mine', title: 'Zoom', click() {} }] });
+    const de = resolveLocale('de', registry.locales);
+    const view = createModebarView(chart, context(chart, { _locale: de }));
+    expect(button(view.toolbar, 'zoom2d').title).toBe('Vergrößern');
+    expect(button(view.toolbar, 'zoom2d').getAttribute('aria-label')).toBe('Vergrößern');
+    expect(button(view.toolbar, 'resetScale2d').title).toBe('Achsen zurücksetzen');
+    expect(button(view.toolbar, 'pan2d').title).toBe('Pan');
+    expect(button(view.toolbar, 'mine').title).toBe('Zoom');
+    // A new locale rebuilds the titles.
+    view.update(context(chart, { _locale: resolveLocale('fr', registry.locales) }));
+    expect(button(view.toolbar, 'resetScale2d').title).toBe('Réinitialiser les axes');
+    expect(button(view.toolbar, 'zoom2d').title).toBe('Zoom');
   });
 
   it('calls custom buttons with the chart and the event', () => {

@@ -81,11 +81,17 @@ export interface Config {
    */
   edits?: ConfigEdits;
   /**
-   * BCP 47 locale for number/date formatting and UI strings.
+   * Locale of UI strings and number and date formats, e.g. `'de'` or `'de-CH'` (which falls back to `de`, then English). Locales come from `locales` or `register()` (`@mk7s/holochart-locales` ships plotly.js's).
    *
    * @defaultValue `"en-US"`
    */
   locale?: string;
+  /**
+   * Locales for this chart only, by name: `{ de: { dictionary, format } }`, in plotly.js's locale shape. Looked up before registered ones.
+   *
+   * @defaultValue `{}`
+   */
+  locales?: unknown;
   /**
    * The chart's accessible name (`aria-label`), read by screen readers. Empty: `layout.meta.description` when set, else the figure title followed by an automatic summary ("Line chart with 3 traces"). Holochart only (plan E17.1).
    *

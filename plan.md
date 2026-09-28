@@ -1323,18 +1323,18 @@ Customization is a **cascade**. Each layer overrides the one above it:
 **Goal:** Sunburst, treemap, icicle, and sankey, all built on a shared hierarchy engine.
 **Milestone:** M5 · **Package:** `traces-hier`
 
-#### E13.1 — Hierarchy engine   `P1` `M`   deps: E1.4
+#### E13.1 — Hierarchy engine   `P1` `M`   deps: E1.4   · 🟡 Partial (M5 wave 0)
 > As a contributor, I want one hierarchy builder for sunburst, treemap, and icicle, so that behavior is consistent.
-- [ ] Input: `labels`, `parents`, `ids`, `values`, `branchvalues: 'remainder' | 'total'`, `count: 'leaves' | 'branches' | 'leaves+branches'`
-- [ ] Validation errors for cycles, missing parents, and `total` violations (child sum > parent)
-- [ ] `level` (current root), `maxdepth`, `root.color`, `leaf.opacity`, `sort`
-- [ ] `textinfo` flags (`label`, `text`, `value`, `current path`, `percent root`, `percent entry`, `percent parent`)
+- [x] Input: `labels`, `parents`, `ids`, `values`, `branchvalues: 'remainder' | 'total'`, `count: 'leaves' | 'branches' | 'leaves+branches'`
+- [x] Validation errors for cycles, missing parents, and `total` violations (child sum > parent)
+- [x] `level` (current root), `maxdepth`, `root.color`, `leaf.opacity`, `sort`
+- [x] `textinfo` flags (`label`, `text`, `value`, `current path`, `percent root`, `percent entry`, `percent parent`) — shared engine in `traces-hier/src/hierarchy` (Plotly stratify semantics and warnings, partition, formatting, colors, event fields)
 - [ ] Express path helper: `hx.sunburst(df, { path: ['continent', 'country'], values: 'pop', color: 'lifeExp' })`
 
-#### E13.2 — `sunburst`   `P1` `L`   deps: E13.1, E2.8
+#### E13.2 — `sunburst`   `P1` `L`   deps: E13.1, E2.8   · ✅ Done (M5 wave 0)
 > As an analyst, I want sunburst charts with drill-down, so that I can explore hierarchies radially.
-- [ ] `rotation`, `insidetextorientation`, `marker.{colors, colorscale, line, pattern}`, `domain`
-- [ ] Click to drill into a node (animated zoom transition). Click the center to go up. `click` event can cancel the drill.
+- [x] `rotation`, `insidetextorientation`, `marker.{colors, colorscale, line, pattern}`, `domain`
+- [x] Click to drill into a node (animated zoom transition). Click the center to go up. `click` event can cancel the drill. — one instanced arc set + one text batch; Plotly's 750 ms tween (snaps under reduced motion); `level` stored by a GUI restyle — *deferred: animated `level` via `animate`/`react`, `coloraxis`, `uniformtext`*
 - [ ] 3D-native: layered extrusion by depth (`depth`, `depthstep`), `P2`
 
 #### E13.3 — `treemap`   `P1` `L`   deps: E13.1, E2.7
@@ -1352,15 +1352,15 @@ Customization is a **cascade**. Each layer overrides the one above it:
 #### E13.5 — `sankey`   `P1` `XL` → split into E13.5a–c   deps: E2.6, E2.7
 > As an analyst, I want Sankey diagrams, so that I can show flows between nodes.
 
-##### E13.5a — Sankey layout & rendering   `P1` `L`
-- [ ] `node.{label, color, customdata, pad, thickness, line, x, y, align: 'justify' | 'left' | 'right' | 'center', groups}`, `link.{source, target, value, label, color, customdata, line, hovercolor, arrowlen}`, `orientation: 'h' | 'v'`, `valueformat`, `valuesuffix`, `textfont`
-- [ ] Layout via `d3-sankey` with iterations. Link ribbons as tessellated cubic Bézier bands (batched).
-- [ ] Circular links (cycles) rendered as loops
+##### E13.5a — Sankey layout & rendering   `P1` `L`   · ✅ Done (M5 wave 0)
+- [x] `node.{label, color, customdata, pad, thickness, line, x, y, align: 'justify' | 'left' | 'right' | 'center', groups}`, `link.{source, target, value, label, color, customdata, line, hovercolor, arrowlen}`, `orientation: 'h' | 'v'`, `valueformat`, `valuesuffix`, `textfont`
+- [x] Layout via `d3-sankey` with iterations. Link ribbons as tessellated cubic Bézier bands (batched).
+- [x] Circular links (cycles) rendered as loops — deterministic port of d3-sankey 0.7 and d3-sankey-circular routing; ribbons in one batched fill
 
-##### E13.5b — Sankey interaction   `P1` `M`
-- [ ] `arrangement: 'snap' | 'perpendicular' | 'freeform' | 'fixed'`, node dragging with relayout
-- [ ] Hover highlights node + connected links. `hoverinfo`/`hovertemplate` for nodes and links separately.
-- [ ] `link.colorscales` (per-link concentration colorscales)
+##### E13.5b — Sankey interaction   `P1` `M`   · ✅ Done (M5 wave 0)
+- [x] `arrangement: 'snap' | 'perpendicular' | 'freeform' | 'fixed'`, node dragging with relayout
+- [x] Hover highlights node + connected links. `hoverinfo`/`hovertemplate` for nodes and links separately.
+- [x] `link.colorscales` (per-link concentration colorscales) — *deferred: per-part `hoverlabel`, lasso node grouping, animated snap*
 
 ##### E13.5c — Sankey 3D-native & animation   `P2` `M`
 - [ ] Animated flow particles along links (`link.flow: { speed, density }`, a Holochart extension)
@@ -1568,11 +1568,11 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] `high-contrast` theme. `Safe` palette. Pattern fills as redundant encoding (`config.a11y.patterns: true`).
 - [ ] `prefers-reduced-motion` disables transitions and auto-rotate by default
 
-#### E17.6 — Locales   `P1` `M`   deps: E3.3, E5.8
+#### E17.6 — Locales   `P1` `M`   deps: E3.3, E5.8   · ✅ Done (M5 wave 0)
 > As a developer serving international users, I want locale-aware number and date formats and UI strings, so that charts feel native.
-- [ ] `Holochart.register(locale)`, `config.locale: 'de'`. Locale dictionaries (modebar labels, tooltips, month/day names, decimal and thousands separators).
-- [ ] Ship ≥ 20 locales. Compatible with Plotly locale file structure for easy porting.
-- [ ] RTL text shaping via troika (Arabic, Hebrew). CJK fonts via registered fallbacks.
+- [x] `Holochart.register(locale)`, `config.locale: 'de'`. Locale dictionaries (modebar labels, tooltips, month/day names, decimal and thousands separators).
+- [x] Ship ≥ 20 locales. Compatible with Plotly locale file structure for easy porting. — all 76 plotly.js locales in `@mk7s/holochart-locales` (ESM + per-locale scripts)
+- [x] RTL text shaping via troika (Arabic, Hebrew). CJK fonts via registered fallbacks. — troika bidi + Arabic joining; fonts via `fonts.register` (examples not visually tested: they need an RTL/CJK font)
 
 ---
 
@@ -1892,12 +1892,12 @@ docs/
 #### E23.4 — Animation frames from data   `P1` `M`   deps: E23.2, E7.4   · ✅ Done (M3 wave 3)
 - [x] `animationFrame`/`animationGroup` generate frames + slider + play button (the Gapminder example) — px's controls; every frame has every group's trace (aligned by index); `ids`; axis ranges fixed across frames unless given
 
-#### E23.5 — Statistical helpers   `P2` `M`   deps: E23.2
-- [ ] Trendlines: `'ols'`, `'lowess'`, `'rolling'`, `'ewm'`, `'expanding'` with `trendlineOptions` and fit results available in hover and via `hx.getTrendlineResults()`
-- [ ] Aggregations for bar/line (`histfunc`-like `agg`)
+#### E23.5 — Statistical helpers   `P2` `M`   deps: E23.2   · ✅ Done (M5 wave 0)
+- [x] Trendlines: `'ols'`, `'lowess'`, `'rolling'`, `'ewm'`, `'expanding'` with `trendlineOptions` and fit results available in hover and via `hx.getTrendlineResults()`
+- [x] Aggregations for bar/line (`histfunc`-like `agg`)
 
 #### E23.6 — Express function catalogue   `P1` `L`   deps: E23.2 + trace epics   · 🟡 Partial (M3 wave 3)
-- [ ] `scatter`, `line`, `area`, `bar`, `timeline`, `pie`, `sunburst`, `treemap`, `icicle`, `funnel`, `funnelArea`, `histogram`, `box`, `violin`, `strip`, `ecdf`, `densityHeatmap`, `densityContour`, `imshow`, `scatterMatrix`, `parallelCoordinates`, `parallelCategories`, `scatterPolar`, `linePolar`, `barPolar`, `scatterTernary`, `scatter3d`, `line3d`, and (stretch) `scatterGeo`, `choropleth` — *M3: `scatter`, `line`, `area`, `bar`, `timeline`, `pie`, `histogram`, `box`, `violin`, `strip`, `ecdf`, `densityHeatmap`, `densityContour`, `scatterMatrix`, `parallelCoordinates`, `parallelCategories`; the rest with their trace epics (M4–M8)*
+- [ ] `scatter`, `line`, `area`, `bar`, `timeline`, `pie`, `sunburst`, `treemap`, `icicle`, `funnel`, `funnelArea`, `histogram`, `box`, `violin`, `strip`, `ecdf`, `densityHeatmap`, `densityContour`, `imshow`, `scatterMatrix`, `parallelCoordinates`, `parallelCategories`, `scatterPolar`, `linePolar`, `barPolar`, `scatterTernary`, `scatter3d`, `line3d`, and (stretch) `scatterGeo`, `choropleth` — *M3: `scatter`, `line`, `area`, `bar`, `timeline`, `pie`, `histogram`, `box`, `violin`, `strip`, `ecdf`, `densityHeatmap`, `densityContour`, `scatterMatrix`, `parallelCoordinates`, `parallelCategories`; M4: `imshow`; M5 wave 0: `funnel`, `funnelArea`, `scatterPolar`, `linePolar`, `barPolar`; the rest with their trace epics*
 - [x] Each returns a `Figure` object (so it can be modified before rendering) or renders directly when given an element — a plain `{ data, layout, frames? }` object; `fn(el, data, options)` renders with `newPlot` and resolves with the chart
 
 ---
@@ -2161,6 +2161,34 @@ and `uniformtext`; `marker.texture` and `pattern.path`; indicator digits are for
 in-between frame during transitions; core has no global Plotly `adjustFormat` for `tickformat`
 like `'2%'`; the default ohlc/candlestick hover label has no change % (Plotly's; `%{changepercent}`
 in templates).
+
+### 11.6 M5 execution plan
+
+Same pattern as M4: ≤ 4 parallel workstreams per wave with separate files, contracts first, the
+default look (ADR-021) for every new example. New trace types go into `traces-hier` (sunburst,
+treemap, icicle, sankey) and locale dictionaries into `locales`, both outside `basic` (242 kB
+budget; CI measures ~0.3% above a local run). Keyboard and touch (E6.5, E6.6), deferred from M3,
+come back in wave 2 because keyboard & focus (E17.4) builds on them.
+
+| Wave | Workstream | Stories |
+| --- | --- | --- |
+| 0 | Hierarchy engine and `sunburst` (drill-down transitions) | E13.1 🟡 (Express `path` in wave 1), E13.2 ✅ |
+| 0 | `sankey` layout, rendering and interaction | E13.5a ✅, E13.5b ✅ |
+| 0 | Express: trendlines and aggregations, M4 functions (`funnel`, `funnelArea`, `scatterPolar`, `linePolar`, `barPolar`) | E23.5 ✅, E23.6 🟡 |
+| 0 | Locales: number/date formats and UI strings, ≥ 20 locales, Plotly locale compatibility | E17.6 ✅ |
+| 1 | `treemap` and `icicle` on the hierarchy engine (pathbar, tiling, drill-down) | E13.3, E13.4 |
+| 1 | Express `sunburst`/`treemap`/`icicle` with `path` | E13.1 (Express), E23.6 |
+| 1 | Chart summaries, data table, visual accessibility (high contrast, safe palette, pattern encoding) | E17.2, E17.3, E17.5 |
+| 1 | Sankey flow particles and 2.5D ribbons | E13.5c |
+| 2 | Keyboard navigation, touch and pointer, keyboard & focus for every control | E6.5, E6.6, E17.4 |
+| 2 | M4/M5 carry-forward and exit review | — |
+
+Open after M5 wave 0: animated sunburst `level` through `animate`/`react` (needs a runtime
+transition-options hook); sunburst `coloraxis`/`uniformtext`; sankey per-part `hoverlabel`, lasso
+node grouping and animated snap (Plotly uses a force simulation); Express polar frames don't fix the
+radial range, ewm `times` and rolling `closed`/`step`; locales don't translate table cells,
+parcoords ticks, accessibility descriptions or Holochart-only strings, and RTL/CJK examples are
+not visually tested (they need a vendored font); the IIFE is at ~643 of 650 kB locally.
 
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 
