@@ -661,7 +661,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] Each trace reports extremes, with pixel padding for marker size/line width (as Plotly's `findExtremes` does)
 - [x] `autorange: true | false | 'reversed' | 'min' | 'max' | 'min reversed' | 'max reversed'`, plus `autorangeoptions` (`minallowed`, `maxallowed`, `clipmin`, `clipmax`, `include`)
 - [x] `rangemode: 'normal' | 'tozero' | 'nonnegative'`
-- [ ] `minallowed`/`maxallowed` hard limits for zoom and pan — *deferred: applied in autorange; zoom/pan enforcement comes with E6.2 (wave 2)*
+- [x] `minallowed`/`maxallowed` hard limits for zoom and pan — zoom and pan clamp to the limits (`interaction.test.ts` "honors fixedrange and minallowed / maxallowed")
 
 #### E3.3 — Tick generation   `P0` `L`   deps: E3.1   · 🟡 Partial (M1 wave 1)
 > As a developer, I want readable, well-spaced ticks with full control, so that axes communicate clearly.
@@ -669,7 +669,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `tickformat` (d3-format / d3-time-format), `tickformatstops` (zoom-dependent formats), `tickprefix`/`ticksuffix` with `showtickprefix`/`showticksuffix`, `exponentformat` (`none`, `e`, `E`, `power`, `SI`, `B`), `separatethousands`, `minexponent`
 - [x] `hoverformat`
 - [x] Minor ticks: `minor.{tickmode, dtick, nticks, ticklen, tickcolor, showgrid, gridcolor, griddash}` — computed; drawn by the axis renderer (wave 2)
-- [ ] `ticklabelmode: 'instant' | 'period'` for dates. `ticklabelposition` inside/outside + left/right/top/bottom. `ticklabeloverflow`. `ticklabelstep`. `ticklabelshift`/`ticklabelstandoff`. — *deferred: `ticklabelmode` and `ticklabelstep` done; `ticklabelposition`/`ticklabeloverflow` are rendering (E3.4, wave 2)*
+- [ ] `ticklabelmode: 'instant' | 'period'` for dates. `ticklabelposition` inside/outside + left/right/top/bottom. `ticklabeloverflow`. `ticklabelstep`. `ticklabelshift`/`ticklabelstandoff`. — `ticklabelmode`, `ticklabelstep`, `ticklabelposition`, `ticklabeloverflow` done — *open: tick labels inside the plot still draw over traces (they share the overlay text batch)*
 - [x] Label collision avoidance: auto-rotate (`tickangle: 'auto'`) and auto-skip — `layoutTickLabels` helper done; the axis renderer applies it (wave 2)
 
 #### E3.4 — Axis rendering   `P0` `M`   deps: E3.3, E2.5, E2.9   · ✅ Done (M1 wave 2)
@@ -761,14 +761,14 @@ Customization is a **cascade**. Each layer overrides the one above it:
 > As a developer, I want a figure title and subtitle with positioning control, so that charts are self-explanatory.
 - [x] `title.{text, font, x, y, xref, yref, xanchor, yanchor, pad, automargin}`, `title.subtitle.{text, font}`
 
-#### E5.2 — Legend   `P0` `L`   deps: E4.2, E2.4, E2.5   · 🟡 Partial (M1 wave 2)
+#### E5.2 — Legend   `P0` `L`   deps: E4.2, E2.4, E2.5   · ✅ Done (M5 carry-forward)
 > As an end user, I want a legend that identifies traces and lets me toggle them, so that I can focus on the series that matter.
 - [x] Glyphs per trace category (marker, line, bar, fill, pie slice, box, candlestick…) from each module's `legendIcon` — marker, line, lines+markers and bar glyphs; other kinds arrive with their traces
 - [x] `legend.{x, y, xanchor, yanchor, xref, yref, orientation: 'v' | 'h', bgcolor, bordercolor, borderwidth, font, title, traceorder: 'normal' | 'reversed' | 'grouped' | 'reversed+grouped', tracegroupgap, itemsizing: 'trace' | 'constant', itemwidth, itemclick, itemdoubleclick, groupclick, valign, entrywidth, entrywidthmode, indentation, maxheight}`
-- [ ] Trace-level: `showlegend`, `legend` (multiple legends: `legend2`, `legend3`), `legendgroup`, `legendgrouptitle`, `legendrank`, `legendwidth` — *deferred: single legend only; `legendgrouptitle` declared but not drawn yet*
+- [x] Trace-level: `showlegend`, `legend` (multiple legends: `legend2`, `legend3`), `legendgroup`, `legendgrouptitle`, `legendrank`, `legendwidth` — multiple legends: each a full `layout.legendN`, isolation per legend, own margin push and keyboard toolbar; numbered legends take the template legend's look, not its place
 - [x] Click toggles visibility (`legendonly`). Double-click isolates.
-- [ ] Scrolling when the content exceeds `maxheight` — *deferred: `maxheight` clips; scrolling later*
-- [ ] Pie/funnelarea/sunburst: legend entries per label — *deferred: comes with those traces (M2+)*
+- [x] Scrolling when the content exceeds `maxheight` — Plotly's `maxheight` defaults, scrollbar, wheel/drag/touch/keyboard scrolling kept across redraws; lazy chunk 1.6 kB — *deferred: `titleclick`/`titledoubleclick`, per-slice `legend` for pie-like traces*
+- [x] Pie/funnelarea/sunburst: legend entries per label — pie and funnelarea (Plotly gives sunburst/treemap no per-label legend)
 
 #### E5.3 — Colorbar   `P0` `M`   deps: E3.3, E2.12   · ✅ Done (M1 wave 3)
 > As a developer, I want colorbars for colorscaled traces, so that color encodings are readable.
@@ -1137,24 +1137,24 @@ Customization is a **cascade**. Each layer overrides the one above it:
 
 #### E10.3 — `histogram2dcontour` (2D density contour)   `P1` `M`   deps: E10.2, E11.2   · ✅ Done (M3 wave 1)
 > As an analyst, I want density contours, so that I can see joint distributions as contours.
-- [x] Every `contour` styling attribute plus histogram binning — `contours.type: 'levels'` only (constraint contours with E11.2); reusable contouring module for E11.2
-- [x] Recipe: scatter + density contour overlay, and marginal histograms (with E10.8) — scatter + density contour overlay; marginal histograms come with E10.8
+- [x] Every `contour` styling attribute plus histogram binning — reusable contouring module shared with `contour`; constraint contours since M4 wave 1 (E11.2)
+- [x] Recipe: scatter + density contour overlay, and marginal histograms (with E10.8) — scatter + density contour overlay; marginal histograms via Express `marginalX`/`marginalY` (E10.8)
 
 #### E10.4 — `box`   `P1` `L`   deps: E2.7, E2.5, E9.9   · ✅ Done (M3 wave 1)
 > As an analyst, I want box plots with full control over stats and points, so that I can compare distributions.
 - [x] Sample input (`y`/`x`) or precomputed stats (`q1`, `median`, `q3`, `lowerfence`, `upperfence`, `mean`, `sd`, `notchspan`)
-- [ ] `quartilemethod: 'linear' | 'exclusive' | 'inclusive'`, `boxmean: true | 'sd' | false`, `notched`, `notchwidth`, `whiskerwidth`, `width`
-- [ ] `boxpoints: 'all' | 'outliers' | 'suspectedoutliers' | false`, `jitter`, `pointpos`, `marker.outliercolor`, `marker.line.outliercolor/outlierwidth`
-- [ ] `boxmode: 'group' | 'overlay'`, `boxgap`, `boxgroupgap`, `offsetgroup`, `orientation`
-- [ ] `hoveron: 'boxes' | 'points' | 'boxes+points'`. Hover shows all stats.
-- [ ] `sizemode: 'quartiles' | 'sd'`, `showwhiskers`
+- [x] `quartilemethod: 'linear' | 'exclusive' | 'inclusive'`, `boxmean: true | 'sd' | false`, `notched`, `notchwidth`, `whiskerwidth`, `width`
+- [x] `boxpoints: 'all' | 'outliers' | 'suspectedoutliers' | false`, `jitter`, `pointpos`, `marker.outliercolor`, `marker.line.outliercolor/outlierwidth`
+- [x] `boxmode: 'group' | 'overlay'`, `boxgap`, `boxgroupgap`, `offsetgroup`, `orientation`
+- [x] `hoveron: 'boxes' | 'points' | 'boxes+points'`. Hover shows all stats.
+- [x] `sizemode: 'quartiles' | 'sd'`, `showwhiskers`
 
 #### E10.5 — `violin`   `P1` `L`   deps: E10.4   · ✅ Done (M3 wave 1)
 > As an analyst, I want violin plots, so that I can see distribution shape.
 - [x] Gaussian KDE with `bandwidth` (default: Silverman's rule), `scalemode: 'width' | 'count'`, `scalegroup`, `spanmode: 'soft' | 'hard' | 'manual'`, `span` — scale groups shared per subplot (Plotly: per figure)
-- [ ] `side: 'both' | 'positive' | 'negative'` (split violins), `box.{visible, width, fillcolor, line}`, `meanline.{visible, color, width}`, `points`, `jitter`, `pointpos`
-- [ ] `violinmode: 'group' | 'overlay'`, `violingap`, `violingroupgap`
-- [ ] `hoveron: 'violins' | 'points' | 'kde'` (hover along the KDE curve)
+- [x] `side: 'both' | 'positive' | 'negative'` (split violins), `box.{visible, width, fillcolor, line}`, `meanline.{visible, color, width}`, `points`, `jitter`, `pointpos`
+- [x] `violinmode: 'group' | 'overlay'`, `violingap`, `violingroupgap`
+- [x] `hoveron: 'violins' | 'points' | 'kde'` (hover along the KDE curve)
 - [x] KDE runs in calc and is worker-able (E16.5) — pure functions over typed arrays
 
 #### E10.6 — Strip plot   `P1` `S`   deps: E10.4   · 🟡 Partial (M3 wave 1)
@@ -1204,8 +1204,8 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] Rendering: a single float `DataTexture` + colorscale LUT in the shader for regular grids. Instanced cells for irregular grids or when `xgap`/`ygap` > 0. — one texture covers uneven grids (edge-texture lookup) and gaps in the same shader, so no instanced path; colorscale / z range / gap restyles are uniform or LUT updates
 - [x] `zsmooth: false | 'fast' | 'best'` (GPU bilinear vs bicubic), `zmin`, `zmax`, `zmid`, `zauto`, `connectgaps`, `hoverongaps` — `'best'` is bilinear between cell centers, as in plotly.js (not bicubic)
 - [x] Annotated heatmap: `texttemplate`/`textfont` per cell with auto-contrast text color (up to 65,536 cells)
-- [x] Category, date, and log axes — *deferred: `xperiod`, range breaks, calendars*
-- [ ] 4096×4096 heatmap renders < 100 ms, with pan/zoom at 60 fps — CPU ≈ 150–200 ms (calc + pack); headless SwiftShader first draw 1.3 s, pan ~9 fps; unverified on a real GPU; R32F packing would halve upload
+- [x] Category, date, and log axes — `xperiod`/`yperiod` and range breaks since the M5 carry-forward — *deferred: calendars*
+- [ ] 4096×4096 heatmap renders < 100 ms, with pan/zoom at 60 fps — pan/zoom 60 fps on a real GPU (M1 Max, GPU ≈ 0.5 ms); first draw ≈ 700 ms, target not met (calc + pack + a 134 MB texture upload; R32F packing would halve the upload)
 
 #### E11.2 — `contour`   `P1` `L`   deps: E11.1, E2.5, E2.6   · ✅ Done (M4 wave 1)
 > As a scientist, I want contour plots with labels and multiple coloring modes, so that I can visualize level sets.
@@ -1213,7 +1213,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `contours.{start, end, size, coloring: 'fill' | 'heatmap' | 'lines' | 'none', showlines, showlabels, labelfont, labelformat, type: 'levels' | 'constraint', operation: '=' | '<' | '>=' | '[]' | '][' ..., value}`, `ncontours`, `autocontour`
 - [x] `line.{color, width, dash, smoothing}`
 - [x] Contour labels placed along the lines with gaps in the lines. Label collision avoidance.
-- [x] Constraint contours (shade regions satisfying an inequality) — every operation, also on `histogram2dcontour`; contouring shared between both traces (traces-stats `contour/`); Plotly's label optimizer with exact line cuts; `connectgaps: false` clipping — *deferred: period alignment, calendars, range breaks, the exact heatmap-coloring clip at gaps*
+- [x] Constraint contours (shade regions satisfying an inequality) — every operation, also on `histogram2dcontour`; contouring shared between both traces (traces-stats `contour/`); Plotly's label optimizer with exact line cuts; `connectgaps: false` clipping — period alignment and range breaks since the M5 carry-forward — *deferred: calendars, the exact heatmap-coloring clip at gaps*
 
 #### E11.3 — `image` & imshow   `P1` `M`   deps: E2.3   · ✅ Done (M4 wave 1)
 > As a scientist, I want to show images and matrices as images, so that I can visualize pixel data and photos.
@@ -1226,7 +1226,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `layout.polar.{domain, sector, hole, bgcolor, gridshape: 'circular' | 'linear', angularaxis.{type, direction, rotation, period, thetaunit, categoryorder, tickmode…, layer}, radialaxis.{range, type (linear/log/date/category), angle, side, autorange, tickmode…}, bargap, barmode}`
 - [x] `scatterpolar`: `r`, `theta`, `thetaunit: 'radians' | 'degrees' | 'gradians'`, `r0`/`dr`, `theta0`/`dtheta`, and all scatter modes and fills (`fill: 'toself'` for radar)
 - [x] Line segments rendered as arcs in angular space (resampled) for `line.shape: 'spline'` and gridshape circular
-- [x] Polar zoom (radial drag) and rotation (angular drag) — plus zoom box, double-click reset, legend toggle; polar lives in traces-sci (a `polarComponent` registered with the traces; runtime hook `subplotDomain`) — *deferred: box/lasso selection on polar, modebar reset, `marker.gradient`, `line.backoff`, tick-label overlap avoidance*
+- [x] Polar zoom (radial drag) and rotation (angular drag) — plus zoom box, double-click reset, legend toggle; polar lives in traces-sci (a `polarComponent` registered with the traces; runtime hook `subplotDomain`) — box/lasso selection since the M5 carry-forward (events carry `r`/`theta`; no `layout.selections`, as in Plotly) — *deferred: modebar (reset, select buttons), `marker.gradient`, `line.backoff`, tick-label overlap avoidance*
 
 #### E11.5 — `barpolar` & wind rose   `P1` `M`   deps: E11.4, E2.8   · ✅ Done (M4 wave 1)
 > As a meteorologist, I want polar bars, so that I can build wind roses and polar histograms.
@@ -1275,7 +1275,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 #### E12.1 — Time series ergonomics   `P1` `M`   deps: E3.5, E3.8, E5.9   · 🟡 Partial (M4 wave 0)
 > As a finance developer, I want time series to be first-class, so that date data "just works".
 - [x] Docs + examples: basic time series, range slider, range selector, range breaks, period alignment, unified hover, date formatting — "Working with dates & time series" page and `timeseries/*` examples
-- [ ] Performance: 10 years of 1-minute bars (~2.6M points) with min-max decimation at 60 fps pan — CPU per pan frame 0.5–0.6 ms and < 6k drawn segments (was 144k–2.6M segments, 50–190 ms rebuilds); 60 fps not yet measured on a real GPU (headless SwiftShader only)
+- [x] Performance: 10 years of 1-minute bars (~2.6M points) with min-max decimation at 60 fps pan — 60 fps pan and zoom on a real GPU (Apple M1 Max, `pnpm bench:gpu`, `docs/perf/gpu-benchmarks.md`): GPU ≈ 0.9 ms per frame; first draw ≈ 420 ms
 
 #### E12.2 — `ohlc`   `P1` `M`   deps: E2.5, E3.5   · ✅ Done (M4 wave 2)
 > As a trader, I want OHLC charts, so that I can see price movements per period.
@@ -1285,7 +1285,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 #### E12.3 — `candlestick`   `P1` `M`   deps: E2.7, E12.2   · 🟡 Partial (M4 wave 2)
 > As a trader, I want candlestick charts, so that I can see open/close bodies with wicks.
 - [x] `whiskerwidth`, `increasing.{fillcolor, line}`, `decreasing.{fillcolor, line}`
-- [x] Instanced bodies + instanced wicks (2 draw calls regardless of count) — 100k candles: ~1 ms CPU per pan step; real-GPU fps unmeasured (headless SwiftShader ~1 fps); level of detail when zoomed far out deferred
+- [x] Instanced bodies + instanced wicks (2 draw calls regardless of count) — 100k candles: 60 fps pan/zoom on a real GPU (M1 Max) but ≈ 10–12 ms GPU per frame, little headroom; level of detail when zoomed far out deferred
 - [x] Recipe: candlestick + volume subplot + moving averages + buy/sell markers
 - [ ] 3D-native: extruded candles (`depth`), `P2`
 
@@ -1304,7 +1304,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 
 #### E12.6 — `funnelarea`   `P1` `M`   deps: E9.11   · 🟡 Partial (M4 wave 2)
 > As a growth analyst, I want funnel-area charts, so that I can show proportional stages as a triangle.
-- [x] Pie-like API (`values`, `labels`, `textinfo`, `marker.colors`, `domain`) plus `aspectratio`, `baseratio`, `title.position` — scalegroup, per-label legend and hover shared with pie — *deferred: patterns, `uniformtext`*
+- [x] Pie-like API (`values`, `labels`, `textinfo`, `marker.colors`, `domain`) plus `aspectratio`, `baseratio`, `title.position` — scalegroup, per-label legend and hover shared with pie — patterns and `uniformtext` since the M5 carry-forward — *deferred: `marker.pattern.path`, label links*
 - [ ] 3D-native: extruded pyramid option (`depth`, `shape: 'pyramid' | 'cone'`), `P2`
 
 #### E12.7 — `indicator` (number, delta, gauge, bullet)   `P1` `L`   deps: E2.8, E2.9   · ✅ Done (M4 wave 2)
@@ -1334,7 +1334,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 #### E13.2 — `sunburst`   `P1` `L`   deps: E13.1, E2.8   · ✅ Done (M5 wave 0)
 > As an analyst, I want sunburst charts with drill-down, so that I can explore hierarchies radially.
 - [x] `rotation`, `insidetextorientation`, `marker.{colors, colorscale, line, pattern}`, `domain`
-- [x] Click to drill into a node (animated zoom transition). Click the center to go up. `click` event can cancel the drill. — one instanced arc set + one text batch; Plotly's 750 ms tween (snaps under reduced motion); `level` stored by a GUI restyle — *deferred: animated `level` via `animate`/`react`, `coloraxis`, `uniformtext`*
+- [x] Click to drill into a node (animated zoom transition). Click the center to go up. `click` event can cancel the drill. — one instanced arc set + one text batch; Plotly's 750 ms tween (snaps under reduced motion); `level` stored by a GUI restyle; `coloraxis` and `uniformtext` since M5 wave 2 — *deferred: animated `level` via `animate`/`react`*
 - [ ] 3D-native: layered extrusion by depth (`depth`, `depthstep`), `P2`
 
 #### E13.3 — `treemap`   `P1` `L`   deps: E13.1, E2.7   · ✅ Done (M5 wave 1)
@@ -1342,7 +1342,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `tiling.{packing: 'squarify' | 'binary' | 'dice' | 'slice' | 'slice-dice' | 'dice-slice', squarifyratio, flip, pad}`
 - [x] `marker.{pad.{t, l, r, b}, depthfade, cornerradius, colors, colorscale}`, `pathbar.{visible, side, edgeshape, thickness, textfont}`
 - [x] Text wrapping and fitting inside tiles. `textposition` 9-way. — wraps at spaces before shrinking (a Holochart addition)
-- [x] Drill-down transition. 100k-node treemap renders < 500 ms. — ≈ 0.3 s CPU (calc, layout, labels, buffers); headless first frame 4–7 s is SwiftShader context/shader setup — *deferred: `uniformtext`, `coloraxis`, animated `level` via `animate`/`react`*
+- [x] Drill-down transition. 100k-node treemap renders < 500 ms. — ≈ 0.3 s CPU (calc, layout, labels, buffers); headless first frame 4–7 s is SwiftShader context/shader setup; ≈ 420 ms on a real GPU (M1 Max); `coloraxis` and `uniformtext` since M5 wave 2 — *deferred: animated `level` via `animate`/`react`*
 - [ ] 3D-native: "city" treemap (tile height encodes a second value), `P2`
 
 #### E13.4 — `icicle`   `P1` `M`   deps: E13.1, E2.7   · ✅ Done (M5 wave 1)
@@ -1997,6 +1997,56 @@ gantt
 **Verdict:** M2's exit criteria are met, and M2 is closed. Publishing `0.2.0` waits on the npm
 setup (carry-forward 1).
 
+**M3 — Statistical, M4 — Scientific & Financial, M5 — Hierarchical & Flow: combined exit review
+2026-09-28** (PRs #16–#26; M3 and M4 had no separate review).
+
+- Stories: every M3–M5 story in §11.4–§11.6 is done or partial with only P2/➕ items or later
+  milestones left, except the gaps below. All 27 trace types are registered in the full bundle,
+  have ≥ 5 examples and a complete chart page. Keyboard and touch (E6.5, E6.6), deferred from M3,
+  landed in M5 wave 2.
+- Exit criteria:
+  - M3 "Statistical 100% (P1), Express alpha, animation + sliders": ✅ met. Open items are ➕ or
+    P2 (adaptive bins, GPU binning, beeswarm); camera transitions wait for 3D (E7.5, M6).
+  - M4 "P1 rows for Scientific & Financial": ✅ met with small P1 gaps — polar box/lasso selection,
+    `funnelarea` patterns and `uniformtext`, heatmap/contour `xperiod`, range breaks and calendars.
+  - M4 "time-series perf target met": ✅ met in the carry-forward wave. `pnpm bench:gpu` (headless
+    Chromium on the real GPU, Apple M1 Max) measures the 2.6M-point pan at 60 fps (GPU ≈ 0.9 ms per
+    frame); the 4096² heatmap, 100k candles, 100k-node treemap and 1M markers meet their frame-rate
+    targets too. Not met: the 4096² heatmap's first draw (≈ 700 ms against < 100 ms). CI still
+    can't measure GPU speed (SwiftShader); the benchmark runs by hand.
+  - M5 "drill-down transitions, sankey interaction, Express full catalogue": ✅ met with caveats —
+    `level` changed through `animate`/`react` snaps; sankey lacks per-part `hoverlabel` and lasso
+    node grouping; the Express catalogue covers every trace type through M5 (ternary, 3D and geo
+    come with their epics), its main px gap is wide-form data.
+- Release: ⏳ nothing published; all 13 packages are at `0.0.0` with 43 pending changesets. The
+  packages version as one `fixed` group, so the first `changeset version` gives `0.1.0` (or a
+  pre-release), not the plan's `0.3.0`–`0.5.0`. npm token, `npm` environment and `RELEASE_ENABLED`
+  are still to be set up.
+- Health:
+  - CI on `main` is green (after #25). #23 and #24 were merged with a red visual job (`main` has no
+    branch protection) and #24 broke `main` until #25.
+  - The interaction suite (37 specs, incl. keyboard, touch, menus) does not run in CI; Playwright
+    runs with `retries: 0`, so flakes fail hard. Known flakes fixed: font-face readiness (#24),
+    update-menu dropdown and touch page-scroll (M5 wave 2).
+  - The nightly property run has never been green: a real bug (`resolveDataRefs` throws on
+    `dataset: NaN`) and two test-isolation defects (pattern loading, image source pixels).
+  - Budgets were raised by decision in M4 and M5 (core + scatter 157, basic 248, full 475, IIFE 690
+    kB); on CI they are 95.8–98.1% used. CI measures 0.3% (basic) to 0.5% (IIFE) above a local run.
+  - Docs: 94 pages (61 complete, 8 draft, 25 stub; 11 stubs past their milestone, incl.
+    `customization/per-point-styling`); attribute coverage in examples 34.2% against the 70%
+    target; `docs/release/bundle-size.md` misses the latest lazy rows.
+  - Repo: 32 MB tracked (visual baselines 13.3 MB, gallery thumbnails 4.4 MB); a stale
+    `dataset-refs` worktree.
+- `plan.md` was corrected at this review: stale checkboxes and notes on E3.2, E3.3, E5.2, E10.3–E10.5,
+  E13.2, E13.3 and the M3 wave 0 open list.
+
+- Decisions at this review (owner): a carry-forward wave before M6 (§11.7); required CI checks on
+  `main` (branch protection); a local real-GPU benchmark script now (CI can't measure GPU speed);
+  npm publishing not yet (setup steps carried forward).
+
+**Verdict:** M3 is closed. M4 and M5 are closed with caveats: the P1 gaps above and the unverified
+real-GPU performance targets go to the carry-forward wave (§11.7) before M6.
+
 ### 11.2 M1 execution plan
 
 M1 runs in three waves of parallel workstreams (≤ 4 at a time), each owning separate files. Shared
@@ -2078,16 +2128,15 @@ default look (ADR-021) for every new example.
 | 3 | Express: data model, mappings, facets, animation frames, ECDF, distplot/marginals | E23.1–E23.4 ✅, E10.7 ✅, E10.8 ✅, E23.6 🟡 (M3 catalogue) |
 
 Open after M3 wave 0 (found while fixing the carry-forward):
-- The visual harness's per-example tolerance (0.4% of pixels) let a whole title move from left to
-  centre pass, because thin text changes few pixels; baselines of changed examples were force-
-  regenerated. Tighten it (per-region or exact-diff thresholds for text) (E20.3).
-- Accepted but not drawn: `legendgrouptitle`, `legendwidth`, `legend.grouptitlefont`; `table`
-  traces never appear in the legend.
-- On overlaying axes, the overlay's grid lines draw over the base plot's traces.
-- Bars ignore `xperiod`; a scatter with a date `x0` + `dx` shows the same x in every hover label;
-  `displaylogo` is missing from the config schema.
-- `minorloglabels` (new, Plotly's `small digits` default) draws 6 px digits in the dense default
-  look; consider `complete` in the `holochart` template.
+- ~~The visual harness's per-example tolerance let a moved title pass (E20.3)~~ — done in M4 wave 0
+  (32 px window rule, DOM text exempt).
+- ~~Accepted but not drawn: `legendgrouptitle`, `legendwidth`, `legend.grouptitlefont`~~ — done in
+  M4 wave 0; `table` traces have no legend entry, as in Plotly.
+- ~~On overlaying axes, the overlay's grid lines draw over the base plot's traces~~ — done in M4 wave 0.
+- ~~Bars ignore `xperiod`; date `x0` + `dx` hover; `displaylogo`~~ — done in M4 wave 0 (a formatted
+  `texttemplate` with an implicit date `x0` still repeats the first value).
+- ~~`minorloglabels` 6 px digits in the default look~~ — `complete` in the `holochart` template (M4
+  wave 0); drawn full-size, where Plotly uses 0.75×.
 - Heavy fills on dark (ADR-021) and the `toJSON` API decision (E21.6) remain.
 
 Open after M3 wave 1: re-binning a whole `bingroup` when one trace changes needs a runtime hook;
@@ -2204,6 +2253,17 @@ range slider/shapes/annotations under `touch-action: manipulation`; `image` has 
 `unhover` sends an empty `points` list (Plotly sends the hovered points) and hierarchy click events
 carry no DOM `event`; Express fixed frame ranges (cartesian and radial) are Holochart defaults, not
 px parity; trace-level hierarchy colorbars don't take the default look's colorbar style.
+
+### 11.7 M5 carry-forward wave (before M6)
+
+From the M3–M5 exit review. Same pattern: ≤ 4 parallel workstreams with separate files.
+
+| Workstream | Items |
+| --- | --- |
+| CI hardening | Interaction suite in CI; nightly property run green (`resolveDataRefs` on `dataset: NaN`, pattern-loading and image-source test isolation); `docs/release/bundle-size.md` budgets table — ✅ (interaction in CI, 2 shards, 1 retry on CI; the NaN failure was the test's own `!==`; fresh seeds found three core bugs, fixed: matched-axis template rangebreaks, partial rangeslider range, font-size overflow) |
+| Legends | Multiple legends (`legend2`, …) and scrolling past `maxheight` (E5.2, P0) — ✅ |
+| P1 parity gaps | Polar box/lasso selection (E6.3/E11.4); `funnelarea` patterns and `uniformtext`; heatmap and contour `xperiod` and range breaks (E11.1/E11.2) — ✅ |
+| GPU benchmarks and docs | A local benchmark script on the real GPU (fps and frame times for the E12.1, E11.1, E12.3, E13.3 targets); the overdue `customization/per-point-styling` page — ✅ (`pnpm bench:gpu`, `docs/perf/gpu-benchmarks.md`) |
 
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 

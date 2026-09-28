@@ -161,10 +161,16 @@ describe('constraint regions (Plotly convert_to_constraints / close_boundaries)'
           const inside = shaded(grid, '[]', [lo, hi])!;
           const outside = shaded(grid, '][', [lo, hi])!;
           expect(regionArea(inside) + regionArea(outside)).toBeCloseTo(total, 9);
+          // Probes off every contour line: with integer z and half-integer levels the lines join
+          // rational points, so irrational offsets keep the probes off them. A probe on a line
+          // is on the boundary of both regions (nightly: (0.63, 0.29) on the 3.5 line of the cell
+          // 5, 4 / 2, 1).
+          const ex = Math.SQRT2 / 1000;
+          const ey = Math.PI / 1000;
           for (const [px, py] of [
-            [0.37, 0.41],
-            [(nx - 1) * 0.63, (ny - 1) * 0.29],
-            [(nx - 1) * 0.5 + 0.01, (ny - 1) * 0.5 + 0.02],
+            [0.37 + ex, 0.41 + ey],
+            [(nx - 1) * 0.63 + ex, (ny - 1) * 0.29 + ey],
+            [(nx - 1) * 0.5 + 0.01 + ex, (ny - 1) * 0.5 + 0.02 + ey],
           ] as const) {
             const wi = winding(inside, px, py);
             const wo = winding(outside, px, py);

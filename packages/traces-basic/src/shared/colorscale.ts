@@ -495,6 +495,17 @@ export function numericExtent(values: ArrayLike<unknown>): [number, number] {
   return [min, max];
 }
 
+/**
+ * Whether a color array has strings among its entries. Plotly draws CSS colors in a colorscaled
+ * array as given and maps only the numbers (`makeColorScaleFunc`), so such an array is resolved
+ * per point ({@link mapColors}) instead of through the GPU LUT, which only sees numbers.
+ */
+export function hasColorStrings(values: ArrayLike<unknown>): boolean {
+  if (ArrayBuffer.isView(values)) return false;
+  for (let i = 0; i < values.length; i++) if (typeof values[i] === 'string') return true;
+  return false;
+}
+
 /** Numeric colors to feed the GPU: non-numeric entries become NaN (the `nanColor`). */
 export function colorValues(values: ArrayLike<unknown>): Float64Array {
   if (values instanceof Float64Array) return values;
@@ -648,12 +659,17 @@ export function mapColor(
   return sampleColorscale(mapping.colorscale, t);
 }
 
-/** Map every value to sRGB 0–1 RGBA (4 floats per value), for colors the GPU LUT can't serve. */
+/**
+ * Every entry as sRGB 0–1 RGBA (4 floats each), for colors the GPU LUT can't serve: numbers
+ * through `mapping`, CSS colors as given (Plotly's `makeColorScaleFunc`), anything else the
+ * `nanColor`.
+ */
 export function mapColors(values: ArrayLike<unknown>, mapping: ColorMapping): Float32Array {
   const out = new Float32Array(values.length * 4);
   for (let i = 0; i < values.length; i++) {
     const v = values[i];
-    out.set(mapColor(typeof v === 'number' ? v : NaN, mapping), i * 4);
+    const literal = typeof v === 'string' ? toRGBA(v) : null;
+    out.set(literal ?? mapColor(typeof v === 'number' ? v : NaN, mapping), i * 4);
   }
   return out;
 }

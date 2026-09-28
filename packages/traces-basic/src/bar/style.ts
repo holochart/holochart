@@ -40,7 +40,10 @@ export interface BarStyle {
   readonly pattern: PatternFill | null;
 }
 
-/** Per-bar colors of a color container (`marker`, `marker.line`): CSS colors or a colorscale. */
+/**
+ * Per-bar colors of a color container (`marker`, `marker.line`): CSS colors or a colorscale (CSS
+ * colors among its numbers drawn as given, see `mapColors`).
+ */
 function colorsOf(
   container: Readonly<Record<string, unknown>> | undefined,
   count: number,

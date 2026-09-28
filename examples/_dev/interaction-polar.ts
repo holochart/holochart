@@ -5,8 +5,9 @@ import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 /**
  * Polar interaction playground (plan E11.4, E20.4): hover labels, the radial drag (the handle past
  * the end of the radial axis), the angular drag (the band just outside the circle), the radial
- * zoom box (`dragmode: 'zoom'`), double-click reset and legend toggling. Every chart event is
- * logged to `window.__interaction.events`, which tests/interaction/polar.spec.ts reads.
+ * zoom box (`dragmode: 'zoom'`), box / lasso selection (`dragmode: 'select' | 'lasso'`),
+ * double-click reset and legend toggling. Every chart event is logged to
+ * `window.__interaction.events`, which tests/interaction/polar.spec.ts reads.
  *
  * The geometry is fixed so the tests can find points without internals: 640×400 px, 20 px
  * margins, one polar subplot over the whole plot area (a 600×360 px domain, so the circle has
@@ -18,7 +19,7 @@ import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 export const meta: ExampleMeta = {
   title: 'Interaction: polar',
   description:
-    'Hover, radial and angular drags, radial zoom box, double-click and legend on a polar subplot; events are logged to window.__interaction.',
+    'Hover, radial and angular drags, radial zoom box, box / lasso selection, double-click and legend on a polar subplot; events are logged to window.__interaction.',
   tags: ['dev', 'polar', 'interaction', 'no-visual-test'],
   size: { width: 640, height: 400 },
 };
@@ -31,6 +32,9 @@ const EVENTS = [
   'relayout',
   'relayouting',
   'legendclick',
+  'selecting',
+  'selected',
+  'deselect',
 ] as const;
 
 /** Keep what tests assert on (points without their trace objects). */

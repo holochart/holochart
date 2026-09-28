@@ -16,11 +16,23 @@
  * 4. **Smoothing** — `zsmooth: 'fast'` falls back to none on log axes and uneven grids (Plotly
  *    warns and turns it off); `'best'` works everywhere.
  *
+ * 5. **Periods** — with `xperiod` (date and linear axes, as bar and scatter), the given `x` values
+ *    (and column data) snap to their periods before anything else (Plotly's `alignPeriod`); hover
+ *    shows the values as given (Plotly's `orig_x`).
+ * 6. **Range breaks** (ADR-022) — coordinates are compressed and the cells tile the compressed
+ *    axis: edges halfway between centers there, so cells beside a break keep their width (Plotly
+ *    halves in real time and maps each edge piecewise, which narrows or collapses them). As
+ *    Plotly's `dropZonBreaks`, columns and rows whose center falls in a break are dropped;
+ *    implicit centers (`x0` + i·`dx`) step in real time, as scatter's; given edges are clamped
+ *    to the breaks and cells left without width dropped.
+ *
  * Calc space follows Plotly (raw values on log axes, ms on dates, indices on categories); the
- * results are linear coordinates (log10 on log axes). Deferred: `xperiod` alignment and range
- * breaks (Plotly drops cells on breaks).
+ * results are linear coordinates (log10 on log axes). Deferred: `xcalendar` / `ycalendar`.
  */
 import {
+  alignPeriod,
+  cleanNumber,
+  dateToMs,
   isArrayLike,
   type AxisType,
   type CategorySamples,
@@ -51,6 +63,11 @@ export interface HeatmapAxisCells {
    * log axes, as Plotly), or the category index.
    */
   readonly centers: Float64Array;
+  /**
+   * With `xperiod`: what hover labels each cell with, the given coordinates before alignment
+   * (Plotly's `orig_x`: the value, or the middle of the given edges), linear coordinates.
+   */
+  readonly hoverAt?: Float64Array;
   readonly type: AxisType;
 }
 
@@ -291,6 +308,9 @@ interface SourceGrid {
   /** Column / row centers in linear coordinates (column data: the distinct values). */
   readonly xs: ArrayLike<number> | undefined;
   readonly ys: ArrayLike<number> | undefined;
+  /** `xs` / `ys` before period alignment (2D `z` with a period only). */
+  readonly xOrig?: ArrayLike<number> | undefined;
+  readonly yOrig?: ArrayLike<number> | undefined;
   /** Category names of the source columns / rows (category axes), for re-indexing. */
   readonly xNames: readonly string[] | undefined;
   readonly yNames: readonly string[] | undefined;
@@ -332,12 +352,37 @@ function namesOf(values: unknown): string[] | undefined {
   return Array.from(values as ArrayLike<unknown>, (v) => String(v));
 }
 
+/**
+ * Linear coordinates snapped to their `xperiod` / `yperiod` (Plotly's `alignPeriod`, on date and
+ * linear axes as bar and scatter; periods tile real time across range breaks), or `undefined`
+ * without a period.
+ */
+export function alignedCoordinates(
+  trace: FullTrace,
+  letter: 'x' | 'y',
+  axis: AxisInfo,
+  values: ArrayLike<number>,
+): Float64Array | undefined {
+  const period = trace[`${letter}period`];
+  if (period === undefined || (axis.type !== 'date' && axis.type !== 'linear')) return undefined;
+  return alignPeriod(values, {
+    period,
+    period0: trace[`${letter}period0`],
+    alignment: trace[`${letter}periodalignment`] as 'start' | 'middle' | 'end' | undefined,
+    isDate: axis.type === 'date',
+    breaks: axis.scale.breaks,
+  })?.vals;
+}
+
 /** Column data (Plotly `convertColumnData`): points placed on their distinct x and y values. */
 function columnGrid(trace: FullTrace, xaxis: AxisInfo, yaxis: AxisInfo): SourceGrid {
   const length = typeof trace['_length'] === 'number' ? trace['_length'] : 0;
   const zIn = trace['z'] as ArrayLike<unknown>;
-  const xl = xaxis.scale.d2lArray(trace['x'] as ArrayLike<unknown>);
-  const yl = yaxis.scale.d2lArray(trace['y'] as ArrayLike<unknown>);
+  let xl = xaxis.scale.d2lArray(trace['x'] as ArrayLike<unknown>);
+  let yl = yaxis.scale.d2lArray(trace['y'] as ArrayLike<unknown>);
+  // Plotly aligns the columns before placing them (hover then shows the aligned values).
+  xl = alignedCoordinates(trace, 'x', xaxis, xl) ?? xl;
+  yl = alignedCoordinates(trace, 'y', yaxis, yl) ?? yl;
   const dx = distinctValues(xl.subarray(0, length));
   const dy = distinctValues(yl.subarray(0, length));
   const cols = dx.vals.length;
@@ -379,11 +424,21 @@ function matrixGrid(trace: FullTrace, xaxis: AxisInfo, yaxis: AxisInfo): SourceG
   const at = transpose
     ? (r: number, c: number) => cleanZ(zIn[c]?.[r])
     : (r: number, c: number) => cleanZ(zIn[r]?.[c]);
-  const coord = (letter: 'x' | 'y', axis: AxisInfo) => {
+  // [aligned, as given] linear coordinates of an axis with `n` cells.
+  const coord = (letter: 'x' | 'y', axis: AxisInfo, n: number) => {
     const v = trace[letter];
-    if (trace[`${letter}type`] === 'scaled' || !isArrayLike(v)) return undefined;
-    return axis.scale.d2lArray(v as ArrayLike<unknown>);
+    if (trace[`${letter}type`] === 'scaled' || !isArrayLike(v)) return [];
+    const values = v as ArrayLike<unknown>;
+    // Cell edges on a range-break axis are clamped to the breaks (`r2l`), not hidden.
+    const l =
+      axis.scale.breaks && values.length > n
+        ? Float64Array.from(values, (d) => axis.scale.r2l(d))
+        : axis.scale.d2lArray(values);
+    const aligned = alignedCoordinates(trace, letter, axis, l);
+    return aligned ? [aligned, l] : [l];
   };
+  const [xs, xOrig] = coord('x', xaxis, cols);
+  const [ys, yOrig] = coord('y', yaxis, rows);
   const xv = trace['x'];
   const yv = trace['y'];
   return {
@@ -391,8 +446,10 @@ function matrixGrid(trace: FullTrace, xaxis: AxisInfo, yaxis: AxisInfo): SourceG
     cols,
     at,
     ...(transpose ? {} : { rowsIn: zIn }),
-    xs: coord('x', xaxis),
-    ys: coord('y', yaxis),
+    xs,
+    ys,
+    xOrig,
+    yOrig,
     xNames: xaxis.type === 'category' ? namesOf(xv) : undefined,
     yNames: yaxis.type === 'category' ? namesOf(yv) : undefined,
   };
@@ -413,6 +470,53 @@ function reindex(names: readonly string[] | undefined, axis: AxisInfo, n: number
   return Int32Array.from(categories, (c) => map.get(c) ?? -1);
 }
 
+/**
+ * Range breaks (see the module comment): the source columns (rows) to keep and their compressed
+ * coordinates, or undefined off break axes and for column data (its points in breaks are skipped).
+ */
+function breakCells(
+  trace: FullTrace,
+  letter: 'x' | 'y',
+  axis: AxisInfo,
+  n: number,
+  coords: ArrayLike<number> | undefined,
+  orig: ArrayLike<number> | undefined,
+): { keep: Int32Array; coords: number[]; orig: number[] | undefined } | undefined {
+  if (!axis.scale.breaks || isColumnZ(trace['z'])) return undefined;
+  let c = coords;
+  if (!c) {
+    // x0 + i·dx in real time, then compressed (and hidden in breaks), like scatter's.
+    const s = trace[`${letter}0`];
+    const d = trace[`d${letter}`];
+    const r0 = axis.type === 'date' ? dateToMs(s) : cleanNumber(s);
+    const step = typeof d === 'number' && d !== 0 ? d : 1;
+    c = Float64Array.from({ length: n }, (_, i) => axis.scale.d2l(r0 + i * step));
+  }
+  const keep: number[] = [];
+  const out: number[] = [];
+  const o: number[] = [];
+  const at = (i: number) => {
+    out.push(c[i]!);
+    if (orig) o.push(orig[i]!);
+  };
+  if (c.length > n) {
+    // Edges: drop the cells a break swallows (zero width), with their far edge.
+    at(0);
+    for (let i = 0; i < n; i++) {
+      if (c[i + 1] === out[out.length - 1]) continue;
+      keep.push(i);
+      at(i + 1);
+    }
+  } else {
+    for (let i = 0; i < n; i++) {
+      if (i < c.length && Number.isNaN(c[i])) continue;
+      keep.push(i);
+      if (i < c.length) at(i);
+    }
+  }
+  return { keep: Int32Array.from(keep), coords: out, orig: orig ? o : undefined };
+}
+
 /** One axis' cells: edges and centers (linear) from its source coordinates. */
 function axisCells(
   trace: FullTrace,
@@ -420,6 +524,7 @@ function axisCells(
   axis: AxisInfo,
   count: number,
   source: ArrayLike<number> | undefined,
+  orig?: ArrayLike<number>,
 ): HeatmapAxisCells {
   const type = axis.type;
   const calcValues = source ? Array.from(source, (l) => toCalc(type, l)) : undefined;
@@ -442,7 +547,13 @@ function axisCells(
     else if (given) centers[i] = source![i]!;
     else centers[i] = toLinear(type, (calcEdges[i]! + calcEdges[i + 1]!) / 2);
   }
-  return { count, edges, centers, type };
+  if (!orig) return { count, edges, centers, type };
+  // Plotly's hover: the given value, or the middle of the given edges (centers past the end).
+  const edgesGiven = orig.length > count;
+  const hoverAt = Float64Array.from(centers, (c, i) =>
+    edgesGiven ? (orig[i]! + orig[i + 1]!) / 2 : i < orig.length ? orig[i]! : c,
+  );
+  return { count, edges, centers, hoverAt, type };
 }
 
 /** Options of {@link calcHeatmapGrid}. */
@@ -463,8 +574,10 @@ export function calcHeatmapGrid(
   const source = isColumnZ(trace['z'])
     ? columnGrid(trace, xaxis, yaxis)
     : matrixGrid(trace, xaxis, yaxis);
-  const colOf = reindex(source.xNames, xaxis, source.cols);
-  const rowOf = reindex(source.yNames, yaxis, source.rows);
+  const xb = breakCells(trace, 'x', xaxis, source.cols, source.xs, source.xOrig);
+  const yb = breakCells(trace, 'y', yaxis, source.rows, source.ys, source.yOrig);
+  const colOf = xb?.keep ?? reindex(source.xNames, xaxis, source.cols);
+  const rowOf = yb?.keep ?? reindex(source.yNames, yaxis, source.rows);
   const nx = colOf.length;
   const ny = rowOf.length;
   if (nx === 0 || ny === 0) return emptyHeatmapCalc();
@@ -493,26 +606,16 @@ export function calcHeatmapGrid(
   if (trace['connectgaps'] === true) z = fillGaps(z, nx, ny);
 
   // Source coordinates only place the cells when the grid was not re-indexed by categories.
-  const x = axisCells(
-    trace,
-    'x',
-    xaxis,
-    nx,
-    identity || xaxis.type !== 'category' ? source.xs : undefined,
-  );
-  const y = axisCells(
-    trace,
-    'y',
-    yaxis,
-    ny,
-    identity || yaxis.type !== 'category' ? source.ys : undefined,
-  );
+  const xs = xb ? xb.coords : identity || xaxis.type !== 'category' ? source.xs : undefined;
+  const ys = yb ? yb.coords : identity || yaxis.type !== 'category' ? source.ys : undefined;
+  const x = axisCells(trace, 'x', xaxis, nx, xs, xb ? xb.orig : source.xOrig);
+  const y = axisCells(trace, 'y', yaxis, ny, ys, yb ? yb.orig : source.yOrig);
 
   const fastSmoothing =
     xaxis.type !== 'log' &&
     yaxis.type !== 'log' &&
-    isEvenlySpaced(source.xs ?? []) &&
-    isEvenlySpaced(source.ys ?? []);
+    isEvenlySpaced(xb?.coords ?? source.xs ?? []) &&
+    isEvenlySpaced(yb?.coords ?? source.ys ?? []);
 
   let lo = Infinity;
   let hi = -Infinity;

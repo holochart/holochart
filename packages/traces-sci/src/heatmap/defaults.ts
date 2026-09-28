@@ -2,7 +2,8 @@
  * `heatmap` supply-defaults (plan E11.1), following plotly.js `heatmap/defaults.js`,
  * `xy_defaults.js`, `style_defaults.js` and `label_defaults.js`: a 2D `z` needs at least one
  * numeric cell, a 1D `z` needs `x` and `y` columns; `x0` / `dx` are coerced only when `x` does not
- * place the cells (`xtype: 'scaled'`), gaps only without `zsmooth`.
+ * place the cells (`xtype: 'scaled'`), gaps only without `zsmooth`; `xperiod0` /
+ * `xperiodalignment` only with an `xperiod`.
  */
 import { isArrayLike, type FullTrace, type TraceDefaultsContext } from '@mk7s/holochart-core';
 import { supplyCellTextDefaults, supplyZColorscaleDefaults } from '@mk7s/holochart-traces-stats';
@@ -53,8 +54,17 @@ function coordinateDefaults(ctx: TraceDefaultsContext, letter: 'x' | 'y'): void 
   }
 }
 
+/** Plotly's `handlePeriodDefaults`: `period0` / `periodalignment` only matter with a period. */
+function periodDefaults(ctx: TraceDefaultsContext): void {
+  for (const letter of ['x', 'y'] as const) {
+    if (ctx.coerce(`${letter}period`) === undefined) continue;
+    ctx.coerce(`${letter}period0`);
+    ctx.coerce(`${letter}periodalignment`);
+  }
+}
+
 /**
- * The grid (Plotly `handleXYZDefaults`). Returns false (and hides the trace) without a usable
+ * The grid (Plotly `handleXYZDefaults`), then the periods (`handlePeriodDefaults`). Returns false (and hides the trace) without a usable
  * `z`.
  */
 export function supplyGridDefaults(traceOut: FullTrace, ctx: TraceDefaultsContext): boolean {
@@ -66,6 +76,7 @@ export function supplyGridDefaults(traceOut: FullTrace, ctx: TraceDefaultsContex
     // Column z needs x and y columns.
     if (nx === 0 || ny === 0) return false;
     traceOut['_length'] = Math.min(nx, ny, lengthOf(z));
+    periodDefaults(ctx);
     return true;
   }
   coordinateDefaults(ctx, 'x');
@@ -73,6 +84,7 @@ export function supplyGridDefaults(traceOut: FullTrace, ctx: TraceDefaultsContex
   if (!isValidZ(z as ArrayLike<unknown>)) return false;
   ctx.coerce('transpose');
   traceOut['_length'] = null;
+  periodDefaults(ctx);
   return true;
 }
 

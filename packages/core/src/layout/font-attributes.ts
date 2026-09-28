@@ -28,6 +28,15 @@ const LINEPOSITION_DESCRIPTION =
 const SHADOW_DESCRIPTION =
   'CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.';
 
+/**
+ * A default font size scaled from another (`layout.title.font`: 1.4 × `layout.font.size`), rounded
+ * like Plotly. Font sizes have no maximum, so the product can overflow: it is capped at the
+ * largest finite number, keeping the default a valid size (and the full output valid input).
+ */
+export function scaledFontSize(size: number, factor: number): number {
+  return Math.min(Math.round(size * factor), Number.MAX_VALUE);
+}
+
 /** The four attributes without defaults, for containers that inherit from `layout.font`. */
 export function fontExtraAttributes() {
   return {

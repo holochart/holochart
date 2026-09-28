@@ -27,8 +27,10 @@
  * in gives the same groups and values (supply-defaults idempotence).
  */
 import { getIn } from '../path/path.ts';
+import type { ObjectNode } from '../schema/types.ts';
 import { keyForSubplotId } from '../schema/walk.ts';
 import { isPlainObject } from '../util/objects.ts';
+import { coerceItems } from './container.ts';
 import type { FullAxis, FullLayout } from './types.ts';
 
 /** A group of axes whose ranges are linked by `matches` (Plotly `_axisMatchGroups` item). */
@@ -161,14 +163,19 @@ function copyValue(v: unknown): unknown {
  * without `matches` (its root) if the user set it there, else from the first axis of the group
  * where the user set it. When an explicit full `range` was synced and no axis sets `autorange`,
  * `autorange` becomes `false`. Otherwise the root's full value is used. The value is copied to
- * every axis of the group.
+ * every axis of the group. An item array (`rangebreaks`) set on another axis than the root is
+ * resolved again against the root's template, as if the user had set it on the root: the full
+ * output fed back in sets it on the root, and template items only one axis' template names would
+ * otherwise turn into dangling `templateitemname` references there (supply-defaults idempotence).
  *
  * @param ids - Every cartesian axis id, x axes first, then y axes, each by number.
- * @param templateLayout - The template's layout (only `constraintoward` reads it).
+ * @param templateLayout - The template's layout (`constraintoward`, and synced item arrays).
  * @param matchDefaults - Default `matches` by axis id, used when the user's axis sets none (splom
  *   dimensions with `axis.matches`, E10.9; Plotly's `splomStash.matches`).
  * @param scaleanchorDefaults - Default `scaleanchor` by axis id, used when the user's axis has no
  *   `scaleanchor` key at all (y axes of `image` traces: their anchor; `false` opts out).
+ * @param axisNodes - The layout schema's `xaxis` / `yaxis` nodes, to resolve synced item arrays
+ *   on the root axis (without them, the source axis' full value is copied as is).
  */
 export function supplyAxisConstraints(
   layoutIn: Readonly<Record<string, unknown>>,
@@ -177,6 +184,7 @@ export function supplyAxisConstraints(
   templateLayout: Record<string, unknown> | undefined,
   matchDefaults?: ReadonlyMap<string, string>,
   scaleanchorDefaults?: ReadonlyMap<string, string>,
+  axisNodes?: Readonly<Partial<Record<'x' | 'y', ObjectNode>>>,
 ): void {
   const constraintGroups: AxisConstraintGroup[] = [];
   const matchGroups: AxisMatchGroup[] = [];
@@ -270,7 +278,9 @@ export function supplyAxisConstraints(
     for (const attr of MATCH_SYNCED) {
       let value: unknown;
       let root: FullAxis | undefined;
+      let rootId: string | undefined;
       let source: Record<string, unknown> | undefined;
+      let sourceId: string | undefined;
       for (const id of members) {
         const ax = axis(id);
         const axIn = input(id);
@@ -278,15 +288,33 @@ export function supplyAxisConstraints(
         const set = axIn[attr] !== undefined;
         if (ax.matches === undefined) {
           root = ax;
+          rootId = id;
           if (set) {
             value = ax[attr];
             source = axIn;
+            sourceId = id;
             break;
           }
         }
         if (value === undefined && set) {
           value = ax[attr];
           source = axIn;
+          sourceId = id;
+        }
+      }
+      if (sourceId !== undefined && rootId !== undefined && sourceId !== rootId) {
+        // Set on another axis: resolve it as the root would (see the function comment).
+        const letter = rootId.charAt(0) === 'x' ? 'x' : 'y';
+        const node = axisNodes?.[letter]?.children[attr];
+        if (node?.kind === 'items') {
+          const tmpl: unknown =
+            templateLayout?.[axisKey(rootId)] ?? templateLayout?.[`${letter}axis`];
+          value = coerceItems(
+            node,
+            source?.[attr],
+            getIn(tmpl, attr),
+            getIn(tmpl, `${node.itemName}defaults`),
+          );
         }
       }
       if (attr === 'range' && value !== undefined && isFullRange(source?.['range'])) {

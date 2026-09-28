@@ -21,7 +21,13 @@
  * └ xpad ───────────────────────────────┘
  * ```
  */
-import { createScale, type FullAxis, type FullLayout, type FullTrace } from '@mk7s/holochart-core';
+import {
+  createScale,
+  scaledFontSize,
+  type FullAxis,
+  type FullLayout,
+  type FullTrace,
+} from '@mk7s/holochart-core';
 import type { RGBA, ViewportRect } from '@mk7s/holochart-render';
 import type { ColorbarSpec, MarginPush, TraceModule } from '@mk7s/holochart-runtime';
 import {
@@ -300,7 +306,7 @@ function sizeColorbar(spec: ColorbarSpec, cb: FullColorbar, env: ColorbarEnv): S
   const titleFull = inheritFont(cb.title.font, {
     ...base,
     family: tickfont.family,
-    size: Math.round(tickfont.size * 1.2),
+    size: scaledFontSize(tickfont.size, 1.2),
   });
   const styled = styledText(cb.title.text, textFont(titleFull));
   const tbox = measureStyled(styled, measure);

@@ -5,7 +5,8 @@
  * cells (`texttemplate`), per-cell hover and a colorbar. Registered with `register(heatmap)`
  * (ADR-019).
  *
- * Deferred: `xperiod` / `yperiod`, range breaks, `xcalendar` / `ycalendar`.
+ * `xperiod` / `yperiod` alignment and range breaks as in `./calc.ts`. Deferred:
+ * `xcalendar` / `ycalendar`.
  */
 import {
   supplyZColoraxisDefaults,

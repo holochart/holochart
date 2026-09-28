@@ -6,6 +6,7 @@ import { coerceValue } from '../coerce/coerce.ts';
 import { attr } from '../schema/attr.ts';
 import type { AttrSpec, ObjectNode } from '../schema/types.ts';
 import { getNodeAtPath } from '../schema/walk.ts';
+import { validate } from '../validate/validate.ts';
 import { isColumnRef, resolveDataRefs } from './datasets.ts';
 
 const registry = fixtureRegistry();
@@ -198,6 +199,19 @@ describe('resolveDataRefs', () => {
     }
   });
 
+  it('drops references quietly under a NaN `dataset`, which validation reports once', () => {
+    // Nightly regression (FC_SEED=-355442979 FC_PATH=50:2:0:68:69): { dataset: NaN, x: '@date' }.
+    const trace = { dataset: Number.NaN, x: '@date' };
+    const r = resolveDataRefs(trace, scatter, datasets, 'data[0]');
+    expect(r.trace).toEqual({ dataset: Number.NaN });
+    expect(Object.is(r.trace['dataset'], trace.dataset)).toBe(true);
+    expect(r.issues).toEqual([]);
+    expect(trace).toEqual({ dataset: Number.NaN, x: '@date' });
+    expect(resolveDataRefs(r.trace, scatter, datasets, 'data[0]').trace).toBe(r.trace);
+    const issues = validate([trace], {}, registry, { datasets });
+    expect(issues.map((i) => i.path)).toEqual(['data[0].dataset']);
+  });
+
   it('resolves inside item arrays and subplot container families', () => {
     const schema = attr.object({
       dimensions: attr.items(
@@ -254,9 +268,10 @@ describe('resolveDataRefs', () => {
         // Resolution is a fixed point: resolving the result again changes nothing.
         expect(resolveDataRefs(r.trace, scatter, ds as never, 'data[0]').trace).toBe(r.trace);
         if (r.trace === trace) return;
-        // Every changed top-level value is a resolved column or a copied container.
+        // Every changed top-level value is a resolved column or a copied container. Object.is,
+        // not !==: an unchanged NaN (`dataset: NaN`) is not a change.
         for (const [k, v] of Object.entries(r.trace)) {
-          if (v !== trace[k]) {
+          if (!Object.is(v, trace[k])) {
             expect(typeof trace[k] === 'string' || typeof trace[k] === 'object').toBe(true);
           }
         }

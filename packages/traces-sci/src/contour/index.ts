@@ -9,7 +9,8 @@
  * The grid comes from `heatmap` (`../heatmap/calc.ts`); contouring, drawing and colors are shared
  * with `histogram2dcontour` (traces-stats `contour/`).
  *
- * Deferred: `xperiod` / `yperiod` alignment, `xcalendar` / `ycalendar`, range breaks.
+ * `xperiod` / `yperiod` alignment and range breaks as in `../heatmap/calc.ts`. Deferred:
+ * `xcalendar` / `ycalendar`.
  */
 import type { FullLayout, LayoutDefaultsContext } from '@mk7s/holochart-core';
 import type { TraceModule } from '@mk7s/holochart-runtime';

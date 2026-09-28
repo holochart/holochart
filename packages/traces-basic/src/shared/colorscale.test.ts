@@ -4,7 +4,9 @@ import {
   coloraxisLayoutSchema,
   colorDomain,
   hasColorscale,
+  hasColorStrings,
   mapColor,
+  mapColors,
   NAMED_COLORSCALES,
   numericExtent,
   resolveColorMapping,
@@ -113,6 +115,39 @@ describe('resolveColorMapping', () => {
     const m = resolveColorMapping({ color: [0, 1], coloraxis: 'coloraxis' }, fullLayout)!;
     expect(m).toMatchObject({ cmin: -5, cmax: 5 });
     expect(m.colorscale).toBe(resolveColorscale('Viridis'));
+  });
+});
+
+describe('CSS colors among colorscaled numbers (Plotly makeColorScaleFunc)', () => {
+  const colors = [0, 'gold', 10, 'nope', null, NaN, 'rgba(0, 0, 255, 0.5)'];
+  const mapping = resolveColorMapping(
+    { color: colors, cauto: true, autocolorscale: false, colorscale: 'Greys' },
+    undefined,
+  )!;
+
+  it('takes the domain from the numbers alone', () => {
+    expect(mapping).toMatchObject({ cmin: 0, cmax: 10 });
+  });
+
+  it('draws valid CSS colors as given, numbers through the scale, anything else in nanColor', () => {
+    const out = mapColors(colors, mapping);
+    const css = colors.map((_, i) => rgbaToCss(out.subarray(4 * i, 4 * i + 4)));
+    expect(css).toEqual([
+      'rgb(0, 0, 0)',
+      'rgb(255, 215, 0)',
+      'rgb(255, 255, 255)',
+      'rgb(128, 128, 128)',
+      'rgb(128, 128, 128)',
+      'rgb(128, 128, 128)',
+      'rgba(0, 0, 255, 0.5)',
+    ]);
+  });
+
+  it('hasColorStrings finds strings; typed arrays have none', () => {
+    expect(hasColorStrings(colors)).toBe(true);
+    expect(hasColorStrings([0, 5, NaN, null])).toBe(false);
+    expect(hasColorStrings(Float64Array.of(0, 1))).toBe(false);
+    expect(hasColorStrings([])).toBe(false);
   });
 });
 

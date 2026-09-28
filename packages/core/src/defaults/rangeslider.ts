@@ -7,7 +7,8 @@
  *   on the axis asks for one (`requestRangeslider`: `ohlc`, `candlestick`); `bgcolor` →
  *   `plot_bgcolor`; `autorange` → `true` unless `range` is a full range; one `yaxis<N>`
  *   container per subplot on the axis, whose `rangemode` defaults to `fixed` with a valid
- *   `range`, else `match` (`range` is dropped for `match`);
+ *   `range`, else `match` (`range` is dropped for `match`, and when it is not a full range; a
+ *   partial one does not hide the template's full range);
  * - `rangeselector` (date axes only) `visible` → `true` when it has buttons; `activecolor` → `bgcolor` darkened by
  *   10 % (light) or lightened by 25 % (dark), Plotly's `Color.contrast`; `x` / `y` (both or
  *   neither, Plotly's `noneOrAll`; a template's when the input has neither) → the start of the
@@ -20,6 +21,7 @@
  * fixed point.
  */
 import { canonicalColor, toRGBA } from '../coerce/color.ts';
+import { coerceValue } from '../coerce/coerce.ts';
 import { getIn } from '../path/path.ts';
 import { keyForSubplotId, splitSubplotKey } from '../schema/walk.ts';
 import type { ObjectNode } from '../schema/types.ts';
@@ -238,6 +240,14 @@ export function supplyRangeControls(
           overrides: { rangemode: isFullRange(getIn(cIn, 'range')) ? 'fixed' : 'match' },
         },
       );
+      // A partial user range (`[]`, `[null, 1]`) is dropped below; the template's full range
+      // applies instead, as it does once the output (without `range`) is fed back in.
+      const rangeSpec = yNode.children['range'];
+      const tmplRange: unknown = getIn(cTmpl, 'range');
+      if (!isFullRange(out['range']) && rangeSpec?.kind === 'attr' && tmplRange != null) {
+        const r = coerceValue(rangeSpec, tmplRange);
+        if (r.ok && isFullRange(r.value)) out['range'] = r.value;
+      }
       if (out['rangemode'] === 'match' || !isFullRange(out['range'])) delete out['range'];
       rs[yName] = out;
     }

@@ -22,6 +22,7 @@ import {
 } from '@mk7s/holochart-render';
 import {
   colorValues,
+  hasColorStrings,
   mapColor,
   mapColors,
   resolveColorMapping,
@@ -71,7 +72,10 @@ function colorInput(value: unknown, fallback: RGBA): ColorInput {
 function scalarInput(value: unknown, fallback: number, scale = 1): ScalarInput {
   if (typeof value === 'number') return value * scale;
   if (isArrayLike(value)) {
-    const out = toFloat32Array(value as ArrayLike<unknown>);
+    // `toFloat32Array` hands a Float32Array back as is: copy it, so scaling and clearing
+    // non-finite values never write into the caller's data (a second style pass would rescale it).
+    const converted = toFloat32Array(value as ArrayLike<unknown>);
+    const out = converted === value ? new Float32Array(converted) : converted;
     for (let i = 0; i < out.length; i++) out[i] = Number.isFinite(out[i]) ? out[i]! * scale : 0;
     return out;
   }
@@ -107,7 +111,10 @@ function colorAt(input: ColorInput, i: number): RGBA {
   return [input[k]!, input[k + 1]!, input[k + 2]!, input[k + 3]!];
 }
 
-/** The fill colorscale mapping of `marker.color`, when its colors are numeric. */
+/**
+ * The fill colorscale mapping of `marker.color`, when its colors are numeric (CSS colors among
+ * the numbers are drawn as given).
+ */
 export function markerColorMapping(
   trace: FullTrace,
   fullLayout?: FullLayout,
@@ -129,7 +136,9 @@ export interface MarkerStyleOptions {
  * Marker style from the full trace, in the render layer's formats (sRGB 0–1 colors, px sizes).
  * The trace `opacity` multiplies `marker.opacity` (Plotly draws the whole trace group with it).
  * Numeric `marker.color` arrays use the GPU colorscale path (`colorValues` + LUT) unless a
- * selection recolors points; numeric `marker.line.color` is mapped on the CPU.
+ * selection recolors points or CSS colors are mixed in (a style rule's `set` over a colorscaled
+ * array, say), which resolve per point on the CPU; numeric `marker.line.color` is mapped on the
+ * CPU.
  */
 export function markerStyle(
   trace: FullTrace,
@@ -154,10 +163,18 @@ export function markerStyle(
       : colorInput(marker.line?.color, DEFAULT_LINE_COLOR),
     lineWidth: scalarInput(marker.line?.width, 0),
   };
-  if (mapping) {
+  const colors = marker.color as ArrayLike<unknown>;
+  if (mapping && hasColorStrings(colors)) {
+    // The LUT only sees numbers: resolve every point (Plotly draws the strings as given).
+    Object.assign(style, {
+      color: mapColors(colors, mapping),
+      colorValues: null,
+      colorscale: null,
+    });
+  } else if (mapping) {
     Object.assign(style, {
       color: DEFAULT_FILL,
-      colorValues: colorValues(marker.color as ArrayLike<unknown>),
+      colorValues: colorValues(colors),
       colorscale: mapping.colorscale,
       cmin: mapping.cmin,
       cmax: mapping.cmax,
@@ -215,9 +232,10 @@ function applySelection(
   if (smc || usmc) {
     // Explicit colors replace the colorscale path: resolve every point's color on the CPU.
     const marker = markerOf(trace);
-    const base = mapping
-      ? mapColors(marker.color as ArrayLike<unknown>, mapping)
-      : (style.color ?? DEFAULT_FILL);
+    const base =
+      mapping && style.colorValues
+        ? mapColors(marker.color as ArrayLike<unknown>, mapping)
+        : (style.color ?? DEFAULT_FILL);
     const colors = new Float32Array(n * 4);
     for (let i = 0; i < n; i++) {
       colors.set((isSelected[i] ? smc : usmc) ?? colorAt(base, i), i * 4);
@@ -259,7 +277,7 @@ export function lineStyle(
 
 /**
  * CSS color of point `i` for hover labels and legends: the marker color (colorscale-mapped when
- * numeric) when markers are drawn, else the line color.
+ * numeric, as given when a CSS color) when markers are drawn, else the line color.
  */
 export function pointColor(
   trace: FullTrace,
@@ -272,6 +290,7 @@ export function pointColor(
     const c = marker.color;
     if (mapping && isArrayLike(c)) {
       const v = (c as ArrayLike<unknown>)[i];
+      if (typeof v === 'string' && toRGBA(v)) return v;
       return rgbaToCss(mapColor(typeof v === 'number' ? v : NaN, mapping));
     }
     if (typeof c === 'string') return c;

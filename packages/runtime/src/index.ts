@@ -45,6 +45,7 @@ export type {
   ValueInsight,
   MarginPush,
   Registrable,
+  SelectArea,
   SelectionQuery,
   SubplotInfo,
   SubplotMirror,

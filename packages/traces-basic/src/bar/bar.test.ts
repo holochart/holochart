@@ -26,7 +26,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { traceRenderOrder } from '../shared/render-order.ts';
 import { bar, type BarCalc } from './index.ts';
 import { barGeometry } from './plot.ts';
-import { barStyle, contrastColor, cornerRadiusPx } from './style.ts';
+import { barStyle, contrastColor, cornerRadiusPx, cssColor } from './style.ts';
 
 const registry = createChartRegistry().register(bar);
 
@@ -398,6 +398,16 @@ describe('bar style', () => {
       { y: [1, 2], marker: { color: [0, 1], colorscale: 'viridis' } },
     ]).fullData;
     expect(barStyle(named!, 2).color[0]).toBeCloseTo(0x44 / 255);
+  });
+
+  it('draws CSS colors among colorscaled numbers as given (Plotly)', () => {
+    const [t] = defaults([
+      { y: [1, 2, 3], marker: { color: [0, 'gold', 10], colorscale: 'Greys', opacity: 0.5 } },
+    ]).fullData;
+    const s = barStyle(t!, 3);
+    const css = [0, 1, 2].map((i) => cssColor(s.color, i));
+    expect(css).toEqual(['rgb(0, 0, 0)', 'rgb(255, 215, 0)', 'rgb(255, 255, 255)']);
+    expect(cssColor(s.fill, 1)).toBe('rgba(255, 215, 0, 0.5)');
   });
 
   it('dims unselected bars and applies selected/unselected styles', () => {

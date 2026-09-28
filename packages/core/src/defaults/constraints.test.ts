@@ -303,6 +303,27 @@ describe('match group attribute sync', () => {
     expect(breaks[0]).not.toBe((ax(fl, 'xaxis2').rangebreaks as unknown[])[0]);
   });
 
+  it("resolves rangebreaks set on a linked axis against the root's template", () => {
+    // Nightly regression (seed -975385339): a template item that only the linked axis' template
+    // names became a dangling reference on the root once the full output was fed back in.
+    const own = runIdempotent({
+      template: { layout: { yaxis11: { rangebreaks: [{ name: ' ', bounds: [1, 2] }] } } },
+      yaxis11: { rangebreaks: [], matches: 'x' },
+    });
+    expect(ax(own, 'xaxis').rangebreaks).toEqual([]);
+    expect(ax(own, 'yaxis11').rangebreaks).toEqual([]);
+    // The root's named template items apply to the whole group, as if the user set it there.
+    const root = runIdempotent({
+      template: { layout: { xaxis: { rangebreaks: [{ name: 'gap', bounds: [1, 2] }] } } },
+      yaxis2: { rangebreaks: [], matches: 'x' },
+    });
+    for (const key of ['xaxis', 'yaxis2']) {
+      expect(ax(root, key).rangebreaks).toEqual([
+        expect.objectContaining({ templateitemname: 'gap', bounds: [1, 2], visible: true }),
+      ]);
+    }
+  });
+
   it('leaves unlinked axes alone', () => {
     const fl = runIdempotent({ xaxis: { range: [0, 1] }, xaxis2: {}, yaxis: { scaleanchor: 'x' } });
     expect(ax(fl, 'xaxis2').range).toBeUndefined();

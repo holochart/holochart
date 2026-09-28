@@ -11,6 +11,7 @@ import { polarCrossTraceLayout } from '../polar/cross-trace.ts';
 import { polarLayoutSchema } from '../polar/layout-attributes.ts';
 import { supplyPolarLayoutDefaults } from '../polar/layout-defaults.ts';
 import { polarSubplotDomain } from '../polar/domain.ts';
+import { polarEventData, scatterpolarSelectPoints } from '../polar/select.ts';
 import { scatterpolarAttributes } from './attributes.ts';
 import { calcScatterpolar, type ScatterpolarCalc } from './calc.ts';
 import { supplyScatterpolarDefaults } from './defaults.ts';
@@ -44,6 +45,8 @@ export const scatterpolar: TraceModule<ScatterpolarCalc, typeof scatterpolarAttr
   crossTraceLayout: polarCrossTraceLayout,
   plot: scatterpolarRenderer,
   hoverPoints: scatterpolarHoverPoints,
+  selectPoints: scatterpolarSelectPoints,
+  eventData: polarEventData,
   legendIcon: (trace) => scatter.legendIcon!(trace),
   colorbar: (trace, ctx) => scatter.colorbar!(trace, ctx),
   describe: (ctx) => describePolar(ctx),

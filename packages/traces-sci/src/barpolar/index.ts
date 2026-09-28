@@ -9,6 +9,7 @@ import { bar, coloraxisLayoutSchema, scatter } from '@mk7s/holochart-traces-basi
 import { describePolar } from '../polar/describe.ts';
 import { polarCrossTraceLayout, type PolarCalc } from '../polar/cross-trace.ts';
 import { polarSubplotDomain } from '../polar/domain.ts';
+import { barpolarSelectPoints, polarEventData } from '../polar/select.ts';
 import { polarLayoutSchema } from '../polar/layout-attributes.ts';
 import { supplyPolarLayoutDefaults } from '../polar/layout-defaults.ts';
 import { barpolarAttributes } from './attributes.ts';
@@ -45,6 +46,8 @@ export const barpolar: TraceModule<PolarCalc, typeof barpolarAttributes.children
   crossTraceLayout: polarCrossTraceLayout,
   plot: barpolarRenderer,
   hoverPoints: barpolarHoverPoints,
+  selectPoints: barpolarSelectPoints,
+  eventData: polarEventData,
   legendIcon: (trace) => bar.legendIcon!(trace),
   colorbar: (trace, ctx) => bar.colorbar!(trace, ctx),
   describe: describePolar,

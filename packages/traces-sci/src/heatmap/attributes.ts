@@ -5,9 +5,10 @@
  * (`connectgaps`, `hoverongaps`), the cell styling shared with `histogram2d` (`xgap`, `ygap`,
  * `zsmooth`, cell labels) and the `z` colorscale.
  *
- * Deferred: `xperiod` / `yperiod` (period alignment) and `xcalendar` / `ycalendar`.
+ * `xperiod` / `yperiod` alignment comes from `bar`. Deferred: `xcalendar` / `ycalendar`.
  */
 import { attr } from '@mk7s/holochart-core';
+import { barAttributes } from '@mk7s/holochart-traces-basic';
 import { cellTextFont, zColorscaleAttributes } from '@mk7s/holochart-traces-stats';
 
 /** A coordinate array (`x` / `y`). */
@@ -65,6 +66,13 @@ export const heatmapAttributes = /* @__PURE__ */ (() =>
       y0: start('y'),
       dy: step('y'),
       ytype: coordinateType('y'),
+      // Period alignment of the given coordinates, as bar's (E3.5).
+      xperiod: barAttributes.children.xperiod,
+      xperiod0: barAttributes.children.xperiod0,
+      xperiodalignment: barAttributes.children.xperiodalignment,
+      yperiod: barAttributes.children.yperiod,
+      yperiod0: barAttributes.children.yperiod0,
+      yperiodalignment: barAttributes.children.yperiodalignment,
       transpose: attr.boolean({
         dflt: false,
         editType: 'calc',

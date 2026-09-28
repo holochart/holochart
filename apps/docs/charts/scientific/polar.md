@@ -232,7 +232,19 @@ createChart(document.getElementById('chart')!, {
   chart.on('click', (e) => console.log(e.points[0]?.pointNumber));
   ```
 
-- **Selection.** Box and lasso selection don't select polar points yet.
+- **Selection.** With `dragmode: 'select'` or `'lasso'`, drag in the plot area to select the
+  markers inside the box or lasso (the box stays within the subplot's bounding box); hold Shift
+  to add to the selection, double-click to clear it. Points outside the radial range or sector
+  aren't selectable, and traces without markers or text select nothing, as in Plotly.
+  `selected` / `unselected` style the points, `selectedpoints` holds the selection, and
+  `selecting` / `selected` points carry `r` and `theta`:
+
+  ```ts
+  chart.on('selected', (e) => console.log(e.points.map((p) => [p.r, p.theta])));
+  ```
+
+  As in Plotly, polar selections aren't stored in `layout.selections`.
+
 - **Transitions.** `animate` and transitions update polar traces without interpolating between
   frames, as in Plotly.
 
@@ -294,5 +306,6 @@ reference: [`sector`](/reference/layout#polar.sector), [`hole`](/reference/layou
   across the circle.
 - `thetaunit: 'gradians'` converts gradians (400 per turn); plotly.js reads them as radians.
 - Transitions don't interpolate polar traces; Plotly doesn't either.
-- Not supported yet: box and lasso selection on polar subplots, `line.backoff`,
-  `marker.gradient` and `fillpattern`.
+- Selection events have no `range` / `lassoPoints` for polar subplots (Plotly reports them in
+  its internal pixel axes), and the box or lasso outline goes away when the drag ends.
+- Not supported yet: `line.backoff`, `marker.gradient` and `fillpattern`.

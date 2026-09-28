@@ -428,6 +428,11 @@ export interface TraceModule<
   /** Indices of the points inside a box or lasso selection (E6.3). */
   selectPoints?(calc: Calc, trace: FullTrace, query: SelectionQuery, ctx: HoverContext): number[];
   /**
+   * Extra fields of point `pointIndex` in selection events (plotly.js `_module.eventData`), e.g.
+   * polar `r` / `theta`. Default: none.
+   */
+  eventData?(calc: Calc, trace: FullTrace, pointIndex: number): Readonly<Record<string, unknown>>;
+  /**
    * Every point keyboard navigation (E6.5) visits, in reading order (pie: its slices in drawing
    * order), shaped like {@link hoverPoints}' results. Cartesian traces don't need it (they are
    * navigated along their `x` / `y` data); domain traces without it are skipped.
@@ -761,7 +766,10 @@ export interface HoverPoint {
   readonly kind?: string;
 }
 
-/** A box or lasso selection in one subplot, in the trace's linear coordinates. */
+/**
+ * A box or lasso selection in one subplot, in the trace's linear coordinates. On a non-cartesian
+ * subplot (a {@link SelectArea}: polar) the coordinates are container px (top-left origin).
+ */
 export interface SelectionQuery {
   readonly kind: 'rect' | 'lasso';
   /** Bounding box (both kinds). */
@@ -1070,6 +1078,22 @@ export interface ComponentView {
    * gesture: later views are then not asked for this call.
    */
   drawShape?(gesture: DrawGesture): boolean | void;
+  /**
+   * Box / lasso selection on a non-cartesian subplot the view draws (E6.3, polar): the subplot
+   * under container `(x, y)` when a `select` / `lasso` drag may start there. The runtime then runs
+   * the selection over the rect (the drag is clamped to it) with the visible traces whose
+   * `subplot` attribute is the area's `id`; their `selectPoints` get container px queries.
+   * Plotly keeps no `layout.selections` for these subplots.
+   */
+  selectArea?(x: number, y: number): SelectArea | undefined;
+}
+
+/** A non-cartesian subplot's selection area (see {@link ComponentView.selectArea}). */
+export interface SelectArea {
+  /** The subplot id (the traces' `subplot` attribute: `'polar'`, `'polar2'`, …). */
+  readonly id: string;
+  /** Where drags are clamped, container px (top-left origin). */
+  readonly rect: Readonly<ViewportRect>;
 }
 
 export interface ComponentRenderer {

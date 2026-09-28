@@ -5,11 +5,13 @@
  * l 40, r 20, t 30, b 50, so the `xy` plot area is x 40–620, y 30–350; with x in [0, 10] and y in
  * [0, 100], data (x, y) sits at container (40 + 58·x, 350 − 3.2·y).
  */
+import { attr } from '@mk7s/holochart-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createChart, type Chart } from '../chart.ts';
 import type { ComponentModule, TraceModule } from '../contracts.ts';
 import type { ChartEventName } from '../events.ts';
 import { createDotsModule, createLog, setup, type TestSetup } from '../__testing__/fakes.ts';
+import { selectionContains } from './geometry.ts';
 
 const MARGIN = { l: 40, r: 20, t: 30, b: 50 };
 const RANGES = { xaxis: { range: [0, 10] }, yaxis: { range: [0, 100] } };
@@ -484,6 +486,114 @@ describe('selection', () => {
     const c = await chart([{ ...DOTS, selectedpoints: [2] }]);
     await c.restyle({ selectedpoints: [[0, 1]] });
     expect(t.log.updates.at(-1)).toMatchObject({ plan: { selection: true }, selected: [0, 1] });
+  });
+});
+
+describe('selection on a component select area (polar, E6.3)', () => {
+  const AREA = { x: 100, y: 50, width: 200, height: 200 };
+  /** A non-cartesian trace whose points sit at container px `(x, y)` on subplot `subplot`. */
+  const rings: TraceModule<{ x: number[]; y: number[] }> = {
+    type: 'rings',
+    categories: ['showLegend'],
+    schema: attr.object({
+      x: attr.dataArray({ editType: 'calc' }),
+      y: attr.dataArray({ editType: 'calc' }),
+      subplot: attr.string({ dflt: 'polar', editType: 'calc' }),
+    }),
+    meta: { description: 'Test rings.' },
+    supplyDefaults(_in, _out, ctx) {
+      ctx.coerce('x');
+      ctx.coerce('y');
+      ctx.coerce('subplot');
+    },
+    subplotDomain: () => ({ x: [0, 1], y: [0, 1] }),
+    calc: (trace) => ({ x: trace['x'] as number[], y: trace['y'] as number[] }),
+    hoverPoints: () => [],
+    selectPoints(calc, _trace, query) {
+      return calc.x.flatMap((x, i) => (selectionContains(query, x, calc.y[i]!) ? [i] : []));
+    },
+    eventData: (calc, _trace, i) => ({ r: calc.x[i] }),
+  };
+  const polar: ComponentModule = {
+    name: 'area-test',
+    draw: {
+      create: () => ({
+        update: () => undefined,
+        selectArea: (x, y) =>
+          x >= AREA.x && x <= AREA.x + AREA.width && y >= AREA.y && y <= AREA.y + AREA.height
+            ? { id: 'polar', rect: AREA }
+            : undefined,
+      }),
+    },
+  };
+
+  async function areaChart(dragmode: string): Promise<Chart> {
+    const s = setup({ width: 640, height: 400, components: [polar] });
+    s.registry.register(rings);
+    t = s;
+    return chart(
+      [
+        { type: 'rings', x: [150, 200, 290], y: [100, 150, 240] },
+        { type: 'rings', x: [150], y: [100], subplot: 'polar2' },
+      ],
+      { dragmode },
+      {},
+      s,
+    );
+  }
+
+  it('box selects in container px, with eventData fields and no layout selection', async () => {
+    const c = await areaChart('select');
+    const log = record(c, 'selecting', 'selected');
+    // The box is clamped to the area: past its right edge still ends at x = 300.
+    await drag(c, [140, 90], [400, 160]);
+    const e = log.at(-1)?.payload as Record<string, unknown> & {
+      points: { curveNumber: number; pointNumber: number; r: unknown }[];
+    };
+    expect(log.at(-1)?.name).toBe('selected');
+    expect(e.points.map((p) => [p.curveNumber, p.pointNumber, p.r])).toEqual([
+      [0, 0, 150],
+      [0, 1, 200],
+    ]);
+    expect(e['range']).toBeUndefined();
+    expect(e['selections']).toBeUndefined();
+    expect(c.layout['selections']).toBeUndefined();
+    // Shift adds a box around the third point.
+    await drag(c, [280, 230], [300, 250], { shiftKey: true });
+    const e2 = log.at(-1)?.payload as { points: { pointNumber: number }[] };
+    expect(e2.points.map((p) => p.pointNumber)).toEqual([0, 1, 2]);
+  });
+
+  it('ignores drags outside the area and deselects on double-click inside', async () => {
+    const c = await areaChart('lasso');
+    const log = record(c, 'selected', 'deselect', 'doubleclick');
+    await drag(c, [20, 20], [90, 90]);
+    expect(log).toHaveLength(0);
+    fire(c, 'pointerdown', 140, 90);
+    for (const [x, y] of [
+      [260, 90],
+      [260, 160],
+      [140, 160],
+    ] as const) {
+      fire(c, 'pointermove', x, y);
+      frame();
+    }
+    fire(c, 'pointerup', 140, 160);
+    await c.relayout({});
+    expect(log.map((l) => l.name)).toEqual(['selected']);
+    for (let k = 0; k < 2; k++) {
+      fire(c, 'pointerdown', 200, 200);
+      fire(c, 'pointerup', 200, 200);
+    }
+    await c.relayout({});
+    expect(log.map((l) => l.name)).toEqual(['selected', 'deselect', 'doubleclick']);
+  });
+
+  it('takes every touch swipe while selecting', async () => {
+    const c = await areaChart('lasso');
+    expect(canvas(c).style.touchAction).toBe('none');
+    await c.relayout({ dragmode: 'zoom' });
+    expect(canvas(c).style.touchAction).toBe('manipulation');
   });
 });
 

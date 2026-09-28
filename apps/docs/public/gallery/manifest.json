@@ -1379,6 +1379,18 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "contour/period",
+      "title": "Contour: period alignment",
+      "description": "Monthly lake temperature by depth, each profile centered in its month with xperiod M1.",
+      "tags": ["contour", "scientific", "date", "period"],
+      "category": "contour",
+      "traceTypes": ["contour"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/contour/period.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "contour/smoothing",
       "title": "Contour: line smoothing",
       "description": "A coarse grid contoured with straight segments (left) and maximum smoothing (right).",
@@ -1955,6 +1967,18 @@
       "thumbnailSize": { "width": 640, "height": 345 }
     },
     {
+      "id": "funnelarea/patterns",
+      "title": "Funnel area: patterns",
+      "description": "Two funnel areas hatched with a pattern per stage: replacing the stage fill on the left, overlaying it on the right, with patterned legend glyphs.",
+      "tags": ["funnelarea", "financial", "chart", "pattern", "legend"],
+      "category": "funnelarea",
+      "traceTypes": ["funnelarea"],
+      "size": { "width": 780, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/funnelarea/patterns.webp",
+      "thumbnailSize": { "width": 640, "height": 345 }
+    },
+    {
       "id": "funnelarea/ratios",
       "title": "Funnel area: aspect and base ratios",
       "description": "The same stages as three funnel areas with different aspectratio and baseratio, from a flat pointed funnel to a tall wide-based one.",
@@ -1977,6 +2001,18 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/funnelarea/texttemplate.webp",
       "thumbnailSize": { "width": 640, "height": 420 }
+    },
+    {
+      "id": "funnelarea/uniformtext",
+      "title": "Funnel area: uniform text",
+      "description": "Two funnel areas whose stage labels share one size through layout.uniformtext; labels under 8 px are hidden.",
+      "tags": ["funnelarea", "financial", "chart", "text", "uniformtext"],
+      "category": "funnelarea",
+      "traceTypes": ["funnelarea"],
+      "size": { "width": 780, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/funnelarea/uniformtext.webp",
+      "thumbnailSize": { "width": 640, "height": 345 }
     },
     {
       "id": "gantt/dependencies",
@@ -2084,6 +2120,30 @@
       "size": { "width": 640, "height": 400 },
       "threeD": false,
       "thumbnail": "gallery/thumbs/heatmap/dates.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "heatmap/period",
+      "title": "Heatmap: period alignment",
+      "description": "Monthly sales by region, each column centered in its month with xperiod M1 and xperiodalignment.",
+      "tags": ["heatmap", "scientific", "date", "period"],
+      "category": "heatmap",
+      "traceTypes": ["heatmap"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/heatmap/period.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "heatmap/rangebreaks",
+      "title": "Heatmap: range breaks",
+      "description": "Daily sector returns with weekends and holidays hidden by rangebreaks: trading days only, each a full column.",
+      "tags": ["heatmap", "scientific", "date", "rangebreaks"],
+      "category": "heatmap",
+      "traceTypes": ["heatmap"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/heatmap/rangebreaks.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
@@ -2627,6 +2687,18 @@
       "thumbnailSize": { "width": 640, "height": 342 }
     },
     {
+      "id": "legends/multiple",
+      "title": "Legend: two legends, one per row",
+      "description": "Temperature lines and stacked rainfall bars on two rows, each row with its own vertical legend (legend and legend2) beside it.",
+      "tags": ["legend", "subplots", "line", "bar"],
+      "category": "legends",
+      "traceTypes": ["bar", "scatter"],
+      "size": { "width": 760, "height": 460 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/legends/multiple.webp",
+      "thumbnailSize": { "width": 640, "height": 387 }
+    },
+    {
       "id": "legends/overlay-columns",
       "title": "Legend: fixed-width columns inside the plot",
       "description": "Eight probe series with a horizontal legend drawn over the plot in four equal columns, with haloed, uppercased entries and an underlined title.",
@@ -2636,6 +2708,30 @@
       "size": { "width": 720, "height": 420 },
       "threeD": false,
       "thumbnail": "gallery/thumbs/legends/overlay-columns.webp",
+      "thumbnailSize": { "width": 640, "height": 373 }
+    },
+    {
+      "id": "legends/scrolling",
+      "title": "Legend: scrolling vertical legend",
+      "description": "Twenty-four load curves with a vertical legend beside the plot that is taller than the plot, so it scrolls, with a scrollbar.",
+      "tags": ["legend", "line", "scatter"],
+      "category": "legends",
+      "traceTypes": ["scatter"],
+      "size": { "width": 720, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/legends/scrolling.webp",
+      "thumbnailSize": { "width": 640, "height": 373 }
+    },
+    {
+      "id": "legends/scrolling-horizontal",
+      "title": "Legend: scrolling horizontal legend",
+      "description": "Stacked bars for 30 product lines with the default horizontal legend capped at two rows by maxheight; the rest scrolls.",
+      "tags": ["legend", "bar"],
+      "category": "legends",
+      "traceTypes": ["bar"],
+      "size": { "width": 720, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/legends/scrolling-horizontal.webp",
       "thumbnailSize": { "width": 640, "height": 373 }
     },
     {
@@ -3512,6 +3608,18 @@
       "size": { "width": 640, "height": 400 },
       "threeD": false,
       "thumbnail": "gallery/thumbs/scatter/style-rules.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "scatter/style-rules-colorscale",
+      "title": "Scatter: style rules over a colorscale",
+      "description": "styleRules set CSS colors on colorscaled markers and bars: matching points draw in the rule color, the rest keep Viridis / Blues.",
+      "tags": ["scatter", "bar", "markers", "colorscale", "style-rules", "conditional-styling"],
+      "category": "scatter",
+      "traceTypes": ["bar", "scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/scatter/style-rules-colorscale.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {

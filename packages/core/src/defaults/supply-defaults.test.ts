@@ -57,6 +57,20 @@ describe('supplyDefaults: layout', () => {
     expect(own.title.font.size).toBe(30);
   });
 
+  it('keeps scaled title font sizes finite for huge layout font sizes', () => {
+    // Nightly regression (seed 445820235): 1.4 × 1.284e308 overflowed to Infinity, an invalid
+    // title size (and 1.2 × 1.5e308 an invalid axis title size).
+    const figure: FigureInput = { data: [{ y: [1, 2] }], layout: { font: { size: 1.5e308 } } };
+    const { fullLayout } = run(figure);
+    expect(fullLayout.title.font.size).toBe(Number.MAX_VALUE);
+    expect((fullLayout['xaxis'] as { title: { font: { size: number } } }).title.font.size).toBe(
+      Number.MAX_VALUE,
+    );
+    const again = run({ data: [{ y: [1, 2] }], layout: stripInternal(fullLayout) as never });
+    expect(stripInternal(again.fullLayout)).toEqual(stripInternal(fullLayout));
+    expect(again.issues).toEqual([]);
+  });
+
   it('invalid values fall back to defaults; numeric strings are coerced', () => {
     const { fullLayout } = run({ layout: { width: 'wide', height: '300', hovermode: 'nearest' } });
     expect(fullLayout.width).toBe(700);

@@ -1,7 +1,8 @@
 /**
  * Heatmap hover (plan E11.1, E6.1; ADR-010: CPU), following plotly.js `heatmap/hover.js`: the
  * cell under the pointer (bisecting the edges, O(log n)), labelled `x: …`, `y: …`, `z: …` with its
- * center (the given `x` / `y`, or the middle of the cell) and value. Gaps get a label with an
+ * center (the given `x` / `y`, or the middle of the cell; with `xperiod`, the given value before
+ * alignment, as Plotly's `orig_x`) and value. Gaps get a label with an
  * empty `z` unless `hoverongaps` is off. `text` / `hovertext` / `customdata` are read per cell as
  * 2D arrays (`HoverPoint.cell`) at the cell's `[row, column]` in `z` — which follows the value when
  * a category axis re-orders the grid (plotly.js reads the grid position there) and is not
@@ -91,8 +92,11 @@ export function heatmapCellHoverPoint(
   const z = calc.z[k]!;
   const xl = calc.x.centers[i]!;
   const yl = calc.y.centers[j]!;
-  const xLabel = axisHoverText(ctx.xaxis, xl, trace['xhoverformat']);
-  const yLabel = axisHoverText(ctx.yaxis, yl, trace['yhoverformat']);
+  // With a period, the position as given (Plotly's `orig_x`); the anchor stays on the cell.
+  const xv = calc.x.hoverAt?.[i] ?? xl;
+  const yv = calc.y.hoverAt?.[j] ?? yl;
+  const xLabel = axisHoverText(ctx.xaxis, xv, trace['xhoverformat']);
+  const yLabel = axisHoverText(ctx.yaxis, yv, trace['yhoverformat']);
   const zLabel = zText(z, trace['zhoverformat'], localeOf((ctx.xaxis ?? ctx.yaxis)?.full));
   const flags = hoverFlags(trace);
   const lines: string[] = [];
@@ -118,8 +122,8 @@ export function heatmapCellHoverPoint(
     distance,
     px: ax * t.scaleX + t.offsetX,
     py: ay * t.scaleY + t.offsetY,
-    x: dataValue(ctx.xaxis, xl),
-    y: dataValue(ctx.yaxis, yl),
+    x: dataValue(ctx.xaxis, xv),
+    y: dataValue(ctx.yaxis, yv),
     ...(textLine !== '' ? { text: textLine } : {}),
     ...(color ? { color } : {}),
     fields: { z: Number.isFinite(z) ? z : undefined },

@@ -28,6 +28,8 @@ export const ITEM_GAP = 5;
 const MIN_ITEM_HEIGHT = 16;
 /** Plotly's `legendrank` default. */
 export const DEFAULT_RANK = 1000;
+/** Room a scrolling legend adds on its right for the scrollbar (Plotly: 6 px bar, 4 px margin). */
+export const SCROLLBAR_ROOM = 10;
 
 /** One legend item. */
 export interface LegendEntry {
@@ -217,7 +219,10 @@ export interface LegendItemBox {
 /** The legend's size and content boxes, relative to its top-left corner. */
 export interface LegendBoxes {
   width: number;
+  /** Height of the box: of the content, or `maxheight` when that is less (the content scrolls). */
   height: number;
+  /** Height of the whole content when it is taller than the box (scrolling), else `undefined`. */
+  contentHeight?: number;
   items: LegendItemBox[];
   title: { text: string; font: TextFont; runs?: TextRunLines; x: number; y: number } | undefined;
 }
@@ -231,6 +236,26 @@ export interface LegendLayoutOptions {
   plotWidth: number;
   /** Figure height (for a fractional `maxheight`), px. */
   figureHeight: number;
+  /** Plot area height (for a fractional `maxheight` of a vertical legend beside the plot), px. */
+  plotHeight?: number;
+}
+
+/**
+ * The most a legend's box may take vertically, px (plotly.js `_maxHeight`): `maxheight` px, or a
+ * fraction of a reference height — the plot height for a vertical, paper-referenced legend beside
+ * the plot, else the figure height — defaulting to 1 and 0.5 of those; never less than 30 px.
+ */
+export function legendMaxHeight(
+  legend: FullLegend,
+  plotHeight: number,
+  figureHeight: number,
+): number {
+  const anchor = legendAnchors(legend).y;
+  const below = legend.y < 0 || (legend.y === 0 && anchor === 'top');
+  const above = legend.y > 1 || (legend.y === 1 && anchor === 'bottom');
+  const figure = below || above || legend.orientation !== 'v' || legend.yref !== 'paper';
+  const m = legend.maxheight || (figure ? 0.5 : 1);
+  return Math.max(m > 1 ? m : m * (figure ? figureHeight : plotHeight), 30);
 }
 
 /**
@@ -400,14 +425,14 @@ export function layoutLegend(
     title.x += titleSide === 'top center' ? free / 2 : free;
   }
 
-  // `maxheight`: scrolling is not implemented yet, so items past the limit are dropped.
-  const maxH = legend.maxheight;
-  if (maxH !== undefined && maxH > 0) {
-    const limit = maxH <= 1 ? maxH * options.figureHeight : maxH;
-    if (height > limit) {
-      const kept = items.filter((it) => it.y + it.height <= limit - bw - ITEM_GAP);
-      return { width, height: limit, items: kept, title };
-    }
+  // Taller than `maxheight`: the box keeps that height and the content scrolls in it.
+  const limit = legendMaxHeight(
+    legend,
+    options.plotHeight ?? options.figureHeight,
+    options.figureHeight,
+  );
+  if (height > limit) {
+    return { width: width + SCROLLBAR_ROOM, height: limit, contentHeight: height, items, title };
   }
   return { width, height, items, title };
 }
@@ -480,8 +505,8 @@ export function legendMarginPush(
   );
 }
 
-/** Whether the legend is drawn at all. */
-export function legendShown(fullLayout: FullLayout): boolean {
-  const legend = fullLayout['legend'] as FullLegend | undefined;
+/** Whether the legend `id` (`'legend'`, `'legend2'`, …) is drawn at all. */
+export function legendShown(fullLayout: FullLayout, id = 'legend'): boolean {
+  const legend = fullLayout[id] as FullLegend | undefined;
   return fullLayout.showlegend === true && legend !== undefined && legend.visible !== false;
 }

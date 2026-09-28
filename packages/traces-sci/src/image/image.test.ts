@@ -340,8 +340,12 @@ describe('image hover (Plotly image/hover.js)', () => {
     expect(hover(h, 0, 0)[0]!.hoverText).toBe('HSLA: [120°, 50%, 50%, 0.5]');
   });
 
+  // Decoded pixels are cached per URI at module level (source.ts), so a URI no earlier run of this
+  // test remembered (under `--repeats`, as in the nightly property run) keeps it order-independent.
+  let serial = 0;
   it('reads decoded source pixels once available', () => {
-    const uri = dataUri([...pngHeader(2, 1), 1]);
+    serial++;
+    const uri = dataUri([...pngHeader(2, 1), serial & 255, serial >>> 8]);
     const s = calcOf({ source: uri });
     expect(hover(s, 1, 0)).toEqual([]);
     rememberPixels(uri, { data: Uint8Array.of(1, 2, 3, 4, 5, 6, 7, 255), width: 2, height: 1 });

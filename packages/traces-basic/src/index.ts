@@ -51,7 +51,7 @@ export { labelContent, measureLabel } from './shared/rich-text.ts';
 // Cross-trace `uniformtext` sizing (E4.6), for the hierarchy traces.
 export { negotiateUniformText, releaseUniformText } from './shared/uniform-text.ts';
 export { aggregateSlices } from './pie/calc.ts';
-export { castOption, extendColors } from './pie/helpers.ts';
+export { castOption, extendColors, slicePattern } from './pie/helpers.ts';
 export { pieHoverText } from './pie/hover.ts';
 export { insideFont, sliceLabels, sliceText, sliceValues } from './pie/text.ts';
 // For the hierarchy traces (traces-hier, M5 wave 0): sunburst sectors fit their labels as pie

@@ -85,7 +85,8 @@ class BarpolarView implements TraceView<PolarCalc> {
     }
     const trace = ctx.trace;
     const n = px.rp0.length;
-    const style = barStyle(trace, n, null, ctx.fullLayout);
+    const selected = ctx.selectedPoints;
+    const style = barStyle(trace, n, selected ? new Set(selected) : null, ctx.fullLayout);
     const transform = subplotTransform(subplot, ctx.viewport.size.height);
     const order = traceOrder(POLAR_ORDER.bars, ctx.index);
     if (subplot.vangles) this.#drawPolygons(ctx, subplot, px, style, transform, order);
