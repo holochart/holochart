@@ -14,8 +14,9 @@ export const meta: ExampleMeta = {
     "A year of daily visits as a line, with config.a11y.dataTable: 'visible' showing every value in a scrolling, virtualized table below the chart.",
   tags: ['a11y', 'data table', 'line', 'config'],
   size: { width: 640, height: 700 },
-  // The table is DOM text, whose anti-aliasing varies between runs.
-  testTolerance: 0.004,
+  // The table is DOM text, rasterized by the OS: Linux CI draws it with other fonts than the macOS
+  // baseline (0.92% of pixels; the window rule skips DOM text, the whole-image fraction doesn't).
+  testTolerance: 0.015,
 };
 
 export function run(el: HTMLElement): ExampleHandle {
