@@ -3,6 +3,18 @@
   "look": "holochart",
   "examples": [
     {
+      "id": "_dev/a11y-summary",
+      "title": "Accessibility: generated summary",
+      "description": "Monthly revenue and costs as lines, with the generated summary (\"Revenue rises from … It peaks at …\") shown under the chart.",
+      "tags": ["dev", "chart", "a11y", "line", "summary"],
+      "category": "_dev",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 460 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/_dev/a11y-summary.webp",
+      "thumbnailSize": { "width": 640, "height": 460 }
+    },
+    {
       "id": "_dev/annotations-arrows",
       "title": "Annotations: arrowheads, sizes, standoff",
       "description": "Arrowheads 0–8, arrowsize and arrowwidth, double-ended arrows and standoffs that stop short of the markers.",
@@ -673,6 +685,42 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/_dev/viewports-grid.webp",
       "thumbnailSize": { "width": 640, "height": 427 }
+    },
+    {
+      "id": "accessibility/data-table",
+      "title": "Accessibility: visible data table",
+      "description": "A year of daily visits as a line, with config.a11y.dataTable: 'visible' showing every value in a scrolling, virtualized table below the chart.",
+      "tags": ["a11y", "data table", "line", "config"],
+      "category": "accessibility",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 700 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/accessibility/data-table.webp",
+      "thumbnailSize": { "width": 640, "height": 700 }
+    },
+    {
+      "id": "accessibility/patterns",
+      "title": "Accessibility: pattern encoding",
+      "description": "Grouped bars and a pie with config.a11y.patterns: true — a distinct hatch per bar trace and per slice, in addition to color.",
+      "tags": ["a11y", "patterns", "bar", "pie", "config"],
+      "category": "accessibility",
+      "traceTypes": ["bar", "pie"],
+      "size": { "width": 720, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/accessibility/patterns.webp",
+      "thumbnailSize": { "width": 640, "height": 373 }
+    },
+    {
+      "id": "accessibility/safe-palette",
+      "title": "Accessibility: Safe palette",
+      "description": "Six series with layout.colorway: 'Safe', the colorblind-safe qualitative palette, as lines with markers.",
+      "tags": ["a11y", "palette", "colorway", "line"],
+      "category": "accessibility",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/accessibility/safe-palette.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
       "id": "animation/gapminder",
@@ -1619,6 +1667,18 @@
       "thumbnailSize": { "width": 640, "height": 480 }
     },
     {
+      "id": "express/icicle-path",
+      "title": "Express: icicle from a path",
+      "description": "World population by continent and country as an icicle chart, built from a path of columns.",
+      "tags": ["express", "icicle", "hierarchical", "path"],
+      "category": "express",
+      "traceTypes": ["icicle"],
+      "size": { "width": 640, "height": 480 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/express/icicle-path.webp",
+      "thumbnailSize": { "width": 640, "height": 480 }
+    },
+    {
       "id": "express/imshow",
       "title": "Express: imshow of a matrix",
       "description": "Average monthly rainfall per city as a labelled heatmap, one row per city.",
@@ -1712,6 +1772,42 @@
       "size": { "width": 640, "height": 480 },
       "threeD": false,
       "thumbnail": "gallery/thumbs/express/scatter-polar.webp",
+      "thumbnailSize": { "width": 640, "height": 480 }
+    },
+    {
+      "id": "express/sunburst-parents",
+      "title": "Express: sunburst from names and parents",
+      "description": "A budget split by department and team from a table of items and their parents.",
+      "tags": ["express", "sunburst", "hierarchical", "branchvalues"],
+      "category": "express",
+      "traceTypes": ["sunburst"],
+      "size": { "width": 560, "height": 480 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/express/sunburst-parents.webp",
+      "thumbnailSize": { "width": 560, "height": 480 }
+    },
+    {
+      "id": "express/sunburst-path",
+      "title": "Express: sunburst from a path",
+      "description": "Countries by continent sized by population and colored by life expectancy, built from a path of columns.",
+      "tags": ["express", "sunburst", "hierarchical", "path", "colorscale", "colorbar"],
+      "category": "express",
+      "traceTypes": ["sunburst"],
+      "size": { "width": 640, "height": 520 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/express/sunburst-path.webp",
+      "thumbnailSize": { "width": 640, "height": 520 }
+    },
+    {
+      "id": "express/treemap-path",
+      "title": "Express: treemap with a discrete color",
+      "description": "Restaurant bills by day, meal and sex as nested rectangles, colored by meal time with (?) for mixed days.",
+      "tags": ["express", "treemap", "hierarchical", "path", "color"],
+      "category": "express",
+      "traceTypes": ["treemap"],
+      "size": { "width": 640, "height": 480 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/express/treemap-path.webp",
       "thumbnailSize": { "width": 640, "height": 480 }
     },
     {
@@ -2241,6 +2337,66 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/histogram2dcontour/over-scatter.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "icicle/basic",
+      "title": "Icicle: basic",
+      "description": "Plotly's Eve family tree as columns of cells from the root on the left, sized by value.",
+      "tags": ["icicle", "hierarchical", "chart", "text", "basic"],
+      "category": "icicle",
+      "traceTypes": ["icicle"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/icicle/basic.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
+    },
+    {
+      "id": "icicle/colorscale",
+      "title": "Icicle: colorscale",
+      "description": "Cells colored by value through a colorscale with a colorbar, departments hatched.",
+      "tags": ["icicle", "hierarchical", "chart", "colorscale", "colorbar", "pattern"],
+      "category": "icicle",
+      "traceTypes": ["icicle"],
+      "size": { "width": 720, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/icicle/colorscale.webp",
+      "thumbnailSize": { "width": 640, "height": 373 }
+    },
+    {
+      "id": "icicle/flip",
+      "title": "Icicle: flipped",
+      "description": "The root on the right of a horizontal icicle and at the bottom of a vertical one.",
+      "tags": ["icicle", "hierarchical", "chart", "orientation"],
+      "category": "icicle",
+      "traceTypes": ["icicle"],
+      "size": { "width": 760, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/icicle/flip.webp",
+      "thumbnailSize": { "width": 640, "height": 337 }
+    },
+    {
+      "id": "icicle/levels",
+      "title": "Icicle: levels and path bar",
+      "description": "Two levels at a time with maxdepth, and an icicle that starts inside a branch, its path bar below it.",
+      "tags": ["icicle", "hierarchical", "chart", "levels", "pathbar"],
+      "category": "icicle",
+      "traceTypes": ["icicle"],
+      "size": { "width": 760, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/icicle/levels.webp",
+      "thumbnailSize": { "width": 640, "height": 354 }
+    },
+    {
+      "id": "icicle/vertical",
+      "title": "Icicle: vertical",
+      "description": "Levels stacked from the top down, cells as wide as their values, with gaps between them.",
+      "tags": ["icicle", "hierarchical", "chart", "orientation"],
+      "category": "icicle",
+      "traceTypes": ["icicle"],
+      "size": { "width": 760, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/icicle/vertical.webp",
+      "thumbnailSize": { "width": 640, "height": 337 }
     },
     {
       "id": "image/dates",
@@ -3215,6 +3371,18 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "sankey/flow",
+      "title": "Sankey: flow particles",
+      "description": "The energy balance with particles streaming along the links, frozen at one frame.",
+      "tags": ["sankey", "hierarchical", "flow", "domain", "particles", "animation"],
+      "category": "sankey",
+      "traceTypes": ["sankey"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/sankey/flow.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "sankey/groups",
       "title": "Sankey: node groups",
       "description": "The energy balance with wind, solar and hydro merged into one group node.",
@@ -3635,6 +3803,18 @@
       "thumbnailSize": { "width": 640, "height": 391 }
     },
     {
+      "id": "themes/high-contrast-dark",
+      "title": "Theme: high-contrast-dark",
+      "description": "The theme sampler figure with layout.template: 'high-contrast-dark' — bars, lines, markers, a colorscale with a colorbar, legend, title and axis titles on two subplots.",
+      "tags": ["themes", "template", "styling", "high-contrast-dark"],
+      "category": "themes",
+      "traceTypes": ["bar", "scatter"],
+      "size": { "width": 720, "height": 440 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/themes/high-contrast-dark.webp",
+      "thumbnailSize": { "width": 640, "height": 391 }
+    },
+    {
       "id": "themes/holochart",
       "title": "Theme: holochart",
       "description": "The theme sampler figure with layout.template: 'holochart' — bars, lines, markers, a colorscale with a colorbar, legend, title and axis titles on two subplots.",
@@ -3849,6 +4029,114 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/timeseries/unified-hover.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "treemap/basic",
+      "title": "Treemap: basic",
+      "description": "Plotly's Eve family tree as nested tiles sized by value, with branch headers and faded parents.",
+      "tags": ["treemap", "hierarchical", "chart", "text", "basic"],
+      "category": "treemap",
+      "traceTypes": ["treemap"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/treemap/basic.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
+    },
+    {
+      "id": "treemap/branchvalues",
+      "title": "Treemap: remainder and total values",
+      "description": "One budget read two ways: `branchvalues: 'remainder'` adds a department's value to its teams', `'total'` takes it as the total.",
+      "tags": ["treemap", "hierarchical", "chart", "branchvalues"],
+      "category": "treemap",
+      "traceTypes": ["treemap"],
+      "size": { "width": 720, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/treemap/branchvalues.webp",
+      "thumbnailSize": { "width": 640, "height": 373 }
+    },
+    {
+      "id": "treemap/depthfade",
+      "title": "Treemap: depth fade and colorscale",
+      "description": "Leaves faded towards the background with depthfade: 'reversed', next to tiles colored by value through a colorscale.",
+      "tags": ["treemap", "hierarchical", "chart", "colorscale", "colorbar"],
+      "category": "treemap",
+      "traceTypes": ["treemap"],
+      "size": { "width": 760, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/treemap/depthfade.webp",
+      "thumbnailSize": { "width": 640, "height": 354 }
+    },
+    {
+      "id": "treemap/levels",
+      "title": "Treemap: levels and depth",
+      "description": "Two levels at a time with maxdepth, and a treemap that starts inside a branch with level, its path bar leading back up.",
+      "tags": ["treemap", "hierarchical", "chart", "levels"],
+      "category": "treemap",
+      "traceTypes": ["treemap"],
+      "size": { "width": 760, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/treemap/levels.webp",
+      "thumbnailSize": { "width": 640, "height": 354 }
+    },
+    {
+      "id": "treemap/padding",
+      "title": "Treemap: padding and corners",
+      "description": "Wider gaps between tiles, roomy branch headers and rounded corners through tiling.pad, marker.pad and marker.cornerradius.",
+      "tags": ["treemap", "hierarchical", "chart", "style"],
+      "category": "treemap",
+      "traceTypes": ["treemap"],
+      "size": { "width": 640, "height": 440 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/treemap/padding.webp",
+      "thumbnailSize": { "width": 640, "height": 440 }
+    },
+    {
+      "id": "treemap/pathbar",
+      "title": "Treemap: path bar",
+      "description": "Path bars of a drilled-in treemap with each edge shape, above or below the tiles.",
+      "tags": ["treemap", "hierarchical", "chart", "pathbar"],
+      "category": "treemap",
+      "traceTypes": ["treemap"],
+      "size": { "width": 760, "height": 480 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/treemap/pathbar.webp",
+      "thumbnailSize": { "width": 640, "height": 404 }
+    },
+    {
+      "id": "treemap/patterns",
+      "title": "Treemap: patterns",
+      "description": "Each branch and its tiles hatched with their own pattern shape over their colors.",
+      "tags": ["treemap", "hierarchical", "chart", "pattern"],
+      "category": "treemap",
+      "traceTypes": ["treemap"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/treemap/patterns.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
+    },
+    {
+      "id": "treemap/text-position",
+      "title": "Treemap: text positions",
+      "description": "Labels centered in their tiles, or in the bottom-right corner with headers below, wrapped and shrunk to fit.",
+      "tags": ["treemap", "hierarchical", "chart", "text"],
+      "category": "treemap",
+      "traceTypes": ["treemap"],
+      "size": { "width": 760, "height": 440 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/treemap/text-position.webp",
+      "thumbnailSize": { "width": 640, "height": 371 }
+    },
+    {
+      "id": "treemap/tilings",
+      "title": "Treemap: tilings",
+      "description": "The same hierarchy laid out by each packing: squarify, binary, dice, slice, slice-dice and dice-slice.",
+      "tags": ["treemap", "hierarchical", "chart", "tiling"],
+      "category": "treemap",
+      "traceTypes": ["treemap"],
+      "size": { "width": 780, "height": 520 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/treemap/tilings.webp",
+      "thumbnailSize": { "width": 640, "height": 427 }
     },
     {
       "id": "uncertainty/calibration-curve",

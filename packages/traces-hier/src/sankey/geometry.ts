@@ -23,9 +23,10 @@ export interface Outline {
 }
 
 /** Plotly's link curvature: both control points halfway along. */
-const CURVATURE = 0.5;
+export const CURVATURE = 0.5;
 
-function cubic(p0: number, p1: number, p2: number, p3: number, t: number): number {
+/** A cubic Bézier coordinate at `t`. */
+export function cubic(p0: number, p1: number, p2: number, p3: number, t: number): number {
   const u = 1 - t;
   return u * u * u * p0 + 3 * u * u * t * p1 + 3 * u * t * t * p2 + t * t * t * p3;
 }
@@ -176,12 +177,12 @@ export function roundedRoute(
   });
 }
 
-/** The loop band of a circular link `width` thick, with an `arrowlen` arrowhead at the target. */
-export function loopOutline(path: CircularPath, width: number, arrowlen = 0): Outline {
+/** The center line of a circular link's loop, up to its `arrowlen` arrowhead, with normals. */
+export function loopRoute(path: CircularPath, arrowlen = 0): Sample[] {
   const a = Math.max(0, arrowlen);
   const { sourceX, sourceY, targetX, targetY, rightX, rSource, rTarget, extent } = path;
   const leftX = path.leftX - a;
-  const samples = roundedRoute(
+  return roundedRoute(
     [
       [sourceX, sourceY],
       [rightX, sourceY],
@@ -192,6 +193,13 @@ export function loopOutline(path: CircularPath, width: number, arrowlen = 0): Ou
     ],
     [rSource, rSource, rTarget, rTarget],
   );
+}
+
+/** The loop band of a circular link `width` thick, with an `arrowlen` arrowhead at the target. */
+export function loopOutline(path: CircularPath, width: number, arrowlen = 0): Outline {
+  const a = Math.max(0, arrowlen);
+  const { targetX, targetY } = path;
+  const samples = loopRoute(path, a);
   const h = width / 2;
   const x: number[] = [];
   const y: number[] = [];

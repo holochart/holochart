@@ -6,7 +6,7 @@
  * opaque); `node.hoverinfo` / `link.hoverinfo` default to the trace `hoverinfo`; `arrangement`
  * defaults to `'freeform'` when `node.x` and `node.y` are given; `textfont` follows `layout.font`
  * with the automatic halo. The concentration colorscales of `link.colorscales` are coerced item
- * by item.
+ * by item. `link.flow` (flow particles, plan E13.5c) is coerced only when given, so it stays off.
  */
 import {
   isArrayLike,
@@ -131,6 +131,12 @@ export function supplySankeyDefaults(
       : defaultHoverColor(linkColor, dark),
   );
   ctx.coerce('link.customdata');
+  const flow = ((traceIn['link'] ?? {}) as Record<string, unknown>)['flow'];
+  if (flow !== null && typeof flow === 'object') {
+    for (const key of ['density', 'speed', 'size', 'color', 'opacity', 'time']) {
+      ctx.coerce(`link.flow.${key}`);
+    }
+  }
   const link = traceOut['link'] as Record<string, unknown>;
   const scalesIn = ((traceIn['link'] ?? {}) as Record<string, unknown>)['colorscales'];
   const scales = Array.isArray(scalesIn) ? scalesIn.map(() => ({}) as Record<string, unknown>) : [];

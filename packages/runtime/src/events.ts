@@ -59,8 +59,9 @@ export interface PointerEventData {
 }
 
 /**
- * Payload of `sunburstclick` (M5, E13.2; Plotly's `plotly_sunburstclick`): the clicked sector and
- * the `level` the click drills to, absent when it does not drill (the root, leaves).
+ * Payload of `sunburstclick`, `treemapclick` and `icicleclick` (M5, E13.2–E13.4; Plotly's
+ * `plotly_sunburstclick`, …): the clicked node and the `level` the click drills to, absent when it
+ * does not drill (a sunburst's root and leaves).
  */
 export interface HierarchyClickEventData extends PointerEventData {
   readonly nextLevel?: string;
@@ -141,6 +142,13 @@ export interface ChartEvents {
    * `click` listener returning `false`.
    */
   sunburstclick: HierarchyClickEventData;
+  /**
+   * A click on a treemap tile or path bar segment (E13.3; Plotly's `plotly_treemapclick`), emitted
+   * before `click` and cancelling like `sunburstclick`.
+   */
+  treemapclick: HierarchyClickEventData;
+  /** A click on an icicle cell or path bar segment (E13.4; Plotly's `plotly_icicleclick`), ditto. */
+  icicleclick: HierarchyClickEventData;
   /** A double-click on the plot area (after `doubleClick` reset/autosize ran). */
   doubleclick: undefined;
   /** Box / lasso selection in progress (E6.3), throttled to animation frames. */

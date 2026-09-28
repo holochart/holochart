@@ -66,8 +66,9 @@ export const FONT_PARTS = ['font-regular', 'font-bold', 'font-italic', 'font-bol
  * runtime's `dist/animation-*.js`), the line level of detail (E16.2: traces-basic's
  * `dist/line-lod-*.js`), the custom marker symbols and image sprites (E8.11: render's
  * `dist/custom-markers-*.js`), the style rules and functions (E8.5, E8.6: runtime's
- * `dist/styles-*.js`), the pattern fills (E8.10: render's `dist/pattern-code-*.js`) and the
- * {@link FONT_PARTS}.
+ * `dist/styles-*.js`), the pattern fills (E8.10: render's `dist/pattern-code-*.js`), the sankey
+ * flow particles (E13.5c: traces-hier's `dist/flow-*.js`), the accessibility code (E17.2, E17.3:
+ * runtime's `dist/summary-*.js` and `dist/table-view-*.js`) and the {@link FONT_PARTS}.
  */
 export const LAZY_PARTS = [
   'fill',
@@ -77,6 +78,8 @@ export const LAZY_PARTS = [
   'markers',
   'style',
   'pattern',
+  'flow',
+  'a11y',
   ...FONT_PARTS,
 ] as const;
 
@@ -127,6 +130,20 @@ const STYLE_MODULE =
 const PATTERN_MODULE =
   /[\\/]render[\\/](?:dist[\\/]pattern-code-[\w-]+\.js|src[\\/]primitives[\\/]pattern-code\.ts)$/;
 
+/**
+ * traces-hier's lazily loaded sankey flow particles (E13.5c: the particle primitive, its shaders
+ * and the center-line sampling): built (`dist/flow-*.js`), or from sources.
+ */
+const FLOW_MODULE =
+  /[\\/]traces-hier[\\/](?:dist[\\/]flow-[\w-]+\.js|src[\\/]sankey[\\/]flow\.ts)$/;
+
+/**
+ * runtime's lazily loaded accessibility code (E17.2, E17.3: the generated summaries and the visible
+ * data table): built (`dist/summary-*.js`, `dist/table-view-*.js`), or from sources.
+ */
+const A11Y_MODULE =
+  /[\\/]runtime[\\/](?:dist[\\/](?:summary|table-view)-[\w-]+\.js|src[\\/]a11y[\\/](?:summary|table-view)\.ts)$/;
+
 /** The {@link LAZY_PARTS} entry a module belongs to, if any. */
 export function lazyPartOf(moduleId: string): string | undefined {
   if (FILL_MODULE.test(moduleId)) return 'fill';
@@ -136,6 +153,8 @@ export function lazyPartOf(moduleId: string): string | undefined {
   if (MARKERS_MODULE.test(moduleId)) return 'markers';
   if (STYLE_MODULE.test(moduleId)) return 'style';
   if (PATTERN_MODULE.test(moduleId)) return 'pattern';
+  if (FLOW_MODULE.test(moduleId)) return 'flow';
+  if (A11Y_MODULE.test(moduleId)) return 'a11y';
   const face = FONT_MODULE.exec(moduleId)?.[1];
   return face ? `font-${face}` : undefined;
 }
@@ -188,8 +207,9 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     // after the E21.5 diet (M2 wave 0: lazy text engine, stripped descriptions; 107.9 kB). Raised to
     // measured + ~10% after M2 wave 1 by decision (area fills, fonts, grid: 129.2 kB), and again after
     // M2 wave 2 (rich text, accessibility, export: 139.0 kB). E21.6 splits the fill code out so
-    // scatter without fills doesn't load it.
-    limit: '153 kB',
+    // scatter without fills doesn't load it. Raised to 157 kB for M5 by decision (M5 wave 1: locales
+    // plumbing, style/a11y hooks: 152.1 kB on CI).
+    limit: '157 kB',
     imports: [
       { pkg: 'runtime', names: ['createChart', 'register'] },
       { pkg: 'traces-basic', names: ['scatter'] },
@@ -271,6 +291,18 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     lazyOf: 'partial-core-scatter',
     lazyPart: 'style',
   },
+  {
+    // Plan E17.2 / E17.3 (M5 wave 1): the generated chart summaries (trend analysis, localized
+    // sentence templates) and the visible, virtualized data table, loaded with a dynamic import()
+    // after a chart's first description (summaries, on by default) or when `config.a11y.dataTable`
+    // is `'visible'`; two chunks, summed here. Measured 5.25 kB when split out (2026-09-28);
+    // budget = measured + ~10%.
+    id: 'a11y-lazy',
+    name: 'chart summaries and data table (lazy chunks of core + scatter)',
+    limit: '5.8 kB',
+    lazyOf: 'partial-core-scatter',
+    lazyPart: 'a11y',
+  },
   ...fontRows(),
   {
     // The future `holochart-basic` CDN variant: runtime, components, and the basic traces.
@@ -284,8 +316,10 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     // M4 wave 0 by decision (style rules, custom markers and line LOD hooks, legend group titles,
     // bar periods: 235.7 kB; their heavy code is in the lazy rows above), and to 242 kB after M4
     // wave 2 by decision (patterns' plumbing, funnel axis defaults, legend parts: 238.6 kB on CI,
-    // which measures ~0.3% more than a local macOS run; CI is the reference).
-    limit: '242 kB',
+    // which measures ~0.3% more than a local macOS run; CI is the reference). Raised to 248 kB for
+    // M5 by decision (M5 wave 1: locales, a11y config and summary hooks: ~241.6 kB on CI; wave 2 adds
+    // keyboard, touch and focus handling).
+    limit: '248 kB',
     imports: [
       { pkg: 'runtime' },
       { pkg: 'components' },
@@ -308,15 +342,30 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
   {
     id: 'full',
     name: '@mk7s/holochart (full, ESM)',
-    limit: '450 kB',
+    // Raised from 450 kB to 475 kB for M5 by decision (M5 wave 1: treemap/icicle, Express hierarchy,
+    // accessibility, sankey flow: ~451.6 kB on CI).
+    limit: '475 kB',
     imports: [{ pkg: 'holochart' }],
   },
   {
+    // Plan E13.5c (M5 wave 1): the sankey flow particles (`link.flow`) — the particle primitive,
+    // its shaders and the center-line sampling — loaded with a dynamic import() the first time a
+    // sankey sets `link.flow`. Measured 3.21 kB when split out (2026-09-28); budget = measured +
+    // ~10%.
+    id: 'flow-lazy',
+    name: 'sankey flow particles (lazy chunk of full)',
+    limit: '3.6 kB',
+    lazyOf: 'full',
+    lazyPart: 'flow',
+  },
+  {
     // Self-contained script-tag build: the full bundle plus three.js (~170-190 kB min+gz on its
-    // own). Budget = full (450 kB) + a three.js allowance of 200 kB.
+    // own). Budget = full + a three.js allowance of ~200 kB: 650 kB, raised to 690 kB for M5 by
+    // decision (M5 wave 1: ~666.8 kB on CI; the IIFE inlines every lazy chunk, so a11y summaries and
+    // tables, sankey flow and patterns count here in full).
     id: 'iife',
     name: '@mk7s/holochart IIFE (includes three)',
-    limit: '650 kB',
+    limit: '690 kB',
     file: 'packages/holochart/dist/holochart.iife.min.js',
   },
 ];

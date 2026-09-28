@@ -82,8 +82,8 @@ types are added as their traces land.
 | Chart                                     | Trace type(s) | Milestone |
 | ----------------------------------------- | ------------- | --------- |
 | [Sunburst](/charts/hierarchical/sunburst) | `sunburst`    | M5        |
-| Treemap                                   | `treemap`     | M5        |
-| Icicle                                    | `icicle`      | M5        |
+| [Treemap](/charts/hierarchical/treemap)   | `treemap`     | M5        |
+| [Icicle](/charts/hierarchical/icicle)     | `icicle`      | M5        |
 | [Sankey](/charts/hierarchical/sankey)     | `sankey`      | M5        |
 
 ## 3D

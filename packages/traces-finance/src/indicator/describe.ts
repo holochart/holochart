@@ -47,5 +47,17 @@ export function describeIndicator(ctx: DescribeContext<IndicatorCalc>): TraceDes
         typeof threshold === 'number' ? `, threshold ${formatPlainNumber(threshold)}.` : '.';
     }
   }
-  return { kind: 'indicator', summary };
+  if (calc.value === undefined) return { kind: 'indicator', summary };
+  const hasReference = trace['_hasDelta'] === true && calc.reference !== undefined;
+  return {
+    kind: 'indicator',
+    summary,
+    insight: {
+      kind: 'value',
+      value: calc.value,
+      ...(hasReference ? { reference: calc.reference } : {}),
+      formatValue: (v) =>
+        `${affix(number['prefix'])}${formatPlainNumber(v)}${affix(number['suffix'])}`,
+    },
+  };
 }

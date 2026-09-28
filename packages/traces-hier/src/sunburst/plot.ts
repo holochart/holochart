@@ -13,41 +13,49 @@
  *
  * ## Drill-down
  *
- * The view takes clicks on its sectors (`handlePointer`): it emits `sunburstclick` (with
- * `nextLevel`) and then `click`; unless a listener returned `false`, a click on a sector sets
- * `level` to it and a click on the center to the level above, with a GUI `restyle` (kept by
- * `uirevision`, Plotly's `_storeDirectGUIEdit`). When that `level` arrives, the sectors tween from
- * where they were to the new layout over 750 ms, linearly (Plotly's click transition; see
- * `tween.ts`), and labels fade in at the end. Other `level` changes (`restyle`, `react`) snap, and
- * so does everything under `prefers-reduced-motion: reduce`. Clicks during a transition emit their
- * events but don't drill (Plotly).
+ * The view takes clicks on its sectors (`handlePointer`) as every hierarchy trace does (see
+ * `../hierarchy/view.ts`): `sunburstclick`, then `click`, then a GUI `restyle` of `level` to the
+ * sector, or to the level above for the center. When that `level` arrives, the sectors tween from
+ * where they were to the new layout (see `tween.ts`), and labels fade in at the end.
  */
 import { toRGBA, type FullTrace, type RGBA } from '@mk7s/holochart-core';
 import {
   createArcPrimitive,
   createTextPrimitive,
-  fadeTextRuns,
   type ArcData,
   type ArcPrimitive,
   type PatternFill,
   type TextLabel,
   type TextPrimitive,
 } from '@mk7s/holochart-render';
-import {
-  getChart,
-  type Chart,
-  type ComponentPointerEvent,
-  type TracePlotContext,
-  type TraceRenderer,
-  type TraceView,
+import type {
+  Chart,
+  ComponentPointerEvent,
+  TracePlotContext,
+  TraceRenderer,
+  TraceView,
 } from '@mk7s/holochart-runtime';
 import { DEFAULT_LINE } from '../hierarchy/colors.ts';
 import { nodeAttr } from '../hierarchy/format.ts';
 import { isLeaf } from '../hierarchy/levels.ts';
+import {
+  canAnimate,
+  chartOf,
+  drillTo,
+  emitNodeClick,
+  fadeColor as fade,
+  labelAlpha,
+  nodePattern,
+  orderOf,
+  syncPrimitive,
+  traceOpacity,
+  Transition,
+  worldLabels,
+} from '../hierarchy/view.ts';
 import { sunburstGeometry, type Sector, type SunburstCalc } from './geometry.ts';
 import { sunburstClick } from './hover.ts';
 import { placeSunburst, resolveSunburstColors } from './layout.ts';
-import { layoutSunburstText, LINE_HEIGHT, type SectorLabel } from './text.ts';
+import { layoutSunburstText, type SectorLabel } from './text.ts';
 import {
   lerpState,
   planTween,
@@ -57,11 +65,7 @@ import {
   type TweenPlan,
 } from './tween.ts';
 
-/** Plotly's `CLICK_TRANSITION_TIME` (ms) and linear `CLICK_TRANSITION_EASING`. */
-export const CLICK_TRANSITION_TIME = 750;
-
-/** Labels fade in over the last part of a transition (fraction of its duration). */
-const LABEL_FADE = 0.4;
+export { CLICK_TRANSITION_TIME } from '../hierarchy/view.ts';
 
 const GREY: RGBA = [0.5, 0.5, 0.5, 1];
 
@@ -70,7 +74,6 @@ const GREY: RGBA = [0.5, 0.5, 0.5, 1];
  * (title, legend, annotations). Sectors of all sunbursts, then labels; trace order within each.
  */
 const ORDER = { arcs: -9, text: -3 } as const;
-const orderOf = (layer: number, index: number): number => layer + Math.min(index, 999) * 1e-3;
 
 /** How a sector is drawn: fill, outline and pattern (Plotly's `styleOne`). */
 export interface SectorStyle {
@@ -85,27 +88,8 @@ export interface SectorStyle {
   readonly pattern: Record<string, unknown> | undefined;
 }
 
-function fade(c: RGBA, alpha: number): RGBA {
-  return alpha === 1 ? c : [c[0], c[1], c[2], c[3] * alpha];
-}
-
-/**
- * A sector's `marker.pattern`, array attributes cast to its data index, with the background
- * defaulting to `paper` unless the pattern overlays the fill (as pie). `undefined` without a
- * shape or for generated roots.
- */
-export function sectorPattern(
-  pattern: unknown,
-  i: number,
-  paper: unknown,
-): Record<string, unknown> | undefined {
-  if (i < 0 || !pattern || typeof pattern !== 'object') return undefined;
-  const out: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(pattern)) out[key] = nodeAttr(value, i);
-  if (!out['shape']) return undefined;
-  if (out['fillmode'] !== 'overlay') out['bgcolor'] ??= paper;
-  return out;
-}
+/** A sector's `marker.pattern` (see {@link nodePattern}). */
+export const sectorPattern = nodePattern;
 
 /** The {@link SectorStyle} of every sector (Plotly's `styleOne`). */
 export function sectorStyles(
@@ -221,48 +205,7 @@ export function sectorTextLabels(
   height: number,
   alpha: number,
 ): TextLabel[] {
-  return labels.map((l) => {
-    const label: TextLabel = {
-      text: l.text,
-      x: l.x,
-      y: height - l.y,
-      font: l.font,
-      color: [l.color[0], l.color[1], l.color[2], l.color[3] * alpha],
-      anchorX: 'center',
-      anchorY: 'middle',
-      align: 'center',
-      angle: l.angle,
-      lineHeight: LINE_HEIGHT,
-    };
-    if (l.runs) label.runs = fadeTextRuns(l.runs, alpha);
-    return label;
-  });
-}
-
-function traceOpacity(trace: FullTrace): number {
-  const o = trace['opacity'];
-  return typeof o === 'number' && Number.isFinite(o) ? o : 1;
-}
-
-function reducedMotion(): boolean {
-  try {
-    return globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
-  } catch {
-    return false;
-  }
-}
-
-/** The chart that owns a pointer event's target (the canvas inside the chart's element). */
-function chartOf(event: ComponentPointerEvent): Chart | undefined {
-  let node = (event.native?.target ?? null) as Node | null;
-  while (node) {
-    if (typeof HTMLElement !== 'undefined' && node instanceof HTMLElement) {
-      const chart = getChart(node);
-      if (chart) return chart;
-    }
-    node = node.parentNode;
-  }
-  return undefined;
+  return worldLabels(labels, height, alpha);
 }
 
 /**
@@ -287,9 +230,6 @@ interface Tween {
   readonly plan: TweenPlan;
   readonly styles: readonly SectorStyle[];
   readonly exitStyles: readonly SectorStyle[];
-  readonly start: number;
-  readonly duration: number;
-  frame: number;
 }
 
 class SunburstView implements TraceView<SunburstCalc> {
@@ -304,6 +244,7 @@ class SunburstView implements TraceView<SunburstCalc> {
   /** The `level` a click asked for: its arrival animates. */
   #pending: string | undefined;
   #tween: Tween | undefined;
+  readonly #clock = new Transition();
   #chart: Chart | undefined;
 
   constructor(ctx: TracePlotContext<SunburstCalc>) {
@@ -312,7 +253,7 @@ class SunburstView implements TraceView<SunburstCalc> {
 
   /** Whether a drill-down transition is running. */
   get transitioning(): boolean {
-    return this.#tween !== undefined;
+    return this.#clock.running;
   }
 
   update(ctx: TracePlotContext<SunburstCalc>): void {
@@ -333,10 +274,10 @@ class SunburstView implements TraceView<SunburstCalc> {
       layout !== undefined &&
       entryId !== this.#drawnEntry &&
       this.#drawn.length > 0 &&
-      typeof requestAnimationFrame === 'function' &&
-      !reducedMotion();
+      canAnimate(ctx.fullLayout);
     this.#pending = undefined;
-    this.#stopTween();
+    this.#clock.stop();
+    this.#tween = undefined;
     if (animate) {
       const plan = planTween(
         this.#drawn,
@@ -350,9 +291,6 @@ class SunburstView implements TraceView<SunburstCalc> {
         plan,
         styles,
         exitStyles: plan.exit.map((e) => this.#drawnStyles[e.index]!),
-        start: performance.now(),
-        duration: CLICK_TRANSITION_TIME,
-        frame: 0,
       };
     }
     this.#drawn = sectors.map((s) => ({
@@ -362,12 +300,12 @@ class SunburstView implements TraceView<SunburstCalc> {
     }));
     this.#drawnStyles = styles;
     this.#drawnEntry = entryId;
-    if (this.#tween) this.#step(this.#tween.start);
+    if (this.#tween) this.#clock.start(this.#step);
     else this.#draw(this.#drawn, styles, 1);
   }
 
   dispose(): void {
-    this.#stopTween();
+    this.#clock.stop();
   }
 
   /**
@@ -392,42 +330,18 @@ class SunburstView implements TraceView<SunburstCalc> {
     );
     if (!click) return false;
     const { point, nextLevel } = click;
-    let proceed = chart.emit('sunburstclick', {
-      points: [point],
-      ...(nextLevel !== undefined ? { nextLevel } : {}),
-    });
-    const fx = chart.interaction;
-    if (proceed && fx.hovermode !== false && fx.clickEvent) {
-      proceed = chart.emit('click', { points: [point] });
-    }
-    if (!proceed || nextLevel === undefined || this.#tween) return true;
-    chart.unhover();
+    const proceed = emitNodeClick(chart, 'sunburstclick', point, nextLevel);
+    if (!proceed || nextLevel === undefined || this.#clock.running) return true;
     this.#pending = nextLevel;
-    chart.restyle({ level: [nextLevel] }, [index], { gui: true }).catch(() => undefined);
+    drillTo(chart, index, nextLevel);
     return true;
   }
 
-  #stopTween(): void {
-    const tween = this.#tween;
-    if (!tween) return;
-    if (tween.frame && typeof cancelAnimationFrame === 'function')
-      cancelAnimationFrame(tween.frame);
-    this.#tween = undefined;
-  }
-
-  readonly #onFrame = (now: number): void => {
-    const tween = this.#tween;
-    if (!tween) return;
-    tween.frame = 0;
-    this.#step(now);
-  };
-
-  /** Draw the running transition at time `now`; the last frame draws the new layout exactly. */
-  #step(now: number): void {
+  /** Draw the running transition at time `t`; the last frame draws the new layout exactly. */
+  readonly #step = (t: number): void => {
     const tween = this.#tween;
     const ctx = this.#ctx;
     if (!tween || !ctx) return;
-    const t = Math.min(1, Math.max(0, (now - tween.start) / tween.duration));
     if (t >= 1) {
       this.#tween = undefined;
       this.#draw(this.#drawn, this.#drawnStyles, 1);
@@ -446,10 +360,9 @@ class SunburstView implements TraceView<SunburstCalc> {
       states.push(lerpState(u.from, u.to, t));
       styles.push(tween.styles[k]!);
     });
-    this.#draw(states, styles, Math.max(0, (t - (1 - LABEL_FADE)) / LABEL_FADE));
+    this.#draw(states, styles, labelAlpha(t));
     ctx.invalidate();
-    tween.frame = requestAnimationFrame(this.#onFrame);
-  }
+  };
 
   #draw(states: readonly SectorState[], styles: readonly SectorStyle[], textAlpha: number): void {
     const ctx = this.#ctx;
@@ -462,26 +375,23 @@ class SunburstView implements TraceView<SunburstCalc> {
       ? sectorArcs(states, styles, layout, height, ctx.fullLayout.paper_bgcolor)
       : sectorArcs([], [], { cx: 0, cy: 0 }, height);
     const data: Partial<ArcData> = { ...arcs, opacity };
-    if (!this.#arcs) {
-      this.#arcs = createArcPrimitive(ctx.primitives, data);
-      ctx.add(this.#arcs);
-    } else this.#arcs.update(data);
-    this.#arcs.object.renderOrder = orderOf(ORDER.arcs, ctx.index);
-    this.#arcs.setTransform(ctx.transform);
+    this.#arcs = syncPrimitive(
+      ctx,
+      this.#arcs,
+      data,
+      (d) => createArcPrimitive(ctx.primitives, d),
+      orderOf(ORDER.arcs, ctx.index),
+    );
 
     // Transitions keep the new labels typeset but transparent until they fade in.
     const labels = sectorTextLabels(this.#labels, height, textAlpha * opacity);
-    if (labels.length === 0) {
-      if (this.#text) ctx.remove(this.#text);
-      this.#text = undefined;
-      return;
-    }
-    if (!this.#text) {
-      this.#text = createTextPrimitive(ctx.primitives, { labels });
-      ctx.add(this.#text);
-    } else this.#text.update({ labels });
-    this.#text.object.renderOrder = orderOf(ORDER.text, ctx.index);
-    this.#text.setTransform(ctx.transform);
+    this.#text = syncPrimitive(
+      ctx,
+      this.#text,
+      labels.length > 0 ? { labels } : undefined,
+      (d) => createTextPrimitive(ctx.primitives, d),
+      orderOf(ORDER.text, ctx.index),
+    );
   }
 }
 

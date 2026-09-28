@@ -8,8 +8,10 @@
  * forward), PageUp/PageDown by a tenth of the steps, Home/End jump to the ends; each key runs the
  * step's method like a pointer move. The current value and tick labels are `aria-hidden` (the
  * slider announces them). Pointer: press anywhere on the rail or labels, drag, the handle snaps to
- * steps. The handle's glide (`transition`) is off with `prefers-reduced-motion`.
+ * steps. The handle's glide (`transition`) is off with `prefers-reduced-motion` (or
+ * `config.a11y.reducedMotion: true`, plan E17.5).
  */
+import { reducedMotion } from '@mk7s/holochart-core';
 import type { ComponentDrawContext, ComponentUpdatePlan } from '@mk7s/holochart-runtime';
 import {
   applyDomFont,
@@ -127,14 +129,6 @@ interface SliderDom {
   /** A step method waiting for the next frame (Plotly's `_nextMethod`), and its cancel. */
   nextStep?: FullSliderStep;
   cancelNext?: () => void;
-}
-
-function reducedMotion(doc: Document): boolean {
-  try {
-    return doc.defaultView?.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
-  } catch {
-    return false;
-  }
 }
 
 /** Create the sliders view (DOM in `chart.element`, above the canvas). */
@@ -430,7 +424,8 @@ export function createSlidersView<Ctx extends SlidersViewContext>(
     const x =
       (layout.positions[k] ?? layout.inputStart) - layout.inputStart - layout.grip.width / 2;
     const duration = slider.transition.duration;
-    const animate = glide && duration > 0 && !reducedMotion(grip.ownerDocument);
+    const animate =
+      glide && duration > 0 && !reducedMotion(last.fullLayout, grip.ownerDocument.defaultView);
     grip.style.transition = animate
       ? `left ${duration}ms ${cssEasing(slider.transition.easing)}`
       : 'none';

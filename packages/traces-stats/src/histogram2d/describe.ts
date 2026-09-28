@@ -50,5 +50,14 @@ export function describeHistogram2d(ctx: DescribeContext<Histogram2dCalc>): Trac
     kind,
     summary,
     table: { caption: name, columns: ['x', 'y', 'z'], rows, total },
+    insight: {
+      kind: 'grid',
+      nx: calc.nx,
+      ny: calc.ny,
+      z: calc.z,
+      xText: xr,
+      yText: yr,
+      formatValue: formatPlainNumber,
+    },
   };
 }

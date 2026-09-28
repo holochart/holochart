@@ -1,6 +1,7 @@
 /**
  * @mk7s/holochart-themes — the built-in templates (plan E8.1): Holochart's own `holochart` (the
- * default look), `plotly-classic` (Plotly's look), `high-contrast` and `neon`, plotly.py's
+ * default look), `plotly-classic` (Plotly's look), `high-contrast`, `high-contrast-dark` (plan
+ * E17.5) and `neon`, plotly.py's
  * `plotly`, `plotly_white`, `plotly_dark`, `simple_white`, `ggplot2`, `seaborn`, `presentation`,
  * `xgridoff`, `ygridoff`, `gridon` and `none`, and `holochart-dark`, a deprecated alias of
  * `holochart` (ADR-021).
@@ -14,7 +15,14 @@
  * Named palettes and colorscales live in core (`colors`, `colorways`, `registerBuiltinColors`).
  */
 import type { Template } from '@mk7s/holochart-core';
-import { highContrast, holochart, holochartDark, neon, plotlyClassic } from './holochart.ts';
+import {
+  highContrast,
+  highContrastDark,
+  holochart,
+  holochartDark,
+  neon,
+  plotlyClassic,
+} from './holochart.ts';
 import {
   ggplot2,
   gridon,
@@ -29,7 +37,14 @@ import {
   ygridoff,
 } from './plotly.ts';
 
-export { highContrast, holochart, holochartDark, neon, plotlyClassic } from './holochart.ts';
+export {
+  highContrast,
+  highContrastDark,
+  holochart,
+  holochartDark,
+  neon,
+  plotlyClassic,
+} from './holochart.ts';
 export {
   ggplot2,
   gridon,
@@ -63,6 +78,7 @@ export const THEMES = {
   none,
   'high-contrast': highContrast,
   neon,
+  'high-contrast-dark': highContrastDark,
 } as const satisfies Record<string, Template>;
 
 /** A built-in theme name. */

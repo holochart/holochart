@@ -87,6 +87,33 @@ export const configSchema = attr.object(
       description:
         'The chart\'s accessible name (`aria-label`), read by screen readers. Empty: `layout.meta.description` when set, else the figure title followed by an automatic summary ("Line chart with 3 traces"). Holochart only (plan E17.1).',
     }),
+    a11y: attr.object(
+      {
+        summaries: attr.boolean({
+          dflt: true,
+          description:
+            'Add generated summaries of trends and extremes ("Revenue rises from 1.2M in Jan to 3.4M in Dec") to what screen readers get. Their code loads after the first draw. Holochart only (plan E17.2).',
+        }),
+        dataTable: attr.enumerated({
+          values: ['hidden', 'visible', false],
+          dflt: 'hidden',
+          description:
+            "The traces' data tables: `'hidden'` for screen readers only (first 100 rows), `'visible'` shown below the chart with every row (virtualized), `false` none. Holochart only (plan E17.3).",
+        }),
+        patterns: attr.boolean({
+          dflt: false,
+          description:
+            'Give bars, histograms, polar bars, filled areas (`fillpattern`) and pie slices a distinct pattern each, as an encoding redundant with color, unless the trace or template sets one. Holochart only (plan E17.5).',
+        }),
+        reducedMotion: attr.enumerated({
+          values: ['auto', true, false],
+          dflt: 'auto',
+          description:
+            "Snap transitions and drill-down tweens instead of animating them: `'auto'` when the user's system asks for reduced motion (the `prefers-reduced-motion` media query), `true` always, `false` never. Holochart only (plan E17.5).",
+        }),
+      },
+      { description: 'Accessibility options (plan E17). Holochart only.' },
+    ),
     toImageButtonOptions: attr.object(
       {
         format: attr.enumerated({

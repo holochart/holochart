@@ -77,7 +77,11 @@ describe('scatter describe()', () => {
         ['4', '4'],
       ],
       total: 4,
+      row: expect.any(Function),
     });
+    // Every row on demand (the visible data table, E17.3), and the series for summaries (E17.2).
+    expect(d.table?.row?.(2)).toEqual(['3', '9']);
+    expect(d.insight).toMatchObject({ kind: 'series', length: 4, joined: true });
   });
 
   it('formats dates and categories, uses axis titles and adds a text column', () => {

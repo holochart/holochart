@@ -58,6 +58,7 @@ export function describeHierarchy(
       formatNodeValue(n.value),
       share(n.value),
     ]);
+  const children = entry.children;
   return {
     kind,
     summary,
@@ -66,6 +67,15 @@ export function describeHierarchy(
       columns: ['Label', 'Path', 'Value', 'Percent of root'],
       rows,
       total: nodes.length,
+    },
+    insight: {
+      kind: 'shares',
+      part: 'branch',
+      length: children.length,
+      values: children.map((n) => n.value),
+      label: (i) => accessibleText(children[i]!.label),
+      total: entry.value,
+      formatValue: formatNodeValue,
     },
   };
 }

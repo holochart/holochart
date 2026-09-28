@@ -1323,13 +1323,13 @@ Customization is a **cascade**. Each layer overrides the one above it:
 **Goal:** Sunburst, treemap, icicle, and sankey, all built on a shared hierarchy engine.
 **Milestone:** M5 · **Package:** `traces-hier`
 
-#### E13.1 — Hierarchy engine   `P1` `M`   deps: E1.4   · 🟡 Partial (M5 wave 0)
+#### E13.1 — Hierarchy engine   `P1` `M`   deps: E1.4   · ✅ Done (M5 waves 0–1)
 > As a contributor, I want one hierarchy builder for sunburst, treemap, and icicle, so that behavior is consistent.
 - [x] Input: `labels`, `parents`, `ids`, `values`, `branchvalues: 'remainder' | 'total'`, `count: 'leaves' | 'branches' | 'leaves+branches'`
 - [x] Validation errors for cycles, missing parents, and `total` violations (child sum > parent)
 - [x] `level` (current root), `maxdepth`, `root.color`, `leaf.opacity`, `sort`
 - [x] `textinfo` flags (`label`, `text`, `value`, `current path`, `percent root`, `percent entry`, `percent parent`) — shared engine in `traces-hier/src/hierarchy` (Plotly stratify semantics and warnings, partition, formatting, colors, event fields)
-- [ ] Express path helper: `hx.sunburst(df, { path: ['continent', 'country'], values: 'pop', color: 'lifeExp' })`
+- [x] Express path helper: `hx.sunburst(df, { path: ['continent', 'country'], values: 'pop', color: 'lifeExp' })` — port of px's `process_dataframe_hierarchy` (M5 wave 1)
 
 #### E13.2 — `sunburst`   `P1` `L`   deps: E13.1, E2.8   · ✅ Done (M5 wave 0)
 > As an analyst, I want sunburst charts with drill-down, so that I can explore hierarchies radially.
@@ -1337,17 +1337,17 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] Click to drill into a node (animated zoom transition). Click the center to go up. `click` event can cancel the drill. — one instanced arc set + one text batch; Plotly's 750 ms tween (snaps under reduced motion); `level` stored by a GUI restyle — *deferred: animated `level` via `animate`/`react`, `coloraxis`, `uniformtext`*
 - [ ] 3D-native: layered extrusion by depth (`depth`, `depthstep`), `P2`
 
-#### E13.3 — `treemap`   `P1` `L`   deps: E13.1, E2.7
+#### E13.3 — `treemap`   `P1` `L`   deps: E13.1, E2.7   · ✅ Done (M5 wave 1)
 > As an analyst, I want treemaps with drill-down and a path bar, so that I can explore hierarchies by area.
-- [ ] `tiling.{packing: 'squarify' | 'binary' | 'dice' | 'slice' | 'slice-dice' | 'dice-slice', squarifyratio, flip, pad}`
-- [ ] `marker.{pad.{t, l, r, b}, depthfade, cornerradius, colors, colorscale}`, `pathbar.{visible, side, edgeshape, thickness, textfont}`
-- [ ] Text wrapping and fitting inside tiles. `textposition` 9-way.
-- [ ] Drill-down transition. 100k-node treemap renders < 500 ms.
+- [x] `tiling.{packing: 'squarify' | 'binary' | 'dice' | 'slice' | 'slice-dice' | 'dice-slice', squarifyratio, flip, pad}`
+- [x] `marker.{pad.{t, l, r, b}, depthfade, cornerradius, colors, colorscale}`, `pathbar.{visible, side, edgeshape, thickness, textfont}`
+- [x] Text wrapping and fitting inside tiles. `textposition` 9-way. — wraps at spaces before shrinking (a Holochart addition)
+- [x] Drill-down transition. 100k-node treemap renders < 500 ms. — ≈ 0.3 s CPU (calc, layout, labels, buffers); headless first frame 4–7 s is SwiftShader context/shader setup — *deferred: `uniformtext`, `coloraxis`, animated `level` via `animate`/`react`*
 - [ ] 3D-native: "city" treemap (tile height encodes a second value), `P2`
 
-#### E13.4 — `icicle`   `P1` `M`   deps: E13.1, E2.7
+#### E13.4 — `icicle`   `P1` `M`   deps: E13.1, E2.7   · ✅ Done (M5 wave 1)
 > As an analyst, I want icicle charts, so that I can show hierarchies as partitioned rectangles.
-- [ ] `tiling.{orientation: 'v' | 'h', flip, pad}`, `pathbar`, drill-down
+- [x] `tiling.{orientation: 'v' | 'h', flip, pad}`, `pathbar`, drill-down — shares the treemap renderer and the sunburst drill machinery
 
 #### E13.5 — `sankey`   `P1` `XL` → split into E13.5a–c   deps: E2.6, E2.7
 > As an analyst, I want Sankey diagrams, so that I can show flows between nodes.
@@ -1362,9 +1362,9 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] Hover highlights node + connected links. `hoverinfo`/`hovertemplate` for nodes and links separately.
 - [x] `link.colorscales` (per-link concentration colorscales) — *deferred: per-part `hoverlabel`, lasso node grouping, animated snap*
 
-##### E13.5c — Sankey 3D-native & animation   `P2` `M`
-- [ ] Animated flow particles along links (`link.flow: { speed, density }`, a Holochart extension)
-- [ ] Extruded ribbons in 2.5D view
+##### E13.5c — Sankey 3D-native & animation   `P2` `M`   · 🟡 Partial (M5 wave 1)
+- [x] Animated flow particles along links (`link.flow: { speed, density }`, a Holochart extension) — one instanced draw with a GPU time uniform, lazy chunk 3.2 kB, `time` freeze for tests, reduced-motion aware
+- [ ] Extruded ribbons in 2.5D view — *deferred until a 2.5D view exists (E9.10/E9.12/M6)*
 
 ---
 
@@ -1550,23 +1550,23 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] Visually-hidden structured description: chart type, axes and ranges, trace names, point counts — per-trace `describe()` summaries and hidden tables (≤ 100 rows); range changes debounced
 - [x] `layout.meta.description` / `config.ariaLabel` overrides
 
-#### E17.2 — Auto-generated chart summaries   `P1` `M`   deps: E17.1
+#### E17.2 — Auto-generated chart summaries   `P1` `M`   deps: E17.1   · ✅ Done (M5 wave 1)
 > As a screen-reader user, I want an automatic summary of trends and extremes, so that I get the gist without exploring every point.
-- [ ] Per trace type `describe(calcdata) → string` (e.g. "Line 'Revenue' rises from 1.2M in Jan to 3.4M in Dec. Peak 3.6M in Nov.")
-- [ ] Localized templates
+- [x] Per trace type `describe(calcdata) → string` (e.g. "Line 'Revenue' rises from 1.2M in Jan to 3.4M in Dec. Peak 3.6M in Nov.")
+- [x] Localized templates — English sentences are dictionary keys; de/fr/es in `@mk7s/holochart-locales` — *open: live region, seasonality; E17.1 lines still English*
 
-#### E17.3 — Data table fallback   `P1` `S`   deps: E17.1
+#### E17.3 — Data table fallback   `P1` `S`   deps: E17.1   · ✅ Done (M5 wave 1)
 > As an accessibility-minded developer, I want an optional visible or hidden data table, so that users can read raw values.
-- [ ] `config.a11y.dataTable: 'hidden' | 'visible' | false`, virtualized for large data
+- [x] `config.a11y.dataTable: 'hidden' | 'visible' | false`, virtualized for large data — visible table after the chart element, virtualized past 200 rows (tested with 100k) — *open: `table.row` for polar, splom, parcoords, parcats, table, pie, sankey, hierarchies*
 
 #### E17.4 — Keyboard & focus   `P1` `S`   deps: E6.5
 > As a keyboard user, I want every control (legend, modebar, updatemenus, sliders) reachable by keyboard, so that nothing requires a mouse.
 - [ ] Tab order documented. Visible focus. `aria-pressed` on toggles.
 
-#### E17.5 — Visual accessibility   `P1` `S`   deps: E8.1, E8.2, E8.10
+#### E17.5 — Visual accessibility   `P1` `S`   deps: E8.1, E8.2, E8.10   · ✅ Done (M5 wave 1)
 > As a user with low vision or color-vision deficiency, I want high-contrast and colorblind-safe options, so that I can read charts.
-- [ ] `high-contrast` theme. `Safe` palette. Pattern fills as redundant encoding (`config.a11y.patterns: true`).
-- [ ] `prefers-reduced-motion` disables transitions and auto-rotate by default
+- [x] `high-contrast` theme. `Safe` palette. Pattern fills as redundant encoding (`config.a11y.patterns: true`).
+- [x] `prefers-reduced-motion` disables transitions and auto-rotate by default — plus `config.a11y.reducedMotion` override; `high-contrast-dark` theme and WCAG contrast tests; `colorway: 'Safe'` (no 3D auto-rotate exists yet)
 
 #### E17.6 — Locales   `P1` `M`   deps: E3.3, E5.8   · ✅ Done (M5 wave 0)
 > As a developer serving international users, I want locale-aware number and date formats and UI strings, so that charts feel native.
@@ -1897,7 +1897,7 @@ docs/
 - [x] Aggregations for bar/line (`histfunc`-like `agg`)
 
 #### E23.6 — Express function catalogue   `P1` `L`   deps: E23.2 + trace epics   · 🟡 Partial (M3 wave 3)
-- [ ] `scatter`, `line`, `area`, `bar`, `timeline`, `pie`, `sunburst`, `treemap`, `icicle`, `funnel`, `funnelArea`, `histogram`, `box`, `violin`, `strip`, `ecdf`, `densityHeatmap`, `densityContour`, `imshow`, `scatterMatrix`, `parallelCoordinates`, `parallelCategories`, `scatterPolar`, `linePolar`, `barPolar`, `scatterTernary`, `scatter3d`, `line3d`, and (stretch) `scatterGeo`, `choropleth` — *M3: `scatter`, `line`, `area`, `bar`, `timeline`, `pie`, `histogram`, `box`, `violin`, `strip`, `ecdf`, `densityHeatmap`, `densityContour`, `scatterMatrix`, `parallelCoordinates`, `parallelCategories`; M4: `imshow`; M5 wave 0: `funnel`, `funnelArea`, `scatterPolar`, `linePolar`, `barPolar`; the rest with their trace epics*
+- [ ] `scatter`, `line`, `area`, `bar`, `timeline`, `pie`, `sunburst`, `treemap`, `icicle`, `funnel`, `funnelArea`, `histogram`, `box`, `violin`, `strip`, `ecdf`, `densityHeatmap`, `densityContour`, `imshow`, `scatterMatrix`, `parallelCoordinates`, `parallelCategories`, `scatterPolar`, `linePolar`, `barPolar`, `scatterTernary`, `scatter3d`, `line3d`, and (stretch) `scatterGeo`, `choropleth` — *M3: `scatter`, `line`, `area`, `bar`, `timeline`, `pie`, `histogram`, `box`, `violin`, `strip`, `ecdf`, `densityHeatmap`, `densityContour`, `scatterMatrix`, `parallelCoordinates`, `parallelCategories`; M4: `imshow`; M5 wave 0: `funnel`, `funnelArea`, `scatterPolar`, `linePolar`, `barPolar`; M5 wave 1: `sunburst`, `treemap`, `icicle`; the rest with their trace epics*
 - [x] Each returns a `Figure` object (so it can be modified before rendering) or renders directly when given an element — a plain `{ data, layout, frames? }` object; `fn(el, data, options)` renders with `newPlot` and resolves with the chart
 
 ---
@@ -2176,10 +2176,10 @@ come back in wave 2 because keyboard & focus (E17.4) builds on them.
 | 0 | `sankey` layout, rendering and interaction | E13.5a ✅, E13.5b ✅ |
 | 0 | Express: trendlines and aggregations, M4 functions (`funnel`, `funnelArea`, `scatterPolar`, `linePolar`, `barPolar`) | E23.5 ✅, E23.6 🟡 |
 | 0 | Locales: number/date formats and UI strings, ≥ 20 locales, Plotly locale compatibility | E17.6 ✅ |
-| 1 | `treemap` and `icicle` on the hierarchy engine (pathbar, tiling, drill-down) | E13.3, E13.4 |
-| 1 | Express `sunburst`/`treemap`/`icicle` with `path` | E13.1 (Express), E23.6 |
-| 1 | Chart summaries, data table, visual accessibility (high contrast, safe palette, pattern encoding) | E17.2, E17.3, E17.5 |
-| 1 | Sankey flow particles and 2.5D ribbons | E13.5c |
+| 1 | `treemap` and `icicle` on the hierarchy engine (pathbar, tiling, drill-down) | E13.3 ✅, E13.4 ✅ |
+| 1 | Express `sunburst`/`treemap`/`icicle` with `path` | E13.1 ✅, E23.6 🟡 (ternary, 3D, geo later) |
+| 1 | Chart summaries, data table, visual accessibility (high contrast, safe palette, pattern encoding) | E17.2 ✅, E17.3 ✅, E17.5 ✅ |
+| 1 | Sankey flow particles and 2.5D ribbons | E13.5c 🟡 (2.5D deferred) |
 | 2 | Keyboard navigation, touch and pointer, keyboard & focus for every control | E6.5, E6.6, E17.4 |
 | 2 | M4/M5 carry-forward and exit review | — |
 
@@ -2189,6 +2189,13 @@ node grouping and animated snap (Plotly uses a force simulation); Express polar 
 radial range, ewm `times` and rolling `closed`/`step`; locales don't translate table cells,
 parcoords ticks, accessibility descriptions or Holochart-only strings, and RTL/CJK examples are
 not visually tested (they need a vendored font); the IIFE is at ~643 of 650 kB locally.
+
+Open after M5 wave 1: budgets raised for M5 by decision (core + scatter 157, basic 248, full 475,
+IIFE 690 kB); treemap/icicle `uniformtext`, `coloraxis` and animated `level`; Express hierarchy
+colorscales sit on the trace until the hierarchy traces read `marker.coloraxis`; visible data
+tables stop at 100 rows for traces without `table.row`; summaries have no live region and the
+E17.1 description lines are still English; `Safe` has three dark colors with low contrast on the
+default dark look; `apps/docs/reference/events.md` doesn't list the `*click` hierarchy events.
 
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 

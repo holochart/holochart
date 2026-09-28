@@ -113,6 +113,7 @@ describe('built-in themes (E8.1)', () => {
       'none',
       'high-contrast',
       'neon',
+      'high-contrast-dark',
     ]);
     expect(builtinThemes.map((t) => t.kind)).toEqual(THEME_NAMES.map(() => 'template'));
     expect(defineTheme('neon').template).toBe(THEMES.neon);

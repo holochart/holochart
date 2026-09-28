@@ -205,7 +205,12 @@ function traceKwargs(
           const marker = (patch['marker'] ??= {}) as Record<string, unknown>;
           if (config.continuousColor === 'pie' && args.table.type(column) === 'numeric') {
             marker['colors'] = values;
-            marker['coloraxis'] = 'coloraxis';
+            if (config.inlineColorscale) {
+              Object.assign(marker, colorscaleAttributes(args), {
+                showscale: true,
+                colorbar: { title: { text: label } },
+              });
+            } else marker['coloraxis'] = 'coloraxis';
             mappingLabels.set(label, '%{color}');
           } else {
             // Discrete: the map's colors, then the sequence, per slice (px, per trace).
@@ -248,13 +253,22 @@ function traceKwargs(
         bar[role.endsWith('Minus') ? 'arrayminus' : 'array'] = values;
         break;
       }
+      // px names a column called like its option by the hover variable (`label=%{label}`).
       case 'names':
         patch['labels'] = values;
-        mappingLabels.set(label, '%{label}');
+        mappingLabels.set(label === 'names' ? 'label' : label, '%{label}');
         break;
       case 'values':
         patch['values'] = values;
-        mappingLabels.set(label, '%{value}');
+        mappingLabels.set(label === 'values' ? 'value' : label, '%{value}');
+        break;
+      case 'parents':
+        patch['parents'] = values;
+        mappingLabels.set(label === 'parents' ? 'parent' : label, '%{parent}');
+        break;
+      case 'ids':
+        patch['ids'] = values;
+        mappingLabels.set(label === 'ids' ? 'id' : label, '%{id}');
         break;
       case 'text':
         patch['text'] = values;
@@ -691,6 +705,6 @@ function overallTrendline(
 }
 
 /** Traces px gives no `legendgroup` / `showlegend`. */
-const NO_LEGEND = new Set(['parcoords', 'parcats', 'histogram2d']);
+const NO_LEGEND = new Set(['parcoords', 'parcats', 'histogram2d', 'sunburst', 'treemap', 'icicle']);
 /** Traces px aligns in `offsetgroup`s (in `group` bar mode or without a bar mode). */
 const ALIGNED = new Set(['bar', 'box', 'violin', 'histogram']);

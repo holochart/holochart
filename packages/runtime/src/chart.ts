@@ -163,7 +163,7 @@ import {
   type StreamUpdate,
 } from './plan.ts';
 import { chartToJSON, type ChartToJSONOptions } from './json.ts';
-import { describeChart, type ChartDescription } from './a11y/describe.ts';
+import { describeChart, type ChartDescription, type OverviewInput } from './a11y/describe.ts';
 import { A11yMirror, type A11yChange } from './a11y/mirror.ts';
 import type { DownloadImageOptions, ExportSource, ToImageOptions } from './export/types.ts';
 import type { Animation } from './anim/animation.ts';
@@ -598,6 +598,9 @@ export class Chart {
   #destroyed = false;
   #unsubscribeFonts: (() => void) | undefined;
   #a11y: A11yMirror | undefined;
+  /** Generated summaries (E17.2): their code loads after the first description needs it. */
+  #summarize: ((input: OverviewInput) => string) | null | undefined;
+  #summaryLoad: Promise<void> | undefined;
   /** Frames and transitions (E7.3, E7.4): their code loads on first use. */
   #animation: Promise<Animation> | undefined;
   /** Style rules and functions (E8.5, E8.6): their code loads when a trace first uses them. */
@@ -752,9 +755,22 @@ export class Chart {
     return this.#describe();
   }
 
+  /**
+   * The {@link description} with its generated summary (E17.2): resolves once the summary code
+   * (and, with `config.a11y.dataTable: 'visible'`, the table code) has loaded, which happens after
+   * the first draw anyway. `undefined` before the first draw.
+   */
+  async describe(): Promise<ChartDescription | undefined> {
+    const first = this.#describe();
+    if (this.#summaryLoad) await this.#summaryLoad;
+    await this.#a11y?.tablesReady;
+    return this.#summaryLoad ? this.#describe() : first;
+  }
+
   #describe(): ChartDescription | undefined {
     const full = this.#full;
     if (!full) return undefined;
+    const a11y = full.fullConfig.a11y;
     return describeChart({
       fullLayout: full.fullLayout,
       fullData: full.fullData,
@@ -765,7 +781,24 @@ export class Chart {
         const slot = this.#traces[i];
         return slot?.hasCalc ? { value: slot.calc } : undefined;
       },
+      summarize: a11y.summaries ? this.#summarize : null,
+      onPending: () => this.#loadSummary(),
+      tables: a11y.dataTable !== false,
     });
+  }
+
+  /** Load the summary code (E17.2), then describe the chart again. */
+  #loadSummary(): void {
+    this.#summaryLoad ??= import('./a11y/summary.ts').then(
+      (m) => {
+        this.#summarize = m.summarizeChart;
+        if (!this.#destroyed) this.#a11y?.update();
+      },
+      (error: unknown) => {
+        this.#summarize = null;
+        console.warn('holochart: loading the chart summary failed', error);
+      },
+    );
   }
 
   /** Traces after defaults (as of the last pipeline run). */
@@ -1629,6 +1662,8 @@ export class Chart {
       this.#a11y = new A11yMirror(this.element, {
         interactive: config.staticPlot !== true,
         describe: () => this.#describe(),
+        dataTable: config.a11y.dataTable,
+        figure: () => ({ layout: this.#full?.fullLayout, width: this.#size.width }),
       });
     }
     const events = this.#events;

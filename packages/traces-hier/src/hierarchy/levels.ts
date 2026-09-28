@@ -124,14 +124,18 @@ export interface PartitionCell {
 }
 
 /**
- * d3's `partition` of the subtree at `entry` over `[0, dx] × [0, dy]`, without padding: each level
- * is `dy / (entry.height + 1)` tall, and children split their parent's `x` span by value (d3's
+ * d3's `partition` of the subtree at `entry` over `[0, dx] × [0, dy]`: each level is
+ * `dy / (entry.height + 1)` tall, and children split their parent's `x` span by value (d3's
  * `treemapDice`; a remainder or `total` above the children's sum leaves a gap at the end). Cells
- * come breadth first (d3 `descendants`), so parents precede their children.
+ * come breadth first (d3 `descendants`), so parents precede their children. With `padding` (icicle's
+ * `tiling.pad`), every cell then gives up `padding` px at its far `x` and `y` ends, and the entry
+ * starts `padding` px in, as in d3.
  */
-export function partition(entry: HierNode, dx: number, dy: number): PartitionCell[] {
+export function partition(entry: HierNode, dx: number, dy: number, padding = 0): PartitionCell[] {
   const n = entry.height + 1;
-  const cells: PartitionCell[] = [{ node: entry, depth: 0, x0: 0, x1: dx, y0: 0, y1: dy / n }];
+  const cells: PartitionCell[] = [
+    { node: entry, depth: 0, x0: padding, x1: dx, y0: padding, y1: dy / n },
+  ];
   for (let k = 0; k < cells.length; k++) {
     const cell = cells[k]!;
     const { node } = cell;
@@ -144,6 +148,15 @@ export function partition(entry: HierNode, dx: number, dy: number): PartitionCel
       const x0 = x;
       x += child.value * scale;
       cells.push({ node: child, depth: cell.depth + 1, x0, x1: x, y0, y1 });
+    }
+  }
+  if (padding > 0) {
+    // d3 pads each node after its children were placed in its unpadded span.
+    for (const c of cells) {
+      c.x1 -= padding;
+      c.y1 -= padding;
+      if (c.x1 < c.x0) c.x0 = c.x1 = (c.x0 + c.x1) / 2;
+      if (c.y1 < c.y0) c.y0 = c.y1 = (c.y0 + c.y1) / 2;
     }
   }
   return cells;

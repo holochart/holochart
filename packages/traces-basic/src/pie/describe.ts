@@ -1,7 +1,7 @@
 /**
  * Accessible description of a pie trace (plan E17.1): slice count, total and the largest slices
  * with their shares, plus a table of every visible slice (label, value, percent), formatted like
- * the pie's own labels.
+ * the pie's own labels, and the slices for the generated summary (E17.2).
  */
 import {
   accessibleText,
@@ -40,9 +40,19 @@ export function describePie(ctx: DescribeContext<PieCalc>): TraceDescription {
 
   const shown = visible.slice(0, ctx.maxRows);
   const rows = shown.map((s) => [label(s), formatPieValue(s.v), share(s)]);
+  const slices = calc.slices;
   return {
     kind,
     summary,
     table: { caption: name, columns: ['Label', 'Value', 'Percent'], rows, total: visible.length },
+    insight: {
+      kind: 'shares',
+      part: 'slice',
+      length: slices.length,
+      values: slices.map((s) => s.v),
+      label: (i) => label(slices[i]!),
+      skip: (i) => slices[i]!.hidden === true,
+      formatValue: formatPieValue,
+    },
   };
 }

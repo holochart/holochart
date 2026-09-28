@@ -2,8 +2,9 @@
  * The chart-level accessible description (plan E17.1): the accessible name (`aria-label`) and
  * the structured text of the visually hidden DOM mirror — chart type(s), axes with their ranges
  * formatted like the axes, one summary per trace (the trace module's `describe()`, or a generic
- * line) and the traces' optional data tables, capped at {@link MAX_TABLE_ROWS} rows. Pure: the
- * DOM side is `mirror.ts`.
+ * line) and the traces' optional data tables, capped at {@link MAX_TABLE_ROWS} rows. With the
+ * lazily loaded summary code (E17.2, `summary.ts`) it adds the generated overview of trends and
+ * extremes from the traces' insights. Pure: the DOM side is `mirror.ts`.
  */
 import {
   formatValue,
@@ -13,7 +14,7 @@ import {
   type FullLayout,
   type FullTrace,
 } from '@mk7s/holochart-core';
-import type { AxisInfo, TraceDescription, TraceModule } from '../contracts.ts';
+import type { AxisInfo, TraceDescription, TraceInsight, TraceModule } from '../contracts.ts';
 import { countText, formatAxisValue, listText, accessibleText, traceNameText } from './text.ts';
 
 /** Rows shown per hidden data table; longer data gets a "first N of M" caption. */
@@ -32,13 +33,38 @@ export interface DescribeInput {
   module(index: number): TraceModule | undefined;
   /** Calc of trace `index`, or `undefined` when it has none (hidden, not calculated). */
   calc(index: number): { readonly value: unknown } | undefined;
+  /**
+   * The generated overview (E17.2, `summarizeChart` of the lazily loaded summary code): `null`
+   * when summaries are off (`config.a11y.summaries: false`), `undefined` while not loaded.
+   */
+  readonly summarize?: ((input: OverviewInput) => string) | null;
+  /** Called when traces have insights but {@link summarize} is not loaded yet. */
+  readonly onPending?: () => void;
+  /** Whether to build data tables (`config.a11y.dataTable` is not `false`). Default: `true`. */
+  readonly tables?: boolean;
 }
 
-/** A hidden data table, ready for the DOM (rows already capped). */
+/** What the summary code gets: visible traces' insights and the first axes' titles. */
+export interface OverviewInput {
+  readonly fullLayout: FullLayout;
+  readonly traces: readonly { readonly name: string; readonly insight: TraceInsight }[];
+  readonly xTitle?: string;
+  readonly yTitle?: string;
+}
+
+/** A data table, ready for the DOM (hidden rows already capped). */
 export interface DescribedTable {
+  /** The table's name (the trace name, or the module's caption). */
+  readonly title: string;
+  /** The title with the row count, e.g. "Revenue (first 100 of 1,000 rows)". */
   readonly caption: string;
   readonly columns: readonly string[];
+  /** The first {@link MAX_TABLE_ROWS} rows. */
   readonly rows: readonly (readonly string[])[];
+  /** Rows the data has. */
+  readonly total: number;
+  /** Row `i` of all {@link total} rows (visible tables), when the trace provides it. */
+  readonly row?: (i: number) => readonly string[];
 }
 
 /** The accessible description of a chart. */
@@ -52,6 +78,12 @@ export interface ChartDescription {
   /** One summary per trace (visible or legend-only). */
   readonly traces: readonly string[];
   readonly tables: readonly DescribedTable[];
+  /**
+   * The generated summary of trends and extremes (E17.2), e.g. "k$ by Month. Revenue rises from 12
+   * (Jan 1, 2024) to 19 (Jun 1, 2024). It peaks at 21 (May 1, 2024)."; empty while its code loads,
+   * with `config.a11y.summaries: false`, or when no trace reports an insight.
+   */
+  readonly overview: string;
 }
 
 /** Build the description of a chart. Trace `describe()` errors fall back to the generic line. */
@@ -60,6 +92,7 @@ export function describeChart(input: DescribeInput): ChartDescription {
   const kinds: string[] = [];
   const traces: string[] = [];
   const tables: DescribedTable[] = [];
+  const insights: { name: string; insight: TraceInsight }[] = [];
   let shown = 0;
   fullData.forEach((trace, index) => {
     if (trace.visible === false) return;
@@ -70,29 +103,60 @@ export function describeChart(input: DescribeInput): ChartDescription {
     if (trace.visible === true) {
       shown++;
       if (!kinds.includes(kind)) kinds.push(kind);
+      const insight = described?.insight;
+      if (insight) insights.push({ name: traceNameText(trace['name'], index), insight });
     }
     let summary = described?.summary ?? genericSummary(trace, index);
     if (trace.visible !== true) summary += ' Hidden (shown in the legend only).';
     traces.push(summary);
     const table = described?.table;
-    if (table && table.columns.length > 0) {
+    if (table && table.columns.length > 0 && input.tables !== false) {
       const rows = table.rows.slice(0, MAX_TABLE_ROWS);
       const total = Math.max(table.total ?? table.rows.length, rows.length);
       const base = accessibleText(table.caption) || traceNameText(trace['name'], index);
       tables.push({
+        title: base,
         caption:
           total > rows.length
             ? `${base} (first ${rows.length} of ${countText(total, 'row')})`
             : `${base} (${countText(total, 'row')})`,
         columns: table.columns.map(accessibleText),
         rows,
+        total,
+        ...(table.row ? { row: table.row } : {}),
       });
     }
   });
 
   const summary = chartSummary(kinds, shown);
-  const axes = [...input.axes.values()].map(describeAxis);
-  return { label: chartLabel(input, summary), summary, axes, traces, tables };
+  const axes = [...input.axes.values()];
+  let overview = '';
+  if (insights.length > 0 && input.summarize) {
+    overview = input.summarize({
+      fullLayout: input.fullLayout,
+      traces: insights,
+      ...axisTitles(axes),
+    });
+  } else if (insights.length > 0 && input.summarize === undefined) {
+    input.onPending?.();
+  }
+  return {
+    label: chartLabel(input, summary),
+    summary,
+    axes: axes.map(describeAxis),
+    traces,
+    tables,
+    overview,
+  };
+}
+
+/** Titles of the first x and y axes, for the overview's "y by x". */
+function axisTitles(axes: readonly AxisInfo[]): { xTitle?: string; yTitle?: string } {
+  const title = (letter: string): string | undefined =>
+    accessibleText(getIn(axes.find((a) => a.letter === letter)?.full, 'title.text')) || undefined;
+  const xTitle = title('x');
+  const yTitle = title('y');
+  return { ...(xTitle ? { xTitle } : {}), ...(yTitle ? { yTitle } : {}) };
 }
 
 /** "Line and bar chart with 3 traces." / "Pie chart." / "Empty chart." */

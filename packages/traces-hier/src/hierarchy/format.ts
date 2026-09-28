@@ -149,6 +149,22 @@ export function nodeLabels(node: HierNode, ctx: NodeContext): Record<string, str
   return out;
 }
 
+const TEXTINFO = new Map<
+  string,
+  { flags: ReadonlySet<string>; keys: readonly ('parent' | 'entry' | 'root')[] }
+>();
+
+/** A `textinfo` string's flags and percentage keys, parsed once (labels of big hierarchies). */
+function textinfoFlags(info: string) {
+  let parsed = TEXTINFO.get(info);
+  if (!parsed) {
+    const flags = new Set(info.split('+'));
+    const keys = (['parent', 'entry', 'root'] as const).filter((k) => flags.has(`percent ${k}`));
+    TEXTINFO.set(info, (parsed = { flags, keys }));
+  }
+  return parsed;
+}
+
 /**
  * The label of a node (Plotly's `formatSliceLabel`), in pseudo-HTML: `texttemplate` when set,
  * else the `textinfo` parts — label, value, current path, percentages (parent, entry, root), text —
@@ -169,14 +185,13 @@ export function nodeText(trace: FullTrace, node: HierNode, ctx: NodeContext): st
   }
   const info = trace['textinfo'];
   if (typeof info !== 'string' || !info || info === 'none') return '';
-  const flags = new Set(info.split('+'));
+  const { flags, keys } = textinfoFlags(info);
   const sep = ctx.separators;
   const parts: string[] = [];
   if (flags.has('label') && node.label) parts.push(node.label);
   if (node.v !== undefined && flags.has('value')) parts.push(formatNodeValue(node.v, sep));
   if (!isHierarchyRoot(node)) {
     if (flags.has('current path')) parts.push(nodePath(node));
-    const keys = (['parent', 'entry', 'root'] as const).filter((k) => flags.has(`percent ${k}`));
     const p = nodePercents(node, ctx);
     const ratios = { parent: p.percentParent, entry: p.percentEntry, root: p.percentRoot };
     for (const key of keys) {

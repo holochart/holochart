@@ -101,7 +101,8 @@ describe('generateTypes leaf mapping', () => {
   });
 
   it('maps colorlist, colorscale, data_array, any and function', () => {
-    expect(typeOf(attr.colorlist())).toBe('readonly string[]');
+    // A list of colors, or a colorway name (E17.5).
+    expect(typeOf(attr.colorlist())).toBe('readonly string[] | string');
     expect(typeOf(attr.colorscale())).toBe('ColorScale');
     expect(typeOf(attr.dataArray())).toBe('DataArray');
     expect(typeOf(attr.any({ arrayOk: true }))).toBe('unknown');

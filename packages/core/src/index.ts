@@ -124,6 +124,9 @@ export type {
 // Supply defaults (E1.4)
 export { supplyDefaults } from './defaults/supply-defaults.ts';
 export type { SupplyDefaultsOptions, SupplyDefaultsResult } from './defaults/supply-defaults.ts';
+// Accessibility defaults (E17.5)
+export { A11Y_PATTERN_SHAPES, reducedMotion } from './defaults/a11y.ts';
+export type { ReducedMotion } from './defaults/a11y.ts';
 export {
   coerceAtPath,
   coerceContainer,

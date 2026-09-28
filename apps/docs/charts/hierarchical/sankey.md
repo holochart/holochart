@@ -20,7 +20,7 @@ Holochart lays sankeys out with a deterministic port of d3-sankey (the algorithm
 Plotly figure keeps its shape, and draws them on the GPU: all link ribbons are one batched polygon
 fill (tessellated cubic Bézier bands), the nodes one instanced rect set and the labels one batched
 SDF text set. Cycles are drawn as loops around the diagram. Hovering highlights links; dragging a
-node rearranges the diagram.
+node rearranges the diagram; animated flow particles can stream along the links.
 
 Pick a different chart when:
 
@@ -161,6 +161,48 @@ the columns); `link.color` takes one color per link:
 
 <Example id="sankey/arrows" />
 
+### Flow particles
+
+`link.flow` is a Holochart extension (Plotly has no equivalent): it streams small dots along every
+link from its source to its target, loops included, so the direction and the busy paths of a flow
+read at a glance. It is off unless you set it; `flow: {}` turns it on with the defaults:
+
+```ts
+import { createChart } from '@mk7s/holochart';
+
+createChart(document.getElementById('chart')!, {
+  data: [
+    {
+      type: 'sankey',
+      node: { label: ['Gas', 'Coal', 'Power', 'Homes', 'Industry'] },
+      link: {
+        source: [0, 1, 2, 2],
+        target: [2, 2, 3, 4],
+        value: [60, 40, 55, 45],
+        flow: { speed: 60, density: 2 },
+      },
+    },
+  ],
+});
+```
+
+- `density` (default 2): particles per 100 px of link length for every 10 px of link width, so
+  wide links carry more particles, spread across their width (a link thinner than 10 px gets one
+  lane). One value, or one per link; 0 draws none on a link.
+- `speed` (default 50): px per second along the link, one value or one per link; 0 holds the
+  particles still.
+- `size` (default 3 px diameter, one or one per link), `color` (default: the link color, opaque;
+  one or one per link) and `opacity` (default 1).
+- `time`: freezes the particles where they are that many seconds into the animation. Set it for a
+  still frame that is always the same, e.g. an exported image or a visual test. The example below
+  is frozen 2 s in; without `time` the particles move.
+
+<Example id="sankey/flow" />
+
+The particles move only while the chart is on screen, dim with the links outside a hover
+highlight, and follow their links while a node is dragged. With `prefers-reduced-motion: reduce`
+they hold still, spread evenly along the links.
+
 ## Styling
 
 - **Nodes.** `node.color` (one color, or one per node; default: the colorway at 0.8 opacity, one
@@ -240,6 +282,10 @@ the columns); `link.color` takes one color per link:
   colors, hovering and resizing labels never lay out again.
 - Hover highlighting only rewrites link colors. While a node is dragged, only the links it can move
   (its own, its neighbours', loops) are re-tessellated, in a separate small fill.
+- Flow particles are one more instanced draw, loaded on first use: the vertex shader places every
+  particle along its link from a small texture of arc-length samples and a time uniform, so an
+  animation frame costs no CPU work beyond setting that uniform and redrawing the chart. Frames are
+  requested only while particles move and the chart is on screen.
 - Hundreds of nodes and thousands of links stay interactive; readability, not rendering, is
   usually the limit.
 
@@ -249,6 +295,8 @@ the columns); `link.color` takes one color per link:
   reads `Sankey diagram "name": N nodes, M links, total flow from sources T.` and mentions cycles;
   its table lists each link's source, target, value and label.
 - **Keyboard:** there is no keyboard navigation between nodes and links yet.
+- **Motion:** flow particles hold still under `prefers-reduced-motion: reduce`; they add no
+  information the link widths don't carry, so a reader without them misses nothing.
 - **Color:** node colors only tell nodes apart; labels carry the meaning. Keep link colors
   translucent so crossings stay readable, and prefer concentration colorscales with a clear
   lightness ramp.
@@ -282,5 +330,7 @@ default.
 - `'snap'` drags push the other nodes of the column aside deterministically instead of Plotly's
   animated force simulation. Event node objects list their links by index (`sourceLinks`,
   `targetLinks`), so events serialize.
+- `link.flow` (flow particles) is a Holochart extension; Plotly ignores it.
 - Not supported yet: `node.hoverlabel` / `link.hoverlabel` (the trace `hoverlabel` applies to
-  both), grouping nodes with a box or lasso selection, keyboard navigation.
+  both), grouping nodes with a box or lasso selection, keyboard navigation. Extruded ribbons in a
+  2.5D view are a planned Holochart extension.

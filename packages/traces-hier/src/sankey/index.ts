@@ -3,12 +3,13 @@
  * between them as wide as their value, laid out by a port of d3-sankey (cycles routed as loops,
  * after d3-sankey-circular), placed by `domain`. Hover highlights a node's or a link's links and
  * shows their values; dragging a node rearranges the diagram (`arrangement`) and restyles
- * `node.x` / `node.y`. Core's schema/defaults parts and the runtime's render and interaction parts
- * in one object, registered with `register(sankey)` (ADR-019).
+ * `node.x` / `node.y`. `link.flow` (E13.5c, a Holochart extension) streams animated particles
+ * along the links. Core's schema/defaults parts and the runtime's render and interaction parts in
+ * one object, registered with `register(sankey)` (ADR-019).
  *
  * Like Plotly, sankey has no legend entry. Deferred: `node.hoverlabel` / `link.hoverlabel`,
- * grouping nodes with a box or lasso selection, animated snapping, flow particles and 2.5D
- * ribbons (E13.5c).
+ * grouping nodes with a box or lasso selection, animated snapping, and extruded ribbons in a 2.5D
+ * view (E13.5c; there is no 2.5D view yet).
  */
 import type { TraceModule } from '@mk7s/holochart-runtime';
 import { sankeyAttributes } from './attributes.ts';

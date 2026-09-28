@@ -1,7 +1,7 @@
 /**
  * Accessible descriptions of box and violin traces (plan E17.1): the box count, the sample count
  * and the range of the medians, plus a table of every box's five-number summary and mean,
- * formatted like the axes' hover labels.
+ * formatted like the axes' hover labels, and the summaries for the generated summary (E17.2).
  */
 import { getIn } from '@mk7s/holochart-core';
 import {
@@ -62,22 +62,32 @@ export function describeBox(ctx: DescribeContext<BoxCalc>): TraceDescription {
     'max',
     'mean',
   ];
+  const row = (b: number): string[] => [
+    fp(calc.pos[b]!),
+    String(stats.n[b]!),
+    fv(stats.min[b]!),
+    fv(stats.q1[b]!),
+    fv(stats.med[b]!),
+    fv(stats.q3[b]!),
+    fv(stats.max[b]!),
+    fv(stats.mean[b]!),
+  ];
   const rows: string[][] = [];
-  for (let b = 0; b < Math.min(count, ctx.maxRows); b++) {
-    rows.push([
-      fp(calc.pos[b]!),
-      String(stats.n[b]!),
-      fv(stats.min[b]!),
-      fv(stats.q1[b]!),
-      fv(stats.med[b]!),
-      fv(stats.q3[b]!),
-      fv(stats.max[b]!),
-      fv(stats.mean[b]!),
-    ]);
-  }
+  for (let b = 0; b < Math.min(count, ctx.maxRows); b++) rows.push(row(b));
   return {
     kind: horizontal ? `horizontal ${shape}` : shape,
     summary,
-    table: { caption: name, columns, rows, total: count },
+    table: { caption: name, columns, rows, total: count, row },
+    insight: {
+      kind: 'boxes',
+      length: count,
+      label: (b) => fp(calc.pos[b]!),
+      min: stats.min,
+      q1: stats.q1,
+      median: stats.med,
+      q3: stats.q3,
+      max: stats.max,
+      formatValue: fv,
+    },
   };
 }

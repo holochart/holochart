@@ -3,7 +3,8 @@
  * `traces/sankey/attributes.js`: nodes (`node.label`, colors, `pad`, `thickness`, `align`, fixed
  * `x` / `y`, `groups`, hover), links (`source`, `target`, `value`, colors, `hovercolor`,
  * `arrowlen`, concentration `colorscales`, hover), `orientation`, `arrangement`, `valueformat`,
- * `valuesuffix` and `textfont`. `domain` comes from the registry (the trace is in the `domain`
+ * `valuesuffix` and `textfont`; plus `link.flow`, animated flow particles (plan E13.5c, a Holochart
+ * extension). `domain` comes from the registry (the trace is in the `domain`
  * category); `name`, `uid`, `hoverlabel`, … are common trace attributes.
  *
  * Edit types: everything the layout reads is `calc` (the calc record carries it, so the laid-out
@@ -244,6 +245,55 @@ export const sankeyAttributes = /* @__PURE__ */ (() =>
             description:
               'Template of the link hover labels: `%{label}`, `%{value}` (formatted with `valueformat` and `valuesuffix`), `%{source.label}`, `%{target.label}`, `%{flow.labelConcentration}`, `%{customdata}`, … `<extra>…</extra>` replaces the value box.',
           }),
+          flow: attr.object(
+            {
+              density: attr.number({
+                min: 0,
+                dflt: 2,
+                arrayOk: true,
+                editType: 'style',
+                description:
+                  'Particles per 100 px of link length for every 10 px of link width (thinner links get one lane), or one density per link; 0 draws none.',
+              }),
+              speed: attr.number({
+                min: 0,
+                dflt: 50,
+                arrayOk: true,
+                editType: 'style',
+                description:
+                  'Particle speed along the link in CSS px per second, or one per link; 0 holds the particles still.',
+              }),
+              size: attr.number({
+                min: 0,
+                dflt: 3,
+                arrayOk: true,
+                editType: 'style',
+                description: 'Particle diameter in CSS px, or one per link.',
+              }),
+              color: attr.color({
+                arrayOk: true,
+                editType: 'style',
+                description: 'Particle color, or one per link. Default: the link color, opaque.',
+              }),
+              opacity: attr.number({
+                min: 0,
+                max: 1,
+                dflt: 1,
+                editType: 'style',
+                description: 'Particle opacity.',
+              }),
+              time: attr.number({
+                editType: 'style',
+                description:
+                  'Freeze the particles where they are this many seconds into the animation: a still frame, e.g. for image export and visual tests. Default: the particles move.',
+              }),
+            },
+            {
+              editType: 'style',
+              description:
+                'Flow particles (a Holochart extension): dots streaming along every link from its source to its target, spread across its width, as many as its size and `density` call for. Off unless `link.flow` is set (`flow: {}` turns them on). They dim with links outside a hover highlight, and hold still under `prefers-reduced-motion: reduce`.',
+            },
+          ),
           colorscales: attr.items(
             {
               label: attr.string({

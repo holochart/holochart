@@ -113,6 +113,7 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
         'animation',
         'statistics',
         'imshow',
+        'hierarchy',
       ]),
     },
     {
@@ -179,7 +180,10 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
         'indicator',
       ]),
     },
-    { text: 'Hierarchical', items: pages('charts/hierarchical/', ['sunburst', 'sankey']) },
+    {
+      text: 'Hierarchical',
+      items: pages('charts/hierarchical/', ['sunburst', 'treemap', 'icicle', 'sankey']),
+    },
   ];
 
   const demos: Item[] = [{ text: 'Demos', items: pages('demos/', ['openrouter']) }];

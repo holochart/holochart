@@ -641,10 +641,12 @@ describe('indicator description', () => {
       yaxis: undefined,
       maxRows: 100,
     });
-    expect(d).toEqual({
+    expect(d).toMatchObject({
       kind: 'indicator',
       summary:
         'Indicator "Revenue 2024": $450. Up 50 (12.5%) from 400. Gauge from 0 to 500, threshold 480.',
+      insight: { kind: 'value', value: 450, reference: 400 },
     });
+    expect((d.insight as { formatValue(v: number): string }).formatValue(50)).toBe('$50');
   });
 });

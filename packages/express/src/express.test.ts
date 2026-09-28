@@ -400,6 +400,7 @@ describe('data input', () => {
         'funnelArea',
         'getTrendlineResults',
         'histogram',
+        'icicle',
         'imshow',
         'line',
         'linePolar',
@@ -410,7 +411,9 @@ describe('data input', () => {
         'scatterMatrix',
         'scatterPolar',
         'strip',
+        'sunburst',
         'timeline',
+        'treemap',
         'violin',
       ].sort(),
     );
