@@ -22,6 +22,8 @@ import { sankeyRenderer } from './plot.ts';
 export const sankey: TraceModule<SankeyCalc, typeof sankeyAttributes.children> = {
   type: 'sankey',
   categories: ['domain', 'noOpacity'],
+  // Node drags start sideways on touch; vertical swipes scroll the page (E6.6).
+  touchAction: 'pan-y',
   schema: sankeyAttributes,
   meta: {
     description:

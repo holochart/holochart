@@ -68,7 +68,8 @@ export const FONT_PARTS = ['font-regular', 'font-bold', 'font-italic', 'font-bol
  * `dist/custom-markers-*.js`), the style rules and functions (E8.5, E8.6: runtime's
  * `dist/styles-*.js`), the pattern fills (E8.10: render's `dist/pattern-code-*.js`), the sankey
  * flow particles (E13.5c: traces-hier's `dist/flow-*.js`), the accessibility code (E17.2, E17.3:
- * runtime's `dist/summary-*.js` and `dist/table-view-*.js`) and the {@link FONT_PARTS}.
+ * runtime's `dist/summary-*.js` and `dist/table-view-*.js`), the keyboard access (E6.5, E17.4:
+ * runtime's `dist/keyboard-*.js`, components' `dist/legend-keys-*.js`) and the {@link FONT_PARTS}.
  */
 export const LAZY_PARTS = [
   'fill',
@@ -80,6 +81,7 @@ export const LAZY_PARTS = [
   'pattern',
   'flow',
   'a11y',
+  'keyboard',
   ...FONT_PARTS,
 ] as const;
 
@@ -144,6 +146,14 @@ const FLOW_MODULE =
 const A11Y_MODULE =
   /[\\/]runtime[\\/](?:dist[\\/](?:summary|table-view)-[\w-]+\.js|src[\\/]a11y[\\/](?:summary|table-view)\.ts)$/;
 
+/**
+ * The lazily loaded keyboard access (E6.5, E17.4: the data navigation, loaded on the chart's first
+ * focus, and the legend's key targets, loaded with the first legend): built
+ * (`dist/keyboard-*.js`, `dist/legend-keys-*.js`), or from sources.
+ */
+const KEYBOARD_MODULE =
+  /[\\/](?:runtime[\\/](?:dist[\\/]keyboard-[\w-]+\.js|src[\\/]fx[\\/]keyboard\.ts)|components[\\/](?:dist[\\/]legend-keys-[\w-]+\.js|src[\\/]legend[\\/]legend-keys\.ts))$/;
+
 /** The {@link LAZY_PARTS} entry a module belongs to, if any. */
 export function lazyPartOf(moduleId: string): string | undefined {
   if (FILL_MODULE.test(moduleId)) return 'fill';
@@ -155,6 +165,7 @@ export function lazyPartOf(moduleId: string): string | undefined {
   if (PATTERN_MODULE.test(moduleId)) return 'pattern';
   if (FLOW_MODULE.test(moduleId)) return 'flow';
   if (A11Y_MODULE.test(moduleId)) return 'a11y';
+  if (KEYBOARD_MODULE.test(moduleId)) return 'keyboard';
   const face = FONT_MODULE.exec(moduleId)?.[1];
   return face ? `font-${face}` : undefined;
 }
@@ -338,6 +349,17 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     limit: '16 kB',
     lazyOf: 'partial-basic',
     lazyPart: 'controls',
+  },
+  {
+    // Plan E6.5 / E17.4 (M5 wave 2): keyboard navigation of the data (loaded on the chart's first
+    // focus) and the legend's key targets (loaded with the first legend of an interactive chart);
+    // two chunks, summed here. Measured 5.03 kB when split out (2026-09-28); budget = measured +
+    // ~10%.
+    id: 'keyboard-lazy',
+    name: 'keyboard navigation and legend keys (lazy chunks of basic)',
+    limit: '5.5 kB',
+    lazyOf: 'partial-basic',
+    lazyPart: 'keyboard',
   },
   {
     id: 'full',

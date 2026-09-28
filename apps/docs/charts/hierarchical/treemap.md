@@ -158,6 +158,16 @@ spaces first when that keeps it larger:
 
 <Example id="treemap/text-position" />
 
+### Uniform text
+
+`layout.uniformtext` draws every tile label at one size, the size of the smallest label that
+still fits, as in Plotly (and as for bars and pies). Labels that would have to shrink below
+`minsize` to fit are hidden with `mode: 'hide'`, or drawn at the common size with `'show'`.
+Headers and path bar labels are sized with the tiles. Drill-down clicks don't animate while it
+is on:
+
+<Example id="treemap/uniformtext" />
+
 ### Patterns
 
 `marker.pattern` hatches tiles (one shape per node, or one for all). With `fillmode: 'overlay'`
@@ -176,7 +186,9 @@ paper color:
 - **Depth fade.** `marker.depthfade`: `true` (default without `marker.colors`), `false` or
   `'reversed'`, as described above. Not with a colorscale.
 - **Colorscales.** `marker.colorscale`, `cmin`, `cmax`, `cmid`, `cauto`, `autocolorscale`,
-  `reversescale`, `showscale` and `marker.colorbar`, as for other colorscaled traces.
+  `reversescale`, `showscale` and `marker.colorbar`, as for other colorscaled traces, or
+  `marker.coloraxis` to share `layout.coloraxis` (its colorscale, domain and one colorbar) with
+  other traces. On a color axis, nodes without `marker.colors` are colored by `values`.
 - **Outlines.** `marker.line.color` (default: `layout.paper_bgcolor`) and `marker.line.width`
   (default 1 px, centered on the edges); both take one value per node.
 - **Shape.** `tiling.pad`, `marker.pad` and `marker.cornerradius`, see above.
@@ -220,7 +232,8 @@ paper color:
   without the percentage of the current root. `hovertemplate` takes the `texttemplate` variables.
 - **Events.** `hover`, `unhover`, `click` and `treemapclick` carry Plotly-shaped points:
   `curveNumber`, `pointNumber`, `label`, `value`, `id`, `parent`, `currentPath`, `entry`, `root`,
-  `percentParent`, `percentEntry`, `percentRoot`, `customdata` and `text`.
+  `percentParent`, `percentEntry`, `percentRoot`, `customdata` and `text`. See
+  [Hierarchy clicks](/reference/events#hierarchy-clicks) in the events reference.
 - Treemaps have no axes or legend entries, so zoom, pan, box or lasso selection and legend
   toggling don't apply to them.
 
@@ -273,7 +286,6 @@ default. [`treemapcolorway`](/reference/layout#treemapcolorway) and
   listener returning `false` also cancels the drill; the drill is a GUI `restyle` of `level`
   rather than an `animate` call; labels fade in at the end of the transition instead of moving
   with their tiles; path bar segments are hit-tested as rectangles.
-- Not supported yet: `marker.coloraxis`, `layout.uniformtext`, `texttemplatefallback` /
-  `hovertemplatefallback`, animated `level` changes through `animate` or `react` with a
-  transition, keyboard navigation.
+- Not supported yet: `texttemplatefallback` / `hovertemplatefallback`, animated `level` changes
+  through `animate` or `react` with a transition, keyboard navigation.
 - A "city" 3D treemap (tiles extruded by value) is a planned Holochart extension.

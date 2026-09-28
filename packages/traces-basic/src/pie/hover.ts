@@ -87,8 +87,31 @@ export function pieHoverPoints(
   const x = query.cx ?? query.px;
   const y = query.cy ?? height - query.py;
   const slice = sliceAt(calc, x, y);
-  if (!slice) return [];
+  return slice ? [slicePoint(calc, layout, trace, slice, ctx, height)] : [];
+}
 
+/** The pie `keyboardPoints` (E6.5): its visible slices in drawing order. */
+export function pieKeyboardPoints(
+  calc: PieCalc,
+  trace: FullTrace,
+  ctx: HoverContext,
+): HoverPoint[] {
+  const layout = calc.layout;
+  if (!layout) return [];
+  return calc.slices
+    .filter((slice) => !slice.hidden && Number.isFinite(slice.midAngle))
+    .map((slice) => slicePoint(calc, layout, trace, slice, ctx, layout.height));
+}
+
+/** A slice as a hover point, anchored in overlay px of a figure `height` px tall. */
+function slicePoint(
+  calc: PieCalc,
+  layout: PieLayout,
+  trace: FullTrace,
+  slice: PieSlice,
+  ctx: HoverContext,
+  height: number,
+): HoverPoint {
   const [ax, ay] = hoverAnchor(slice, layout);
   const locale = localeOf(ctx.fullLayout);
   const hovertext = castOption(trace['hovertext'] || trace['text'], slice.pts);
@@ -101,18 +124,16 @@ export function pieHoverPoints(
     curveNumber: typeof trace._index === 'number' ? trace._index : undefined,
   };
   if (slice.pts.length === 1) fields['pointNumber'] = fields['i'] = slice.pts[0];
-  return [
-    {
-      pointIndex: slice.i,
-      pointIndices: slice.pts,
-      distance: 0,
-      px: ax,
-      py: height - ay,
-      ...(isValidTextValue(hovertext) ? { text: String(hovertext) } : {}),
-      color: slice.color,
-      fields,
-      labels: sliceLabels(calc, slice, locale),
-      hoverText: pieHoverText(trace, calc, slice, hovertext, locale),
-    },
-  ];
+  return {
+    pointIndex: slice.i,
+    pointIndices: slice.pts,
+    distance: 0,
+    px: ax,
+    py: height - ay,
+    ...(isValidTextValue(hovertext) ? { text: String(hovertext) } : {}),
+    color: slice.color,
+    fields,
+    labels: sliceLabels(calc, slice, locale),
+    hoverText: pieHoverText(trace, calc, slice, hovertext, locale),
+  };
 }

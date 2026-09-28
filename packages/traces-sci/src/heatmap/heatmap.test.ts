@@ -658,5 +658,9 @@ describe('heatmap describe', () => {
     );
     expect(d!.table!.total).toBe(3);
     expect(d!.table!.rows).toHaveLength(2);
+    // Every row on demand (the visible data table, E17.3), skipping cells without a value.
+    const { rows, row } = d!.table!;
+    expect([0, 1].map((k) => row!(k))).toEqual(rows);
+    expect(row!(2)).toEqual(['0', '1', '3']);
   });
 });

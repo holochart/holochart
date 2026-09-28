@@ -559,3 +559,24 @@ describe('splom in a chart', () => {
     expect(text).toContain('4 samples of 3 dimensions');
   });
 });
+
+describe('splom description', () => {
+  it('lists every sample on demand past the first rows (E17.3)', () => {
+    const { fullData, fullLayout } = defaults({ dimensions: dims(2, 150) });
+    const d = splom.describe!({
+      trace: fullData[0] as FullTrace,
+      calc: { length: 150 } as SplomCalc,
+      index: 0,
+      fullLayout,
+      xaxis: undefined,
+      yaxis: undefined,
+      maxRows: 100,
+    })!;
+    const table = d.table!;
+    expect(table.columns).toEqual(['d0', 'd1']);
+    expect(table.rows).toHaveLength(100);
+    expect(table.total).toBe(150);
+    for (let k = 0; k < 100; k++) expect(table.row!(k)).toEqual(table.rows[k]);
+    expect(table.row!(149)).toEqual(['149', '159']);
+  });
+});

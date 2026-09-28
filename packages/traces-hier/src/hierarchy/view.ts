@@ -11,7 +11,7 @@
  * `react`) snap, and so does everything under `prefers-reduced-motion: reduce`. Clicks during a
  * transition emit their events but don't drill (Plotly).
  */
-import { reducedMotion, type FullTrace, type RGBA } from '@mk7s/holochart-core';
+import { reducedMotion, uniformTextOf, type FullTrace, type RGBA } from '@mk7s/holochart-core';
 import { fadeTextRuns, type Primitive, type TextLabel } from '@mk7s/holochart-render';
 import {
   getChart,
@@ -223,8 +223,13 @@ export class Transition {
 
 /**
  * Whether a `level` change should animate (a click asked for it, and motion is allowed:
- * `config.a11y.reducedMotion`, else `prefers-reduced-motion`; plan E17.5).
+ * `config.a11y.reducedMotion`, else `prefers-reduced-motion`; plan E17.5). Not with
+ * `layout.uniformtext` (E4.6), as in Plotly: labels are sized once every trace is laid out.
  */
-export function canAnimate(fullLayout: unknown): boolean {
-  return typeof requestAnimationFrame === 'function' && !reducedMotion(fullLayout);
+export function canAnimate(fullLayout: Readonly<Record<string, unknown>>): boolean {
+  return (
+    typeof requestAnimationFrame === 'function' &&
+    !reducedMotion(fullLayout) &&
+    !uniformTextOf(fullLayout).mode
+  );
 }

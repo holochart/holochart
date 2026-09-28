@@ -4,8 +4,23 @@
  * `outsidetextfont`; the others use `insidetextfont` (treemap and icicle path bars
  * `pathbar.textfont`) with a color contrasting their node unless one is set. Each font field falls
  * back to `textfont`, then `layout.font`, per node.
+ *
+ * With `layout.uniformtext` (E4.6), label fonts are raised to `minsize` and every label's fit is
+ * recorded, then resized to the size negotiated across the traces of the type ({@link
+ * UniformTextPass}; Plotly's `ensureUniformFontSize`, `recordMinTextSize` and `resizeText`).
  */
-import { toRGBA, type FullLayout, type FullTrace, type RGBA } from '@mk7s/holochart-core';
+import {
+  toRGBA,
+  uniformFontSize,
+  uniformTextOf,
+  uniformTextScale,
+  uniformTextSize,
+  type FullLayout,
+  type FullTrace,
+  type RGBA,
+  type UniformText,
+  type UniformTextItem,
+} from '@mk7s/holochart-core';
 import type { TextFont, TextFontWeight } from '@mk7s/holochart-render';
 import type { HierNode } from './build.ts';
 import { DEFAULT_LINE } from './colors.ts';
@@ -107,4 +122,39 @@ export function nodeFont(
     font: toFont([own, textfont, layoutFont], i),
     color: (typeof custom === 'string' ? toRGBA(custom) : null) ?? contrastColor(node.color),
   };
+}
+
+/**
+ * `layout.uniformtext` in one label layout (E4.6): the layout raises fonts to `minsize` and records
+ * every label's `{ fontSize, scale }` into `items` (hidden candidates included), for the size
+ * negotiated across the traces of the type; labels are drawn at `size`, that negotiated size
+ * (default: this trace's own).
+ */
+export interface UniformTextPass {
+  readonly uniform: UniformText;
+  readonly size?: number | undefined;
+  readonly items: UniformTextItem[];
+}
+
+/** A {@link UniformTextPass} with the layout's `uniformtext` and no negotiated size. */
+export function uniformTextPass(fullLayout: FullLayout): UniformTextPass {
+  return { uniform: uniformTextOf(fullLayout), items: [] };
+}
+
+/** `font` raised to `minsize` (Plotly's `ensureUniformFontSize`; unchanged when off). */
+export function uniformFont(font: TextFont, pass: UniformTextPass): TextFont {
+  return pass.uniform.mode ? { ...font, size: uniformFontSize(font.size, pass.uniform) } : font;
+}
+
+/**
+ * The scale each label is drawn at (Plotly's `resizeText`): the fit scales of `fits` when
+ * `uniformtext` is off; else the uniform size over the font size (never above 1), 0 for hidden
+ * candidates in `hide` mode. Records `fits` into `pass.items`.
+ */
+export function uniformScales(fits: readonly UniformTextItem[], pass: UniformTextPass): number[] {
+  const u = pass.uniform;
+  if (!u.mode) return fits.map((f) => f.scale);
+  pass.items.push(...fits);
+  const size = pass.size ?? uniformTextSize(fits, u);
+  return fits.map((f) => Math.min(1, uniformTextScale(f, size, u)));
 }

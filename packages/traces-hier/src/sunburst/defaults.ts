@@ -28,9 +28,9 @@ export function supplySunburstDefaults(
 
 /** Layout defaults for sunbursts: `sunburstcolorway` defaults to `colorway`. */
 export function supplySunburstLayoutDefaults(
-  _layoutIn: Readonly<Record<string, unknown>>,
+  layoutIn: Readonly<Record<string, unknown>>,
   layoutOut: FullLayout,
   ctx: LayoutDefaultsContext,
 ): void {
-  supplyHierarchyLayoutDefaults('sunburst', layoutOut, ctx);
+  supplyHierarchyLayoutDefaults('sunburst', layoutIn, layoutOut, ctx);
 }

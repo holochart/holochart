@@ -319,3 +319,25 @@ describe('funnelarea view', () => {
     expect(added).toHaveLength(1);
   });
 });
+
+describe('funnelarea description', () => {
+  it('formats every visible stage on demand, past maxRows (the visible data table, E17.3)', () => {
+    const { fullData, fullLayout, calcs } = laidOut([AREA]);
+    const describeWith = (maxRows: number) =>
+      funnelarea.describe!({
+        trace: fullData[0]!,
+        calc: calcs[0]!,
+        index: 0,
+        fullLayout,
+        xaxis: undefined,
+        yaxis: undefined,
+        maxRows,
+      })!.table!;
+    const all = describeWith(100);
+    const t = describeWith(1);
+    expect(t.rows).toEqual(all.rows.slice(0, 1));
+    expect(t.total).toBe(4);
+    expect(Array.from({ length: 4 }, (_, i) => t.row!(i))).toEqual(all.rows);
+    expect(t.row!(3)).toEqual([LABELS[3], '10', '10%']);
+  });
+});

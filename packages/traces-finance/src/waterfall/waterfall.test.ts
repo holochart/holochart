@@ -407,5 +407,9 @@ describe('waterfall description', () => {
       ['Consulting', '20', '80'],
       ['Costs', '−40', '40'],
     ]);
+    // Every bar on demand, past maxRows (the visible data table, E17.3).
+    expect(d!.table!.total).toBe(5);
+    expect(d!.table!.row?.(0)).toEqual(d!.table!.rows[0]);
+    expect(d!.table!.row?.(3)).toEqual(['Taxes', '−10', '30']);
   });
 });

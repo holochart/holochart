@@ -45,9 +45,10 @@ export function describeSplom(ctx: DescribeContext<SplomCalc>): TraceDescription
     const r = rangeText(d.values, calc.length);
     return r ? `${labels[i]} ${r}` : (labels[i] as string);
   });
+  const row = (i: number): string[] => dims.map((d) => cellText(d.values?.[i]));
   const rows: string[][] = [];
   const shown = Math.min(calc.length, ctx.maxRows);
-  for (let i = 0; i < shown; i++) rows.push(dims.map((d) => cellText(d.values?.[i])));
+  for (let i = 0; i < shown; i++) rows.push(row(i));
   return {
     kind: 'scatter plot matrix',
     summary: `Scatter plot matrix "${name}": ${countText(calc.length, 'sample')} of ${countText(dims.length, 'dimension')} (${listText(ranges)}), each pair of dimensions plotted against each other.`,
@@ -56,6 +57,7 @@ export function describeSplom(ctx: DescribeContext<SplomCalc>): TraceDescription
       columns: labels,
       rows,
       total: calc.length,
+      row,
     },
   };
 }

@@ -4,13 +4,14 @@
  * (`determineTextFont`: the transparent root's label sits on the background and uses
  * `outsidetextfont`; the others use `insidetextfont` with a color contrasting their sector) and where
  * it goes: pie's `transformInsideText` with `insidetextorientation`, fitted to the sector with its
- * outer radius as the pie radius, and shrunk (never grown) to fit.
+ * outer radius as the pie radius, and shrunk (never grown) to fit, or sized alike with
+ * `layout.uniformtext` (E4.6).
  *
  * Pure and in container px (top-left origin, y down), with angles in pie's convention (see
  * `geometry.ts`); text sizes come from the render layer's synchronous metrics, so placement is unit
  * tested without a GPU. Labels may be Plotly pseudo-HTML (E2.10): mixed styles become styled runs.
  */
-import type { FullLayout, FullTrace, RGBA } from '@mk7s/holochart-core';
+import type { FullLayout, FullTrace, RGBA, UniformTextItem } from '@mk7s/holochart-core';
 import { scaleTextRuns, type TextFont, type TextRunLines } from '@mk7s/holochart-render';
 import {
   labelContent,
@@ -25,7 +26,11 @@ import {
   LINE_HEIGHT,
   MIN_FONT_SIZE,
   nodeFont,
+  uniformFont,
+  uniformScales,
+  uniformTextPass,
   type LabelFont,
+  type UniformTextPass,
 } from '../hierarchy/text.ts';
 import type { Sector, SunburstGeometry, SunburstLayout } from './geometry.ts';
 
@@ -74,7 +79,8 @@ function orientationOf(trace: FullTrace): InsideOrientation {
 
 /**
  * Place the label of every sector of `geometry` (Plotly's sunburst `plot` text part), in container
- * px. Sectors without text, or whose label would shrink below 1 px, get none.
+ * px. Sectors without text, or whose label would shrink below 1 px, get none. `pass` applies
+ * `layout.uniformtext` (see {@link UniformTextPass}).
  */
 export function layoutSunburstText(
   trace: FullTrace,
@@ -82,26 +88,40 @@ export function layoutSunburstText(
   geometry: SunburstGeometry,
   layout: Pick<SunburstLayout, 'cx' | 'cy'>,
   fullLayout: FullLayout,
+  pass: UniformTextPass = uniformTextPass(fullLayout),
 ): SectorLabel[] {
   const hierarchy = calc.hierarchy;
   if (!hierarchy) return [];
   const ctx = nodeContext(hierarchy, geometry.entry, fullLayout);
   const orientation = orientationOf(trace);
-  const labels: SectorLabel[] = [];
+  const placed: {
+    content: ReturnType<typeof labelContent>;
+    t: ReturnType<typeof transformInsideText>;
+    color: RGBA;
+    index: number;
+  }[] = [];
+  const fits: UniformTextItem[] = [];
   geometry.sectors.forEach((s, index) => {
     if (!(s.r1 > 0) || s.x1 === s.x0) return;
     const raw = nodeText(trace, s.node, ctx);
     if (!raw) return;
     const { font, color } = sectorFont(trace, calc, s, fullLayout);
-    const content = labelContent(raw, font);
+    const content = labelContent(raw, uniformFont(font, pass));
     if (!content.text) return;
     const box = measureLabel(content, LINE_HEIGHT);
     if (!(box.width > 0 && box.height > 0)) return;
     const t = transformInsideText(box, s, s.r1, orientation);
     const scale = Math.min(1, Math.max(0, Number.isFinite(t.scale) ? t.scale : 0));
+    placed.push({ content, t, color, index });
+    fits.push({ fontSize: content.font.size, scale });
+  });
+  const scales = uniformScales(fits, pass);
+  const labels: SectorLabel[] = [];
+  placed.forEach(({ content, t, color, index }, k) => {
+    const s = geometry.sectors[index]!;
     const base = content.font;
     // Quantized so tiny layout changes don't re-typeset labels.
-    const size = Math.floor(base.size * scale * 4) / 4;
+    const size = Math.floor(base.size * scales[k]! * 4) / 4;
     if (!(size >= MIN_FONT_SIZE)) return;
     const a = t.textPosAngle ?? s.midAngle;
     const reach = s.r1 * t.rCenter;

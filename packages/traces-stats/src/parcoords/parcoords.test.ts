@@ -651,5 +651,8 @@ describe('parcoords describe', () => {
       ['20', '150', '2', 'yes'],
     ]);
     expect(d.table?.total).toBe(3);
+    // Every line on demand (the visible data table, E17.3).
+    expect(d.table?.row?.(0)).toEqual(d.table?.rows[0]);
+    expect(d.table?.row?.(2)).toEqual(['30', '90', '3', 'no']);
   });
 });

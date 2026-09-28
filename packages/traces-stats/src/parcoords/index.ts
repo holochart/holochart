@@ -23,6 +23,8 @@ import { parcoordsRenderer } from './plot.ts';
 export const parcoords: TraceModule<ParcoordsCalc, typeof parcoordsAttributes.children> = {
   type: 'parcoords',
   categories: ['domain', 'noOpacity'],
+  // Brushes (along the axes) and axis drags go in any direction (E6.6).
+  touchAction: 'none',
   schema: parcoordsAttributes,
   meta: {
     description:

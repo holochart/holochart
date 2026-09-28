@@ -20,6 +20,8 @@ import { barpolarRenderer } from './plot.ts';
 export const barpolar: TraceModule<PolarCalc, typeof barpolarAttributes.children> = {
   type: 'barpolar',
   categories: ['polar', 'bar', 'showLegend'],
+  // Polar axis drags and the zoom box (E6.6).
+  touchAction: 'pan-y',
   schema: barpolarAttributes,
   layoutSchema: /* @__PURE__ */ (() => ({ ...polarLayoutSchema, ...coloraxisLayoutSchema }))(),
   meta: {

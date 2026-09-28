@@ -1,7 +1,8 @@
 /**
  * Accessible description of a `sankey` trace (plan E17.1, E13.5a): its nodes, links and total
  * flow (the sum of the source nodes' outflows), whether it has cycles, and a table with one row
- * per link — source, target, value and label. Only the first `ctx.maxRows` links are built.
+ * per link — source, target, value and label. Only the first `ctx.maxRows` links are built up
+ * front; `row` formats any link on demand (E17.3).
  */
 import {
   accessibleText,
@@ -23,14 +24,12 @@ export function describeSankey(ctx: DescribeContext<SankeyCalc>): TraceDescripti
   let total = 0;
   for (const l of calc.links) if (!hasIn.has(l.source)) total += l.value;
   const cycles = calc.circular ? ', with cycles' : '';
-  const rows = calc.links
-    .slice(0, Math.max(0, ctx.maxRows))
-    .map((l) => [
-      label(l.source),
-      label(l.target),
-      formatPlainNumber(l.value),
-      accessibleText(l.label),
-    ]);
+  const row = (i: number): string[] => {
+    const l = calc.links[i]!;
+    return [label(l.source), label(l.target), formatPlainNumber(l.value), accessibleText(l.label)];
+  };
+  const rows: string[][] = [];
+  for (let i = 0; i < Math.min(calc.links.length, ctx.maxRows); i++) rows.push(row(i));
   return {
     kind: 'sankey diagram',
     summary: `Sankey diagram "${name}": ${countText(calc.nodes.length, 'node')}, ${countText(calc.links.length, 'link')}${cycles}, total flow from sources ${formatPlainNumber(total)}.`,
@@ -39,6 +38,7 @@ export function describeSankey(ctx: DescribeContext<SankeyCalc>): TraceDescripti
       columns: ['Source', 'Target', 'Value', 'Label'],
       rows,
       total: calc.links.length,
+      row,
     },
     insight: {
       kind: 'shares',

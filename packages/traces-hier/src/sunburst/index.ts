@@ -8,10 +8,14 @@
  * (`sunburstclick` / `click` listeners may cancel). Drawn as one instanced GPU arc set and one SDF
  * text batch. Registered with `register(sunburst)` (ADR-019).
  *
- * Deferred: the layered 3D extrusion (`depth` / `depthstep`, P2), `uniformtext` (E4.6),
- * `marker.coloraxis`, label links, transitions of `level` changes made by `animate` / `react`.
+ * Colorscales may be shared through `marker.coloraxis`, and `layout.uniformtext` (E4.6) sizes the
+ * labels of every sunburst of the chart alike.
+ *
+ * Deferred: the layered 3D extrusion (`depth` / `depthstep`, P2), label links, transitions of
+ * `level` changes made by `animate` / `react`.
  */
 import type { TraceModule } from '@mk7s/holochart-runtime';
+import { coloraxisLayoutSchema } from '@mk7s/holochart-traces-basic';
 import { describeHierarchy } from '../hierarchy/describe.ts';
 import { hierarchyColorbar } from '../hierarchy/colors.ts';
 import { sunburstAttributes, sunburstLayoutAttributes } from './attributes.ts';
@@ -25,7 +29,11 @@ export const sunburst: TraceModule<SunburstCalc, typeof sunburstAttributes.child
   type: 'sunburst',
   categories: ['domain', 'sunburst'],
   schema: sunburstAttributes,
-  layoutSchema: sunburstLayoutAttributes,
+  // Wrapped so the schema tree-shakes out of bundles without sunburst (E21.6).
+  layoutSchema: /* @__PURE__ */ (() => ({
+    ...sunburstLayoutAttributes,
+    ...coloraxisLayoutSchema,
+  }))(),
   meta: {
     description:
       'Sunburst charts: a hierarchy as rings of sectors sized by value, placed by `domain`, with animated drill-down, drawn as one instanced GPU arc set with batched SDF labels.',

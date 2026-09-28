@@ -424,7 +424,7 @@ describe('contour hover, colorbar and description', () => {
 
   it('describes the grid and its levels', () => {
     const s = setup({ z: cone(), contours: { start: 7, end: 9, size: 1 } });
-    const d = contour.describe!({
+    const ctx = {
       trace: s.trace,
       calc: s.calc,
       index: 0,
@@ -432,10 +432,17 @@ describe('contour hover, colorbar and description', () => {
       xaxis: s.xaxis,
       yaxis: s.yaxis,
       maxRows: 3,
-    } as never);
+    };
+    const d = contour.describe!(ctx as never);
     expect(d!.summary).toContain('5 × 5 grid, 3 levels from 7 to 9');
     expect(d!.summary).toContain('Highest value 10 at x 2, y 2');
     expect(d!.table!.rows).toHaveLength(3);
     expect(d!.table!.total).toBe(25);
+    // Every grid point on demand (the visible data table, E17.3).
+    const { rows, row } = d!.table!;
+    expect([0, 1, 2].map((k) => row!(k))).toEqual(rows);
+    const all = contour.describe!({ ...ctx, maxRows: 100 } as never)!.table!.rows;
+    expect(all.map((_, k) => row!(k))).toEqual(all);
+    expect(row!(24)).toEqual(['4', '4', all[24]![2]]);
   });
 });

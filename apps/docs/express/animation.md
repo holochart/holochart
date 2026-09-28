@@ -83,16 +83,20 @@ if (play) {
 ## Fixed axis ranges
 
 Axes that autoranged per frame would jump while the data move, so Express fixes the ranges of an
-animated figure to the data of every frame, unless `rangeX` / `rangeY` are given:
+animated figure to the data of every frame, unless `rangeX` / `rangeY` (`rangeR` on polar charts)
+are given:
 
 - numeric position axes span the data's extent plus 5% on each side (10% with sized markers), in
   log units on log axes;
 - the value axis of bars spans zero and every frame's stacked totals (or largest bar, grouped),
   plus 5%;
+- the radial axis of `scatterPolar`, `linePolar` and `barPolar` spans zero (the radial axis'
+  `rangemode: 'tozero'`) and every frame's radii, or the largest stacked total of `barPolar`, plus
+  5% (10% with sized markers); a log radial axis spans the radii in log units, plus 5% each side;
 - category and date axes, histogram counts and marginal axes keep autoranging.
 
-px itself leaves this to `range_x` / `range_y` (its examples always pass them); give them to fix
-the ranges yourself, in data units (also on log axes, as in px).
+px itself leaves this to `range_x` / `range_y` / `range_r` (its examples always pass them); give
+them to fix the ranges yourself, in data units (also on log axes, as in px).
 
 ## What animates
 

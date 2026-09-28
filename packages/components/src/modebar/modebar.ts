@@ -144,14 +144,16 @@ const HOST_TOUCHED = 'hc-modebar-host--touched';
  * opacity (not `display`) so its buttons stay in the tab order; it shows while the chart is
  * hovered, and while a button has keyboard focus (`:focus-visible`, so a mouse click does not pin
  * it open; `:focus-within` where `:has()` is unsupported). On touch, a tap on the chart shows it
- * (`HOST_TOUCHED`, set by the view).
+ * (`HOST_TOUCHED`, set by the view); with a coarse pointer (a finger) buttons are 32 px tap
+ * targets (E6.6), and `touch-action: manipulation` makes taps on them immediate.
  */
 const CSS = `
 .hc-modebar{position:absolute;top:2px;right:2px;z-index:1001;display:flex;flex-direction:row;align-items:flex-start;gap:4px;line-height:0;opacity:1;transition:opacity .3s ease}
 .hc-modebar[aria-orientation="vertical"]{flex-direction:column;align-items:flex-end}
 .hc-modebar-group{display:flex;flex-direction:row;padding:1px;border-radius:3px;background:var(--hc-modebar-bg)}
 .hc-modebar[aria-orientation="vertical"] .hc-modebar-group{flex-direction:column}
-.hc-modebar-btn{-webkit-appearance:none;appearance:none;box-sizing:border-box;display:flex;align-items:center;justify-content:center;width:24px;height:24px;margin:0;padding:4px;border:0;border-radius:2px;background:transparent;color:var(--hc-modebar-color);cursor:pointer;font:inherit}
+.hc-modebar-btn{-webkit-appearance:none;appearance:none;box-sizing:border-box;display:flex;align-items:center;justify-content:center;width:24px;height:24px;margin:0;padding:4px;border:0;border-radius:2px;background:transparent;color:var(--hc-modebar-color);cursor:pointer;font:inherit;touch-action:manipulation}
+@media (pointer:coarse){.hc-modebar-btn{width:32px;height:32px;padding:8px}}
 .hc-modebar-btn:hover,.hc-modebar-btn[aria-pressed="true"]{color:var(--hc-modebar-active)}
 .hc-modebar-btn:focus-visible{outline:2px solid var(--hc-modebar-active);outline-offset:-2px}
 .hc-modebar-btn svg{display:block;width:16px;height:16px;pointer-events:none}

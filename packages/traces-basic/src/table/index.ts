@@ -22,6 +22,8 @@ import { tableRenderer } from './plot.ts';
 export const table: TraceModule<TableCalc, typeof tableAttributes.children> = {
   type: 'table',
   categories: ['domain', 'noOpacity'],
+  // Rows scroll and columns reorder by dragging in any direction (E6.6).
+  touchAction: 'none',
   schema: tableAttributes,
   meta: {
     description:

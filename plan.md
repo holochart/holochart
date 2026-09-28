@@ -847,7 +847,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 > As an end user, I want box zoom, scroll zoom, drag pan, and double-click reset, so that I can explore data.
 - [x] `dragmode: 'zoom' | 'pan' | 'select' | 'lasso' | 'drawline' | ... | false` — zoom/pan/select/lasso/false; draw modes come with E5.5
 - [x] Box zoom with x-only/y-only zones near axes. Axis-end drag to scale one end. Axis-middle drag to pan.
-- [x] Scroll zoom (`config.scrollZoom`) anchored at the cursor. Pinch zoom on touch. — pinch implemented, not covered by a Playwright test
+- [x] Scroll zoom (`config.scrollZoom`) anchored at the cursor. Pinch zoom on touch. — Playwright-tested since M5 wave 2 (E6.6)
 - [x] Double-click: `config.doubleClick: 'reset+autosize' | 'reset' | 'autosize' | false`
 - [x] During drag: GPU-only camera transform (no re-calc), with tick relayout throttled to rAF. `relayouting` fires during the drag, `relayout` at the end.
 - [x] Respects `fixedrange`, `minallowed`/`maxallowed`, `matches`, `scaleanchor` — `matches`/`scaleanchor` in M3 wave 1
@@ -865,16 +865,16 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `click` with the same point structure as hover. `doubleclick` event.
 - [ ] Click on legend, annotation, and shape emit their own events (`legendclick`, `clickannotation`, ...) — *deferred: `legendclick`/`legenddoubleclick` done; annotations and shapes are E5.4/E5.5*
 
-#### E6.5 — Keyboard navigation   `P1` `M`   deps: E6.1, E17.2
+#### E6.5 — Keyboard navigation   `P1` `M`   deps: E6.1, E17.2   · ✅ Done (M5 wave 2)
 > As a keyboard user, I want to focus the chart and move between points and traces with arrow keys, so that I can explore without a mouse.
-- [ ] Tab focuses the chart. Arrows move between points. PgUp/PgDn move between traces. Enter emits click.
-- [ ] `+`/`-` zoom, arrow keys + Shift pan, `0` reset
-- [ ] Focus ring and a live-region announcement per point (ties into E17)
+- [x] Tab focuses the chart. Arrows move between points. PgUp/PgDn move between traces. Enter emits click. — plot-area focus target (`role="application"`), cursor in x order, Home/End, Escape; cartesian traces and pie (`TraceModule.keyboardPoints`); lazy chunk 5.0 kB — *later: histogram, box/violin, 2D grids, polar, hierarchies*
+- [x] `+`/`-` zoom, arrow keys + Shift pan, `0` reset — through the same GUI relayout as drags
+- [x] Focus ring and a live-region announcement per point (ties into E17) — localized polite announcements; `config.a11y.keyboard`
 
-#### E6.6 — Touch & pointer support   `P1` `M`   deps: E6.2
+#### E6.6 — Touch & pointer support   `P1` `M`   deps: E6.2   · ✅ Done (M5 wave 2)
 > As a mobile user, I want pinch-zoom, pan, and tap-to-hover, so that charts work on phones.
-- [ ] Pointer Events for all input. Two-finger pinch and pan. Tap shows hover, tap elsewhere hides it.
-- [ ] `touch-action` configured so page scroll still works when the chart is not in drag mode
+- [x] Pointer Events for all input. Two-finger pinch and pan. Tap shows hover, tap elsewhere hides it. — pinch around the midpoint and two-finger pan (one `relayout`), double tap resets, views keep their one-finger drags — *deferred: polar pinch*
+- [x] `touch-action` configured so page scroll still works when the chart is not in drag mode — `pan-y` by default (vertical swipes scroll the page), per `dragmode`, fixed axes and `TraceModule.touchAction`
 
 #### E6.7 — Editable mode   `P2` `M`   deps: E5.2, E5.4, E5.5
 > As a developer building a chart editor, I want `config.editable` to let users drag the legend, edit titles inline, and move annotations, so that I get an editing UI for free.
@@ -1559,9 +1559,9 @@ Customization is a **cascade**. Each layer overrides the one above it:
 > As an accessibility-minded developer, I want an optional visible or hidden data table, so that users can read raw values.
 - [x] `config.a11y.dataTable: 'hidden' | 'visible' | false`, virtualized for large data — visible table after the chart element, virtualized past 200 rows (tested with 100k) — *open: `table.row` for polar, splom, parcoords, parcats, table, pie, sankey, hierarchies*
 
-#### E17.4 — Keyboard & focus   `P1` `S`   deps: E6.5
+#### E17.4 — Keyboard & focus   `P1` `S`   deps: E6.5   · ✅ Done (M5 wave 2)
 > As a keyboard user, I want every control (legend, modebar, updatemenus, sliders) reachable by keyboard, so that nothing requires a mouse.
-- [ ] Tab order documented. Visible focus. `aria-pressed` on toggles.
+- [x] Tab order documented. Visible focus. `aria-pressed` on toggles. — legend keyboard buttons (toolbar, Shift+Enter isolates); modebar, menus, sliders, range selector verified — *later: range slider handles, selections*
 
 #### E17.5 — Visual accessibility   `P1` `S`   deps: E8.1, E8.2, E8.10   · ✅ Done (M5 wave 1)
 > As a user with low vision or color-vision deficiency, I want high-contrast and colorblind-safe options, so that I can read charts.
@@ -2180,8 +2180,8 @@ come back in wave 2 because keyboard & focus (E17.4) builds on them.
 | 1 | Express `sunburst`/`treemap`/`icicle` with `path` | E13.1 ✅, E23.6 🟡 (ternary, 3D, geo later) |
 | 1 | Chart summaries, data table, visual accessibility (high contrast, safe palette, pattern encoding) | E17.2 ✅, E17.3 ✅, E17.5 ✅ |
 | 1 | Sankey flow particles and 2.5D ribbons | E13.5c 🟡 (2.5D deferred) |
-| 2 | Keyboard navigation, touch and pointer, keyboard & focus for every control | E6.5, E6.6, E17.4 |
-| 2 | M4/M5 carry-forward and exit review | — |
+| 2 | Keyboard navigation, touch and pointer, keyboard & focus for every control | E6.5 ✅, E6.6 ✅, E17.4 ✅ |
+| 2 | M4/M5 carry-forward and exit review | carry-forward ✅ (hierarchy `coloraxis`/`uniformtext`, table rows, events reference, polar frame ranges); exit review next |
 
 Open after M5 wave 0: animated sunburst `level` through `animate`/`react` (needs a runtime
 transition-options hook); sunburst `coloraxis`/`uniformtext`; sankey per-part `hoverlabel`, lasso
@@ -2196,6 +2196,14 @@ colorscales sit on the trace until the hierarchy traces read `marker.coloraxis`;
 tables stop at 100 rows for traces without `table.row`; summaries have no live region and the
 E17.1 description lines are still English; `Safe` has three dark colors with low contrast on the
 default dark look; `apps/docs/reference/events.md` doesn't list the `*click` hierarchy events.
+
+Open after M5 wave 2: keyboard navigation for histograms, box/violin, 2D grids, polar and
+hierarchies (`keyboardPoints`), and keys for range-slider handles and selections; still-English UI
+labels ("Chart toolbar", "Range selector…", "Menu N", "Slider N"); polar pinch and touch drags of
+range slider/shapes/annotations under `touch-action: manipulation`; `image` has no data table;
+`unhover` sends an empty `points` list (Plotly sends the hovered points) and hierarchy click events
+carry no DOM `event`; Express fixed frame ranges (cartesian and radial) are Holochart defaults, not
+px parity; trace-level hierarchy colorbars don't take the default look's colorbar style.
 
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 

@@ -3,6 +3,7 @@
  * `scatter_polar` / `line_polar` / `bar_polar` — one `scatterpolar` or `barpolar` trace per group
  * on one `polar` subplot, with px's clockwise angular axis starting at the top.
  */
+import { frameRange } from '../core/animation.ts';
 import { prepare, type Args } from '../core/args.ts';
 import type { Config, Grouper, Role } from '../core/config.ts';
 import { buildFigure } from '../core/engine.ts';
@@ -88,6 +89,8 @@ function sizeref(values: readonly unknown[], sizeMax: number): number {
 /**
  * The polar subplot's axes (px's `configure_polar_axes`): the direction and start of the angular
  * axis, category orders of `r` / `theta`, the radial axis' log type and range, and the sector.
+ * Animated figures without `rangeR` get a radial range fixed over every frame (a Holochart
+ * default, as `rangeX` / `rangeY` on cartesian charts).
  */
 function configurePolar(args: Args, figure: ExpressFigure, extra: Record<string, unknown>): void {
   const opts = args.options;
@@ -108,10 +111,28 @@ function configurePolar(args: Args, figure: ExpressFigure, extra: Record<string,
     }
   }
   const range = opts['rangeR'] as readonly number[] | undefined;
-  if (opts['logR']) {
-    radialaxis['type'] = 'log';
-    if (range) radialaxis['range'] = range.map((v) => Math.log10(v));
-  } else if (range) radialaxis['range'] = [...range];
+  const log = Boolean(opts['logR']);
+  if (log) radialaxis['type'] = 'log';
+  if (range) radialaxis['range'] = log ? range.map((v) => Math.log10(v)) : [...range];
+  else if (
+    figure.frames &&
+    args.cols.r !== undefined &&
+    args.table.type(args.cols.r) === 'numeric'
+  ) {
+    // Animated without `rangeR`: every frame's radii, from zero (the radial `rangemode: 'tozero'`).
+    const fixed = frameRange(
+      figure.frames,
+      'r',
+      (t) =>
+        t['type'] === 'barpolar' && t['base'] === undefined
+          ? ['theta', 'subplot']
+          : t['type'] === 'barpolar' || t['type'] === 'scatterpolar',
+      log,
+      extra['barmode'] !== 'overlay',
+      true,
+    );
+    if (fixed) radialaxis['range'] = fixed;
+  }
   polar['angularaxis'] = angularaxis;
   polar['radialaxis'] = radialaxis;
   if (opts['rangeTheta'] !== undefined) polar['sector'] = [...(opts['rangeTheta'] as number[])];

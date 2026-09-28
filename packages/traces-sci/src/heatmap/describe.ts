@@ -31,20 +31,34 @@ export function describeHeatmap(ctx: DescribeContext<HeatmapCalc>): TraceDescrip
     const [lo, hi] = calc.zExtent;
     summary += ` Values from ${formatPlainNumber(lo)} to ${formatPlainNumber(hi)}; highest at x ${xt(best % calc.nx)}, y ${yt(Math.floor(best / calc.nx))}.`;
   }
+  const { nx, z } = calc;
+  const size = nx * calc.ny;
+  const cell = (c: number): string[] => [
+    xt(c % nx),
+    yt(Math.floor(c / nx)),
+    formatPlainNumber(z[c]!),
+  ];
   const rows: string[][] = [];
   let total = 0;
-  for (let j = 0; j < calc.ny; j++) {
-    for (let i = 0; i < calc.nx; i++) {
-      const v = calc.z[j * calc.nx + i]!;
-      if (!Number.isFinite(v)) continue;
-      total++;
-      if (rows.length < ctx.maxRows) rows.push([xt(i), yt(j), formatPlainNumber(v)]);
-    }
+  for (let c = 0; c < size; c++) {
+    if (!Number.isFinite(z[c]!)) continue;
+    total++;
+    if (rows.length < ctx.maxRows) rows.push(cell(c));
   }
+  // Row `k` of all `total` rows: the grid index of every listed cell, built on first use.
+  let cells: Int32Array | undefined;
+  const row = (k: number): string[] => {
+    if (total === size) return cell(k);
+    if (!cells) {
+      cells = new Int32Array(total);
+      for (let c = 0, m = 0; c < size; c++) if (Number.isFinite(z[c]!)) cells[m++] = c;
+    }
+    return cell(cells[k]!);
+  };
   return {
     kind,
     summary,
-    table: { caption: name, columns: ['x', 'y', 'z'], rows, total },
+    table: { caption: name, columns: ['x', 'y', 'z'], rows, total, row },
     insight: {
       kind: 'grid',
       nx: calc.nx,

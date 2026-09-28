@@ -54,11 +54,12 @@ export function describePolar(ctx: DescribeContext<PolarCalc>): TraceDescription
   const hasText = Array.isArray(text);
   const columns = ['r', 'θ'];
   if (hasText) columns.push('text');
+  const row = (i: number): string[] => {
+    const cells = [fr(r[i]!), ft(theta[i]!)];
+    if (hasText) cells.push(accessibleText((text as unknown[])[i]));
+    return cells;
+  };
   const rows: string[][] = [];
-  for (let i = 0; i < Math.min(n, ctx.maxRows); i++) {
-    const row = [fr(r[i]!), ft(theta[i]!)];
-    if (hasText) row.push(accessibleText((text as unknown[])[i]));
-    rows.push(row);
-  }
-  return { kind, summary, table: { caption: name, columns, rows, total: n } };
+  for (let i = 0; i < Math.min(n, ctx.maxRows); i++) rows.push(row(i));
+  return { kind, summary, table: { caption: name, columns, rows, total: n, row } };
 }

@@ -741,8 +741,8 @@ function containerAt(trace: Readonly<Record<string, unknown>>, path: string): un
 /**
  * Layout defaults for the color axes the traces reference (Plotly `colorAxisDefaults` +
  * `calcColorAxis`): coerce each referenced `coloraxisN` and store its cross-trace data extent as
- * `_min` / `_max`, which {@link resolveColorMapping} uses when `cauto` is on. Idempotent, so every
- * trace module that owns {@link coloraxisLayoutSchema} may call it.
+ * `_min` / `_max` (widening what is there), which {@link resolveColorMapping} uses when `cauto` is
+ * on. Idempotent, so every trace module that owns {@link coloraxisLayoutSchema} may call it.
  */
 export function supplyColoraxisDefaults(
   layoutIn: Readonly<Record<string, unknown>>,
@@ -774,9 +774,13 @@ export function supplyColoraxisDefaults(
       `${id}.`,
       { inTrace: false, showscale: true },
     );
-    const out = layoutOut[id];
+    const out = layoutOut[id] as Record<string, unknown> | undefined;
     if (out !== null && typeof out === 'object') {
-      Object.assign(out, { _min: min, _max: max });
+      // Merged with extents other trace types (the hierarchy traces) gave the axis.
+      const lo = out['_min'];
+      const hi = out['_max'];
+      out['_min'] = Math.min(min, typeof lo === 'number' ? lo : Infinity);
+      out['_max'] = Math.max(max, typeof hi === 'number' ? hi : -Infinity);
     }
   }
 }

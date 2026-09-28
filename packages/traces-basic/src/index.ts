@@ -48,6 +48,8 @@ export {
   type StackOutput,
 } from './shared/stack/index.ts';
 export { labelContent, measureLabel } from './shared/rich-text.ts';
+// Cross-trace `uniformtext` sizing (E4.6), for the hierarchy traces.
+export { negotiateUniformText, releaseUniformText } from './shared/uniform-text.ts';
 export { aggregateSlices } from './pie/calc.ts';
 export { castOption, extendColors } from './pie/helpers.ts';
 export { pieHoverText } from './pie/hover.ts';
@@ -64,5 +66,6 @@ export {
   colorscaleAttributes,
   mapColor,
   markerColorbar,
+  numericExtent,
   resolveColorMapping,
 } from './shared/colorscale.ts';

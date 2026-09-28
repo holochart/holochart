@@ -7,10 +7,13 @@
  * and drill-down (`icicleclick` / `click` listeners may cancel). It shares the treemap's renderer:
  * one instanced GPU rect set and one SDF text batch. Registered with `register(icicle)` (ADR-019).
  *
- * Deferred: `uniformtext` (E4.6), `marker.coloraxis`, transitions of `level` changes made by
- * `animate` / `react`.
+ * Colorscales may be shared through `marker.coloraxis`, and `layout.uniformtext` (E4.6) sizes the
+ * labels of every icicle of the chart alike.
+ *
+ * Deferred: transitions of `level` changes made by `animate` / `react`.
  */
 import type { TraceModule } from '@mk7s/holochart-runtime';
+import { coloraxisLayoutSchema } from '@mk7s/holochart-traces-basic';
 import { hierarchyColorbar } from '../hierarchy/colors.ts';
 import { describeHierarchy } from '../hierarchy/describe.ts';
 import { calcRects, type RectCalc } from '../treemap/geometry.ts';
@@ -25,7 +28,8 @@ export const icicle: TraceModule<RectCalc, typeof icicleAttributes.children> = {
   type: 'icicle',
   categories: ['domain', 'icicle'],
   schema: icicleAttributes,
-  layoutSchema: icicleLayoutAttributes,
+  // Wrapped so the schema tree-shakes out of bundles without icicle (E21.6).
+  layoutSchema: /* @__PURE__ */ (() => ({ ...icicleLayoutAttributes, ...coloraxisLayoutSchema }))(),
   meta: {
     description:
       'Icicle charts: a hierarchy as rows or columns of cells sized by value, placed by `domain`, with a path bar and animated drill-down, drawn as one instanced GPU rect set with batched SDF labels.',

@@ -256,6 +256,12 @@ export interface ConfigA11y {
    * @defaultValue `"auto"`
    */
   reducedMotion?: 'auto' | true | false;
+  /**
+   * Keyboard access: Tab reaches the plot area (the arrows step through the data, `+` / `-` zoom) and the legend items. Holochart only (plan E6.5, E17.4).
+   *
+   * @defaultValue `true`
+   */
+  keyboard?: boolean;
 }
 
 /**

@@ -36,14 +36,23 @@ function describeFunnelarea(ctx: DescribeContext<FunnelareaCalc>): TraceDescript
   summary += total > 0 ? `, total ${formatPieValue(total)}.` : '.';
   const hidden = calc.slices.length - visible.length;
   if (hidden > 0) summary += ` ${countText(hidden, 'stage')} hidden.`;
-  const rows = visible
-    .slice(0, ctx.maxRows)
-    .map((s) => [accessibleText(s.label), formatPieValue(s.v), share(s.v)]);
+  const row = (i: number): string[] => {
+    const s = visible[i]!;
+    return [accessibleText(s.label), formatPieValue(s.v), share(s.v)];
+  };
+  const rows: string[][] = [];
+  for (let i = 0; i < Math.min(visible.length, ctx.maxRows); i++) rows.push(row(i));
   const slices = calc.slices;
   return {
     kind: 'funnelarea',
     summary,
-    table: { caption: name, columns: ['Stage', 'Value', 'Percent'], rows, total: visible.length },
+    table: {
+      caption: name,
+      columns: ['Stage', 'Value', 'Percent'],
+      rows,
+      total: visible.length,
+      row,
+    },
     insight: {
       kind: 'shares',
       part: 'stage',

@@ -280,3 +280,25 @@ describe('funnel hover', () => {
     ).toBe('26.7% of total');
   });
 });
+
+describe('funnel description', () => {
+  it('formats every bar on demand, past maxRows (the visible data table, E17.3)', () => {
+    const s = one();
+    const describeWith = (maxRows: number) =>
+      funnel.describe!({
+        trace: s.trace,
+        calc: s.calc,
+        index: 0,
+        fullLayout: s.fullLayout,
+        xaxis: s.xaxis,
+        yaxis: s.yaxis,
+        maxRows,
+      })!.table!;
+    const all = describeWith(100);
+    const t = describeWith(2);
+    expect(t.rows).toEqual(all.rows.slice(0, 2));
+    expect(t.total).toBe(4);
+    expect(Array.from({ length: 4 }, (_, i) => t.row!(i))).toEqual(all.rows);
+    expect(t.row!(3)[0]).toBe('Orders');
+  });
+});

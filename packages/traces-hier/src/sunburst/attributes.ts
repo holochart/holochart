@@ -5,7 +5,7 @@
  * `domain` comes from the registry (the trace is in the `domain` category); `ids`, `customdata`,
  * `hovertext`, `hovertemplate`, `opacity`, … are common trace attributes.
  *
- * Deferred: the layered 3D extrusion (`depth` / `depthstep`, P2), `uniformtext` sizing (E4.6).
+ * Deferred: the layered 3D extrusion (`depth` / `depthstep`, P2).
  */
 import { attr } from '@mk7s/holochart-core';
 import {

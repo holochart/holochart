@@ -2,8 +2,8 @@
  * Node colors of hierarchy charts (plan E13.1), following plotly.js' sunburst `calc` (explicit and
  * colorscale colors) and `crossTraceCalc` (defaults):
  *
- * - With a colorscale (numeric `marker.colors`, or `marker.colorscale` / `showscale` / … set), every
- *   node is colored by its `marker.colors` entry — or its `values` entry, or its count without
+ * - With a colorscale (numeric `marker.colors`, `marker.colorscale` / `showscale` / … set, or a
+ *   shared `marker.coloraxis`), every node is colored by its `marker.colors` entry — or its `values` entry, or its count without
  *   `values`. Valid CSS colors among them are kept; anything else is `#444`.
  * - Otherwise valid `marker.colors` entries are used and registered by node id in a map shared by
  *   every trace of the type (Plotly's `_sunburstcolormap`); the remaining nodes take, in order: the
@@ -17,6 +17,7 @@ import {
   toRGBA,
   type FullLayout,
   type FullTrace,
+  type LayoutDefaultsContext,
 } from '@mk7s/holochart-core';
 import type { ColorbarSpec } from '@mk7s/holochart-runtime';
 import {
@@ -24,8 +25,10 @@ import {
   hasColorscale,
   mapColor,
   markerColorbar,
+  numericExtent,
   resolveColorMapping,
   rgbaToCss,
+  supplyColorscaleDefaults,
 } from '@mk7s/holochart-traces-basic';
 import { buildHierarchy, type Hierarchy, type HierNode } from './build.ts';
 
@@ -45,11 +48,15 @@ function marker(trace: FullTrace): Record<string, unknown> {
 }
 
 /**
- * Plotly's `_hasColorscale` of a hierarchy trace's input: numeric `marker.colors`, or any
- * colorscale attribute of `marker` set.
+ * Plotly's `_hasColorscale` of a hierarchy trace's input: numeric `marker.colors`, any colorscale
+ * attribute of `marker` set, or `marker.coloraxis` (which colors by `values` without colors).
  */
 export function hierarchyHasColorscale(traceIn: Readonly<Record<string, unknown>>): boolean {
-  return hasColorscale(traceIn['marker'], 'colors');
+  const m = traceIn['marker'];
+  return (
+    hasColorscale(m, 'colors') ||
+    (m !== null && typeof m === 'object' && !!(m as Record<string, unknown>)['coloraxis'])
+  );
 }
 
 /**
@@ -161,14 +168,11 @@ export function resolveHierarchyColors(
 }
 
 /**
- * The colorbar of a colorscaled hierarchy trace with `marker.showscale` (the trace module's
- * `colorbar` hook, E5.3), spanning the values nodes are colored by (see {@link colorValues}).
+ * {@link colorValues} of a defaulted trace, building its hierarchy only when nodes are colored by
+ * their counts (no `marker.colors` or `values`).
  */
-export function hierarchyColorbar(trace: FullTrace, fullLayout: FullLayout): ColorbarSpec | null {
-  if (trace['_hasColorscale'] !== true) return null;
-  const m = marker(trace);
-  if (m['showscale'] !== true) return null;
-  const needsCounts = !isArrayLike(m['colors']) && !isArrayLike(trace['values']);
+function colorValuesOf(trace: FullTrace): ArrayLike<unknown> {
+  const needsCounts = !isArrayLike(marker(trace)['colors']) && !isArrayLike(trace['values']);
   const hierarchy = needsCounts
     ? buildHierarchy({
         labels: trace['labels'],
@@ -179,6 +183,53 @@ export function hierarchyColorbar(trace: FullTrace, fullLayout: FullLayout): Col
         name: '',
       }).hierarchy
     : undefined;
-  const color = colorValues(trace, hierarchy);
-  return markerColorbar({ ...trace, marker: { ...m, color } }, fullLayout);
+  return colorValues(trace, hierarchy);
+}
+
+/**
+ * The colorbar of a colorscaled hierarchy trace with `marker.showscale`, or of its color axis (the
+ * trace module's `colorbar` hook, E5.3), spanning the values nodes are colored by (see
+ * {@link colorValues}).
+ */
+export function hierarchyColorbar(trace: FullTrace, fullLayout: FullLayout): ColorbarSpec | null {
+  if (trace['_hasColorscale'] !== true) return null;
+  const m = marker(trace);
+  if (m['showscale'] !== true && typeof m['coloraxis'] !== 'string') return null;
+  return markerColorbar({ ...trace, marker: { ...m, color: colorValuesOf(trace) } }, fullLayout);
+}
+
+/** Trace types colored through {@link colorValues}. */
+const HIERARCHY_TYPES = new Set(['sunburst', 'treemap', 'icicle']);
+
+/**
+ * Layout defaults for the color axes hierarchy traces reference with `marker.coloraxis` (Plotly's
+ * `colorAxisDefaults`, and the extents its sunburst `calc` adds to the axis): coerce each axis and
+ * widen its cross-trace `_min` / `_max` with the values the traces' nodes are colored by.
+ * Idempotent, and merges with the extents other trace types gave the axis.
+ */
+export function supplyHierarchyColoraxisDefaults(
+  layoutIn: Readonly<Record<string, unknown>>,
+  layoutOut: FullLayout,
+  ctx: LayoutDefaultsContext,
+): void {
+  for (const trace of ctx.fullData) {
+    const id = marker(trace)['coloraxis'];
+    if (trace.visible === false || !HIERARCHY_TYPES.has(trace.type) || typeof id !== 'string') {
+      continue;
+    }
+    const input = layoutIn[id];
+    supplyColorscaleDefaults(
+      input !== null && typeof input === 'object' ? (input as Record<string, unknown>) : undefined,
+      ctx.coerce,
+      `${id}.`,
+      { inTrace: false, showscale: true },
+    );
+    const out = layoutOut[id] as Record<string, unknown> | undefined;
+    if (out === null || typeof out !== 'object') continue;
+    const [lo, hi] = numericExtent(colorValuesOf(trace));
+    const min = out['_min'];
+    const max = out['_max'];
+    out['_min'] = Math.min(lo, typeof min === 'number' ? min : Infinity);
+    out['_max'] = Math.max(hi, typeof max === 'number' ? max : -Infinity);
+  }
 }

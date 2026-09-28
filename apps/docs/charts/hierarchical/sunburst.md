@@ -161,6 +161,15 @@ default: whichever fits largest):
 
 <Example id="sunburst/text-orientation" />
 
+### Uniform text
+
+`layout.uniformtext` draws every sector label at one size, the size of the smallest label that
+still fits, as in Plotly (and as for bars and pies). Labels that would have to shrink below
+`minsize` to fit are hidden with `mode: 'hide'`, or drawn at the common size with `'show'`.
+Drill-down clicks don't animate while it is on:
+
+<Example id="sunburst/uniformtext" />
+
 ### Patterns
 
 `marker.pattern` hatches sectors (one shape per node, or one for all). With `fillmode: 'overlay'`
@@ -177,7 +186,9 @@ paper color:
   (default `true`) the colorway is extended to three times its length, every color 20% lighter
   then every color 20% darker. The root is `root.color` (default transparent).
 - **Colorscales.** `marker.colorscale`, `cmin`, `cmax`, `cmid`, `cauto`, `autocolorscale`,
-  `reversescale`, `showscale` and `marker.colorbar`, as for other colorscaled traces.
+  `reversescale`, `showscale` and `marker.colorbar`, as for other colorscaled traces, or
+  `marker.coloraxis` to share `layout.coloraxis` (its colorscale, domain and one colorbar) with
+  other traces. On a color axis, nodes without `marker.colors` are colored by `values`.
 - **Leaves.** `leaf.opacity`: 0.7 by default, 1 with a colorscale.
 - **Outlines.** `marker.line.color` (default: `layout.paper_bgcolor`, which separates the
   sectors) and `marker.line.width` (default 1 px, centered on the edges); both take one value per
@@ -229,7 +240,7 @@ paper color:
 - **Events.** `hover`, `unhover`, `click` and `sunburstclick` carry Plotly-shaped points:
   `curveNumber`, `pointNumber`, `label`, `value`, `id`, `parent` (the parent's label),
   `currentPath`, `entry`, `root`, `percentParent`, `percentEntry`, `percentRoot`, `customdata`
-  and `text`.
+  and `text`. See [Hierarchy clicks](/reference/events#hierarchy-clicks) in the events reference.
 - Sunbursts have no axes or legend entries, so zoom, pan, box or lasso selection and legend
   toggling don't apply to them.
 
@@ -281,7 +292,6 @@ its default. [`sunburstcolorway`](/reference/layout#sunburstcolorway) and
   `restyle` of `level` (a `restyle` event) rather than an `animate` call; labels fade in at the
   end of the transition instead of moving with their sectors; sectors wider than half a turn fit
   their labels like pie slices.
-- Not supported yet: `marker.coloraxis`, `layout.uniformtext`, `texttemplatefallback` /
-  `hovertemplatefallback`, animated `level` changes through `animate` or `react` with a
-  transition, keyboard navigation.
+- Not supported yet: `texttemplatefallback` / `hovertemplatefallback`, animated `level` changes
+  through `animate` or `react` with a transition, keyboard navigation.
 - A layered 3D extrusion (`depth`, `depthstep`) is a planned Holochart extension.

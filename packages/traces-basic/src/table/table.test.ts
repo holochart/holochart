@@ -235,4 +235,15 @@ describe('table describe', () => {
     expect(d.table?.columns).toEqual(['Column 1']);
     expect(d.summary).toBe('Table "trace 0": 1 column (Column 1), 1,500 rows.');
   });
+
+  it('formats any row on demand, past maxRows (the visible data table, E17.3)', () => {
+    const trace = traceOf({
+      cells: { values: [Array.from({ length: 1500 }, (_, i) => i)], prefix: ['#'] },
+    });
+    const d = describeOf(trace, 100);
+    expect(d.table?.row?.(0)).toEqual(d.table?.rows[0]);
+    expect(d.table?.row?.(99)).toEqual(d.table?.rows[99]);
+    expect(d.table?.row?.(1200)).toEqual(describeOf(trace, 1500).table?.rows[1200]);
+    expect(d.table?.row?.(1499)).toEqual(['#1499']);
+  });
 });

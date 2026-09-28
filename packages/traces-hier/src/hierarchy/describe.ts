@@ -50,14 +50,17 @@ export function describeHierarchy(
     );
     summary += ` ${top.length === 1 ? 'Branch' : 'Largest branches'}: ${listText(items)}.`;
   }
-  const rows = nodes
-    .slice(0, ctx.maxRows)
-    .map((n) => [
+  const row = (i: number): string[] => {
+    const n = nodes[i]!;
+    return [
       accessibleText(n.label),
       accessibleText(nodePath(n)),
       formatNodeValue(n.value),
       share(n.value),
-    ]);
+    ];
+  };
+  const rows: string[][] = [];
+  for (let i = 0; i < Math.min(nodes.length, ctx.maxRows); i++) rows.push(row(i));
   const children = entry.children;
   return {
     kind,
@@ -67,6 +70,7 @@ export function describeHierarchy(
       columns: ['Label', 'Path', 'Value', 'Percent of root'],
       rows,
       total: nodes.length,
+      row,
     },
     insight: {
       kind: 'shares',

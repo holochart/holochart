@@ -56,20 +56,34 @@ export function describeContour(ctx: DescribeContext<ContourTraceCalc>): TraceDe
   const at = (k: number): string => `x ${xt(k % calc.nx)}, y ${yt(Math.floor(k / calc.nx))}`;
   if (hi >= 0) summary += ` Highest value ${formatPlainNumber(calc.z[hi]!)} at ${at(hi)}.`;
   if (lo >= 0) summary += ` Lowest value ${formatPlainNumber(calc.z[lo]!)} at ${at(lo)}.`;
+  const { nx, z } = calc;
+  const size = nx * calc.ny;
+  const cell = (g: number): string[] => [
+    xt(g % nx),
+    yt(Math.floor(g / nx)),
+    formatPlainNumber(z[g]!),
+  ];
   const rows: string[][] = [];
   let total = 0;
-  for (let j = 0; j < calc.ny; j++) {
-    for (let i = 0; i < calc.nx; i++) {
-      const v = calc.z[j * calc.nx + i]!;
-      if (!Number.isFinite(v)) continue;
-      total++;
-      if (rows.length < ctx.maxRows) rows.push([xt(i), yt(j), formatPlainNumber(v)]);
-    }
+  for (let g = 0; g < size; g++) {
+    if (!Number.isFinite(z[g]!)) continue;
+    total++;
+    if (rows.length < ctx.maxRows) rows.push(cell(g));
   }
+  // Row `k` of all `total` rows: the grid index of every listed cell, built on first use.
+  let cells: Int32Array | undefined;
+  const row = (k: number): string[] => {
+    if (total === size) return cell(k);
+    if (!cells) {
+      cells = new Int32Array(total);
+      for (let g = 0, m = 0; g < size; g++) if (Number.isFinite(z[g]!)) cells[m++] = g;
+    }
+    return cell(cells[k]!);
+  };
   return {
     kind,
     summary,
-    table: { caption: name, columns: ['x', 'y', 'z'], rows, total },
+    table: { caption: name, columns: ['x', 'y', 'z'], rows, total, row },
     insight: {
       kind: 'grid',
       nx: calc.nx,

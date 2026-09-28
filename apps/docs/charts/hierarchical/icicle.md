@@ -117,6 +117,15 @@ with a colorbar; `marker.pattern` hatches cells:
 
 <Example id="icicle/colorscale" />
 
+### Uniform text
+
+`layout.uniformtext` draws every cell label at one size, the size of the smallest label that
+still fits, as in Plotly (and as for bars and pies). Labels that would have to shrink below
+`minsize` to fit are hidden with `mode: 'hide'`, or drawn at the common size with `'show'`.
+Path bar labels are sized with the cells. Drill-down clicks don't animate while it is on:
+
+<Example id="icicle/uniformtext" />
+
 ## Styling
 
 - **Colors.** `marker.colors` (one per node) or `layout.iciclecolorway` (default: the `colorway`)
@@ -124,7 +133,9 @@ with a colorbar; `marker.pattern` hatches cells:
   (default `true`) extends the colorway with lighter and darker copies. The root is `root.color`
   (default transparent).
 - **Colorscales.** `marker.colorscale`, `cmin`, `cmax`, `cmid`, `cauto`, `autocolorscale`,
-  `reversescale`, `showscale` and `marker.colorbar`.
+  `reversescale`, `showscale` and `marker.colorbar`, or `marker.coloraxis` to share
+  `layout.coloraxis` with other traces (nodes without `marker.colors` are then colored by
+  `values`).
 - **Leaves.** `leaf.opacity`: 0.7 by default, 1 with a colorscale.
 - **Outlines.** `marker.line.color` (default: `layout.paper_bgcolor`) and `marker.line.width`
   (default 1 px, centered on the edges), per node.
@@ -148,7 +159,7 @@ with a colorbar; `marker.pattern` hatches cells:
 - **Hover.** Hovering a cell or path bar segment shows its label, value, `text`, current path and
   percentages, picked with `hoverinfo`, or `hovertemplate`.
 - **Events.** `hover`, `unhover`, `click` and `icicleclick` carry the same Plotly-shaped points as
-  treemaps.
+  treemaps. See [Hierarchy clicks](/reference/events#hierarchy-clicks) in the events reference.
 - Icicles have no axes or legend entries, so zoom, pan, selection and legend toggling don't apply.
 
 ## Performance notes
@@ -191,6 +202,5 @@ default. [`iciclecolorway`](/reference/layout#iciclecolorway) and
 - Differences: labels too wide for their cell wrap at spaces before they shrink; a `click`
   listener returning `false` also cancels the drill; the drill is a GUI `restyle` of `level`;
   labels fade in at the end of the transition.
-- Not supported yet: `marker.coloraxis`, `layout.uniformtext`, `texttemplatefallback` /
-  `hovertemplatefallback`, animated `level` changes through `animate` or `react`, keyboard
-  navigation.
+- Not supported yet: `texttemplatefallback` / `hovertemplatefallback`, animated `level` changes
+  through `animate` or `react`, keyboard navigation.
