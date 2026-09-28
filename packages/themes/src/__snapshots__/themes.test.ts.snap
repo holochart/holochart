@@ -181,6 +181,86 @@ exports[`built-in themes (E8.1) > high-contrast: layout values snapshot 1`] = `
 }
 `;
 
+exports[`built-in themes (E8.1) > high-contrast-dark: layout values snapshot 1`] = `
+{
+  "barLine": {
+    "color": "#000000",
+    "width": 1,
+  },
+  "colorscaleStops": {
+    "diverging": "11 stops [0,"rgb(127,59,8)"]…",
+    "sequential": "Cividis",
+    "sequentialminus": "Cividis",
+  },
+  "colorway": [
+    "#ffd400",
+    "#56b4e9",
+    "#ff9e3d",
+    "#f28cd2",
+    "#2ee6b0",
+    "#ff7b7b",
+    "#c3b6ff",
+    "#ffffff",
+  ],
+  "dataTypes": [
+    "bar",
+    "choropleth",
+    "cone",
+    "contour",
+    "contourcarpet",
+    "heatmap",
+    "histogram2d",
+    "histogram2dcontour",
+    "mesh3d",
+    "parcoords",
+    "scatter",
+    "scatter3d",
+    "scattercarpet",
+    "scattergeo",
+    "scattergl",
+    "scattermapbox",
+    "scatterpolar",
+    "scatterpolargl",
+    "scatterternary",
+    "streamtube",
+    "surface",
+  ],
+  "font": {
+    "color": "#ffffff",
+    "size": 16,
+  },
+  "layoutKeys": [
+    "annotationdefaults",
+    "coloraxis",
+    "colorscale",
+    "colorway",
+    "font",
+    "hoverlabel",
+    "legend",
+    "modebar",
+    "paper_bgcolor",
+    "plot_bgcolor",
+    "shapedefaults",
+    "title",
+    "xaxis",
+    "yaxis",
+  ],
+  "paper_bgcolor": "#000000",
+  "plot_bgcolor": "#000000",
+  "xaxis": {
+    "color": "#ffffff",
+    "gridcolor": "#5c5c5c",
+    "showline": true,
+    "ticks": "outside",
+    "zerolinecolor": "#bdbdbd",
+    "zerolinewidth": 2,
+  },
+  "yaxis": {
+    "gridcolor": "#5c5c5c",
+  },
+}
+`;
+
 exports[`built-in themes (E8.1) > holochart: layout values snapshot 1`] = `
 {
   "barLine": {

@@ -314,3 +314,96 @@ describe('updates', () => {
     s.container.remove();
   });
 });
+
+describe('summaries and data tables (E17.2, E17.3)', () => {
+  /** A `dots` variant describing its points as a series, with every row on demand. */
+  function seriesModule(total = 3): TraceModule<DotsCalc> {
+    const base = createDotsModule(createLog());
+    return {
+      ...base,
+      type: 'series',
+      describe(ctx: DescribeContext<DotsCalc>) {
+        const row = (i: number): string[] => [`x${i}`, `y${i}`];
+        return {
+          kind: 'line',
+          summary: `Line "${String(ctx.trace['name'])}".`,
+          table: { columns: ['x', 'y'], rows: [row(0)], total, row },
+          insight: {
+            kind: 'series',
+            length: ctx.calc.x.length,
+            x: ctx.calc.x,
+            y: ctx.calc.y,
+            joined: true,
+            formatX: String,
+            formatY: String,
+          },
+        };
+      },
+    };
+  }
+
+  function seriesChart(config: Record<string, unknown> = {}, total?: number) {
+    const s = setup({ width: 640, height: 400 });
+    s.registry.register(seriesModule(total));
+    const c = chart(
+      {
+        data: [{ type: 'series', name: 'Rev', x: [0, 5, 10], y: [10, 60, 40] }],
+        layout: { xaxis: { title: { text: 'Day' } }, yaxis: { title: { text: 'k$' } } },
+        config,
+      },
+      s,
+    );
+    return { s, c };
+  }
+
+  it('adds the generated overview once its code has loaded', async () => {
+    const { s, c } = seriesChart();
+    await c.ready;
+    const d = await c.describe();
+    expect(d?.overview).toBe('k$ by Day. Rev rises from 10 (0) to 40 (10). It peaks at 60 (5).');
+    expect(c.description?.overview).toBe(d?.overview);
+    const paragraphs = [...mirror(s.container).querySelectorAll('p')].map((p) => p.textContent);
+    expect(paragraphs.slice(0, 2)).toEqual(['Line chart.', d?.overview]);
+    expect(describedBy(s.container)).toContain('Rev rises from 10 (0) to 40 (10).');
+    s.container.remove();
+  });
+
+  it('leaves the overview out with a11y.summaries off', async () => {
+    const { s, c } = seriesChart({ a11y: { summaries: false } });
+    await c.ready;
+    expect((await c.describe())?.overview).toBe('');
+    expect(mirror(s.container).querySelectorAll('p')[1]?.textContent).toBe('Axes:');
+    s.container.remove();
+  });
+
+  it('has no tables with a11y.dataTable false', async () => {
+    const { s, c } = seriesChart({ a11y: { dataTable: false } });
+    await c.ready;
+    expect(c.description?.tables).toEqual([]);
+    expect(mirror(s.container).querySelector('table')).toBeNull();
+    s.container.remove();
+  });
+
+  it('shows every row of a visible table after the chart, virtualized', async () => {
+    const { s, c } = seriesChart({ a11y: { dataTable: 'visible' } }, 100_000);
+    await c.ready;
+    await c.describe();
+    // Not hidden in the mirror too (screen readers would read both).
+    expect(mirror(s.container).querySelector('table')).toBeNull();
+    const view = s.container.nextElementSibling as HTMLElement;
+    expect(view.className).toBe('holochart-data-table');
+    expect(view.style.width).toBe('640px');
+    const table = view.querySelector('table')!;
+    expect(table.getAttribute('aria-rowcount')).toBe('100001');
+    expect(view.textContent).toContain('Rev (100,000 rows)');
+    expect(view.querySelector('[role="region"]')?.getAttribute('tabindex')).toBe('0');
+    const rows = table.querySelectorAll('tbody tr[aria-rowindex]');
+    expect(rows.length).toBeGreaterThan(10);
+    expect(rows.length).toBeLessThan(60);
+    expect(rows[0]?.getAttribute('aria-rowindex')).toBe('2');
+    expect(rows[0]?.textContent).toBe('x0y0');
+    c.destroy();
+    expect(s.container.nextElementSibling).toBeNull();
+    s.container.remove();
+  });
+});

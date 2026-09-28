@@ -109,26 +109,28 @@ subplots), with only `layout.template` changed. Each one is also a visual regres
 <Example id="themes/none" :height="300" />
 <Example id="themes/high-contrast" :height="300" />
 <Example id="themes/neon" :height="300" />
+<Example id="themes/high-contrast-dark" :height="300" />
 
 </div>
 
-| Theme            | What it is                                                                                   |
-| ---------------- | -------------------------------------------------------------------------------------------- |
-| `holochart`      | The default look: dark and dense. A chart without `layout.template` looks exactly like this. |
-| `plotly-classic` | Plotly's look, the library defaults written out. Renders the same as `none`.                 |
-| `plotly`         | plotly.py's default: blue-grey plot area, white grid, the Plotly colorway, Plasma.           |
-| `plotly_white`   | `plotly` on white with light blue-grey grid lines.                                           |
-| `plotly_dark`    | plotly.py's dark theme.                                                                      |
-| `simple_white`   | No grid, dark axis lines with outside ticks, D3 colors, Viridis.                             |
-| `ggplot2`        | R's ggplot2: grey panel, white grid, ggplot's hue palette.                                   |
-| `seaborn`        | Python seaborn's darkgrid style with the deep palette and the rocket colorscale.             |
-| `presentation`   | 18 px text, 3 px lines, 9 px markers. Meant to be combined: `'plotly_white+presentation'`.   |
-| `xgridoff`       | No vertical grid lines. Combine it with another theme.                                       |
-| `ygridoff`       | No horizontal grid lines. Combine it with another theme.                                     |
-| `gridon`         | Grid lines on both axes, e.g. `'simple_white+gridon'`.                                       |
-| `none`           | The empty template: the library defaults, Plotly's look (same as `template: null`).          |
-| `high-contrast`  | For low vision, projectors and print.                                                        |
-| `neon`           | Neon hues on near-black, with glowing title text.                                            |
+| Theme                | What it is                                                                                   |
+| -------------------- | -------------------------------------------------------------------------------------------- |
+| `holochart`          | The default look: dark and dense. A chart without `layout.template` looks exactly like this. |
+| `plotly-classic`     | Plotly's look, the library defaults written out. Renders the same as `none`.                 |
+| `plotly`             | plotly.py's default: blue-grey plot area, white grid, the Plotly colorway, Plasma.           |
+| `plotly_white`       | `plotly` on white with light blue-grey grid lines.                                           |
+| `plotly_dark`        | plotly.py's dark theme.                                                                      |
+| `simple_white`       | No grid, dark axis lines with outside ticks, D3 colors, Viridis.                             |
+| `ggplot2`            | R's ggplot2: grey panel, white grid, ggplot's hue palette.                                   |
+| `seaborn`            | Python seaborn's darkgrid style with the deep palette and the rocket colorscale.             |
+| `presentation`       | 18 px text, 3 px lines, 9 px markers. Meant to be combined: `'plotly_white+presentation'`.   |
+| `xgridoff`           | No vertical grid lines. Combine it with another theme.                                       |
+| `ygridoff`           | No horizontal grid lines. Combine it with another theme.                                     |
+| `gridon`             | Grid lines on both axes, e.g. `'simple_white+gridon'`.                                       |
+| `none`               | The empty template: the library defaults, Plotly's look (same as `template: null`).          |
+| `high-contrast`      | For low vision, projectors and print.                                                        |
+| `neon`               | Neon hues on near-black, with glowing title text.                                            |
+| `high-contrast-dark` | `high-contrast` on black: white text, yellow titles, a bright colorway (7:1 or more).        |
 
 `holochart-dark`, the dark variant from before the default look was dark, still resolves as a
 **deprecated** alias of `holochart`. Use `holochart` (or leave `layout.template` unset); the alias
@@ -154,6 +156,15 @@ hues are spread apart for color-vision deficiencies. Lines are 2.5 px; markers a
 white rim, so overlapping points stay separate; bars get a black outline; the legend gets a
 border. Sequential data uses Cividis, which was designed for color-vision deficiency, and
 diverging data uses ColorBrewer PuOr. Hover labels are white on black.
+
+**`high-contrast-dark`** is its dark counterpart, for low vision and dark high-contrast modes:
+black paper, white 16 px text (21:1), yellow 20 px titles, white 2 px axis lines with long
+outside ticks, a subdued grid, and a colorway after Okabe–Ito in which every color has at least
+7:1 contrast against black (WCAG AAA even for text). Lines are 3 px; markers are 9 px with a black
+rim; bars get a black outline between neighbours. Hover labels are white on black with a yellow
+border. A unit test computes the contrast ratios of both high-contrast themes. See the
+[accessibility guide](/guides/accessibility#visual-accessibility) for patterns, the `Safe` palette
+and reduced motion.
 
 **`neon`** shows off glow: saturated neon hues on a near-black indigo background, a faint cyan
 grid, a magenta zero line, and a title with a cyan halo (`title.font.shadow`). Markers and bars

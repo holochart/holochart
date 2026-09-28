@@ -490,7 +490,126 @@ export interface TraceDescription {
      * table then says "first N of M". Default: `rows.length`.
      */
     readonly total?: number;
+    /**
+     * Row `i` of all `total` rows (E17.3), for the visible data table (`config.a11y.dataTable:
+     * 'visible'`), which formats only the rows scrolled into view. Without it the visible table
+     * shows `rows` only.
+     */
+    readonly row?: (i: number) => readonly string[];
   };
+  /**
+   * Facts for the generated summary (E17.2): the runtime's lazily loaded summary code turns them
+   * into localized sentences about trends and extremes ("Revenue rises from 1.2M (Jan) to 3.4M
+   * (Dec). It peaks at 3.6M (Nov)."). Arrays are the calc's own (not copied); keep this cheap.
+   */
+  readonly insight?: TraceInsight;
+}
+
+/**
+ * What a trace's generated summary is about (E17.2), by `kind`: values along an ordered position
+ * (`series`), parts of a whole (`shares`), distributions (`boxes`, `bins`), a grid of values
+ * (`grid`), prices (`prices`) or a single value (`value`). Values are numbers as the trace
+ * computes them (linear for axes); the `format*` functions show them as the chart does.
+ */
+export type TraceInsight =
+  | SeriesInsight
+  | SharesInsight
+  | BoxesInsight
+  | BinsInsight
+  | GridInsight
+  | PricesInsight
+  | ValueInsight;
+
+/** Values along a position: lines, areas, markers, bars on ordered axes. */
+export interface SeriesInsight {
+  readonly kind: 'series';
+  readonly length: number;
+  /** Positions (linear) and values; points with a non-finite one are skipped. */
+  readonly x: ArrayLike<number>;
+  readonly y: ArrayLike<number>;
+  /**
+   * Points joined in order (lines, areas, bars): described as a trend from the first to the last
+   * point. Unjoined markers are too when `x` increases; otherwise as a correlation of `y` with `x`.
+   */
+  readonly joined: boolean;
+  formatX(x: number): string;
+  formatY(y: number): string;
+}
+
+/** Parts of a whole: pie slices, funnel stages, category bars, hierarchy branches, sankey flows. */
+export interface SharesInsight {
+  readonly kind: 'shares';
+  readonly length: number;
+  readonly values: ArrayLike<number>;
+  /** Label of part `i` (plain text). */
+  label(i: number): string;
+  /** Parts that are hidden (legend-toggled slices) or not drawn, if any. */
+  skip?(i: number): boolean;
+  /** The whole, when it isn't the sum of `values` (sankey: flow from sources). */
+  readonly total?: number;
+  /** What a part is: `'slice'`, `'bar'`, `'stage'`, `'branch'` or `'flow'`. */
+  readonly part: 'slice' | 'bar' | 'stage' | 'branch' | 'flow';
+  formatValue(v: number): string;
+}
+
+/** Box plots and violins: five-number summaries per box. */
+export interface BoxesInsight {
+  readonly kind: 'boxes';
+  readonly length: number;
+  /** Position label of box `i` (plain text). */
+  label(i: number): string;
+  readonly min: ArrayLike<number>;
+  readonly q1: ArrayLike<number>;
+  readonly median: ArrayLike<number>;
+  readonly q3: ArrayLike<number>;
+  readonly max: ArrayLike<number>;
+  formatValue(v: number): string;
+}
+
+/** Histogram bins: `[start, end)` per bin and the bin's value (count, density, …). */
+export interface BinsInsight {
+  readonly kind: 'bins';
+  readonly length: number;
+  readonly start: ArrayLike<number>;
+  readonly end: ArrayLike<number>;
+  readonly values: ArrayLike<number>;
+  formatPosition(p: number): string;
+  formatValue(v: number): string;
+}
+
+/** A grid of values (heatmaps, contours, 2D histograms), `z[j * nx + i]`. */
+export interface GridInsight {
+  readonly kind: 'grid';
+  readonly nx: number;
+  readonly ny: number;
+  readonly z: ArrayLike<number>;
+  /** Column `i` / row `j` as the axes show them. */
+  xText(i: number): string;
+  yText(j: number): string;
+  formatValue(v: number): string;
+}
+
+/** Open, high, low, close per point (candlestick, OHLC). */
+export interface PricesInsight {
+  readonly kind: 'prices';
+  /** The points drawn, in order (indices into the arrays below). */
+  readonly points: ArrayLike<number>;
+  /** Positions (linear). */
+  readonly x: ArrayLike<number>;
+  readonly open: ArrayLike<number>;
+  readonly high: ArrayLike<number>;
+  readonly low: ArrayLike<number>;
+  readonly close: ArrayLike<number>;
+  formatX(x: number): string;
+  formatY(y: number): string;
+}
+
+/** One value, optionally against a reference (indicators). */
+export interface ValueInsight {
+  readonly kind: 'value';
+  readonly value: number;
+  readonly reference?: number;
+  formatValue(v: number): string;
 }
 
 // ---- Interaction parts of the trace contract (M1 wave 2) --------------------------------------

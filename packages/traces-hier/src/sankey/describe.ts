@@ -40,5 +40,14 @@ export function describeSankey(ctx: DescribeContext<SankeyCalc>): TraceDescripti
       rows,
       total: calc.links.length,
     },
+    insight: {
+      kind: 'shares',
+      part: 'flow',
+      length: calc.links.length,
+      values: calc.links.map((l) => l.value),
+      label: (i) => `${label(calc.links[i]!.source)} → ${label(calc.links[i]!.target)}`,
+      total,
+      formatValue: formatPlainNumber,
+    },
   };
 }

@@ -37,6 +37,8 @@ export const COLUMN_KEYS = [
   'errorYMinus',
   'names',
   'values',
+  'parents',
+  'ids',
   'xStart',
   'xEnd',
   'r',
@@ -44,7 +46,7 @@ export const COLUMN_KEYS = [
 ] as const;
 
 /** Options that name a list of columns. */
-export const LIST_KEYS = ['hoverData', 'customData', 'dimensions'] as const;
+export const LIST_KEYS = ['hoverData', 'customData', 'dimensions', 'path'] as const;
 
 export type ColumnKey = (typeof COLUMN_KEYS)[number];
 export type ListKey = (typeof LIST_KEYS)[number];

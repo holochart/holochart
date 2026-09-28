@@ -21,7 +21,8 @@ Pick a different chart when:
 - you compare the same parts across several groups: use stacked or grouped
   [bars](/charts/basic/bar) rather than several pies;
 - the values don't add up to a meaningful whole (averages, rates, values that can be negative);
-- the parts form a hierarchy: sunburst and treemap charts arrive in M3.
+- the parts form a hierarchy: use a [sunburst](/charts/hierarchical/sunburst) or a
+  [treemap](/charts/hierarchical/treemap).
 
 ## Minimal example
 
@@ -209,7 +210,9 @@ The pie layout options `piecolorway`, `extendpiecolors`, `hiddenlabels`, and `gr
 
 - [Bar](/charts/basic/bar): compare parts precisely, or the same parts across groups (stacked bars)
 - [Horizontal bar](/charts/basic/horizontal-bar): many parts, sorted, with long labels
-- Sunburst, treemap, and funnel area (a pie-like funnel) are planned for M3
+- [Sunburst](/charts/hierarchical/sunburst) and [treemap](/charts/hierarchical/treemap): parts that
+  form a hierarchy
+- [Funnel area](/charts/financial/funnelarea): a pie-like funnel
 
 ## Plotly migration notes
 

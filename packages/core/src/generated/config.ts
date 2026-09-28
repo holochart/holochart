@@ -99,6 +99,10 @@ export interface Config {
    */
   ariaLabel?: string;
   /**
+   * Accessibility options (plan E17). Holochart only.
+   */
+  a11y?: ConfigA11y;
+  /**
    * Options for the modebar "download image" button.
    */
   toImageButtonOptions?: ConfigToImageButtonOptions;
@@ -222,6 +226,36 @@ export interface ConfigEdits {
    * @defaultValue `false`
    */
   titleText?: boolean;
+}
+
+/**
+ * Accessibility options (plan E17). Holochart only.
+ */
+export interface ConfigA11y {
+  /**
+   * Add generated summaries of trends and extremes ("Revenue rises from 1.2M in Jan to 3.4M in Dec") to what screen readers get. Their code loads after the first draw. Holochart only (plan E17.2).
+   *
+   * @defaultValue `true`
+   */
+  summaries?: boolean;
+  /**
+   * The traces' data tables: `'hidden'` for screen readers only (first 100 rows), `'visible'` shown below the chart with every row (virtualized), `false` none. Holochart only (plan E17.3).
+   *
+   * @defaultValue `"hidden"`
+   */
+  dataTable?: 'hidden' | 'visible' | false;
+  /**
+   * Give bars, histograms, polar bars, filled areas (`fillpattern`) and pie slices a distinct pattern each, as an encoding redundant with color, unless the trace or template sets one. Holochart only (plan E17.5).
+   *
+   * @defaultValue `false`
+   */
+  patterns?: boolean;
+  /**
+   * Snap transitions and drill-down tweens instead of animating them: `'auto'` when the user's system asks for reduced motion (the `prefers-reduced-motion` media query), `true` always, `false` never. Holochart only (plan E17.5).
+   *
+   * @defaultValue `"auto"`
+   */
+  reducedMotion?: 'auto' | true | false;
 }
 
 /**

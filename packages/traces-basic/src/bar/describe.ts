@@ -1,6 +1,7 @@
 /**
  * Accessible description of a bar trace (plan E17.1): bar count and the largest and smallest bar
- * with their positions, formatted like the axes' hover labels, plus a table of the first bars.
+ * with their positions, formatted like the axes' hover labels, plus a table of the first bars
+ * (every bar on demand) and the bars for the generated summary (E17.2).
  * Values are each bar's own value (after `barnorm`), not the stacked top.
  */
 import { getIn } from '@mk7s/holochart-core';
@@ -56,8 +57,32 @@ export function describeBar(ctx: DescribeContext<BarCalc>): TraceDescription {
 
   const letters = horizontal ? ['y', 'x'] : ['x', 'y'];
   const columns = [axisTitle(pa, letters[0] as string), axisTitle(sa, letters[1] as string)];
-  const shown = Math.min(n, ctx.maxRows);
+  const row = (i: number): string[] => [fp(pos[i] as number), fs(values[i] as number)];
   const rows: string[][] = [];
-  for (let i = 0; i < shown; i++) rows.push([fp(pos[i] as number), fs(values[i] as number)]);
-  return { kind, summary, table: { caption: name, columns, rows, total: n } };
+  for (let i = 0; i < Math.min(n, ctx.maxRows); i++) rows.push(row(i));
+  // Bars on categories are ranked (E17.2), bars along dates or numbers are a series.
+  const categories = pa?.type === 'category' || pa?.type === 'multicategory';
+  return {
+    kind,
+    summary,
+    table: { caption: name, columns, rows, total: n, row },
+    insight: categories
+      ? {
+          kind: 'shares',
+          part: 'bar',
+          length: n,
+          values: values as ArrayLike<number>,
+          label: (i) => fp(pos[i] as number),
+          formatValue: fs,
+        }
+      : {
+          kind: 'series',
+          length: n,
+          x: pos as ArrayLike<number>,
+          y: values as ArrayLike<number>,
+          joined: true,
+          formatX: fp,
+          formatY: fs,
+        },
+  };
 }

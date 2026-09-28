@@ -420,6 +420,56 @@ describe('TextPrimitive: built-in default font (E2.18)', () => {
     expect(fontsOf(text)).toEqual([['b', '/fonts/italic.otf']]);
   });
 
+  it('`ready` of a primitive created after the engine loaded includes the faces it waits for', async () => {
+    // The first primitive loads the engine and the regular face.
+    open();
+    const first = mod.createTextPrimitive(context(), { labels: labels('a') });
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(1));
+    finishSyncs();
+    await first.ready;
+
+    // The engine is attached synchronously now; the bold face is still loading.
+    gateFonts();
+    const text = mod.createTextPrimitive(context(), {
+      labels: [{ text: 'Halo', x: 0, y: 0, font: { weight: 'bold' } }],
+    });
+    const ready = text.ready;
+    await flush();
+    expect(troika.fontLoads).toEqual(['regular.otf', 'bold.otf']);
+    expect(troika.syncs).toHaveLength(0);
+    expect(await settled(ready)).toBe(false);
+    openFonts();
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(1));
+    expect(await settled(ready)).toBe(false); // still typesetting
+    finishSyncs();
+    await ready;
+    expect(fontsOf(text)).toEqual([['Halo', '/fonts/bold.otf']]);
+  });
+
+  it('`ready` of a later primitive waits for a face another primitive started loading', async () => {
+    // Two charts side by side: the first starts the bold face; the engine arrives before the
+    // second chart's first pass (slow WebGL setup), so the second attaches it synchronously.
+    gateFonts();
+    open();
+    const left = mod.createTextPrimitive(context(), {
+      labels: [{ text: 'hide', x: 0, y: 0, font: { weight: 'bold' } }],
+    });
+    await vi.waitFor(() => expect(troika.loaded).toBe(1));
+    const right = mod.createTextPrimitive(context(), {
+      labels: [{ text: 'show', x: 0, y: 0, font: { weight: 'bold' } }],
+    });
+    const ready = right.ready;
+    await flush();
+    expect(troika.fontLoads.filter((f) => f === 'bold.otf')).toHaveLength(1); // one shared load
+    expect(await settled(ready)).toBe(false);
+    openFonts();
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(2));
+    expect(await settled(ready)).toBe(false);
+    finishSyncs();
+    await Promise.all([left.ready, ready]);
+    expect(fontsOf(right)).toEqual([['show', '/fonts/bold.otf']]);
+  });
+
   it('shares one load per face between primitives', async () => {
     open();
     const a = mod.createTextPrimitive(context(), { labels: labels('a') });

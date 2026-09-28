@@ -9,7 +9,7 @@ Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's
 
 | Entry                                   | What it measures                                           | Budget |
 | --------------------------------------- | ---------------------------------------------------------- | ------ |
-| `partial: core + scatter`               | `createChart` + `register` from runtime, `scatter` trace   | 153 kB |
+| `partial: core + scatter`               | `createChart` + `register` from runtime, `scatter` trace   | 157 kB |
 | `text engine (lazy chunk …)`            | the SDF text engine chunk, loaded on first text use        | 49 kB  |
 | `fill primitive (lazy chunk …)`         | fill primitive + earcut + exact fill rules, on first fill  | 9.4 kB |
 | `animation (lazy chunk …)`              | transitions, frames and `animate`, on first animation      | 6.4 kB |
@@ -20,10 +20,10 @@ Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's
 | `default font, bold face (lazy …)`      | the bold face chunk, loaded when bold text is drawn        | 95 kB  |
 | `default font, italic face (lazy …)`    | the italic face chunk, loaded when italic text is drawn    | 98 kB  |
 | `default font, bold italic face (…)`    | the bold italic face chunk                                 | 95 kB  |
-| `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 242 kB |
+| `partial: basic`                        | runtime + components + traces-basic + themes (all exports) | 248 kB |
 | `controls views (lazy chunks of basic)` | menus, sliders, range selector/slider, selections views    | 16 kB  |
-| `@mk7s/holochart (full, ESM)`           | everything the full bundle exports                         | 450 kB |
-| `@mk7s/holochart IIFE (includes three)` | `dist/holochart.iife.min.js` as shipped, **with** three.js | 650 kB |
+| `@mk7s/holochart (full, ESM)`           | everything the full bundle exports                         | 475 kB |
+| `@mk7s/holochart IIFE (includes three)` | `dist/holochart.iife.min.js` as shipped, **with** three.js | 690 kB |
 | each `@mk7s/holochart-*` package        | `export *` of that package                                 | report |
 
 The IIFE budget is the full budget plus a 200 kB allowance for the bundled three.js (about
@@ -143,6 +143,25 @@ entry measures the whole package instead and the report adds a footnote.
 In CI, the job writes the table to the job summary, uploads `size.json` as the `size-report`
 artifact, compares with the latest successful `main` run, and posts or updates one PR comment
 (same-repo PRs only; fork PRs get a read-only token, so they get the job summary only).
+
+## Sizes after M5 wave 1 (2026-09-28)
+
+M5 adds `traces-hier` (sunburst, sankey, treemap, icicle) and Express's hierarchy functions to
+the full bundle, and accessibility (summaries, data table), locales plumbing and sankey flow
+particles. Heavy parts are lazy chunks in the ESM build; the IIFE inlines them.
+
+| Entry                     | Local (macOS) | Est. CI (+0.3%) | Budget       |
+| ------------------------- | ------------- | --------------- | ------------ |
+| partial: core + scatter   | 151.63 kB     | ≈ 152.1 kB      | 153 → 157 kB |
+| partial: basic            | 240.93 kB     | ≈ 241.6 kB      | 242 → 248 kB |
+| full, ESM                 | 450.25 kB     | ≈ 451.6 kB      | 450 → 475 kB |
+| IIFE (includes three)     | 664.85 kB     | ≈ 666.8 kB      | 650 → 690 kB |
+| chart summaries and table | 5.24 kB       |                 | 5.8 kB       |
+| sankey flow particles     | 3.21 kB       |                 | 3.6 kB       |
+
+IIFE growth in wave 1: treemap/icicle ~8.2 kB, accessibility ~7.2 kB (its lazy chunks inlined),
+sankey flow ~4.7 kB, Express hierarchy ~1.4 kB. The budgets were raised for all of M5 by decision,
+leaving room for wave 2's keyboard, touch and focus handling in `basic`.
 
 ## Sizes after M4 wave 2 (2026-09-28)
 

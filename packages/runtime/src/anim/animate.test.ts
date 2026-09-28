@@ -289,6 +289,31 @@ describe('react with layout.transition (E7.3)', () => {
     vi.unstubAllGlobals();
   });
 
+  it('follows config.a11y.reducedMotion over the media query (E17.5)', async () => {
+    const reduced = (y: number[], setting: boolean) => ({
+      ...base(y),
+      config: { a11y: { reducedMotion: setting } },
+    });
+    const c = await make(reduced([1, 2, 3], true));
+    const log = events(c, ANIMATION_EVENTS);
+    // Forced on: snaps without any media query.
+    await c.react(reduced([4, 5, 6], true));
+    expect(last().y).toEqual([4, 5, 6]);
+    expect(log).toEqual(['transitioning', 'transitioned']);
+    // Forced off: animates even when the user prefers reduced motion.
+    const d = await make(reduced([1, 2, 3], false));
+    const matchMedia = vi.fn(() => ({ matches: true }));
+    Object.defineProperty(window, 'matchMedia', { value: matchMedia, configurable: true });
+    const done = d.react(reduced([5, 6, 7], false));
+    await flush();
+    await steps(5);
+    expect(Array.from(last().y as ArrayLike<number>)).not.toEqual([5, 6, 7]);
+    await steps(10);
+    await done;
+    expect(last().y).toEqual([5, 6, 7]);
+    Reflect.deleteProperty(window, 'matchMedia');
+  });
+
   it('lets another update of an animating attribute win', async () => {
     const c = await make(base([1, 2, 3]));
     const done = c.react(base([5, 6, 7]));

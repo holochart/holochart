@@ -39,10 +39,20 @@ function describeFunnelarea(ctx: DescribeContext<FunnelareaCalc>): TraceDescript
   const rows = visible
     .slice(0, ctx.maxRows)
     .map((s) => [accessibleText(s.label), formatPieValue(s.v), share(s.v)]);
+  const slices = calc.slices;
   return {
     kind: 'funnelarea',
     summary,
     table: { caption: name, columns: ['Stage', 'Value', 'Percent'], rows, total: visible.length },
+    insight: {
+      kind: 'shares',
+      part: 'stage',
+      length: slices.length,
+      values: slices.map((s) => s.v),
+      label: (i) => accessibleText(slices[i]!.label),
+      skip: (i) => slices[i]!.hidden === true,
+      formatValue: formatPieValue,
+    },
   };
 }
 

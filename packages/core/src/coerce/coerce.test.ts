@@ -99,6 +99,9 @@ describe('coerceValue', () => {
     expect(ok(attr.colorlist(), ['red', '#00f'])).toEqual(['rgb(255, 0, 0)', 'rgb(0, 0, 255)']);
     expect(bad(attr.colorlist(), [])).toBe(true);
     expect(bad(attr.colorlist(), ['red', 'nope'])).toBe(true);
+    // A colorway name (E17.5): `Safe` is always there; unknown names are invalid.
+    expect((ok(attr.colorlist(), 'safe') as string[])[0]).toBe('rgb(136, 204, 238)');
+    expect(bad(attr.colorlist(), 'NoSuchPalette')).toBe(true);
     const cs = attr.colorscale();
     expect(ok(cs, 'Viridis')).toBe('Viridis');
     expect(ok(cs, ['red', 'blue', 'green'])).toEqual([

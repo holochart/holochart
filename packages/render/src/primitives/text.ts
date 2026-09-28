@@ -453,7 +453,9 @@ export class TextPrimitive implements Primitive<TextData> {
     if (this.attaching) return;
     const loaded = loadedTextEngine();
     if (loaded) {
-      this.install(loaded);
+      // `install` may wait for default font faces (a bold or italic face still loading) before it
+      // typesets: `ready` must cover that wait too, not only the typesetting it starts later.
+      this.track(this.install(loaded));
       return;
     }
     this.attaching = true;

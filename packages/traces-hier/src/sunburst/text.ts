@@ -10,13 +10,8 @@
  * `geometry.ts`); text sizes come from the render layer's synchronous metrics, so placement is unit
  * tested without a GPU. Labels may be Plotly pseudo-HTML (E2.10): mixed styles become styled runs.
  */
-import { toRGBA, type FullLayout, type FullTrace, type RGBA } from '@mk7s/holochart-core';
-import {
-  scaleTextRuns,
-  type TextFont,
-  type TextFontWeight,
-  type TextRunLines,
-} from '@mk7s/holochart-render';
+import type { FullLayout, FullTrace, RGBA } from '@mk7s/holochart-core';
+import { scaleTextRuns, type TextFont, type TextRunLines } from '@mk7s/holochart-render';
 import {
   labelContent,
   measureLabel,
@@ -24,75 +19,24 @@ import {
   type InsideOrientation,
 } from '@mk7s/holochart-traces-basic';
 import type { HierarchyCalc } from '../hierarchy/calc.ts';
-import { DEFAULT_LINE } from '../hierarchy/colors.ts';
-import { nodeAttr, nodeContext, nodeText } from '../hierarchy/format.ts';
-import { isHierarchyRoot } from '../hierarchy/levels.ts';
+import { nodeContext, nodeText } from '../hierarchy/format.ts';
+import {
+  isOutsideNode,
+  LINE_HEIGHT,
+  MIN_FONT_SIZE,
+  nodeFont,
+  type LabelFont,
+} from '../hierarchy/text.ts';
 import type { Sector, SunburstGeometry, SunburstLayout } from './geometry.ts';
 
-/** Line height of labels as a multiple of the font size (as pie's). */
-export const LINE_HEIGHT = 1.2;
-
-/** Labels whose fitted font is smaller than this many px are not drawn (they would be specks). */
-const MIN_FONT_SIZE = 1;
-
-type FontContainer = Readonly<Record<string, unknown>> | undefined;
-
-function container(trace: FullTrace, key: string): FontContainer {
-  const c = trace[key];
-  return c !== null && typeof c === 'object' ? (c as Record<string, unknown>) : undefined;
-}
-
-/** The first truthy value of `key` along a font chain (Plotly's `castOption(a) || …`). */
-function chain(fonts: readonly FontContainer[], key: string, i: number): unknown {
-  for (const f of fonts) {
-    const v = nodeAttr(f?.[key], i);
-    if (v) return v;
-  }
-  return undefined;
-}
-
-function toFont(fonts: readonly FontContainer[], i: number): TextFont {
-  const family = chain(fonts, 'family', i);
-  const size = Number(chain(fonts, 'size', i));
-  const weight = chain(fonts, 'weight', i);
-  const style = chain(fonts, 'style', i);
-  return {
-    family: typeof family === 'string' ? family : 'sans-serif',
-    size: Number.isFinite(size) && size > 0 ? size : 12,
-    ...(weight === 'normal' || weight === 'bold' || typeof weight === 'number'
-      ? { weight: weight as TextFontWeight }
-      : {}),
-    ...(style === 'italic' ? { style: 'italic' as const } : {}),
-  };
-}
-
-const WHITE: RGBA = [1, 1, 1, 1];
-const DARK: RGBA = toRGBA(DEFAULT_LINE)!;
-
-/**
- * Plotly's `Color.contrast` without amounts: white on dark colors, `#444` on light ones
- * (tinycolor's `isDark`: perceived brightness below 128), translucent colors over white first.
- */
-export function contrastColor(color: string): RGBA {
-  const c = toRGBA(color) ?? DARK;
-  const a = c[3];
-  const mix = (v: number): number => v * a + (1 - a);
-  const brightness = (mix(c[0]) * 299 + mix(c[1]) * 587 + mix(c[2]) * 114) / 1000;
-  return brightness * 255 < 128 ? WHITE : DARK;
-}
-
-/** A resolved label font and color. */
-export interface LabelFont {
-  readonly font: TextFont;
-  readonly color: RGBA;
-}
+export { contrastColor, LINE_HEIGHT, type LabelFont } from '../hierarchy/text.ts';
 
 /**
  * Plotly's `isOutsideText`: the hierarchy root's label, when nodes are not colorscaled (the root is
  * transparent by default, so its label sits on the background).
  */
 export function isOutsideText(calc: Pick<HierarchyCalc, 'colorscale'>, sector: Sector): boolean {
-  return !calc.colorscale && isHierarchyRoot(sector.node);
+  return isOutsideNode(calc.colorscale, sector.node);
 }
 
 /** The font of a sector's label (Plotly's `determineTextFont`). */
@@ -102,22 +46,7 @@ export function sectorFont(
   sector: Sector,
   fullLayout: FullLayout,
 ): LabelFont {
-  const i = sector.node.i;
-  const layoutFont = fullLayout.font as unknown as FontContainer;
-  if (isOutsideText(calc, sector)) {
-    const fonts = [container(trace, 'outsidetextfont'), container(trace, 'textfont'), layoutFont];
-    const color = chain(fonts, 'color', i);
-    return {
-      font: toFont(fonts, i),
-      color: (typeof color === 'string' ? toRGBA(color) : null) ?? DARK,
-    };
-  }
-  const fonts = [container(trace, 'insidetextfont'), container(trace, 'textfont'), layoutFont];
-  const custom = nodeAttr(container(trace, 'insidetextfont')?.['color'], i);
-  return {
-    font: toFont(fonts, i),
-    color: (typeof custom === 'string' ? toRGBA(custom) : null) ?? contrastColor(sector.node.color),
-  };
+  return nodeFont(trace, calc.colorscale, sector.node, fullLayout);
 }
 
 /** One placed label, in container px. */

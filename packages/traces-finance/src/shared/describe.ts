@@ -46,17 +46,18 @@ export function describePrices(
       : ` Close ${fy(calc.close[first]!)};`;
   summary += ` lowest low ${fy(calc.low[lowest]!)} at ${fx(calc.origPos[lowest]!)}, highest high ${fy(calc.high[highest]!)} at ${fx(calc.origPos[highest]!)}.`;
   summary += ` ${rising} rising, ${drawn.length - rising} falling.`;
-  const rows: string[][] = [];
-  for (let k = 0; k < Math.min(drawn.length, ctx.maxRows); k++) {
+  const row = (k: number): string[] => {
     const i = drawn[k]!;
-    rows.push([
+    return [
       fx(calc.origPos[i]!),
       fy(calc.open[i]!),
       fy(calc.high[i]!),
       fy(calc.low[i]!),
       fy(calc.close[i]!),
-    ]);
-  }
+    ];
+  };
+  const rows: string[][] = [];
+  for (let k = 0; k < Math.min(drawn.length, ctx.maxRows); k++) rows.push(row(k));
   return {
     kind,
     summary,
@@ -65,6 +66,18 @@ export function describePrices(
       columns: ['x', 'open', 'high', 'low', 'close'],
       rows,
       total: drawn.length,
+      row,
+    },
+    insight: {
+      kind: 'prices',
+      points: drawn,
+      x: calc.origPos,
+      open: calc.open,
+      high: calc.high,
+      low: calc.low,
+      close: calc.close,
+      formatX: fx,
+      formatY: fy,
     },
   };
 }

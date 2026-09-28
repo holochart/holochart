@@ -1,6 +1,7 @@
 /**
  * Accessible description of a histogram (plan E17.1): sample and bin counts, the bins' range,
- * the largest bin with its range, and a table of the first bins (range, value).
+ * the largest bin with its range, a table of the first bins (range, value; every bin on demand)
+ * and the bins for the generated summary (E17.2).
  */
 import { getIn } from '@mk7s/holochart-core';
 import {
@@ -58,11 +59,27 @@ export function describeHistogram(ctx: DescribeContext<HistogramCalc>): TraceDes
     axisTitle(pa, horizontal ? 'y' : 'x'),
     axisTitle(sa, what.charAt(0).toUpperCase() + what.slice(1)),
   ];
+  const row = (i: number): string[] => [range(i), fv(values[i]!)];
   const rows: string[][] = [];
-  for (let i = 0; i < Math.min(n, ctx.maxRows); i++) rows.push([range(i), fv(values[i]!)]);
+  for (let i = 0; i < Math.min(n, ctx.maxRows); i++) rows.push(row(i));
+  // Cumulative bins describe no distribution (E17.2).
+  const cumulative = what.startsWith('cumulative');
   return {
     kind: horizontal ? 'horizontal histogram' : 'histogram',
     summary,
-    table: { caption: name, columns, rows, total: n },
+    table: { caption: name, columns, rows, total: n, row },
+    ...(cumulative
+      ? {}
+      : {
+          insight: {
+            kind: 'bins',
+            length: n,
+            start: calc.binStart,
+            end: calc.binEnd,
+            values,
+            formatPosition: fp,
+            formatValue: fv,
+          },
+        }),
   };
 }

@@ -20,7 +20,8 @@
  *
  * Another update of an animating attribute wins: the transition stops writing that attribute. A
  * new transition interrupts the running one (which jumps to its end in the input) and starts from
- * what is drawn. With `prefers-reduced-motion: reduce`, transitions snap (frames still advance).
+ * what is drawn. With `prefers-reduced-motion: reduce` (or `config.a11y.reducedMotion: true`, plan
+ * E17.5), transitions snap (frames still advance).
  *
  * ## Frames
  *
@@ -32,6 +33,7 @@
  */
 import {
   getIn,
+  reducedMotion,
   type FigureInput,
   type FullAxis,
   type Scale,
@@ -121,15 +123,6 @@ function interrupted(): Error {
   const error = new Error('holochart: the animation was interrupted');
   error.name = 'AnimationInterrupted';
   return error;
-}
-
-function reducedMotion(el: HTMLElement): boolean {
-  try {
-    const view = el.ownerDocument.defaultView;
-    return view?.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
-  } catch {
-    return false;
-  }
 }
 
 /** Position attributes that interpolate only on non-category axes. */
@@ -383,7 +376,8 @@ export class Animation {
       if (tracks.length === 0) return;
       events = true;
       const opts = optionsOf(target);
-      if (opts.duration <= 0 || reducedMotion(chart.element)) return;
+      const view = chart.element.ownerDocument.defaultView;
+      if (opts.duration <= 0 || reducedMotion(target.fullLayout, view)) return;
       running = this.#start(plan, tracks, opts);
     });
     if (events) chart.emit('transitioning', undefined);

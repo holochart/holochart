@@ -18,6 +18,7 @@
  * 100+ colorscales.
  */
 import { evenStops, PLOTLYJS_COLORSCALES, type ColorscaleStops } from './plotlyjs.ts';
+import { Safe } from './data/qualitative.ts';
 
 export type { ColorscaleStops } from './plotlyjs.ts';
 
@@ -162,14 +163,20 @@ export function registerColorway(name: string, colorList: readonly string[]): ()
   };
 }
 
-/** A named colorway's colors (case-insensitive), or `undefined`. Shared: do not mutate. */
+/**
+ * A named colorway's colors (case-insensitive), or `undefined`. `Safe` (CARTO's colorblind-safe
+ * palette, plan E17.5) is always available, like plotly.js's colorscale names; registering a
+ * colorway of that name replaces it. Shared: do not mutate.
+ */
 export function getColorway(name: string): readonly string[] | undefined {
-  return colorwayMap.get(name.trim().toLowerCase())?.value;
+  const key = name.trim().toLowerCase();
+  return colorwayMap.get(key)?.value ?? (key === 'safe' ? Safe : undefined);
 }
 
-/** Names of every registered colorway. */
+/** Names of every registered colorway, and `Safe`. */
 export function colorwayNames(): string[] {
-  return [...colorwayMap.values()].map((e) => e.name);
+  const names = [...colorwayMap.values()].map((e) => e.name);
+  return colorwayMap.has('safe') ? names : [...names, 'Safe'];
 }
 
 /**

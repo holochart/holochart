@@ -18,12 +18,14 @@ function nonEmpty(v: unknown): boolean {
 
 /**
  * The rows, levels and node colors of a hierarchy trace. Returns `false` (and hides the trace)
- * without both `labels` and `parents`, as Plotly. Sets `_hasColorscale`.
+ * without both `labels` and `parents`, as Plotly. Sets `_hasColorscale`. `leaf: false` for traces
+ * without `leaf.opacity` (treemap).
  */
 export function supplyHierarchyDefaults(
   traceIn: Readonly<Record<string, unknown>>,
   traceOut: FullTrace,
   ctx: TraceDefaultsContext,
+  options: { readonly leaf?: boolean } = {},
 ): boolean {
   const labels = ctx.coerce('labels');
   const parents = ctx.coerce('parents');
@@ -48,7 +50,7 @@ export function supplyHierarchyDefaults(
     supplyColorscaleDefaults(markerIn, ctx.coerce, 'marker.', { inTrace: true, showscale: true });
   }
   supplyPatternDefaults(traceIn, ctx, 'marker.pattern');
-  ctx.coerce('leaf.opacity', colorscale ? 1 : 0.7);
+  if (options.leaf !== false) ctx.coerce('leaf.opacity', colorscale ? 1 : 0.7);
   ctx.coerce('root.color');
   ctx.coerce('sort');
   return true;
@@ -89,7 +91,12 @@ export function supplyHierarchyTextDefaults(
   const userColor =
     (traceIn['textfont'] as { color?: unknown } | undefined)?.color !== undefined ||
     (ctx.template?.['textfont'] as { color?: unknown } | undefined)?.color !== undefined;
-  ctx.coerceContainer('insidetextfont', userColor ? inherited : { ...inherited, color: undefined });
+  const inside = userColor ? inherited : { ...inherited, color: undefined };
+  ctx.coerceContainer('insidetextfont', inside);
+  // Treemap and icicle path bars (Plotly's `handleText` with `hasPathbar`).
+  if (traceOut['pathbar'] && (traceOut['pathbar'] as { visible?: unknown }).visible) {
+    ctx.coerceContainer('pathbar.textfont', inside);
+  }
   ctx.coerceContainer('outsidetextfont', inherited);
 }
 

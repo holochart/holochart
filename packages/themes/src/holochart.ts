@@ -1,6 +1,7 @@
 /**
  * Holochart's own themes (plan E8.1, ADR-021): `holochart` (the default look), `plotly-classic`
- * (Plotly's look), `high-contrast` and `neon`, plus the deprecated `holochart-dark` alias. Design
+ * (Plotly's look), `high-contrast`, `high-contrast-dark` (E17.5) and `neon`, plus the deprecated
+ * `holochart-dark` alias. Design
  * notes are in the docs (customization/themes-templates.md).
  */
 import { holochartTemplate, plotlyClassicTemplate, type Template } from '@mk7s/holochart-core';
@@ -105,6 +106,72 @@ export const highContrast: Template = /* @__PURE__ */ (() => {
         },
       ],
       bar: [{ type: 'bar', marker: { line: { color: HC_INK, width: 1 }, colorbar } }],
+    },
+  };
+})();
+
+const HCD_INK = '#ffffff';
+const HCD_ACCENT = '#ffd400';
+
+/**
+ * The dark counterpart of {@link highContrast} (plan E17.5), for low vision and for users of dark
+ * high-contrast modes: black paper, white 16 px text (21:1), yellow 20 px titles, white 2 px axis
+ * lines with long outside ticks, a subdued grid, and a colorway in which every color has at least
+ * 7:1 contrast against black (WCAG AAA for text, far above the 3:1 of non-text contrast), with
+ * hues after Okabe–Ito so the colors stay apart for color-vision deficiencies. Lines are 3 px,
+ * markers 9 px with a black rim so overlapping points separate; bars get a black outline between
+ * neighbours. Hover labels are white on black with a yellow border. Cividis for sequential data,
+ * ColorBrewer PuOr for diverging data. Pair it with `config.a11y.patterns` for an encoding that
+ * doesn't rely on color at all.
+ */
+export const highContrastDark: Template = /* @__PURE__ */ (() => {
+  const colorbar = { outlinewidth: 1, outlinecolor: HCD_INK, ticks: 'outside', tickcolor: HCD_INK };
+  const colorbars = colorbarDefaults(colorbar, undefined);
+  return {
+    layout: {
+      paper_bgcolor: '#000000',
+      plot_bgcolor: '#000000',
+      font: { color: HCD_INK, size: 16 },
+      title: { font: { color: HCD_ACCENT, size: 20 } },
+      colorway: [
+        HCD_ACCENT,
+        '#56b4e9',
+        '#ff9e3d',
+        '#f28cd2',
+        '#2ee6b0',
+        '#ff7b7b',
+        '#c3b6ff',
+        '#ffffff',
+      ],
+      colorscale: { sequential: 'Cividis', sequentialminus: 'Cividis', diverging: PUOR },
+      ...colorbars.layout,
+      ...bothAxes({
+        color: HCD_INK,
+        showline: true,
+        linewidth: 2,
+        ticks: 'outside',
+        tickwidth: 2,
+        ticklen: 7,
+        gridcolor: '#5c5c5c',
+        zerolinecolor: '#bdbdbd',
+        zerolinewidth: 2,
+      }),
+      legend: { bordercolor: HCD_INK, borderwidth: 1 },
+      hoverlabel: { bgcolor: '#000000', bordercolor: HCD_ACCENT, font: { color: HCD_INK } },
+      modebar: { bgcolor: 'rgba(0,0,0,0.85)', color: HCD_INK, activecolor: HCD_ACCENT },
+      annotationdefaults: { arrowcolor: HCD_INK, arrowwidth: 2, font: { color: HCD_INK } },
+      shapedefaults: { line: { color: HCD_INK, width: 2 } },
+    },
+    data: {
+      ...colorbars.data,
+      scatter: [
+        {
+          type: 'scatter',
+          line: { width: 3 },
+          marker: { size: 9, line: { color: '#000000', width: 1 }, colorbar },
+        },
+      ],
+      bar: [{ type: 'bar', marker: { line: { color: '#000000', width: 1 }, colorbar } }],
     },
   };
 })();

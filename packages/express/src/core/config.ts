@@ -14,6 +14,8 @@ export type Role =
   | 'text'
   | 'names'
   | 'values'
+  | 'parents'
+  | 'ids'
   | 'animationGroup'
   | 'errorX'
   | 'errorXMinus'
@@ -67,7 +69,8 @@ export interface Config {
   readonly continuousColor?: 'marker' | 'line' | 'pie' | 'sectors';
   /**
    * Put a numeric color's colorscale and colorbar on the trace (`line.colorscale`, `showscale`)
-   * rather than on `layout.coloraxis`: Holochart's `parcoords` / `parcats` have no `line.coloraxis`.
+   * rather than on `layout.coloraxis`: Holochart's `parcoords` / `parcats` have no `line.coloraxis`,
+   * and its hierarchy traces no `marker.coloraxis` yet.
    */
   readonly inlineColorscale?: boolean;
   /**

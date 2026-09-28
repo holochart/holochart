@@ -9,6 +9,9 @@
  * only when some `link.line.width` is set), the nodes (one instanced rect set) and the labels (one
  * text primitive). Hover recolors (a color-only fill update: hovered links take their
  * `hovercolor`); a drag re-lays out only link breadths and moved ribbons.
+ *
+ * With `link.flow` (plan E13.5c), flow particles (one instanced draw, `flow.ts`, loaded on first
+ * use) stream along the ribbons, above the moving ribbons and below the outlines.
  */
 import {
   createLazyFillPrimitive,
@@ -19,6 +22,8 @@ import {
   type FillData,
   type LazyFillPrimitive,
   type LineData,
+  type Primitive,
+  type PrimitiveContext,
   type RectData,
   type RectPrimitive,
   type RGBA,
@@ -36,8 +41,10 @@ import {
   type TraceView,
 } from '@mk7s/holochart-runtime';
 import { labelContent } from '@mk7s/holochart-traces-basic';
+import { Mesh } from 'three';
 import type { SankeyCalc } from './calc.ts';
 import { SankeyDrag } from './drag.ts';
+import type { FlowParticles, FlowState } from './flow.ts';
 import {
   eventPoint,
   highlightOf,
@@ -58,7 +65,14 @@ import {
 type Ctx = TracePlotContext<SankeyCalc>;
 
 /** Render orders in the overlay (like pie and parcats, in [-10, 0)), plus trace order. */
-const LAYER = { links: -9.6, moving: -9.55, lines: -9.5, nodes: -9.4, text: -9.3 } as const;
+const LAYER = {
+  links: -9.6,
+  moving: -9.55,
+  flow: -9.52,
+  lines: -9.5,
+  nodes: -9.4,
+  text: -9.3,
+} as const;
 const orderOf = (layer: number, index: number): number => layer + Math.min(index, 999) * 1e-4;
 
 /** The chart that owns a pointer event's target (the canvas inside the chart's element). */
@@ -91,6 +105,52 @@ function fontOf(container: unknown): { font: TextFont; color: RGBA } {
     },
     color: rgba(f['color'], [0.27, 0.27, 0.27, 1]),
   };
+}
+
+/** The flow particles' code (`flow.ts`), loaded the first time a trace sets `link.flow`. */
+let flowCode: Promise<typeof import('./flow.ts')> | undefined;
+
+/**
+ * A trace's flow particles, before and after their code loads: a hidden mesh they then draw into.
+ * `ready` covers the load, so `chart.ready` and image export wait for the particles.
+ */
+class LazyFlow implements Primitive<FlowState> {
+  readonly object = new Mesh();
+  readonly ready: Promise<void>;
+  #particles: FlowParticles | undefined;
+  #state: FlowState;
+  #disposed = false;
+
+  constructor(context: PrimitiveContext, state: FlowState) {
+    this.#state = state;
+    this.object.visible = false;
+    this.ready = (flowCode ??= import('./flow.ts')).then(
+      (mod) => {
+        if (this.#disposed) return;
+        this.#particles = mod.createFlowParticles(context, this.object);
+        this.#particles.update(this.#state);
+      },
+      (error: unknown) => {
+        flowCode = undefined;
+        console.error('[holochart] could not load the sankey flow particles:', error);
+      },
+    );
+  }
+
+  update(patch: Partial<FlowState>): void {
+    this.#state = { ...this.#state, ...patch };
+    this.#particles?.update(this.#state);
+  }
+
+  setTransform(): void {}
+
+  setViewport(): void {}
+
+  dispose(): void {
+    this.#disposed = true;
+    this.#particles?.dispose();
+    this.object.removeFromParent();
+  }
 }
 
 /** Links whose ribbons a drag of `moved` nodes can change: theirs and their neighbours'. */
@@ -128,6 +188,7 @@ class SankeyView implements TraceView<SankeyCalc> {
   #links: LazyFillPrimitive | undefined;
   #movingFill: LazyFillPrimitive | undefined;
   #lines: LinePrimitive | undefined;
+  #flow: LazyFlow | undefined;
   #nodes: RectPrimitive | undefined;
   #text: TextPrimitive | undefined;
 
@@ -233,6 +294,7 @@ class SankeyView implements TraceView<SankeyCalc> {
     if (this.#movingFill && moving.length > 0) {
       this.#movingFill.update({ color: this.#colors(moving) });
     }
+    this.#flow?.update({ lit: this.#lit });
     this.#ctx?.invalidate();
   }
 
@@ -282,10 +344,31 @@ class SankeyView implements TraceView<SankeyCalc> {
       this.#movingKey = '';
     }
 
+    this.#drawFlow(ctx, model, H);
     this.#drawLines(ctx, model, H);
     this.#drawNodes(ctx, model, H);
     this.#drawText(ctx, model, H);
     ctx.invalidate();
+  }
+
+  /** Flow particles, when `link.flow` is set (the defaults coerce it only then). */
+  #drawFlow(ctx: Ctx, model: SankeyModel, H: number): void {
+    const link = (ctx.trace['link'] ?? {}) as Record<string, unknown>;
+    if (!link['flow']) {
+      if (this.#flow) ctx.remove(this.#flow);
+      this.#flow = undefined;
+      return;
+    }
+    // `config.a11y.reducedMotion` (plan E17.5), which supply-defaults keeps on the full layout.
+    const { _reducedMotion: reducedMotion } = ctx.fullLayout as {
+      _reducedMotion?: 'auto' | boolean;
+    };
+    const state: FlowState = { model, height: H, lit: this.#lit, reducedMotion };
+    if (!this.#flow) {
+      this.#flow = new LazyFlow(ctx.primitives, state);
+      ctx.add(this.#flow);
+    } else this.#flow.update(state);
+    this.#flow.object.renderOrder = orderOf(LAYER.flow, ctx.index);
   }
 
   #drawLines(ctx: Ctx, model: SankeyModel, H: number): void {

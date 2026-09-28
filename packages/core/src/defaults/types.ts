@@ -1,5 +1,6 @@
 /** Types of the supply-defaults output (`fullData`, `fullLayout`, `fullConfig`). */
 import type { configSchema } from '../config/schema.ts';
+import type { ReducedMotion } from './a11y.ts';
 import type { gridSchema } from '../layout/grid.ts';
 import type { layoutSchema, xaxisSchema } from '../layout/schema.ts';
 import type { Locale } from '../locale/locale.ts';
@@ -92,6 +93,8 @@ export type FullLayout = BaseFullLayout & {
    * dates and translate UI strings through it (`localeOf`, `localize`). Set by supply-defaults.
    */
   _locale?: Locale;
+  /** `config.a11y.reducedMotion` (plan E17.5), read through `reducedMotion()`. Set by supply-defaults. */
+  _reducedMotion?: ReducedMotion;
   /**
    * Axes linked by `matches` (plan E3.9, `defaults/constraints.ts`): one object per group, axis id
    * → 1, e.g. `[{ x: 1, x2: 1 }]`. Axes of a group share their range. Set by supply-defaults.

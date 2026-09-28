@@ -95,7 +95,8 @@ register(...basicTraces, ...statsTraces, ...builtinComponents);
 `parallelCategories`, marginals and `ff.distplot` use traces-stats too; `imshow` uses the
 `heatmap` and `image` traces of traces-sci, and `scatterPolar`, `linePolar` and `barPolar` its
 polar traces (`register(...sciTraces)`); `funnel` and `funnelArea` use traces-finance
-(`register(...financeTraces)`). Facet labels, legends, colorbars and animation controls are
+(`register(...financeTraces)`); `sunburst`, `treemap` and `icicle` use traces-hier
+(`register(...hierTraces)`). Facet labels, legends, colorbars and animation controls are
 components.
 
 ## Functions
@@ -124,11 +125,13 @@ components.
 | [`scatterPolar`](/express/mappings#polar-charts)                 | `px.scatter_polar`         | `scatterpolar` (markers)      |
 | [`linePolar`](/express/mappings#polar-charts)                    | `px.line_polar`            | `scatterpolar` (lines)        |
 | [`barPolar`](/express/mappings#polar-charts)                     | `px.bar_polar`             | `barpolar`                    |
+| [`sunburst`](/express/hierarchy)                                 | `px.sunburst`              | `sunburst`                    |
+| [`treemap`](/express/hierarchy)                                  | `px.treemap`               | `treemap`                     |
+| [`icicle`](/express/hierarchy)                                   | `px.icicle`                | `icicle`                      |
 | [`getTrendlineResults`](/express/statistics#fit-results)         | `px.get_trendline_results` | —                             |
 | [`data.fromCSV`](/express/data#csv)                              | `pd.read_csv`              | —                             |
 
-The rest of plotly.py's catalogue (hierarchical charts, ternary, 3D, geo) follows with its trace
-types (M5–M8).
+The rest of plotly.py's catalogue (ternary, 3D, geo) follows with its trace types (M5–M8).
 
 ## Options every function shares
 
@@ -182,6 +185,7 @@ or the `template` option. Pass `template: 'plotly-classic'` (or call
 - `barPolar`'s `barmode: 'overlay'` sets `layout.polar.barmode` (plotly.js ignores px's top-level
   `barmode` on polar bars, which always stack there); `barnorm` isn't offered, as polar bars
   don't read it.
+- `sunburst`, `treemap` and `icicle` put a numeric color's colorscale on the trace's `marker`
+  instead of `layout.coloraxis` ([more](/express/hierarchy#differences-from-plotly-express)).
 - Not yet: `marginal` on `line` / `bar`, `text_auto` (except on `imshow`), `render_mode`,
-  `color_discrete_map` given as a Plotly `px.colors` object, `sunburst` / `treemap` / `icicle`
-  (with the hierarchy traces).
+  `color_discrete_map` given as a Plotly `px.colors` object, `px.Constant`.

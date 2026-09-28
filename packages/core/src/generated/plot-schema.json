@@ -166,7 +166,7 @@
           "#17becf"
         ],
         "editType": "style+legend",
-        "description": "Default trace colors, cycled by trace index.",
+        "description": "Default trace colors, cycled by trace index. A registered colorway's name works too, e.g. `'Safe'` (colorblind-safe, always available; Holochart only).",
         "valType": "colorlist"
       },
       "template": {
@@ -2727,6 +2727,32 @@
         "dflt": "",
         "description": "The chart's accessible name (`aria-label`), read by screen readers. Empty: `layout.meta.description` when set, else the figure title followed by an automatic summary (\"Line chart with 3 traces\"). Holochart only (plan E17.1).",
         "valType": "string"
+      },
+      "a11y": {
+        "description": "Accessibility options (plan E17). Holochart only.",
+        "role": "object",
+        "summaries": {
+          "dflt": true,
+          "description": "Add generated summaries of trends and extremes (\"Revenue rises from 1.2M in Jan to 3.4M in Dec\") to what screen readers get. Their code loads after the first draw. Holochart only (plan E17.2).",
+          "valType": "boolean"
+        },
+        "dataTable": {
+          "values": ["hidden", "visible", false],
+          "dflt": "hidden",
+          "description": "The traces' data tables: `'hidden'` for screen readers only (first 100 rows), `'visible'` shown below the chart with every row (virtualized), `false` none. Holochart only (plan E17.3).",
+          "valType": "enumerated"
+        },
+        "patterns": {
+          "dflt": false,
+          "description": "Give bars, histograms, polar bars, filled areas (`fillpattern`) and pie slices a distinct pattern each, as an encoding redundant with color, unless the trace or template sets one. Holochart only (plan E17.5).",
+          "valType": "boolean"
+        },
+        "reducedMotion": {
+          "values": ["auto", true, false],
+          "dflt": "auto",
+          "description": "Snap transitions and drill-down tweens instead of animating them: `'auto'` when the user's system asks for reduced motion (the `prefers-reduced-motion` media query), `true` always, `false` never. Holochart only (plan E17.5).",
+          "valType": "enumerated"
+        }
       },
       "toImageButtonOptions": {
         "description": "Options for the modebar \"download image\" button.",

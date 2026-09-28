@@ -1110,7 +1110,8 @@ export const layoutSchema = attr.object(
     colorway: attr.colorlist({
       dflt: DEFAULT_COLORWAY,
       editType: ['style', 'legend'],
-      description: 'Default trace colors, cycled by trace index.',
+      description:
+        "Default trace colors, cycled by trace index. A registered colorway's name works too, e.g. `'Safe'` (colorblind-safe, always available; Holochart only).",
     }),
     template: attr.any({
       editType: 'calc',

@@ -1,8 +1,8 @@
 /**
  * Accessible description of a scatter trace (plan E17.1): its kind (line, area, bubble or
  * scatter), point count, x extent and where y is lowest and highest, formatted like the axes'
- * hover labels, plus a table of the first points. One pass over the points, no allocation per
- * point.
+ * hover labels, plus a table of the first points (every point on demand) and the points as a
+ * series for the generated summary (E17.2). One pass over the points, no allocation per point.
  */
 import { getIn, isArrayLike } from '@mk7s/holochart-core';
 import {
@@ -67,12 +67,25 @@ export function describeScatter(ctx: DescribeContext<ScatterCalc>): TraceDescrip
   const hasText = isArrayLike(text);
   const columns = [axisTitle(xaxis, 'x'), axisTitle(yaxis, 'y')];
   if (hasText) columns.push('text');
-  const shown = Math.min(n, ctx.maxRows);
+  const row = (i: number): string[] => {
+    const cells = [fx(x[i] as number), fy(y[i] as number)];
+    if (hasText) cells.push(accessibleText((text as ArrayLike<unknown>)[i]));
+    return cells;
+  };
   const rows: string[][] = [];
-  for (let i = 0; i < shown; i++) {
-    const row = [fx(x[i] as number), fy(y[i] as number)];
-    if (hasText) row.push(accessibleText((text as ArrayLike<unknown>)[i]));
-    rows.push(row);
-  }
-  return { kind, summary, table: { caption: name, columns, rows, total: n } };
+  for (let i = 0; i < Math.min(n, ctx.maxRows); i++) rows.push(row(i));
+  return {
+    kind,
+    summary,
+    table: { caption: name, columns, rows, total: n, row },
+    insight: {
+      kind: 'series',
+      length: n,
+      x: x as ArrayLike<number>,
+      y: y as ArrayLike<number>,
+      joined: kind === 'line' || kind === 'area',
+      formatX: fx,
+      formatY: fy,
+    },
+  };
 }

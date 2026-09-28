@@ -23,6 +23,7 @@ import { localize, resolveLocale, type LocaleDefinitions } from '../locale/local
 import { getIn, setIn } from '../path/path.ts';
 import type { LayoutDefaultsContext, Registry, TraceDefaultsContext } from '../registry/types.ts';
 import { getNodeAtPath } from '../schema/walk.ts';
+import { withA11yPattern } from './a11y.ts';
 import type { ObjectNode } from '../schema/types.ts';
 import { resolveTemplate, templateTraceFor, type Template } from '../templates/templates.ts';
 import { ValidationError, type Issue } from '../validate/issues.ts';
@@ -112,6 +113,7 @@ function supplyTrace(
   template: Template | null,
   fullLayout: FullLayout,
   datasets: FigureInput['datasets'],
+  nextPattern: (() => number) | undefined,
 ): FullTrace {
   const input = userTrace;
   const rawType = input['type'];
@@ -125,7 +127,13 @@ function supplyTrace(
   // already reported by validation. `_input` keeps the user's original object.
   const traceIn = resolveDataRefs(input, schema, datasets, `data[${index}]`).trace;
 
-  const tmpl = templateTraceFor(template, type, typeIndex(type));
+  let tmpl = templateTraceFor(template, type, typeIndex(type));
+  // `config.a11y.patterns` (E17.5): a pattern per trace (per slice for pie-like traces), not for
+  // other domain traces (hierarchies, sankey), whose sectors one shape per trace would not tell apart.
+  const pieLike = mod.categories.includes('pie-like');
+  if (nextPattern && (pieLike || !mod.categories.includes('domain'))) {
+    tmpl = withA11yPattern(tmpl, schema, traceIn, pieLike, nextPattern);
+  }
   const out = { type } as FullTrace;
   const colorway = fullLayout.colorway;
   const ctx: TraceDefaultsContext = {
@@ -235,6 +243,7 @@ export function supplyDefaults(
     locale = resolveLocale(fullConfig.locale, registry.locales, { defs, separators });
   }
   fullLayout._locale = locale;
+  fullLayout._reducedMotion = fullConfig.a11y.reducedMotion;
   supplySelectionDefaults(fullLayout);
   // Grid cells first: domain traces are placed in them (`domain.row` / `domain.column`).
   supplyGridSizing(layoutIn, fullLayout, tLayout, schema);
@@ -246,6 +255,8 @@ export function supplyDefaults(
     typeCounts.set(type, n + 1);
     return n;
   };
+  let patterns = 0;
+  const nextPattern = fullConfig.a11y.patterns ? () => patterns++ : undefined;
   // `Array.from` visits holes of a sparse `data` array (as `undefined` → a default trace);
   // `map` would keep them as holes, which later stages cannot read.
   const fullData = Array.from(dataIn, (raw: unknown, i) =>
@@ -257,6 +268,7 @@ export function supplyDefaults(
       template,
       fullLayout,
       figure.datasets,
+      nextPattern,
     ),
   );
 

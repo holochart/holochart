@@ -20,6 +20,13 @@
  * Attributes the page already set on the element (`role`, `aria-label`, `aria-describedby`) are
  * left alone, and everything the mirror set is restored on destroy.
  *
+ * ## Summary and data tables
+ *
+ * The generated overview (E17.2) follows the chart type summary as its own paragraph. Data tables
+ * (E17.3, `config.a11y.dataTable`) are hidden tables here (`'hidden'`, the default), a visible,
+ * virtualized table after the chart element (`'visible'`, `table-view.ts`, loaded on first use;
+ * the hidden copies are then left out) or none (`false`).
+ *
  * ## Updates
  *
  * {@link A11yMirror.invalidate} says what changed after a pipeline run: content changes (data,
@@ -27,7 +34,9 @@
  * streaming appends throttled, so a drag or a 60 Hz stream never rebuilds per frame; hover and
  * selection don't touch it. A rebuild that produces the same text leaves the DOM alone.
  */
+import type { FullLayout } from '@mk7s/holochart-core';
 import type { ChartDescription, DescribedTable } from './describe.ts';
+import type { DataTableView } from './table-view.ts';
 
 /** What changed, as far as the description is concerned. */
 export type A11yChange = 'content' | 'range' | 'stream' | 'none';
@@ -52,6 +61,10 @@ export interface A11yMirrorOptions {
   readonly interactive: boolean;
   /** The current description, or `undefined` before the first pipeline run. */
   readonly describe: () => ChartDescription | undefined;
+  /** `config.a11y.dataTable`. Default: `'hidden'`. */
+  readonly dataTable?: 'hidden' | 'visible' | false;
+  /** The layout and width (CSS px) the visible tables are styled and sized after. */
+  readonly figure?: () => { readonly layout: FullLayout | undefined; readonly width: number };
 }
 
 /** The hidden description and ARIA attributes of one chart element. */
@@ -68,6 +81,10 @@ export class A11yMirror {
   #timerKind: A11yChange | undefined;
   #key = '';
   #destroyed = false;
+  /** The visible tables (`dataTable: 'visible'`) and their code, once loaded. */
+  #view: DataTableView | undefined;
+  #tableCode: typeof import('./table-view.ts') | undefined;
+  #viewLoad: Promise<void> | undefined;
 
   constructor(el: HTMLElement, options: A11yMirrorOptions) {
     this.#el = el;
@@ -116,13 +133,45 @@ export class A11yMirror {
     const description = this.#options.describe();
     if (!description) return;
     this.#claim('aria-label', description.label);
+    const mode = this.#options.dataTable ?? 'hidden';
+    // The visible tables re-render the rows in view: data past the hidden rows may have changed.
+    if (mode === 'visible') this.#showTables(description.tables);
     // Skip the DOM work when nothing an assistive technology reads changed.
-    const key = JSON.stringify([description.summary, description.axes, description.traces]);
-    const tablesKey = JSON.stringify(description.tables);
+    const key = JSON.stringify([
+      description.summary,
+      description.overview,
+      description.axes,
+      description.traces,
+    ]);
+    const tablesKey = mode === 'hidden' ? JSON.stringify(description.tables) : '';
     if (key + tablesKey === this.#key) return;
     this.#key = key + tablesKey;
     this.#renderText(description);
-    this.#renderTables(description.tables);
+    this.#renderTables(mode === 'hidden' ? description.tables : []);
+  }
+
+  /** The visible tables (their code loads on first use). */
+  #showTables(tables: readonly DescribedTable[]): void {
+    const code = this.#tableCode;
+    if (code) {
+      const figure = this.#options.figure?.();
+      this.#view ??= new code.DataTableView(this.#el);
+      this.#view.update(tables, code.tableStyle(figure?.layout), figure?.width ?? 0);
+      return;
+    }
+    this.#viewLoad ??= import('./table-view.ts').then(
+      (m) => {
+        this.#tableCode = m;
+        // Show the latest description, not the one that started the load.
+        this.update();
+      },
+      (error: unknown) => console.warn('holochart: loading the data table failed', error),
+    );
+  }
+
+  /** Resolves once the visible tables' code has loaded (immediately without visible tables). */
+  get tablesReady(): Promise<void> {
+    return this.#viewLoad ?? Promise.resolve();
   }
 
   /** Whether a debounced / throttled rebuild is pending. */
@@ -138,6 +187,8 @@ export class A11yMirror {
     for (const name of this.#owned) this.#el.removeAttribute(name);
     this.#owned.clear();
     this.root.remove();
+    this.#view?.destroy();
+    this.#view = undefined;
   }
 
   #defer(kind: A11yChange, ms: number): void {
@@ -171,6 +222,11 @@ export class A11yMirror {
     const p = doc.createElement('p');
     p.textContent = d.summary;
     nodes.push(p);
+    if (d.overview) {
+      const overview = doc.createElement('p');
+      overview.textContent = d.overview;
+      nodes.push(overview);
+    }
     const list = (label: string, items: readonly string[]): void => {
       if (items.length === 0) return;
       // A text heading, not `aria-label`: in the flattened description (`aria-describedby`) a

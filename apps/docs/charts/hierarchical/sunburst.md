@@ -20,11 +20,14 @@ Rows name their parent (`labels` and `parents`, or `ids` when labels repeat), so
 parent column is a sunburst. Holochart draws every sector of a trace in one instanced GPU arc set
 and all labels in one batched SDF text set.
 
+From a table of levels (continent, country), [`hx.sunburst`](/express/hierarchy) builds the tree.
+
 Pick a different chart when:
 
 - the hierarchy has one level: use a [pie](/charts/basic/pie);
 - readers compare the sizes of leaves precisely: rectangles compare better than angles in rings
-  (treemap and icicle charts are planned for this milestone), or use [bars](/charts/basic/bar);
+  (a [treemap](/charts/hierarchical/treemap) or an [icicle](/charts/hierarchical/icicle)), or use
+  [bars](/charts/basic/bar);
 - the data is a flow between stages rather than a tree (Sankey diagrams are planned).
 
 ## Minimal example

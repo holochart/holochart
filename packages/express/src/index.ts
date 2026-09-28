@@ -4,7 +4,8 @@
  * a legend, facets, animation frames and marginals, following plotly.py's `px` and
  * `figure_factory.create_distplot`. `imshow` (M4) draws arrays rather than tables: matrices as
  * heatmaps, RGB / RGBA arrays and `ImageData` as images. M5 adds trendlines (OLS, LOWESS, rolling,
- * EWM, expanding) with `getTrendlineResults`, `agg` on bars and lines, funnels and polar charts.
+ * EWM, expanding) with `getTrendlineResults`, `agg` on bars and lines, funnels, polar charts, and
+ * `sunburst` / `treemap` / `icicle` with the `path` helper.
  *
  * ```ts
  * import hx from '@mk7s/holochart-express';
@@ -23,6 +24,7 @@ import { box, histogram, strip, violin } from './charts/distribution.ts';
 import { densityContour, densityHeatmap } from './charts/density.ts';
 import { ecdf } from './charts/ecdf.ts';
 import { funnel, funnelArea } from './charts/funnel.ts';
+import { icicle, sunburst, treemap } from './charts/hierarchy.ts';
 import { imshow } from './charts/imshow.ts';
 import { parallelCategories, parallelCoordinates, scatterMatrix } from './charts/multidim.ts';
 import { pie } from './charts/pie.ts';
@@ -44,6 +46,7 @@ export {
   funnelArea,
   getTrendlineResults,
   histogram,
+  icicle,
   imshow,
   line,
   linePolar,
@@ -54,7 +57,9 @@ export {
   scatterMatrix,
   scatterPolar,
   strip,
+  sunburst,
   timeline,
+  treemap,
   violin,
 };
 export { ecdfValues } from './charts/ecdf.ts';
@@ -106,6 +111,12 @@ export type {
 export type { PieOptions } from './charts/pie.ts';
 export type { FunnelAreaOptions, FunnelOptions } from './charts/funnel.ts';
 export type {
+  HierarchyOptions,
+  IcicleOptions,
+  SunburstOptions,
+  TreemapOptions,
+} from './charts/hierarchy.ts';
+export type {
   BarPolarOptions,
   LinePolarOptions,
   PolarOptions,
@@ -148,6 +159,9 @@ const hx = {
   pie,
   funnel,
   funnelArea,
+  sunburst,
+  treemap,
+  icicle,
   scatterPolar,
   linePolar,
   barPolar,

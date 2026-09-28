@@ -113,3 +113,151 @@ test.describe('static chart', () => {
     await expect(page.getByRole('toolbar')).toHaveCount(0);
   });
 });
+
+/** Chart methods the E17.2–E17.5 tests call in the page. */
+interface A11yChart {
+  describe(): Promise<{ overview: string } | undefined>;
+  react(figure: object): Promise<unknown>;
+  update(update: object): Promise<unknown>;
+  data: unknown[];
+  layout: object;
+}
+
+/** The example's chart, inside `page.evaluate` (written out there: functions don't serialize). */
+type Hooked = { __interaction: { chart: A11yChart } };
+
+test.describe('generated summary (E17.2)', () => {
+  test.beforeEach(async ({ page }) => {
+    await openInteraction(page, '_dev/a11y-summary');
+  });
+
+  test('describes trends and extremes with the axis format', async ({ page }) => {
+    const overview =
+      'USD by Month. Revenue rises from 1.2M (Jan 1, 2024) to 3.4M (Dec 1, 2024). It peaks at 3.6M (Nov 1, 2024). Costs stays flat at about 2.0M.';
+    const figure = page.getByRole('figure');
+    await expect(figure).toHaveAccessibleDescription(
+      new RegExp(overview.replace(/[.()$]/g, '\\$&')),
+    );
+    // The example shows the same words under the chart.
+    await expect(page.locator('p.a11y-summary')).toHaveText(overview);
+  });
+
+  test('speaks the chart locale through dictionary templates', async ({ page }) => {
+    const overview = await page.evaluate(async () => {
+      const chart = (window as unknown as Hooked).__interaction.chart;
+      await chart.update({
+        config: {
+          locale: 'de',
+          locales: {
+            de: {
+              dictionary: {
+                '{name} rises from {start} ({startX}) to {end} ({endX}).':
+                  '{name} steigt von {start} ({startX}) auf {end} ({endX}).',
+              },
+              format: { decimal: ',', thousands: '.' },
+            },
+          },
+        },
+      });
+      return (await chart.describe())?.overview;
+    });
+    expect(overview).toContain('Revenue steigt von 1,2M');
+    await expect(page.getByRole('figure')).toHaveAccessibleDescription(/Revenue steigt von/);
+  });
+});
+
+test.describe('data table (E17.3)', () => {
+  test('is visible below the chart, virtualized, and scrolls through 100k rows', async ({
+    page,
+  }) => {
+    await openInteraction(page, '_dev/a11y-table-100k');
+    await page.evaluate(() => (window as unknown as Hooked).__interaction.chart.describe());
+    const region = page.getByRole('region', { name: 'Signal (100,000 rows)' });
+    await expect(region).toBeVisible();
+    const table = page.getByRole('table', { name: 'Signal (100,000 rows)' });
+    await expect(table).toHaveAttribute('aria-rowcount', '100001');
+    await expect(table.getByRole('columnheader')).toHaveText(['x', 'y']);
+    // Below the chart, not over it; and not repeated in the hidden description.
+    const chartBox = await page.locator('canvas').first().boundingBox();
+    const tableBox = await region.boundingBox();
+    expect(tableBox!.y).toBeGreaterThanOrEqual(chartBox!.y + chartBox!.height - 1);
+    await expect(page.locator('.holochart-a11y table')).toHaveCount(0);
+    const rows = table.locator('tbody tr[aria-rowindex]');
+    expect(await rows.count()).toBeLessThan(60);
+    await expect(rows.first()).toHaveAttribute('aria-rowindex', '2');
+
+    // The rows fill the scroll region from the start.
+    const regionBox = await region.boundingBox();
+    const lastBox = await rows.last().boundingBox();
+    expect(lastBox!.y + lastBox!.height).toBeGreaterThanOrEqual(regionBox!.y + regionBox!.height);
+    // The region takes keyboard focus (so arrow keys scroll it); scroll it to the end.
+    await region.focus();
+    await expect(region).toBeFocused();
+    await region.evaluate((el) => (el.scrollTop = el.scrollHeight));
+    await expect(rows.last()).toHaveAttribute('aria-rowindex', '100001');
+    // Values as the axes format them.
+    await expect(rows.last()).toHaveText(/^99\.999k/);
+    expect(await rows.count()).toBeLessThan(60);
+    // Scrolling to the middle renders the rows there.
+    await region.evaluate((el) => (el.scrollTop = el.scrollHeight / 2));
+    await expect
+      .poll(async () => Number(await rows.first().getAttribute('aria-rowindex')))
+      .toBeGreaterThan(49_000);
+  });
+
+  test('can be hidden (screen readers only) or turned off', async ({ page }) => {
+    await openInteraction(page, '_dev/a11y-description');
+    await expect(page.locator('.holochart-data-table')).toHaveCount(0);
+    const hidden = page.getByRole('table', { name: 'Revenue (6 rows)' });
+    await expect(hidden).toHaveCount(1);
+    expect((await page.locator('.holochart-a11y').boundingBox())!.height).toBeLessThanOrEqual(1);
+    await page.evaluate(() =>
+      (window as unknown as Hooked).__interaction.chart.update({
+        config: { a11y: { dataTable: false } },
+      }),
+    );
+    await expect(page.getByRole('figure')).toHaveAccessibleDescription(/Line and bar chart/);
+    await expect(page.getByRole('table')).toHaveCount(0);
+    await page.evaluate(async () => {
+      await (window as unknown as Hooked).__interaction.chart.update({
+        config: { a11y: { dataTable: 'visible' } },
+      });
+      await (window as unknown as Hooked).__interaction.chart.describe();
+    });
+    await expect(page.locator('.holochart-data-table').getByRole('table')).toHaveCount(2);
+  });
+});
+
+test.describe('reduced motion (E17.5)', () => {
+  /** Milliseconds a `react` with a 1.5 s transition takes to settle. */
+  async function transitionTime(page: Page, config: object): Promise<number> {
+    return page.evaluate(async (cfg) => {
+      const chart = (window as unknown as Hooked).__interaction.chart;
+      const figure = (y: number[]) => ({
+        data: [{ type: 'scatter', mode: 'lines', x: [0, 1, 2], y }],
+        layout: { transition: { duration: 1500, easing: 'linear' } },
+        config: cfg,
+      });
+      await chart.react(figure([1, 2, 3]));
+      const start = performance.now();
+      await chart.react(figure([3, 2, 1]));
+      return performance.now() - start;
+    }, config);
+  }
+
+  test.beforeEach(async ({ page }) => {
+    await openInteraction(page, '_dev/a11y-description');
+  });
+
+  test('transitions snap when the user prefers reduced motion', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    expect(await transitionTime(page, {})).toBeLessThan(1000);
+  });
+
+  test('config.a11y.reducedMotion overrides the preference', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    expect(await transitionTime(page, { a11y: { reducedMotion: false } })).toBeGreaterThan(1400);
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    expect(await transitionTime(page, { a11y: { reducedMotion: true } })).toBeLessThan(1000);
+  });
+});

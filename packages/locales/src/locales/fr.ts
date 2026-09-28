@@ -3,6 +3,7 @@
  * 2016-2024 Plotly Technologies Inc.; see this package's THIRD_PARTY_NOTICES.md).
  */
 import type { LocaleModule } from '@mk7s/holochart-core';
+import { summariesFr } from '../summaries.ts';
 
 /** French (`fr`). */
 export const fr: LocaleModule = {
@@ -73,6 +74,8 @@ export const fr: LocaleModule = {
     'incoming flow count:': 'flux entrant :',
     'outgoing flow count:': 'flux sortant :',
     'kde:': 'est. par noyau :',
+    // Holochart's generated chart summaries (plan E17.2), not from plotly.js.
+    ...summariesFr,
   },
   format: {
     days: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],

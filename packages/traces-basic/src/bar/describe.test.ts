@@ -49,7 +49,12 @@ describe('bar describe()', () => {
         ['Mar', '7'],
       ],
       total: 3,
+      row: expect.any(Function),
     });
+    // Category bars are ranked by the generated summary (E17.2).
+    const insight = d.insight as { kind: string; label(i: number): string };
+    expect(insight.kind).toBe('shares');
+    expect(insight.label(1)).toBe('Feb');
   });
 
   it('swaps position and value for horizontal bars and uses axis titles', () => {

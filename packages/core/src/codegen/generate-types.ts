@@ -129,7 +129,7 @@ function leafMembers(spec: AttrSpec, ctx: Context): string[] {
       return spec.arrayOk === true ? [...members, readonlyArray(members)] : members;
     }
     case 'colorlist':
-      return ['readonly string[]'];
+      return ['readonly string[]', 'string'];
     case 'colorscale':
       ctx.helpers.add('ColorScale');
       return ['ColorScale'];

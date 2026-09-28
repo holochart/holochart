@@ -18,8 +18,8 @@ import { createChart } from '@mk7s/holochart';
 createChart(el, { data, layout: { template: 'plotly_white' } });
 ```
 
-Fifteen themes are built in: Holochart's `holochart` (the default look), `plotly-classic`
-(Plotly's look), `high-contrast` and `neon`, and plotly.py's `plotly`, `plotly_white`,
+Sixteen themes are built in: Holochart's `holochart` (the default look), `plotly-classic`
+(Plotly's look), `high-contrast`, `high-contrast-dark` and `neon`, and plotly.py's `plotly`, `plotly_white`,
 `plotly_dark`, `simple_white`, `ggplot2`, `seaborn`, `presentation`, `xgridoff`, `ygridoff`,
 `gridon` and `none`. (`holochart-dark` still resolves, as a deprecated alias of `holochart`.)
 Four of them, on the same figure:

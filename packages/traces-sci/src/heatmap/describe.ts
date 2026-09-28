@@ -41,5 +41,18 @@ export function describeHeatmap(ctx: DescribeContext<HeatmapCalc>): TraceDescrip
       if (rows.length < ctx.maxRows) rows.push([xt(i), yt(j), formatPlainNumber(v)]);
     }
   }
-  return { kind, summary, table: { caption: name, columns: ['x', 'y', 'z'], rows, total } };
+  return {
+    kind,
+    summary,
+    table: { caption: name, columns: ['x', 'y', 'z'], rows, total },
+    insight: {
+      kind: 'grid',
+      nx: calc.nx,
+      ny: calc.ny,
+      z: calc.z,
+      xText: xt,
+      yText: yt,
+      formatValue: formatPlainNumber,
+    },
+  };
 }

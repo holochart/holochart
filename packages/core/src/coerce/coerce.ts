@@ -14,6 +14,7 @@
  *   millions of points here would defeat zero-copy ingestion; the calc stage handles bad points.
  */
 import type { AttrSpec, Primitive } from '../schema/types.ts';
+import { getColorway } from '../colors/registry.ts';
 import { canonicalColor } from './color.ts';
 
 /** Outcome of coercing one value. `note` explains a lossy but accepted coercion (clamping). */
@@ -186,9 +187,11 @@ export function coerceValue(spec: AttrSpec, v: unknown): CoerceResult {
       return c === null ? INVALID : valid(c);
     }
     case 'colorlist': {
-      if (!Array.isArray(v) || v.length === 0) return INVALID;
+      // A registered colorway's name (`colorway: 'Safe'`, plan E17.5; Holochart only).
+      const list = typeof v === 'string' ? getColorway(v) : v;
+      if (!Array.isArray(list) || list.length === 0) return INVALID;
       const out: string[] = [];
-      for (const item of v) {
+      for (const item of list) {
         const c = canonicalColor(item);
         if (c === null) return INVALID;
         out.push(c);
@@ -271,7 +274,7 @@ export function describeExpected(spec: AttrSpec): string {
     case 'color':
       return `a CSS color${arr}`;
     case 'colorlist':
-      return 'a non-empty array of CSS colors';
+      return 'a non-empty array of CSS colors or a colorway name';
     case 'colorscale':
       return 'a colorscale name, a list of colors, or [position, color] stops from 0 to 1';
     case 'subplotid':

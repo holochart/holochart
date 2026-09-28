@@ -14,6 +14,7 @@ import {
   type HoverContext,
   type TracePlotContext,
 } from '@mk7s/holochart-runtime';
+import { Mesh } from 'three';
 import { describe, expect, it, vi } from 'vitest';
 import { hasCycle, type SankeyCalc } from './calc.ts';
 import { defaultHoverColor, darkBackground } from './defaults.ts';
@@ -719,6 +720,36 @@ describe('sankey view and description', () => {
     expect(added.filter((p) => p instanceof LazyFillPrimitive)).toHaveLength(2);
     view.handlePointer!(pointer('leave', cx, cy + 40));
     expect(added.filter((p) => p instanceof LazyFillPrimitive)).toHaveLength(1);
+  });
+
+  it('draws flow particles with link.flow only, dimmed outside the hover highlight', async () => {
+    const { ctx, added } = plotCtx({ ...BASIC, link: { ...BASIC.link, flow: {} } });
+    const view = sankey.plot!.create(ctx);
+    expect(added).toHaveLength(4);
+    const flow = added[1]!;
+    // Above the ribbons, below the nodes.
+    expect(flow.object.renderOrder).toBeGreaterThan(added[0]!.object.renderOrder);
+    expect(flow.object.renderOrder).toBeLessThan(added[2]!.object.renderOrder);
+    await (flow as { ready?: Promise<void> }).ready;
+    const mesh = flow.object as Mesh;
+    expect(mesh.visible).toBe(true);
+    const alphas = (): Set<number> => {
+      const c = mesh.geometry.getAttribute('iColor').array as Float32Array;
+      const n = (mesh.geometry as { instanceCount?: number }).instanceCount ?? 0;
+      return new Set(Array.from(c.slice(0, n * 4).filter((_, i) => i % 4 === 3)));
+    };
+    expect(alphas()).toEqual(new Set([1]));
+    // Hovering node A lights A → C only: the other links' particles dim.
+    const model = buildModel(ctx.calc, ctx.trace, ctx.fullLayout, RECT);
+    const [ax, ay] = center(model, 0);
+    view.handlePointer!(pointer('move', ax, ay));
+    expect(alphas()).toEqual(new Set([1, 0.25]));
+    view.handlePointer!(pointer('leave', 0, 0));
+    expect(alphas()).toEqual(new Set([1]));
+    // Without link.flow, the particles go.
+    const plan = { calc: false, plot: true, style: true, transform: false };
+    view.update({ ...ctx, trace: plotCtx().ctx.trace }, plan);
+    expect(added).not.toContain(flow);
   });
 
   it('outlines links with a line primitive when link.line.width is set', () => {
