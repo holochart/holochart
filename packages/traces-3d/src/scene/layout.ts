@@ -55,7 +55,21 @@ export interface SceneLayout {
 export interface SceneCalc {
   readonly sceneExtremes: SceneExtremes;
   scene?: SceneLayout | undefined;
+  /**
+   * A cross-trace step of the trace type (e.g. `bar3d` stacking, M6 wave 2): run by
+   * {@link sceneCrossTraceLayout} once per scene and pass, before the scene is laid out, with the
+   * scene's entries whose calc carries this same function (in trace order). It may update their
+   * `sceneExtremes` in place; it must be idempotent.
+   */
+  readonly sceneCrossTrace?: SceneCrossTrace;
 }
+
+/** See {@link SceneCalc.sceneCrossTrace}. */
+export type SceneCrossTrace = (
+  entries: readonly DomainTraceEntry<SceneCalc>[],
+  fullLayout: FullLayout,
+  sceneId: string,
+) => void;
 
 function extent(v: unknown): [number, number] | undefined {
   return Array.isArray(v) && typeof v[0] === 'number' && typeof v[1] === 'number'
@@ -150,6 +164,12 @@ export function sceneCrossTraceLayout(
   }
   const built = new Map<string, SceneLayout>();
   for (const [id, list] of byScene) {
+    const steps = new Map<SceneCrossTrace, DomainTraceEntry<SceneCalc>[]>();
+    for (const e of list) {
+      const step = e.calc.sceneCrossTrace;
+      if (step) steps.set(step, [...(steps.get(step) ?? []), e]);
+    }
+    for (const [step, members] of steps) step(members, ctx.fullLayout, id);
     const layout = buildSceneLayout(
       ctx.fullLayout,
       id,

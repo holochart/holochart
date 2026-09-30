@@ -72,14 +72,20 @@ function legendTrace(trace: FullTrace, fullLayout: FullLayout | undefined): Full
   return color ? ({ ...trace, line: { ...line, color } } as FullTrace) : trace;
 }
 
-/** The nearest hit, preferring markers over a line at the same distance. */
+/** The nearest hit, preferring markers over a line (screen, tube or ribbon) at the same distance. */
 function bestHit(hits: readonly PickResult[]): PickResult {
   const first = hits[0]!;
   for (const h of hits) {
     if (h.distance > first.distance) break;
-    if (h.object?.name !== 'holochart:line3d') return h;
+    if (!h.object?.name.startsWith('holochart:line3d')) return h;
   }
   return first;
+}
+
+/** The data point of a hit: tube and ribbon meshes map their vertices to points. */
+function hitPoint(hit: PickResult): number {
+  const map = hit.object?.userData['hcPointIndex'] as Int32Array | undefined;
+  return map ? (map[hit.pointIndex] ?? -1) : hit.pointIndex;
 }
 
 function scatter3dHoverPoints(
@@ -91,7 +97,7 @@ function scatter3dHoverPoints(
   const pick = scenePicks(trace, query, ctx);
   if (!pick) return [];
   const hit = bestHit(pick.hits);
-  const i = hit.pointIndex;
+  const i = hitPoint(hit);
   if (!(i >= 0 && i < calc.length)) return [];
   const x = calc.x[i]!;
   const y = calc.y[i]!;

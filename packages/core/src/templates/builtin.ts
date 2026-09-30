@@ -292,6 +292,14 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
       // only the slim colorbar; the mesh hover contour in the text gray (Plotly's #444 vanishes).
       mesh3d: [{ colorbar, contour: { color: TEXT } }],
       cone: [{ colorbar }],
+      // 3D bars: thin background-colored edges (Plotly's-look #444 muddies dark bars), slim
+      // colorbars.
+      bar3d: [{ marker: { line: { color: BG, width: 1 }, colorbar } }],
+      // Stream tubes, like cones, pick automatic colorscales: only the slim colorbar.
+      streamtube: [{ colorbar }],
+      // Isosurfaces and volumes, like meshes, pick automatic colorscales: only the slim colorbar.
+      isosurface: [{ colorbar }],
+      volume: [{ colorbar }],
       // Parallel coordinates and categories: the sequential ramp (parcoords defaults to Viridis),
       // slim colorbars, 9 px axis labels and 8 px tick and range labels (Plotly's 1/1.2 of the
       // layout font rounds up to 8 px for the labels too).

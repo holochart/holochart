@@ -8,6 +8,7 @@
  * | markers (`sprite`)     | `Markers3D`: SDF symbols, one instanced draw call      | yes    |
  * | markers (`sphere`)     | `SphereSet`: ray-cast lit spheres, one draw call       | yes    |
  * | lines                  | `Line3D`: screen-space width and dashes, one draw call | yes    |
+ * | lines (`tube`, `ribbon`) | the lazily loaded mesh primitive, lit (`line-mesh.ts`) | yes    |
  * | text                   | `TextPrimitive`, `billboard` + `screen` sizing         | no     |
  * | error bars             | one gapped `Line3D` for all three axes                 | no     |
  * | projections (shadows)  | one `Markers3D` per axis, on its far wall              | no     |
@@ -15,7 +16,9 @@
  *
  * Opaque markers and lines write depth (the default look); translucent markers (`opacity < 1`)
  * blend and are sorted back to front as the camera moves. A camera move re-renders only, except
- * for the projections, which move to the walls that face the camera when those flip.
+ * for the projections, which move to the walls that face the camera when those flip. Tube and
+ * ribbon lines (`line.render`, E14.10) are built in scene units, so they are rebuilt when the
+ * scene's transform changes (layout passes), not when the camera moves.
  */
 import {
   richTextLabel,
@@ -25,9 +28,11 @@ import {
   type RGBA,
 } from '@mk7s/holochart-core';
 import {
+  createLazyMeshPrimitive,
   createTextPrimitive,
   linesMarkers3DModule,
   loadLinesMarkers3D,
+  type LazyMeshPrimitive,
   type LinesMarkers3DModule,
   type Line3D,
   type MarkerData,
@@ -61,6 +66,7 @@ import {
   Object3D,
   SRGBColorSpace,
 } from 'three';
+import { sceneMeshLighting } from '../scene/lighting-attributes.ts';
 import { sceneOf } from '../scene/layout-defaults.ts';
 import {
   invalidateScenePicks,
@@ -71,6 +77,7 @@ import { acquireScene, type Scene3D } from '../scene/scene.ts';
 import { farWalls } from '../scene/spikes.ts';
 import type { Scatter3dCalc } from './calc.ts';
 import { hasLines3d, hasMarkers3d, hasText3d } from './defaults.ts';
+import { ribbonMesh, tubeMesh, type LineMesh } from './line-mesh.ts';
 import { surfaceTriangles } from './surface.ts';
 
 type Container = Record<string, unknown>;
@@ -285,6 +292,57 @@ export function errorSegments(
   return { x, y, z, color, width };
 }
 
+/** `line.render` of a defaulted trace drawing lines (`'screen'` without lines too). */
+export function lineRender3d(trace: FullTrace): 'screen' | 'tube' | 'ribbon' {
+  const r = ((trace['line'] ?? {}) as Container)['render'];
+  return hasLines3d(trace['mode']) && (r === 'tube' || r === 'ribbon') ? r : 'screen';
+}
+
+/** The identity transform: tube and ribbon meshes are built in scene units. */
+const WORLD = { scaleX: 1, scaleY: 1, scaleZ: 1, offsetX: 0, offsetY: 0, offsetZ: 0 };
+
+/**
+ * The tube or ribbon mesh of a trace's line in scene units (`line-mesh.ts`): the points through
+ * the scene's transform, the tube radius as a fraction of the axis box's longest side, the ribbon
+ * width in axis units (default a twentieth of the axis range).
+ */
+export function lineMesh3d(
+  trace: FullTrace,
+  calc: Scatter3dCalc,
+  scene: Pick<Scene3D, 'transform' | 'layout'>,
+  fullLayout: FullLayout | undefined,
+): LineMesh {
+  const t = scene.transform;
+  const n = calc.length;
+  const x = new Float64Array(n);
+  const y = new Float64Array(n);
+  const z = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    x[i] = calc.x[i]! * t.scaleX + t.offsetX;
+    y[i] = calc.y[i]! * t.scaleY + t.offsetY;
+    z[i] = calc.z[i]! * t.scaleZ + t.offsetZ;
+  }
+  const line = (trace['line'] ?? {}) as Container;
+  const input = {
+    x,
+    y,
+    z,
+    color: lineColors(trace, n, fullLayout),
+    connectGaps: trace['connectgaps'] === true,
+  };
+  if (lineRender3d(trace) === 'tube') {
+    const r = typeof line['radius'] === 'number' ? line['radius'] : 0.01;
+    return tubeMesh(input, r * Math.max(...scene.layout.aspect));
+  }
+  const ribbon = (line['ribbon'] ?? {}) as Container;
+  const d = ribbon['axis'] === 'x' ? 0 : ribbon['axis'] === 'z' ? 2 : 1;
+  const range = scene.layout.axes[d].range;
+  const width =
+    typeof ribbon['width'] === 'number' ? ribbon['width'] : Math.abs(range[1] - range[0]) / 20;
+  const scale = Math.abs(d === 0 ? t.scaleX : d === 1 ? t.scaleY : t.scaleZ);
+  return ribbonMesh(input, d, (width * scale) / 2);
+}
+
 /** The linear coordinate of axis `d`'s far wall (see `farWalls`). */
 function wallLinear(scene: Scene3D, d: number, side: 0 | 1): number {
   const t = scene.transform;
@@ -302,6 +360,10 @@ class Scatter3dView implements TraceView<Scatter3dCalc> {
   #markers: Markers3D | SphereSet | undefined;
   #markersKind = '';
   #line: Line3D | undefined;
+  /** Tube or ribbon line (`line.render`), with its light rig subscription and build key. */
+  #lineMesh: LazyMeshPrimitive | undefined;
+  #offLineRig: (() => void) | undefined;
+  #lineMeshKey = '';
   #errors: Line3D | undefined;
   #text: TextPrimitive | undefined;
   readonly #shadows: (Markers3D | undefined)[] = [undefined, undefined, undefined];
@@ -363,6 +425,7 @@ class Scatter3dView implements TraceView<Scatter3dCalc> {
     if (full || plan.transform || plan.style) {
       this.#placeShadows(true);
       this.#placeSurface(scene, full);
+      this.#placeLineMesh(scene, full || plan.style);
     }
     // Everything the pick ids refer to may have changed: hover picks again.
     invalidateScenePicks(scene);
@@ -394,6 +457,14 @@ class Scatter3dView implements TraceView<Scatter3dCalc> {
     this.#surface = this.#remove(this.#surface);
     this.#surfaceKey = '';
     this.#wallKey = '';
+    this.#removeLineMesh();
+  }
+
+  #removeLineMesh(): void {
+    this.#offLineRig?.();
+    this.#offLineRig = undefined;
+    this.#lineMesh = this.#remove(this.#lineMesh);
+    this.#lineMeshKey = '';
   }
 
   #markerData(): { style: Partial<MarkerData>; translucent: boolean } {
@@ -436,8 +507,9 @@ class Scatter3dView implements TraceView<Scatter3dCalc> {
       this.#markersKind = '';
     }
 
-    // Lines.
-    if (hasLines3d(mode)) {
+    // Lines (tubes and ribbons: #placeLineMesh).
+    if (lineRender3d(trace) !== 'screen') this.#line = this.#remove(this.#line);
+    else if (hasLines3d(mode)) {
       const line = (trace['line'] ?? {}) as Container;
       const data = {
         ...pos,
@@ -556,6 +628,41 @@ class Scatter3dView implements TraceView<Scatter3dCalc> {
       shadow.setTransform(scene.transform);
     }
     this.#ctx.invalidate();
+  }
+
+  /** The tube or ribbon line (`line.render`), rebuilt when the transform changed or `force`. */
+  #placeLineMesh(scene: Scene3D, force: boolean): void {
+    const { trace, calc, fullLayout } = this.#ctx;
+    if (lineRender3d(trace) === 'screen') {
+      this.#removeLineMesh();
+      return;
+    }
+    const t = scene.transform;
+    const key = [t.scaleX, t.offsetX, t.scaleY, t.offsetY, t.scaleZ, t.offsetZ].join(',');
+    if (this.#lineMesh && !force && key === this.#lineMeshKey) return;
+    this.#lineMeshKey = key;
+    const mesh = lineMesh3d(trace, calc, scene, fullLayout);
+    const line = (trace['line'] ?? {}) as Container;
+    const data = {
+      positions: mesh.positions,
+      origin: mesh.origin,
+      indices: mesh.indices,
+      normals: mesh.normals,
+      color: mesh.colors,
+      opacity: opacityOf(trace),
+      ...sceneMeshLighting(line, () => this.#ctx.invalidate()),
+    };
+    if (!this.#lineMesh) {
+      this.#lineMesh = createLazyMeshPrimitive(this.#ctx.primitives, data);
+      this.#lineMesh.object.name = `holochart:line3d-${lineRender3d(trace)}`;
+      this.#ctx.add(this.#lineMesh, scene.viewport);
+      this.#offLineRig = scene.useLightRig(this.#lineMesh);
+    } else this.#lineMesh.update(data);
+    // Hover maps a picked vertex to the point it was built around.
+    this.#lineMesh.object.userData['hcPointIndex'] = mesh.pointIndex;
+    this.#lineMesh.object.renderOrder = orders(this.#ctx.index).lines;
+    this.#lineMesh.setTransform(WORLD);
+    registerScenePickable(scene, this.#lineMesh, this.#ctx.index);
   }
 
   /** The `surfaceaxis` surface, triangulated in scene units (so per layout, when they change). */

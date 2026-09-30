@@ -98,6 +98,25 @@ segment. Here a helix is colored by its parameter, with diamond markers on every
 
 <Example id="scatter3d/helix" />
 
+### Tubes
+
+`line.render: 'tube'` (a Holochart extension) draws the line as a lit tube instead of a px-wide
+band. `line.radius` is a fraction of the longest side of the scene's axis box (default 0.01), so
+tubes stay round whatever the axis scales and grow and shrink with the view like the data. Here a
+helix tube is colored along its length through a colorscale, and a thinner tube with a metallic
+`line.material` winds around it:
+
+<Example id="scatter3d/tube" />
+
+### Ribbons
+
+`line.render: 'ribbon'` sweeps the line along one axis into a lit strip: `line.ribbon.axis`
+(`'x'`, `'y'` or `'z'`, default `'y'`) and `line.ribbon.width` in that axis's units (default a
+twentieth of the axis range). Here twelve spectra, one trace per moment on the time (y) axis, form
+a spectrogram-style waterfall, each ribbon 0.6 s wide and colored by amplitude:
+
+<Example id="scatter3d/ribbons" />
+
 ### Marker symbols
 
 `marker.symbol` takes Plotly's 3D set: `circle`, `circle-open`, `cross`, `diamond`,
@@ -175,6 +194,12 @@ z axis:
 - **Lines.** `line.color` (CSS, or numbers through `line.colorscale` and its range attributes,
   with `line.showscale` / `line.colorbar`), `line.width` (CSS px) and `line.dash` (`solid`,
   `dot`, `dash`, `longdash`, `dashdot`, `longdashdot`, in CSS px).
+- **Tubes and ribbons.** `line.render` (`'screen'`, the default, `'tube'` or `'ribbon'`; a
+  Holochart extension) with `line.radius` for tubes and `line.ribbon.axis` / `line.ribbon.width`
+  for ribbons. They take `line.color` like screen lines (one color, or numbers through
+  `line.colorscale`, interpolated along the line), and are lit with `line.lighting` (defaults
+  ambient 0.5, diffuse 0.7, specular 0.15, roughness 0.4, fresnel 0.2), `line.lightposition` and
+  `line.material`. `line.width` and `line.dash` don't apply to them.
 - **Text.** `text`, `texttemplate` (`%{x}`, `%{y}`, `%{z}`, `%{text}`, `%{customdata}`),
   `textposition` and `textfont`.
 - **Default look.** In the default `holochart` template, markers are 5 px with rims in the
@@ -232,6 +257,9 @@ createChart(document.getElementById('chart')!, {
   });
   ```
 
+  Tubes and ribbons are picked too: hovering one hovers the data point its part of the mesh was
+  built around.
+
   Hover is always `closest` in a scene, as in Plotly. `scene.hovermode: false` (or
   `layout.hovermode: false`) turns it off. While the camera moves the label is hidden; it comes
   back at the point's new place once the camera rests. See
@@ -261,6 +289,11 @@ createChart(document.getElementById('chart')!, {
 - **Sphere markers.** `marker.render: 'sphere'` draws lit, ray-cast spheres instead of the
   default flat `'sprite'` symbols (which face the camera, as in Plotly). Spheres keep the marker's
   px size and color, and read better where depth and overlaps matter; symbols don't apply to them.
+- **Tubes and ribbons.** `line.render: 'tube'` or `'ribbon'` draws lines as lit meshes that
+  scale with the view, instead of Plotly's px-wide screen lines. Tube frames are carried along the
+  curve by rotation-minimizing parallel transport (the double reflection method), so tubes don't
+  twist; each end has a flat cap. Ribbons are lit on both sides. `line.material` takes the
+  [material types](/customization/materials-lighting#material-types-trace-material) of meshes.
 - **Camera tours and auto-rotation.** [`chart.animateCamera`](/fundamentals/3d-scenes#camera-animation)
   flies the camera to a new view, and
   [`scene.autorotate`](/fundamentals/3d-scenes#auto-rotation) turns the scene like a turntable.
@@ -276,6 +309,10 @@ createChart(document.getElementById('chart')!, {
   clouds.
 - A million markers orbit interactively. The `scatter3d/perf-1m` sandbox example draws them, and
   `pnpm bench:gpu --only scatter3d/perf-1m` measures the frame rate.
+- Tubes and ribbons are meshes built on the CPU: a tube has 12 vertices per point plus 13 per cap
+  (two caps per unbroken run), a ribbon 2 vertices per point. They are built in scene units, so
+  they are rebuilt when the scene's layout changes (axis ranges, aspect ratio), not when the camera
+  moves. Screen lines cost less for very long lines.
 - Pass `x`, `y`, `z` as typed arrays to keep large inputs compact. Text labels cost more than
   markers per point; keep them for a few hundred points. See the
   [performance guide](/guides/performance).
@@ -314,6 +351,9 @@ its default. Scene attributes (camera, axes, spikes, annotations) are under
   `hovertemplate`, `hovertext`, `customdata` and `scene`. Hover labels and their formats match
   Plotly's gl3d.
 - `marker.render` (`'sprite'` or `'sphere'`) is a Holochart extension; `'mesh'` is planned.
+- `line.render` (`'screen'`, `'tube'` or `'ribbon'`) and its `line.radius`, `line.ribbon`,
+  `line.lighting`, `line.lightposition` and `line.material` are Holochart extensions. The default,
+  `'screen'`, is Plotly's line; Plotly ignores the others and draws screen lines.
 - Error bars have no caps (as in Plotly); `width` is accepted but ignored.
 - Projections are camera-facing sprites drawn on the walls (Plotly flattens them onto the wall).
 - The `surfaceaxis` surface is flat-shaded (unlit).

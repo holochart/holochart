@@ -142,6 +142,7 @@ export {
   sceneSubplotDomain,
   type SceneAxis,
   type SceneCalc,
+  type SceneCrossTrace,
   type SceneLayout,
 } from './layout.ts';
 export { sceneExtent, sceneScales, type SceneExtremes } from './axes.ts';

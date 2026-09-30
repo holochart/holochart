@@ -303,6 +303,18 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "_dev/lines-3d-opaque",
+      "title": "3D lines: opaque at grazing angles",
+      "description": "Opaque (depth-writing) 3D lines at grazing angles, crossing in depth, with round joins.",
+      "tags": ["dev", "primitives", "lines", "3d"],
+      "category": "_dev",
+      "traceTypes": [],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/_dev/lines-3d-opaque.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "_dev/lines-joins-dashes",
       "title": "Lines: joins, caps & dashes",
       "description": "Miter/round/bevel joins × butt/round/square caps, and Plotly dash styles at widths 1–8 px.",
@@ -1285,6 +1297,66 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/bar/text.webp",
       "thumbnailSize": { "width": 640, "height": 352 }
+    },
+    {
+      "id": "bar3d/colorscale",
+      "title": "Bar3D: colored by height (colorscale)",
+      "description": "Temperature anomalies as 3D bars colored by value through a diverging colorscale.",
+      "tags": ["bar3d", "3d", "bar", "colorscale", "colorbar", "holochart-extension"],
+      "category": "bar3d",
+      "traceTypes": ["bar3d"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/bar3d/colorscale.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "bar3d/materials",
+      "title": "Bar3D: materials and translucency",
+      "description": "The same bars with Plotly lighting, a metallic standard material, and translucent.",
+      "tags": ["bar3d", "3d", "bar", "materials", "lighting", "holochart-extension"],
+      "category": "bar3d",
+      "traceTypes": ["bar3d"],
+      "size": { "width": 900, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/bar3d/materials.webp",
+      "thumbnailSize": { "width": 640, "height": 284 }
+    },
+    {
+      "id": "bar3d/matrix",
+      "title": "Bar3D: a matrix of values",
+      "description": "Revenue by product and region as 3D columns on categorical axes, a trace per row.",
+      "tags": ["bar3d", "3d", "bar", "categorical", "holochart-extension"],
+      "category": "bar3d",
+      "traceTypes": ["bar3d"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/bar3d/matrix.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "bar3d/numeric-grid",
+      "title": "Bar3D: a numeric grid (3D histogram)",
+      "description": "A bivariate histogram as 3D bars on numeric x/y axes.",
+      "tags": ["bar3d", "3d", "bar", "histogram", "holochart-extension"],
+      "category": "bar3d",
+      "traceTypes": ["bar3d"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/bar3d/numeric-grid.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "bar3d/stacked",
+      "title": "Bar3D: stacked bars",
+      "description": "Generation mix by country and year as stacked 3D bars (stackgroup).",
+      "tags": ["bar3d", "3d", "bar", "stacked", "holochart-extension"],
+      "category": "bar3d",
+      "traceTypes": ["bar3d"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/bar3d/stacked.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
       "id": "box/basic",
@@ -2903,6 +2975,66 @@
       "thumbnailSize": { "width": 640, "height": 373 }
     },
     {
+      "id": "isosurface/basic",
+      "title": "Isosurface: nested ellipsoids",
+      "description": "Two isosurfaces of a quadratic field, with the x and y caps hidden.",
+      "tags": ["isosurface", "3d", "scientific"],
+      "category": "isosurface",
+      "traceTypes": ["isosurface"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/isosurface/basic.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "isosurface/caps",
+      "title": "Isosurface: caps",
+      "description": "A gyroid solid closed by caps on the grid boundary, and the same without caps.",
+      "tags": ["isosurface", "3d", "scientific"],
+      "category": "isosurface",
+      "traceTypes": ["isosurface"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/isosurface/caps.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "isosurface/slices",
+      "title": "Isosurface: slices",
+      "description": "Slices of constant z and y through a field, with open isosurfaces around them.",
+      "tags": ["isosurface", "3d", "scientific"],
+      "category": "isosurface",
+      "traceTypes": ["isosurface"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/isosurface/slices.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "isosurface/spaceframe",
+      "title": "Isosurface: space frame",
+      "description": "The lattice of grid cells inside an open sphere.",
+      "tags": ["isosurface", "3d", "scientific"],
+      "category": "isosurface",
+      "traceTypes": ["isosurface"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/isosurface/spaceframe.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "isosurface/surface-options",
+      "title": "Isosurface: surface count, fill and pattern",
+      "description": "Nested spheres: four surfaces, open triangles (fill) and a checkerboard pattern.",
+      "tags": ["isosurface", "3d", "scientific"],
+      "category": "isosurface",
+      "traceTypes": ["isosurface"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/isosurface/surface-options.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "layout/climate-grid",
       "title": "Layout: climate small multiples",
       "description": "A coupled 2×3 grid (xaxes/yaxes) with top month axes, shared row scales, autorange include/clip and zoom limits.",
@@ -4103,6 +4235,18 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "scatter3d/ribbons",
+      "title": "Scatter3D: ribbons (a spectrogram waterfall)",
+      "description": "Spectra over time as lit ribbons swept along the time axis.",
+      "tags": ["scatter3d", "3d", "lines", "ribbon", "waterfall", "holochart-extension"],
+      "category": "scatter3d",
+      "traceTypes": ["scatter3d"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/scatter3d/ribbons.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "scatter3d/spheres",
       "title": "Scatter3D: sphere markers",
       "description": "Bubble-sized, lit sphere markers colored by value (marker.render: sphere).",
@@ -4148,6 +4292,18 @@
       "size": { "width": 640, "height": 400 },
       "threeD": true,
       "thumbnail": "gallery/thumbs/scatter3d/text.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "scatter3d/tube",
+      "title": "Scatter3D: tubes (line.render)",
+      "description": "A helix drawn as a lit tube colored along its length, and a thin metallic tube.",
+      "tags": ["scatter3d", "3d", "lines", "tube", "holochart-extension"],
+      "category": "scatter3d",
+      "traceTypes": ["scatter3d"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/scatter3d/tube.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
@@ -4209,6 +4365,66 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/splom/lower-half.webp",
       "thumbnailSize": { "width": 640, "height": 600 }
+    },
+    {
+      "id": "streamtube/basic",
+      "title": "Stream tubes: a tornado",
+      "description": "Stream tubes from the default starting plane through a swirling updraft.",
+      "tags": ["streamtube", "3d", "vector field"],
+      "category": "streamtube",
+      "traceTypes": ["streamtube"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/streamtube/basic.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "streamtube/colorscale",
+      "title": "Stream tubes: colorscale, cmin / cmax and colorbar",
+      "description": "A source–sink flow colored by speed on a fixed Viridis domain.",
+      "tags": ["streamtube", "3d", "vector field", "colorscale", "colorbar"],
+      "category": "streamtube",
+      "traceTypes": ["streamtube"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/streamtube/colorscale.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "streamtube/maxdisplayed",
+      "title": "Stream tubes: maxdisplayed",
+      "description": "The same stream tubes with the default and a small maxdisplayed.",
+      "tags": ["streamtube", "3d", "vector field", "multiple scenes"],
+      "category": "streamtube",
+      "traceTypes": ["streamtube"],
+      "size": { "width": 800, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/streamtube/maxdisplayed.webp",
+      "thumbnailSize": { "width": 640, "height": 320 }
+    },
+    {
+      "id": "streamtube/sizeref",
+      "title": "Stream tubes: sizeref",
+      "description": "A source–sink flow with thin and thick tubes (sizeref 0.4 and 1.5).",
+      "tags": ["streamtube", "3d", "vector field", "multiple scenes"],
+      "category": "streamtube",
+      "traceTypes": ["streamtube"],
+      "size": { "width": 800, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/streamtube/sizeref.webp",
+      "thumbnailSize": { "width": 640, "height": 320 }
+    },
+    {
+      "id": "streamtube/starts",
+      "title": "Stream tubes: explicit starts in the ABC flow",
+      "description": "Nine stream tubes started from a patch of the ABC flow.",
+      "tags": ["streamtube", "3d", "vector field"],
+      "category": "streamtube",
+      "traceTypes": ["streamtube"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/streamtube/starts.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
       "id": "strip/basic",
@@ -5060,6 +5276,66 @@
       "size": { "width": 640, "height": 400 },
       "threeD": false,
       "thumbnail": "gallery/thumbs/violin/split.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "volume/basic",
+      "title": "Volume: stacked isosurfaces",
+      "description": "A 3D field drawn as 17 translucent isosurfaces, as Plotly draws volumes.",
+      "tags": ["volume", "3d", "scientific"],
+      "category": "volume",
+      "traceTypes": ["volume"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/volume/basic.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "volume/clipped",
+      "title": "Volume: ray-marched cutaway",
+      "description": "A gyroid lattice ray-marched and cut open by the scene’s x range.",
+      "tags": ["volume", "3d", "scientific", "raymarch"],
+      "category": "volume",
+      "traceTypes": ["volume"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/volume/clipped.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "volume/modes",
+      "title": "Volume: stacked isosurfaces and ray marching",
+      "description": "One density field drawn as stacked isosurfaces (as Plotly) and ray-marched.",
+      "tags": ["volume", "3d", "scientific", "raymarch"],
+      "category": "volume",
+      "traceTypes": ["volume"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/volume/modes.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "volume/opacityscale",
+      "title": "Volume: opacityscale",
+      "description": "One field with four opacity scales: min, max, extremes and a custom one.",
+      "tags": ["volume", "3d", "scientific", "opacity"],
+      "category": "volume",
+      "traceTypes": ["volume"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/volume/opacityscale.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "volume/raymarch",
+      "title": "Volume: GPU ray marching",
+      "description": "A density field ray-marched on the GPU, plain and with gradient shading.",
+      "tags": ["volume", "3d", "scientific", "raymarch"],
+      "category": "volume",
+      "traceTypes": ["volume"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/volume/raymarch.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {

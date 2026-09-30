@@ -8,17 +8,25 @@
  * `scene/index.ts` for the contract 3D trace modules build on). The trace types follow in wave 1.
  */
 import type { Registrable } from '@mk7s/holochart-runtime';
+import { bar3d } from './bar3d/index.ts';
 import { cone } from './cone/index.ts';
+import { isosurface } from './isosurface/index.ts';
 import { mesh3d } from './mesh3d/index.ts';
 import { scatter3d } from './scatter3d/index.ts';
 import { sceneComponent } from './scene/component.ts';
+import { streamtube } from './streamtube/index.ts';
 import { surface } from './surface/index.ts';
+import { volume } from './volume/index.ts';
 
 export * from './scene/index.ts';
 export * from './scatter3d/index.ts';
 export * from './surface/index.ts';
 export * from './mesh3d/index.ts';
 export * from './cone/index.ts';
+export * from './bar3d/index.ts';
+export * from './streamtube/index.ts';
+export * from './isosurface/index.ts';
+export * from './volume/index.ts';
 
 /** The scene component and every 3D trace module, for `register(...traces3d)`. */
 export const traces3d: readonly Registrable[] = [
@@ -28,4 +36,8 @@ export const traces3d: readonly Registrable[] = [
   surface,
   mesh3d,
   cone,
+  bar3d,
+  streamtube,
+  isosurface,
+  volume,
 ];

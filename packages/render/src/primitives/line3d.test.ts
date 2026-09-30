@@ -51,6 +51,16 @@ describe('3D line shaders (injected into the 2D line shaders)', () => {
     expect(LINE_FRAGMENT_SHADER).not.toContain('PICKING');
   });
 
+  it('place the inner quad vertices on the end points (exact depth; the 2D quad is unchanged)', () => {
+    expect(LINE3D_VERTEX_SHADER).toContain(
+      'float along = position.z > 0.5 ? (atB ? len : 0.0) : (atB ? len + extB + aa : -(extA + aa));',
+    );
+    expect(LINE_VERTEX_SHADER).toContain('float along = atB ? len + extB + aa : -(extA + aa);');
+    const line = new Line3D(context(), helix(4));
+    expect(line.object.geometry.getAttribute('position').count).toBe(8);
+    expect(line.object.geometry.index?.count).toBe(18);
+  });
+
   it('write per-vertex pick ids only under PICKING', () => {
     expect(LINE3D_VERTEX_SHADER).toMatch(/#ifdef PICKING\s+in int aSrcA;/);
     expect(LINE3D_VERTEX_SHADER).toContain('uPickBase + uint(aSrcA)');

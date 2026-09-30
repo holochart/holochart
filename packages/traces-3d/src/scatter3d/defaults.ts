@@ -89,7 +89,19 @@ function coerceLine(traceIn: Container, ctx: TraceDefaultsContext): void {
     supplyColorscaleDefaults(lineIn, ctx.coerce, 'line.', { inTrace: true, showscale: true });
   }
   ctx.coerce('line.width');
-  ctx.coerce('line.dash');
+  const render = ctx.coerce<string>('line.render');
+  if (render === 'screen') ctx.coerce('line.dash');
+  else {
+    if (render === 'tube') ctx.coerce('line.radius');
+    else {
+      ctx.coerce('line.ribbon.axis');
+      ctx.coerce('line.ribbon.width');
+    }
+    ctx.coerceContainer('line.lighting');
+    ctx.coerceContainer('line.lightposition');
+    if (ctx.coerce<string>('line.material.type') !== undefined)
+      ctx.coerceContainer('line.material');
+  }
 }
 
 function coerceText(ctx: TraceDefaultsContext): void {

@@ -130,6 +130,21 @@ export const SCENARIOS: readonly Scenario[] = [
       { story: 'E14.3', goal: 'orbit at 60 fps', metric: 'panFps', value: 60 },
     ],
   },
+  // E14.7 (M6 wave 2): a 256³ volume ray-marched from a 3D texture, orbiting.
+  {
+    example: 'volume/perf-256',
+    label: 'Volume, 256³ ray-marched (orbit)',
+    drive: { kind: 'button', label: 'Orbit' },
+    perfGlobal: '__volumePerf',
+    targets: [
+      {
+        story: 'E14.7',
+        goal: '256³ ray-marched volume interactive (≥ 30 fps)',
+        metric: 'panFps',
+        value: 30,
+      },
+    ],
+  },
 ];
 
 /** Share of an fps target that counts as met (see {@link SCENARIOS}). */
