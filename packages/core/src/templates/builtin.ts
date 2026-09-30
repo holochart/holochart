@@ -224,6 +224,9 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
       pie: [{ marker: { line: { color: BG, width: 1 } } }],
       // Polar traces look like their cartesian twins; stacked polar bars get a thin rim.
       scatterpolar: [{ line: { width: 1.25 }, marker: { size: 4, line: { width: 0, color: BG } } }],
+      // 3D scatter: scatter's background-colored rims, markers a step larger than 2D (Plotly's
+      // 8 px reads heavy when dense, 4 px gets lost in depth), slim colorbars.
+      scatter3d: [{ marker: { size: 5, line: { width: 0, color: BG }, colorbar } }],
       barpolar: [{ marker: { line: { color: BG, width: 0.5 }, colorbar } }],
       // Histograms are bars: same borderless look and readable error bars.
       histogram: [
@@ -283,6 +286,12 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
       histogram2dcontour: [{ colorbar }],
       // Contour plots, like heatmaps, don't pick automatic colorscales (Plotly's `contour`).
       contour: [{ colorscale: sequential, colorbar }],
+      // Surfaces, like heatmaps, don't pick automatic colorscales (Plotly's `surface`).
+      surface: [{ colorscale: sequential, colorbar }],
+      // Meshes and cones pick automatic colorscales (`autocolorscale`: the layout's ramps), so
+      // only the slim colorbar; the mesh hover contour in the text gray (Plotly's #444 vanishes).
+      mesh3d: [{ colorbar, contour: { color: TEXT } }],
+      cone: [{ colorbar }],
       // Parallel coordinates and categories: the sequential ramp (parcoords defaults to Viridis),
       // slim colorbars, 9 px axis labels and 8 px tick and range labels (Plotly's 1/1.2 of the
       // layout font rounds up to 8 px for the labels too).

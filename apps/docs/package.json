@@ -10,7 +10,7 @@
     "predev": "pnpm run gen",
     "dev": "vitepress dev",
     "prebuild": "pnpm run gen",
-    "build": "vitepress build",
+    "build": "NODE_OPTIONS=--max-old-space-size=8192 vitepress build",
     "preview": "vitepress preview",
     "lint:pages": "node scripts/lint-pages.ts",
     "quality": "node --conditions=source scripts/quality.ts",

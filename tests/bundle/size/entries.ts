@@ -468,10 +468,12 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
   {
     // M6: the 3D add-on of the script-tag build, loaded after the IIFE above: the 3D package and
     // render's 3D chunks (inlined), using the main script's three.js, runtime and render (never
-    // copies of them). Measured 30.9 kB when split out (2026-09-29); budget = measured + ~10%.
+    // copies of them). Measured 30.9 kB when split out (2026-09-29); 73.6 kB with M6 wave 1's
+    // traces (scatter3d, surface, mesh3d, cone), 3D hover and camera motion (2026-09-30, local);
+    // budget = measured + ~10%.
     id: 'iife-3d',
     name: '@mk7s/holochart 3D add-on IIFE (after the IIFE)',
-    limit: '34 kB',
+    limit: '81 kB',
     file: 'packages/holochart/dist/holochart-3d.iife.min.js',
   },
 ];

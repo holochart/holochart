@@ -28,7 +28,10 @@ import {
   type FullTrace,
   type LayoutDefaultsContext,
 } from '@mk7s/holochart-core';
+import { supplySceneAnnotations } from './annotations.ts';
+import { supplySceneAutorotate } from './camera-animation.ts';
 import { sceneAttributes, sceneAxisAttributes } from './layout-attributes.ts';
+import { supplySceneLightingLayout } from './lighting-attributes.ts';
 
 /** `fullLayout` key of the scene ids, in order of their number. */
 export const SCENE_IDS = '_sceneIds';
@@ -145,6 +148,7 @@ export function supplySceneLayoutDefaults(
       (t) => t.visible !== false && isSceneTrace(t) && sceneOf(t) === id,
     );
     supplyScene(id, i, ids.length, input, template, out, layoutOut, traces, dragmode, hovermode);
+    supplySceneAnnotations(input, template, tLayout, out, layoutOut);
   });
 }
 
@@ -229,6 +233,9 @@ function supplyScene(
   }
   coerce('dragmode', dragmode);
   coerce('hovermode', layoutHovermode);
+  // Holochart extensions (E8.7, E7.5): lights only when given; auto-rotation off unless given.
+  supplySceneLightingLayout(input, template, out);
+  supplySceneAutorotate(input, template, out);
 }
 
 function supplyAxis(

@@ -20,6 +20,13 @@
  * | `walls` / `labels`  | far walls and label edges per camera; label placement and culling     |
  * | `draw`              | walls, grid / zero / axis lines, tick marks, billboarded labels       |
  * | `component`         | `sceneComponent`: defaults, drawing, controls; `modebar`: 3D buttons  |
+ * | `pick` / `hover`     | GPU picking per scene, the hover points of 3D traces (E14.1d)        |
+ * | `spikes` / `annotations` | hover spikes to the walls, `scene.annotations[]` (E14.1d)       |
+ * | `overlays`          | the component's picking, spikes, annotations and `click`              |
+ * | `camera-animation`  | camera tweens (orbit, not a line), auto-rotation steps, `autorotate`  |
+ * | `camera-motion`     | `animateCamera` flights, camera transitions, auto-rotation loop       |
+ * | `lighting-attributes` | trace `lighting` / `lightposition` / `material`, `scene.lighting`   |
+ * | `scene-lighting`    | the scene's light rig (`scene.useLightRig(mesh)`)                     |
  *
  * ## Coordinates
  *
@@ -69,15 +76,62 @@
  *   depth, so traces use render orders ≥ 0.
  * - **Clipping**: data outside the axis ranges is not clipped yet (Plotly clips to the box):
  *   planned with the 3D primitives, from `scene.layout.aspect` (the box is `[-a/2, a/2]`).
- * - **Hover and picking (E14.1d, wave 1)**: 3D traces are hovered like domain traces: the runtime
- *   calls `hoverPoints` on every hover with the pointer in container px (`query.cx`, `query.cy`).
- *   `sceneFor(ctx.fullLayout, trace)` gives the live scene of that pass; `scene.toWorld` then
- *   `scene.project` put a data point on screen (CPU picking), and `scene.viewport` (camera,
- *   rect) is what GPU picking renders. Hover points anchor in overlay px (y up: `height − y`).
- *   `scene.hovermode` and the axes' `showspikes` / `spikesides` / `spikecolor` /
- *   `spikethickness` are defaulted for it.
+ * - **Hover and picking (E14.1d)**: 3D traces are hovered like domain traces (the runtime calls
+ *   `hoverPoints` on every hover with the pointer in container px, `query.cx` / `query.cy`),
+ *   through GPU picking (`pick.ts`, `hover.ts`):
+ *
+ *   ```ts
+ *   // view: make what is drawn pickable as this trace (again on every update: the index may move)
+ *   registerScenePickable(scene, markers, ctx.index); // Markers3D, Line3D, SphereSet, …
+ *   registerScenePickable(scene, mesh.object, ctx.index, { element: 'vertex' }); // any Object3D
+ *   invalidateScenePicks(scene); // after updates that change what is drawn where
+ *   unregisterScenePickable(scene, markers); // before disposing it
+ *   // module:
+ *   hoverPoints(calc, trace, query, ctx) {
+ *     const pick = scenePicks(trace, query, ctx); // this trace's hits under the pointer
+ *     if (!pick) return [];
+ *     const hit = pick.hits[0]!; // nearest first: `pointIndex` (per `element`), `object`
+ *     const i = hit.pointIndex; // → data index, a grid cell, …
+ *     return [sceneHoverPoint(pick, trace, { pointIndex: i, x: calc.x[i], y: …, z: … })];
+ *   },
+ *   ```
+ *
+ *   One GPU pick per pointer position serves every trace of a scene: it resolves asynchronously
+ *   and hover runs again (`chart.refreshHover()`) with its hits; until then hover keeps the
+ *   previous hits near that position. `sceneHoverPoint` anchors the label at the projected point
+ *   (linear `x`, `y`, `z`), formats the values per scene axis (`hoverformat`, trace
+ *   `xhoverformat` / `yhoverformat` / `zhoverformat`) into `x: …<br>y: …<br>z: …` (per
+ *   `hoverinfo`; `extraText` adds lines) and `%{x}` / `%{y}` / `%{z}` labels, reports `x`, `y`,
+ *   `z` (the data, or `values`) in events, and records the position for the spikes, which the
+ *   scene component draws for the winning point (`spikes.ts`: to the walls, `showspikes`,
+ *   `spikesides`, `spikecolor`, `spikethickness`). A camera move hides the label; it comes back
+ *   at the new place when the camera rests. `scene.hovermode: false` turns hover off. A click in a
+ *   scene emits `click` with the hovered point (the press itself starts a camera gesture).
+ *   `scene.annotations` are drawn by the component (`annotations.ts`).
  * - **Camera**: `scene.camera` (live, scene units) and `scene.setCamera(camera)` for animations
  *   (E7.5); commit with `chart.relayout({ 'scene.camera': sceneCameraPayload(camera, projection) })`.
+ *   The component runs `chart.animateCamera` flights, `scene.autorotate` and camera transitions
+ *   (`camera-motion.ts`): the live camera then moves without pipeline runs, so views that depend on
+ *   the view use `scene.onCameraChange`.
+ * - **Materials and lighting (E8.7)**: meshes take Plotly's `lighting` / `lightposition` and the
+ *   Holochart `material` from `lighting-attributes.ts`, and the scene's lights from its rig:
+ *
+ *   ```ts
+ *   schema: attr.object({
+ *     ...sceneLightingAttributes('mesh3d'), // Plotly's defaults of that trace type
+ *     ...sceneMaterialAttributes, // `material: { type, roughness, …, castshadow, receiveshadow }`
+ *   }),
+ *   supplyDefaults(traceIn, traceOut, ctx) { …; supplySceneLightingDefaults(ctx); },
+ *   // view: the mesh primitive's `lighting`, `lightposition`, `material`, `castShadow`, `receiveShadow`
+ *   const mesh = createLazyMeshPrimitive(ctx.primitives, { positions, …, ...sceneMeshLighting(ctx.trace, () => ctx.invalidate()) });
+ *   const stop = scene.useLightRig(mesh); // call `stop()` when the mesh is disposed
+ *   ```
+ *
+ *   `sceneLightingAttributes(type)` takes plotly.js' defaults per trace type
+ *   (`SCENE_LIGHTING_DEFAULTS`: `surface` has no normal epsilons and lights from `(10, 1e4, 0)`;
+ *   `isosurface` / `volume` default `facenormalsepsilon` to 0) or custom defaults. The scene's
+ *   `lighting` (a render `LightRig`) lights three.js material types always, and Plotly's model only
+ *   when set (else each mesh keeps its own `lightposition` light, as in Plotly).
  */
 export { sceneComponent } from './component.ts';
 export { sceneAttributes, sceneAxisAttributes, sceneIdAttribute } from './layout-attributes.ts';
@@ -93,3 +147,41 @@ export {
 export { sceneExtent, sceneScales, type SceneExtremes } from './axes.ts';
 export { sceneCameraPayload, type SceneCamera, type SceneProjection } from './camera.ts';
 export { acquireScene, Scene3D, sceneFor, type SceneContext, type ScreenPoint } from './scene.ts';
+export {
+  autorotateCamera,
+  cameraTween,
+  interpolateCamera,
+  resolveCameraTarget,
+  sceneAutorotateAttributes,
+  type CameraTargetInput,
+  type CameraVectorInput,
+} from './camera-animation.ts';
+export {
+  SCENE_LIGHTING_DEFAULTS,
+  SCENE_MATERIAL_TYPES,
+  sceneLightingAttributes,
+  sceneLightingSpec,
+  sceneLightRigAttributes,
+  sceneMaterialAttributes,
+  sceneMaterialSpec,
+  sceneMeshLighting,
+  supplySceneLightingDefaults,
+  type SceneLightingDefaults,
+  type SceneLightingTrace,
+} from './lighting-attributes.ts';
+export { SceneLighting, type LightRigUser } from './scene-lighting.ts';
+export {
+  sceneAxisHoverText,
+  sceneHoverPoint,
+  sceneHoverText,
+  scenePicks,
+  type SceneHoverSpec,
+  type ScenePicks,
+} from './hover.ts';
+export {
+  invalidateScenePicks,
+  registerScenePickable,
+  SCENE_PICK_RADIUS,
+  unregisterScenePickable,
+  type ScenePickableOptions,
+} from './pick.ts';

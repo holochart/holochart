@@ -17,6 +17,8 @@ export * from './text.ts';
 export * from './text-metrics.ts';
 export * from './text-fonts.ts';
 export * from './text-style.ts';
+// Annotation arrows and rotated text boxes (E5.4), container px.
+export * from './arrow-geometry.ts';
 // 3D lines, sprites and spheres (E14.2): the loader, and only the TYPES of the lazily loaded chunk.
 export * from './lines-markers-3d-loader.ts';
 export type { Line3D, Line3DData, Line3DOptions } from './line3d.ts';

@@ -10,7 +10,13 @@ import {
   type Chart,
   type ChartOptions,
 } from './chart.ts';
-import type { AnimateTarget, AnimationOptions, Frame } from './anim/types.ts';
+import type {
+  AnimateTarget,
+  AnimationOptions,
+  CameraAnimationOptions,
+  CameraTarget,
+  Frame,
+} from './anim/types.ts';
 import type { DownloadImageOptions, ToImageOptions } from './export/types.ts';
 import type { AttributeUpdate, MaxPoints, StreamUpdate } from './plan.ts';
 
@@ -168,6 +174,15 @@ export function animate(
   options?: AnimationOptions,
 ): Promise<Chart> {
   return call(() => chartIn(el, 'animate').animate(target, options));
+}
+
+/** Fly a 3D scene's camera (Holochart extension). See {@link Chart.animateCamera}. */
+export function animateCamera(
+  el: HTMLElement,
+  camera: CameraTarget,
+  options?: CameraAnimationOptions,
+): Promise<Chart> {
+  return call(() => chartIn(el, 'animateCamera').animateCamera(camera, options));
 }
 
 /**

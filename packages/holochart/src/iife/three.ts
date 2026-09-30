@@ -24,6 +24,7 @@ export {
   DynamicDrawUsage,
   EquirectangularReflectionMapping,
   Float32BufferAttribute,
+  FloatType,
   FrontSide,
   GLSL3,
   Group,

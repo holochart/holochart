@@ -98,6 +98,38 @@ export const SCENARIOS: readonly Scenario[] = [
       },
     ],
   })),
+  // E14.2 (M6 wave 1): the same through a chart: the `scatter3d` trace, its scene's axes redrawn
+  // on every camera change and hover picking attached.
+  ...(['sprites', 'spheres'] as const).map((mode): Scenario => ({
+    example: 'scatter3d/perf-1m',
+    label: `scatter3d chart, 1M points, ${mode} (orbit)`,
+    drive: { kind: 'button', label: `Orbit ${mode}` },
+    perfGlobal: '__scatter3dPerf',
+    targets: [
+      {
+        story: 'E14.2',
+        goal: '1M points interactive orbit (≥ 30 fps)',
+        metric: 'panFps',
+        value: 30,
+      },
+    ],
+  })),
+  // E14.3 (M6 wave 1): a 1024² surface built on the GPU from a height texture, orbiting.
+  {
+    example: 'surface/perf-1024',
+    label: 'Surface, 1024 × 1024 (orbit)',
+    drive: { kind: 'button', label: 'Orbit' },
+    perfGlobal: '__surfacePerf',
+    targets: [
+      {
+        story: 'E14.3',
+        goal: '1024² grid drawn < 50 ms (first draw: chart, shaders, textures)',
+        metric: 'firstDraw',
+        value: 50,
+      },
+      { story: 'E14.3', goal: 'orbit at 60 fps', metric: 'panFps', value: 60 },
+    ],
+  },
 ];
 
 /** Share of an fps target that counts as met (see {@link SCENARIOS}). */

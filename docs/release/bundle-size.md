@@ -31,7 +31,7 @@ Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's
 | `3D mesh primitive and lighting (lazy …)`    | mesh primitive, lighting, light rigs, material types, transparency sorting, on first 3D mesh | 11.7 kB |
 | `3D lines, sprites and spheres (lazy …)`     | 3D lines, sprite markers, sphere impostors, depth sorting, on first 3D lines or markers      | 10.7 kB |
 | `@mk7s/holochart IIFE, 2D (includes three)`  | `dist/holochart.iife.min.js` as shipped, **with** three.js: everything but 3D                | 690 kB  |
-| `@mk7s/holochart 3D add-on IIFE (…)`         | `dist/holochart-3d.iife.min.js` as shipped: the 3D package and render's 3D chunks            | 34 kB   |
+| `@mk7s/holochart 3D add-on IIFE (…)`         | `dist/holochart-3d.iife.min.js` as shipped: the 3D package and render's 3D chunks            | 81 kB   |
 | each `@mk7s/holochart-*` package             | `export *` of that package                                                                   | report  |
 
 The IIFE budget is the full budget plus a 200 kB allowance for the bundled three.js (about

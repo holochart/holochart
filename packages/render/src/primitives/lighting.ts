@@ -10,7 +10,7 @@
  * `(1e5, 1e5, 0)`: far to the upper right of the screen). {@link PLOTLY_LIGHTING} holds Plotly's
  * `lighting` defaults; {@link resolveMeshLighting} clamps values to Plotly's attribute ranges.
  *
- * ## Light rigs (`layout.lighting`)
+ * ## Light rigs (`scene.lighting`)
  *
  * A {@link LightRig} is the scene's lights: ambient, directional lights (in scene, camera or
  * Plotly's clip space, optionally casting shadows), a hemisphere light, an environment map
@@ -143,7 +143,7 @@ export function clipToView(
 /** Where a directional light's `position` is given. */
 export type LightSpace = 'scene' | 'camera' | 'clip';
 
-/** One directional light of `layout.lighting`. */
+/** One directional light of `scene.lighting`. */
 export interface DirectionalLightSpec {
   /** sRGB. Default white. */
   color?: RGBA;
@@ -161,7 +161,7 @@ export interface DirectionalLightSpec {
   castShadow?: boolean;
 }
 
-/** `layout.lighting` (E8.7). Colors are sRGB 0–1 RGBA (parsed by the caller). */
+/** `scene.lighting` (E8.7). Colors are sRGB 0–1 RGBA (parsed by the caller). */
 export interface LightingSpec {
   ambient?: { color?: RGBA; intensity?: number } | null;
   directional?: readonly DirectionalLightSpec[] | null;
@@ -192,7 +192,7 @@ export interface LightingSpec {
 }
 
 /**
- * The rig used for three.js material types when a figure has no `layout.lighting`: Plotly's
+ * The rig used for three.js material types when a figure has no `scene.lighting`: Plotly's
  * default light (`lightposition` `(1e5, 1e5, 0)`, moving with the view) with Plotly's default
  * ambient and diffuse strengths.
  */
@@ -371,7 +371,7 @@ const tmp = new Vector3();
 const tmp4 = new Vector4();
 
 /**
- * The lights of `layout.lighting` for a 3D scene. Add {@link object} to the scene, call
+ * The lights of `scene.lighting` for a 3D scene. Add {@link object} to the scene, call
  * {@link attach} once with the renderer (shadow maps, environment), and {@link setCamera} with the
  * scene's camera (lights in camera or clip space follow it). Set the rig on meshes drawn with
  * Plotly's model (`MeshPrimitive.setLightRig`) so they use the same lights.
