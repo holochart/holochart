@@ -117,7 +117,8 @@ export async function clickUntil(page: Page, p: Pt, done: () => Promise<boolean>
       if (await done()) return;
       await page.waitForTimeout(25);
     }
-    if (Date.now() > deadline) throw new Error(`clickUntil: no effect after 10 s at (${p.x}, ${p.y})`);
+    if (Date.now() > deadline)
+      throw new Error(`clickUntil: no effect after 10 s at (${p.x}, ${p.y})`);
   }
 }
 
