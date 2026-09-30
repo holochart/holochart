@@ -20,6 +20,7 @@ import {
 } from './camera.ts';
 import { buildSceneLayout, laidOutScene, type SceneLayout } from './layout.ts';
 import { sceneOf } from './layout-defaults.ts';
+import { SceneLighting, type LightRigUser } from './scene-lighting.ts';
 
 type Container = Record<string, unknown>;
 
@@ -63,6 +64,8 @@ export class Scene3D {
   /** An orthographic zoom committed as an aspect ratio, waiting for its layout. */
   #committedZoom = 1;
   readonly #listeners = new Set<(scene: Scene3D) => void>();
+  /** The scene's lights (`layout.sceneN.lighting`, E8.7; see `scene-lighting.ts`). */
+  readonly lighting: SceneLighting = new SceneLighting(this);
 
   constructor(id: string, viewport: Viewport, layout: SceneLayout, full: Container) {
     this.id = id;
@@ -141,6 +144,14 @@ export class Scene3D {
   cameraPayload(commit = false): Record<string, unknown> {
     if (commit) this.#committed = copyCamera(this.camera);
     return sceneCameraPayload(this.camera, this.projection);
+  }
+
+  /**
+   * Light a mesh primitive with the scene's lights (`scene.lighting`, E8.7): now and whenever they
+   * change. Returns the function that stops it (call it when the mesh is disposed).
+   */
+  useLightRig(mesh: LightRigUser): () => void {
+    return this.lighting.use(mesh);
   }
 
   /** Called with this scene whenever the camera moved (the axes redraw, views may re-sort). */

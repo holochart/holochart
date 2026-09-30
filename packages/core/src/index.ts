@@ -104,6 +104,7 @@ export {
 } from './layout/schema.ts';
 export { configSchema } from './config/schema.ts';
 export { scaledFontSize } from './layout/font-attributes.ts';
+export { annotationItemAttributes } from './layout/annotation-attributes.ts';
 
 // Registry & trace module contract
 export { createRegistry } from './registry/registry.ts';

@@ -17,10 +17,13 @@
  */
 import { reducedMotion, type FullLayout, type FullTrace } from '@mk7s/holochart-core';
 import type {
+  CameraAnimationRun,
+  CameraTarget,
   ComponentDrawContext,
   ComponentModule,
   ComponentPointerEvent,
   ComponentView,
+  LayoutTween,
 } from '@mk7s/holochart-runtime';
 import {
   addMotion,
@@ -34,7 +37,9 @@ import {
   type Motion,
 } from './controls.ts';
 import { sceneCameraPayload, sameCamera } from './camera.ts';
+import { SceneMotion } from './camera-motion.ts';
 import { SceneAxes } from './draw.ts';
+import { SceneOverlays } from './overlays.ts';
 import { sceneLayoutSchema } from './layout-attributes.ts';
 import { isSceneTrace, sceneIds, sceneOf, supplySceneLayoutDefaults } from './layout-defaults.ts';
 import { buildSceneLayout, laidOutScene, type SceneCalc, type SceneLayout } from './layout.ts';
@@ -88,6 +93,10 @@ class SceneView implements ComponentView {
   /** Touch: every finger on the canvas during a touch gesture (container px). */
   readonly #touches = new Map<number, { x: number; y: number }>();
   #touchEnd: (() => void) | undefined;
+  /** Camera animations, auto-rotation and lights (E7.5, E8.7; `camera-motion.ts`). */
+  readonly #motion = new SceneMotion((scene) => this.#moving.has(scene));
+  /** Hover picking, spikes, `scene.annotations` and clicks (E14.1d; `overlays.ts`). */
+  #overlays: SceneOverlays | undefined;
 
   constructor(ctx: ComponentDrawContext) {
     this.#ctx = ctx;
@@ -120,6 +129,16 @@ class SceneView implements ComponentView {
     for (const [id, axes] of next) this.#axes.set(id, axes);
     this.#scenes = scenes;
     for (const s of this.#moving.keys()) if (!scenes.includes(s)) this.#moving.delete(s);
+    this.#motion.sync(ctx, scenes);
+    (this.#overlays ??= new SceneOverlays(ctx)).sync(ctx, scenes);
+  }
+
+  animateCamera(camera: CameraTarget, run: CameraAnimationRun): Promise<void> | undefined {
+    return this.#motion.animateCamera(camera, run);
+  }
+
+  layoutTweens(from: FullLayout, to: FullLayout): readonly LayoutTween[] {
+    return this.#motion.layoutTweens(from, to);
   }
 
   #sceneAt(x: number, y: number): Scene3D | undefined {
@@ -139,9 +158,14 @@ class SceneView implements ComponentView {
   handlePointer(event: ComponentPointerEvent): boolean {
     const chart = this.#ctx.chart;
     if (!chart || this.#scenes.length === 0 || chart.interaction.staticPlot) return false;
+    // Annotations take the pointer over their text; a click emits the hovered point.
+    if (!this.#gesture && this.#overlays?.handlePointer(event, this.#sceneAt(event.x, event.y))) {
+      return true;
+    }
     if (event.type === 'dblclick') {
       const scene = this.#sceneAt(event.x, event.y);
       if (!scene || this.#ctx.fullConfig?.doubleClick === false) return false;
+      this.#motion.interact(scene);
       this.#reset(scene);
       chart.emit('doubleclick', undefined);
       return true;
@@ -176,6 +200,7 @@ class SceneView implements ComponentView {
               : 'rotate';
       this.#gesture = { scene, mode, x: event.x, y: event.y };
       this.#hold(scene).active = true;
+      this.#motion.interact(scene);
       const native = event.native as PointerEvent | undefined;
       if (native?.pointerType === 'touch') this.#startTouch(native, event.x, event.y);
       return true;
@@ -218,6 +243,7 @@ class SceneView implements ComponentView {
     const dy = e.deltaMode === 1 ? e.deltaY * 40 : e.deltaMode === 2 ? e.deltaY * 800 : e.deltaY;
     const m = this.#hold(scene);
     m.active = true;
+    this.#motion.interact(scene);
     this.#input(scene, { zoom: dy * WHEEL_ZOOM });
     clearTimeout(this.#wheelTimer);
     this.#wheelTimer = setTimeout(() => {
@@ -371,6 +397,8 @@ class SceneView implements ComponentView {
   }
 
   dispose(): void {
+    this.#motion.dispose();
+    this.#overlays?.dispose();
     this.#touchEnd?.();
     clearTimeout(this.#wheelTimer);
     this.#release?.();

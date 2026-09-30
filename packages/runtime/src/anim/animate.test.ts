@@ -3,9 +3,9 @@ import { attr, toRGBA, type FullTrace } from '@mk7s/holochart-core';
 import { mixColors } from '@mk7s/holochart-render';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { linearExtremes } from '../axes.ts';
-import { addFrames, animate, deleteFrames } from '../api.ts';
+import { addFrames, animate, animateCamera, deleteFrames } from '../api.ts';
 import { createChart, type Chart } from '../chart.ts';
-import type { TraceModule } from '../contracts.ts';
+import type { ComponentModule, TraceModule } from '../contracts.ts';
 import { setup, type TestSetup } from '../__testing__/fakes.ts';
 import { easing } from './easing.ts';
 
@@ -518,5 +518,68 @@ describe('frames and animate (E7.4)', () => {
     chart = undefined;
     await steps(1);
     expect(await done).toBe('AnimationInterrupted');
+  });
+});
+
+describe('component tweens and animateCamera (E7.5)', () => {
+  /** A component owning `layout.dial`, interpolated by its view (squared progress). */
+  function dialComponent(
+    calls: { camera: unknown; duration: number; half: number; subplot?: string | undefined }[],
+  ): ComponentModule {
+    return {
+      name: 'dial',
+      layoutSchema: { dial: attr.number({ dflt: 0, editType: 'plot' }) },
+      draw: {
+        create: () => ({
+          update: () => {},
+          layoutTweens(from, to) {
+            const a = from['dial'] as number;
+            const b = to['dial'] as number;
+            return a === b ? [] : [{ path: 'dial', tween: (e: number) => a + (b - a) * e * e }];
+          },
+          animateCamera(camera, run) {
+            if (run.subplot === 'none') return undefined;
+            calls.push({
+              camera,
+              duration: run.duration,
+              half: run.ease(0.5),
+              subplot: run.subplot,
+            });
+            return Promise.resolve();
+          },
+        }),
+      },
+    };
+  }
+
+  const figure = (y: number[], dial: number) => ({
+    data: [{ type: 'blobs', x: [0, 1], y }],
+    layout: { transition: { duration: 160, easing: 'linear' }, dial, yaxis: { range: [0, 10] } },
+  });
+
+  it("interpolates a component's attribute its way, outside `ordering`", async () => {
+    t.registry.register(dialComponent([]));
+    const c = await make(figure([1, 2], 0));
+    void c.react(figure([5, 6], 8));
+    await flush();
+    await steps(5); // halfway: the component's curve, and the traces animate too (not held)
+    expect(c.fullLayout!['dial']).toBeCloseTo(2, 10);
+    expect(Array.from(last().y as ArrayLike<number>)).toEqual([3, 4]);
+    await steps(10);
+    expect(c.fullLayout!['dial']).toBe(8);
+    expect(c.layout['dial']).toBe(8);
+  });
+
+  it('animateCamera hands the easing and timing to the first view that has the subplot', async () => {
+    const calls: { camera: unknown; duration: number; half: number }[] = [];
+    t.registry.register(dialComponent(calls));
+    const c = await make(figure([1, 2], 0));
+    await expect(c.animateCamera({ eye: { x: 2 } }, { easing: 'quad-in' })).resolves.toBe(c);
+    await animateCamera(t.container, { up: { z: 1 } }, { duration: 0, subplot: 'scene2' });
+    expect(calls).toEqual([
+      { camera: { eye: { x: 2 } }, duration: 500, half: 0.25, subplot: undefined },
+      { camera: { up: { z: 1 } }, duration: 0, half: 0.5, subplot: 'scene2' },
+    ]);
+    await expect(c.animateCamera({}, { subplot: 'none' })).rejects.toThrow('no scene none');
   });
 });

@@ -16,6 +16,9 @@ import {
   type EditType,
   type SchemaNode,
 } from '@mk7s/holochart-core';
+import { sceneAnnotationsAttributes } from './annotations.ts';
+import { sceneAutorotateAttributes } from './camera-animation.ts';
+import { sceneLightRigAttributes } from './lighting-attributes.ts';
 
 /** A copy of a schema node with `editType` set on it and every descendant. */
 function withEdit<N extends SchemaNode>(node: N, editType: EditType): N {
@@ -261,6 +264,9 @@ export const sceneAttributes = /* @__PURE__ */ (() =>
         description:
           'Persistence of user-driven camera changes. Accepted for Plotly compatibility; `layout.uirevision` governs them.',
       }),
+      annotations: sceneAnnotationsAttributes,
+      lighting: sceneLightRigAttributes,
+      autorotate: sceneAutorotateAttributes,
     },
     {
       editType: 'plot',

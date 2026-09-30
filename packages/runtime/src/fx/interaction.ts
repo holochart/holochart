@@ -1034,6 +1034,18 @@ export class Interaction {
   }
 
   /**
+   * Hover again at the pointer's latest position on the next frame, labels redrawn (M6: a hover
+   * source answered asynchronously, a 3D scene's GPU pick, or its camera moved). Nothing while
+   * the pointer is away, during a gesture or while the app's hover (`hover`) is shown.
+   */
+  rehover(): void {
+    if (this.#pointerInside && !this.#drag && !this.#programmatic) {
+      this.#hoverForce = true;
+      this.#request('hover');
+    }
+  }
+
+  /**
    * {@link hover} for points the caller already resolved (keyboard navigation, E6.5, `keyboard.ts`),
    * so domain traces' points (pie slices) get their labels where the trace put them.
    */

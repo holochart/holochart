@@ -46,7 +46,8 @@ test('3D add-on draws a scene with the main script’s three.js and render', asy
     const hc = (window as any).Holochart;
     const three = hc.__iife.three;
     const exports = {
-      traces3d: Array.isArray(hc.traces3d) ? hc.traces3d.length : -1,
+      // The scene component and the trace modules (M6 wave 1: `scatter3d` and more).
+      traces3d: Array.isArray(hc.traces3d) && hc.traces3d.includes(hc.scatter3d),
       scene: hc.registry.getComponent('scene') === hc.sceneComponent,
       functions: [
         'acquireScene',
@@ -136,7 +137,7 @@ test('3D add-on draws a scene with the main script’s three.js and render', asy
   });
 
   expect(result).toEqual({
-    exports: { traces3d: 1, scene: true, functions: [] },
+    exports: { traces3d: true, scene: true, functions: [] },
     allObject3D: true,
     walls: true,
     lines: true,

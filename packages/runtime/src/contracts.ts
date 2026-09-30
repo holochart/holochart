@@ -44,6 +44,7 @@ import type {
   Viewport,
   ViewportRect,
 } from '@mk7s/holochart-render';
+import type { CameraTarget } from './anim/types.ts';
 import type { Chart } from './chart.ts';
 
 // ---- Axes and subplots ------------------------------------------------------------------------
@@ -1120,6 +1121,36 @@ export interface ComponentView {
    * Plotly keeps no `layout.selections` for these subplots.
    */
   selectArea?(x: number, y: number): SelectArea | undefined;
+  /**
+   * Camera animation (E7.5, `chart.animateCamera`): move the camera of the view's subplot
+   * `run.subplot` (default: its first) to `camera` with `run`'s duration and easing, resolving
+   * when it arrives. Return `undefined` when the view has no such subplot (the chart asks the next
+   * view).
+   */
+  animateCamera?(camera: CameraTarget, run: CameraAnimationRun): Promise<void> | undefined;
+  /**
+   * Layout transitions (E7.3, E7.5): attributes the view animates with its own interpolation
+   * (a 3D camera orbits rather than moving in a straight line), from what it shows now to the
+   * defaulted layout `to`. The transition writes each tween's value at `path` on every frame.
+   */
+  layoutTweens?(from: FullLayout, to: FullLayout): readonly LayoutTween[];
+}
+
+/** What {@link ComponentView.animateCamera} gets: timing, the eased curve and the subplot. */
+export interface CameraAnimationRun {
+  /** Milliseconds (0: jump). */
+  readonly duration: number;
+  /** Maps linear progress in [0, 1] to eased progress. */
+  readonly ease: (t: number) => number;
+  readonly subplot?: string | undefined;
+}
+
+/** An animated layout attribute (see {@link ComponentView.layoutTweens}). */
+export interface LayoutTween {
+  /** Layout attribute path (`'scene.camera'`). */
+  readonly path: string;
+  /** Its value at eased progress `e` (0 → now, 1 → the target). */
+  tween(e: number): unknown;
 }
 
 /** A non-cartesian subplot's selection area (see {@link ComponentView.selectArea}). */

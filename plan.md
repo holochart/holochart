@@ -915,10 +915,10 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `animate(frameOrGroupOrNames, { frame: { duration, redraw }, transition, mode: 'immediate' | 'next' | 'afterall', direction, fromcurrent })` — plotly.js's queue and timing (a string names a group; per-frame option arrays; transition capped at the frame duration); the promise resolves after the last frame, rejects (`AnimationInterrupted` errors, Plotly rejects with `undefined`) when that frame is dropped or its transition interrupted; `redraw` is accepted but moot (every change draws incrementally)
 - [x] Play/pause via update menu. Slider sync (E5.11). Events `animatingframe`, `animated`, `animationinterrupted`. — plus `animating`, `transitioning`, `transitioned`, `transitioninterrupted` and `fullLayout._currentFrame`; examples `animation/gapminder` and `animation/transitions`, docs page `fundamentals/transitions-animation`
 
-#### E7.5 — Camera animation (3D & 2.5D)   `P1` `M`   deps: E14.1
+#### E7.5 — Camera animation (3D & 2.5D)   `P1` `M`   deps: E14.1   · ✅ Done (M6 wave 1)
 > As a developer, I want to animate the camera along a path or to preset views, so that I can create guided 3D tours.
-- [ ] `chart.animateCamera({ eye, center, up }, { duration, easing })`. Keyframe paths (`P2`).
-- [ ] Auto-rotate option (`scene.autorotate: { speed, axis }`)
+- [x] `chart.animateCamera({ eye, center, up }, { duration, easing })`. Keyframe paths (`P2`). — orbit interpolation, interrupted by drags, `react`/`animate` camera transitions — *deferred: keyframe paths (P2)*
+- [x] Auto-rotate option (`scene.autorotate: { speed, axis }`)
 
 ---
 
@@ -964,12 +964,12 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `marker.color: (point, i, trace) => string`. Supported on every `arrayOk` attribute. — evaluated before supply-defaults, so modules see plain arrays; functions on other attributes are rejected with a hint
 - [x] Figure is marked non-serializable. `toJSON()` warns and evaluates functions into arrays.
 
-#### E8.7 — Materials & lighting   `P1` `M`   deps: E2.11   · 🟡 Partial (M6 wave 0)
+#### E8.7 — Materials & lighting   `P1` `M`   deps: E2.11   · ✅ Done (M6 waves 0–1)
 > As a designer, I want to choose materials and lights for any trace, so that 3D and extruded charts look the way I want.
 - [x] `trace.material: { type: 'flat' | 'basic' | 'lambert' | 'phong' | 'standard' | 'physical' | 'toon' | 'matcap', ...params }`
 - [x] `layout.lighting: { ambient: {color, intensity}, directional: [{color, intensity, position, castShadow}], hemisphere, environment: 'studio' | 'city' | url(HDR) }`
 - [x] Shadows (`castShadow`/`receiveShadow`, a ground plane option)
-- [x] Plotly's `lighting`/`lightposition` attributes map onto this system — render side done (material types, light rig, shadows, environments); the `trace.material` / `layout.lighting` attributes arrive with the wave-1 traces
+- [x] Plotly's `lighting`/`lightposition` attributes map onto this system — render side (M6 wave 0); `material` and per-scene `layout.sceneN.lighting` attributes with per-trace-type Plotly lighting defaults (M6 wave 1)
 
 #### E8.8 — Shader hooks   `P2` `M`   deps: E2.4, E2.5, E2.11
 > As an advanced developer, I want to inject GLSL (or TSL nodes) into trace materials, so that I can create custom visual effects.
@@ -1390,38 +1390,38 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] Orbit (free), turntable (z-up constrained), zoom (dolly vs FOV for ortho), pan. Damping. Touch support.
 - [x] Double-click resets the camera. Modebar 3D buttons. Scroll zoom respects `config.scrollZoom`. — *deferred: keyboard orbit, right/middle-button drags*
 
-##### E14.1d — 3D hover & annotations   `P1` `M`
-- [ ] GPU picking for meshes and markers. Hover labels positioned at projected points. Spikes to axis walls.
-- [ ] `scene.annotations[]` with `x`, `y`, `z`, `ax`, `ay`, arrows, and all 2D annotation styling
+##### E14.1d — 3D hover & annotations   `P1` `M`   · ✅ Done (M6 wave 1)
+- [x] GPU picking for meshes and markers. Hover labels positioned at projected points. Spikes to axis walls.
+- [x] `scene.annotations[]` with `x`, `y`, `z`, `ax`, `ay`, arrows, and all 2D annotation styling — one GPU pick per pointer position for the scene (`registerScenePickable`, `scenePicks`, `sceneHoverPoint`), clicks emit the hovered point, `chart.refreshHover()` — *deferred: programmatic 3D hover, annotation `hovertext`*
 
-#### E14.2 — `scatter3d`   `P1` `L`   deps: E14.1, E2.4, E2.5
+#### E14.2 — `scatter3d`   `P1` `L`   deps: E14.1, E2.4, E2.5   · ✅ Done (M6 wave 1)
 > As a scientist, I want 3D scatter and line plots, so that I can view three-variable data.
-- [ ] `x`, `y`, `z`, `mode` (markers/lines/text), `marker.{symbol (circle, circle-open, cross, diamond, diamond-open, square, square-open, x), size, color, colorscale, opacity, line}`
-- [ ] Marker rendering modes (Holochart extension): `marker.render: 'sprite' | 'sphere' | 'mesh'` (instanced lit spheres or custom geometry)
-- [ ] `line.{color, width, dash, colorscale}` (screen-space thick lines in 3D)
-- [ ] `error_x/y/z`, `projection.{x, y, z}.{show, opacity, scale}` (shadows onto walls), `surfaceaxis`, `surfacecolor`
-- [ ] Text in 3D (`textposition`, billboarded)
-- [ ] 1M points interactive orbit
+- [x] `x`, `y`, `z`, `mode` (markers/lines/text), `marker.{symbol (circle, circle-open, cross, diamond, diamond-open, square, square-open, x), size, color, colorscale, opacity, line}`
+- [x] Marker rendering modes (Holochart extension): `marker.render: 'sprite' | 'sphere' | 'mesh'` (instanced lit spheres or custom geometry)
+- [x] `line.{color, width, dash, colorscale}` (screen-space thick lines in 3D)
+- [x] `error_x/y/z`, `projection.{x, y, z}.{show, opacity, scale}` (shadows onto walls), `surfaceaxis`, `surfacecolor`
+- [x] Text in 3D (`textposition`, billboarded)
+- [x] 1M points interactive orbit — 57–60 fps on a real GPU (M1 Max); *deferred: `marker.render: 'mesh'`, error-bar caps, projections flattened onto the walls*
 
-#### E14.3 — `surface`   `P1` `L`   deps: E14.1, E2.11
+#### E14.3 — `surface`   `P1` `L`   deps: E14.1, E2.11   · ✅ Done (M6 wave 1)
 > As a scientist, I want 3D surfaces, so that I can visualize functions of two variables.
-- [ ] `z` (+ optional `x`, `y` vectors or matrices), `surfacecolor`, colorscale attributes, `opacity`, `opacityscale`, `hidesurface`, `connectgaps`
-- [ ] `contours.{x, y, z}.{show, start, end, size, color, width, usecolormap, highlight, highlightcolor, highlightwidth, project.{x, y, z}}`
-- [ ] `lighting.{ambient, diffuse, specular, roughness, fresnel}`, `lightposition`
-- [ ] Wireframe overlay (a Holochart extension: `wireframe.{show, color, width, step}`)
-- [ ] Surface built in the shader from a height texture (1024² grid < 50 ms)
+- [x] `z` (+ optional `x`, `y` vectors or matrices), `surfacecolor`, colorscale attributes, `opacity`, `opacityscale`, `hidesurface`, `connectgaps`
+- [x] `contours.{x, y, z}.{show, start, end, size, color, width, usecolormap, highlight, highlightcolor, highlightwidth, project.{x, y, z}}`
+- [x] `lighting.{ambient, diffuse, specular, roughness, fresnel}`, `lightposition`
+- [x] Wireframe overlay (a Holochart extension: `wireframe.{show, color, width, step}`)
+- [x] Surface built in the shader from a height texture (1024² grid < 50 ms) — every grid (vectors and matrices) from float textures in the vertex shader; 1024² rebuild 40–46 ms, orbit 60 fps; first draw ≈ 260 ms incl. chart setup, lazy chunks and shader compile — *deferred: `refineData`, highlight projections, calendars*
 
-#### E14.4 — `mesh3d`   `P1` `L`   deps: E14.1, E2.11
+#### E14.4 — `mesh3d`   `P1` `L`   deps: E14.1, E2.11   · ✅ Done (M6 wave 1)
 > As an engineer, I want arbitrary triangle meshes, so that I can render 3D geometry and point-cloud hulls.
-- [ ] `x`, `y`, `z`, `i`, `j`, `k` (explicit triangles) or `alphahull` (-1 convex hull, 0 Delaunay, > 0 alpha shape), `delaunayaxis`
-- [ ] `intensity` + `intensitymode: 'vertex' | 'cell'`, `vertexcolor`, `facecolor`, `color`, colorscale attributes
-- [ ] `flatshading`, `lighting`, `lightposition`, `contour.{show, color, width}`
+- [x] `x`, `y`, `z`, `i`, `j`, `k` (explicit triangles) or `alphahull` (-1 Delaunay (default), 0 convex hull, > 0 alpha shape — as plotly.js; the original text had -1 and 0 swapped), `delaunayaxis`
+- [x] `intensity` + `intensitymode: 'vertex' | 'cell'`, `vertexcolor`, `facecolor`, `color`, colorscale attributes
+- [x] `flatshading`, `lighting`, `lightposition`, `contour.{show, color, width}` — `contour` is Plotly's hover iso-line (not a wireframe); own Quickhull / lifted-paraboloid Delaunay / alpha shapes
 - [ ] Load helpers: `Holochart.io.meshFromSTL/OBJ/PLY/GLTF` → mesh3d trace, `P2`
 
-#### E14.5 — `cone`   `P1` `M`   deps: E14.1
+#### E14.5 — `cone`   `P1` `M`   deps: E14.1   · ✅ Done (M6 wave 1)
 > As a physicist, I want 3D cone fields, so that I can visualize 3D vector fields.
-- [ ] `x`, `y`, `z`, `u`, `v`, `w`, `sizemode: 'scaled' | 'absolute' | 'raw'`, `sizeref`, `anchor: 'tip' | 'tail' | 'cm' | 'center'`, colorscale by norm, lighting
-- [ ] Instanced cones (single draw call). Hover shows the vector and norm.
+- [x] `x`, `y`, `z`, `u`, `v`, `w`, `sizemode: 'scaled' | 'absolute' | 'raw'`, `sizeref`, `anchor: 'tip' | 'tail' | 'cm' | 'center'`, colorscale by norm, lighting
+- [x] Instanced cones (single draw call). Hover shows the vector and norm. — gl-cone3d `vectorScale`/`coneScale` semantics
 
 #### E14.6 — `streamtube`   `P1` `L`   deps: E14.1
 > As a physicist, I want stream tubes through 3D vector fields, so that I can visualize flow.
@@ -2279,10 +2279,10 @@ performance targets are checked with `pnpm bench:gpu` on the real GPU.
 | 0 | Scene subplot: layout, camera, controls, 3D axes, multiple scenes | E14.1a ✅, E14.1b ✅, E14.1c ✅ |
 | 0 | Mesh primitive, lit materials, lighting, transparency sorting | E2.11 ✅, E8.7 🟡 (trace attributes in wave 1), E2.14 (3D) ✅ |
 | 0 | 3D line and marker primitives (screen-space lines, sprites, instanced spheres) | E14.2 (render part) ✅ |
-| 1 | `scatter3d`, 3D hover, picking and annotations | E14.2, E14.1d |
-| 1 | `surface` (height texture, contours, wireframe) | E14.3 |
-| 1 | `mesh3d` and `cone` | E14.4, E14.5 |
-| 1 | Camera animation and auto-rotate | E7.5 |
+| 1 | `scatter3d`, 3D hover, picking and annotations | E14.2 ✅, E14.1d ✅ |
+| 1 | `surface` (height texture, contours, wireframe) | E14.3 ✅ |
+| 1 | `mesh3d` and `cone` | E14.4 ✅, E14.5 ✅ |
+| 1 | Camera animation and auto-rotate | E7.5 ✅ (plus E8.7 attributes) |
 | 2 | `streamtube` | E14.6 |
 | 2 | `volume` (stacked isosurfaces and ray-marched) and `isosurface` | E14.7, E14.8 |
 | 2 | `bar3d` and 3D line extras | E14.9, E14.10 |
@@ -2299,6 +2299,13 @@ name must be listed in `packages/holochart/src/iife/three.ts`; new render 3D mod
 registered with the split's loaders. Open: camera linking, keyboard orbit, 3D line widths on the
 axes (1 device px until they use the 3D line primitive), OIT (P2), `trace.material` and
 `layout.lighting` attributes (wave 1).
+
+Open after M6 wave 1: the docs build now needs an 8 GB heap (`apps/docs` build script; peak RSS
+7.3 GB with ~450 examples) — look into why VitePress holds so much; under SwiftShader the opaque
+3D line path draws stray dashed fragments on some segments (surface projections use the
+translucent path); surface `contours.color` defaults to Plotly's `#444`, hard to see on the dark
+walls; 3D traces have no keyboard navigation or `describe`-based tables beyond surface; the 3D
+add-on budget is 81 kB (73.6 kB).
 
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 

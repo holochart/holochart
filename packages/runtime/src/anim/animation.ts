@@ -82,6 +82,8 @@ interface Track {
   readonly constant: boolean;
   /** Animates in the phase `ordering` puts second: holds its old value, then snaps at the end. */
   held: boolean;
+  /** Outside `ordering` (a component's own tween: a 3D camera): always animates. */
+  readonly free?: boolean;
   /** The input value restored at the end (`null`: unset). */
   readonly end: unknown;
   /** The value written last; anything else there means another update replaced it. */
@@ -176,6 +178,11 @@ export class Animation {
         else t.trace = j;
       }
     });
+  }
+
+  /** The easing of a Plotly easing name (`chart.animateCamera`). */
+  easing(name: string): Easing {
+    return easing(name);
   }
 
   get #chart(): Chart {
@@ -408,7 +415,14 @@ export class Animation {
   ): Track[] {
     const tracks: Track[] = [];
     const order = this.#order;
-    const add = (trace: number, path: string, tween: Tween, constant: boolean, input: unknown) => {
+    const add = (
+      trace: number,
+      path: string,
+      tween: Tween,
+      constant: boolean,
+      input: unknown,
+      free?: boolean,
+    ) => {
       const end = getIn(input, path);
       tracks.push({
         trace,
@@ -416,6 +430,7 @@ export class Animation {
         tween,
         constant,
         held: false,
+        free,
         end: end === undefined ? null : end,
         last: end,
         dropped: false,
@@ -495,15 +510,19 @@ export class Animation {
         layout,
       );
     }
+    // Attributes components interpolate themselves (3D cameras, E7.5).
+    for (const t of this.#host.tweens(from.full.fullLayout, target.fullLayout)) {
+      add(-1, t.path, (e) => t.tween(e), false, layout, true);
+    }
     return tracks;
   }
 
   /** Start animating `tracks`: `ordering`, and the first frame (progress 0). */
   #start(plan: Plan, tracks: Track[], opts: Required<TransitionOptions>): Running {
-    const layout = tracks.some((t) => t.trace < 0);
+    const layout = tracks.some((t) => t.trace < 0 && !t.free);
     if (layout && tracks.some((t) => t.trace >= 0)) {
       const holdTraces = opts.ordering !== 'traces first';
-      for (const t of tracks) t.held = t.trace < 0 ? !holdTraces : holdTraces;
+      for (const t of tracks) if (!t.free) t.held = t.trace < 0 ? !holdTraces : holdTraces;
     }
     const running: Running = {
       tracks,

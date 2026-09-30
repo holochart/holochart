@@ -169,7 +169,14 @@ import { describeChart, type ChartDescription, type OverviewInput } from './a11y
 import { A11yMirror, type A11yChange } from './a11y/mirror.ts';
 import type { DownloadImageOptions, ExportSource, ToImageOptions } from './export/types.ts';
 import type { Animation } from './anim/animation.ts';
-import type { AnimateTarget, AnimationHost, AnimationOptions, Frame } from './anim/types.ts';
+import type {
+  AnimateTarget,
+  AnimationHost,
+  AnimationOptions,
+  CameraAnimationOptions,
+  CameraTarget,
+  Frame,
+} from './anim/types.ts';
 import { registry as defaultRegistry, type ChartRegistry } from './registry.ts';
 import {
   axisDataOf,
@@ -915,6 +922,15 @@ export class Chart {
     this.#fx?.unhover();
   }
 
+  /**
+   * Hover again where the pointer is, on the next frame (M6: for hover sources that answer
+   * asynchronously, such as a 3D scene's GPU picking, or whose points moved without a redraw,
+   * such as an orbiting camera). No-op when the pointer is away or a gesture is in progress.
+   */
+  refreshHover(): void {
+    this.#fx?.rehover();
+  }
+
   /** Set `layout.dragmode` as a user interaction (modebar buttons; kept across `uirevision`). */
   setDragmode(mode: Dragmode): Promise<Chart> {
     return this.relayout({ dragmode: mode }, { gui: true });
@@ -1333,6 +1349,33 @@ export class Chart {
     return this.#animate((a) => a.animate(target, options));
   }
 
+  /**
+   * Fly a 3D scene's camera to `camera` (E7.5; Plotly's `scene.camera` shape, missing parts kept):
+   * it orbits the scene over `duration` ms with `easing`, then commits the camera with a
+   * `relayout` (`'scene.camera'`) and resolves. Dragging the scene, a camera change or another
+   * `animateCamera` interrupts it (rejects, `AnimationInterrupted`); reduced motion jumps.
+   *
+   * @example
+   * ```ts
+   * await chart.animateCamera({ eye: { x: 2, y: 0, z: 0.5 } }, { duration: 1500 });
+   * ```
+   */
+  animateCamera(camera: CameraTarget, options: CameraAnimationOptions = {}): Promise<Chart> {
+    return this.#animate(async (a) => {
+      await this.ready;
+      const run = {
+        duration: options.duration ?? 500,
+        ease: a.easing(options.easing ?? 'cubic-in-out'),
+        subplot: options.subplot,
+      };
+      for (const slot of this.#components.values()) {
+        const done = slot.view?.animateCamera?.(camera, run);
+        if (done) return done.then(() => this);
+      }
+      throw new Error(`holochart: animateCamera: no scene ${options.subplot ?? ''}`);
+    });
+  }
+
   /** Run `fn` with this chart's animation state, loading the animation code the first time. */
   #animate<T>(fn: (animation: Animation) => T | Promise<T>): Promise<T> {
     if (this.#destroyed) return Promise.reject(destroyedError());
@@ -1352,6 +1395,8 @@ export class Chart {
           this.#relayoutInto(plan, layout, null);
         },
         react: (figure) => this.#reactPlan(figure),
+        tweens: (from, to) =>
+          [...this.#components.values()].flatMap((c) => c.view?.layoutTweens?.(from, to) ?? []),
         current: (name) => {
           this.#currentFrame = name;
         },

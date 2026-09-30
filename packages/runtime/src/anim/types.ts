@@ -2,10 +2,10 @@
  * Types of frames, `animate` and transitions (plan E7.3, E7.4). The animation code itself loads on
  * first use (`animation.ts`, a dynamic `import()` from the chart), so these live apart from it.
  */
-import type { FigureInput, Registry, SupplyDefaultsResult } from '@mk7s/holochart-core';
+import type { FigureInput, FullLayout, Registry, SupplyDefaultsResult } from '@mk7s/holochart-core';
 import type { FrameScheduler } from '@mk7s/holochart-render';
 import type { Chart, Plan } from '../chart.ts';
-import type { AxisInfo } from '../contracts.ts';
+import type { AxisInfo, LayoutTween } from '../contracts.ts';
 import type { AttributeUpdate } from '../plan.ts';
 
 /** Plotly's easing names (`layout.transition.easing`, `animate`'s `transition.easing`). */
@@ -23,6 +23,33 @@ export interface TransitionOptions {
    * snaps when the transition ends. Default `'layout first'`: the axes animate.
    */
   readonly ordering?: 'layout first' | 'traces first';
+}
+
+/** A camera vector (`eye`, `center`, `up`) of {@link CameraTarget}: missing components stay. */
+export interface CameraVector {
+  readonly x?: number;
+  readonly y?: number;
+  readonly z?: number;
+}
+
+/**
+ * Where {@link Chart.animateCamera} moves a 3D scene's camera: Plotly's `scene.camera` shape, in
+ * scene units; missing vectors and components keep their current values.
+ */
+export interface CameraTarget {
+  readonly eye?: CameraVector;
+  readonly center?: CameraVector;
+  readonly up?: CameraVector;
+}
+
+/** Options of {@link Chart.animateCamera}. */
+export interface CameraAnimationOptions {
+  /** Milliseconds. Default 500 (0 or reduced motion: the camera jumps). */
+  readonly duration?: number;
+  /** A Plotly easing name. Default `'cubic-in-out'`. */
+  readonly easing?: EasingName | (string & {});
+  /** The scene (`'scene'`, `'scene2'`, …). Default: the first scene. */
+  readonly subplot?: string;
 }
 
 /** Per-frame timing of `animate`. */
@@ -130,6 +157,8 @@ export interface AnimationHost {
   react(figure: FigureInput): ((plan: Plan) => void) | undefined;
   /** Record the frame shown (Plotly's `fullLayout._currentFrame`). */
   current(name: string | null): void;
+  /** In-between values of layout attributes components animate themselves (3D cameras). */
+  tweens(from: FullLayout, to: FullLayout): readonly LayoutTween[];
   /** Called with Plotly's order (`order[newIndex] = oldIndex`) when traces are added or moved. */
   remapped(listener: ((order: readonly (number | undefined)[]) => void) | undefined): void;
 }

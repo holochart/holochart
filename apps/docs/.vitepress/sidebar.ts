@@ -185,6 +185,7 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
       text: 'Hierarchical',
       items: pages('charts/hierarchical/', ['sunburst', 'treemap', 'icicle', 'sankey']),
     },
+    { text: '3D', items: pages('charts/3d/', ['scatter3d', 'surface', 'mesh3d', 'cone']) },
   ];
 
   const demos: Item[] = [{ text: 'Demos', items: pages('demos/', ['openrouter']) }];
