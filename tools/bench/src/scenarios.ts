@@ -84,6 +84,20 @@ export const SCENARIOS: readonly Scenario[] = [
     drive: { kind: 'button', label: 'Pan' },
     targets: [{ story: 'E2.4', goal: 'pan ≥ 50 fps', metric: 'panFps', value: 50 }],
   },
+  // E14.2 (M6 wave 0, render level): 1M 3D points orbiting; the camera moves every frame.
+  ...(['sprites', 'spheres', 'lines'] as const).map((mode): Scenario => ({
+    example: '_dev/scatter3d-1m',
+    label: `1M 3D points, ${mode} (orbit)`,
+    drive: { kind: 'button', label: `Orbit ${mode}` },
+    targets: [
+      {
+        story: 'E14.2',
+        goal: '1M points interactive orbit (≥ 30 fps)',
+        metric: 'panFps',
+        value: 30,
+      },
+    ],
+  })),
 ];
 
 /** Share of an fps target that counts as met (see {@link SCENARIOS}). */

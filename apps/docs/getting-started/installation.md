@@ -98,6 +98,18 @@ For pages without a build step, use the self-contained IIFE build,
 </script>
 ```
 
+For [3D scenes](/fundamentals/3d-scenes), add the 3D add-on after it. The main script is 2D only,
+so pages without 3D charts don't download the 3D code:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart/dist/holochart.iife.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart/dist/holochart-3d.iife.min.js"></script>
+```
+
+The add-on registers the 3D scene and traces into `window.Holochart` (`Holochart.traces3d`, and the
+exports of `@mk7s/holochart-traces-3d`). It uses the main script's three.js, so load both from the
+same version, and the main script first.
+
 The IIFE build bundles its own copy of three.js, because three no longer ships a global build.
 Do not mix it with another copy of three on the same page: objects created with a separately
 loaded `THREE` are different classes from the ones inside the bundle. If you need to add your own

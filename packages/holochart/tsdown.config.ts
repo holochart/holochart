@@ -1,7 +1,16 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'tsdown';
+import {
+  ADDON_BANNER,
+  ADDON_GLOBALS,
+  iife2DPlugin,
+  iife3DAddonPlugin,
+} from '../../scripts/build/iife-split.ts';
 import { productionPlugins } from '../../scripts/build/tsdown-preset.ts';
+import pkg from './package.json' with { type: 'json' };
+
+const source = (file: string): string => fileURLToPath(new URL(file, import.meta.url));
 
 /** The built-in default font's face table (render), and its IIFE replacement. */
 const FONT_FILES_MODULE = /[\\/]render[\\/]src[\\/]fonts[\\/]default-font-files\.ts$/;
@@ -25,18 +34,30 @@ function scriptFontFilesPlugin() {
   };
 }
 
+/** Workspace packages resolve through the `source` export condition in the IIFE builds. */
+const SOURCE_CONDITIONS = {
+  resolve: { conditionNames: ['source', 'browser', 'import', 'module', 'default'] },
+};
+/** The package version, checked by the 3D add-on against the main script's (`iife/host.ts`). */
+const VERSION_DEFINE = { __HOLOCHART_VERSION__: JSON.stringify(pkg.version) };
+
 /**
- * Two builds of the full bundle (ADR-015):
+ * Three builds (ADR-015):
  *
- * - `dist/index.js` + `dist/index.d.ts`: ESM for bundler users. Holochart packages and `three`
- *   (peer dependency, ADR-003) stay external.
+ * - `dist/index.js` + `dist/index.d.ts`: ESM for bundler users, the full bundle (3D included; its
+ *   heavy code is in render's lazy chunks). Holochart packages and `three` (peer dependency,
+ *   ADR-003) stay external.
  * - `dist/holochart.iife.min.js`: self-contained, minified IIFE for `<script>` / CDN use, exposing
- *   `window.Holochart`. Everything is bundled, including `three` (which no longer ships a UMD or
- *   global build). Workspace packages resolve through the `source` export condition so the bundle
- *   and its sourcemap come straight from TypeScript sources, so the strip-descriptions plugin
- *   (ADR-020) runs on them here: the IIFE ships without attribute-schema descriptions.
- *   The built-in default font (TeX Gyre Heros, plan E2.18) ships as `dist/fonts/*.otf` with its
- *   license, loaded relative to the script when text first needs a face.
+ *   `window.Holochart`: the 2D bundle (`src/iife.ts`, everything but the 3D package). Everything is
+ *   bundled, including `three` (which no longer ships a UMD or global build). Workspace packages
+ *   resolve through the `source` export condition so the bundle and its sourcemap come straight
+ *   from TypeScript sources, so the strip-descriptions plugin (ADR-020) runs on them here: the IIFE
+ *   ships without attribute-schema descriptions. The built-in default font (TeX Gyre Heros, plan
+ *   E2.18) ships as `dist/fonts/*.otf` with its license, loaded relative to the script when text
+ *   first needs a face.
+ * - `dist/holochart-3d.iife.min.js`: the 3D add-on (`src/iife-3d.ts`), loaded after the main
+ *   script. It bundles only the 3D package and render's 3D chunks; three.js, core, the runtime,
+ *   render and traces-basic are the main script's (`scripts/build/iife-split.ts`).
  */
 export default defineConfig([
   {
@@ -50,7 +71,7 @@ export default defineConfig([
     plugins: productionPlugins(),
   },
   {
-    entry: { holochart: 'src/index.ts' },
+    entry: { holochart: 'src/iife.ts' },
     format: 'iife',
     globalName: 'Holochart',
     platform: 'browser',
@@ -61,11 +82,39 @@ export default defineConfig([
     clean: false,
     outputOptions: { entryFileNames: '[name].iife.min.js' },
     deps: { alwaysBundle: [/.*/], onlyBundle: false },
-    plugins: [...productionPlugins(), scriptFontFilesPlugin()],
-    inputOptions: {
-      resolve: { conditionNames: ['source', 'browser', 'import', 'module', 'default'] },
-    },
+    define: VERSION_DEFINE,
+    plugins: [
+      ...productionPlugins(),
+      scriptFontFilesPlugin(),
+      iife2DPlugin(source('./src/iife/host.ts')),
+    ],
+    inputOptions: SOURCE_CONDITIONS,
     // The font files (and their license) the script loads, next to it.
     copy: [{ from: '../render/fonts/*', to: 'dist/fonts' }],
+  },
+  {
+    entry: { 'holochart-3d': 'src/iife-3d.ts' },
+    format: 'iife',
+    platform: 'browser',
+    target: 'es2022',
+    minify: true,
+    sourcemap: true,
+    dts: false,
+    clean: false,
+    outputOptions: {
+      entryFileNames: '[name].iife.min.js',
+      globals: { ...ADDON_GLOBALS },
+      banner: ADDON_BANNER,
+    },
+    deps: { alwaysBundle: [/.*/], onlyBundle: false },
+    define: VERSION_DEFINE,
+    plugins: [
+      ...productionPlugins(),
+      iife3DAddonPlugin({
+        threeModule: source('./src/iife/three.ts'),
+        entry: source('./src/iife-3d.ts'),
+      }),
+    ],
+    inputOptions: SOURCE_CONDITIONS,
   },
 ]);

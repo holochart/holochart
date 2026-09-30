@@ -149,7 +149,6 @@ export class Viewport {
   readonly kind: ViewportKind;
   readonly name: string;
   readonly scene = new Scene();
-  readonly camera: OrthographicCamera | PerspectiveCamera;
   readonly fit: boolean;
   /** Size handed to primitives (render-area size in CSS px + DPR). Mutated in place. */
   readonly size: ViewportSize = { width: 1, height: 1, pixelRatio: 1 };
@@ -166,6 +165,8 @@ export class Viewport {
   #area: ViewportRect = { x: 0, y: 0, width: 1, height: 1 };
   #scissor: ViewportRect | null = null;
   #orthoHalfHeight: number;
+  #camera: OrthographicCamera | PerspectiveCamera;
+  readonly #options: ViewportOptions;
   #disposed = false;
   /** Set by the root so it can re-sort when `order` changes. */
   onOrderChange: (() => void) | null = null;
@@ -183,26 +184,37 @@ export class Viewport {
     this.background = options.background ?? null;
     this.clearDepth = options.clearDepth ?? this.kind === '3d';
     this.#orthoHalfHeight = options.orthoHalfHeight ?? 1;
+    this.#options = options;
+    this.#camera =
+      this.kind === '2d'
+        ? new OrthographicCamera(0, 1, 1, 0, options.near ?? -10000, options.far ?? 10000)
+        : camera3d(options, options.projection);
+    this.layout();
+  }
 
-    if (this.kind === '2d') {
-      this.camera = new OrthographicCamera(
-        0,
-        1,
-        1,
-        0,
-        options.near ?? -10000,
-        options.far ?? 10000,
-      );
-    } else if (options.projection === 'orthographic') {
-      this.camera = new OrthographicCamera(-1, 1, 1, -1, options.near ?? 0.01, options.far ?? 1000);
-    } else {
-      this.camera = new PerspectiveCamera(
-        options.fov ?? 45,
-        1,
-        options.near ?? 0.01,
-        options.far ?? 1000,
-      );
+  /** The camera: orthographic for 2D; perspective or orthographic for 3D (see {@link setProjection}). */
+  get camera(): OrthographicCamera | PerspectiveCamera {
+    return this.#camera;
+  }
+
+  /**
+   * 3D only: switch between a perspective and an orthographic camera (M6: a scene's
+   * `camera.projection.type`). The camera object is replaced; its pose (position, orientation,
+   * `up`) carries over. No-op for 2D viewports or when the projection is unchanged.
+   */
+  setProjection(projection: 'perspective' | 'orthographic'): void {
+    const old = this.#camera;
+    if (
+      this.kind === '2d' ||
+      (projection === 'orthographic') === old instanceof OrthographicCamera
+    ) {
+      return;
     }
+    const next = camera3d(this.#options, projection);
+    next.position.copy(old.position);
+    next.quaternion.copy(old.quaternion);
+    next.up.copy(old.up);
+    this.#camera = next;
     this.layout();
   }
 
@@ -382,6 +394,18 @@ export class Viewport {
     this.scene.clear();
     this.onOrderChange = null;
   }
+}
+
+/** A 3D viewport's camera (`fov`, `near`, `far` from the viewport options). */
+function camera3d(
+  options: ViewportOptions,
+  projection: ViewportOptions['projection'],
+): OrthographicCamera | PerspectiveCamera {
+  const near = options.near ?? 0.01;
+  const far = options.far ?? 1000;
+  return projection === 'orthographic'
+    ? new OrthographicCamera(-1, 1, 1, -1, near, far)
+    : new PerspectiveCamera(options.fov ?? 45, 1, near, far);
 }
 
 function normalizeClip(clip: boolean | ViewportRect | undefined): boolean | ViewportRect {

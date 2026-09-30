@@ -63,7 +63,7 @@ names are `@mk7s/holochart` and `@mk7s/holochart-*`
 | `packages/traces-sci`     | heatmap, contour, image, polar, ternary, quiver, streamline, carpet | Exists  |
 | `packages/traces-finance` | ohlc, candlestick, waterfall, funnel, funnelarea, indicator         | Exists  |
 | `packages/traces-hier`    | sunburst, treemap, icicle, sankey                                   | Exists  |
-| `packages/traces-3d`      | scatter3d, surface, mesh3d, cone, streamtube, volume, isosurface    | Planned |
+| `packages/traces-3d`      | scatter3d, surface, mesh3d, cone, streamtube, volume, isosurface    | Exists  |
 | `packages/traces-geo`     | Stretch: scattergeo, choropleth, globe, tile maps                   | Planned |
 | `packages/express`        | High-level API (`hx.scatter(df, ...)`), faceting, frames, marginals | Exists  |
 | `packages/locales`        | Locale modules (plotly.js's): UI strings, number and date formats   | Exists  |

@@ -3,6 +3,7 @@ import { events, openInteraction, waitForEvent } from './helpers.ts';
 import {
   at,
   cancelOn,
+  clickUntilEvent,
   expectColor,
   level,
   maxRects,
@@ -97,11 +98,10 @@ test('clicking a tile drills into it with a transition; the path bar goes back u
   // The zoom animated: the five leaving tiles were drawn with Seth's three.
   expect(await maxRects(page)).toBe(8);
 
-  // Clicks during a transition don't drill: let it end.
-  await page.waitForTimeout(900);
+  // Clicks during a transition do nothing: retry until one lands after it.
   await events(page, true);
   const bar = await pt(page, P.pathbar);
-  await page.mouse.click(bar.x, bar.y);
+  await clickUntilEvent(page, bar, 'treemapclick');
   const up = await waitForEvent(page, 'treemapclick');
   expect(up.payload).toMatchObject({ nextLevel: 'Eve', points: [{ label: 'Eve' }] });
   await expect.poll(() => level(page)).toBe('Eve');
@@ -117,11 +117,10 @@ test("clicking the entry's header goes up; leaves drill in too", async ({ page }
   // Enos fills the treemap below its header.
   await expectColor(page, await pt(page, P.cain), SETH);
 
-  // Clicks during a transition don't drill: let it end.
-  await page.waitForTimeout(900);
+  // Clicks during a transition do nothing: retry until one lands after it.
   await events(page, true);
   const header = await pt(page, P.eveHeader);
-  await page.mouse.click(header.x, header.y);
+  await clickUntilEvent(page, header, 'treemapclick');
   const up = await waitForEvent(page, 'treemapclick');
   expect(up.payload).toMatchObject({ nextLevel: 'Seth', points: [{ label: 'Enos' }] });
   await expect.poll(() => level(page)).toBe('Seth');

@@ -17,3 +17,30 @@ export * from './text.ts';
 export * from './text-metrics.ts';
 export * from './text-fonts.ts';
 export * from './text-style.ts';
+// 3D lines, sprites and spheres (E14.2): the loader, and only the TYPES of the lazily loaded chunk.
+export * from './lines-markers-3d-loader.ts';
+export type { Line3D, Line3DData, Line3DOptions } from './line3d.ts';
+export type { Markers3D, Markers3DOptions } from './markers3d.ts';
+export type {
+  SphereData,
+  SphereLighting,
+  SphereSet,
+  SphereSetOptions,
+  SphereSizing,
+} from './spheres.ts';
+export type { Blend3D } from './blend3d.ts';
+export type { DepthCoefficients } from './depth-sort.ts';
+// 3D meshes, lighting, materials and transparency (E2.11, E8.7, E2.14): the loader, and only the
+// TYPES of the lazily loaded chunk (`mesh-lazy.ts`).
+export * from './mesh-loader.ts';
+export type { MeshData, MeshInput, MeshPrimitive, MeshShaderHooks } from './mesh.ts';
+export type { MeshColorSource, MeshIndexArray, MeshLayout } from './mesh-geometry.ts';
+export type { MeshMaterialSpec, MeshMaterialType } from './mesh-material.ts';
+export type {
+  DirectionalLightSpec,
+  LightRig,
+  LightSpace,
+  LightingSpec,
+  MeshLighting,
+  ViewLights,
+} from './lighting.ts';

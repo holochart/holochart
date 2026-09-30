@@ -103,6 +103,7 @@ import type {
   MarginPush,
   SelectionQuery,
   SubplotInfo,
+  SubplotViewportOptions,
   TraceExtremes,
   TraceAppend,
   TraceModule,
@@ -614,6 +615,8 @@ export class Chart {
   /** The animation frame shown last (Plotly's `fullLayout._currentFrame`). */
   #currentFrame: string | null = null;
   #onRemap: ((order: readonly (number | undefined)[]) => void) | undefined;
+  /** Non-cartesian subplots' own 3D viewports (M6 scenes), see `#subplotViewport`. */
+  readonly #keyed = new Map<string, { viewport: Viewport; used: boolean }>();
   /** Secondary views of subplots' traces (E5.9 range slider thumbnails), see `mirror.ts`. */
   readonly #mirrors: SubplotMirrors = new SubplotMirrors({
     root: () => this.#requireRoot(),
@@ -1722,6 +1725,7 @@ export class Chart {
     for (const off of this.#rootListeners) off();
     this.#rootListeners = [];
     this.#mirrors.clear();
+    this.#keyed.clear();
     this.#root?.destroy();
     this.#root = undefined;
   }
@@ -1956,6 +1960,13 @@ export class Chart {
     const stages = new Set(plan.layout);
     for (const s of plan.traces.values()) for (const stage of s) stages.add(stage);
     this.#drawComponents(fullLayout, fullData, { stages, layout: layoutRan });
+    for (const [key, entry] of this.#keyed) {
+      if (!entry.used) {
+        this.#keyed.delete(key);
+        root.removeViewport(entry.viewport);
+      }
+      entry.used = false;
+    }
     root.invalidate();
 
     if (layoutRan) this.#captureInitialAxes();
@@ -2582,8 +2593,31 @@ export class Chart {
         });
       },
       invalidate: () => root.invalidate(),
+      subplotViewport: (key, options) => this.#subplotViewport(key, options),
       selectedPoints: this.#selectionOf(index),
     };
+  }
+
+  /** See `TracePlotContext.subplotViewport`: one 3D viewport per key, kept while asked for. */
+  #subplotViewport(key: string, options: SubplotViewportOptions): Viewport {
+    let entry = this.#keyed.get(key);
+    if (!entry) {
+      const viewport = this.#requireRoot().addViewport({
+        kind: '3d',
+        rect: options.rect,
+        projection: options.projection ?? 'perspective',
+        // After every cartesian subplot and mirror (1e6 + …), before the overlay.
+        order: 2e6,
+        name: `subplot-${key}`,
+      });
+      this.#keyed.set(key, (entry = { viewport, used: true }));
+    }
+    const vp = entry.viewport;
+    entry.used = true;
+    vp.setRect(options.rect);
+    vp.setProjection(options.projection ?? 'perspective');
+    vp.background = options.background ?? null;
+    return vp;
   }
 
   #disposeView(slot: TraceSlot): void {
@@ -2654,6 +2688,7 @@ export class Chart {
         vp?.remove(primitive, { dispose: true });
       },
       invalidate: () => root.invalidate(),
+      subplotViewport: (key, options) => this.#subplotViewport(key, options),
       chart: this,
       ...(this.#full ? { fullConfig: this.#full.fullConfig } : {}),
       traceModule: (type: string) => this.#registry.getTrace(type),

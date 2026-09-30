@@ -298,10 +298,13 @@ describe.skipIf(!devBuilt)('built dist/', () => {
     }
   });
 
-  it.skipIf(
-    !existsSync(path.join(WORKSPACE_ROOT, 'packages/holochart/dist/holochart.iife.min.js')),
-  )('the IIFE has no descriptions', () => {
-    const iife = windowsOf(read('packages/holochart/dist/holochart.iife.min.js'));
-    expect(ALL_DESCRIPTIONS.filter((d) => occurs(d, iife))).toEqual([]);
-  });
+  it.each(['holochart.iife.min.js', 'holochart-3d.iife.min.js'])(
+    '%s has no descriptions',
+    (file) => {
+      const built = path.join(WORKSPACE_ROOT, 'packages/holochart/dist', file);
+      if (!existsSync(built)) return;
+      const iife = windowsOf(readFileSync(built, 'utf8'));
+      expect(ALL_DESCRIPTIONS.filter((d) => occurs(d, iife))).toEqual([]);
+    },
+  );
 });

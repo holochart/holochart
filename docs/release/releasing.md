@@ -28,7 +28,8 @@ from a laptop.
    the release; the docs site should read its displayed version from
    `packages/holochart/package.json` (docs workstream, E19). Versioned docs per major are a later
    E19 item. jsDelivr and unpkg serve the new version automatically, e.g.
-   `https://cdn.jsdelivr.net/npm/@mk7s/holochart@<version>/dist/holochart.iife.min.js`.
+   `https://cdn.jsdelivr.net/npm/@mk7s/holochart@<version>/dist/holochart.iife.min.js` (and its 3D
+   add-on, `…/dist/holochart-3d.iife.min.js`).
 
 Local equivalents (for inspection only): `pnpm changeset status`, `pnpm release:pack` (writes
 tarballs to `release-artifacts/`; delete it afterwards).

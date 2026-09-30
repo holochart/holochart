@@ -1,6 +1,16 @@
 import { expect, test, type Page } from '@playwright/test';
 import { events, openInteraction, waitForEvent } from './helpers.ts';
-import { at, cancelOn, expectColor, level, maxRects, trackRects, type RGB } from './hierarchy.ts';
+import {
+  at,
+  cancelOn,
+  clickUntil,
+  clickUntilEvent,
+  expectColor,
+  level,
+  maxRects,
+  trackRects,
+  type RGB,
+} from './hierarchy.ts';
 
 /**
  * Icicle drill-down on `_dev/interaction-icicle` (plan E13.4, E20.4): hover labels and events per
@@ -65,25 +75,20 @@ test('clicking a cell drills in with a transition; the path bar and the entry go
   await expectColor(page, await pt(page, P.pathbar), WHITE);
   expect(await maxRects(page)).toBe(8);
 
-  // Clicks during a transition don't drill: let it end.
-  await page.waitForTimeout(900);
+  // Clicks during a transition do nothing: retry until one lands after it.
   await events(page, true);
   const bar = await pt(page, P.pathbar);
-  await page.mouse.click(bar.x, bar.y);
+  await clickUntilEvent(page, bar, 'icicleclick');
   const up = await waitForEvent(page, 'icicleclick');
   expect(up.payload).toMatchObject({ nextLevel: 'Eve', points: [{ label: 'Eve' }] });
   await expect.poll(() => level(page)).toBe('Eve');
   await expectColor(page, await pt(page, P.cain), CAIN);
-  await page.waitForTimeout(900);
 
   // Back in, then up again from the entry itself.
-  await page.mouse.click(seth.x, seth.y);
-  await expect.poll(() => level(page)).toBe('Seth');
+  await clickUntil(page, seth, async () => (await level(page)) === 'Seth');
   await expectColor(page, await pt(page, P.sethDrilled), SETH);
-  await page.waitForTimeout(900);
   const entry = await pt(page, P.sethDrilled);
-  await page.mouse.click(entry.x, entry.y);
-  await expect.poll(() => level(page)).toBe('Eve');
+  await clickUntil(page, entry, async () => (await level(page)) === 'Eve');
 });
 
 test('an icicleclick listener returning false cancels the drill', async ({ page }) => {

@@ -4,7 +4,7 @@ import { defineConfig } from '@playwright/test';
  * Bundle smoke test (plan E0.2, ADR-015): loads the self-contained IIFE build of `@mk7s/holochart`
  * with a classic `<script>` tag in headless Chromium (software GL via SwiftShader) and checks the
  * `window.Holochart` global, and that text draws with the built-in default font from the files
- * next to the script (E2.18). `esm-fonts.spec.ts` checks the same font through an app bundler's
+ * next to the script (E2.18); `iife-3d.spec.ts` adds the 3D add-on script after it. `esm-fonts.spec.ts` checks the same font through an app bundler's
  * lazy chunks (needs every package built). Run with `pnpm test:bundle`, which builds the package
  * first.
  */

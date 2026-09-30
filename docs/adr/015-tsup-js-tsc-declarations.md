@@ -43,6 +43,16 @@ and the separate `tsc --emitDeclarationOnly` step.
   "decided with that build" follow-up: bundling three is acceptable for the script-tag build only,
   because script-tag users cannot share a three instance with Holochart anyway (no global build of
   three exists). Bundler users get the ESM build with `three` as a peer.
+- **3D add-on (M6)**: the script-tag build is split in two. `holochart.iife.min.js` is the bundle
+  without the 3D package (`src/iife.ts`); `dist/holochart-3d.iife.min.js` (`src/iife-3d.ts`),
+  loaded after it, registers the 3D scene and traces into its registry and adds their exports to
+  `window.Holochart`. The add-on bundles only 3D code: `three`, core, the runtime, traces-basic and
+  render are external and mapped to the main script's instances (`window.Holochart`,
+  `Holochart.render`, and an internal handle `Holochart.__iife` with the three.js classes the
+  add-on uses), so a page has one three.js and one registry. render's lazily loaded 3D chunks are
+  inlined into the add-on, and the main script's loaders get them from it. The build fails when
+  the add-on imports a name the main script doesn't share, bundles anything but 3D code, or when 3D
+  code ends up in the main script (`scripts/build/iife-split.ts`).
 - `exports` maps keep `source` first, then `types`, then `import`.
 - `tsc --noEmit` remains the type checker (`pnpm typecheck`); the build does not replace it.
 - Verification: a throwaway consumer project with `skipLibCheck: false` type-checks against the
@@ -74,7 +84,8 @@ and the separate `tsc --emitDeclarationOnly` step.
 - Optional: api-extractor on top of the bundled `.d.ts` for API reports (E21.1), and
   `publint` / `@arethetypeswrong/core` (both tsdown integrations) before the first publish (E21.3).
 - A size budget for the IIFE once real traces land (E23).
-- If a per-trace or "lite" IIFE is needed, add entries to `packages/holochart/tsdown.config.ts`.
+- If a per-trace or "lite" IIFE is needed, add entries to `packages/holochart/tsdown.config.ts`
+  (the 3D add-on is the pattern for add-on scripts that share the main script's instances).
 
 ## Alternatives considered
 
