@@ -778,7 +778,10 @@ export class MeshPrimitive implements Primitive<MeshData>, PickablePrimitive {
       if (hasColor || this.#source !== 'uniform') m.color.setRGB(1, 1, 1);
       else m.color.setRGB(uniform[0], uniform[1], uniform[2], SRGBColorSpace);
       m.opacity = u.uOpacity.value * (!hasColor && this.#source === 'uniform' ? uniform[3] : 1);
-      const threeDefines = (m.defines ??= {}) as Record<string, unknown>;
+      // Older @types/three (the minimum supported 0.180) don't declare `defines` on non-shader
+      // materials; three.js reads it at runtime on every material.
+      const withDefines = m as { defines?: Record<string, unknown> };
+      const threeDefines = (withDefines.defines ??= {});
       if (setDefine(threeDefines, 'HC_CLIP', d.clip !== null)) m.needsUpdate = true;
     }
     this.object.castShadow = d.castShadow;

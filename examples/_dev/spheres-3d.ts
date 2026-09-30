@@ -8,6 +8,7 @@ import {
   type Markers3D,
   type SphereSet,
 } from '@mk7s/holochart-render';
+import { createReadout, expectValue } from '../_lib/readout.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -84,11 +85,7 @@ export function run(el: HTMLElement): ExampleHandle {
   place(left.camera, 0.55, 0.3, 5.4);
   place(right.camera, -0.5, 0.5);
 
-  const readout = document.createElement('div');
-  readout.style.cssText =
-    'position:absolute;left:8px;bottom:8px;padding:2px 6px;font:12px/1.4 monospace;' +
-    'background:rgba(255,255,255,.9);color:#223';
-  el.appendChild(readout);
+  const readout = createReadout(el, 'left');
 
   const owned: (Line3D | Markers3D | SphereSet)[] = [];
   let disposed = false;
@@ -205,6 +202,12 @@ export function run(el: HTMLElement): ExampleHandle {
     readout.textContent =
       `pick: sphere ${hit ? hit.pointIndex : '–'}` +
       ` · glass ${glassHit?.traceIndex === 1 ? glassHit.pointIndex : '–'}`;
+    expectValue('spheres-3d pick', hit?.pointIndex, 64);
+    expectValue(
+      'spheres-3d glass pick',
+      glassHit?.traceIndex === 1 ? glassHit.pointIndex : undefined,
+      0,
+    );
   });
 
   return {

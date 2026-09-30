@@ -1,5 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import pngjs from 'pngjs';
+import { events } from './helpers.ts';
 
 /**
  * Pixel and state probes shared by the treemap and icicle specs: container points of the
@@ -100,4 +101,27 @@ export async function cancelOn(page: Page, name: string): Promise<void> {
     w.__off?.();
     w.__off = w.__interaction.chart.on(event, () => false);
   }, name);
+}
+
+/**
+ * Click `p` until `done()` holds: a click during a drill transition is ignored (as in plotly.js,
+ * without events), and how long the 750 ms transition takes in wall time depends on the machine,
+ * so retry instead of sleeping a fixed time.
+ */
+export async function clickUntil(page: Page, p: Pt, done: () => Promise<boolean>): Promise<void> {
+  const deadline = Date.now() + 10_000;
+  for (;;) {
+    await page.mouse.click(p.x, p.y);
+    const until = Date.now() + 250;
+    while (Date.now() < until) {
+      if (await done()) return;
+      await page.waitForTimeout(25);
+    }
+    if (Date.now() > deadline) throw new Error(`clickUntil: no effect after 10 s at (${p.x}, ${p.y})`);
+  }
+}
+
+/** Click `p` until an event called `name` is logged (see {@link clickUntil}). */
+export async function clickUntilEvent(page: Page, p: Pt, name: string): Promise<void> {
+  await clickUntil(page, p, async () => (await events(page)).some((e) => e.name === name));
 }

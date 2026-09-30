@@ -334,7 +334,7 @@ describe('MeshPrimitive material types (E8.7)', () => {
   it('three.js materials clip through an injected chunk', () => {
     const p = mesh({ material: { type: 'lambert' }, clip: { min: [0, 0, 0], max: [1, 1, 1] } });
     const m = p.material;
-    expect(m.defines?.['HC_CLIP']).toBe('');
+    expect((m as { defines?: Record<string, unknown> }).defines?.['HC_CLIP']).toBe('');
     const shader = {
       uniforms: {},
       vertexShader: '#include <begin_vertex>',

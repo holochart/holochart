@@ -5,6 +5,7 @@ import {
   loadLinesMarkers3D,
   type Line3D,
 } from '@mk7s/holochart-render';
+import { createReadout, expectValue } from '../_lib/readout.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -85,11 +86,7 @@ export function run(el: HTMLElement): ExampleHandle {
   const distance = 4.4;
   orbit(camera, azimuth, elevation, distance);
 
-  const readout = document.createElement('div');
-  readout.style.cssText =
-    'position:absolute;right:8px;bottom:8px;padding:2px 6px;font:12px/1.4 monospace;' +
-    'background:rgba(255,255,255,.9);color:#223';
-  el.appendChild(readout);
+  const readout = createReadout(el, 'right');
 
   const lines: Line3D[] = [];
   let disposed = false;
@@ -185,6 +182,7 @@ export function run(el: HTMLElement): ExampleHandle {
     const py = ((1 - at.y) / 2) * root.size.height;
     const hit = (await picker.pick(px, py, { radius: 1 }))[0];
     readout.textContent = hit ? `pick: helix point ${hit.pointIndex}` : 'pick: none';
+    expectValue('lines-3d pick', hit?.pointIndex, 40);
   });
 
   return {

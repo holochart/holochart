@@ -7,6 +7,7 @@ import {
   type Markers3D,
 } from '@mk7s/holochart-render';
 import { gaussian, rng } from '../_lib/rng.ts';
+import { createReadout, expectValue } from '../_lib/readout.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -66,11 +67,7 @@ export function run(el: HTMLElement): ExampleHandle {
   const camera = viewport.camera as PerspectiveCamera;
   orbit(camera, 0.3, 0.38, 4.8);
 
-  const readout = document.createElement('div');
-  readout.style.cssText =
-    'position:absolute;right:8px;bottom:8px;padding:2px 6px;font:12px/1.4 monospace;' +
-    'background:rgba(255,255,255,.9);color:#223';
-  el.appendChild(readout);
+  const readout = createReadout(el, 'right');
 
   const owned: (Line3D | Markers3D)[] = [];
   let disposed = false;
@@ -170,6 +167,12 @@ export function run(el: HTMLElement): ExampleHandle {
     readout.textContent =
       (hit ? `pick: ${SYMBOLS[Math.floor(hit.pointIndex / perRow)]} #${hit.pointIndex}` : 'none') +
       ` · cloud #${cloudHit?.traceIndex === 1 ? cloudHit.pointIndex : '–'} (nearest #${nearest})`;
+    expectValue('markers-3d diamond pick', hit?.pointIndex, 15);
+    expectValue(
+      'markers-3d cloud pick',
+      cloudHit?.traceIndex === 1 ? cloudHit.pointIndex : undefined,
+      nearest,
+    );
   });
 
   return {

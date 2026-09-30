@@ -378,9 +378,12 @@ class RectView implements TraceView<RectCalc> {
       event.y,
     );
     if (!click) return false;
+    // Like plotly.js (`gd._transitioning`): a click during a drill transition does nothing, not
+    // even its events (which would announce a drill that doesn't happen).
+    if (this.#clock.running) return true;
     const type = trace.type === 'icicle' ? 'icicleclick' : 'treemapclick';
     const proceed = emitNodeClick(chart, type, click.point, click.nextLevel);
-    if (proceed && click.drills && !this.#clock.running) {
+    if (proceed && click.drills) {
       this.#pending = click.nextLevel;
       drillTo(chart, index, click.nextLevel);
     }

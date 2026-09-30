@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import pngjs from 'pngjs';
 import { events, openInteraction, waitForEvent } from './helpers.ts';
+import { clickUntilEvent } from './hierarchy.ts';
 
 const { PNG } = pngjs;
 
@@ -173,9 +174,10 @@ test('clicking a sector drills into it with a transition; the center goes back u
   // The zoom animated: the six leaving sectors were drawn with Seth's three (wedge + rim each).
   expect(await maxArcs(page)).toBe(18);
 
+  // Clicks during the transition do nothing: retry until one lands after it.
   await events(page, true);
   const center = await at(page, 0, 0);
-  await page.mouse.click(center.x + 10, center.y + 10);
+  await clickUntilEvent(page, { x: center.x + 10, y: center.y + 10 }, 'sunburstclick');
   const up = await waitForEvent(page, 'sunburstclick');
   expect(up.payload).toMatchObject({ nextLevel: 'Eve', points: [{ label: 'Seth' }] });
   await expect.poll(() => level(page)).toBe('Eve');
