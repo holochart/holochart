@@ -7,32 +7,45 @@ Plan E21.1 and §5 ("Size tracking"). Budgets are checked in CI by the `bundle s
 Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's unit), and
 **exclude three.js** unless stated.
 
-| Entry                                        | What it measures                                                                            | Budget  |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------- | ------- |
-| `partial: core + scatter`                    | `createChart` + `register` from runtime, `scatter` trace                                    | 157 kB  |
-| `text engine (lazy chunk …)`                 | the SDF text engine chunk, loaded on first text use                                         | 49 kB   |
-| `fill primitive (lazy chunk …)`              | fill primitive + earcut + exact fill rules, on first fill                                   | 9.4 kB  |
-| `animation (lazy chunk …)`                   | transitions, frames and `animate`, on first animation                                       | 6.4 kB  |
-| `line level of detail (lazy chunk …)`        | min/max pyramid for lines of 100k+ points, on first use                                     | 2.3 kB  |
-| `custom marker symbols … (lazy chunk)`       | SVG-path SDFs, image and glyph atlases, on first use                                        | 3.9 kB  |
-| `pattern fills (lazy chunk …)`               | Plotly's pattern rules, shader code and attribute writer, on first pattern                  | 2.25 kB |
-| `style rules and functions (lazy …)`         | `styleRules` and function-valued attributes, on first use                                   | 4 kB    |
-| `chart summaries and data table (…)`         | generated summaries and the visible data table (two chunks, summed)                         | 5.8 kB  |
-| `default font, regular face (lazy …)`        | TeX Gyre Heros Regular chunk, loaded on first text use                                      | 95 kB   |
-| `default font, bold face (lazy …)`           | the bold face chunk, loaded when bold text is drawn                                         | 95 kB   |
-| `default font, italic face (lazy …)`         | the italic face chunk, loaded when italic text is drawn                                     | 98 kB   |
-| `default font, bold italic face (…)`         | the bold italic face chunk                                                                  | 95 kB   |
-| `partial: basic`                             | runtime + components + traces-basic + themes (all exports)                                  | 248 kB  |
-| `controls views (lazy chunks of basic)`      | menus, sliders, range selector/slider, selections views                                     | 16 kB   |
-| `keyboard navigation and legend keys (…)`    | data keyboard navigation (first focus) and legend keys (two chunks)                         | 5.5 kB  |
-| `legend scrolling (lazy chunk of basic)`     | scrolled legend viewport, scrollbar, wheel/drag/touch/keyboard scrolling, on first overflow | 1.8 kB  |
-| `@mk7s/holochart (full, ESM)`                | everything the full bundle exports                                                          | 475 kB  |
-| `sankey flow particles (lazy chunk of full)` | the `link.flow` particle primitive, on first sankey flow                                    | 3.6 kB  |
-| `@mk7s/holochart IIFE (includes three)`      | `dist/holochart.iife.min.js` as shipped, **with** three.js                                  | 690 kB  |
-| each `@mk7s/holochart-*` package             | `export *` of that package                                                                  | report  |
+| Entry                                        | What it measures                                                                             | Budget  |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------- | ------- |
+| `partial: core + scatter`                    | `createChart` + `register` from runtime, `scatter` trace                                     | 157 kB  |
+| `text engine (lazy chunk …)`                 | the SDF text engine chunk, loaded on first text use                                          | 49 kB   |
+| `fill primitive (lazy chunk …)`              | fill primitive + earcut + exact fill rules, on first fill                                    | 9.4 kB  |
+| `animation (lazy chunk …)`                   | transitions, frames and `animate`, on first animation                                        | 6.4 kB  |
+| `line level of detail (lazy chunk …)`        | min/max pyramid for lines of 100k+ points, on first use                                      | 2.3 kB  |
+| `custom marker symbols … (lazy chunk)`       | SVG-path SDFs, image and glyph atlases, on first use                                         | 3.9 kB  |
+| `pattern fills (lazy chunk …)`               | Plotly's pattern rules, shader code and attribute writer, on first pattern                   | 2.25 kB |
+| `style rules and functions (lazy …)`         | `styleRules` and function-valued attributes, on first use                                    | 4 kB    |
+| `chart summaries and data table (…)`         | generated summaries and the visible data table (two chunks, summed)                          | 5.8 kB  |
+| `default font, regular face (lazy …)`        | TeX Gyre Heros Regular chunk, loaded on first text use                                       | 95 kB   |
+| `default font, bold face (lazy …)`           | the bold face chunk, loaded when bold text is drawn                                          | 95 kB   |
+| `default font, italic face (lazy …)`         | the italic face chunk, loaded when italic text is drawn                                      | 98 kB   |
+| `default font, bold italic face (…)`         | the bold italic face chunk                                                                   | 95 kB   |
+| `partial: basic`                             | runtime + components + traces-basic + themes (all exports)                                   | 248 kB  |
+| `controls views (lazy chunks of basic)`      | menus, sliders, range selector/slider, selections views                                      | 16 kB   |
+| `keyboard navigation and legend keys (…)`    | data keyboard navigation (first focus) and legend keys (two chunks)                          | 5.5 kB  |
+| `legend scrolling (lazy chunk of basic)`     | scrolled legend viewport, scrollbar, wheel/drag/touch/keyboard scrolling, on first overflow  | 1.8 kB  |
+| `@mk7s/holochart (full, ESM)`                | everything the full bundle exports, 3D included                                              | 540 kB  |
+| `sankey flow particles (lazy chunk of full)` | the `link.flow` particle primitive, on first sankey flow                                     | 3.6 kB  |
+| `3D mesh primitive and lighting (lazy …)`    | mesh primitive, lighting, light rigs, material types, transparency sorting, on first 3D mesh | 11.7 kB |
+| `3D lines, sprites and spheres (lazy …)`     | 3D lines, sprite markers, sphere impostors, depth sorting, on first 3D lines or markers      | 10.7 kB |
+| `@mk7s/holochart IIFE, 2D (includes three)`  | `dist/holochart.iife.min.js` as shipped, **with** three.js: everything but 3D                | 690 kB  |
+| `@mk7s/holochart 3D add-on IIFE (…)`         | `dist/holochart-3d.iife.min.js` as shipped: the 3D package and render's 3D chunks            | 34 kB   |
+| each `@mk7s/holochart-*` package             | `export *` of that package                                                                   | report  |
 
 The IIFE budget is the full budget plus a 200 kB allowance for the bundled three.js (about
 170–190 kB min + gzip on its own; ADR-015). Per-package entries are reported but not gated.
+
+Since M6 the script-tag build is **split** (ADR-015): `holochart.iife.min.js` is 2D only (every
+package but `traces-3d`, and without render's 3D chunks), and pages with 3D charts add
+`holochart-3d.iife.min.js` after it. The add-on bundles only the 3D package and render's 3D
+chunks (inlined); three.js, core, the runtime, render and traces-basic are the main script's
+(`scripts/build/iife-split.ts`), so its row is exactly what 3D adds to a script-tag page. The main
+script carries the three.js classes the add-on uses (`packages/holochart/src/iife/three.ts`, ~3.8
+kB, mostly the mesh primitive's material types and lights). The ESM full bundle keeps the 3D
+package: its heavy code is in the two lazy 3D rows, loaded the first time a scene draws a mesh or
+3D lines and markers.
 
 An ESM entry's size is its **initial** download. Code an entry loads on demand with a dynamic
 `import()` is its **lazy** size, reported next to it: the SDF text engine (troika-three-text,
@@ -148,6 +161,27 @@ entry measures the whole package instead and the report adds a footnote.
 In CI, the job writes the table to the job summary, uploads `size.json` as the `size-report`
 artifact, compares with the latest successful `main` run, and posts or updates one PR comment
 (same-repo PRs only; fork PRs get a read-only token, so they get the job summary only).
+
+## Sizes after M6 wave 0: the script-tag split (2026-09-29)
+
+M6 wave 0 adds the 3D scene subplot (`traces-3d`) and render's lazily loaded 3D chunks (mesh,
+lighting and materials; 3D lines, sprites and spheres). The IIFE inlined all of it and reached
+708.8 kB against its 690 kB budget, and the 3D traces of waves 1–3 add more, so the script-tag
+build was split by decision into the 2D script and a 3D add-on (above). The full ESM budget was
+raised to 540 kB for M6 by decision. Measured with `pnpm size` locally (macOS; CI measures about
+0.3–0.5% more).
+
+| Entry                       | Before the split   | After     | Budget       |
+| --------------------------- | ------------------ | --------- | ------------ |
+| full, ESM                   | 468.53 kB          | 468.53 kB | 475 → 540 kB |
+| IIFE (2D, includes three)   | 708.8 kB (with 3D) | 681.45 kB | 690 kB       |
+| 3D add-on IIFE              | —                  | 30.83 kB  | 34 kB        |
+| 3D mesh primitive (lazy)    | 10.6 kB            | 10.6 kB   | 11.7 kB      |
+| 3D lines and markers (lazy) | 9.71 kB            | 9.71 kB   | 10.7 kB      |
+
+The 2D script without the shared three.js classes would be 677.65 kB (the pre-M6 size plus M6
+wave 0's 2D changes); sharing them costs 3.8 kB. The two scripts together (712.3 kB) are 3.5 kB
+more than the single script was.
 
 ## Sizes after M5 wave 2 (2026-09-28)
 

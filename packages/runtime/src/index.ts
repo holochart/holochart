@@ -50,6 +50,7 @@ export type {
   SubplotInfo,
   SubplotMirror,
   SubplotMirrorOptions,
+  SubplotViewportOptions,
   TemplateModule,
   TraceAppend,
   TraceCellRef,

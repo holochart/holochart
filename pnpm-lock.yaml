@@ -344,6 +344,9 @@ importers:
       '@mk7s/holochart-themes':
         specifier: workspace:*
         version: link:../themes
+      '@mk7s/holochart-traces-3d':
+        specifier: workspace:*
+        version: link:../traces-3d
       '@mk7s/holochart-traces-basic':
         specifier: workspace:*
         version: link:../traces-basic
@@ -439,6 +442,34 @@ importers:
         specifier: workspace:*
         version: link:../core
     devDependencies:
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.23.0(typescript@6.0.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/traces-3d:
+    dependencies:
+      '@mk7s/holochart-core':
+        specifier: workspace:*
+        version: link:../core
+      '@mk7s/holochart-render':
+        specifier: workspace:*
+        version: link:../render
+      '@mk7s/holochart-runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@mk7s/holochart-traces-basic':
+        specifier: workspace:*
+        version: link:../traces-basic
+    devDependencies:
+      '@types/three':
+        specifier: 'catalog:'
+        version: 0.186.0
+      three:
+        specifier: 'catalog:'
+        version: 0.186.0
       tsdown:
         specifier: 'catalog:'
         version: 0.23.0(typescript@6.0.3)

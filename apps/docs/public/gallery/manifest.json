@@ -291,6 +291,18 @@
       "thumbnailSize": { "width": 640, "height": 387 }
     },
     {
+      "id": "_dev/lines-3d",
+      "title": "3D lines: joins, dashes, near plane",
+      "description": "Screen-space 3D polylines: per-vertex colors, joins, dashes, gaps, depth and near-plane clipping.",
+      "tags": ["dev", "primitives", "lines", "3d"],
+      "category": "_dev",
+      "traceTypes": [],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/_dev/lines-3d.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "_dev/lines-joins-dashes",
       "title": "Lines: joins, caps & dashes",
       "description": "Miter/round/bevel joins × butt/round/square caps, and Plotly dash styles at widths 1–8 px.",
@@ -327,6 +339,18 @@
       "thumbnailSize": { "width": 560, "height": 360 }
     },
     {
+      "id": "_dev/markers-3d",
+      "title": "3D markers: symbols, depth, sorting",
+      "description": "Screen-facing SDF sprites of every scatter3d symbol, depth-interleaved with a line, and a depth-sorted translucent cloud.",
+      "tags": ["dev", "primitives", "markers", "3d"],
+      "category": "_dev",
+      "traceTypes": [],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/_dev/markers-3d.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "_dev/markers-colorscale",
       "title": "Markers colored by a colorscale",
       "description": "100k seeded markers whose fill comes from a 256-texel Viridis LUT via cmin/cmax uniforms.",
@@ -361,6 +385,54 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/_dev/matches-subplots.webp",
       "thumbnailSize": { "width": 640, "height": 404 }
+    },
+    {
+      "id": "_dev/mesh-lighting",
+      "title": "Mesh lighting",
+      "description": "Plotly's lighting model: ambient, diffuse, specular, roughness, fresnel, light position, epsilons.",
+      "tags": ["dev", "primitives", "3d", "mesh", "lighting"],
+      "category": "_dev",
+      "traceTypes": [],
+      "size": { "width": 800, "height": 600 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/_dev/mesh-lighting.webp",
+      "thumbnailSize": { "width": 640, "height": 480 }
+    },
+    {
+      "id": "_dev/mesh-materials",
+      "title": "Mesh materials",
+      "description": "Material types on the mesh primitive: plotly, flat, basic, lambert, phong, standard, physical, toon, matcap.",
+      "tags": ["dev", "primitives", "3d", "mesh", "materials"],
+      "category": "_dev",
+      "traceTypes": [],
+      "size": { "width": 720, "height": 600 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/_dev/mesh-materials.webp",
+      "thumbnailSize": { "width": 640, "height": 533 }
+    },
+    {
+      "id": "_dev/mesh-shading",
+      "title": "Mesh shading",
+      "description": "Mesh primitive: smooth vs flat shading, vertex vs cell intensity, double-sided and culled faces.",
+      "tags": ["dev", "primitives", "3d", "mesh"],
+      "category": "_dev",
+      "traceTypes": [],
+      "size": { "width": 720, "height": 480 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/_dev/mesh-shading.webp",
+      "thumbnailSize": { "width": 640, "height": 427 }
+    },
+    {
+      "id": "_dev/mesh-transparency",
+      "title": "Mesh transparency",
+      "description": "Translucent meshes composited back to front: objects and triangles sorted by depth.",
+      "tags": ["dev", "primitives", "3d", "mesh", "transparency"],
+      "category": "_dev",
+      "traceTypes": [],
+      "size": { "width": 780, "height": 300 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/_dev/mesh-transparency.webp",
+      "thumbnailSize": { "width": 640, "height": 246 }
     },
     {
       "id": "_dev/picking-3d",
@@ -471,6 +543,90 @@
       "thumbnailSize": { "width": 640, "height": 320 }
     },
     {
+      "id": "_dev/scene-aspect",
+      "title": "3D scene: aspect modes",
+      "description": "Three scenes with aspectmode cube, data and manual (2 : 1 : 0.5), side by side.",
+      "tags": ["dev", "scene", "3d", "aspect", "subplots"],
+      "category": "_dev",
+      "traceTypes": ["scenepoints"],
+      "size": { "width": 900, "height": 360 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/_dev/scene-aspect.webp",
+      "thumbnailSize": { "width": 640, "height": 256 }
+    },
+    {
+      "id": "_dev/scene-axis-types",
+      "title": "3D scene: log, date and category axes",
+      "description": "A scene with a log x axis, a date y axis and a category z axis.",
+      "tags": ["dev", "scene", "3d", "log", "date", "category"],
+      "category": "_dev",
+      "traceTypes": ["scenepoints"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/_dev/scene-axis-types.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "_dev/scene-default",
+      "title": "3D scene: default camera",
+      "description": "A 3D scene with the default camera and the default look: far walls, grids, tick labels and axis titles.",
+      "tags": ["dev", "scene", "3d", "camera"],
+      "category": "_dev",
+      "traceTypes": ["scenepoints"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/_dev/scene-default.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "_dev/scene-orthographic",
+      "title": "3D scene: orthographic camera",
+      "description": "A surface-like grid of points seen through an orthographic camera, y reversed.",
+      "tags": ["dev", "scene", "3d", "camera", "orthographic"],
+      "category": "_dev",
+      "traceTypes": ["scenepoints"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/_dev/scene-orthographic.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "_dev/scene-plotly-classic",
+      "title": "3D scene: Plotly look",
+      "description": "The 3D scene with template plotly-classic: Plotly defaults, one wall filled.",
+      "tags": ["dev", "scene", "3d", "themes"],
+      "category": "_dev",
+      "traceTypes": ["scenepoints"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/_dev/scene-plotly-classic.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "_dev/scene-subplots",
+      "title": "3D scene: several scenes and a 2D subplot",
+      "description": "Two 3D scenes with their own cameras in grid cells, next to a cartesian scatter.",
+      "tags": ["dev", "scene", "3d", "subplots", "grid"],
+      "category": "_dev",
+      "traceTypes": ["scatter", "scenepoints"],
+      "size": { "width": 900, "height": 420 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/_dev/scene-subplots.webp",
+      "thumbnailSize": { "width": 640, "height": 299 }
+    },
+    {
+      "id": "_dev/scene-walls",
+      "title": "3D scene: walls and axis styling",
+      "description": "Scene background, tinted walls, axis lines, mirrored lines, tick marks and styled titles.",
+      "tags": ["dev", "scene", "3d", "styling"],
+      "category": "_dev",
+      "traceTypes": ["scenepoints"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/_dev/scene-walls.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "_dev/selections-lasso",
       "title": "Selections: restored lasso on a date axis",
       "description": "A path (lasso) selection given in layout.selections selects points of a date-axis scatter on load.",
@@ -553,6 +709,18 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/_dev/sliders-sweep.webp",
       "thumbnailSize": { "width": 640, "height": 420 }
+    },
+    {
+      "id": "_dev/spheres-3d",
+      "title": "3D spheres: lit impostors",
+      "description": "Ray-cast sphere impostors: px and world sizing, colorscale, translucency, intersections with lines and sprites, perspective and orthographic.",
+      "tags": ["dev", "primitives", "markers", "3d"],
+      "category": "_dev",
+      "traceTypes": [],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/_dev/spheres-3d.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
       "id": "_dev/spikes-hover",

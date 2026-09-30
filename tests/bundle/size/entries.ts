@@ -70,7 +70,10 @@ export const FONT_PARTS = ['font-regular', 'font-bold', 'font-italic', 'font-bol
  * flow particles (E13.5c: traces-hier's `dist/flow-*.js`), the accessibility code (E17.2, E17.3:
  * runtime's `dist/summary-*.js` and `dist/table-view-*.js`), the keyboard access (E6.5, E17.4:
  * runtime's `dist/keyboard-*.js`, components' `dist/legend-keys-*.js`), the legend scrolling
- * (E5.2: components' `dist/legend-scroll-*.js`) and the {@link FONT_PARTS}.
+ * (E5.2: components' `dist/legend-scroll-*.js`), the 3D mesh primitive with its lighting, material
+ * types and transparency sorting (E2.11, E8.7, E2.14: render's `dist/mesh-lazy-*.js`), the 3D
+ * lines, sprites and spheres (E14.2: render's `dist/lines-markers-3d-*.js`) and the
+ * {@link FONT_PARTS}.
  */
 export const LAZY_PARTS = [
   'fill',
@@ -84,6 +87,8 @@ export const LAZY_PARTS = [
   'a11y',
   'keyboard',
   'legend-scroll',
+  'mesh',
+  'lines-markers-3d',
   ...FONT_PARTS,
 ] as const;
 
@@ -164,6 +169,23 @@ const KEYBOARD_MODULE =
 const LEGEND_SCROLL_MODULE =
   /[\\/]components[\\/](?:dist[\\/]legend-scroll-[\w-]+\.js|src[\\/]legend[\\/]legend-scroll\.ts)$/;
 
+/**
+ * render's lazily loaded 3D mesh code (E2.11, E8.7, E2.14: the mesh primitive and its shaders,
+ * normals, lighting and light rigs, material types, transparency sorting): built
+ * (`dist/mesh-lazy-*.js`), or from sources (`mesh-loader.ts` is in the initial chunk).
+ */
+const MESH_MODULE =
+  /[\\/]render[\\/](?:dist[\\/]mesh-lazy-[\w-]+\.js|src[\\/]primitives[\\/](?:mesh(?:-lazy|-geometry|-material|\.glsl)?|lighting|transparency)\.ts)$/;
+
+/**
+ * render's lazily loaded 3D lines, sprites and spheres (E14.2: the 3D line primitive and shaders,
+ * `Markers3D`, the sphere impostors, depth sorting and 3D blending): built
+ * (`dist/lines-markers-3d-*.js`), or from sources (`lines-markers-3d-loader.ts` is in the initial
+ * chunk).
+ */
+const LINES_MARKERS_3D_MODULE =
+  /[\\/]render[\\/](?:dist[\\/]lines-markers-3d-[\w-]+\.js|src[\\/]primitives[\\/](?:lines-markers-3d|line3d(?:-math|\.glsl)?|markers3d|spheres(?:\.glsl)?|depth-sort|blend3d)\.ts)$/;
+
 /** The {@link LAZY_PARTS} entry a module belongs to, if any. */
 export function lazyPartOf(moduleId: string): string | undefined {
   if (FILL_MODULE.test(moduleId)) return 'fill';
@@ -177,6 +199,8 @@ export function lazyPartOf(moduleId: string): string | undefined {
   if (A11Y_MODULE.test(moduleId)) return 'a11y';
   if (KEYBOARD_MODULE.test(moduleId)) return 'keyboard';
   if (LEGEND_SCROLL_MODULE.test(moduleId)) return 'legend-scroll';
+  if (MESH_MODULE.test(moduleId)) return 'mesh';
+  if (LINES_MARKERS_3D_MODULE.test(moduleId)) return 'lines-markers-3d';
   const face = FONT_MODULE.exec(moduleId)?.[1];
   return face ? `font-${face}` : undefined;
 }
@@ -211,6 +235,8 @@ const PACKAGES: readonly SizeEntry[] = [
     name: '@mk7s/holochart-traces-hier',
     imports: [{ pkg: 'traces-hier' }],
   },
+  // Report-only (M6 wave 0): the 3D scene and (from wave 1) the 3D traces, never in `basic`.
+  { id: 'traces-3d', name: '@mk7s/holochart-traces-3d', imports: [{ pkg: 'traces-3d' }] },
   { id: 'themes', name: '@mk7s/holochart-themes', imports: [{ pkg: 'themes' }] },
   { id: 'express', name: '@mk7s/holochart-express', imports: [{ pkg: 'express' }] },
   // Report-only (M5 wave 0): every locale module at once; never in `basic` or the full bundle.
@@ -387,8 +413,10 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     id: 'full',
     name: '@mk7s/holochart (full, ESM)',
     // Raised from 450 kB to 475 kB for M5 by decision (M5 wave 1: treemap/icicle, Express hierarchy,
-    // accessibility, sankey flow: ~451.6 kB on CI).
-    limit: '475 kB',
+    // accessibility, sankey flow: ~451.6 kB on CI), and to 540 kB for M6 by decision (the 3D scene
+    // and, from wave 1, the 3D traces are in the full bundle; their heavy render code is in the lazy
+    // rows below).
+    limit: '540 kB',
     imports: [{ pkg: 'holochart' }],
   },
   {
@@ -403,14 +431,48 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     lazyPart: 'flow',
   },
   {
+    // Plan E2.11 / E8.7 / E2.14 (M6 wave 0): the 3D mesh primitive — Plotly's lighting model and
+    // shaders, normals with Plotly's epsilons, colorscale intensity, light rigs (`layout.lighting`:
+    // shadows, environments), the three.js material types and transparency sorting — loaded with
+    // a dynamic import() the first time a 3D scene draws a mesh. Measured 10.6 kB when split out
+    // (2026-09-28); budget = measured + ~10%.
+    id: 'mesh-lazy',
+    name: '3D mesh primitive and lighting (lazy chunk of full)',
+    limit: '11.7 kB',
+    lazyOf: 'full',
+    lazyPart: 'mesh',
+  },
+  {
+    // Plan E14.2 (M6 wave 0, render part of scatter3d): 3D lines (near-plane clipping, joins,
+    // dashes, picking), sprite markers with 3D blending and depth sorting, and the lit sphere
+    // impostors, loaded with a dynamic import() the first time a 3D trace draws lines or markers.
+    // Measured 9.72 kB when split out (2026-09-28); budget = measured + ~10%.
+    id: 'lines-markers-3d-lazy',
+    name: '3D lines, sprites and spheres (lazy chunk of full)',
+    limit: '10.7 kB',
+    lazyOf: 'full',
+    lazyPart: 'lines-markers-3d',
+  },
+  {
     // Self-contained script-tag build: the full bundle plus three.js (~170-190 kB min+gz on its
     // own). Budget = full + a three.js allowance of ~200 kB: 650 kB, raised to 690 kB for M5 by
     // decision (M5 wave 1: ~666.8 kB on CI; the IIFE inlines every lazy chunk, so a11y summaries and
-    // tables, sankey flow and patterns count here in full).
+    // tables, sankey flow and patterns count here in full). M6 splits the script tag build by
+    // decision: this script is 2D only (everything but the 3D package, which is the add-on below;
+    // ~681.5 kB locally, with the few three.js classes the add-on shares).
     id: 'iife',
-    name: '@mk7s/holochart IIFE (includes three)',
+    name: '@mk7s/holochart IIFE, 2D (includes three)',
     limit: '690 kB',
     file: 'packages/holochart/dist/holochart.iife.min.js',
+  },
+  {
+    // M6: the 3D add-on of the script-tag build, loaded after the IIFE above: the 3D package and
+    // render's 3D chunks (inlined), using the main script's three.js, runtime and render (never
+    // copies of them). Measured 30.9 kB when split out (2026-09-29); budget = measured + ~10%.
+    id: 'iife-3d',
+    name: '@mk7s/holochart 3D add-on IIFE (after the IIFE)',
+    limit: '34 kB',
+    file: 'packages/holochart/dist/holochart-3d.iife.min.js',
   },
 ];
 

@@ -40,6 +40,7 @@ export type {
   ModebarButtonKind,
   ModebarCustomButton,
   ModebarResolveInput,
+  ModebarSubplotButton,
 } from './buttons.ts';
 export { isModebarIcon, modebarIcons } from './icons.ts';
 export type { ModebarIcon } from './icons.ts';

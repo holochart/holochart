@@ -1,73 +1,25 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { dirname, extname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { expect, test, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { expect, test } from '@playwright/test';
+import {
+  BUNDLE,
+  DIST,
+  fontRequests,
+  mapSources,
+  ORIGIN,
+  requireBuilt,
+  SCRIPT_PATH,
+  servePage,
+} from './iife-page.ts';
 
 /**
  * Smoke test for the CDN build: `packages/holochart/dist/holochart.iife.min.js` must be
  * self-contained (three.js bundled, no imports or extra network requests) and expose the full API
- * as `window.Holochart`. Its only other files are the built-in default font's faces in
- * `dist/fonts/` (plan E2.18), fetched next to the script when text first needs them.
+ * but the 3D package (the `holochart-3d.iife.min.js` add-on, `iife-3d.spec.ts`) as
+ * `window.Holochart`. Its only other files are the built-in default font's faces in `dist/fonts/`
+ * (plan E2.18), fetched next to the script when text first needs them.
  */
-const DIST = resolve(dirname(fileURLToPath(import.meta.url)), '../../packages/holochart/dist');
-const BUNDLE = 'holochart.iife.min.js';
-const ORIGIN = 'http://holochart.test';
-/** Served from a subfolder, like a CDN path, so fonts must resolve relative to the script. */
-const SCRIPT_PATH = `/cdn/holochart@0/dist/${BUNDLE}`;
-
-test.beforeAll(() => {
-  if (!existsSync(resolve(DIST, BUNDLE))) {
-    throw new Error(`${BUNDLE} not found in ${DIST}; run \`pnpm test:bundle\` (it builds first).`);
-  }
-});
-
-const CONTENT_TYPES: Record<string, string> = {
-  '.map': 'application/json',
-  '.otf': 'font/otf',
-  '.txt': 'text/plain',
-  '.js': 'text/javascript',
-};
-
-/**
- * Serve the page and `dist/` (under {@link SCRIPT_PATH}'s folder) from {@link ORIGIN}; every
- * other request is aborted, so the page has no network access beyond its own files. Returns the
- * errors and requested URLs as they come in.
- */
-async function servePage(page: Page): Promise<{ errors: string[]; requests: string[] }> {
-  const errors: string[] = [];
-  const requests: string[] = [];
-  page.on('pageerror', (err) => errors.push(err.message));
-  page.on('console', (msg) => {
-    if (msg.type() === 'error') errors.push(msg.text());
-  });
-  page.on('request', (req) => requests.push(req.url()));
-
-  const distURL = SCRIPT_PATH.slice(0, SCRIPT_PATH.lastIndexOf('/') + 1);
-  await page.route('**/*', async (route) => {
-    const url = new URL(route.request().url());
-    if (url.origin !== ORIGIN) {
-      await route.abort('internetdisconnected');
-      return;
-    }
-    if (url.pathname === '/') {
-      await route.fulfill({
-        contentType: 'text/html',
-        body: `<!doctype html><html><body><div id="root"></div><script src="${SCRIPT_PATH}"></script></body></html>`,
-      });
-      return;
-    }
-    const file = resolve(DIST, `./${url.pathname.slice(distURL.length)}`);
-    if (!url.pathname.startsWith(distURL) || !file.startsWith(DIST) || !existsSync(file)) {
-      await route.fulfill({ status: 404, body: 'not found' });
-      return;
-    }
-    await route.fulfill({
-      contentType: CONTENT_TYPES[extname(file)] ?? 'application/octet-stream',
-      body: readFileSync(file),
-    });
-  });
-  return { errors, requests };
-}
+test.beforeAll(() => requireBuilt(BUNDLE));
 
 test('IIFE exposes window.Holochart and renders with the bundled three.js', async ({ page }) => {
   const { errors, requests } = await servePage(page);
@@ -151,18 +103,47 @@ test('IIFE exposes window.Holochart and renders with the bundled three.js', asyn
   expect(fontRequests(requests)).toEqual([]);
 
   // The sourcemap is served next to the bundle and points at TypeScript sources.
-  const map = JSON.parse(readFileSync(resolve(DIST, `${BUNDLE}.map`), 'utf8')) as {
-    sources: string[];
-  };
-  expect(map.sources.some((s) => s.endsWith('core/src/defaults/supply-defaults.ts'))).toBe(true);
-  expect(map.sources.some((s) => s.includes('/three/'))).toBe(true);
+  const sources = mapSources(BUNDLE);
+  expect(sources.some((s) => s.endsWith('core/src/defaults/supply-defaults.ts'))).toBe(true);
+  expect(sources.some((s) => s.includes('/three/'))).toBe(true);
 });
 
-/** Font files requested so far, as paths relative to the script's folder. */
-const fontRequests = (requests: readonly string[]): string[] =>
-  requests
-    .filter((url) => url.endsWith('.otf'))
-    .map((url) => new URL(url).pathname.slice(SCRIPT_PATH.lastIndexOf('/') + 1));
+test('IIFE is the 2D bundle: no 3D code, and 3D loads only with the add-on', async ({ page }) => {
+  // The 3D package and render's 3D chunks are in the add-on only (`iife-3d.spec.ts`); render's
+  // loaders of those chunks stay (public API), asking the add-on for them.
+  const sources = mapSources(BUNDLE);
+  const threeD = sources.filter((s) =>
+    /traces-3d\/|primitives\/(?:mesh(?!-loader)|lighting|line3d|markers3d|spheres|depth-sort|blend3d)/.test(
+      s,
+    ),
+  );
+  expect(threeD).toEqual([]);
+  expect(readFileSync(resolve(DIST, BUNDLE), 'utf8')).not.toContain('aspectmode'); // scene layout (3D only)
+
+  const { errors } = await servePage(page);
+  await page.goto(`${ORIGIN}/`);
+  const state = await page.evaluate(async () => {
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global from the IIFE */
+    const hc = (window as any).Holochart;
+    const mesh = await hc.render.loadMeshModule().then(
+      () => 'loaded',
+      (error: Error) => error.message,
+    );
+    return {
+      traces3d: typeof hc.traces3d,
+      sceneComponent: hc.registry.getComponent('scene') === undefined,
+      host: typeof hc.__iife?.provideLazy3D,
+      mesh,
+    };
+  });
+  expect(state).toEqual({
+    traces3d: 'undefined',
+    sceneComponent: true,
+    host: 'function',
+    mesh: expect.stringContaining('holochart-3d.iife.min.js'),
+  });
+  expect(errors).toEqual([]);
+});
 
 test('IIFE draws text with the shipped default font, loading only the faces it uses', async ({
   page,

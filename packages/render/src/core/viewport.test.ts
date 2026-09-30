@@ -154,6 +154,31 @@ describe('Viewport', () => {
     expect([cam.left, cam.right, cam.top, cam.bottom]).toEqual([-4, 4, 2, -2]);
   });
 
+  it('switches a 3D camera between perspective and orthographic, keeping its pose', () => {
+    const vp = new Viewport(host(), { kind: '3d', rect: { x: 0, y: 0, width: 400, height: 200 } });
+    vp.camera.position.set(1, 2, 3);
+    vp.camera.up.set(0, 0, 1);
+    vp.camera.lookAt(0, 0, 0);
+    const q = vp.camera.quaternion.clone();
+    vp.setProjection('orthographic');
+    const cam = vp.camera as OrthographicCamera;
+    expect(cam).toBeInstanceOf(OrthographicCamera);
+    expect([cam.left, cam.right, cam.top, cam.bottom]).toEqual([-2, 2, 1, -1]);
+    expect(cam.position.toArray()).toEqual([1, 2, 3]);
+    expect(cam.up.toArray()).toEqual([0, 0, 1]);
+    expect(cam.quaternion.equals(q)).toBe(true);
+    vp.setProjection('orthographic');
+    expect(vp.camera).toBe(cam);
+    vp.setProjection('perspective');
+    expect(vp.camera).toBeInstanceOf(PerspectiveCamera);
+    expect((vp.camera as PerspectiveCamera).aspect).toBe(2);
+    // 2D viewports keep their camera.
+    const flat = new Viewport(host(), { rect: { x: 0, y: 0, width: 10, height: 10 } });
+    const before = flat.camera;
+    flat.setProjection('perspective');
+    expect(flat.camera).toBe(before);
+  });
+
   it('fits the canvas when fit is set', () => {
     const vp = new Viewport(host(640, 480), { fit: true });
     expect(vp.rect).toEqual({ x: 0, y: 0, width: 640, height: 480 });

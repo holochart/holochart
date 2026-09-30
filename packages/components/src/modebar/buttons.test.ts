@@ -110,6 +110,40 @@ describe('resolveModebarButtons', () => {
     expect(last[0]?.custom?.click).toBe(click);
   });
 
+  it('adds subplot button groups after the cartesian ones, removable by name or alias', () => {
+    const click = vi.fn();
+    const pressed = (fl: Readonly<Record<string, unknown>>): boolean => fl['on'] === true;
+    const subplotGroups = [
+      [
+        { name: 'zoom3d', title: 'Zoom', aliases: ['zoom'], icon: modebarIcons.magnifier, click },
+        { name: 'orbitRotation', title: 'Orbital rotation', pressed, click },
+      ],
+      [{ name: 'resetCameraDefault3d', title: 'Reset camera to default', click }],
+      'not a group',
+    ];
+    const groups = resolveModebarButtons({
+      hasCartesian: false,
+      hasSelectable: false,
+      subplotGroups,
+    });
+    expect(names(groups)).toEqual([
+      ['toImage'],
+      ['zoom3d', 'orbitRotation'],
+      ['resetCameraDefault3d'],
+    ]);
+    const orbit = groups[1]?.[1];
+    expect(orbit?.subplot?.pressed?.({ on: true })).toBe(true);
+    expect(orbit).toMatchObject({ title: 'Orbital rotation', kind: 'action', custom: { click } });
+    const removed = resolveModebarButtons({
+      hasCartesian: false,
+      hasSelectable: false,
+      subplotGroups,
+      config: { modeBarButtonsToRemove: ['zoom', 'ORBITROTATION'] },
+      warn: vi.fn(),
+    });
+    expect(names(removed)).toEqual([['toImage'], ['resetCameraDefault3d']]);
+  });
+
   it('removes custom buttons by name and dedupes them', () => {
     const click = vi.fn();
     const groups = cartesian({

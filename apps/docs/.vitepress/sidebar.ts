@@ -62,6 +62,7 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
       items: pages('fundamentals/', [
         'traces',
         'layout-axes-subplots',
+        '3d-scenes',
         'shapes-images',
         'styling-themes',
         'conditional-styling',

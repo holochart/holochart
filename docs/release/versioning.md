@@ -14,7 +14,9 @@ is not supported.
 We follow [SemVer 2.0.0](https://semver.org/). The public API is:
 
 - Everything exported from a package's entry point (`import … from '@mk7s/holochart-…'`), with its
-  TypeScript types, and the `window.Holochart` global of the IIFE build.
+  TypeScript types, and the `window.Holochart` global of the IIFE build and its 3D add-on
+  (`Holochart.__iife`, the handle between the two scripts, is internal; the add-on requires the
+  main script of the same version).
 - The figure spec: trace and layout attribute names, types, allowed values, and defaults, as
   declared in the schema ([ADR-002](../adr/002-schema-first-attribute-dsl.md)), plus events and
   their payloads.

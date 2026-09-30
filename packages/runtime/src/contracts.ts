@@ -40,6 +40,7 @@ import type {
   DataTransform,
   Primitive,
   PrimitiveContext,
+  RGBA,
   Viewport,
   ViewportRect,
 } from '@mk7s/holochart-render';
@@ -100,6 +101,19 @@ export interface DomainInfo {
   readonly y: readonly [number, number];
   /** The domain in container CSS px (top-left origin), inside the margins. */
   readonly rect: Readonly<ViewportRect>;
+}
+
+/**
+ * A non-cartesian subplot's own 3D viewport (M6: 3D scenes; ADR-004), from
+ * {@link TracePlotContext.subplotViewport} / {@link ComponentDrawContext.subplotViewport}.
+ */
+export interface SubplotViewportOptions {
+  /** Rect in container px (top-left origin); the viewport clips to it. */
+  readonly rect: Readonly<ViewportRect>;
+  /** Default `'perspective'`; a change swaps the camera (`Viewport.setProjection`). */
+  readonly projection?: 'perspective' | 'orthographic';
+  /** Painted under the subplot (sRGB 0–1); `null` or unset for none. */
+  readonly background?: RGBA | null;
 }
 
 /** One domain trace as seen by {@link TraceModule.crossTraceLayout}. */
@@ -246,6 +260,16 @@ export interface TracePlotContext<Calc = unknown> {
   remove<T>(primitive: Primitive<T>): void;
   /** Schedule a frame (ADR-007), e.g. after async resources finish loading. */
   invalidate(): void;
+  /**
+   * The 3D viewport of non-cartesian subplot `key` (M6: a 3D scene, `'scene'`, `'scene2'`, …;
+   * ADR-004): its own rect, perspective or orthographic camera and depth buffer (cleared first),
+   * drawn after the cartesian subplots and before the overlay. Created on the first call, shared by
+   * every trace and component that asks for the same key and updated with `options` on each call;
+   * removed (with what is still in it) after a draw pass in which nothing asked for it. Add
+   * primitives to it with `add(primitive, viewport)`. Always set by the runtime; optional for
+   * hand-built contexts.
+   */
+  subplotViewport?(key: string, options: SubplotViewportOptions): Viewport;
   /**
    * Active selection for this trace (E6.3): indices into its data arrays, or `null` when nothing is
    * selected (draw everything normally). Traces apply `selected` / `unselected` styles from it.
@@ -928,6 +952,16 @@ export interface ComponentDrawContext {
   add<T>(primitive: Primitive<T>, viewport?: Viewport): Primitive<T>;
   remove<T>(primitive: Primitive<T>): void;
   invalidate(): void;
+  /**
+   * The 3D viewport of non-cartesian subplot `key` (M6: a 3D scene, `'scene'`, `'scene2'`, …;
+   * ADR-004): its own rect, perspective or orthographic camera and depth buffer (cleared first),
+   * drawn after the cartesian subplots and before the overlay. Created on the first call, shared by
+   * every trace and component that asks for the same key and updated with `options` on each call;
+   * removed (with what is still in it) after a draw pass in which nothing asked for it. Add
+   * primitives to it with `add(primitive, viewport)`. Always set by the runtime; optional for
+   * hand-built contexts.
+   */
+  subplotViewport?(key: string, options: SubplotViewportOptions): Viewport;
   /**
    * The chart (M1 wave 2): for components that act on it — the legend restyles `visible` and
    * emits `legendclick` (`chart.emit`), the modebar calls `chart.setDragmode`, `chart.zoom`,

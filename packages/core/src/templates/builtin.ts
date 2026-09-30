@@ -90,6 +90,17 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
     tickcolor: AXIS,
     tickfont: { size: 8, color: TICK },
   };
+  // 3D scene axes (M6): the cartesian look on faint back walls a step above the background.
+  const sceneAxis = {
+    color: TEXT,
+    linecolor: AXIS,
+    gridcolor: '#24242e',
+    zerolinecolor: ZERO,
+    showbackground: true,
+    backgroundcolor: '#111118',
+    tickfont: { size: 8, color: TICK },
+    title: { font: { size: 9, color: TEXT } },
+  };
   const axis = {
     color: TEXT,
     showline: true,
@@ -187,6 +198,7 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
         angularaxis: polarAxis,
         radialaxis: { ...polarAxis, title: { font: { size: 9, color: TEXT } } },
       },
+      scene: { xaxis: sceneAxis, yaxis: sceneAxis, zaxis: sceneAxis },
       modebar: { bgcolor: 'rgba(10,10,15,0.6)', color: '#4a4c58', activecolor: TEXT },
       annotationdefaults: { arrowcolor: TEXT, arrowwidth: 1, font: { color: TEXT } },
       shapedefaults: { line: { color: TEXT, width: 1 } },

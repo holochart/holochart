@@ -599,11 +599,11 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] Optional MathJax/KaTeX-rendered LaTeX via texture (`$...$`), `P3` — *deferred (P3)*
 - [x] Scatter/bar `text` labels: today `<b>`/`<i>` are stripped (plain text); render them per run like titles and annotations (found in M1 wave 3)
 
-#### E2.11 — Mesh primitive & lit materials   `P0` `M`   deps: E2.3
+#### E2.11 — Mesh primitive & lit materials   `P0` `M`   deps: E2.3   · ✅ Done (M6 wave 0)
 > As a contributor, I want an indexed mesh primitive with per-vertex color/intensity and configurable lighting, so that surface, mesh3d, isosurface, and extruded 2D shapes share it.
-- [ ] Per-vertex position, normal, color or intensity (colorscale texture lookup in the shader)
-- [ ] Plotly lighting model mapped: `ambient`, `diffuse`, `specular`, `roughness`, `fresnel`, `lightposition`, `facenormalsepsilon`, `vertexnormalsepsilon`
-- [ ] Flat vs smooth shading, double-sided, opacity with correct depth sorting (see E2.14)
+- [x] Per-vertex position, normal, color or intensity (colorscale texture lookup in the shader)
+- [x] Plotly lighting model mapped: `ambient`, `diffuse`, `specular`, `roughness`, `fresnel`, `lightposition`, `facenormalsepsilon`, `vertexnormalsepsilon`
+- [x] Flat vs smooth shading, double-sided, opacity with correct depth sorting (see E2.14)
 
 #### E2.12 — Colorscale textures   `P0` `S`   deps: E2.3   · ✅ Done (M0)
 > As a contributor, I want colorscales uploaded as 1D textures, so that shaders map values to colors on the GPU.
@@ -619,7 +619,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 #### E2.14 — Transparency & draw ordering   `P1` `M`   deps: E2.4, E2.11   · 🟡 Partial (M1 wave 3)
 > As an end user, I want overlapping translucent traces to composite correctly, so that charts look right.
 - [x] 2D draw order matches Plotly (`plots/cartesian`): `zorder` groups first, then Plotly's trace-type layer order (bars below scatter), then trace order; `zorder` on scatter and bar (`traces-basic/src/shared/render-order.ts`)
-- [ ] 3D: sort transparent objects. Optional weighted-blended OIT for dense translucent meshes (`P2`).
+- [x] 3D: sort transparent objects. Optional weighted-blended OIT for dense translucent meshes (`P2`). — objects and triangles sorted back to front (M6 wave 0) — *deferred: OIT (P2)*
 
 #### E2.15 — Resource manager   `P0` `S`   deps: E2.1   · ✅ Done (M0)
 > As a contributor, I want reference-counted shared GPU resources, so that nothing leaks and duplicates are avoided.
@@ -964,12 +964,12 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `marker.color: (point, i, trace) => string`. Supported on every `arrayOk` attribute. — evaluated before supply-defaults, so modules see plain arrays; functions on other attributes are rejected with a hint
 - [x] Figure is marked non-serializable. `toJSON()` warns and evaluates functions into arrays.
 
-#### E8.7 — Materials & lighting   `P1` `M`   deps: E2.11
+#### E8.7 — Materials & lighting   `P1` `M`   deps: E2.11   · 🟡 Partial (M6 wave 0)
 > As a designer, I want to choose materials and lights for any trace, so that 3D and extruded charts look the way I want.
-- [ ] `trace.material: { type: 'flat' | 'basic' | 'lambert' | 'phong' | 'standard' | 'physical' | 'toon' | 'matcap', ...params }`
-- [ ] `layout.lighting: { ambient: {color, intensity}, directional: [{color, intensity, position, castShadow}], hemisphere, environment: 'studio' | 'city' | url(HDR) }`
-- [ ] Shadows (`castShadow`/`receiveShadow`, a ground plane option)
-- [ ] Plotly's `lighting`/`lightposition` attributes map onto this system
+- [x] `trace.material: { type: 'flat' | 'basic' | 'lambert' | 'phong' | 'standard' | 'physical' | 'toon' | 'matcap', ...params }`
+- [x] `layout.lighting: { ambient: {color, intensity}, directional: [{color, intensity, position, castShadow}], hemisphere, environment: 'studio' | 'city' | url(HDR) }`
+- [x] Shadows (`castShadow`/`receiveShadow`, a ground plane option)
+- [x] Plotly's `lighting`/`lightposition` attributes map onto this system — render side done (material types, light rig, shadows, environments); the `trace.material` / `layout.lighting` attributes arrive with the wave-1 traces
 
 #### E8.8 — Shader hooks   `P2` `M`   deps: E2.4, E2.5, E2.11
 > As an advanced developer, I want to inject GLSL (or TSL nodes) into trace materials, so that I can create custom visual effects.
@@ -1375,20 +1375,20 @@ Customization is a **cascade**. Each layer overrides the one above it:
 
 #### E14.1 — 3D scene subplot   `P1` `XL` → split into E14.1a–d   deps: E2.3, E2.11
 
-##### E14.1a — Scene layout & camera   `P1` `L`
+##### E14.1a — Scene layout & camera   `P1` `L`   · ✅ Done (M6 wave 0)
 > As a developer, I want 3D scenes with camera and aspect control, so that 3D data is framed correctly.
-- [ ] `layout.scene{N}.{domain, bgcolor, aspectmode: 'auto' | 'cube' | 'data' | 'manual', aspectratio.{x, y, z}, camera.{eye, center, up, projection.type: 'perspective' | 'orthographic'}, dragmode: 'orbit' | 'turntable' | 'zoom' | 'pan' | false, hovermode, uirevision}`
-- [ ] Camera state reported via `relayout` (`scene.camera`) on interaction end
-- [ ] Multiple scenes in one figure (via grid/domains), each with its own camera. Optional camera linking.
+- [x] `layout.scene{N}.{domain, bgcolor, aspectmode: 'auto' | 'cube' | 'data' | 'manual', aspectratio.{x, y, z}, camera.{eye, center, up, projection.type: 'perspective' | 'orthographic'}, dragmode: 'orbit' | 'turntable' | 'zoom' | 'pan' | false, hovermode, uirevision}`
+- [x] Camera state reported via `relayout` (`scene.camera`) on interaction end
+- [x] Multiple scenes in one figure (via grid/domains), each with its own camera. Optional camera linking. — *deferred: camera linking*
 
-##### E14.1b — 3D axes   `P1` `L`
-- [ ] `scene.{xaxis, yaxis, zaxis}` with `range`, `autorange`, `type` (linear/log/date/category), `tickmode…`, `title`, `showgrid`, `gridcolor`, `gridwidth`, `zeroline`, `showline`, `mirror`, `ticks`, `ticklen`, `showbackground`, `backgroundcolor`, `showaxeslabels`, `showspikes`, `spikecolor`, `spikesides`, `spikethickness`, `showticklabels`, `tickfont`, `tickangle`
-- [ ] Axes and back-planes auto-select the far walls relative to the camera (as Plotly/gl-plot3d do)
-- [ ] Tick labels billboarded, with collision culling
+##### E14.1b — 3D axes   `P1` `L`   · ✅ Done (M6 wave 0)
+- [x] `scene.{xaxis, yaxis, zaxis}` with `range`, `autorange`, `type` (linear/log/date/category), `tickmode…`, `title`, `showgrid`, `gridcolor`, `gridwidth`, `zeroline`, `showline`, `mirror`, `ticks`, `ticklen`, `showbackground`, `backgroundcolor`, `showaxeslabels`, `showspikes`, `spikecolor`, `spikesides`, `spikethickness`, `showticklabels`, `tickfont`, `tickangle`
+- [x] Axes and back-planes auto-select the far walls relative to the camera (as Plotly/gl-plot3d do)
+- [x] Tick labels billboarded, with collision culling — upright billboards (Plotly draws them along the axis); spikes with E14.1d
 
-##### E14.1c — 3D controls   `P1` `M`
-- [ ] Orbit (free), turntable (z-up constrained), zoom (dolly vs FOV for ortho), pan. Damping. Touch support.
-- [ ] Double-click resets the camera. Modebar 3D buttons. Scroll zoom respects `config.scrollZoom`.
+##### E14.1c — 3D controls   `P1` `M`   · ✅ Done (M6 wave 0)
+- [x] Orbit (free), turntable (z-up constrained), zoom (dolly vs FOV for ortho), pan. Damping. Touch support.
+- [x] Double-click resets the camera. Modebar 3D buttons. Scroll zoom respects `config.scrollZoom`. — *deferred: keyboard orbit, right/middle-button drags*
 
 ##### E14.1d — 3D hover & annotations   `P1` `M`
 - [ ] GPU picking for meshes and markers. Hover labels positioned at projected points. Spikes to axis walls.
@@ -2264,6 +2264,41 @@ From the M3–M5 exit review. Same pattern: ≤ 4 parallel workstreams with sepa
 | Legends | Multiple legends (`legend2`, …) and scrolling past `maxheight` (E5.2, P0) — ✅ |
 | P1 parity gaps | Polar box/lasso selection (E6.3/E11.4); `funnelarea` patterns and `uniformtext`; heatmap and contour `xperiod` and range breaks (E11.1/E11.2) — ✅ |
 | GPU benchmarks and docs | A local benchmark script on the real GPU (fps and frame times for the E12.1, E11.1, E12.3, E13.3 targets); the overdue `customization/per-point-styling` page — ✅ (`pnpm bench:gpu`, `docs/perf/gpu-benchmarks.md`) |
+
+### 11.8 M6 execution plan
+
+Same pattern: ≤ 4 parallel workstreams per wave with separate files, contracts first, the default
+look (ADR-021) for every new example. The scene subplot, its component and the 3D traces live in
+`traces-3d` (like polar in `traces-sci`), in the full bundle but not in `basic` (248 kB budget,
+~245 kB on CI). Render-level pieces (mesh, 3D lines and markers) go into `render` behind lazy
+imports so 2D charts don't pay for them. CI measures GPU speed only through SwiftShader; 3D
+performance targets are checked with `pnpm bench:gpu` on the real GPU.
+
+| Wave | Workstream | Stories |
+| --- | --- | --- |
+| 0 | Scene subplot: layout, camera, controls, 3D axes, multiple scenes | E14.1a ✅, E14.1b ✅, E14.1c ✅ |
+| 0 | Mesh primitive, lit materials, lighting, transparency sorting | E2.11 ✅, E8.7 🟡 (trace attributes in wave 1), E2.14 (3D) ✅ |
+| 0 | 3D line and marker primitives (screen-space lines, sprites, instanced spheres) | E14.2 (render part) ✅ |
+| 1 | `scatter3d`, 3D hover, picking and annotations | E14.2, E14.1d |
+| 1 | `surface` (height texture, contours, wireframe) | E14.3 |
+| 1 | `mesh3d` and `cone` | E14.4, E14.5 |
+| 1 | Camera animation and auto-rotate | E7.5 |
+| 2 | `streamtube` | E14.6 |
+| 2 | `volume` (stacked isosurfaces and ray-marched) and `isosurface` | E14.7, E14.8 |
+| 2 | `bar3d` and 3D line extras | E14.9, E14.10 |
+| 3 | Extrusion and 2.5D view: bar and pie depth, `view3d` | E8.9, E9.10, E9.12 |
+| 3 | Express `scatter3d`/`line3d`, docs, exit review | E23.6 |
+
+M6 wave 0 decisions and notes: the script-tag build is split by decision —
+`holochart.iife.min.js` stays 2D (690 kB budget) and `holochart-3d.iife.min.js` is an add-on
+(34 kB budget) that registers the 3D scene and traces into the main script, sharing its three.js,
+core, runtime, render and traces-basic (a build guard fails on anything else); the full ESM budget
+went 475 → 540 kB for M6. Rules for 3D code (see `scripts/build/iife-split.ts`): import only from
+`three`, core, runtime, render, traces-basic and traces-3d; named imports only; every three.js
+name must be listed in `packages/holochart/src/iife/three.ts`; new render 3D modules are
+registered with the split's loaders. Open: camera linking, keyboard orbit, 3D line widths on the
+axes (1 device px until they use the 3D line primitive), OIT (P2), `trace.material` and
+`layout.lighting` attributes (wave 1).
 
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 

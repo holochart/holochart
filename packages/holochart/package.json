@@ -6,8 +6,12 @@
   "type": "module",
   "sideEffects": [
     "./src/index.ts",
+    "./src/bundle-2d.ts",
+    "./src/iife.ts",
+    "./src/iife-3d.ts",
     "./dist/index.js",
-    "./dist/holochart.iife.min.js"
+    "./dist/holochart.iife.min.js",
+    "./dist/holochart-3d.iife.min.js"
   ],
   "repository": {
     "type": "git",
@@ -22,6 +26,7 @@
       "import": "./dist/index.js"
     },
     "./holochart.iife.min.js": "./dist/holochart.iife.min.js",
+    "./holochart-3d.iife.min.js": "./dist/holochart-3d.iife.min.js",
     "./fonts/*": "./dist/fonts/*"
   },
   "main": "./dist/index.js",
@@ -41,6 +46,7 @@
     "@mk7s/holochart-render": "workspace:*",
     "@mk7s/holochart-runtime": "workspace:*",
     "@mk7s/holochart-themes": "workspace:*",
+    "@mk7s/holochart-traces-3d": "workspace:*",
     "@mk7s/holochart-traces-basic": "workspace:*",
     "@mk7s/holochart-traces-finance": "workspace:*",
     "@mk7s/holochart-traces-hier": "workspace:*",
@@ -63,6 +69,7 @@
         "import": "./dist/index.js"
       },
       "./holochart.iife.min.js": "./dist/holochart.iife.min.js",
+      "./holochart-3d.iife.min.js": "./dist/holochart-3d.iife.min.js",
       "./fonts/*": "./dist/fonts/*"
     }
   }

@@ -1,0 +1,67 @@
+/**
+ * The three.js classes and constants the `holochart-3d.iife.min.js` add-on uses (ADR-015). The
+ * add-on bundles no three.js of its own: its `import … from 'three'` resolve to this module of the
+ * main script (`Holochart.__iife.three`), so there is one three.js per page (`instanceof`, shared
+ * caches and renderer state keep working).
+ *
+ * Only these names are shared, not the whole namespace, so the 2D script keeps tree-shaking three:
+ * the add-on build fails (naming the missing export) when 3D code imports anything else from
+ * `three`; add it here. Most are already in the 2D script (the renderer uses them); the materials,
+ * lights and environment classes of the mesh primitive's light rigs cost a few kB.
+ */
+export {
+  AmbientLight,
+  BackSide,
+  Box3,
+  BoxGeometry,
+  BufferAttribute,
+  BufferGeometry,
+  Color,
+  CustomBlending,
+  DataTexture,
+  DirectionalLight,
+  DoubleSide,
+  DynamicDrawUsage,
+  EquirectangularReflectionMapping,
+  Float32BufferAttribute,
+  FrontSide,
+  GLSL3,
+  Group,
+  HemisphereLight,
+  InstancedBufferAttribute,
+  InstancedBufferGeometry,
+  InstancedInterleavedBuffer,
+  InterleavedBufferAttribute,
+  LineBasicMaterial,
+  LineSegments,
+  Matrix4,
+  Mesh,
+  MeshBasicMaterial,
+  MeshLambertMaterial,
+  MeshMatcapMaterial,
+  MeshPhongMaterial,
+  MeshPhysicalMaterial,
+  MeshStandardMaterial,
+  MeshToonMaterial,
+  NearestFilter,
+  NoBlending,
+  NormalBlending,
+  Object3D,
+  OneFactor,
+  PlaneGeometry,
+  PMREMGenerator,
+  Quaternion,
+  RedFormat,
+  REVISION,
+  Scene,
+  ShaderMaterial,
+  ShadowMaterial,
+  Sphere,
+  SRGBColorSpace,
+  Texture,
+  TextureLoader,
+  Vector2,
+  Vector3,
+  Vector4,
+  ZeroFactor,
+} from 'three';

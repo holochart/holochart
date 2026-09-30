@@ -470,8 +470,9 @@ export function createModebarView<Ctx extends ModebarViewContext>(
         const el = doc.createElement('button');
         el.type = 'button';
         el.className = 'hc-modebar-btn';
-        // Built-in titles are Plotly's dictionary keys (plan E17.6); custom ones are the user's.
-        const title = button.builtin ? locale._(button.title) : button.title;
+        // Built-in and subplot titles are Plotly's dictionary keys (plan E17.6); custom ones are
+        // the user's.
+        const title = button.builtin || button.subplot ? locale._(button.title) : button.title;
         el.title = title;
         el.setAttribute('aria-label', title);
         el.dataset['button'] = button.name;
@@ -507,7 +508,8 @@ export function createModebarView<Ctx extends ModebarViewContext>(
       spikelines: modebarSpikelinesState(c.axes.values()).on,
     };
     for (const { el, button } of buttons) {
-      const active = modebarButtonActive(button, state);
+      const pressed = button.subplot?.pressed;
+      const active = pressed ? pressed(c.fullLayout) : modebarButtonActive(button, state);
       if (active === undefined) continue;
       const value = active ? 'true' : 'false';
       if (el.getAttribute('aria-pressed') !== value) el.setAttribute('aria-pressed', value);
@@ -538,6 +540,7 @@ export function createModebarView<Ctx extends ModebarViewContext>(
       hasCartesian: axisList.length > 0,
       hasSelectable: hasSelectable(c.fullData),
       allAxesFixed: axisList.length > 0 && axisList.every(modebarAxisFixed),
+      subplotGroups: c.fullLayout['_modebarButtons'],
       warn,
     });
     const locale = localeOf(c.fullLayout);

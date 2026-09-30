@@ -72,6 +72,19 @@ export interface ModebarCustomButton {
   click(chart: Chart, event: MouseEvent): void;
 }
 
+/**
+ * A button of a subplot kind outside `basic` (M6: the 3D scene's drag and camera groups), listed
+ * in `fullLayout._modebarButtons` (an array of groups) by that kind's component during
+ * supply-defaults. It acts like a custom button, but its title is a Plotly dictionary key (it is
+ * translated), `modeBarButtonsToRemove` / `layout.modebar.remove` match its `name` or one of its
+ * lower-case `aliases`, and `pressed` gives its pressed state.
+ */
+export interface ModebarSubplotButton extends ModebarCustomButton {
+  readonly title: string;
+  readonly aliases?: readonly string[];
+  pressed?(fullLayout: Readonly<Record<string, unknown>>): boolean;
+}
+
 /** One resolved button. */
 export interface ModebarButton {
   readonly name: string;
@@ -81,8 +94,10 @@ export interface ModebarButton {
   readonly kind: ModebarButtonKind;
   /** Set for built-in buttons. */
   readonly builtin?: ModebarBuiltinName;
-  /** Set for custom buttons. */
+  /** Set for custom buttons (and subplot buttons, which are custom buttons too). */
   readonly custom?: ModebarCustomButton;
+  /** Set for subplot buttons ({@link ModebarSubplotButton}). */
+  readonly subplot?: ModebarSubplotButton;
   /** The `dragmode` a `dragmode` button selects. */
   readonly dragmode?: 'zoom' | 'pan' | 'select' | 'lasso' | DrawDragmode;
   /** The `hovermode` a `hovermode` button selects. */
@@ -106,6 +121,8 @@ export interface ModebarResolveInput {
   readonly hasSelectable: boolean;
   /** Every cartesian axis is `fixedrange` (drops zoom/pan and the zoom group, like Plotly). */
   readonly allAxesFixed?: boolean;
+  /** Groups of subplot buttons (`fullLayout._modebarButtons`), after the cartesian groups. */
+  readonly subplotGroups?: unknown;
   /** Receives warnings about unknown or unsupported names (once per name). Default `console.warn`. */
   readonly warn?: (message: string) => void;
 }
@@ -316,12 +333,14 @@ export function resolveModebarButtons(input: ModebarResolveInput): ModebarButton
   const warn = input.warn ?? defaultWarn;
   const removed = new Set<ModebarBuiltinName>();
   const removedOther = new Set<string>();
+  const removedAny = new Set<string>();
   for (const raw of [
     ...listOf(input.config?.modeBarButtonsToRemove),
     ...listOf(input.layoutModebar?.remove),
   ]) {
     if (typeof raw !== 'string') continue;
     const lower = raw.toLowerCase();
+    removedAny.add(lower);
     const hit = ALIASES.get(lower);
     if (hit) for (const name of hit) removed.add(name);
     else if (!UNSUPPORTED.has(lower)) removedOther.add(lower);
@@ -376,6 +395,20 @@ export function resolveModebarButtons(input: ModebarResolveInput): ModebarButton
       ]),
       keep(fixed ? [] : ZOOM_GROUP),
       keep(OPT_IN.filter((n) => added.has(n))),
+    );
+  }
+
+  for (const group of Array.isArray(input.subplotGroups) ? input.subplotGroups : []) {
+    groups.push(
+      listOf(group)
+        .filter(
+          (b): b is ModebarSubplotButton =>
+            isCustomButton(b) &&
+            ![b.name.toLowerCase(), ...((b as ModebarSubplotButton).aliases ?? [])].some((n) =>
+              removedAny.has(n),
+            ),
+        )
+        .map((b) => ({ ...customButton(b), subplot: b })),
     );
   }
 
