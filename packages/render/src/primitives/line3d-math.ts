@@ -124,6 +124,37 @@ export function projectSegment3D(
 }
 
 /**
+ * The quad template of a 3D segment instance: `position` per vertex = (end: 0 at A / 1 at B, side
+ * −1 / +1, 0 outer / 1 inner) and the triangle indices. The outer vertices sit past the end by the
+ * join / cap extent and the AA margin, the inner ones on the end point, so the depth ramp between
+ * the inner vertices spans the segment exactly (see `line3d.glsl.ts`). Three quads, A cap → body →
+ * B cap, all counter-clockwise in the (along, side) frame.
+ */
+export const LINE3D_QUAD_POSITIONS: readonly number[] = [
+  0, -1, 0, 0, 1, 0, 0, -1, 1, 0, 1, 1, 1, -1, 1, 1, 1, 1, 1, -1, 0, 1, 1, 0,
+];
+export const LINE3D_QUAD_INDEX: readonly number[] = [
+  0, 2, 1, 1, 2, 3, 2, 4, 3, 3, 4, 5, 4, 6, 5, 5, 6, 7,
+];
+
+/**
+ * Screen distance along the segment (px from the clipped A end) of a template vertex: mirrors the
+ * vertex shader. `atB`, `inner` from the template's `position.x` / `.z`; `extA` / `extB` the join
+ * or cap extents; `aa` the AA margin.
+ */
+export function line3DQuadAlong(
+  atB: boolean,
+  inner: boolean,
+  len: number,
+  extA: number,
+  extB: number,
+  aa: number,
+): number {
+  if (inner) return atB ? len : 0;
+  return atB ? len + extB + aa : -(extA + aa);
+}
+
+/**
  * NDC depth of the point `along` px from the clipped A end of a segment of screen length `len`
  * (ends and joins past either end take that end's depth). NDC depth is affine in screen position
  * along a projected straight line, so the shader interpolates it linearly with `w = 1`.

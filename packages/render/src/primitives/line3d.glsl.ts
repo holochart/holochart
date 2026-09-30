@@ -8,6 +8,15 @@
  *   2D shader's `w > ε` guard: exact for perspective and orthographic cameras, and it cuts
  *   segments at the near plane rather than just in front of the eye (whose projection explodes).
  *   A cut end becomes a cap, and its color is interpolated to the cut.
+ * - **Exact depth**: the 2D quad spans each segment plus its join / cap extent and the AA margin,
+ *   with the end depths on its outer corners, so its linearly interpolated depth ramp was longer
+ *   than the segment: the line's depth tilted through the true one by up to `(ext + aa) / len` of
+ *   the segment's depth change (large for short, steep segments at grazing angles). Opaque lines
+ *   write that depth, so anything at the line's depth (markers at its vertices, a plane it lies
+ *   on, a crossing line) z-fought it in a sawtooth, one dash per segment (the stray "arrowheads").
+ *   The 3D quad (`line3d.ts`) therefore has four more vertices, on the end points
+ *   (`position.z = 1`): the depth is exact along the segment and constant over joins, caps and the
+ *   AA margin, which take their end's depth (`segmentDepthAt`, `line3DQuadAlong`).
  * - **Picking** (`#define PICKING`, E2.13): each fragment writes the pick id of the nearer vertex
  *   of its segment (split where the segment's 3D midpoint projects), from the stream's source
  *   indices (`aSrcA` / `aSrcB`).
@@ -40,6 +49,8 @@ const VERTEX_NEXT = `bool hasNext = aNext.w > 0.5;`;
 const VERTEX_COLORS = `  vColorA = aColorA;
   vColorB = aColorB;
 `;
+const VERTEX_ALONG = `  float along = atB ? len + extB + aa : -(extA + aa);
+`;
 
 export const LINE3D_VERTEX_SHADER = [
   [
@@ -71,6 +82,12 @@ flat out float vPickSplit;
   ],
   // A cut end has no visible neighbour: it becomes a cap.
   [VERTEX_PREV, `bool hasPrev = aPrev.w > 0.5 && sA == 0.0;`],
+  // The 3D quad has inner vertices on the end points (see the module comment).
+  [
+    VERTEX_ALONG,
+    `  float along = position.z > 0.5 ? (atB ? len : 0.0) : (atB ? len + extB + aa : -(extA + aa));
+`,
+  ],
   [VERTEX_NEXT, `bool hasNext = aNext.w > 0.5 && sB == 0.0;`],
   [
     VERTEX_COLORS,

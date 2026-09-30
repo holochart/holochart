@@ -3,14 +3,15 @@
  * ms since epoch for dates, category indices; `sceneScales`), marker diameters (bubble sizing as
  * in 2D scatter), 3D error bars (plotly.js `scatter3d/calc_errors.js`: `percent`, `constant`,
  * `sqrt`, `data`, computed in data space, then made linear) and the scene autorange, which
- * includes the error bars' ends. Pure: no three.js.
+ * includes the error bars' ends and the sides of ribbons of a given width (`line.ribbon.width`).
+ * Pure: no three.js.
  */
 import { isArrayLike, type FullTrace, type Scale } from '@mk7s/holochart-core';
 import type { CalcContext } from '@mk7s/holochart-runtime';
 import { sceneExtent, sceneScales } from '../scene/axes.ts';
 import type { SceneCalc } from '../scene/layout.ts';
 import { sceneOf } from '../scene/layout-defaults.ts';
-import { hasMarkers3d } from './defaults.ts';
+import { hasLines3d, hasMarkers3d } from './defaults.ts';
 
 type Container = Readonly<Record<string, unknown>>;
 
@@ -177,6 +178,21 @@ export function calcScatter3d(trace: FullTrace, ctx: CalcContext): Scatter3dCalc
     const bars = errorBars3d(trace, letter, l, scales[letter]);
     if (bars) errors.push(bars);
     extremes[letter] = withErrors(sceneExtent(l), bars);
+  }
+  // A ribbon of a given width (`line.render: 'ribbon'`) reaches half of it past the points.
+  const line = (trace['line'] ?? {}) as Container;
+  const ribbon = (line['ribbon'] ?? {}) as Container;
+  const letter = ribbon['axis'];
+  const width = ribbon['width'];
+  if (
+    hasLines3d(trace['mode']) &&
+    line['render'] === 'ribbon' &&
+    (letter === 'x' || letter === 'y' || letter === 'z') &&
+    typeof width === 'number' &&
+    width > 0
+  ) {
+    const e = extremes[letter];
+    if (e) extremes[letter] = [e[0] - width / 2, e[1] + width / 2];
   }
   return {
     length,

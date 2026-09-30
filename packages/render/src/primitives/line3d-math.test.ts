@@ -7,6 +7,9 @@ import {
   clipSegmentNear,
   clipToScreen,
   computeDashDistances3D,
+  LINE3D_QUAD_INDEX,
+  LINE3D_QUAD_POSITIONS,
+  line3DQuadAlong,
   mixClip,
   NEAR_EPS,
   projectSegment3D,
@@ -171,6 +174,94 @@ describe('screen-space expansion of 3D segments', () => {
     // Caps and joins past the ends take the end depth.
     expect(segmentDepthAt(seg.a[2], seg.b[2], -5, len)).toBe(seg.a[2]);
     expect(segmentDepthAt(seg.a[2], seg.b[2], len + 5, len)).toBe(seg.b[2]);
+  });
+});
+
+describe('the 3D segment quad (exact depth, the opaque-line "arrowhead" fix)', () => {
+  /** The template vertices as (along, side, depth) for a segment frame. */
+  function quadVertices(
+    len: number,
+    extA: number,
+    extB: number,
+    aa: number,
+    zA: number,
+    zB: number,
+  ) {
+    const out: { along: number; side: number; z: number }[] = [];
+    for (let v = 0; v < LINE3D_QUAD_POSITIONS.length / 3; v++) {
+      const atB = LINE3D_QUAD_POSITIONS[v * 3]! > 0.5;
+      const side = LINE3D_QUAD_POSITIONS[v * 3 + 1]!;
+      const inner = LINE3D_QUAD_POSITIONS[v * 3 + 2]! > 0.5;
+      const along = line3DQuadAlong(atB, inner, len, extA, extB, aa);
+      // The vertex shader: depth = mix(zA, zB, clamp(along / len, 0, 1)).
+      out.push({ along, side, z: segmentDepthAt(zA, zB, along, len) });
+    }
+    return out;
+  }
+
+  /** Depth the rasterizer interpolates at `along` on the centerline (side 0). */
+  function rasterDepth(verts: ReturnType<typeof quadVertices>, along: number): number {
+    for (let t = 0; t < LINE3D_QUAD_INDEX.length; t += 3) {
+      const [p, q, r] = [0, 1, 2].map((k) => verts[LINE3D_QUAD_INDEX[t + k]!]!);
+      // Barycentric coordinates of (along, 0) in triangle p, q, r.
+      const det =
+        (q!.along - p!.along) * (r!.side - p!.side) - (r!.along - p!.along) * (q!.side - p!.side);
+      if (Math.abs(det) < 1e-12) continue;
+      const u =
+        ((along - p!.along) * (r!.side - p!.side) - (r!.along - p!.along) * (0 - p!.side)) / det;
+      const v =
+        ((q!.along - p!.along) * (0 - p!.side) - (along - p!.along) * (q!.side - p!.side)) / det;
+      if (u < -1e-9 || v < -1e-9 || u + v > 1 + 1e-9) continue;
+      return p!.z + u * (q!.z - p!.z) + v * (r!.z - p!.z);
+    }
+    return NaN;
+  }
+
+  it('has outer and inner vertices at both ends, three counter-clockwise quads', () => {
+    expect(LINE3D_QUAD_POSITIONS).toHaveLength(8 * 3);
+    expect(LINE3D_QUAD_INDEX).toHaveLength(6 * 3);
+    const verts = quadVertices(10, 2, 3, 1, 0.1, 0.5);
+    expect(verts.map((v) => v.along)).toEqual([-3, -3, 0, 0, 10, 10, 14, 14]);
+    for (let t = 0; t < LINE3D_QUAD_INDEX.length; t += 3) {
+      const [p, q, r] = [0, 1, 2].map((k) => verts[LINE3D_QUAD_INDEX[t + k]!]!);
+      const cross =
+        (q!.along - p!.along) * (r!.side - p!.side) - (r!.along - p!.along) * (q!.side - p!.side);
+      expect(cross).toBeGreaterThan(0);
+    }
+  });
+
+  it('property: the rasterized depth is exact along the segment and the end depth past it', () => {
+    fc.assert(
+      fc.property(
+        fc.double({ min: 0.01, max: 200, noNaN: true }),
+        fc.double({ min: 0, max: 40, noNaN: true }),
+        fc.double({ min: 0, max: 40, noNaN: true }),
+        fc.double({ min: 0.5, max: 2, noNaN: true }),
+        fc.double({ min: -1, max: 1, noNaN: true }),
+        fc.double({ min: -1, max: 1, noNaN: true }),
+        fc.double({ min: 0, max: 1, noNaN: true }),
+        (len, extA, extB, aa, zA, zB, s) => {
+          const verts = quadVertices(len, extA, extB, aa, zA, zB);
+          // Anywhere from the outer A corner to the outer B corner.
+          const along = -(extA + aa) + s * (len + extA + extB + 2 * aa);
+          const expected = segmentDepthAt(zA, zB, along, len);
+          expect(Math.abs(rasterDepth(verts, along) - expected)).toBeLessThan(1e-9);
+        },
+      ),
+    );
+  });
+
+  it('a short, steep segment no longer tilts through its own depth (the old quad did)', () => {
+    // 4 px long, 3 px round joins and 1 px AA at both ends: the old 2-vertex-per-end quad ramped
+    // the depth over 12 px, so at the end points it was off by a third of the depth change.
+    const [len, ext, aa, zA, zB] = [4, 3, 1, 0.2, 0.6];
+    const oldRamp = (along: number) =>
+      zA + ((zB - zA) * (along + ext + aa)) / (len + 2 * (ext + aa));
+    expect(oldRamp(0) - zA).toBeCloseTo((zB - zA) / 3, 9);
+    const verts = quadVertices(len, ext, ext, aa, zA, zB);
+    expect(rasterDepth(verts, 0)).toBeCloseTo(zA, 12);
+    expect(rasterDepth(verts, len)).toBeCloseTo(zB, 12);
+    expect(rasterDepth(verts, len / 2)).toBeCloseTo((zA + zB) / 2, 12);
   });
 });
 

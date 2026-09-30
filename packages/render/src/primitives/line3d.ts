@@ -92,7 +92,7 @@ import {
 import { CAP_CODE, JOIN_CODE } from './line-join.ts';
 import { applyBlend3D, colorsOpaque, isOpaque, type Blend3D } from './blend3d.ts';
 import type { LineData } from './line.ts';
-import { computeDashDistances3D } from './line3d-math.ts';
+import { computeDashDistances3D, LINE3D_QUAD_INDEX, LINE3D_QUAD_POSITIONS } from './line3d-math.ts';
 import { LINE3D_FRAGMENT_SHADER, LINE3D_VERTEX_SHADER } from './line3d.glsl.ts';
 
 /**
@@ -119,12 +119,10 @@ const QUAD_KEY = 'holochart:primitives:line3d-quad';
 
 function createQuadTemplate(): BufferGeometry {
   const geometry = new BufferGeometry();
-  // x: 0 = segment start end, 1 = segment end; y: side (-1 / +1).
-  geometry.setAttribute(
-    'position',
-    new Float32BufferAttribute([0, -1, 0, 1, -1, 0, 0, 1, 0, 1, 1, 0], 3),
-  );
-  geometry.setIndex([0, 1, 2, 2, 1, 3]);
+  // x: 0 = segment start end, 1 = segment end; y: side (-1 / +1); z: 1 = on the end point (the
+  // exact depth ramp, see `line3d.glsl.ts`), 0 = past it by the join / cap extent.
+  geometry.setAttribute('position', new Float32BufferAttribute([...LINE3D_QUAD_POSITIONS], 3));
+  geometry.setIndex([...LINE3D_QUAD_INDEX]);
   return geometry;
 }
 

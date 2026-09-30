@@ -88,17 +88,17 @@ types are added as their traces land.
 
 ## 3D
 
-| Chart                             | Trace type(s)            | Milestone |
-| --------------------------------- | ------------------------ | --------- |
-| [Scatter3D](/charts/3d/scatter3d) | `scatter3d`              | M6        |
-| [Surface](/charts/3d/surface)     | `surface`                | M6        |
-| [Mesh3D](/charts/3d/mesh3d)       | `mesh3d`                 | M6        |
-| [Cone](/charts/3d/cone)           | `cone`                   | M6        |
-| Streamtube                        | `streamtube`             | M6        |
-| Volume                            | `volume`                 | M6        |
-| Isosurface                        | `isosurface`             | M6        |
-| Bar3D                             | `bar3d` (Holochart only) | M6        |
-| 3D Axes & Camera                  | `layout.scene`           | M6        |
+| Chart                               | Trace type(s)            | Milestone |
+| ----------------------------------- | ------------------------ | --------- |
+| [Scatter3D](/charts/3d/scatter3d)   | `scatter3d`              | M6        |
+| [Surface](/charts/3d/surface)       | `surface`                | M6        |
+| [Mesh3D](/charts/3d/mesh3d)         | `mesh3d`                 | M6        |
+| [Cone](/charts/3d/cone)             | `cone`                   | M6        |
+| [Streamtube](/charts/3d/streamtube) | `streamtube`             | M6        |
+| [Volume](/charts/3d/volume)         | `volume`                 | M6        |
+| [Isosurface](/charts/3d/isosurface) | `isosurface`             | M6        |
+| [Bar3D](/charts/3d/bar3d)           | `bar3d` (Holochart only) | M6        |
+| 3D Axes & Camera                    | `layout.scene`           | M6        |
 
 ## Maps
 

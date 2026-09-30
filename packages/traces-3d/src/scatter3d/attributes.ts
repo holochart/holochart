@@ -3,7 +3,9 @@
  * `x`, `y`, `z` in a 3D scene, `mode` (markers, lines, text), Plotly's eight 3D marker symbols,
  * markers and lines colored directly or through colorscales, 3D error bars, shadows of the points
  * on the walls (`projection`), a surface through the points (`surfaceaxis`) and camera-facing
- * text. Holochart extension: `marker.render` (`'sphere'`: lit spheres instead of flat sprites).
+ * text. Holochart extensions: `marker.render` (`'sphere'`: lit spheres instead of flat sprites)
+ * and `line.render` (`'tube'`, `'ribbon'`: lit meshes instead of screen-space lines, with
+ * `line.radius`, `line.ribbon`, `line.lighting`, `line.lightposition` and `line.material`).
  *
  * Scatter's own declarations are reused where the semantics match (text, fonts, colorscales,
  * bubble sizing), with Plotly's 3D defaults (`mode: 'lines+markers'`, `marker.size: 8`,
@@ -12,6 +14,11 @@
 import { attr, type SchemaNode } from '@mk7s/holochart-core';
 import { colorscaleAttributes, scatterAttributes } from '@mk7s/holochart-traces-basic';
 import { sceneIdAttribute } from '../scene/layout-attributes.ts';
+import {
+  sceneLightingAttributes,
+  sceneMaterialAttributes,
+  type SceneLightingDefaults,
+} from '../scene/lighting-attributes.ts';
 
 const S = scatterAttributes.children;
 const M = S.marker.children;
@@ -37,6 +44,15 @@ export const SCATTER3D_DASHES = [
   'longdashdot',
   'solid',
 ] as const;
+
+/**
+ * Lighting of tube and ribbon lines (`line.render`): Plotly's mesh model with more directional
+ * contrast than its mesh defaults, so round tubes read as round.
+ */
+export const LINE_MESH_LIGHTING: SceneLightingDefaults = {
+  lighting: { ambient: 0.5, diffuse: 0.7, specular: 0.15, roughness: 0.4, fresnel: 0.2 },
+  lightposition: [1e5, 1e5, 0],
+};
 
 /** A copy of an attribute node with fields replaced (e.g. a 3D default). */
 function override<N extends SchemaNode>(node: N, fields: Record<string, unknown>): N {
@@ -166,8 +182,42 @@ export const scatter3dAttributes = /* @__PURE__ */ (() =>
             values: SCATTER3D_DASHES,
             dflt: 'solid',
             editType: 'style',
-            description: 'Dash style, measured in CSS px along the drawn line.',
+            description:
+              'Dash style, measured in CSS px along the drawn line (`render: "screen"` only).',
           }),
+          render: attr.enumerated({
+            values: ['screen', 'tube', 'ribbon'],
+            dflt: 'screen',
+            editType: 'calc',
+            description:
+              "How the line is drawn (a Holochart extension): `'screen'` — Plotly's look, a flat band `width` CSS px wide at every depth; `'tube'` — a lit tube of `radius` around the line; `'ribbon'` — a lit strip swept along an axis (`ribbon`), e.g. waterfall plots of spectra. Tubes and ribbons are meshes: they scale with the view like the data, and take `lighting`, `lightposition` and `material`.",
+          }),
+          radius: attr.number({
+            min: 0,
+            dflt: 0.01,
+            editType: 'calc',
+            description:
+              "Tube radius (`render: 'tube'`) as a fraction of the longest side of the scene's axis box (so tubes stay round whatever the axis scales).",
+          }),
+          ribbon: attr.object(
+            {
+              axis: attr.enumerated({
+                values: ['x', 'y', 'z'],
+                dflt: 'y',
+                editType: 'calc',
+                description: 'The axis the ribbon extends along (on both sides of the line).',
+              }),
+              width: attr.number({
+                min: 0,
+                editType: 'calc',
+                description:
+                  "Ribbon width along `axis`, in that axis' units (a category is 1, dates in ms). Default: a twentieth of the axis range.",
+              }),
+            },
+            { editType: 'calc', description: "The ribbon of `render: 'ribbon'`." },
+          ),
+          ...sceneLightingAttributes(LINE_MESH_LIGHTING),
+          ...sceneMaterialAttributes,
         },
         { editType: 'plot', description: 'Line style (`mode` `lines`).' },
       ),

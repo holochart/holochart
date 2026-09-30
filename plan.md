@@ -1423,32 +1423,32 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] `x`, `y`, `z`, `u`, `v`, `w`, `sizemode: 'scaled' | 'absolute' | 'raw'`, `sizeref`, `anchor: 'tip' | 'tail' | 'cm' | 'center'`, colorscale by norm, lighting
 - [x] Instanced cones (single draw call). Hover shows the vector and norm. — gl-cone3d `vectorScale`/`coneScale` semantics
 
-#### E14.6 — `streamtube`   `P1` `L`   deps: E14.1
+#### E14.6 — `streamtube`   `P1` `L`   deps: E14.1   · ✅ Done (M6 wave 2)
 > As a physicist, I want stream tubes through 3D vector fields, so that I can visualize flow.
-- [ ] `x`, `y`, `z`, `u`, `v`, `w` on a grid, `starts.{x, y, z}`, `maxdisplayed`, `sizeref`
-- [ ] RK4 integration with trilinear interpolation. Tube radius varies with divergence (Plotly semantics).
-- [ ] Animated flow texture (Holochart extension), `P2`
+- [x] `x`, `y`, `z`, `u`, `v`, `w` on a grid, `starts.{x, y, z}`, `maxdisplayed`, `sizeref` — grid detection like plotly.js `processGrid`; gl-streamtube3d starts, step and stopping rules (`maxdisplayed` = samples per tube)
+- [x] RK4 integration with trilinear interpolation. Tube radius varies with divergence (Plotly semantics). — RK4 with substeps instead of Plotly's Euler; one mesh per trace, round untwisted rings, per-vertex norm colors; 32³ × 100 starts ≈ 10 ms
+- [ ] Animated flow texture (Holochart extension), `P2` — *deferred*; also worker integration, `hovertemplatefallback`
 
-#### E14.7 — `volume`   `P1` `L`   deps: E14.1
+#### E14.7 — `volume`   `P1` `L`   deps: E14.1   · ✅ Done (M6 wave 2)
 > As a scientist, I want volume rendering of 3D scalar fields, so that I can see internal structure.
-- [ ] `x`, `y`, `z`, `value`, `isomin`, `isomax`, `opacity`, `opacityscale` (`'min' | 'max' | 'extremes' | 'uniform' | [[v, o]…]`), `surface.{count, fill, pattern}`, `caps`, `slices`, colorscale
-- [ ] Two rendering modes: Plotly-compatible (stacked isosurfaces) and **GPU ray-marched** (`render: 'raymarch'`, a holochart extension) using a `Data3DTexture` + transfer function
-- [ ] 256³ ray-marched volume interactive at ≥ 30 fps on the reference machine
+- [x] `x`, `y`, `z`, `value`, `isomin`, `isomax`, `opacity`, `opacityscale` (`'min' | 'max' | 'extremes' | 'uniform' | [[v, o]…]`), `surface.{count, fill, pattern}`, `caps`, `slices`, colorscale — `opacityscale` applied squared as gl-mesh3d draws it; *deferred: `contour`, calendars*
+- [x] Two rendering modes: Plotly-compatible (stacked isosurfaces) and **GPU ray-marched** (`render: 'raymarch'`, a holochart extension) using a `Data3DTexture` + transfer function — 8-bit texture, transfer function per grid cell, front-to-back with early termination, `raymarch.{step, shading}`, CPU ray-cast hover; *deferred: caps/slices/spaceframe and hover occlusion for ray-marched volumes*
+- [x] 256³ ray-marched volume interactive at ≥ 30 fps on the reference machine — 60 fps on M1 Max (6.5 ms GPU at DPR 1, 10 ms at DPR 2; `volume/perf-256` bench scenario)
 
-#### E14.8 — `isosurface`   `P1` `L`   deps: E14.1
+#### E14.8 — `isosurface`   `P1` `L`   deps: E14.1   · ✅ Done (M6 wave 2)
 > As a scientist, I want isosurfaces, so that I can extract level surfaces of 3D fields.
-- [ ] Marching cubes (worker-able) with `isomin`, `isomax`, `surface.{count, fill, pattern: 'all' | 'odd' | 'even' | 'A+B+C+D+E'…, show}`
-- [ ] `caps.{x, y, z}.{show, fill}`, `slices.{x, y, z}.{show, locations, fill}`, `spaceframe.{show, fill}`
-- [ ] Lighting and colorscale attributes
+- [x] Marching cubes (worker-able) with `isomin`, `isomax`, `surface.{count, fill, pattern: 'all' | 'odd' | 'even' | 'A+B+C+D+E'…, show}` — plotly.js `generateIsoMeshes` ported (five tetrahedra per cell, marching tetrahedra) so figures match Plotly; pure typed-array function, still synchronous in calc (*worker dispatch deferred*)
+- [x] `caps.{x, y, z}.{show, fill}`, `slices.{x, y, z}.{show, locations, fill}`, `spaceframe.{show, fill}`
+- [x] Lighting and colorscale attributes — hover snaps to the nearest grid point with a `value` line
 
-#### E14.9 — `bar3d` (holochart-exclusive)   `P2` `M`   deps: E14.1, E2.7
+#### E14.9 — `bar3d` (holochart-exclusive)   `P2` `M`   deps: E14.1, E2.7   · ✅ Done (M6 wave 2)
 > As an analyst, I want true 3D bar charts on an x/y grid, so that I can show matrix data as columns.
-- [ ] `x`, `y` (categorical or numeric), `z` heights, `width`, `depth`, `base`, `marker.{color, colorscale, line}`, `material`
-- [ ] Stacked 3D bars (`barmode: 'stack'`). Hover per column.
+- [x] `x`, `y` (categorical or numeric), `z` heights, `width`, `depth`, `base`, `marker.{color, colorscale, line}`, `material` — instanced lit boxes (one draw call per trace), in-face edges, translucency sorted by bar
+- [x] Stacked 3D bars (`barmode: 'stack'`). Hover per column. — trace `stackgroup` (scenes have no `barmode`), via a `SceneCalc.sceneCrossTrace` hook; hover x/y/z/base. *Deferred: cast shadows, per-bar edge colors, grouped/relative modes, bar text, a11y summary*
 
-#### E14.10 — `ribbon3d` & `line3d` extras (holochart-exclusive)   `P3` `M`   deps: E14.2
+#### E14.10 — `ribbon3d` & `line3d` extras (holochart-exclusive)   `P3` `M`   deps: E14.2   · ✅ Done (M6 wave 2)
 > As a designer, I want ribbon and tube renderings of 3D lines, so that I can build waterfall-ribbon plots (like spectrograms).
-- [ ] `line.render: 'screen' | 'tube' | 'ribbon'`, `line.radius`, ribbon width along an axis
+- [x] `line.render: 'screen' | 'tube' | 'ribbon'`, `line.radius`, ribbon width along an axis — `line.radius` as a fraction of the axis box's longest side, twist-free frames, `line.ribbon.{axis, width}`, lit meshes; *deferred: per-point radius, dashes on meshes*
 
 #### E14.11 — 3D performance & quality   `P1` `M`   deps: E14.2–E14.8
 > As an end user, I want 3D charts to stay smooth, so that exploring feels natural.
@@ -2283,9 +2283,9 @@ performance targets are checked with `pnpm bench:gpu` on the real GPU.
 | 1 | `surface` (height texture, contours, wireframe) | E14.3 ✅ |
 | 1 | `mesh3d` and `cone` | E14.4 ✅, E14.5 ✅ |
 | 1 | Camera animation and auto-rotate | E7.5 ✅ (plus E8.7 attributes) |
-| 2 | `streamtube` | E14.6 |
-| 2 | `volume` (stacked isosurfaces and ray-marched) and `isosurface` | E14.7, E14.8 |
-| 2 | `bar3d` and 3D line extras | E14.9, E14.10 |
+| 2 | `streamtube` | E14.6 ✅ |
+| 2 | `volume` (stacked isosurfaces and ray-marched) and `isosurface` | E14.7 ✅, E14.8 ✅ |
+| 2 | `bar3d` and 3D line extras | E14.9 ✅, E14.10 ✅ |
 | 3 | Extrusion and 2.5D view: bar and pie depth, `view3d` | E8.9, E9.10, E9.12 |
 | 3 | Express `scatter3d`/`line3d`, docs, exit review | E23.6 |
 
@@ -2306,6 +2306,15 @@ Open after M6 wave 1: the docs build now needs an 8 GB heap (`apps/docs` build s
 translucent path); surface `contours.color` defaults to Plotly's `#444`, hard to see on the dark
 walls; 3D traces have no keyboard navigation or `describe`-based tables beyond surface; the 3D
 add-on budget is 81 kB (73.6 kB).
+
+Open after M6 wave 2: the opaque 3D line fragments are fixed (the 3D quad now has exact depth
+along each segment; `_dev/lines-3d-opaque` baseline), but surface projections stay translucent
+because lines lying exactly on the walls can still z-fight slightly; isosurface extraction and
+streamtube integration are pure and worker-able but still run synchronously in calc; ray-marched
+volumes hide the whole ray behind opaque traces inside them and have no caps, slices or
+spaceframe; the new 3D traces (streamtube, isosurface, volume, bar3d) have no keyboard navigation
+or `describe` tables; 3D add-on measured 96.7 kB after wave 2 (budget raised 81 → 105 kB by
+owner decision; full ESM stays 540 kB, 533.9 kB measured).
 
 > M6 (3D) can run **in parallel** with M4/M5 on a separate track once M3's shared infrastructure (transitions, components) has landed, because it mostly depends on E2 and E14.1.
 

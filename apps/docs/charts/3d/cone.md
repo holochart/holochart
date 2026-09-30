@@ -17,8 +17,8 @@ call, so fields of tens of thousands of samples stay interactive.
 
 Pick a different chart when:
 
-- you want to follow the flow rather than see it at sample points: stream tubes (planned) trace
-  paths through the field;
+- you want to follow the flow rather than see it at sample points:
+  [stream tubes](/charts/3d/streamtube) trace paths through the field;
 - the field is 2D: a quiver plot (planned) draws arrows on a flat plot;
 - only the magnitude matters: a `surface` or [heatmap](/charts/scientific/heatmap) of the norms
   is easier to read.
