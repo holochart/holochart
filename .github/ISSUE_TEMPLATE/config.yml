@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://mk7s.dev/holochart/
+    about: Guides, the API reference and the list of known Plotly differences.
+  - name: Security vulnerability
+    url: https://github.com/holochart/holochart/security/advisories/new
+    about: Report security problems privately. Do not open a public issue.

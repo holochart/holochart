@@ -25,8 +25,16 @@ function normalizeBase(b: string): string {
 }
 
 const base = normalizeBase(process.env['HOLOCHART_DOCS_BASE'] ?? '/holochart/');
-/** Dev sandbox for "Open in sandbox" links; empty hides the link. */
-const sandboxUrl = process.env['HOLOCHART_SANDBOX_URL'] ?? 'http://localhost:5173/';
+/**
+ * Target of the "Open in sandbox" links on examples; empty hides them. Without
+ * `HOLOCHART_SANDBOX_URL`, `vitepress dev` links the local dev sandbox and builds hide the links:
+ * the sandbox is not deployed, so a built site must never point at localhost.
+ */
+function sandboxUrl(command: 'build' | 'serve'): string {
+  return (
+    process.env['HOLOCHART_SANDBOX_URL'] ?? (command === 'serve' ? 'http://localhost:5173/' : '')
+  );
+}
 const repoUrl = 'https://github.com/holochart/holochart';
 
 const markdown: MarkdownOptions = {
@@ -101,10 +109,14 @@ export default defineConfig({
         markdown,
         base,
       }),
+      {
+        // A plugin, not a static `define`, to tell `vitepress dev` (serve) from a build.
+        name: 'holochart-sandbox-url',
+        config: (_config, { command }) => ({
+          define: { __HOLOCHART_SANDBOX_URL__: JSON.stringify(sandboxUrl(command)) },
+        }),
+      },
     ],
-    define: {
-      __HOLOCHART_SANDBOX_URL__: JSON.stringify(sandboxUrl),
-    },
     resolve: {
       // VitePress bundles Vite 5, where custom conditions are added to the defaults.
       conditions: ['source'],
@@ -113,10 +125,14 @@ export default defineConfig({
       resolve: { conditions: ['source'], externalConditions: ['source'] },
     },
     server: {
-      // The sandbox uses 5173.
-      port: 5174,
+      // The sandbox uses 5173. This setting overrides `vitepress dev --port`, so tools that need
+      // their own port (the render check) set DOCS_PORT, which must then be free.
+      port: Number(process.env['DOCS_PORT'] ?? 5174),
+      strictPort: process.env['DOCS_PORT'] !== undefined,
       // Examples live outside the docs app.
       fs: { allow: [REPO_ROOT] },
+      // A build writing `.vitepress/dist` while the dev server runs must not reload its pages.
+      watch: { ignored: ['**/.vitepress/dist/**', '**/.vitepress/cache/**'] },
     },
     build: {
       target: 'es2022',

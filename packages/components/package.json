@@ -2,7 +2,19 @@
   "name": "@mk7s/holochart-components",
   "version": "0.0.0",
   "description": "Figure components: axes, legend, colorbar, annotations, shapes, hover labels, modebar.",
+  "keywords": [
+    "charts",
+    "plotly",
+    "webgl",
+    "three",
+    "data-visualization",
+    "axes",
+    "legend",
+    "colorbar",
+    "annotations"
+  ],
   "license": "MIT",
+  "author": "sanjee",
   "type": "module",
   "sideEffects": false,
   "repository": {
@@ -11,13 +23,18 @@
     "directory": "packages/components"
   },
   "homepage": "https://mk7s.dev/holochart",
+  "bugs": {
+    "url": "https://github.com/holochart/holochart/issues"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "development": "./dist/index.development.js",
-      "import": "./dist/index.js"
-    }
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -34,7 +51,13 @@
     "@mk7s/holochart-runtime": "workspace:*"
   },
   "peerDependencies": {
-    "three": ">=0.180.0"
+    "three": ">=0.180.0 <0.187.0",
+    "@types/three": ">=0.180.0 <0.187.0"
+  },
+  "peerDependenciesMeta": {
+    "@types/three": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "three": "catalog:",
@@ -43,12 +66,16 @@
     "typescript": "catalog:"
   },
   "publishConfig": {
+    "access": "public",
+    "provenance": true,
     "exports": {
       ".": {
         "types": "./dist/index.d.ts",
         "development": "./dist/index.development.js",
-        "import": "./dist/index.js"
-      }
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
     }
   }
 }

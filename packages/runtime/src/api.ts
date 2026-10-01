@@ -18,6 +18,7 @@ import type {
   Frame,
 } from './anim/types.ts';
 import type { DownloadImageOptions, ToImageOptions } from './export/types.ts';
+import { removeFallback } from './fallback.ts';
 import type { AttributeUpdate, MaxPoints, StreamUpdate } from './plan.ts';
 
 type TraceIndices = number | readonly number[];
@@ -201,9 +202,13 @@ export function unhover(el: HTMLElement): void {
 /** Plotly's `Fx` namespace: `Fx.hover(el, [{ curveNumber, pointNumber }])`, `Fx.unhover(el)`. */
 export const Fx = { hover, unhover } as const;
 
-/** Destroy the chart in `el` (if any) and free everything it holds. */
+/**
+ * Destroy the chart in `el` (if any) and free everything it holds, including the note shown
+ * instead of a chart without WebGL2.
+ */
 export function purge(el: HTMLElement): void {
   getChart(el)?.destroy();
+  removeFallback(el);
 }
 
 function isElement(value: unknown): value is HTMLElement {

@@ -2,7 +2,17 @@
   "name": "@mk7s/holochart-themes",
   "version": "0.0.0",
   "description": "Built-in templates, palettes, and colorscales.",
+  "keywords": [
+    "charts",
+    "plotly",
+    "data-visualization",
+    "themes",
+    "templates",
+    "palettes",
+    "colorscales"
+  ],
   "license": "MIT",
+  "author": "sanjee",
   "type": "module",
   "sideEffects": false,
   "repository": {
@@ -11,12 +21,17 @@
     "directory": "packages/themes"
   },
   "homepage": "https://mk7s.dev/holochart",
+  "bugs": {
+    "url": "https://github.com/holochart/holochart/issues"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -35,11 +50,15 @@
     "typescript": "catalog:"
   },
   "publishConfig": {
+    "access": "public",
+    "provenance": true,
     "exports": {
       ".": {
         "types": "./dist/index.d.ts",
-        "import": "./dist/index.js"
-      }
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
     }
   }
 }

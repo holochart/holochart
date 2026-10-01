@@ -1,0 +1,82 @@
+# Dependabot version updates.
+# https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+version: 2
+
+updates:
+  # npm packages of the pnpm workspace. The `npm` ecosystem reads pnpm-lock.yaml and updates the
+  # lockfile with pnpm. Most versions live in the `catalog:` of pnpm-workspace.yaml, which
+  # Dependabot updates in place (pnpm catalog support since 2025); the rest are in package.json
+  # files.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    # Wait a few days after a release before proposing it (supply-chain safety margin).
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    # Published packages keep their ranges while a new version satisfies them (only the lockfile
+    # moves), so a routine update never raises the minimum version users must install.
+    versioning-strategy: increase-if-necessary
+    commit-message:
+      prefix: chore(deps)
+    ignore:
+      # three.js is a peer dependency, and its 0.x minor releases (0.186 -> 0.187) are breaking
+      # changes. Raising the supported three.js range is a deliberate, manually reviewed change
+      # (see docs/release/versioning.md); patch updates are still proposed.
+      - dependency-name: three
+        update-types: ['version-update:semver-minor', 'version-update:semver-major']
+      - dependency-name: '@types/three'
+        update-types: ['version-update:semver-minor', 'version-update:semver-major']
+    groups:
+      # Build, lint, test and docs tooling: one PR for its minor and patch updates.
+      dev-tooling:
+        patterns:
+          - '@changesets/*'
+          - '@eslint/*'
+          - 'eslint'
+          - 'eslint-*'
+          - 'typescript-eslint'
+          - 'globals'
+          - 'prettier'
+          - 'typescript'
+          - '@types/node'
+          - 'tsdown'
+          - 'turbo'
+          - 'vite'
+          - 'vitest'
+          - '@vitest/*'
+          - '@playwright/test'
+          - 'playwright'
+          - 'jsdom'
+          - 'fast-check'
+          - 'pixelmatch'
+          - 'pngjs'
+          - '@types/pngjs'
+          - 'size-limit'
+          - '@size-limit/*'
+          - 'typedoc'
+          - 'typedoc-*'
+          - 'vitepress'
+        update-types: ['minor', 'patch']
+      # Everything else (runtime dependencies such as d3-*, earcut, flatbush, troika-three-text):
+      # one PR for minor and patch updates. Major updates always get their own PR.
+      dependencies:
+        patterns: ['*']
+        update-types: ['minor', 'patch']
+
+  # GitHub Actions used by the workflows (.github/workflows, covered by "/") and by the local
+  # composite actions (.github/actions/*, e.g. setup).
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      - /.github/actions/*
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore(deps)
+    groups:
+      github-actions:
+        patterns: ['*']

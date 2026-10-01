@@ -1,4 +1,5 @@
 /** Validation issue types (plan E1.3). */
+import { HolochartError } from '../errors.ts';
 
 /** What kind of problem an issue describes. */
 export type IssueCode =
@@ -32,7 +33,7 @@ export interface Issue {
 }
 
 /** Thrown by supply-defaults in `config.strict` mode, carrying the first issue. */
-export class ValidationError extends Error {
+export class ValidationError extends HolochartError {
   readonly issue: Issue;
   constructor(issue: Issue) {
     super(`${issue.path}: ${issue.message}`);

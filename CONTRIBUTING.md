@@ -1,6 +1,7 @@
 # Contributing to Holochart
 
-Thanks for helping build Holochart. The project is pre-alpha (milestone M1, First Plot), so
+Thanks for helping build Holochart. The project is in alpha (all chart families through 3D are
+built; nothing is on npm yet, see the [roadmap](https://mk7s.dev/holochart/roadmap)), so
 tooling and conventions are still settling. When this document and the code disagree, the code
 wins; please fix the document in the same PR.
 
@@ -9,7 +10,9 @@ Background reading: [README.md](README.md), [ARCHITECTURE.md](ARCHITECTURE.md),
 [docs/release/](docs/release/README.md).
 
 Holochart is licensed under the [MIT License](LICENSE). By contributing, you agree that your
-contributions are licensed under the same terms.
+contributions are licensed under the same terms. Everyone taking part follows the
+[Code of Conduct](CODE_OF_CONDUCT.md); report security problems privately as described in
+[SECURITY.md](SECURITY.md), not in a public issue.
 
 ## Prerequisites and setup
 

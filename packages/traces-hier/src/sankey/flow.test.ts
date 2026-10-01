@@ -254,8 +254,10 @@ describe('sankey flow particles: placement and motion', () => {
           // The distance travelled along the link, modulo its length.
           const d = (((u1 - u0) * length) % length) + (u1 < u0 ? length : 0);
           expect(d).toBeCloseTo((speed * t) % length, 6);
-          // A particle a few px on is a few px away (the samples follow the arc).
-          if (speed * t < 5 && u0 + (speed * t) / length < 1) {
+          // A particle a few px on is a few px away (the samples follow the arc). Unless it wrapped
+          // to the start: judged from `u1` itself, since `u0 + Δ < 1` can round differently from
+          // the phase arithmetic (u0 = 0.9999999999999984 and a 1e-14 px step wraps to 0).
+          if (speed * t < 5 && u1 >= u0) {
             const [x0, y0] = particleAt(paths, k, u0, 0);
             const [x1, y1] = particleAt(paths, k, u1, 0);
             expect(Math.hypot(x1 - x0, y1 - y0)).toBeLessThanOrEqual(speed * t + 1e-3);

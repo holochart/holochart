@@ -72,22 +72,36 @@ needs a major). While deprecated:
 
 `three` is a peer dependency ([ADR-003](../adr/003-three-peer-dependency.md)).
 
-| Item                  | Value                                                                  |
-| --------------------- | ---------------------------------------------------------------------- |
-| Peer range            | `>=0.180.0`                                                            |
-| Minimum, tested in CI | `0.180.0` (`three (min)` job: typecheck + unit tests)                  |
-| Development version   | pnpm catalog `^0.186.0` (all other CI jobs, visual tests)              |
-| Latest, tested in CI  | newest release that passes pnpm `minimumReleaseAge` (`three (latest)`) |
+| Item                  | Value                                                                    |
+| --------------------- | ------------------------------------------------------------------------ |
+| Peer range            | `>=0.180.0 <0.187.0`                                                     |
+| `@types/three`        | optional peer, same range (packages whose `.d.ts` exposes three's types) |
+| Minimum, tested in CI | `0.180.0` (`three (min)` job: typecheck + unit tests)                    |
+| Development version   | pnpm catalog `^0.186.0` (all other CI jobs, visual tests)                |
+| Latest, tested in CI  | newest release that passes pnpm `minimumReleaseAge` (`three (latest)`)   |
 
 - The CI `three` jobs override the pnpm catalog in the runner only
   (`.github/workflows/ci.yml`); `three (latest)` is a canary that reports but doesn't fail the
   workflow. Visual tests run only on the catalog version.
 - The lower bound is raised on purpose (a minor release, noted in the changelog) when we need a
-  newer API, to a three.js release at least 3 months old. The upper bound stays open; if a new
-  three release breaks Holochart, the fix ships in a patch.
+  newer API, to a three.js release at least 3 months old.
+- The upper bound is the next three minor after the newest one CI has tested (three is `0.x`, so
+  every minor may break). It is widened per tested release: when `three (latest)` passes on a new
+  three minor `0.N`, a patch release sets the bound to `<0.(N+1).0` and says so in the changelog. If
+  a new three release breaks Holochart, the fix ships first and the bound moves with it. To try a
+  newer three before that, pnpm and yarn only warn; npm needs an `overrides` entry (or
+  `--legacy-peer-deps`).
+- `@types/three` is an optional peer with the same range, declared by the packages whose shipped
+  `.d.ts` exposes three's types (`render`, `runtime`, `components`, `traces-3d` and the full bundle
+  `@mk7s/holochart`). TypeScript users install it next to `three`; JavaScript users can ignore it.
 - The IIFE build bundles its own three (ADR-015); its version is listed in the release notes.
 
 ## Runtimes
 
 - Browsers with WebGL 2 and ES2022 (current Chrome, Edge, Firefox, Safari 16.4+).
 - Node.js ≥ 22 for the headless, renderer-free parts (`@mk7s/holochart-core`) and for tooling.
+  The packages are ESM-only; their `default` export condition lets Node 22's `require(esm)` and
+  tools that only know `default` load them.
+- The published packages declare no `engines` field: they run in browsers, and an `engines.node`
+  entry would make some package managers (yarn 1) refuse to install them on an older Node used
+  only to run a bundler. The Node requirement above is documented, not enforced.

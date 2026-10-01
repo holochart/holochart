@@ -76,6 +76,7 @@ export type { ChartRegistry, ChartRegistryOptions, RegistryListing } from './reg
 
 // Chart (E7.1, E4.1, E4.3)
 export { Chart, createChart, getChart, STACK_GROUPS } from './chart.ts';
+export { WebGLUnavailableError } from './fallback.ts';
 export type { ChartOptions, ChartThree, FigurePatch } from './chart.ts';
 export {
   addFrames,

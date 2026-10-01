@@ -31,8 +31,9 @@ and the separate `tsc --emitDeclarationOnly` step.
 - Each package has a `tsdown.config.ts`; the package `build` script is `tsdown`.
 - **ESM**: `dist/index.js` + sourcemap, `platform: 'neutral'`, `target: 'es2022'`. Packages listed in
   `dependencies` and `peerDependencies` (including `three`) are external automatically.
-- **Declarations**: `dts: true` emits **one bundled `dist/index.d.ts` per entry** (plus a declaration
-  map, from `declarationMap` in `tsconfig.base.json`). rolldown-plugin-dts runs the real TypeScript
+- **Declarations**: `dts` emits **one bundled `dist/index.d.ts` per entry**, with `@internal`
+  members stripped and no declaration map (`DTS_OPTIONS` in `scripts/build/tsdown-preset.ts`: the
+  maps would point at `src/`, which isn't published). rolldown-plugin-dts runs the real TypeScript
   6 compiler with the package's tsconfig, so our compiler options and `.ts` specifiers work as-is and
   no `baseUrl` is injected. Imports of other packages (workspace or third-party) stay as imports.
 - **Full-bundle IIFE**: `@mk7s/holochart` has a second build, `dist/holochart.iife.min.js` (+

@@ -1,0 +1,15 @@
+{
+  "name": "fixture-vite",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@mk7s/holochart": "*",
+    "three": "*"
+  },
+  "devDependencies": {
+    "vite": "*"
+  }
+}

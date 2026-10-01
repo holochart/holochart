@@ -20,6 +20,8 @@
     "test:visual": "playwright test",
     "test:visual:update": "UPDATE_BASELINES=1 playwright test",
     "test:bundle": "turbo run build --filter=@mk7s/holochart && playwright test -c tests/bundle/playwright.config.ts",
+    "test:package": "pnpm build:packages && playwright test -c tests/package/playwright.config.ts",
+    "lint:package": "pnpm build:packages && node tests/package/lint.ts",
     "test:visual:report": "node tests/visual/report.ts",
     "gallery": "playwright test -c tools/gallery-gen/playwright.config.ts",
     "gallery:check": "node tools/gallery-gen/src/check.ts",

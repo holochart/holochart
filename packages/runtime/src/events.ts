@@ -3,7 +3,7 @@
  * alias of `'relayout'`, so code ported from Plotly keeps working.
  */
 import type { FullTrace } from '@mk7s/holochart-core';
-import type { FrameInfo } from '@mk7s/holochart-render';
+import { reportUserError, type FrameInfo } from '@mk7s/holochart-render';
 import type { AnimatingFrameEvent } from './anim/types.ts';
 import type { AxisInfo } from './contracts.ts';
 import type { AttributeUpdate, MaxPoints, StreamUpdate } from './plan.ts';
@@ -239,13 +239,20 @@ export class ChartEmitter {
     return this.#listeners.has(type);
   }
 
-  /** Call every listener of `type`; `false` when any of them returned `false` (cancel). */
+  /**
+   * Call every listener of `type`; `false` when any of them returned `false` (cancel). A listener
+   * that throws does not stop the others or the chart: its error is reported (`reportError`).
+   */
   emit<K extends ChartEventName>(type: K, payload: ChartEvents[K]): boolean {
     const list = this.#listeners.get(type);
     if (!list) return true;
     let proceed = true;
     for (const listener of list) {
-      if ((listener as (p: ChartEvents[K]) => unknown)(payload) === false) proceed = false;
+      try {
+        if ((listener as (p: ChartEvents[K]) => unknown)(payload) === false) proceed = false;
+      } catch (error) {
+        reportUserError(error);
+      }
     }
     return proceed;
   }

@@ -1,0 +1,7 @@
+{
+  "name": "fixture-html",
+  "private": true,
+  "dependencies": {
+    "@mk7s/holochart": "*"
+  }
+}

@@ -2,7 +2,18 @@
   "name": "@mk7s/holochart-render",
   "version": "0.0.0",
   "description": "three.js rendering engine: renderer, viewports, GPU primitives, picking.",
+  "keywords": [
+    "charts",
+    "plotly",
+    "webgl",
+    "three",
+    "data-visualization",
+    "gpu",
+    "renderer",
+    "sdf-text"
+  ],
   "license": "MIT",
+  "author": "sanjee",
   "type": "module",
   "sideEffects": false,
   "repository": {
@@ -11,13 +22,18 @@
     "directory": "packages/render"
   },
   "homepage": "https://mk7s.dev/holochart",
+  "bugs": {
+    "url": "https://github.com/holochart/holochart/issues"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
-    "./fonts/*": "./fonts/*"
+    "./fonts/*": "./fonts/*",
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -35,7 +51,13 @@
     "flatbush": "catalog:"
   },
   "peerDependencies": {
-    "three": ">=0.180.0"
+    "three": ">=0.180.0 <0.187.0",
+    "@types/three": ">=0.180.0 <0.187.0"
+  },
+  "peerDependenciesMeta": {
+    "@types/three": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "three": "catalog:",
@@ -44,12 +66,16 @@
     "typescript": "catalog:"
   },
   "publishConfig": {
+    "access": "public",
+    "provenance": true,
     "exports": {
       ".": {
         "types": "./dist/index.d.ts",
-        "import": "./dist/index.js"
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
       },
-      "./fonts/*": "./fonts/*"
+      "./fonts/*": "./fonts/*",
+      "./package.json": "./package.json"
     }
   }
 }

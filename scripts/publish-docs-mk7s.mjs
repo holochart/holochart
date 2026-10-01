@@ -15,7 +15,7 @@
 //          --deploy, --branch <name> (Pages branch; default: production).
 // Deploying needs `npx wrangler login` once per machine (see the mk7s README).
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { parseArgs } from 'node:util';
@@ -43,9 +43,9 @@ function fail(message) {
   process.exit(1);
 }
 
-function run(command, commandArgs, cwd) {
+function run(command, commandArgs, cwd, env = process.env) {
   console.log(`\n$ ${command} ${commandArgs.join(' ')}   (in ${cwd})`);
-  const result = spawnSync(command, commandArgs, { cwd, stdio: 'inherit' });
+  const result = spawnSync(command, commandArgs, { cwd, stdio: 'inherit', env });
   if (result.status !== 0) fail(`${command} ${commandArgs.join(' ')} failed`);
 }
 
@@ -55,9 +55,27 @@ if (!existsSync(mk7sPackage) || JSON.parse(readFileSync(mk7sPackage, 'utf8')).na
   fail(`${MK7S} is not the mk7s site (expected a package.json named "mk7s")`);
 }
 
-// 1. Build the docs (regenerates the schema reference and API pages first).
-if (!args['skip-build']) run('pnpm', ['--filter', '@mk7s/holochart-docs', 'build'], ROOT);
+// 1. Build the docs (regenerates the schema reference and API pages first). The dev sandbox is not
+//    deployed, so "Open in sandbox" links stay hidden unless HOLOCHART_SANDBOX_URL names a public
+//    one (builds already default to hidden; this keeps a stray local value out of production).
+if (!args['skip-build']) {
+  run('pnpm', ['--filter', '@mk7s/holochart-docs', 'build'], ROOT, {
+    ...process.env,
+    HOLOCHART_SANDBOX_URL: /^https:\/\//.test(process.env.HOLOCHART_SANDBOX_URL ?? '')
+      ? process.env.HOLOCHART_SANDBOX_URL
+      : '',
+  });
+}
 if (!existsSync(path.join(DOCS_DIST, 'index.html'))) fail(`no docs build at ${DOCS_DIST}`);
+// A build made outside this script (--skip-build) could still link the local dev servers.
+const localLinks = readdirSync(DOCS_DIST, { recursive: true, encoding: 'utf8' }).filter(
+  (file) =>
+    /\.(?:html|js)$/.test(file) &&
+    /\/\/(?:localhost|127\.0\.0\.1):\d/.test(readFileSync(path.join(DOCS_DIST, file), 'utf8')),
+);
+if (localLinks.length > 0) {
+  fail(`the docs build links a local server (${localLinks.slice(0, 3).join(', ')}); rebuild it`);
+}
 
 // 2. Replace <mk7s>/public/holochart with the fresh build (minus _headers, merged below).
 rmSync(TARGET, { recursive: true, force: true });

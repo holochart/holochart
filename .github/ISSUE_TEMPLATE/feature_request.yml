@@ -1,0 +1,57 @@
+name: Feature request
+description: Suggest a new trace, attribute, option or API.
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to do, and what makes it hard or impossible today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API or attribute
+      description: How you would like it to work, for example a figure snippet or a function signature.
+      render: js
+      placeholder: |
+        createChart(el, {
+          data: [{ type: 'scatter', x: [1, 2, 3], y: [2, 1, 3], newAttribute: 'value' }],
+          layout: {},
+        });
+    validations:
+      required: false
+
+  - type: textarea
+    id: plotly
+    attributes:
+      label: Plotly equivalent
+      description: If Plotly already supports this, the attribute or API and a link to its documentation.
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds you use today, or other approaches you considered.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: contribute
+    attributes:
+      label: Would you like to contribute this?
+      options:
+        - No, I am only suggesting it
+        - Maybe, with guidance
+        - Yes, I would like to open a pull request
+    validations:
+      required: true
