@@ -12,6 +12,8 @@ export const meta: ExampleMeta = {
   title: '2.5D view: drag to tilt and turn',
   description: 'Stacked 3D bars and a line in a 2.5D view that dragging tilts and turns.',
   tags: ['view3d', '2.5d', 'bar', 'depth', 'interaction', '3d-native', 'holochart-extension'],
+  // Perspective rendering: SwiftShader rasterizes slightly differently on Linux (CI).
+  testTolerance: 0.004,
 };
 
 export function run(el: HTMLElement): ExampleHandle {

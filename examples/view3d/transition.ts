@@ -22,6 +22,8 @@ export const meta: ExampleMeta = {
     '3d-native',
     'holochart-extension',
   ],
+  // Perspective rendering: SwiftShader rasterizes slightly differently on Linux (CI).
+  testTolerance: 0.004,
 };
 
 const ANIMATION = {

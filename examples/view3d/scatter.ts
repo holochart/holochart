@@ -13,6 +13,8 @@ export const meta: ExampleMeta = {
   description:
     'A scatter and a line chart on a tilted, perspective plot plane, with a hover label.',
   tags: ['view3d', '2.5d', 'scatter', 'line', 'hover', '3d-native', 'holochart-extension'],
+  // Perspective rendering: SwiftShader rasterizes slightly differently on Linux (CI).
+  testTolerance: 0.004,
 };
 
 export function run(el: HTMLElement): ExampleHandle {
