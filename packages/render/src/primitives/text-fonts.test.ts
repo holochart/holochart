@@ -124,6 +124,23 @@ describe('font registry', () => {
     registerFont({ family: 'Inter', url: 'b.woff' });
     expect(listener).toHaveBeenCalledTimes(1);
   });
+
+  it('a throwing subscriber does not stop the others; its error is reported (S1.7)', () => {
+    const reported: unknown[] = [];
+    vi.stubGlobal('reportError', (error: unknown) => void reported.push(error));
+    const error = new Error('listener failed');
+    const offA = subscribeFontChanges(() => {
+      throw error;
+    });
+    const listener = vi.fn();
+    const offB = subscribeFontChanges(listener);
+    expect(() => registerFont({ family: 'Inter', url: 'a.woff' })).not.toThrow();
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(reported).toEqual([error]);
+    offA();
+    offB();
+    vi.unstubAllGlobals();
+  });
 });
 
 describe('resolveFontFace', () => {

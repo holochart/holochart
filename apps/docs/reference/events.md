@@ -26,6 +26,12 @@ chart.off('click', onClick);
 `chart.off(name)` without a listener removes every listener of that event. Listeners may
 unsubscribe while the event is being dispatched.
 
+A listener that throws doesn't stop the other listeners or the chart: hover labels, zoom, pending
+updates and the `afterplot` event carry on as usual. The error is reported with the browser's
+`reportError`, so it shows up in the console and in error trackers as an uncaught error. The same
+applies to `config.renderHover` (the built-in labels are drawn instead) and to custom modebar
+buttons.
+
 ## Event list
 
 The payloads are typed: [`ChartEvents`](/reference/api/holochart/interfaces/ChartEvents) in the API

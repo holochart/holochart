@@ -1,0 +1,16 @@
+{
+  "name": "fixture-types",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@mk7s/holochart": "*",
+    "@mk7s/holochart-runtime": "*",
+    "@mk7s/holochart-traces-basic": "*",
+    "@mk7s/holochart-locales": "*",
+    "three": "*"
+  },
+  "devDependencies": {
+    "@types/three": "*",
+    "typescript": "*"
+  }
+}

@@ -6,9 +6,9 @@ status: complete
 
 # Installation
 
-::: warning Pre-alpha
-Holochart is not published to npm yet. The commands below show how installation will work once
-the first public release ships (see the [roadmap](/roadmap)). Until then, see
+::: warning Alpha
+Holochart is not published to npm yet. The commands below show how installation works once the
+first release, `0.1.0-alpha`, ships (see the [roadmap](/roadmap)). Until then, see
 [Try it from the monorepo](#try-it-from-the-monorepo).
 :::
 
@@ -19,18 +19,21 @@ Holochart ships as `@mk7s/holochart`. It needs `three` as a peer dependency.
 ::: code-group
 
 ```sh [npm]
-npm install @mk7s/holochart three
+npm install @mk7s/holochart@alpha three
 ```
 
 ```sh [pnpm]
-pnpm add @mk7s/holochart three
+pnpm add @mk7s/holochart@alpha three
 ```
 
 ```sh [yarn]
-yarn add @mk7s/holochart three
+yarn add @mk7s/holochart@alpha three
 ```
 
 :::
+
+While Holochart is in alpha, releases are published under the `alpha` dist-tag, so `@alpha` gets
+the newest one. Once a stable version is out, drop the tag.
 
 Then import it:
 
@@ -48,24 +51,55 @@ Your app keeps a single `three` instance. That matters for two reasons:
 - three.js objects you create (meshes, materials, vectors) are the same classes Holochart uses, so
   you can add them to a chart's scene without `instanceof` checks failing.
 
-Holochart supports `three` 0.180 or newer.
+Holochart supports `three` 0.180 and newer, up to the newest minor version tested in CI; the
+exact range is the `three` peer dependency in each package's `package.json`.
 
 ## Smaller bundles with partial packages
 
-`@mk7s/holochart` registers every trace type and component. If you only need a few trace types,
-install the runtime and the trace packages you use, then register them yourself:
+`@mk7s/holochart` registers every trace type, component and theme. If you only need a few trace
+types, install the runtime, the components and the trace packages you use, then register them
+yourself:
 
 ```sh
-pnpm add @mk7s/holochart-runtime @mk7s/holochart-traces-basic three
+pnpm add @mk7s/holochart-runtime@alpha @mk7s/holochart-components@alpha @mk7s/holochart-traces-basic@alpha three
 ```
 
 ```ts
 import { createChart, register } from '@mk7s/holochart-runtime';
-import { scatter, bar } from '@mk7s/holochart-traces-basic';
+import { builtinComponents } from '@mk7s/holochart-components';
+import { bar, scatter } from '@mk7s/holochart-traces-basic';
 
-register(scatter, bar);
+// The trace types you use, plus the components that draw axes, titles, legends, colorbars,
+// annotations, shapes, the modebar, sliders and menus.
+register(scatter, bar, ...builtinComponents);
 
-const chart = createChart(el, { data: [{ type: 'scatter', x: [1, 2, 3], y: [3, 1, 2] }] });
+const chart = createChart(el, {
+  data: [
+    { type: 'scatter', x: [1, 2, 3], y: [3, 1, 2], name: 'A' },
+    { type: 'bar', x: [1, 2, 3], y: [1, 2, 1.5], name: 'B' },
+  ],
+  layout: { title: { text: 'A partial bundle' } },
+});
+```
+
+Without `builtinComponents` the traces still draw, with hover labels, but there are no axes,
+title or legend. To save more, register single components instead (`axesComponent`,
+`legendComponent`, `titleComponent`, …).
+
+The default look (the `holochart` template), `plotly-classic` and `none` are built in. Other named
+themes and the extra named colorscales and palettes are opt-in:
+
+```sh
+pnpm add @mk7s/holochart-themes@alpha @mk7s/holochart-core@alpha
+```
+
+```ts
+import { register } from '@mk7s/holochart-runtime';
+import { registerBuiltinColors } from '@mk7s/holochart-core';
+import { builtinThemes, defineTheme } from '@mk7s/holochart-themes';
+
+register(defineTheme('plotly_dark')); // one theme, or all of them: register(...builtinThemes)
+registerBuiltinColors(); // cmocean, CARTO and ColorBrewer colorscales, qualitative palettes
 ```
 
 The packages are:
@@ -98,7 +132,7 @@ For pages without a build step, use the self-contained IIFE build,
 
 ```html
 <div id="chart" style="width: 600px; height: 400px"></div>
-<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart/dist/holochart.iife.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart@0.1/dist/holochart.iife.min.js"></script>
 <script>
   const chart = Holochart.createChart(document.getElementById('chart'), {
     data: [{ type: 'scatter', x: [1, 2, 3], y: [4, 1, 7] }],
@@ -110,13 +144,17 @@ For [3D scenes](/fundamentals/3d-scenes), add the 3D add-on after it. The main s
 so pages without 3D charts don't download the 3D code:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart/dist/holochart.iife.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart/dist/holochart-3d.iife.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart@0.1/dist/holochart.iife.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart@0.1/dist/holochart-3d.iife.min.js"></script>
 ```
 
 The add-on registers the 3D scene and traces into `window.Holochart` (`Holochart.traces3d`, and the
 exports of `@mk7s/holochart-traces-3d`). It uses the main script's three.js, so load both from the
 same version, and the main script first.
+
+The URLs pin the `0.1` release line, so a new minor version (which may change APIs before 1.0)
+never reaches your page unannounced. jsDelivr version ranges skip pre-releases: during the alpha,
+pin the exact version instead, for example `@mk7s/holochart@0.1.0-alpha.0`.
 
 The IIFE build bundles its own copy of three.js, because three no longer ships a global build.
 Do not mix it with another copy of three on the same page: objects created with a separately
@@ -127,41 +165,56 @@ three.js objects, use the npm packages with a bundler instead.
 
 Official wrappers for React, Vue, Svelte, Angular, and a web component are planned for a later
 milestone (see [Framework integration](/guides/frameworks)). Until then, create the chart when the
-component mounts and destroy it when it unmounts. `chart.destroy()` releases the WebGL context and
-GPU memory, so always call it.
+component mounts, pass new figures to `react()`, which redraws only what changed, and destroy the
+chart when the component unmounts. Destroying (`purge(el)` or `chart.destroy()`) releases the
+WebGL context and GPU memory, so always do it.
 
 React:
 
 ```tsx
 import { useEffect, useRef } from 'react';
-import { createChart, type FigureInput } from '@mk7s/holochart';
+import { newPlot, purge, react, type FigureInput } from '@mk7s/holochart';
 
 export function Chart({ figure }: { figure: FigureInput }) {
   const ref = useRef<HTMLDivElement>(null);
 
+  // Create the chart once, and destroy it on unmount.
   useEffect(() => {
-    const chart = createChart(ref.current!, figure);
-    return () => chart.destroy();
+    const el = ref.current!;
+    void newPlot(el, figure);
+    return () => purge(el);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Later figures update the chart in place (on mount this is a no-op).
+  useEffect(() => {
+    void react(ref.current!, figure);
   }, [figure]);
 
   return <div ref={ref} style={{ width: '100%', height: 400 }} />;
 }
 ```
 
+Pass a new figure object to trigger an update: like Plotly's `react`, unchanged data arrays are
+compared by reference, so replace an array instead of mutating it.
+
 Vue:
 
 ```vue
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref } from 'vue';
-import { createChart, type Chart, type Figure } from '@mk7s/holochart';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { createChart, type Chart, type FigureInput } from '@mk7s/holochart';
 
-const props = defineProps<{ figure: Figure }>();
+const props = defineProps<{ figure: FigureInput }>();
 const el = ref<HTMLDivElement>();
 let chart: Chart | undefined;
 
 onMounted(() => {
   chart = createChart(el.value!, props.figure);
 });
+watch(
+  () => props.figure,
+  (figure) => void chart?.react(figure),
+);
 onBeforeUnmount(() => chart?.destroy());
 </script>
 
@@ -178,10 +231,11 @@ client (the mount hooks above already do that).
 - A browser with **WebGL2** (all current desktop and mobile browsers). Browsers without WebGL2
   are not supported.
 - **ES modules.** The npm packages are ESM-only and target ES2022. Use a bundler such as Vite,
-  webpack, or Rollup, or the IIFE build above.
-- **TypeScript** types are included in every package. No `@types` package is needed. Types are
-  generated from the attribute schema, so your editor autocompletes every trace and layout
-  attribute.
+  webpack, or Rollup, or the IIFE build above. Node 22 and newer can also `require()` them.
+- **TypeScript** types are included in every package. No `@types` package is needed. The chart
+  API is fully typed; figures are typed loosely for now (`FigureInput`), so trace and layout
+  attributes are not autocompleted yet. Look them up in the [attribute reference](/reference/);
+  typed figures are planned for the alpha releases.
 
 ## Try it from the monorepo
 

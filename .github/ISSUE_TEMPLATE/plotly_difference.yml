@@ -1,0 +1,76 @@
+name: Plotly difference
+description: The same figure looks or behaves differently in Holochart than in Plotly.
+labels: ['plotly-compat']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Holochart aims to draw Plotly figures the way Plotly does. Some differences are deliberate or known; please check the list first: https://mk7s.dev/holochart/reference/plotly-compat
+
+  - type: textarea
+    id: figure
+    attributes:
+      label: Plotly figure JSON
+      description: The smallest figure that shows the difference, as `{ data, layout, config }`.
+      render: json
+      placeholder: |
+        {
+          "data": [{ "type": "scatter", "x": [1, 2, 3], "y": [2, 1, 3] }],
+          "layout": {},
+          "config": {}
+        }
+    validations:
+      required: true
+
+  - type: input
+    id: plotly-version
+    attributes:
+      label: Plotly version
+      description: The plotly.js version you compared against (for example from `Plotly.version`).
+      placeholder: '3.1.0'
+    validations:
+      required: true
+
+  - type: textarea
+    id: plotly-behavior
+    attributes:
+      label: What Plotly does
+      description: Describe Plotly's output or behavior. A screenshot is welcome.
+    validations:
+      required: true
+
+  - type: textarea
+    id: holochart-behavior
+    attributes:
+      label: What Holochart does
+      description: Describe Holochart's output or behavior. A screenshot is welcome.
+    validations:
+      required: true
+
+  - type: input
+    id: holochart-version
+    attributes:
+      label: Holochart version
+      placeholder: '@mk7s/holochart@0.1.0-alpha'
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and OS
+      placeholder: Chrome 140 on macOS 26
+    validations:
+      required: true
+
+  - type: dropdown
+    id: known
+    attributes:
+      label: Is this in the known-differences list?
+      description: See https://mk7s.dev/holochart/reference/plotly-compat
+      options:
+        - No, I checked and it is not listed
+        - Yes, but I think it should change (explain why above)
+        - I am not sure
+    validations:
+      required: true

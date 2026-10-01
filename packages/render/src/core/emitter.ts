@@ -1,8 +1,11 @@
+import { reportUserError } from './report.ts';
+
 /**
  * Minimal typed event emitter used by the render loop and render root.
  *
  * Listener lists are copy-on-write arrays so `emit` (called every frame) iterates by index without
- * allocating, and listeners may unsubscribe themselves during dispatch.
+ * allocating, and listeners may unsubscribe themselves during dispatch. A listener that throws does
+ * not stop the others: its error is reported (`reportError`) and dispatch carries on.
  */
 export class Emitter<Events extends object> {
   #listeners = new Map<keyof Events, ReadonlyArray<(payload: never) => void>>();
@@ -31,7 +34,13 @@ export class Emitter<Events extends object> {
   emit<K extends keyof Events>(type: K, payload: Events[K]): void {
     const list = this.#listeners.get(type) as ReadonlyArray<(p: Events[K]) => void> | undefined;
     if (!list) return;
-    for (let i = 0; i < list.length; i++) list[i]!(payload);
+    for (let i = 0; i < list.length; i++) {
+      try {
+        list[i]!(payload);
+      } catch (error) {
+        reportUserError(error);
+      }
+    }
   }
 
   clear(): void {

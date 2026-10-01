@@ -6,5 +6,7 @@
     "checkJs": false,
     "types": ["node"]
   },
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts"],
+  // The pack-and-install fixtures compile against the installed tarballs, in their own projects.
+  "exclude": ["package/fixtures/**"]
 }

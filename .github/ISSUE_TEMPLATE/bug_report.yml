@@ -1,0 +1,119 @@
+name: Bug report
+description: Something renders wrong, throws, or behaves unexpectedly.
+labels: ['bug', 'needs triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. If the problem is that Holochart draws a figure differently from Plotly, use the **Plotly difference** template instead. Security problems must be reported privately: https://github.com/holochart/holochart/security/advisories/new
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A short description of the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: figure
+    attributes:
+      label: Figure JSON
+      description: The smallest figure that shows the problem, as `{ data, layout, config }`. Trim data to a few points where possible.
+      render: json
+      placeholder: |
+        {
+          "data": [{ "type": "scatter", "x": [1, 2, 3], "y": [2, 1, 3] }],
+          "layout": {},
+          "config": {}
+        }
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: A link to a CodePen, StackBlitz or repository, or the code that creates the chart (including any update or event calls).
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead. Screenshots or screen recordings are welcome (drag them into this field).
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Package(s) and version
+      description: For example `@mk7s/holochart@0.1.0-alpha`, or the individual `@mk7s/holochart-*` packages you use.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: Install method
+      options:
+        - npm / pnpm / yarn with a bundler
+        - Script tag (IIFE build)
+        - Built from source
+        - Other (describe in the summary)
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: Chrome 140, Firefox 143, Safari 26, ...
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: macOS 26, Windows 11, Ubuntu 24.04, Android 16, ...
+    validations:
+      required: true
+
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU
+      description: Holochart requires WebGL2. Find your GPU and renderer at `chrome://gpu` (Chromium browsers) or https://webglreport.com.
+      placeholder: Apple M2, NVIDIA RTX 3060 (ANGLE D3D11), Intel UHD 620, ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors
+      description: Errors or warnings from the browser's developer console, if any.
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched the existing issues and this has not been reported yet.
+          required: true
+        - label: I reproduced the problem with the latest published version.
+          required: false

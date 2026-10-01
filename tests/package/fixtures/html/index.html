@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Holochart script-tag fixture</title>
+  </head>
+  <body>
+    <div id="chart2d" style="width: 400px; height: 300px"></div>
+    <div id="chart3d" style="width: 400px; height: 300px"></div>
+    <!-- The script-tag build straight from the installed tarball, 3D add-on after the main script. -->
+    <script src="node_modules/@mk7s/holochart/dist/holochart.iife.min.js"></script>
+    <script src="node_modules/@mk7s/holochart/dist/holochart-3d.iife.min.js"></script>
+    <script>
+      window.holochartFixture = (async () => {
+        const chart2d = Holochart.createChart(document.getElementById('chart2d'), {
+          data: [{ type: 'scatter', x: [1, 2, 3], y: [2, 1, 3], name: 'Revenue' }],
+          layout: { width: 400, height: 300, title: { text: 'Script 2D' } },
+        });
+        const chart3d = Holochart.createChart(document.getElementById('chart3d'), {
+          data: [{ type: 'scatter3d', x: [1, 2, 3], y: [3, 1, 2], z: [2, 3, 1], mode: 'markers' }],
+          layout: { width: 400, height: 300, title: { text: 'Script 3D' } },
+        });
+        await Promise.all([chart2d.ready, chart3d.ready]);
+        return {
+          viewports2d: chart2d.three.viewports.length,
+          viewports3d: chart3d.three.viewports.length,
+          webgl2: chart2d.three.renderer.getContext() instanceof WebGL2RenderingContext,
+        };
+      })();
+    </script>
+  </body>
+</html>

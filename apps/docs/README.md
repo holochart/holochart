@@ -33,10 +33,10 @@ ADR-013), so no package build is needed first.
 
 Environment variables:
 
-| Variable                | Default                  | Purpose                                                                 |
-| ----------------------- | ------------------------ | ----------------------------------------------------------------------- |
-| `HOLOCHART_DOCS_BASE`   | `/holochart/`            | Site base. Use `/holochart/v1/` for a versioned build.                  |
-| `HOLOCHART_SANDBOX_URL` | `http://localhost:5173/` | Target of "Open in sandbox" links. Set to an empty string to hide them. |
+| Variable                | Default                                         | Purpose                                                                                                                        |
+| ----------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `HOLOCHART_DOCS_BASE`   | `/holochart/`                                   | Site base. Use `/holochart/v1/` for a versioned build.                                                                         |
+| `HOLOCHART_SANDBOX_URL` | `dev`: `http://localhost:5173/`; `build`: empty | Target of "Open in sandbox" links on examples. Empty hides them, which is the default for builds: the sandbox is not deployed. |
 
 ## Layout
 

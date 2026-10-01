@@ -277,11 +277,14 @@ export class RenderRoot implements ViewportHost {
     this.#dprQuery = null;
     this.canvas.removeEventListener('webglcontextlost', this.#onContextLost, false);
     this.canvas.removeEventListener('webglcontextrestored', this.#onContextRestored, false);
-    for (const vp of this.#viewports) vp.dispose();
+    // A primitive whose dispose throws must not keep the context alive: log it and carry on.
+    for (const vp of this.#viewports) disposeSafely(() => vp.dispose());
     this.#viewports.length = 0;
-    this.resources.disposeAll();
-    this.renderer.renderLists.dispose();
-    this.renderer.dispose();
+    disposeSafely(() => this.resources.disposeAll());
+    disposeSafely(() => {
+      this.renderer.renderLists.dispose();
+      this.renderer.dispose();
+    });
     // Free the context slot now instead of waiting for GC (browsers cap live contexts at ~16).
     try {
       this.renderer.forceContextLoss();
@@ -394,6 +397,14 @@ export class RenderRoot implements ViewportHost {
     this.loop.setPaused(false);
     this.invalidate();
   };
+}
+
+function disposeSafely(step: () => void): void {
+  try {
+    step();
+  } catch (error) {
+    console.warn('[holochart] disposing GPU resources failed:', error);
+  }
 }
 
 /** Create a render root inside `container` (plan E2.1). */

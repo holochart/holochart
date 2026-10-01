@@ -24,6 +24,7 @@
  * instead would pick whatever system font matches, which differs from what is drawn and across
  * platforms.
  */
+import { reportUserError } from '../core/report.ts';
 import { DEFAULT_FONT_FILES } from '../fonts/default-font-files.ts';
 
 /** CSS font weight: a number in 1–1000, or the `normal` (400) / `bold` (700) keywords. */
@@ -781,7 +782,13 @@ export function subscribeFontChanges(listener: () => void): () => void {
 
 function notifyFontChange(): void {
   measurementFaces.clear();
-  for (const listener of listeners) listener();
+  for (const listener of listeners) {
+    try {
+      listener();
+    } catch (error) {
+      reportUserError(error);
+    }
+  }
 }
 
 function loadCSSFontFace(face: RegisteredFontFace, entry: Face): void {

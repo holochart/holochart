@@ -89,6 +89,7 @@ export type { RGBA } from './coerce/color.ts';
 export { validate } from './validate/validate.ts';
 export type { ValidateOptions } from './validate/validate.ts';
 export { formatIssue, ValidationError } from './validate/issues.ts';
+export { HolochartError } from './errors.ts';
 export type { Issue, IssueCode } from './validate/issues.ts';
 export { editDistance, suggest } from './validate/suggest.ts';
 

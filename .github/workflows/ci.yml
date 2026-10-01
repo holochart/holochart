@@ -119,6 +119,33 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
 
+  # Docs pages render (backlog S1.5): every hand-written docs page loads in the VitePress dev server
+  # with no console errors, failed requests or example embeds that error or never become ready.
+  # Not a required check yet: it takes ~10-15 min on 2 workers.
+  docs-render:
+    name: docs pages render
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --ipc=host
+    env:
+      CI: 'true'
+      HOME: /root
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Docs pages render without errors
+        run: pnpm --filter @mk7s/holochart-docs check:render
+      - name: Upload docs render report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-render-report
+          path: test-results/docs-render/
+          retention-days: 14
+          if-no-files-found: ignore
+
   # Interaction tests (plan E20.4): scripted pointer, keyboard and touch scenarios (hover, zoom,
   # pan, lasso, clicks, GPU picking, legends, controls, a11y) against the dev sandbox, in the same
   # pinned image and software GL (Chromium + SwiftShader) as `visual`.
@@ -186,16 +213,70 @@ jobs:
       - name: Build and smoke-test the IIFE bundle
         run: pnpm test:bundle
 
-  # Three.js compatibility (ADR-003, docs/release/versioning.md): typecheck and unit tests against
-  # the lowest supported three (the peer range's lower bound) and the newest release old enough for
-  # pnpm's minimumReleaseAge (ADR-016). The catalog version is covered by the jobs above. The
-  # catalog is overridden in the runner only; the repo's lockfile is not touched.
+  # Package quality gates (backlog S1.3): what users download, not the workspace. Every publishable
+  # package is packed once with `pnpm pack` (publishConfig applied, workspace:* resolved); publint
+  # and arethetypeswrong check those tarballs (tests/package/lint.ts: pinned versions through
+  # `pnpm dlx`, attw's esm-only profile), then the pack-and-install smoke test installs them into
+  # fresh fixture projects outside the workspace (Node ESM/CJS, strict tsc with bundler and node16
+  # resolution, a Vite app, a plain HTML page with the script-tag build) and draws a 2D and a 3D
+  # chart in Chromium + SwiftShader (tests/package/playwright.config.ts).
+  package:
+    name: package checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --ipc=host
+    env:
+      CI: 'true'
+      HOME: /root
+      # The fixtures install from the pnpm store; CI has the tarballs there (setup's frozen install)
+      # but not the registry metadata, which pnpm fetches for what it lacks.
+      PACKAGE_INSTALL_MODE: prefer-offline
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm build:packages
+      - name: Pack every publishable package
+        run: |
+          echo "HOLOCHART_PACKS=$RUNNER_TEMP/packs" >> "$GITHUB_ENV"
+          node tests/package/packs.ts "$RUNNER_TEMP/packs"
+      - name: publint and arethetypeswrong
+        run: node tests/package/lint.ts
+      - name: Pack-and-install smoke test
+        if: ${{ !cancelled() }}
+        run: pnpm exec playwright test -c tests/package/playwright.config.ts
+      - name: Upload package test results
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-test-results
+          path: test-results/package/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # Three.js compatibility (ADR-003, docs/release/versioning.md): typecheck, unit tests and the
+  # bundle smoke test (IIFE and ESM builds, which bundle the overridden three) against the lowest
+  # supported three (the peer range's lower bound) and the newest release old enough for pnpm's
+  # minimumReleaseAge (ADR-016). The catalog version is covered by the jobs above. The catalog is
+  # overridden in the runner only; the repo's lockfile is not touched. Same pinned Playwright image
+  # as `bundle`, for the browser.
   three:
     name: three (${{ matrix.leg }})
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    # `latest` is a canary for upcoming three releases: it reports but never fails the workflow.
+    timeout-minutes: 25
+    # `latest` is a canary for upcoming three releases: it never fails the workflow, but a failure
+    # on main opens (or comments on) a tracking issue, so it doesn't pass silently.
     continue-on-error: ${{ matrix.leg == 'latest' }}
+    container:
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --ipc=host
+    env:
+      CI: 'true'
+      HOME: /root
+    permissions:
+      contents: read
+      issues: write # the `latest` failure issue
     strategy:
       fail-fast: false
       matrix:
@@ -208,6 +289,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Override three and @types/three in the pnpm catalog
+        id: three
         env:
           THREE: ${{ matrix.three }}
         run: |
@@ -215,8 +297,53 @@ jobs:
           grep -E "^  (three|'@types/three'):" pnpm-workspace.yaml
           pnpm install --no-frozen-lockfile
           node -e "const fs=require('fs');for(const p of ['three','@types/three'])console.log(p,JSON.parse(fs.readFileSync('packages/render/node_modules/'+p+'/package.json','utf8')).version)"
+          version=$(node -p "require('./packages/render/node_modules/three/package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
       - run: pnpm typecheck
       - run: pnpm test
+      - name: Bundle smoke test
+        run: pnpm test:bundle
+      # Pull requests only get the failed (non-blocking) check and this warning: a PR may be what
+      # broke it, and fork PRs cannot write issues.
+      - name: Warn that three (latest) fails
+        if: ${{ failure() && matrix.leg == 'latest' }}
+        env:
+          VERSION: ${{ steps.three.outputs.version }}
+        run: echo "::warning title=three (latest)::Fails with three ${VERSION:-(not installed)}; see this job's log."
+      - name: Open or update the three (latest) issue
+        if: ${{ failure() && matrix.leg == 'latest' && github.event_name != 'pull_request' }}
+        uses: actions/github-script@v7
+        env:
+          VERSION: ${{ steps.three.outputs.version }}
+        with:
+          script: |
+            const marker = '<!-- holochart-three-latest -->';
+            const { owner, repo } = context.repo;
+            const run = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const version = process.env.VERSION || '(install failed)';
+            const line = `three \`${version}\` fails the [three (latest) leg](${run}) on \`${context.sha.slice(0, 7)}\` (${context.eventName}).`;
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: 'open', creator: 'github-actions[bot]', per_page: 100,
+            });
+            const open = issues.find((i) => !i.pull_request && i.body?.includes(marker));
+            if (open) {
+              await github.rest.issues.createComment({ owner, repo, issue_number: open.number, body: line });
+              core.notice(`Commented on #${open.number}`);
+            } else {
+              const body = [
+                marker,
+                line,
+                '',
+                'The `three (latest)` CI leg runs typecheck, unit tests and the bundle smoke test against',
+                'the newest three release (ci.yml, job `three`). It does not block merges, so this issue',
+                'tracks it: fix the incompatibility, then widen the `three` peer range',
+                '(docs/release/versioning.md). Later failures comment here; close the issue once fixed.',
+              ].join('\n');
+              const { data } = await github.rest.issues.create({
+                owner, repo, title: 'CI: three (latest) leg is failing', body,
+              });
+              core.notice(`Opened #${data.number}`);
+            }
 
   # Bundle-size budgets (plan E21.1, docs/release/bundle-size.md). `pnpm size` builds the packages,
   # bundles each entry (min + gzip, three external; the IIFE as-is) and fails over budget. The

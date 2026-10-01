@@ -2,7 +2,16 @@
   "name": "@mk7s/holochart-locales",
   "version": "0.0.0",
   "description": "Locale modules for Holochart (plotly.js's locales): UI strings, month and day names, number separators and date formats, one module per locale.",
+  "keywords": [
+    "charts",
+    "plotly",
+    "data-visualization",
+    "locales",
+    "i18n",
+    "l10n"
+  ],
   "license": "MIT",
+  "author": "sanjee",
   "type": "module",
   "sideEffects": false,
   "repository": {
@@ -11,13 +20,18 @@
     "directory": "packages/locales"
   },
   "homepage": "https://mk7s.dev/holochart",
+  "bugs": {
+    "url": "https://github.com/holochart/holochart/issues"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
-    "./scripts/*": "./dist/scripts/*"
+    "./scripts/*": "./dist/scripts/*",
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -37,12 +51,16 @@
     "typescript": "catalog:"
   },
   "publishConfig": {
+    "access": "public",
+    "provenance": true,
     "exports": {
       ".": {
         "types": "./dist/index.d.ts",
-        "import": "./dist/index.js"
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
       },
-      "./scripts/*": "./dist/scripts/*"
+      "./scripts/*": "./dist/scripts/*",
+      "./package.json": "./package.json"
     }
   }
 }

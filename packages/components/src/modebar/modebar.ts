@@ -28,6 +28,7 @@ import type {
   ComponentUpdatePlan,
   ComponentView,
 } from '@mk7s/holochart-runtime';
+import { reportUserError } from '@mk7s/holochart-render';
 import { claimPositionedHost, ensureStyle, shieldEvents } from '../shared/dom.ts';
 import { findChart, fireAndForget } from '../shared/host.ts';
 import { eraseActiveShape } from '../shapes/draw.ts';
@@ -320,8 +321,12 @@ export function createModebarView<Ctx extends ModebarViewContext>(
     if (!chart) return;
     if (button.custom) {
       // Custom buttons are typed against the real Chart; the view is only ever given one
-      // outside of tests.
-      button.custom.click(chart as unknown as Chart, event);
+      // outside of tests. Their errors are reported, like event listeners' (S1.7).
+      try {
+        button.custom.click(chart as unknown as Chart, event);
+      } catch (error) {
+        reportUserError(error);
+      }
       return;
     }
     const fl = last.fullLayout;

@@ -70,6 +70,7 @@ import {
 import {
   browserFrameScheduler,
   createRenderRoot,
+  reportUserError,
   subscribeFontChanges,
   IDENTITY_TRANSFORM,
   type FrameScheduler,
@@ -167,6 +168,7 @@ import {
 import { chartToJSON, type ChartToJSONOptions } from './json.ts';
 import { describeChart, type ChartDescription, type OverviewInput } from './a11y/describe.ts';
 import { A11yMirror, type A11yChange } from './a11y/mirror.ts';
+import { removeFallback, showFallback, WebGLUnavailableError } from './fallback.ts';
 import type { DownloadImageOptions, ExportSource, ToImageOptions } from './export/types.ts';
 import type { Animation } from './anim/animation.ts';
 import type {
@@ -647,10 +649,23 @@ export class Chart {
     this.#options = options;
     this.#figure = normalizeFigure(figure);
     CHARTS.get(el)?.destroy();
-    CHARTS.set(el, this);
+    removeFallback(el);
     // Mount now so `chart.three` works right away; the first run sizes everything properly.
     const config = coerceContainer(configSchema, figure.config) as FullConfig;
-    this.#mount(config, resolveFigureSize(this.#figure.layout, DEFAULT_SIZE, this.#container()));
+    const size = resolveFigureSize(this.#figure.layout, DEFAULT_SIZE, this.#container());
+    try {
+      this.#mount(config, size);
+    } catch (error) {
+      // Leave nothing behind (and nothing for `getChart(el)`); without WebGL2, say so in `el`.
+      this.#destroyed = true;
+      this.#unmount();
+      if (error instanceof WebGLUnavailableError && !OFFSCREEN.has(el)) {
+        showFallback(el, this.#fallbackText(), size.width);
+      }
+      throw error;
+    }
+    // Registered only once mounted, so `getChart(el)` never returns a broken chart.
+    CHARTS.set(el, this);
     this.ready = this.#schedule((plan) => {
       plan.full = true;
       plan.validate = true;
@@ -659,6 +674,26 @@ export class Chart {
     // browser has; a web font that finishes loading later changes those metrics. Re-run layout
     // then, or margins and label placement stay computed with the fallback font.
     this.#unsubscribeFonts = subscribeFontChanges(() => this.#fontsChanged());
+  }
+
+  /** The accessible name and trace summaries, from defaults alone (no GPU), for the fallback. */
+  #fallbackText(): string[] {
+    try {
+      const { fullLayout, fullData, fullConfig } = this.#defaults(this.#figure, false);
+      const { label, traces } = describeChart({
+        fullLayout,
+        fullData,
+        fullConfig,
+        axes: new Map(),
+        module: () => undefined,
+        calc: () => undefined,
+        summarize: null,
+        tables: false,
+      });
+      return [label, ...traces];
+    } catch {
+      return [];
+    }
   }
 
   #fontsChanged(): void {
@@ -1695,18 +1730,24 @@ export class Chart {
   #mount(config: FullConfig, size: Size): void {
     const pixelRatio = typeof config.pixelRatio === 'number' ? config.pixelRatio : undefined;
     const offscreen = OFFSCREEN.has(this.element);
-    const root = createRenderRoot(this.element, {
-      // The chart owns sizing (layout.width/height vs the container), so the root must not resize
-      // itself to the container.
-      responsive: false,
-      width: size.width,
-      height: size.height,
-      background: null,
-      antialias: config.antialias,
-      powerPreference: config.powerPreference,
-      ...(pixelRatio === undefined ? {} : { pixelRatio }),
-      ...this.#options.renderRoot,
-    });
+    let root: RenderRoot;
+    try {
+      root = createRenderRoot(this.element, {
+        // The chart owns sizing (layout.width/height vs the container), so the root must not
+        // resize itself to the container.
+        responsive: false,
+        width: size.width,
+        height: size.height,
+        background: null,
+        antialias: config.antialias,
+        powerPreference: config.powerPreference,
+        ...(pixelRatio === undefined ? {} : { pixelRatio }),
+        ...this.#options.renderRoot,
+      });
+    } catch (error) {
+      // three.js throws when no WebGL2 context can be created.
+      throw new WebGLUnavailableError(error);
+    }
     this.#root = root;
     this.#size = { ...size };
     // The canvas has no accessible content of its own: the a11y mirror describes it.
@@ -1746,15 +1787,11 @@ export class Chart {
     }
   }
 
+  /** Tear everything down; a step that throws is logged and the rest still runs (S1.8). */
   #unmount(): void {
-    this.#a11y?.destroy();
-    this.#a11y = undefined;
-    this.#focus?.destroy();
-    this.#focus = undefined;
-    this.#fx?.destroy();
-    this.#fx = undefined;
-    this.#layer?.destroy();
-    this.#layer = undefined;
+    for (const part of [this.#a11y, this.#focus, this.#fx, this.#layer])
+      safely(() => part?.destroy());
+    this.#a11y = this.#focus = this.#fx = this.#layer = undefined;
     this.#hoverEntries = null;
     this.#domainHover = null;
     for (const slot of this.#traces) if (slot) this.#disposeView(slot);
@@ -1769,10 +1806,11 @@ export class Chart {
     this.#observer = null;
     for (const off of this.#rootListeners) off();
     this.#rootListeners = [];
-    this.#mirrors.clear();
+    safely(() => this.#mirrors.clear());
     this.#keyed.clear();
-    this.#root?.destroy();
+    const root = this.#root;
     this.#root = undefined;
+    safely(() => root?.destroy());
   }
 
   readonly #onResize = (entries: ResizeObserverEntry[]): void => {
@@ -2667,16 +2705,14 @@ export class Chart {
 
   #disposeView(slot: TraceSlot): void {
     const view = slot.view;
+    const what = `the ${slot.module?.type ?? 'unknown'} trace`;
     slot.view = undefined;
-    try {
-      view?.dispose?.();
-    } finally {
-      for (const p of slot.primitives) {
-        (placedViewport(p) ?? slot.viewport)?.remove(p, { dispose: true });
-      }
-      slot.primitives.clear();
-      slot.viewport = undefined;
+    safely(() => view?.dispose?.(), what);
+    for (const p of slot.primitives) {
+      safely(() => (placedViewport(p) ?? slot.viewport)?.remove(p, { dispose: true }), what);
     }
+    slot.primitives.clear();
+    slot.viewport = undefined;
   }
 
   #drawComponents(
@@ -2824,9 +2860,14 @@ export class Chart {
         const fn = isPlainObject(this.#figure.config)
           ? this.#figure.config['renderHover']
           : undefined;
-        return typeof fn === 'function'
-          ? (fn as (p: readonly ChartPoint[]) => HTMLElement | null | undefined)(points)
-          : undefined;
+        if (typeof fn !== 'function') return undefined;
+        // A throwing renderer is reported and the built-in labels are drawn instead (S1.7).
+        try {
+          return (fn as (p: readonly ChartPoint[]) => HTMLElement | null | undefined)(points);
+        } catch (error) {
+          reportUserError(error);
+          return undefined;
+        }
       },
     };
   }
@@ -3260,14 +3301,12 @@ export class Chart {
 
   #disposeComponent(slot: ComponentSlot): void {
     const view = slot.view;
+    const what = `the ${slot.module.name} component`;
     slot.view = undefined;
-    try {
-      view?.dispose?.();
-    } finally {
-      for (const [p, vp] of slot.primitives) vp.remove(p, { dispose: true });
-      this.#mirrors.disposeOwner(slot);
-      slot.primitives.clear();
-    }
+    safely(() => view?.dispose?.(), what);
+    for (const [p, vp] of slot.primitives) safely(() => vp.remove(p, { dispose: true }), what);
+    safely(() => this.#mirrors.disposeOwner(slot), what);
+    slot.primitives.clear();
   }
 }
 
@@ -3421,6 +3460,19 @@ export function figureExportSource(
       });
     },
   };
+}
+
+const WARNED = new Set<string>();
+
+/** Run a teardown step; when it throws, warn (once per `what`) and carry on. */
+function safely(step: () => void, what = 'the chart'): void {
+  try {
+    step();
+  } catch (error) {
+    if (WARNED.has(what)) return;
+    WARNED.add(what);
+    console.warn(`[holochart] disposing ${what} failed:`, error);
+  }
 }
 
 function destroyedError(): Error {

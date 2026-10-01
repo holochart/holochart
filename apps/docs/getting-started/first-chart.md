@@ -144,6 +144,33 @@ memory the chart used.
 chart.destroy();
 ```
 
+`purge(el)` does the same for the chart in an element, and also removes the note described next.
+
+## When WebGL2 is unavailable
+
+Holochart draws with WebGL2. In a browser without it (or with it disabled, or on a blocklisted
+GPU), `createChart` throws a `WebGLUnavailableError` and `newPlot` rejects with one. The container
+shows a short note that WebGL2 is required, followed by the chart's text description (its title,
+chart type and one line per trace), so the page is not left with an empty box. No chart is
+registered for the element: `getChart(el)` returns `undefined`, and `purge(el)` removes the note.
+
+```ts
+import { newPlot, WebGLUnavailableError } from '@mk7s/holochart';
+
+try {
+  await newPlot(el, data, layout);
+} catch (error) {
+  if (error instanceof WebGLUnavailableError) {
+    // The note is already in `el`; show a static image instead if you have one.
+  } else {
+    throw error;
+  }
+}
+```
+
+`WebGLUnavailableError` and `ValidationError` (thrown in `config.strict` mode) both extend
+`HolochartError`. The renderer's own error is in `error.cause`.
+
 ## What is underneath
 
 Every chart is drawn with a small set of GPU primitives: instanced markers, screen-space lines,

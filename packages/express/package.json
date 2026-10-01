@@ -2,7 +2,19 @@
   "name": "@mk7s/holochart-express",
   "version": "0.0.0",
   "description": "Plotly Express-style one-line charts from tabular data: grouping, facets, animation frames, ECDF, marginals.",
+  "keywords": [
+    "charts",
+    "plotly",
+    "webgl",
+    "three",
+    "data-visualization",
+    "plotly-express",
+    "tabular-data",
+    "facets",
+    "statistics"
+  ],
   "license": "MIT",
+  "author": "sanjee",
   "type": "module",
   "sideEffects": false,
   "repository": {
@@ -11,13 +23,18 @@
     "directory": "packages/express"
   },
   "homepage": "https://mk7s.dev/holochart",
+  "bugs": {
+    "url": "https://github.com/holochart/holochart/issues"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "development": "./dist/index.development.js",
-      "import": "./dist/index.js"
-    }
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -33,7 +50,7 @@
     "@mk7s/holochart-runtime": "workspace:*"
   },
   "peerDependencies": {
-    "three": ">=0.180.0"
+    "three": ">=0.180.0 <0.187.0"
   },
   "devDependencies": {
     "three": "catalog:",
@@ -42,12 +59,16 @@
     "typescript": "catalog:"
   },
   "publishConfig": {
+    "access": "public",
+    "provenance": true,
     "exports": {
       ".": {
         "types": "./dist/index.d.ts",
         "development": "./dist/index.development.js",
-        "import": "./dist/index.js"
-      }
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
     }
   }
 }

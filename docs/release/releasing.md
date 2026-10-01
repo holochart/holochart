@@ -83,11 +83,10 @@ None of this exists yet. The Release workflow is **skipped** until the repositor
      a changeset with a `minor` bump, so the first release is `0.1.0-alpha.0` on the `alpha`
      dist-tag. Run `pnpm changeset pre exit` before the first stable `0.x` release.
    - Run `pnpm release:pack` locally and inspect the tarballs (contents, `exports`, LICENSE and
-     THIRD_PARTY_NOTICES, no `src/`). Consider `publint` and `@arethetypeswrong/cli` on them
-     (ADR-015 follow-up; not installed).
-   - Decide whether published `exports` should keep the `source` condition: it points at
-     `./src/index.ts`, which is not in the tarball, so a consumer bundler configured with a
-     `source` condition would fail to resolve. `publishConfig.exports` can drop it.
+     THIRD_PARTY_NOTICES, no `src/`). CI's `package checks` job already runs `publint --strict`
+     and `@arethetypeswrong/cli --profile esm-only` on packed tarballs (`pnpm lint:package`) and
+     installs them into fresh fixture projects (`pnpm test:package`); `publishConfig.exports`
+     drops the `source` condition.
 7. **After the first publish:** check the package pages on npmjs.com show the provenance badge.
 
 ## Provenance and trust

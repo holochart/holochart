@@ -6,8 +6,10 @@
 
 ## Evidence
 
-- Every package declares `three >=0.180.0` as a peer and builds with it external; the IIFE CDN
-  bundle is the documented exception (ADR-015). The bundle smoke test loads it in Chromium.
+- Every package declares `three >=0.180.0 <0.187.0` as a peer (the upper bound follows the newest
+  three tested in CI, [versioning.md](../release/versioning.md#threejs-compatibility)) and builds
+  with it external; the IIFE CDN bundle is the documented exception (ADR-015). The bundle smoke
+  test loads it in Chromium.
 
 ## Context
 

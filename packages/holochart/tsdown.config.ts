@@ -7,7 +7,11 @@ import {
   iife2DPlugin,
   iife3DAddonPlugin,
 } from '../../scripts/build/iife-split.ts';
-import { productionPlugins } from '../../scripts/build/tsdown-preset.ts';
+import {
+  DTS_OPTIONS,
+  dtsWithoutMapComment,
+  productionPlugins,
+} from '../../scripts/build/tsdown-preset.ts';
 import pkg from './package.json' with { type: 'json' };
 
 const source = (file: string): string => fileURLToPath(new URL(file, import.meta.url));
@@ -71,6 +75,9 @@ const VERSION_DEFINE = { __HOLOCHART_VERSION__: JSON.stringify(pkg.version) };
  * - `dist/holochart-3d.iife.min.js`: the 3D add-on (`src/iife-3d.ts`), loaded after the main
  *   script. It bundles only the 3D package and render's 3D chunks; three.js, core, the runtime,
  *   render and traces-basic are the main script's (`scripts/build/iife-split.ts`).
+ *
+ * The IIFE sourcemaps map to file names and lines but leave out `sourcesContent` (10 MB of
+ * TypeScript sources, most of the package's unpacked size); the ESM build's maps keep theirs.
  */
 export default defineConfig([
   {
@@ -79,9 +86,9 @@ export default defineConfig([
     platform: 'neutral',
     target: 'es2022',
     sourcemap: true,
-    dts: true,
+    dts: DTS_OPTIONS,
     clean: true,
-    plugins: productionPlugins(),
+    plugins: [...productionPlugins(), dtsWithoutMapComment()],
     outputOptions: { chunkFileNames },
   },
   {
@@ -94,7 +101,7 @@ export default defineConfig([
     sourcemap: true,
     dts: false,
     clean: false,
-    outputOptions: { entryFileNames: '[name].iife.min.js' },
+    outputOptions: { entryFileNames: '[name].iife.min.js', sourcemapExcludeSources: true },
     deps: { alwaysBundle: [/.*/], onlyBundle: false },
     define: VERSION_DEFINE,
     plugins: [
@@ -117,6 +124,7 @@ export default defineConfig([
     clean: false,
     outputOptions: {
       entryFileNames: '[name].iife.min.js',
+      sourcemapExcludeSources: true,
       globals: { ...ADDON_GLOBALS },
       banner: ADDON_BANNER,
     },

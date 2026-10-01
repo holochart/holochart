@@ -30,6 +30,40 @@ export function productionPlugins(): ReturnType<typeof stripDescriptionsPlugin>[
 }
 
 /**
+ * Declaration options of every published build (`dts` in tsdown):
+ *
+ * - `stripInternal`: members tagged `@internal` in TSDoc are left out of the shipped `.d.ts`
+ *   (docs/release/versioning.md: they are not public API).
+ * - No declaration maps: they would point at `../src/*.ts`, which the packages don't ship (`files`
+ *   is `dist` only). The JS sourcemaps embed their sources, so debugging is unaffected.
+ */
+export const DTS_OPTIONS = {
+  sourcemap: false,
+  compilerOptions: { stripInternal: true },
+};
+
+/**
+ * Removes the `//# sourceMappingURL=….d.ts.map` comment from the bundled declarations: with
+ * declaration maps off ({@link DTS_OPTIONS}), rolldown-plugin-dts drops the map file but rolldown
+ * still appends the comment (the JS builds have `sourcemap: true`). Add it to every build that
+ * emits declarations.
+ */
+export function dtsWithoutMapComment() {
+  return {
+    name: 'holochart:dts-without-map-comment',
+    generateBundle(
+      _options: unknown,
+      bundle: Record<string, { type: string; fileName: string; code?: string }>,
+    ): void {
+      for (const chunk of Object.values(bundle)) {
+        if (chunk.type !== 'chunk' || !chunk.fileName.endsWith('.d.ts') || !chunk.code) continue;
+        chunk.code = chunk.code.replace(/\n\/\/# sourceMappingURL=\S+\.d\.ts\.map\s*$/, '\n');
+      }
+    },
+  };
+}
+
+/**
  * tsdown configs for one library package: ESM + one bundled `index.d.ts`. `dependencies` and
  * `peerDependencies` (e.g. `three`, ADR-003) are external automatically; declarations come from
  * tsc via rolldown-plugin-dts (they never contained descriptions).
@@ -42,7 +76,12 @@ export function libraryConfig(options: LibraryConfigOptions = {}): Record<string
     target: 'es2022',
     sourcemap: true,
   };
-  const production = { ...base, dts: true, clean: true, plugins: productionPlugins() };
+  const production = {
+    ...base,
+    dts: DTS_OPTIONS,
+    clean: true,
+    plugins: [...productionPlugins(), dtsWithoutMapComment()],
+  };
   if (!options.development) return [production];
   return [
     production,
