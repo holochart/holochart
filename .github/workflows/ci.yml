@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm lint
       - run: pnpm format:check
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm typecheck
       - name: Typecheck root configs and tests
@@ -55,14 +55,14 @@ jobs:
       matrix:
         node: ['22', '26']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
         with:
           node-version: ${{ matrix.node }}
       - run: pnpm test:coverage
       - name: Upload coverage report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-node-${{ matrix.node }}
           path: coverage/
@@ -78,7 +78,7 @@ jobs:
       matrix:
         node: ['22', '26']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
         with:
           node-version: ${{ matrix.node }}
@@ -97,7 +97,7 @@ jobs:
       CI: 'true'
       HOME: /root
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - name: Visual regression tests (Chromium + SwiftShader)
         run: pnpm test:visual
@@ -108,7 +108,7 @@ jobs:
         run: pnpm test:visual:report
       - name: Upload visual diff report
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: visual-diff-report
           path: |
@@ -133,13 +133,13 @@ jobs:
       CI: 'true'
       HOME: /root
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - name: Docs pages render without errors
         run: pnpm --filter @mk7s/holochart-docs check:render
       - name: Upload docs render report
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: docs-render-report
           path: test-results/docs-render/
@@ -175,7 +175,7 @@ jobs:
       matrix:
         shard: [1, 2]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - name: Interaction tests (Chromium + SwiftShader)
         run: pnpm test:interaction --shard ${{ matrix.shard }}/2
@@ -186,7 +186,7 @@ jobs:
         run: pnpm test:interaction:report
       - name: Upload interaction report and traces
         if: ${{ !cancelled() && (failure() || steps.summary.outputs.flaky != '0') }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: interaction-report-shard-${{ matrix.shard }}
           path: |
@@ -208,7 +208,7 @@ jobs:
       CI: 'true'
       HOME: /root
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - name: Build and smoke-test the IIFE bundle
         run: pnpm test:bundle
@@ -234,7 +234,7 @@ jobs:
       # but not the registry metadata, which pnpm fetches for what it lacks.
       PACKAGE_INSTALL_MODE: prefer-offline
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm build:packages
       - name: Pack every publishable package
@@ -248,7 +248,7 @@ jobs:
         run: pnpm exec playwright test -c tests/package/playwright.config.ts
       - name: Upload package test results
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: package-test-results
           path: test-results/package/
@@ -286,7 +286,7 @@ jobs:
           - leg: latest
             three: '>=0.186.0'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - name: Override three and @types/three in the pnpm catalog
         id: three
@@ -312,7 +312,7 @@ jobs:
         run: echo "::warning title=three (latest)::Fails with three ${VERSION:-(not installed)}; see this job's log."
       - name: Open or update the three (latest) issue
         if: ${{ failure() && matrix.leg == 'latest' && github.event_name != 'pull_request' }}
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           VERSION: ${{ steps.three.outputs.version }}
         with:
@@ -358,7 +358,7 @@ jobs:
       actions: read # download main's size report
       pull-requests: write # PR comment
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - name: Download the size report of the latest main run (baseline)
         if: ${{ github.event_name == 'pull_request' }}
@@ -380,7 +380,7 @@ jobs:
           pnpm size:report --json size-report/size.json --markdown size-report/size.md "${base[@]}"
       - name: Upload size report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: size-report
           path: size-report/
@@ -391,7 +391,7 @@ jobs:
           ${{ !cancelled() && github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository }}
         continue-on-error: true
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const fs = require('node:fs');
@@ -421,7 +421,7 @@ jobs:
     if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: echo "TODO — run apps/bench and upload its report" && exit 1
 
@@ -431,7 +431,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm build:packages
       - run: pnpm --filter @mk7s/holochart-docs lint:pages
