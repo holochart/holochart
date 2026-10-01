@@ -24,13 +24,15 @@ test('3D add-on bundles only 3D code', () => {
   const sources = mapSources(BUNDLE_3D);
   const shared = sources.filter(
     (s) =>
-      !/(?:traces-3d\/src\/|render\/src\/primitives\/|render\/src\/precision\.ts$|^\.\.\/src\/iife-3d\.ts$)/.test(
+      !/(?:traces-3d\/src\/|render\/src\/primitives\/|render\/src\/precision\.ts$|^\.\.\/src\/iife-3d\.ts$|^\.\.\/src\/view3d\/view\.ts$)/.test(
         s,
       ),
   );
   expect(shared).toEqual([]);
   expect(sources.some((s) => s.endsWith('traces-3d/src/scene/component.ts'))).toBe(true);
   expect(sources.some((s) => s.endsWith('render/src/primitives/mesh.ts'))).toBe(true);
+  // The 2.5D view component's view (`layout.view3d`) comes with render's 2.5D chunk.
+  expect(sources.some((s) => s.endsWith('src/view3d/view.ts'))).toBe(true);
   // No three.js (its duplicate-instance warning lives in its core module), no render root.
   const code = readFileSync(resolve(DIST, BUNDLE_3D), 'utf8');
   expect(code).not.toContain('Multiple instances of Three.js');
@@ -179,4 +181,87 @@ test('3D add-on fails loudly without the main script, and loads once', async ({ 
     return hc.registry.list().components.filter((c) => c.name === 'scene').length;
   });
   expect(scenes).toBe(1);
+});
+
+/** A bar chart with depth in the 2.5D view; what it drew. */
+async function draw25D(page: import('@playwright/test').Page) {
+  return page.evaluate(async () => {
+    /* eslint-disable @typescript-eslint/no-explicit-any -- untyped globals from the IIFEs */
+    const hc = (window as any).Holochart;
+    const chart = hc.createChart(document.getElementById('root')!, {
+      data: [{ type: 'bar', y: [3, 1, 2], depth: 20 }],
+      layout: { width: 320, height: 240, view3d: { enabled: true } },
+    });
+    await chart.ready;
+    const vp = chart.subplots.get('xy').viewport;
+    const objects: any[] = chart.getTraceObjects(0);
+    return {
+      tilted: Boolean(vp.projector),
+      extruded: objects.some((o) => o.name === 'holochart:extrusion'),
+      flatBars: objects.some((o) => o.type === 'Mesh' && o.visible),
+      loaded: hc.render.extrusionModuleLoaded() !== null,
+    };
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+  });
+}
+
+test('2.5D view and extruded bars come with the 3D add-on', async ({ page }) => {
+  const { errors, warnings } = await servePage(page, [BUNDLE, BUNDLE_3D]);
+  await page.goto(`${ORIGIN}/`);
+  expect(await draw25D(page)).toEqual({
+    tilted: true,
+    extruded: true,
+    flatBars: false,
+    loaded: true,
+  });
+  expect(errors).toEqual([]);
+  expect(warnings).toEqual([]);
+});
+
+test('2.5D without the 3D add-on draws flat, with one warning', async ({ page }) => {
+  const { errors, warnings } = await servePage(page, [BUNDLE]);
+  await page.goto(`${ORIGIN}/`);
+  expect(await draw25D(page)).toEqual({
+    tilted: false,
+    extruded: false,
+    flatBars: true,
+    loaded: false,
+  });
+  expect(errors).toEqual([]);
+  expect(warnings).toEqual([expect.stringContaining('holochart-3d.iife.min.js')]);
+});
+
+/** A tilted, extruded pie (a domain trace in 2.5D, E9.12); what it drew. */
+async function drawPie25D(page: import('@playwright/test').Page) {
+  return page.evaluate(async () => {
+    /* eslint-disable @typescript-eslint/no-explicit-any -- untyped globals from the IIFEs */
+    const hc = (window as any).Holochart;
+    const chart = hc.createChart(document.getElementById('root')!, {
+      data: [{ type: 'pie', values: [3, 1, 2], textinfo: 'none', depth: 20, tilt: 40 }],
+      layout: { width: 320, height: 240, showlegend: false },
+    });
+    await chart.ready;
+    const objects: any[] = chart.getTraceObjects(0);
+    return {
+      extruded: objects.some((o) => o.name === 'holochart:extrusion'),
+      flatSlices: objects.some((o) => o.type === 'Mesh' && o.visible),
+    };
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+  });
+}
+
+test('3D pies come with the 3D add-on', async ({ page }) => {
+  const { errors, warnings } = await servePage(page, [BUNDLE, BUNDLE_3D]);
+  await page.goto(`${ORIGIN}/`);
+  expect(await drawPie25D(page)).toEqual({ extruded: true, flatSlices: false });
+  expect(errors).toEqual([]);
+  expect(warnings).toEqual([]);
+});
+
+test('3D pies without the 3D add-on draw flat, with one warning', async ({ page }) => {
+  const { errors, warnings } = await servePage(page, [BUNDLE]);
+  await page.goto(`${ORIGIN}/`);
+  expect(await drawPie25D(page)).toEqual({ extruded: false, flatSlices: true });
+  expect(errors).toEqual([]);
+  expect(warnings).toEqual([expect.stringContaining('holochart-3d.iife.min.js')]);
 });

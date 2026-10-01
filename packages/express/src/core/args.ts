@@ -35,6 +35,8 @@ export const COLUMN_KEYS = [
   'errorXMinus',
   'errorY',
   'errorYMinus',
+  'errorZ',
+  'errorZMinus',
   'names',
   'values',
   'parents',

@@ -101,6 +101,8 @@ export class RenderRoot implements ViewportHost {
       premultipliedAlpha: true,
       preserveDrawingBuffer: options.preserveDrawingBuffer ?? false,
       powerPreference: options.powerPreference ?? 'default',
+      // The 2.5D view (E8.9) clips flat traces to the tilted plot area with the stencil buffer.
+      stencil: true,
     };
     this.renderer = options.createRenderer
       ? options.createRenderer(parameters)

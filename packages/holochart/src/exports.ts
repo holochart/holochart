@@ -39,6 +39,21 @@ export * from '@mk7s/holochart-traces-sci';
 export * from '@mk7s/holochart-traces-finance';
 export * from '@mk7s/holochart-traces-hier';
 export * from '@mk7s/holochart-components';
+/**
+ * The 2.5D view (`layout.view3d`) and extruded bars and areas (`depth`; plan E8.9, E9.10), and
+ * pies, treemaps and icicles with depth and a tilt of their own (E9.12), registered by the full
+ * bundle (not in `basic`).
+ */
+export {
+  extrudedBar,
+  extrudedIcicle,
+  extrudedPie,
+  extrudedScatter,
+  extrudedTreemap,
+  view3dAttributes,
+  view3dComponent,
+  view3dEnabled,
+} from './view3d/index.ts';
 /** The built-in themes (plan E8.1), namespaced: `themes.THEMES`, `themes.plotly_dark`, … */
 export * as themes from '@mk7s/holochart-themes';
 /**

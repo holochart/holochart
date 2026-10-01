@@ -34,6 +34,19 @@ function scriptFontFilesPlugin() {
   };
 }
 
+/** The 2.5D view's lazily loaded view (`src/view3d/view.ts`, plan E8.9). */
+const VIEW3D_VIEW = /[\\/]src[\\/]view3d[\\/]view\.ts$/;
+
+/**
+ * ESM chunk names: the 2.5D view's lazily loaded view is `view3d-<hash>.js`, so apps (and the size
+ * report, `tests/bundle/size/entries.ts`) can tell it apart; other chunks keep rolldown's.
+ */
+function chunkFileNames(chunk: { facadeModuleId: string | null }): string {
+  return chunk.facadeModuleId && VIEW3D_VIEW.test(chunk.facadeModuleId)
+    ? 'view3d-[hash].js'
+    : '[name]-[hash].js';
+}
+
 /** Workspace packages resolve through the `source` export condition in the IIFE builds. */
 const SOURCE_CONDITIONS = {
   resolve: { conditionNames: ['source', 'browser', 'import', 'module', 'default'] },
@@ -69,6 +82,7 @@ export default defineConfig([
     dts: true,
     clean: true,
     plugins: productionPlugins(),
+    outputOptions: { chunkFileNames },
   },
   {
     entry: { holochart: 'src/iife.ts' },

@@ -166,6 +166,43 @@ const figures: Record<string, () => hx.ExpressFigure> = {
       logR: true,
       animationFrame: 'year',
     }),
+  scatter3d: () =>
+    hx.scatter3d(rows, {
+      x: 'gdp',
+      y: 'life',
+      z: 'pop',
+      color: 'continent',
+      symbol: 'smoker',
+      size: 'pop',
+      text: 'day',
+      hoverName: 'country',
+      hoverData: ['day'],
+      errorZ: 'life',
+      logZ: true,
+      rangeX: [0, 7000],
+      opacity: 0.8,
+    }),
+  scatter3dContinuous: () =>
+    hx.scatter3d(rows, {
+      x: 'day',
+      y: 'life',
+      z: 'gdp',
+      color: 'pop',
+      animationFrame: 'year',
+      animationGroup: 'country',
+      categoryOrders: { day: ['Thu', 'Fri', 'Sat', 'Sun'] },
+    }),
+  line3d: () =>
+    hx.line3d(rows, {
+      x: 'year',
+      y: 'gdp',
+      z: 'life',
+      color: 'continent',
+      lineDash: 'smoker',
+      lineGroup: 'country',
+      symbol: 'smoker',
+      markers: true,
+    }),
   sunburst: () =>
     hx.sunburst(rows, {
       path: ['continent', 'country'],

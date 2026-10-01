@@ -6,17 +6,17 @@ status: complete
 
 # Materials, lighting & effects
 
-3D surfaces and meshes (`surface`, `mesh3d`, `isosurface`, `volume`, and later extruded 2D charts)
-are drawn by one mesh primitive. By default it lights them exactly like Plotly, so Plotly figures
+3D surfaces and meshes (`surface`, `mesh3d`, `isosurface`, `volume`) and extruded 2D charts are
+drawn by one mesh primitive. By default it lights them exactly like Plotly, so Plotly figures
 look the same. On top of that, Holochart adds three.js materials per trace, scene lights with
 shadows and environment maps, and correct compositing of translucent meshes.
 
 ::: info Status
 The mesh primitive, Plotly's lighting model, the material types, scene light rigs, shadows and
 transparency sorting are in place (M6 waves 0 and 1), with the trace attributes (`lighting`,
-`lightposition`, `material`) and the scene's `lighting`. Some examples below draw with small
-development traces. Extrusion and 2.5D views follow in M6 wave 3; shader hooks and
-post-processing in M7.
+`lightposition`, `material`) and the scene's `lighting`. Extruded 2D traces (`depth`) take the
+same `material` (M6 wave 3, see [Extrusion & 2.5D](/customization/extrusion-2-5d)); shader hooks
+and post-processing follow in M7.
 :::
 
 The 3D code loads the first time a figure draws a 3D mesh, so 2D charts don't pay for it.
@@ -62,9 +62,9 @@ camera: when you rotate the scene, the lit side stays the one facing the upper r
 screen. Colorscales (`intensity`, surface `z`) are sampled per pixel, so color bands stay sharp on
 coarse meshes; `intensitymode: 'cell'` colors each face with one value.
 
-<Example id="_dev/mesh-lighting" />
+<Example id="mesh3d/lighting" />
 
-<Example id="_dev/mesh-shading" />
+<Example id="mesh3d/intensity" />
 
 ## Material types: `trace.material`
 
@@ -113,11 +113,12 @@ in Plotly; they map onto three.js' camelCase properties (`emissiveintensity` →
 `emissiveIntensity`). The three.js types are lit by the scene's lights (`scene.lighting` below)
 and receive shadows; they map colorscales per vertex (or per face) rather than per pixel.
 
-<Example id="_dev/scene-materials" />
+<Example id="mesh3d/materials" />
 
-The same material types on the mesh primitive directly, each panel with its own light rig:
+The three.js types on a colored surface, each scene with its own light rig (the colorscale is
+mapped per vertex):
 
-<Example id="_dev/mesh-materials" />
+<Example id="surface/materials" />
 
 ## Scene lights: `scene.lighting`
 
@@ -171,7 +172,7 @@ Each scene has its own lights. To give every scene the same ones, put `lighting`
 `material.castshadow`; three.js material types with `material.receiveshadow` and the ground plane
 show them.
 
-<Example id="_dev/scene-lighting" />
+<Example id="scene/lighting" />
 
 ## Translucent meshes
 
@@ -181,7 +182,7 @@ sorted back to front too each time the view changes (up to 500,000 triangles), s
 surface that folds over itself, or a closed isosurface, composites correctly. Both sides of a
 double-sided translucent mesh are drawn: the back faces first, then the front faces.
 
-<Example id="_dev/mesh-transparency" />
+<Example id="mesh3d/transparency" />
 
 Order-independent transparency for very dense translucent meshes is planned.
 

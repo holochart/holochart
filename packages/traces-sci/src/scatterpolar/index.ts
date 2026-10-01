@@ -47,7 +47,7 @@ export const scatterpolar: TraceModule<ScatterpolarCalc, typeof scatterpolarAttr
   hoverPoints: scatterpolarHoverPoints,
   selectPoints: scatterpolarSelectPoints,
   eventData: polarEventData,
-  legendIcon: (trace) => scatter.legendIcon!(trace),
+  legendIcon: (trace, ctx) => scatter.legendIcon!(trace, ctx),
   colorbar: (trace, ctx) => scatter.colorbar!(trace, ctx),
   describe: (ctx) => describePolar(ctx),
 };

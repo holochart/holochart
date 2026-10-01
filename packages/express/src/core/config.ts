@@ -21,6 +21,8 @@ export type Role =
   | 'errorXMinus'
   | 'errorY'
   | 'errorYMinus'
+  | 'errorZ'
+  | 'errorZMinus'
   | 'dimensions'
   | 'customData'
   | 'hoverData'
@@ -74,9 +76,10 @@ export interface Config {
   readonly inlineColorscale?: boolean;
   /**
    * `'domain'` for pie-like traces, `'splom'` for a scatter matrix (which lays out its own axes),
-   * `'polar'` for polar traces (one `layout.polar`); default `'xy'`.
+   * `'polar'` for polar traces (one `layout.polar`), `'scene'` for 3D traces (one `layout.scene`);
+   * default `'xy'`.
    */
-  readonly subplotType?: 'xy' | 'domain' | 'splom' | 'polar';
+  readonly subplotType?: 'xy' | 'domain' | 'splom' | 'polar' | 'scene';
   /** `'v'` / `'h'` for functions with an orientation (histogram labels depend on it). */
   readonly orientation?: 'v' | 'h';
   /** Histogram / density aggregation. */

@@ -105,6 +105,14 @@ export {
 export { configSchema } from './config/schema.ts';
 export { scaledFontSize } from './layout/font-attributes.ts';
 export { annotationItemAttributes } from './layout/annotation-attributes.ts';
+// Extrusion (2.5D) and lit material attributes (E8.9, E8.7)
+export {
+  extrusionAttributes,
+  LIT_MATERIAL_TYPES,
+  litMaterialAttributes,
+  supplyExtrusionDefaults,
+  withExtrusion,
+} from './schema/extrusion.ts';
 
 // Registry & trace module contract
 export { createRegistry } from './registry/registry.ts';

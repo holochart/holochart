@@ -246,6 +246,56 @@ hx.linePolar(wind, { r: 'frequency', theta: 'direction', color: 'strength', line
 
 <Example id="express/line-polar" :height="480" />
 
+## 3D charts {#3d-charts}
+
+`scatter3d` and `line3d` are `px.scatter_3d` and `px.line_3d`: `x`, `y` and `z` columns on one 3D
+`scene`, grouped as `scatter` and `line` are (`color`, `symbol`, `size`, `opacity` and a continuous
+`color` on `coloraxis`; `lineDash`, `lineGroup` and `markers`), with `text`, hover options, error
+bars (`errorX` … `errorZMinus`) and animation frames. The scene's axes take their titles from
+`labels`, and `logX` / `logY` / `logZ`, `rangeX` / `rangeY` / `rangeZ` and `categoryOrders`, as
+px's `configure_3d_axes` writes them. Like px, the 3D functions have no facets or marginals. Draw
+them with traces-3d (the `@mk7s/holochart` bundle includes it); see
+[3D scatter](/charts/3d/scatter3d) for the trace and [3D scenes](/fundamentals/3d-scenes) for the
+camera, aspect and lighting.
+
+<Example id="express/scatter3d" :height="480" />
+
+```ts
+import hx from '@mk7s/holochart-express';
+
+declare const iris: object[]; // [{ sepal_length: 5.1, sepal_width: 3.5, petal_width: 0.2, … }]
+hx.scatter3d(iris, { x: 'sepal_length', y: 'sepal_width', z: 'petal_width', color: 'species' });
+hx.scatter3d(iris, {
+  x: 'sepal_length',
+  y: 'sepal_width',
+  z: 'petal_width',
+  color: 'petal_length', // numeric: a colorscale
+  size: 'petal_length',
+  sizeMax: 18,
+  symbol: 'species',
+  opacity: 0.7,
+});
+
+declare const gapminder: object[]; // [{ country: 'France', year: 1952, gdpPercap: 7030, … }]
+hx.line3d(gapminder, { x: 'gdpPercap', y: 'pop', z: 'year', color: 'country', markers: true });
+```
+
+| Option                  | px                         | What it does                                      |
+| ----------------------- | -------------------------- | ------------------------------------------------- |
+| `x`, `y`, `z`           | `x`, `y`, `z`              | Columns on the scene's axes (z is up)             |
+| `logZ`, `rangeZ`        | `log_z`, `range_z`         | The z axis' type and range, like `logX`, `rangeX` |
+| `errorZ`, `errorZMinus` | `error_z`, `error_z_minus` | z error bars (`error_z.array`, `arrayminus`)      |
+| `lineGroup`, `markers`  | `line_group`, `markers`    | `line3d`: lines within a color, markers           |
+
+<Example id="express/scatter3d-continuous" :height="480" />
+
+<Example id="express/line3d" :height="480" />
+
+An animated 3D scatter (`animationFrame`, `animationGroup`) moves the points between frames inside
+a scene whose ranges hold still:
+
+<Example id="express/scatter3d-animated" :height="560" />
+
 ## Templates
 
 The figure's colors are taken from the template it will render with: the `template` option when

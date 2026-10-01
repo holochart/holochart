@@ -6,8 +6,13 @@
  * geometry, label placement (`inside` / `outside` / `auto`, `insidetextanchor`, `textangle`,
  * `constraintext`) and update paths are exactly bar's. Each type adds its connectors as extra
  * layers of the same view.
+ *
+ * With `depth` (2.5D, plan E8.9; the full bundle adds the attribute) bar's renderer draws the bars
+ * extruded and lifts their labels onto the front faces; the layers update first and hand their
+ * primitives to it as `lift` in the bar context, so the connectors are lifted with the labels.
  */
 import type { FullTrace } from '@mk7s/holochart-core';
+import type { Primitive } from '@mk7s/holochart-render';
 import type {
   ComponentPointerEvent,
   TracePlotContext,
@@ -20,6 +25,8 @@ import { bar, type BarCalc } from '@mk7s/holochart-traces-basic';
 /** Extra layers of a bar-like view (connectors), drawn with the bars. */
 export interface BarLikeLayer<C> {
   update(ctx: TracePlotContext<C>, plan: TraceUpdatePlan): void;
+  /** The primitives drawn on the bars' front faces when they are extruded (connectors). */
+  lifted(): readonly (Primitive<unknown> | undefined)[];
 }
 
 /** What a bar-like type adds to bar's renderer. */
@@ -39,18 +46,22 @@ class BarLikeView<C extends BarCalc> implements TraceView<C> {
 
   constructor(ctx: TracePlotContext<C>, spec: BarLikeRenderer<C>) {
     this.#spec = spec;
-    this.#bars = bar.plot!.create(this.#barContext(ctx));
     this.#layers = spec.layers?.() ?? [];
     for (const layer of this.#layers) layer.update(ctx, FULL);
+    this.#bars = bar.plot!.create(this.#barContext(ctx));
   }
 
   #barContext(ctx: TracePlotContext<C>): TracePlotContext<BarCalc> {
-    return { ...ctx, trace: this.#spec.barTrace(ctx) };
+    return {
+      ...ctx,
+      trace: this.#spec.barTrace(ctx),
+      lift: this.#layers.flatMap((layer) => layer.lifted()),
+    } as TracePlotContext<BarCalc>;
   }
 
   update(ctx: TracePlotContext<C>, plan: TraceUpdatePlan): void {
-    this.#bars.update(this.#barContext(ctx), plan);
     for (const layer of this.#layers) layer.update(ctx, plan);
+    this.#bars.update(this.#barContext(ctx), plan);
   }
 
   handlePointer(event: ComponentPointerEvent): boolean {

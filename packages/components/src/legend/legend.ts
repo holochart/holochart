@@ -29,6 +29,7 @@ import type {
   ComponentUpdatePlan,
   ComponentView,
   LegendGlyph,
+  LegendIconContext,
   LegendItem,
   MarginPush,
   TraceModule,
@@ -99,10 +100,12 @@ export function legendGlyphOf(
   trace: FullTrace,
   fullLayout: Pick<FullLayout, 'colorway'>,
 ): LegendGlyph {
-  const module = trace._module as { legendIcon?: (t: FullTrace) => LegendGlyph } | undefined;
+  const module = trace._module as
+    { legendIcon?: (t: FullTrace, ctx?: LegendIconContext) => LegendGlyph } | undefined;
   if (typeof module?.legendIcon === 'function') {
     try {
-      return module.legendIcon(trace);
+      // The layout resolves `coloraxis` references (and other layout-level styling) in glyphs.
+      return module.legendIcon(trace, { fullLayout: fullLayout as FullLayout });
     } catch {
       // A failing icon must not break the legend: fall back below.
     }

@@ -72,6 +72,8 @@ export const bar: TraceModule<BarCalc, typeof barAttributes.children> = {
 };
 
 export { barAttributes, barLayoutAttributes } from './attributes.ts';
+// 2.5D bars (E9.10): the full bundle installs render's extruder.
+export { setBarExtruder, type BarExtruder } from './plot.ts';
 export type { BarCalc } from './calc.ts';
 // For trace types drawn as bars (histogram, E10.1): the bar module's parts are reused through
 // `bar.plot`, `bar.crossTraceCalc`, …; these two build a bar calc and bar styling defaults.

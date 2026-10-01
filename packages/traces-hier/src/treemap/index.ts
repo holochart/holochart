@@ -12,8 +12,9 @@
  * Colorscales may be shared through `marker.coloraxis`, and `layout.uniformtext` (E4.6) sizes the
  * labels of every treemap of the chart alike.
  *
- * Deferred: the "city" 3D treemap (P2), transitions of `level` changes made by `animate` /
- * `react`.
+ * The full bundle adds `depth`, `bevel`, `material`, `tilt` and `perspective` (tiles as prisms in
+ * terraces, the "city" 3D treemap; `@mk7s/holochart`'s `extrudedTreemap`). Deferred: transitions
+ * of `level` changes made by `animate` / `react`.
  */
 import type { TraceModule } from '@mk7s/holochart-runtime';
 import { coloraxisLayoutSchema } from '@mk7s/holochart-traces-basic';

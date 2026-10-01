@@ -289,3 +289,31 @@ export function pointCount(trace: FullTrace): number {
   }
   return n;
 }
+
+/**
+ * The 2.5D view (`layout.view3d`, plan E8.9) between two defaulted layouts: its angles and
+ * perspective move linearly; turning it on or off moves from or to the flat view (`tilt` and
+ * `rotation` 0 draw the plot plane where the flat view does), shown enabled until the end.
+ * `undefined` when the view is off in both or nothing it draws changes.
+ */
+export function view3dTween(from: unknown, to: unknown): Tween | undefined {
+  if (!isPlainObject(from) || !isPlainObject(to)) return undefined;
+  const on0 = from['enabled'] === true;
+  const on1 = to['enabled'] === true;
+  const num = (v: Record<string, unknown>, key: string, on: boolean): number =>
+    on && isNumber(v[key]) ? v[key] : 0;
+  const t0 = num(from, 'tilt', on0);
+  const t1 = num(to, 'tilt', on1);
+  const r0 = num(from, 'rotation', on0);
+  const r1 = num(to, 'rotation', on1);
+  const p0 = num(from, 'perspective', true);
+  const p1 = num(to, 'perspective', true);
+  if ((!on0 && !on1) || (t0 === t1 && r0 === r1 && p0 === p1)) return undefined;
+  return (e) => ({
+    ...to,
+    enabled: true,
+    tilt: lerp(t0, t1, e),
+    rotation: lerp(r0, r1, e),
+    perspective: Math.min(1, Math.max(0, lerp(p0, p1, e))),
+  });
+}

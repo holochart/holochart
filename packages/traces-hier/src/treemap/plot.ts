@@ -187,6 +187,8 @@ interface Tween {
   readonly segments: RectTweenPlan;
   readonly tileExitStyles: readonly RectStyle[];
   readonly segmentExitStyles: readonly RectStyle[];
+  /** Node indices of the leaving tiles. */
+  readonly tileExitItems: readonly number[];
 }
 
 /** What is drawn. */
@@ -196,6 +198,8 @@ interface Drawn {
   readonly segments: DrawnRect[];
   readonly segmentStyles: RectStyle[];
   readonly labelled: boolean[];
+  /** Node index of each tile (`depth` arrays are per node in 2.5D). */
+  readonly items: readonly number[];
   readonly entry: string | undefined;
 }
 
@@ -205,6 +209,7 @@ const EMPTY: Drawn = {
   segments: [],
   segmentStyles: [],
   labelled: [],
+  items: [],
   entry: undefined,
 };
 
@@ -295,6 +300,7 @@ class RectView implements TraceView<RectCalc> {
         segments: segmentPlan,
         tileExitStyles: tilePlan.exit.map((e) => prev.tileStyles[e.index]!),
         segmentExitStyles: segmentPlan.exit.map((e) => prev.segmentStyles[e.index]!),
+        tileExitItems: tilePlan.exit.map((e) => prev.items[e.index]!),
       };
     }
     const drawn = (r: RectState & { node: HierNode }): DrawnRect => ({
@@ -307,6 +313,7 @@ class RectView implements TraceView<RectCalc> {
       segments: segments.map(drawn),
       segmentStyles,
       labelled: tiles.map((t) => t.node.label !== ''),
+      items: tiles.map((t) => t.node.i),
       entry,
     };
     if (this.#tween) this.#clock.start(this.#step);
@@ -448,7 +455,7 @@ class RectView implements TraceView<RectCalc> {
   #drawFinal(): void {
     const d = this.#drawn;
     this.#hover = undefined;
-    this.#draw(d.tiles, d.tileStyles, d.segments, d.segmentStyles, d.labelled, 1);
+    this.#draw(d.tiles, d.tileStyles, d.segments, d.segmentStyles, d.labelled, 1, d.items);
     this.#ctx?.invalidate();
   }
 
@@ -483,7 +490,8 @@ class RectView implements TraceView<RectCalc> {
       tween.segmentExitStyles,
     );
     const labelled = [...tween.tiles.exit.map(() => false), ...d.labelled];
-    this.#draw(tiles, tileStyles, segments, segmentStyles, labelled, labelAlpha(t));
+    const items = [...tween.tileExitItems, ...d.items];
+    this.#draw(tiles, tileStyles, segments, segmentStyles, labelled, labelAlpha(t), items);
     this.#ctx?.invalidate();
   };
 
@@ -494,6 +502,7 @@ class RectView implements TraceView<RectCalc> {
     segmentStyles: readonly RectStyle[],
     labelled: readonly boolean[],
     textAlpha: number,
+    items: readonly number[],
   ): void {
     const ctx = this.#ctx;
     const layout = ctx?.calc.layout;
@@ -510,6 +519,7 @@ class RectView implements TraceView<RectCalc> {
       ...(rects ?? { x0: [], y0: [], x1: [], y1: [] }),
       borderAlign: 'center',
       opacity,
+      items,
     };
     this.#rects = syncPrimitive(
       ctx,

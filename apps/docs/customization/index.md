@@ -32,6 +32,7 @@ per layer, with a runnable example each.
     [Writing a custom trace](/extending/custom-trace).
 
 Holochart also adds **3D-native** options: any 2D trace can take `depth` and `material`
-(with `castshadow`), and any 2D subplot can be shown in perspective with `layout.view3d`.
+(with `castshadow`), and any 2D subplot can be shown in perspective with `layout.view3d`. See
+[Extrusion & 2.5D](/customization/extrusion-2-5d) (bars today).
 
 See also [Custom markers, patterns & textures](/customization/markers-patterns).

@@ -16,6 +16,10 @@ import type * as Three from './three.ts';
 export interface Lazy3DModules {
   mesh: Render.MeshModule;
   'lines-markers-3d': Render.LinesMarkers3DModule;
+  /** The 2.5D view and the extrusion primitive (`layout.view3d`, `depth`; plan E8.9). */
+  extrusion: Render.ExtrusionModule;
+  /** The full bundle's 2.5D view component's view (`view3d/view.ts`). */
+  view3d: typeof import('../view3d/view.ts');
 }
 
 export interface IIFEHost {
@@ -38,7 +42,8 @@ export function provideLazy3D<K extends keyof Lazy3DModules>(
 }
 
 /**
- * In the main script, render's 3D loaders (`loadMeshModule`, `loadLinesMarkers3D`) call this in
+ * In the main script, render's 3D loaders (`loadMeshModule`, `loadLinesMarkers3D`,
+ * `loadExtrusionModule`) call this in
  * place of their dynamic `import()` (the build rewrites them, see `tsdown.config.ts`): the chunk
  * the 3D add-on provided, or a rejection that says to load the add-on.
  */

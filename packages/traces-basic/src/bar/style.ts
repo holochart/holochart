@@ -4,7 +4,7 @@
  */
 import { isArrayLike, toRGBA, type FullLayout, type FullTrace } from '@mk7s/holochart-core';
 import type { PatternFill, RGBA, ScalarInput } from '@mk7s/holochart-render';
-import type { LegendGlyph } from '@mk7s/holochart-runtime';
+import type { LegendGlyph, LegendIconContext } from '@mk7s/holochart-runtime';
 import { mapColors, resolveColorMapping } from '../shared/colorscale.ts';
 import { patternFill } from '../shared/pattern.ts';
 
@@ -162,10 +162,11 @@ export function cornerRadiusPx(radius: unknown, barWidthPx: number): number {
  * The legend glyph: a bar in the first bar's colors (Plotly). Without the layout, a `coloraxis`
  * reference falls back to the trace's own colorscale attributes.
  */
-export function barLegendIcon(trace: FullTrace): LegendGlyph {
+export function barLegendIcon(trace: FullTrace, ctx?: LegendIconContext): LegendGlyph {
   // The whole trace decides the colorscale domain; the glyph uses the first bar.
   const length = typeof trace['_length'] === 'number' ? trace['_length'] : 1;
-  const style = barStyle(trace, Math.max(1, length));
+  // `ctx.fullLayout` resolves `marker.coloraxis` references.
+  const style = barStyle(trace, Math.max(1, length), null, ctx?.fullLayout);
   const marker = (trace['marker'] ?? {}) as FullMarker;
   const pattern = style.pattern ? (marker['pattern'] as Readonly<Record<string, unknown>>) : null;
   return {

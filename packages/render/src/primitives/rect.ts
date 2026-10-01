@@ -106,6 +106,11 @@ export interface RectData {
   opacity: number;
   /** Pattern fills per rect (plan E8.10), or `null` (the default) for plain fills. */
   pattern: PatternFill | null;
+  /**
+   * The item each rect stands for (e.g. a treemap tile's node), for the 2.5D view of domain
+   * traces (`extrusion-domain.ts`: per-item `depth`). Ignored when drawing.
+   */
+  items?: ArrayLike<number>;
 }
 
 const DEFAULTS: Omit<RectData, 'x0' | 'y0' | 'x1' | 'y1'> = {

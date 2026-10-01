@@ -12,12 +12,13 @@ box, and mouse, wheel and touch controls. Scenes follow Plotly's `layout.scene` 
 events, so 3D figures written for Plotly keep their camera, aspect ratio and axis styling.
 
 ::: info 3D traces
-3D traces such as [`scatter3d`](/charts/3d/scatter3d) are available: they draw in the scenes this
-page describes. Most scene examples below still draw their points with a small development
-trace (the `_dev/scene-*` examples), which keeps the focus on the scene itself.
+3D traces such as [`scatter3d`](/charts/3d/scatter3d), [`surface`](/charts/3d/surface) and
+[`mesh3d`](/charts/3d/mesh3d) draw in the scenes this page describes; the
+[3D overview](/charts/3d/) lists them all. The examples below keep their data simple, mostly
+`scatter3d` markers, so the focus stays on the scene itself.
 :::
 
-<Example id="_dev/scene-default" />
+<Example id="scene/default-camera" />
 
 A 3D trace picks its scene with `scene: 'scene2'` (default `'scene'`), like cartesian traces pick
 their axes with `xaxis` / `yaxis`. A scene exists when a visible 3D trace uses it.
@@ -54,7 +55,7 @@ const layout = {
 };
 ```
 
-<Example id="_dev/scene-orthographic" />
+<Example id="scene/orthographic" />
 
 An orthographic camera keeps parallel lines parallel. It sees 2 scene units vertically whatever
 the eye's distance, so, as in Plotly, zooming an orthographic scene scales its `aspectratio`
@@ -75,7 +76,7 @@ The full layout (`chart.fullLayout.scene.aspectratio`) holds the ratio in use fo
 camera does not move when the box grows: a long `data` or `manual` box may need the eye further
 away.
 
-<Example id="_dev/scene-aspect" />
+<Example id="scene/aspect" />
 
 ## Axes, walls and background
 
@@ -96,7 +97,7 @@ attributes (`tickmode`, `nticks`, `dtick`, `tickvals`, `ticktext`, `tickformat`,
 Autorange pads the data by 1/32 of its span on each side (Plotly's 3D rule). Ticks come about one
 per 40 px of the axis on screen, between 4 and 9, unless `nticks` or `dtick` say otherwise.
 
-<Example id="_dev/scene-axis-types" />
+<Example id="scatter3d/axis-types" />
 
 The walls, grid lines and zero lines are always on the **far** faces of the box, chosen again
 every time the camera moves, so they never hide the data. Tick labels and titles sit beside the
@@ -114,13 +115,13 @@ const layout = {
 };
 ```
 
-<Example id="_dev/scene-walls" />
+<Example id="scene/walls" />
 
 In the default look, scenes get faint walls a step above the background, the dark grid and the
 small labels of the cartesian axes. `template: 'plotly-classic'` gives Plotly's look: no walls,
 a light grid and `#444` labels.
 
-<Example id="_dev/scene-plotly-classic" />
+<Example id="scene/plotly-look" />
 
 Grid, axis, zero and tick lines are 1 device px wide for now; `gridwidth`, `linewidth`,
 `zerolinewidth` and `tickwidth` apply once 3D lines move to the 3D line primitive.
@@ -131,7 +132,7 @@ Each scene has its own camera and sits in its `domain` (`x`, `y` fractions of th
 `layout.grid` cell with `row` / `column`); without one, scenes are placed side by side. Scenes mix
 with cartesian and other subplots.
 
-<Example id="_dev/scene-subplots" />
+<Example id="scene/subplots" />
 
 ## Controls
 
@@ -182,7 +183,7 @@ the one rotation that takes the first view to the second. It never cuts through 
 a straight eye path would, and never flips over the top. The functional form is
 `animateCamera(el, camera, options)`.
 
-<Example id="_dev/scene-camera-tween" />
+<Example id="scene/camera-tween" />
 
 When the camera arrives, one `relayout` commits it (`'scene.camera'`, see
 [camera events](#camera-events)) and the promise resolves. Dragging, scrolling or double-clicking
@@ -218,10 +219,10 @@ screen and stops with reduced motion. The layout's camera doesn't follow it, so 
 per frame: when the rotation stops (`speed: 0`, or reduced motion switched on) one `relayout`
 reports the view it left; a gesture reports its own view as usual.
 
-<Example id="_dev/scene-autorotate" />
+<Example id="scene/autorotate" />
 
-With `time`, the frame is the layout camera turned by `speed × time` (here 30°/s × 3 s = 90°). Try
-the live motion, tours and interruptions in the `_dev/interaction-scene-animation` sandbox example.
+With `time`, the frame is the layout camera turned by `speed × time` (here 30°/s × 3 s = 90°).
+Leave `time` out to see the scene turn, and drag it to pause the rotation.
 
 ## Lights
 

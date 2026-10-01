@@ -179,6 +179,31 @@ linearly between its neighbors (constant beyond its ends). Set it on the first t
   below it. Group bounds with `legendgroup` so one click toggles a band.
 - **Zoom, pan, and events** work as for [line charts](/charts/basic/line#interactivity).
 
+## 3D-native options
+
+Holochart extensions (full bundle), see [Extrusion & 2.5D](/customization/extrusion-2-5d#areas-fills-with-depth):
+
+- `depth` on a filled trace (`fill: 'tozeroy'`, `'tonexty'`, `'toself'`, …): the fill becomes a
+  slab that many px thick (or a percentage of the plot area's width). The line, markers, labels
+  and error bars are drawn on its front face. `0` (default) draws the trace flat.
+- `material`: Plotly's lighting model (default), `flat`, or a three.js material type.
+- `layout.view3d`: the plot area in perspective; hover on the points stays exact on the front face.
+
+<Example id="area/depth" />
+
+Every filled trace uses the same depth range, so **stacked areas form one slab in layers**, each
+lit on its front and its top wall:
+
+<Example id="area/depth-stacked" />
+
+The slab is exactly the region the flat fill covers — holes, and self-intersecting `toself` shapes
+filled by the nonzero rule — with walls only on its outline:
+
+<Example id="area/depth-toself" />
+
+The slab takes `fillcolor`; `fillgradient` and `fillpattern` are drawn flat, and `bevel` doesn't
+apply to fills.
+
 ## Performance notes
 
 - Fills are triangulated once. Zoom and pan only change a transform for straight and step lines,

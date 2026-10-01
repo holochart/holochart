@@ -1011,6 +1011,70 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "area/depth",
+      "title": "Area: with depth (2.5D view)",
+      "description": "A filled area extruded into a 40 px slab, line and markers on its front face, in a tilted view.",
+      "tags": [
+        "area",
+        "fill",
+        "scatter",
+        "depth",
+        "2.5d",
+        "view3d",
+        "3d-native",
+        "holochart-extension"
+      ],
+      "category": "area",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/area/depth.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
+    },
+    {
+      "id": "area/depth-stacked",
+      "title": "Area: stacked slabs (depth, 2.5D view)",
+      "description": "Four stacked areas extruded into one layered 30 px slab, boundary lines on the front face.",
+      "tags": [
+        "area",
+        "stacked",
+        "fill",
+        "scatter",
+        "depth",
+        "2.5d",
+        "view3d",
+        "3d-native",
+        "holochart-extension"
+      ],
+      "category": "area",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/area/depth-stacked.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
+    },
+    {
+      "id": "area/depth-toself",
+      "title": "Area: self-intersecting shapes with depth",
+      "description": "A star and a figure-eight filled toself and extruded 24 px, walls on their outlines only, in a tilted view.",
+      "tags": [
+        "area",
+        "fill",
+        "toself",
+        "scatter",
+        "depth",
+        "2.5d",
+        "view3d",
+        "holochart-extension"
+      ],
+      "category": "area",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/area/depth-toself.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
+    },
+    {
       "id": "area/gradient",
       "title": "Area: gradient fills",
       "description": "fillgradient in three directions: a vertical fade to transparent, a horizontal colorscale along x, and a radial glow.",
@@ -1164,6 +1228,117 @@
       "size": { "width": 640, "height": 400 },
       "threeD": false,
       "thumbnail": "gallery/thumbs/bar/basic.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "bar/depth",
+      "title": "Bar: 3D bars (depth, 2.5D view)",
+      "description": "Bars extruded toward the viewer with rounded edges, in a tilted and turned view.",
+      "tags": ["bar", "chart", "depth", "2.5d", "view3d", "3d-native", "holochart-extension"],
+      "category": "bar",
+      "traceTypes": ["bar"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/bar/depth.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "bar/depth-bevel",
+      "title": "Bar: bevelled bars in the flat view",
+      "description": "Extruded bars seen straight on: bevels shade the rounded edges of each bar.",
+      "tags": ["bar", "chart", "depth", "bevel", "3d-native", "holochart-extension"],
+      "category": "bar",
+      "traceTypes": ["bar"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/bar/depth-bevel.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "bar/depth-grouped",
+      "title": "Bar: grouped 3D bars",
+      "description": "Two grouped bar traces as square-section 3D columns with rounded edges.",
+      "tags": [
+        "bar",
+        "chart",
+        "grouped",
+        "depth",
+        "bevel",
+        "2.5d",
+        "view3d",
+        "3d-native",
+        "holochart-extension"
+      ],
+      "category": "bar",
+      "traceTypes": ["bar"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/bar/depth-grouped.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "bar/depth-horizontal",
+      "title": "Bar: horizontal 3D bars with a base",
+      "description": "Horizontal bars from a base, negative values included, extruded with labels.",
+      "tags": [
+        "bar",
+        "chart",
+        "horizontal",
+        "depth",
+        "text",
+        "2.5d",
+        "view3d",
+        "3d-native",
+        "holochart-extension"
+      ],
+      "category": "bar",
+      "traceTypes": ["bar"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/bar/depth-horizontal.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "bar/depth-materials",
+      "title": "Bar: 3D bar materials",
+      "description": "Grouped 3D bars shaded with Plotly lighting, unlit, metallic standard and toon.",
+      "tags": [
+        "bar",
+        "chart",
+        "depth",
+        "materials",
+        "lighting",
+        "2.5d",
+        "view3d",
+        "3d-native",
+        "holochart-extension"
+      ],
+      "category": "bar",
+      "traceTypes": ["bar"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/bar/depth-materials.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "bar/depth-stacked",
+      "title": "Bar: stacked 3D bars",
+      "description": "Three stacked bar traces extruded toward the viewer in the tilted 2.5D view.",
+      "tags": [
+        "bar",
+        "chart",
+        "stacked",
+        "depth",
+        "2.5d",
+        "view3d",
+        "3d-native",
+        "holochart-extension"
+      ],
+      "category": "bar",
+      "traceTypes": ["bar"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/bar/depth-stacked.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
@@ -2099,6 +2274,18 @@
       "thumbnailSize": { "width": 640, "height": 480 }
     },
     {
+      "id": "express/line3d",
+      "title": "Express: 3D lines per country",
+      "description": "GDP per capita, population and year of eight European countries, one 3D line per country.",
+      "tags": ["express", "scatter3d", "line3d", "3d", "scene", "lines"],
+      "category": "express",
+      "traceTypes": ["scatter3d"],
+      "size": { "width": 640, "height": 480 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/express/line3d.webp",
+      "thumbnailSize": { "width": 640, "height": 480 }
+    },
+    {
       "id": "express/marginals",
       "title": "Express: scatter with box and violin marginals",
       "description": "Tips against bills by smoker, with a box plot of bills above and a violin of tips at the right.",
@@ -2144,6 +2331,42 @@
       "size": { "width": 640, "height": 480 },
       "threeD": false,
       "thumbnail": "gallery/thumbs/express/scatter-polar.webp",
+      "thumbnailSize": { "width": 640, "height": 480 }
+    },
+    {
+      "id": "express/scatter3d",
+      "title": "Express: 3D scatter grouped by color",
+      "description": "Iris-like flowers in 3D: sepal length, sepal width and petal width, one colored trace per species.",
+      "tags": ["express", "scatter3d", "3d", "scene", "grouping"],
+      "category": "express",
+      "traceTypes": ["scatter3d"],
+      "size": { "width": 640, "height": 480 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/express/scatter3d.webp",
+      "thumbnailSize": { "width": 640, "height": 480 }
+    },
+    {
+      "id": "express/scatter3d-animated",
+      "title": "Express: animated 3D scatter",
+      "description": "GDP per capita, population and life expectancy by country in 3D, one frame per year, with play and a slider.",
+      "tags": ["express", "scatter3d", "3d", "scene", "animation", "frames", "sliders"],
+      "category": "express",
+      "traceTypes": ["scatter3d"],
+      "size": { "width": 720, "height": 560 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/express/scatter3d-animated.webp",
+      "thumbnailSize": { "width": 640, "height": 498 }
+    },
+    {
+      "id": "express/scatter3d-continuous",
+      "title": "Express: 3D scatter with a colorscale, sizes and symbols",
+      "description": "Iris-like flowers in 3D, colored and sized by petal length, one marker symbol per species.",
+      "tags": ["express", "scatter3d", "3d", "scene", "coloraxis", "colorbar", "bubble"],
+      "category": "express",
+      "traceTypes": ["scatter3d"],
+      "size": { "width": 640, "height": 480 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/express/scatter3d-continuous.webp",
       "thumbnailSize": { "width": 640, "height": 480 }
     },
     {
@@ -2241,6 +2464,27 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/funnel/colorscale.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "funnel/depth",
+      "title": "Funnel: 3D funnel (depth, 2.5D view)",
+      "description": "Sales funnel stages extruded toward the viewer with rounded edges, connectors on the front faces, in a tilted view.",
+      "tags": [
+        "funnel",
+        "financial",
+        "chart",
+        "depth",
+        "2.5d",
+        "view3d",
+        "3d-native",
+        "holochart-extension"
+      ],
+      "category": "funnel",
+      "traceTypes": ["funnel"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/funnel/depth.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
     },
     {
       "id": "funnel/grouped",
@@ -2457,6 +2701,46 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/heatmap/columns.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "heatmap/columns-city",
+      "title": "Heatmap: cells as columns (depth, 2.5D view)",
+      "description": "A 16×16 grid of counts drawn as columns as tall as their values, with gaps, in a tilted and turned view.",
+      "tags": [
+        "heatmap",
+        "scientific",
+        "depth",
+        "2.5d",
+        "view3d",
+        "3d-native",
+        "holochart-extension"
+      ],
+      "category": "heatmap",
+      "traceTypes": ["heatmap"],
+      "size": { "width": 640, "height": 480 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/heatmap/columns-city.webp",
+      "thumbnailSize": { "width": 640, "height": 480 }
+    },
+    {
+      "id": "heatmap/columns-terrain",
+      "title": "Heatmap: 40,000 columns (depth)",
+      "description": "A 200×200 heatmap drawn as 40,000 columns forming a stepped terrain in a tilted view.",
+      "tags": [
+        "heatmap",
+        "scientific",
+        "depth",
+        "2.5d",
+        "view3d",
+        "performance",
+        "holochart-extension"
+      ],
+      "category": "heatmap",
+      "traceTypes": ["heatmap"],
+      "size": { "width": 640, "height": 480 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/heatmap/columns-terrain.webp",
+      "thumbnailSize": { "width": 640, "height": 480 }
     },
     {
       "id": "heatmap/dates",
@@ -2781,6 +3065,27 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/icicle/colorscale.webp",
       "thumbnailSize": { "width": 640, "height": 373 }
+    },
+    {
+      "id": "icicle/depth",
+      "title": "Icicle: 3D cells (depth, bevel, tilt)",
+      "description": "A store's sales as rows of extruded cells, deeper levels taller, tilted back.",
+      "tags": [
+        "icicle",
+        "hierarchical",
+        "chart",
+        "depth",
+        "bevel",
+        "2.5d",
+        "3d-native",
+        "holochart-extension"
+      ],
+      "category": "icicle",
+      "traceTypes": ["icicle"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/icicle/depth.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
     },
     {
       "id": "icicle/flip",
@@ -3407,6 +3712,30 @@
       "thumbnailSize": { "width": 640, "height": 533 }
     },
     {
+      "id": "mesh3d/materials",
+      "title": "Mesh3d: material types",
+      "description": "The nine material types of trace.material on spheres, lit by a scene light rig with a studio environment.",
+      "tags": ["mesh3d", "3d", "mesh", "materials", "lighting", "holochart-extension"],
+      "category": "mesh3d",
+      "traceTypes": ["mesh3d"],
+      "size": { "width": 640, "height": 440 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/mesh3d/materials.webp",
+      "thumbnailSize": { "width": 640, "height": 440 }
+    },
+    {
+      "id": "mesh3d/transparency",
+      "title": "Mesh3d: translucent meshes",
+      "description": "Translucent spheres around an opaque core and a translucent torus, composited back to front.",
+      "tags": ["mesh3d", "3d", "mesh", "opacity", "transparency"],
+      "category": "mesh3d",
+      "traceTypes": ["mesh3d"],
+      "size": { "width": 800, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/mesh3d/transparency.webp",
+      "thumbnailSize": { "width": 640, "height": 320 }
+    },
+    {
       "id": "ohlc/basic",
       "title": "OHLC: basic",
       "description": "Six months of daily open, high, low and close bars, colored by direction, with the default range slider.",
@@ -3584,6 +3913,93 @@
       "size": { "width": 640, "height": 400 },
       "threeD": false,
       "thumbnail": "gallery/thumbs/pie/basic.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "pie/depth",
+      "title": "Pie: 3D pie (depth, tilt)",
+      "description": "A pie with a thickness, tilted back, with gaps between the slices.",
+      "tags": ["pie", "chart", "depth", "2.5d", "3d-native", "holochart-extension"],
+      "category": "pie",
+      "traceTypes": ["pie"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/pie/depth.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "pie/depth-donut",
+      "title": "Pie: 3D donut (hole, bevel)",
+      "description": "A tilted donut with rounded edges and the total in the hole.",
+      "tags": [
+        "pie",
+        "donut",
+        "chart",
+        "depth",
+        "bevel",
+        "2.5d",
+        "3d-native",
+        "holochart-extension"
+      ],
+      "category": "pie",
+      "traceTypes": ["pie"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/pie/depth-donut.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "pie/depth-exploded",
+      "title": "Pie: exploded 3D pie (pull, material)",
+      "description": "A tilted pie with two slices pulled out, shaded with a standard material.",
+      "tags": [
+        "pie",
+        "chart",
+        "depth",
+        "pull",
+        "material",
+        "2.5d",
+        "3d-native",
+        "holochart-extension"
+      ],
+      "category": "pie",
+      "traceTypes": ["pie"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/pie/depth-exploded.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "pie/depth-height",
+      "title": "Pie: height-encoded slices (per-slice depth)",
+      "description": "Slices sized by revenue and raised by growth, with outside labels.",
+      "tags": ["pie", "chart", "depth", "2.5d", "3d-native", "holochart-extension"],
+      "category": "pie",
+      "traceTypes": ["pie"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/pie/depth-height.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "pie/depth-tilt",
+      "title": "Pie: animated tilt",
+      "description": "A thick pie that tilts back with an animated transition, and buttons to switch.",
+      "tags": [
+        "pie",
+        "chart",
+        "depth",
+        "animation",
+        "transitions",
+        "2.5d",
+        "3d-native",
+        "holochart-extension"
+      ],
+      "category": "pie",
+      "traceTypes": ["pie"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/pie/depth-tilt.webp",
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
@@ -4307,6 +4723,114 @@
       "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
+      "id": "scene/aspect",
+      "title": "3D scene: aspect modes",
+      "description": "Three scenes with aspectmode cube, data and manual (2 : 1 : 0.5), side by side.",
+      "tags": ["scene", "3d", "aspect", "subplots", "scatter3d"],
+      "category": "scene",
+      "traceTypes": ["scatter3d"],
+      "size": { "width": 900, "height": 360 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/scene/aspect.webp",
+      "thumbnailSize": { "width": 640, "height": 256 }
+    },
+    {
+      "id": "scene/autorotate",
+      "title": "3D scene: auto-rotation (frozen)",
+      "description": "scene.autorotate frozen at autorotate.time: the default camera turned 90° about z, a fixed frame for exports and tests.",
+      "tags": ["scene", "3d", "camera", "animation", "scatter3d"],
+      "category": "scene",
+      "traceTypes": ["scatter3d"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/scene/autorotate.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "scene/camera-tween",
+      "title": "3D scene: camera animation path",
+      "description": "Start, middle and end of a camera animation between opposite views: it orbits around the z axis rather than over the top.",
+      "tags": ["scene", "3d", "camera", "animation", "scatter3d"],
+      "category": "scene",
+      "traceTypes": ["scatter3d"],
+      "size": { "width": 720, "height": 320 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/scene/camera-tween.webp",
+      "thumbnailSize": { "width": 640, "height": 284 }
+    },
+    {
+      "id": "scene/default-camera",
+      "title": "3D scene: default camera",
+      "description": "A 3D scene with the default camera and the default look: far walls, grids, tick labels and axis titles.",
+      "tags": ["scene", "3d", "camera", "scatter3d"],
+      "category": "scene",
+      "traceTypes": ["scatter3d"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/scene/default-camera.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "scene/lighting",
+      "title": "3D scene: lights and shadows",
+      "description": "Plotly's per-trace light (left) and a scene light rig with a hemisphere light, a shadow-casting light and a ground plane (right).",
+      "tags": ["scene", "3d", "lighting", "shadows", "mesh3d", "holochart-extension"],
+      "category": "scene",
+      "traceTypes": ["mesh3d"],
+      "size": { "width": 720, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/scene/lighting.webp",
+      "thumbnailSize": { "width": 640, "height": 356 }
+    },
+    {
+      "id": "scene/orthographic",
+      "title": "3D scene: orthographic camera",
+      "description": "A surface seen through an orthographic camera, with the y axis reversed.",
+      "tags": ["scene", "3d", "camera", "orthographic", "surface"],
+      "category": "scene",
+      "traceTypes": ["surface"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/scene/orthographic.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "scene/plotly-look",
+      "title": "3D scene: Plotly look",
+      "description": "The 3D scene with template plotly-classic: Plotly defaults, one wall filled.",
+      "tags": ["scene", "3d", "themes", "scatter3d"],
+      "category": "scene",
+      "traceTypes": ["scatter3d"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/scene/plotly-look.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "scene/subplots",
+      "title": "3D scene: several scenes and a 2D subplot",
+      "description": "Two 3D scenes with their own cameras in grid cells, next to a cartesian scatter.",
+      "tags": ["scene", "3d", "subplots", "grid", "scatter3d", "surface"],
+      "category": "scene",
+      "traceTypes": ["scatter", "scatter3d", "surface"],
+      "size": { "width": 900, "height": 420 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/scene/subplots.webp",
+      "thumbnailSize": { "width": 640, "height": 299 }
+    },
+    {
+      "id": "scene/walls",
+      "title": "3D scene: walls and axis styling",
+      "description": "Scene background, tinted walls, axis lines, mirrored lines, tick marks and styled titles.",
+      "tags": ["scene", "3d", "styling", "scatter3d"],
+      "category": "scene",
+      "traceTypes": ["scatter3d"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/scene/walls.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
       "id": "splom/axis-types",
       "title": "Scatter plot matrix: axis types",
       "description": "Date, category and log dimensions; axis.matches links a dimension’s x and y axes.",
@@ -4653,6 +5177,18 @@
       "threeD": true,
       "thumbnail": "gallery/thumbs/surface/lighting.webp",
       "thumbnailSize": { "width": 640, "height": 256 }
+    },
+    {
+      "id": "surface/materials",
+      "title": "Surface: materials and light rigs",
+      "description": "A colored surface with the lambert, standard, physical and toon materials, each scene with its own lights.",
+      "tags": ["surface", "3d", "materials", "lighting", "shadows", "holochart-extension"],
+      "category": "surface",
+      "traceTypes": ["surface"],
+      "size": { "width": 720, "height": 600 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/surface/materials.webp",
+      "thumbnailSize": { "width": 640, "height": 533 }
     },
     {
       "id": "surface/matrices",
@@ -5075,6 +5611,46 @@
       "thumbnailSize": { "width": 640, "height": 373 }
     },
     {
+      "id": "treemap/depth",
+      "title": "Treemap: 3D terraces (depth, tilt)",
+      "description": "Plotly's Eve family tree as tiles stacked by level, tilted back.",
+      "tags": [
+        "treemap",
+        "hierarchical",
+        "chart",
+        "depth",
+        "2.5d",
+        "3d-native",
+        "holochart-extension"
+      ],
+      "category": "treemap",
+      "traceTypes": ["treemap"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/treemap/depth.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
+    },
+    {
+      "id": "treemap/depth-height",
+      "title": "Treemap: height-encoded tiles (per-node depth)",
+      "description": "A store's sales as tiles, each category raised by its margin.",
+      "tags": [
+        "treemap",
+        "hierarchical",
+        "chart",
+        "depth",
+        "2.5d",
+        "3d-native",
+        "holochart-extension"
+      ],
+      "category": "treemap",
+      "traceTypes": ["treemap"],
+      "size": { "width": 640, "height": 420 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/treemap/depth-height.webp",
+      "thumbnailSize": { "width": 640, "height": 420 }
+    },
+    {
       "id": "treemap/depthfade",
       "title": "Treemap: depth fade and colorscale",
       "description": "Leaves faded towards the background with depthfade: 'reversed', next to tiles colored by value through a colorscale.",
@@ -5205,6 +5781,51 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/uncertainty/forest-plot.webp",
       "thumbnailSize": { "width": 640, "height": 455 }
+    },
+    {
+      "id": "view3d/interactive",
+      "title": "2.5D view: drag to tilt and turn",
+      "description": "Stacked 3D bars and a line in a 2.5D view that dragging tilts and turns.",
+      "tags": ["view3d", "2.5d", "bar", "depth", "interaction", "3d-native", "holochart-extension"],
+      "category": "view3d",
+      "traceTypes": ["bar", "scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/view3d/interactive.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "view3d/scatter",
+      "title": "2.5D view: tilted scatter and line",
+      "description": "A scatter and a line chart on a tilted, perspective plot plane, with a hover label.",
+      "tags": ["view3d", "2.5d", "scatter", "line", "hover", "3d-native", "holochart-extension"],
+      "category": "view3d",
+      "traceTypes": ["scatter"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/view3d/scatter.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
+    },
+    {
+      "id": "view3d/transition",
+      "title": "2.5D view: animated transition from flat",
+      "description": "Bars that tilt into a 2.5D view with an animated transition, and buttons to switch.",
+      "tags": [
+        "view3d",
+        "2.5d",
+        "bar",
+        "depth",
+        "animation",
+        "transitions",
+        "3d-native",
+        "holochart-extension"
+      ],
+      "category": "view3d",
+      "traceTypes": ["bar"],
+      "size": { "width": 640, "height": 400 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/view3d/transition.webp",
+      "thumbnailSize": { "width": 640, "height": 400 }
     },
     {
       "id": "violin/basic",
@@ -5349,6 +5970,27 @@
       "threeD": false,
       "thumbnail": "gallery/thumbs/waterfall/connector-modes.webp",
       "thumbnailSize": { "width": 640, "height": 320 }
+    },
+    {
+      "id": "waterfall/depth",
+      "title": "Waterfall: 3D steps (depth, 2.5D view)",
+      "description": "Profit and loss steps extruded toward the viewer, connectors along the front faces, in a tilted view.",
+      "tags": [
+        "waterfall",
+        "financial",
+        "chart",
+        "depth",
+        "2.5d",
+        "view3d",
+        "3d-native",
+        "holochart-extension"
+      ],
+      "category": "waterfall",
+      "traceTypes": ["waterfall"],
+      "size": { "width": 720, "height": 440 },
+      "threeD": true,
+      "thumbnail": "gallery/thumbs/waterfall/depth.webp",
+      "thumbnailSize": { "width": 640, "height": 391 }
     },
     {
       "id": "waterfall/grouped",

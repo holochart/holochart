@@ -118,6 +118,8 @@ test('IIFE is the 2D bundle: no 3D code, and 3D loads only with the add-on', asy
     ),
   );
   expect(threeD).toEqual([]);
+  // The 2.5D view's view is in the add-on too; only its component (schema and loader) stays.
+  expect(sources.filter((s) => s.endsWith('src/view3d/view.ts'))).toEqual([]);
   expect(readFileSync(resolve(DIST, BUNDLE), 'utf8')).not.toContain('aspectmode'); // scene layout (3D only)
 
   const { errors } = await servePage(page);

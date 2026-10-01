@@ -41,6 +41,8 @@ import {
   attr,
   coerceContainer,
   isPlainObject,
+  LIT_MATERIAL_TYPES,
+  litMaterialAttributes,
   toRGBA,
   type FullTrace,
   type TraceDefaultsContext,
@@ -196,18 +198,8 @@ export function sceneLightingAttributes(defaults: SceneLightingTrace | SceneLigh
   };
 }
 
-/** `material.type` values. */
-export const SCENE_MATERIAL_TYPES: readonly MeshMaterialType[] = [
-  'plotly',
-  'flat',
-  'basic',
-  'lambert',
-  'phong',
-  'standard',
-  'physical',
-  'toon',
-  'matcap',
-];
+/** `material.type` values (core's, shared with extruded 2D traces). */
+export const SCENE_MATERIAL_TYPES: readonly MeshMaterialType[] = LIT_MATERIAL_TYPES;
 
 /** Material attribute → three.js material property (only where the names differ). */
 const THREE_PARAM_NAMES: Readonly<Record<string, string>> = {
@@ -218,83 +210,15 @@ const THREE_PARAM_NAMES: Readonly<Record<string, string>> = {
   envmapintensity: 'envMapIntensity',
 };
 
-const unit = (description: string) =>
-  attr.number({ min: 0, max: 1, editType: 'calc', description });
-const positive = (description: string) => attr.number({ min: 0, editType: 'calc', description });
-const colorParam = (description: string) => attr.color({ editType: 'calc', description });
-
 /**
- * The `material` trace attribute (Holochart extension, E8.7). Spread into a trace schema. Unset
- * parameters keep the three.js material's defaults (seeded from Plotly's `lighting`: `roughness`,
- * and `shininess` / `specular` for `phong`).
+ * The `material` trace attribute (Holochart extension, E8.7): core's `litMaterialAttributes`,
+ * shared with extruded 2D traces. Spread into a trace schema. Unset parameters keep the three.js
+ * material's defaults (seeded from Plotly's `lighting`: `roughness`, and `shininess` /
+ * `specular` for `phong`).
  */
 export const sceneMaterialAttributes = /* @__PURE__ */ (() => ({
-  material: attr.object(
-    {
-      type: attr.enumerated({
-        values: SCENE_MATERIAL_TYPES,
-        dflt: 'plotly',
-        editType: 'calc',
-        description:
-          "How the surface is shaded. `plotly`: Plotly's lighting model (`lighting`, `lightposition`). `flat`: unlit, colors as given. `basic`, `lambert`, `phong`, `standard`, `physical`, `toon`, `matcap`: the three.js material of that name, lit by the scene's lights (`scene.lighting`), with shadows and environment reflections.",
-      }),
-      roughness: unit('Surface roughness (`standard`, `physical`). Default: `lighting.roughness`.'),
-      metalness: unit('How metallic the surface is (`standard`, `physical`). Default 0.'),
-      shininess: positive(
-        'Sharpness of the highlights (`phong`). Default: from `lighting.roughness`.',
-      ),
-      specular: colorParam('Color of the highlights (`phong`). Default: `lighting.specular` gray.'),
-      emissive: colorParam('Color the surface emits regardless of the lights. Default black.'),
-      emissiveintensity: positive('Strength of `emissive`. Default 1.'),
-      reflectivity: unit(
-        'How much the environment is reflected (`basic`, `lambert`, `phong`, `physical`).',
-      ),
-      envmapintensity: positive(
-        "Strength of the environment's light (`standard`, `physical`). Default 1.",
-      ),
-      clearcoat: unit('A clear lacquer layer (`physical`). Default 0.'),
-      clearcoatroughness: unit('Roughness of the clear coat (`physical`). Default 0.'),
-      transmission: unit('Transmission, for glass-like surfaces (`physical`). Default 0.'),
-      ior: attr.number({
-        min: 1,
-        max: 2.333,
-        editType: 'calc',
-        description: 'Index of refraction (`physical`). Default 1.5.',
-      }),
-      thickness: positive('Thickness of transmissive volumes, scene units (`physical`).'),
-      sheen: unit('Velvet-like sheen (`physical`). Default 0.'),
-      sheencolor: colorParam('Color of the sheen (`physical`).'),
-      sheenroughness: unit('Roughness of the sheen (`physical`). Default 1.'),
-      iridescence: unit('Thin-film iridescence (`physical`). Default 0.'),
-      steps: attr.integer({
-        min: 2,
-        max: 16,
-        dflt: 3,
-        editType: 'calc',
-        description: 'Number of shading bands (`toon`).',
-      }),
-      matcap: attr.string({
-        editType: 'calc',
-        description:
-          'URL of a matcap image (`matcap`): the surface takes its colors from it by normal direction.',
-      }),
-      castshadow: attr.boolean({
-        dflt: false,
-        editType: 'calc',
-        description:
-          'Cast shadows from the lights of `scene.lighting` with `castshadow` (onto three.js material types and the ground plane).',
-      }),
-      receiveshadow: attr.boolean({
-        dflt: false,
-        editType: 'calc',
-        description: 'Receive shadows (three.js material types only).',
-      }),
-    },
-    {
-      editType: 'calc',
-      description:
-        'The material of the surface (Holochart extension). Plotly figures keep the default, `plotly`.',
-    },
+  material: litMaterialAttributes(
+    'The material of the surface (Holochart extension). Plotly figures keep the default, `plotly`.',
   ),
 }))();
 

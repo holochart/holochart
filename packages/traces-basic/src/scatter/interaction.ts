@@ -14,6 +14,7 @@ import type {
   HoverPoint,
   HoverQuery,
   LegendGlyph,
+  LegendIconContext,
   SelectionQuery,
 } from '@mk7s/holochart-runtime';
 import type { ScatterCalc } from './calc.ts';
@@ -413,7 +414,7 @@ function mean(v: unknown, fallback: number): number {
  * marker size clamped to 2–16 px (bubbles: 12), outline width ≤ 2 px, line width ≤ 10 px.
  * Text-only traces show a marker in the text color until the contract has a text glyph.
  */
-export function scatterLegendIcon(trace: FullTrace): LegendGlyph {
+export function scatterLegendIcon(trace: FullTrace, ctx?: LegendIconContext): LegendGlyph {
   const mode = trace['mode'];
   const lines = hasLines(mode);
   const markers = hasMarkers(mode);
@@ -436,7 +437,8 @@ export function scatterLegendIcon(trace: FullTrace): LegendGlyph {
       symbol: typeof symbol === 'string' || typeof symbol === 'number' ? symbol : 'circle',
       ...(typeof first(m.image) === 'string' ? { image: first(m.image) as string } : {}),
       size: isBubble(trace) ? 12 : clamp(mean(m.size, 6), 2, 16),
-      color: pointColor(trace, 0),
+      // `ctx.fullLayout` resolves `marker.coloraxis` references.
+      color: pointColor(trace, 0, ctx?.fullLayout),
       lineColor: typeof lineColor === 'string' ? lineColor : undefined,
       lineWidth: clamp(Number(first(m.line?.width)) || 0, 0, 2),
       opacity: (typeof mo === 'number' ? mo : 1) * opacity,

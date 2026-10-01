@@ -40,7 +40,8 @@ export const orderOf = (layer: number, index: number): number =>
   layer + Math.min(index, 999) * 1e-3;
 
 /**
- * A view's primitive after drawing `data`: created (and added) on first use, else updated, and
+ * A view's primitive after drawing `data`: created (and added) on first use, and updated (on first
+ * use too: the full bundle's 2.5D wrapper sees the data of new primitives in their updates), and
  * placed at render order `order`; removed when `data` is `undefined`.
  */
 export function syncPrimitive<T, P extends Primitive<T>>(
@@ -55,7 +56,7 @@ export function syncPrimitive<T, P extends Primitive<T>>(
     return undefined;
   }
   if (!primitive) ctx.add((primitive = create(data)));
-  else primitive.update(data);
+  primitive.update(data);
   primitive.object.renderOrder = order;
   primitive.setTransform(ctx.transform);
   return primitive;

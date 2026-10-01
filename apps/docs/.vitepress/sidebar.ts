@@ -86,6 +86,7 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
         'themes-templates',
         'per-point-styling',
         'materials-lighting',
+        'extrusion-2-5d',
         'custom-markers',
         'markers-patterns',
         'three-objects',
@@ -188,6 +189,7 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
     {
       text: '3D',
       items: pages('charts/3d/', [
+        '',
         'scatter3d',
         'surface',
         'mesh3d',

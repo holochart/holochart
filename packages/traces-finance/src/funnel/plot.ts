@@ -5,7 +5,8 @@
  * next bar's near edge — all of a trace in one batched polygon fill (the fill primitive, loaded on
  * first use) — and, with `connector.line.width`, lines along their two slanted sides in one line
  * primitive. Geometry is in linear coordinates, so zoom and pan only set the transform. Connectors
- * draw under the bars, as in Plotly.
+ * draw under the bars, as in Plotly. Extruded (`depth`, 2.5D) they lie on the plane of the bars'
+ * front faces, joining the fronts of consecutive stages.
  */
 import { createLazyFillPrimitive, type LazyFillPrimitive } from '@mk7s/holochart-render';
 import type { TracePlotContext, TraceUpdatePlan } from '@mk7s/holochart-runtime';
@@ -141,6 +142,10 @@ class ConnectorLayer implements BarLikeLayer<FunnelCalc> {
       if (plan.style) this.#lines.restyle(c.line);
       if (plan.transform) this.#lines.setTransform(ctx.transform);
     }
+  }
+
+  lifted() {
+    return [this.#fill, this.#lines.primitive];
   }
 
   #remove(ctx: TracePlotContext<FunnelCalc>): void {

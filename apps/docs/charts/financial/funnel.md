@@ -193,6 +193,21 @@ createChart(document.getElementById('chart')!, {
   unselected bars dim.
 - **Legend.** A click hides a trace; stacked funnels re-center without it.
 
+## 3D-native options
+
+Holochart extensions (full bundle), see [Extrusion & 2.5D](/customization/extrusion-2-5d#funnels-and-waterfalls):
+
+- `depth`: extrusion of the stages toward the viewer in px, a percentage of the stage thickness
+  (`'70%'`), or one number per stage. `0` (default) draws a flat funnel.
+- `bevel.size` and `bevel.segments`: rounded front and side edges.
+- `material`: Plotly's lighting model (default), `flat`, or a three.js material type.
+- `layout.view3d`: the plot area in perspective, with hover and click still exact on the stages.
+
+The connector regions and their outlines lie on the plane of the stages' front faces, so the
+stages read as one continuous funnel; labels sit on the front faces.
+
+<Example id="funnel/depth" />
+
 ## Performance notes
 
 - A funnel draws in a constant number of draw calls whatever its stage count: one instanced rect

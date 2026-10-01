@@ -9,6 +9,7 @@ import {
   pointKind,
   pointTween,
   sameValue,
+  view3dTween,
 } from './interpolate.ts';
 
 describe('interpolator', () => {
@@ -169,5 +170,40 @@ describe('helpers', () => {
       'marker.color',
       'marker.line.width',
     ]);
+  });
+});
+
+describe('view3dTween (E8.9)', () => {
+  const view = (enabled: boolean, tilt = 20, rotation = -20, perspective = 0.5) => ({
+    enabled,
+    tilt,
+    rotation,
+    perspective,
+    interactive: true,
+  });
+
+  it('moves the angles and perspective between two tilted views', () => {
+    const tween = view3dTween(view(true, 10, 0, 0.2), view(true, 30, -40, 0.6))!;
+    expect(tween(0)).toEqual(view(true, 10, 0, 0.2));
+    expect(tween(0.5)).toEqual({ ...view(true, 20, -20, 0.4), perspective: expect.closeTo(0.4) });
+    expect(tween(1)).toEqual({ ...view(true, 30, -40, 0.6), perspective: expect.closeTo(0.6) });
+  });
+
+  it('turns the view on and off through the flat view, enabled until the end', () => {
+    const on = view3dTween(view(false), view(true, 30, -40))!;
+    expect(on(0)).toMatchObject({ enabled: true, tilt: 0, rotation: 0 });
+    expect(on(1)).toMatchObject({ enabled: true, tilt: 30, rotation: -40 });
+    const off = view3dTween(view(true, 30, -40), view(false))!;
+    expect(off(0)).toMatchObject({ enabled: true, tilt: 30, rotation: -40 });
+    expect(off(1)).toMatchObject({ enabled: true, tilt: 0, rotation: 0 });
+    // Overshooting easings keep the perspective in range.
+    expect(on(1.5)).toMatchObject({ perspective: 0.5 });
+  });
+
+  it('has nothing to animate when the view is off, unchanged or missing', () => {
+    expect(view3dTween(view(false), view(false, 40))).toBeUndefined();
+    expect(view3dTween(view(true), { ...view(true), interactive: false })).toBeUndefined();
+    expect(view3dTween(undefined, view(true))).toBeUndefined();
+    expect(view3dTween(view(false), view(true, 0, 0))).toBeUndefined();
   });
 });

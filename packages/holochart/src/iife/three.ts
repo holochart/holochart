@@ -10,6 +10,7 @@
  * lights and environment classes of the mesh primitive's light rigs cost a few kB.
  */
 export {
+  AlwaysStencilFunc,
   AmbientLight,
   BackSide,
   Box3,
@@ -23,6 +24,7 @@ export {
   DirectionalLight,
   DoubleSide,
   DynamicDrawUsage,
+  EqualStencilFunc,
   EquirectangularReflectionMapping,
   Float32BufferAttribute,
   FloatType,
@@ -51,10 +53,13 @@ export {
   NormalBlending,
   Object3D,
   OneFactor,
+  OrthographicCamera,
+  PerspectiveCamera,
   PlaneGeometry,
   PMREMGenerator,
   Quaternion,
   RedFormat,
+  ReplaceStencilOp,
   REVISION,
   Scene,
   ShaderMaterial,

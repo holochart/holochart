@@ -267,6 +267,28 @@ createChart(document.getElementById('chart')!, {
   pixels changes.
 - **Selection.** Box and lasso selection don't select cells, as in Plotly.
 
+## 3D-native options
+
+Holochart extensions (full bundle), see [Extrusion & 2.5D](/customization/extrusion-2-5d#heatmaps-cells-as-columns):
+
+- `depth`: stands every cell up as a column as tall as its value — the height in px of a column
+  at `zmax` (or a percentage of the mean cell width, `'300%'`). Heights grow linearly from 0 (from
+  `zmin` when the color range has negative values); values outside the color range are clamped.
+  `0` (default) draws a flat heatmap.
+- Columns take the cell's color, `xgap` / `ygap` space them, and the flat heatmap stays under them
+  as their floor (cells at the bottom of the range keep their color).
+- `bevel` and `material`: rounded edges (up to 10,000 cells) and the shading, as for bars.
+- `layout.view3d`: the grid in perspective, like a 3D histogram; hover reports the column under
+  the pointer, top or side.
+
+<Example id="heatmap/columns-city" />
+
+All columns are one merged mesh (one draw call). A 200 × 200 grid — 40,000 columns — builds in
+about 0.2 s, again on each zoom step (pans only move it); grids of more than 100,000 cells stay
+flat, with a console warning.
+
+<Example id="heatmap/columns-terrain" />
+
 ## Performance notes
 
 - The grid is one textured quad per trace: one float texture holds every value (with a validity

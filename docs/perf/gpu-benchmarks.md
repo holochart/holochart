@@ -5,9 +5,7 @@ M0 marker baseline E2.4. CI renders with SwiftShader (software GL), so these num
 a local run: `pnpm bench:gpu` (script in `tools/bench/`) writes this page and
 `gpu-benchmarks.json` next to it. **Generated: rerun the script instead of editing.**
 
-> **Note:** rerun after the carry-forward agents finished (no other suites running)
->
-> **Note:** The machine was busy (1-minute load average up to 14.6 on 10 cores): frame times and first draws are pessimistic. Rerun on an idle machine.
+> **Note:** The machine was busy (1-minute load average up to 66.0 on 10 cores): frame times and first draws are pessimistic. Rerun on an idle machine.
 
 ## Machine
 
@@ -18,9 +16,9 @@ a local run: `pnpm bench:gpu` (script in `tools/bench/`) writes this page and
 | OS                            | macOS 26.6.2 (Darwin 25.6.0, arm64)                                                     |
 | CPU                           | Apple M1 Max (10 cores)                                                                 |
 | Memory                        | 64 GB                                                                                   |
-| Load average (1 / 5 / 15 min) | before 14.61 / 25.03 / 38.07, after 9.29 / 20.54 / 34.96                                |
-| Commit                        | fdffd51 (with uncommitted changes)                                                      |
-| Date                          | 2026-09-28T19:08:00Z                                                                    |
+| Load average (1 / 5 / 15 min) | before 65.99 / 71.07 / 69.41, after 46.69 / 58.21 / 64.14                               |
+| Commit                        | b49fe2c (with uncommitted changes)                                                      |
+| Date                          | 2026-09-30T19:45:39Z                                                                    |
 | Runs                          | 3 per example (medians below), 500 ms warm-up + 3000 ms per sweep, device pixel ratio 1 |
 
 ## Targets
@@ -28,16 +26,24 @@ a local run: `pnpm bench:gpu` (script in `tools/bench/`) writes this page and
 fps targets count as met at 95 % (headless Chromium paces frames at 60 Hz, so a chart that
 keeps up measures 59–60 fps). First-draw targets include the `gl.finish()` right after ready.
 
-| Story | Example               | Target                     | Measured                                 | Met    |
-| ----- | --------------------- | -------------------------- | ---------------------------------------- | ------ |
-| E12.1 | `_dev/timeseries-2m6` | pan at 60 fps              | 60.0 fps                                 | yes    |
-| E11.1 | `heatmap/large`       | renders < 100 ms           | 702 ms (createChart → ready + gl.finish) | **no** |
-| E11.1 | `heatmap/large`       | pan at 60 fps              | 60.0 fps                                 | yes    |
-| E11.1 | `heatmap/large`       | zoom at 60 fps             | 60.0 fps                                 | yes    |
-| E12.3 | `candlestick/large`   | pan at 60 fps (instanced)  | 60.0 fps                                 | yes    |
-| E12.3 | `candlestick/large`   | zoom at 60 fps (instanced) | 60.0 fps                                 | yes    |
-| E13.3 | `treemap/large`       | renders < 500 ms           | 420 ms (createChart → ready + gl.finish) | yes    |
-| E2.4  | `_dev/markers-1m`     | pan ≥ 50 fps               | 60.0 fps                                 | yes    |
+| Story | Example               | Target                                                          | Measured                                 | Met    |
+| ----- | --------------------- | --------------------------------------------------------------- | ---------------------------------------- | ------ |
+| E12.1 | `_dev/timeseries-2m6` | pan at 60 fps                                                   | 60.0 fps                                 | yes    |
+| E11.1 | `heatmap/large`       | renders < 100 ms                                                | 695 ms (createChart → ready + gl.finish) | **no** |
+| E11.1 | `heatmap/large`       | pan at 60 fps                                                   | 60.0 fps                                 | yes    |
+| E11.1 | `heatmap/large`       | zoom at 60 fps                                                  | 60.0 fps                                 | yes    |
+| E12.3 | `candlestick/large`   | pan at 60 fps (instanced)                                       | 60.0 fps                                 | yes    |
+| E12.3 | `candlestick/large`   | zoom at 60 fps (instanced)                                      | 60.0 fps                                 | yes    |
+| E13.3 | `treemap/large`       | renders < 500 ms                                                | 416 ms (createChart → ready + gl.finish) | yes    |
+| E2.4  | `_dev/markers-1m`     | pan ≥ 50 fps                                                    | 60.0 fps                                 | yes    |
+| E14.2 | `_dev/scatter3d-1m`   | 1M points interactive orbit (≥ 30 fps)                          | 60.0 fps                                 | yes    |
+| E14.2 | `_dev/scatter3d-1m`   | 1M points interactive orbit (≥ 30 fps)                          | 60.0 fps                                 | yes    |
+| E14.2 | `_dev/scatter3d-1m`   | 1M points interactive orbit (≥ 30 fps)                          | 38.8 fps                                 | yes    |
+| E14.2 | `scatter3d/perf-1m`   | 1M points interactive orbit (≥ 30 fps)                          | 60.0 fps                                 | yes    |
+| E14.2 | `scatter3d/perf-1m`   | 1M points interactive orbit (≥ 30 fps)                          | 57.7 fps                                 | yes    |
+| E14.3 | `surface/perf-1024`   | 1024² grid drawn < 50 ms (first draw: chart, shaders, textures) | 262 ms (createChart → ready + gl.finish) | **no** |
+| E14.3 | `surface/perf-1024`   | orbit at 60 fps                                                 | 60.0 fps                                 | yes    |
+| E14.7 | `volume/perf-256`     | 256³ ray-marched volume interactive (≥ 30 fps)                  | 60.0 fps                                 | yes    |
 
 ## First draw
 
@@ -47,11 +53,18 @@ generation. `gl.finish` is the GPU work still queued at ready.
 
 | Example               | Canvas       | Data generation | createChart → ready | gl.finish | run() → ready | JS heap |
 | --------------------- | ------------ | --------------- | ------------------- | --------- | ------------- | ------- |
-| `_dev/timeseries-2m6` | 640 × 400 px | –               | –                   | 0.0 ms    | 416 ms        | 177 MB  |
-| `heatmap/large`       | 800 × 600 px | 722 ms          | 702 ms              | 0.0 ms    | 1437 ms       | 386 MB  |
-| `candlestick/large`   | 900 × 520 px | 299 ms          | 556 ms              | 0.0 ms    | 856 ms        | 123 MB  |
-| `treemap/large`       | 900 × 600 px | 12 ms           | 420 ms              | 0.0 ms    | 433 ms        | 109 MB  |
-| `_dev/markers-1m`     | 640 × 400 px | –               | –                   | 0.0 ms    | 131 ms        | 81 MB   |
+| `_dev/timeseries-2m6` | 640 × 400 px | –               | –                   | 0.0 ms    | 413 ms        | 177 MB  |
+| `heatmap/large`       | 800 × 600 px | 720 ms          | 695 ms              | 0.0 ms    | 1415 ms       | 410 MB  |
+| `candlestick/large`   | 900 × 520 px | 294 ms          | 540 ms              | 0.0 ms    | 834 ms        | 139 MB  |
+| `treemap/large`       | 900 × 600 px | 10 ms           | 416 ms              | 0.0 ms    | 427 ms        | 109 MB  |
+| `_dev/markers-1m`     | 640 × 400 px | –               | –                   | 0.0 ms    | 128 ms        | 81 MB   |
+| `_dev/scatter3d-1m`   | 640 × 400 px | –               | –                   | 0.0 ms    | 278 ms        | 139 MB  |
+| `_dev/scatter3d-1m`   | 640 × 400 px | –               | –                   | 0.0 ms    | 277 ms        | 139 MB  |
+| `_dev/scatter3d-1m`   | 640 × 400 px | –               | –                   | 0.0 ms    | 276 ms        | 139 MB  |
+| `scatter3d/perf-1m`   | 640 × 400 px | 77 ms           | 218 ms              | 0.0 ms    | 295 ms        | 148 MB  |
+| `scatter3d/perf-1m`   | 640 × 400 px | 78 ms           | 215 ms              | 0.0 ms    | 293 ms        | 148 MB  |
+| `surface/perf-1024`   | 640 × 400 px | 28 ms           | 262 ms              | 0.0 ms    | 291 ms        | 157 MB  |
+| `volume/perf-256`     | 640 × 400 px | 88 ms           | 448 ms              | 0.0 ms    | 537 ms        | 342 MB  |
 
 ## Pan and zoom
 
@@ -63,13 +76,20 @@ CPU is the `previewRanges` call; render CPU is `renderer.render` (command submis
 
 | Example               | Sweep | fps  | Frame p50 | Frame p95 | Frame max | Renders/s | Update CPU | Render CPU | GPU           | Draw calls |
 | --------------------- | ----- | ---- | --------- | --------- | --------- | --------- | ---------- | ---------- | ------------- | ---------- |
-| `_dev/timeseries-2m6` | pan   | 60.0 | 16.7      | 16.8      | 16.8      | 60        | 2.15       | 0.36       | 0.89 / 1.71   | 7          |
-| `_dev/timeseries-2m6` | zoom  | 60.0 | 16.7      | 16.8      | 16.8      | 60        | 2.11       | 0.32       | 1.03 / 2.24   | 7          |
-| `heatmap/large`       | pan   | 60.0 | 16.7      | 16.7      | 16.8      | 60        | 0.88       | 0.40       | 0.48 / 0.59   | 9          |
-| `heatmap/large`       | zoom  | 60.0 | 16.7      | 16.7      | 16.8      | 60        | 0.83       | 0.34       | 0.48 / 0.57   | 9          |
-| `candlestick/large`   | pan   | 60.0 | 16.7      | 16.8      | 16.8      | 60        | 0.75       | 0.48       | 9.81 / 12.56  | 9          |
-| `candlestick/large`   | zoom  | 60.0 | 16.7      | 16.7      | 16.8      | 60        | 0.63       | 0.37       | 11.68 / 26.28 | 9          |
-| `_dev/markers-1m`     | pan   | 60.0 | 16.7      | 16.7      | 16.8      | 60        | –          | 0.12       | 7.76 / 9.64   | 1          |
+| `_dev/timeseries-2m6` | pan   | 60.0 | 16.7      | 16.7      | 16.8      | 60        | 2.04       | 0.36       | 0.84 / 1.13   | 7          |
+| `_dev/timeseries-2m6` | zoom  | 60.0 | 16.7      | 16.8      | 16.8      | 60        | 2.05       | 0.31       | 0.95 / 1.51   | 7          |
+| `heatmap/large`       | pan   | 60.0 | 16.7      | 16.8      | 16.8      | 60        | 0.96       | 0.41       | 0.56 / 0.99   | 9          |
+| `heatmap/large`       | zoom  | 60.0 | 16.7      | 16.7      | 16.8      | 60        | 0.88       | 0.35       | 0.59 / 1.07   | 9          |
+| `candlestick/large`   | pan   | 60.0 | 16.7      | 16.7      | 16.8      | 60        | 0.75       | 0.43       | 9.53 / 12.12  | 9          |
+| `candlestick/large`   | zoom  | 60.0 | 16.7      | 16.8      | 16.8      | 60        | 0.58       | 0.30       | 11.89 / 28.10 | 9          |
+| `_dev/markers-1m`     | pan   | 60.0 | 16.7      | 16.7      | 16.8      | 60        | –          | 0.11       | 8.75 / 14.36  | 1          |
+| `_dev/scatter3d-1m`   | pan   | 60.0 | 16.7      | 16.7      | 16.8      | 60        | –          | 0.09       | 5.41 / 7.35   | 1          |
+| `_dev/scatter3d-1m`   | pan   | 60.0 | 16.7      | 16.8      | 16.8      | 60        | –          | 0.09       | 9.56 / 12.29  | 1          |
+| `_dev/scatter3d-1m`   | pan   | 38.8 | 33.3      | 33.4      | 50.0      | 39        | –          | 0.10       | 49.69 / 61.63 | 1          |
+| `scatter3d/perf-1m`   | pan   | 60.0 | 16.7      | 16.8      | 16.8      | 60        | –          | 0.43       | 14.71 / 26.72 | 10         |
+| `scatter3d/perf-1m`   | pan   | 57.7 | 16.7      | 16.8      | 33.4      | 58        | –          | 0.37       | 64.59 / 69.63 | 10         |
+| `surface/perf-1024`   | pan   | 60.0 | 16.7      | 16.7      | 16.8      | 60        | –          | 0.48       | 9.87 / 12.03  | 12         |
+| `volume/perf-256`     | pan   | 60.0 | 16.7      | 16.7      | 16.8      | 60        | –          | 0.43       | 6.48 / 8.34   | 12         |
 
 ## Method
 

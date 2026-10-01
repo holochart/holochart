@@ -30,7 +30,7 @@ export interface GridPlan {
   readonly marginalY?: string | undefined;
   /** Whether a `color` column is given (marginal sizes depend on it, as in px). */
   readonly colorGiven: boolean;
-  readonly subplotType: 'xy' | 'domain' | 'splom' | 'polar';
+  readonly subplotType: 'xy' | 'domain' | 'splom' | 'polar' | 'scene';
 }
 
 /** The grid built from a plan. */
@@ -98,14 +98,16 @@ export function layoutGrid(args: Args, plan: GridPlan): Grid {
   if (plan.subplotType === 'splom') {
     return { layout: {}, cell: () => undefined, place: () => undefined, nrows: 1, ncols: 1 };
   }
-  if (plan.subplotType === 'polar') {
-    // px's polar functions take no facets: one `polar` subplot filling the plot area, as
-    // `make_subplots(specs=[[{'type': 'polar'}]])` lays it out.
+  if (plan.subplotType === 'polar' || plan.subplotType === 'scene') {
+    // px's polar and 3D functions take no facets: one `polar` / `scene` subplot filling the plot
+    // area, as `make_subplots(specs=[[{'type': 'polar'}]])` lays it out; traces point at it with
+    // `subplot` (polar) or `scene`.
+    const id = plan.subplotType;
     return {
-      layout: { polar: { domain: { x: [0, 1], y: [0, 1] } } },
+      layout: { [id]: { domain: { x: [0, 1], y: [0, 1] } } },
       cell: () => undefined,
       place: (trace) => {
-        trace['subplot'] = 'polar';
+        trace[id === 'polar' ? 'subplot' : 'scene'] = id;
       },
       nrows: 1,
       ncols: 1,

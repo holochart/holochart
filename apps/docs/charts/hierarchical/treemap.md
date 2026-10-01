@@ -237,6 +237,28 @@ paper color:
 - Treemaps have no axes or legend entries, so zoom, pan, box or lasso selection and legend
   toggling don't apply to them.
 
+## 3D-native options
+
+Holochart extensions (full bundle), see
+[Extrusion & 2.5D](/customization/extrusion-2-5d#pies-treemaps-and-icicles-depth-and-tilt):
+
+- `depth`: each tile's thickness in px, a percentage of its smaller side (`'20%'`), or one number
+  per node (per `labels` entry). `0` (default) draws flat tiles.
+- `tilt`: lays the chart back, degrees (±80); `0` (default) is the flat view. `perspective` (0–1,
+  default 0.5): 0 is a parallel projection, which keeps heights comparable.
+- `bevel.size` and `bevel.segments`: rounded edges. `material`: Plotly's lighting model (default),
+  `flat`, or a three.js material type.
+- A tile stands on its parent's top, so the hierarchy rises in terraces, one per level; with one
+  `depth` per node the tiles become a "city" whose heights show a second measure (a height
+  treemap).
+- Labels sit on the tiles' tops, `marker.line` becomes a gap between tiles, and translucent colors
+  (`leaf.opacity`, `marker.depthfade`) are drawn as the flat chart shows them. Hover and click work
+  on the tilted tiles; a click still drills down, and the tiles glide to their new places in 3D.
+
+<Example id="treemap/depth" />
+
+<Example id="treemap/depth-height" />
+
 ## Performance notes
 
 - A treemap draws its tiles in one instanced rect draw whatever its size, its labels in one
@@ -288,4 +310,4 @@ default. [`treemapcolorway`](/reference/layout#treemapcolorway) and
   with their tiles; path bar segments are hit-tested as rectangles.
 - Not supported yet: `texttemplatefallback` / `hovertemplatefallback`, animated `level` changes
   through `animate` or `react` with a transition, keyboard navigation.
-- A "city" 3D treemap (tiles extruded by value) is a planned Holochart extension.
+- `depth`, `tilt` and `perspective` (3D-native options above) are Holochart extensions.

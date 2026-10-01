@@ -155,6 +155,14 @@ chart.on('selected', (event) => {
 });
 ```
 
+## 3D-native options
+
+A Holochart extension (full bundle): on a filled trace (`fill`), `depth` turns the fill into a
+slab with the line and markers on its front face — see [Area](/charts/basic/area#_3d-native-options)
+and [Extrusion & 2.5D](/customization/extrusion-2-5d#areas-fills-with-depth). Traces without a
+fill stay flat, but `layout.view3d` shows any scatter plot in perspective, with hover, zoom and
+selection still exact.
+
 ## Performance notes
 
 - Markers are instanced on the GPU. In the M0 marker benchmark on an Apple M1 Max, 100,000
