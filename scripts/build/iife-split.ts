@@ -24,7 +24,7 @@ const RENDER_SRC = path.join(WORKSPACE_ROOT, 'packages/render/src');
 
 /** render's modules that only the lazily loaded 3D chunks use (bundled into the add-on only). */
 export const RENDER_3D_MODULE =
-  /[\\/]packages[\\/]render[\\/]src[\\/]primitives[\\/](?:mesh(?:-lazy|-geometry|-material|\.glsl)?|lighting(?:-model)?|transparency|lines-markers-3d|line3d(?:-math|\.glsl)?|markers3d|spheres(?:\.glsl)?|depth-sort|blend3d)\.ts$/;
+  /[\\/]packages[\\/]render[\\/]src[\\/]primitives[\\/](?:mesh(?:-lazy|-geometry|-material|\.glsl)?|lighting(?:-model)?|transparency|lines-markers-3d|line3d(?:-math|\.glsl)?|markers3d|spheres(?:\.glsl)?|depth-sort|blend3d|extrusion(?:-lazy|-geometry|-cartesian|-domain)?|view3d(?:-camera)?)\.ts$/;
 
 /**
  * render modules that the 3D chunks import but render doesn't export (so they can't come from the
@@ -35,6 +35,12 @@ const RENDER_COPIED_MODULE = /[\\/]packages[\\/]render[\\/]src[\\/]precision\.ts
 
 /** The 3D package's sources. */
 const TRACES_3D_MODULE = /[\\/]packages[\\/]traces-3d[\\/]src[\\/]/;
+
+/**
+ * The full bundle's 2.5D view (`layout.view3d`): only useful with render's 2.5D chunk, so the
+ * script-tag build ships it in the add-on too (its component stays in the 2D script).
+ */
+const VIEW3D_VIEW_MODULE = /[\\/]packages[\\/]holochart[\\/]src[\\/]view3d[\\/]view\.ts$/;
 
 /** The virtual module of the add-on entry that bundles render's 3D chunks (`iife/build.d.ts`). */
 const RENDER_3D_CHUNKS = 'holochart-iife:render-3d';
@@ -51,6 +57,7 @@ export const ADDON_GLOBALS: Readonly<Record<string, string>> = {
   '@mk7s/holochart-core': 'Holochart',
   '@mk7s/holochart-runtime': 'Holochart',
   '@mk7s/holochart-traces-basic': 'Holochart',
+  '@mk7s/holochart-components': 'Holochart',
   '@mk7s/holochart-render': 'Holochart.render',
 };
 
@@ -79,6 +86,8 @@ const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/
 const LOADERS: Readonly<Record<string, { specifier: string; chunk: string }>> = {
   'mesh-loader.ts': { specifier: './mesh-lazy.ts', chunk: 'mesh' },
   'lines-markers-3d-loader.ts': { specifier: './lines-markers-3d.ts', chunk: 'lines-markers-3d' },
+  'extrusion-loader.ts': { specifier: './extrusion-lazy.ts', chunk: 'extrusion' },
+  'view-loader.ts': { specifier: './view.ts', chunk: 'view3d' },
 };
 
 /**
@@ -89,7 +98,9 @@ export function iife2DPlugin(hostModule: string) {
   return {
     name: 'holochart:iife-2d',
     transform: {
-      filter: { id: /[\\/]render[\\/]src[\\/]primitives[\\/][\w-]+-loader\.ts$/ },
+      filter: {
+        id: /[\\/](?:render[\\/]src[\\/]primitives|holochart[\\/]src[\\/]view3d)[\\/][\w-]+-loader\.ts$/,
+      },
       handler(this: PluginContext, code: string, id: string) {
         const loader = LOADERS[path.basename(id)];
         if (!loader) return null;
@@ -111,7 +122,8 @@ export function iife2DPlugin(hostModule: string) {
     },
     generateBundle(this: PluginContext) {
       const bundled = [...this.getModuleIds()].filter(
-        (id) => TRACES_3D_MODULE.test(id) || RENDER_3D_MODULE.test(id),
+        (id) =>
+          TRACES_3D_MODULE.test(id) || RENDER_3D_MODULE.test(id) || VIEW3D_VIEW_MODULE.test(id),
       );
       if (bundled.length > 0) {
         this.error(
@@ -211,7 +223,7 @@ export function iife3DAddonPlugin(options: { threeModule: string; entry: string 
     load(id: string) {
       if (id !== RENDER_3D_CHUNKS_ID) return null;
       const chunk = (file: string) => JSON.stringify(path.join(RENDER_SRC, 'primitives', file));
-      return `export * as mesh from ${chunk('mesh-lazy.ts')};\nexport * as linesMarkers3D from ${chunk('lines-markers-3d.ts')};\n`;
+      return `export * as mesh from ${chunk('mesh-lazy.ts')};\nexport * as linesMarkers3D from ${chunk('lines-markers-3d.ts')};\nexport * as extrusion from ${chunk('extrusion-lazy.ts')};\n`;
     },
     transform: {
       filter: { id: /\.ts$/ },
@@ -246,6 +258,7 @@ export function iife3DAddonPlugin(options: { threeModule: string; entry: string 
         id === RENDER_3D_CHUNKS_ID ||
         TRACES_3D_MODULE.test(id) ||
         RENDER_3D_MODULE.test(id) ||
+        VIEW3D_VIEW_MODULE.test(id) ||
         RENDER_COPIED_MODULE.test(id);
       const extra = Object.values(bundle)
         .flatMap((chunk) => chunk.moduleIds ?? [])

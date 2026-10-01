@@ -1006,3 +1006,77 @@ describe('touch (E6.6)', () => {
     expect(log).toHaveLength(0);
   });
 });
+
+describe('2.5D view: a viewport projector (E8.9)', () => {
+  /** A stand-in for the 2.5D view: the plot drawn 100 px to the right of the flat view. */
+  function shift(c: Chart): void {
+    const vp = c.subplots.get('xy')!.viewport;
+    vp.projector = {
+      camera: vp.camera,
+      layout: () => undefined,
+      project: (x, y) => [x + 100, y],
+      unproject: (x, y) => [x - 100, y],
+    };
+  }
+
+  it('hovers and clicks the plot plane under the pointer, and draws labels there', async () => {
+    const c = await chart([DOTS], { hovermode: 'closest' });
+    shift(c);
+    const log = record(c, 'hover', 'click');
+    // Where the flat view draws point 1 is empty now; 100 px right of it is the point.
+    fire(c, 'pointermove', cx(5), cy(50));
+    frame();
+    expect(log).toHaveLength(0);
+    fire(c, 'pointermove', cx(5) + 100, cy(50));
+    frame();
+    expect(log.map((e) => e.name)).toEqual(['hover']);
+    const hover = log[0]?.payload as { points: { pointNumber: number }[]; xvals: number[] };
+    expect(hover.points[0]?.pointNumber).toBe(1);
+    expect(hover.xvals[0]).toBeCloseTo(5, 6);
+    const label = [...c.element.querySelectorAll<HTMLElement>('.holochart-hoverlabel')].find(
+      (el) => el.style.display !== 'none',
+    );
+    // Beside the drawn point (right of it, or left when it doesn't fit).
+    expect(Math.abs(Number.parseFloat(label!.style.left) - (cx(5) + 100))).toBeLessThan(200);
+    expect(Number.parseFloat(label!.style.left)).toBeGreaterThan(cx(5));
+    fire(c, 'pointerdown', cx(5) + 100, cy(50));
+    fire(c, 'pointerup', cx(5) + 100, cy(50));
+    expect(log.map((e) => e.name)).toEqual(['hover', 'click']);
+  });
+
+  it('zooms to the data range of the box on the plot plane, outline drawn projected', async () => {
+    const c = await chart([DOTS]);
+    shift(c);
+    fire(c, 'pointerdown', cx(2) + 100, cy(80));
+    fire(c, 'pointermove', cx(4) + 100, cy(20));
+    frame();
+    const path = c.element.querySelector('.holochart-dragoverlay path')!.getAttribute('d')!;
+    expect(path.startsWith(`M${cx(2) + 100},`)).toBe(true);
+    fire(c, 'pointerup', cx(4) + 100, cy(20));
+    await c.relayout({});
+    expect(c.fullLayout?.xaxis?.range).toEqual([expect.closeTo(2, 6), expect.closeTo(4, 6)]);
+    expect(c.fullLayout?.yaxis?.range).toEqual([expect.closeTo(20, 6), expect.closeTo(80, 6)]);
+  });
+
+  it('gives component views the screen position', async () => {
+    const seen: number[] = [];
+    const probe: ComponentModule = {
+      name: 'probe-test',
+      draw: {
+        create: () => ({
+          update: () => undefined,
+          handlePointer(e) {
+            seen.push(e.x);
+            return false;
+          },
+        }),
+      },
+    };
+    const s = setup({ width: 640, height: 400, components: [probe] });
+    t = s;
+    const c = await chart([DOTS], {}, {}, s);
+    shift(c);
+    fire(c, 'pointermove', cx(5) + 100, cy(50));
+    expect(seen.at(-1)).toBe(cx(5) + 100);
+  });
+});

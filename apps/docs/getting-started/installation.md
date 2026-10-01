@@ -8,7 +8,7 @@ status: complete
 
 ::: warning Pre-alpha
 Holochart is not published to npm yet. The commands below show how installation will work once
-the first public alpha (`0.1.0-alpha`, milestone M1) ships. Until then, see
+the first public release ships (see the [roadmap](/roadmap)). Until then, see
 [Try it from the monorepo](#try-it-from-the-monorepo).
 :::
 
@@ -70,18 +70,26 @@ const chart = createChart(el, { data: [{ type: 'scatter', x: [1, 2, 3], y: [3, 1
 
 The packages are:
 
-| Package                        | Contents                                                              |
-| ------------------------------ | --------------------------------------------------------------------- |
-| `@mk7s/holochart`              | Full bundle: re-exports and registers everything                      |
-| `@mk7s/holochart-runtime`      | `createChart`, `newPlot`, the update API, events, and registration    |
-| `@mk7s/holochart-core`         | Figure model, attribute schema, validation, defaults, update planning |
-| `@mk7s/holochart-render`       | three.js engine: renderer, viewports, GPU primitives, picking         |
-| `@mk7s/holochart-components`   | Axes, legend, colorbar, annotations, shapes, hover labels, modebar    |
-| `@mk7s/holochart-traces-basic` | Basic traces: scatter, bar, pie, table                                |
-| `@mk7s/holochart-themes`       | Built-in templates, palettes, and colorscales                         |
+| Package                          | Contents                                                                                                               |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `@mk7s/holochart`                | Full bundle: re-exports and registers everything, 2D and 3D, with Express as `express`                                 |
+| `@mk7s/holochart-runtime`        | `createChart`, `newPlot`, the update API, events, and registration                                                     |
+| `@mk7s/holochart-core`           | Figure model, attribute schema, validation, defaults, update planning                                                  |
+| `@mk7s/holochart-render`         | three.js engine: renderer, viewports, GPU primitives, picking                                                          |
+| `@mk7s/holochart-components`     | Axes, legend, colorbar, annotations, shapes, hover labels, modebar, sliders and menus (`builtinComponents`)            |
+| `@mk7s/holochart-traces-basic`   | Basic traces: scatter, bar, pie, table (`basicTraces`)                                                                 |
+| `@mk7s/holochart-traces-stats`   | Statistical traces: histogram, histogram2d, histogram2dcontour, box, violin, splom, parcoords, parcats (`statsTraces`) |
+| `@mk7s/holochart-traces-sci`     | Scientific traces: heatmap, contour, image, and polar scatterpolar, barpolar (`sciTraces`)                             |
+| `@mk7s/holochart-traces-finance` | Financial traces: ohlc, candlestick, waterfall, funnel, funnelarea, indicator (`financeTraces`)                        |
+| `@mk7s/holochart-traces-hier`    | Hierarchical and flow traces: sunburst, treemap, icicle, sankey (`hierTraces`)                                         |
+| `@mk7s/holochart-traces-3d`      | The 3D scene and 3D traces: scatter3d, surface, mesh3d, cone, streamtube, isosurface, volume, bar3d (`traces3d`)       |
+| `@mk7s/holochart-express`        | [Express](/express/): Plotly Express-style charts from tabular data                                                    |
+| `@mk7s/holochart-themes`         | Built-in templates, palettes, and colorscales                                                                          |
+| `@mk7s/holochart-locales`        | [Locales](/fundamentals/locales): UI strings, month names, number and date formats, one module per locale              |
 
-More trace packages (statistical, scientific, financial, hierarchical, 3D) arrive with later
-milestones. See the [roadmap](/roadmap).
+Each trace package exports its trace types one by one and as a list to register at once
+(`register(...basicTraces, ...traces3d)`). The 3D traces also need the scene, which `traces3d`
+includes.
 
 ## Use a script tag (CDN)
 
@@ -189,9 +197,8 @@ pnpm dev
 ```
 
 `pnpm dev` starts the sandbox, a small Vite app with an example picker. Open an example by id, for
-example `?example=_dev/hello-cube`. The examples under `examples/_dev/` exercise the GPU
-primitives directly. The chart runtime (`createChart`) is being built in M1, so chart-level
-examples will appear there as it lands.
+example `?example=scatter3d/basic`: every example in the [gallery](/gallery/) is there, and the
+internal test pages under `examples/_dev/` too.
 
 ## License
 

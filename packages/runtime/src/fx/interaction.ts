@@ -32,6 +32,14 @@
  * `touch-action` (see `gestures.ts`) leaves page scrolling to the browser where the chart does not
  * need the gesture; under `pan-y`, a swipe that starts vertically is the page's and the chart
  * ignores it.
+ *
+ * ## 2.5D view (E8.9)
+ *
+ * On a subplot drawn in perspective (`layout.view3d`: its viewport has a `projector`), the
+ * pointer is mapped onto the plot plane (or the extruded shape under it) before the chart's own
+ * handling, so hover, click, zoom, pan and selection work on the plane in data terms, exactly as in
+ * the flat view; component views still get screen positions. Hover labels, spikes and drag
+ * outlines are drawn projected back onto the screen (the hover layer's `projector`).
  */
 import type { FullLayout } from '@mk7s/holochart-core';
 import type { FrameScheduler } from '@mk7s/holochart-render';
@@ -46,6 +54,7 @@ import type { ChartEmitter, ChartPoint } from '../events.ts';
 import type { AttributeUpdate } from '../plan.ts';
 import {
   dragZoneAt,
+  inRect,
   limitRange,
   panBy,
   selectBoxAxes,
@@ -232,7 +241,10 @@ export class Interaction {
     native: undefined,
     cursor: undefined,
   };
-  // Latest pointer position (container px) and the event behind it.
+  // Latest pointer position (container px) and the event behind it: on screen (`#sx`), and on
+  // the plot plane of a 2.5D view (`#px`, the screen position otherwise).
+  #sx = 0;
+  #sy = 0;
   #px = 0;
   #py = 0;
   #pointerInside = false;
@@ -340,8 +352,15 @@ export class Interaction {
 
   #local(e: MouseEvent): void {
     const r = this.#host.target.getBoundingClientRect();
-    this.#px = e.clientX - r.left;
-    this.#py = e.clientY - r.top;
+    const x = (this.#sx = e.clientX - r.left);
+    const y = (this.#sy = e.clientY - r.top);
+    // 2.5D view: the plot plane under the pointer (of the drag's subplot, the one it is over, or
+    // the first).
+    const all = this.#host.subplots();
+    const p = (this.#drag?.subplot ?? all.find((sp) => inRect(sp.rect, x, y)) ?? all[0])?.viewport
+      ?.projector;
+    this.#host.layer.projector = p;
+    [this.#px, this.#py] = p ? p.unproject(x, y) : [x, y];
   }
 
   #request(kind: 'hover' | 'drag'): void {
@@ -373,8 +392,8 @@ export class Interaction {
   ): unknown {
     const ev = this.#cev;
     ev.type = type;
-    ev.x = this.#px;
-    ev.y = this.#py;
+    ev.x = this.#sx;
+    ev.y = this.#sy;
     ev.button = e?.button ?? 0;
     ev.shiftKey = e?.shiftKey ?? false;
     ev.altKey = e?.altKey ?? false;
@@ -856,6 +875,7 @@ export class Interaction {
   ): void {
     const finder = this.#finder;
     const host = this.#host;
+    host.layer.projector = finder.subplot?.viewport.projector;
     if (finder.count === 0) {
       host.layer.hideLabels();
       if (changed) host.events.emit('unhover', { points: [], ...(event ? { event } : {}) });

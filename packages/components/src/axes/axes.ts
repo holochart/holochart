@@ -16,6 +16,9 @@
  * ticks (tens of items) and re-uploads small buffers into the same primitives, and text labels that
  * only move are not re-typeset.
  *
+ * Subplots drawn in perspective (the 2.5D view, E8.9: their viewport has a `projector`) draw their
+ * axes and grid themselves, tilted with them (the `view3d` component): they are left out here.
+ *
  * ## Automargin
  *
  * `pushMargin` measures each automargin axis with its current scale. The runtime iterates its
@@ -208,7 +211,11 @@ class AxesView implements ComponentView {
   }
 
   #draw(ctx: ComponentDrawContext): void {
-    const scene = buildAxesScene(ctx, oracleMeasure);
+    const axes = new Map(ctx.axes);
+    for (const sp of ctx.subplots.values()) {
+      if (sp.viewport.projector) for (const a of [sp.xaxis, sp.yaxis]) axes.delete(a.id);
+    }
+    const scene = buildAxesScene({ ...ctx, axes }, oracleMeasure);
     const overlay = overlayTransform(ctx.height);
     this.#over.setTransform(overlay);
     this.#over.set(scene.over);

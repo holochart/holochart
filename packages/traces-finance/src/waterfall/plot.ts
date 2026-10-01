@@ -11,6 +11,9 @@
  *
  * Plotly lengthens bars by half the connector width in `between` mode so a thick connector stays
  * flush with the bar ends; bars keep their exact size here.
+ *
+ * Extruded (`depth`, 2.5D) the connectors lie on the plane of the bars' front faces, running along
+ * the fronts of the bar ends.
  */
 import type { TracePlotContext, TraceUpdatePlan } from '@mk7s/holochart-runtime';
 import { traceRenderOrder } from '@mk7s/holochart-traces-basic';
@@ -84,6 +87,10 @@ function connectorOf(ctx: TracePlotContext<WaterfallCalc>): ConnectorLine {
 class ConnectorLayer implements BarLikeLayer<WaterfallCalc> {
   readonly #line = new LineLayer();
   #mode: unknown;
+
+  lifted() {
+    return [this.#line.primitive];
+  }
 
   update(ctx: TracePlotContext<WaterfallCalc>, plan: TraceUpdatePlan): void {
     const c = connectorOf(ctx);

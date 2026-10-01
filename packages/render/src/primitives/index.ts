@@ -46,3 +46,17 @@ export type {
   MeshLighting,
   ViewLights,
 } from './lighting.ts';
+// Extrusion and the 2.5D view (E8.9): the loader and the bar hook, and only the TYPES of the
+// lazily loaded chunk (`extrusion-lazy.ts`).
+export * from './extrusion-loader.ts';
+export type {
+  ExtrusionData,
+  ExtrusionHit,
+  ExtrusionHost,
+  ExtrusionPrimitive,
+  LiftedPrimitive,
+} from './extrusion.ts';
+export type { Outline, PrismBuffers } from './extrusion-geometry.ts';
+export type { DomainCamera, DomainHost, DomainShape, DomainView } from './extrusion-domain.ts';
+export type { View3DProjector } from './view3d.ts';
+export type { View3DAngles, View3DCamera } from './view3d-camera.ts';

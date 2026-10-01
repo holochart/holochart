@@ -6,11 +6,17 @@
  * sets uniforms — except for what depends on bar sizes in px (label placement, percentage corner
  * radii, the start of bars below a log axis), which is recomputed from the calc without new geometry
  * in the common case.
+ *
+ * With `depth` (plan E9.10, a full-bundle feature like 3D) the bars draw extruded instead: the full
+ * bundle installs an extruder ({@link setBarExtruder}: render's `extrudeRects`, which hands the rect
+ * data to the lazily loaded extrusion primitive and hides the flat rects); labels and error bars
+ * move to the bars' front faces. Extruded bars (hidden flat rects) redraw fully on every update.
  */
 import { toRGBA, uniformTextOf, type FullTrace, type UniformText } from '@mk7s/holochart-core';
 import {
   createRectPrimitive,
   createTextPrimitive,
+  type extrudeRects,
   type RectData,
   type RectPrimitive,
   type RGBA,
@@ -42,6 +48,20 @@ const WHITE: RGBA = [1, 1, 1, 1];
 
 /** Draw order within the trace (added to its render order): bars, error bars, then labels on top. */
 const LAYER = { errorBars: 0.25, text: 0.5 } as const;
+
+/** Draws a bar trace with `depth` extruded (render's `extrudeRects`; see the module comment). */
+export type BarExtruder = typeof extrudeRects;
+
+let extruder: BarExtruder | undefined;
+
+/**
+ * Install (or remove) the extruder of bars with `depth` (plan E9.10). The full bundle
+ * (`@mk7s/holochart`) installs render's `extrudeRects` and registers `bar` with the `depth`,
+ * `bevel` and `material` attributes (core `withExtrusion`); partial bundles opt in the same way.
+ */
+export function setBarExtruder(fn: BarExtruder | undefined): void {
+  extruder = fn;
+}
 
 /** Rect corners of every bar, in linear coordinates. */
 export interface BarGeometry {
@@ -174,7 +194,7 @@ class BarView implements TraceView<BarCalc> {
   }
 
   update(ctx: TracePlotContext<BarCalc>, plan: TraceUpdatePlan): void {
-    if (!this.#rects || plan.calc || plan.plot) {
+    if (!this.#rects?.object.visible || plan.calc || plan.plot) {
       this.#sync(ctx);
       return;
     }
@@ -273,6 +293,8 @@ class BarView implements TraceView<BarCalc> {
     this.#rects.setTransform(ctx.transform);
     this.#syncErrorBars(ctx);
     this.#syncText(ctx);
+    const errors = this.#errors;
+    extruder?.(ctx, this.#rects, data, [this.#text, errors.x, errors.y]);
   }
 
   /**

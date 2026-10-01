@@ -48,7 +48,7 @@ export const barpolar: TraceModule<PolarCalc, typeof barpolarAttributes.children
   hoverPoints: barpolarHoverPoints,
   selectPoints: barpolarSelectPoints,
   eventData: polarEventData,
-  legendIcon: (trace) => bar.legendIcon!(trace),
+  legendIcon: (trace, ctx) => bar.legendIcon!(trace, ctx),
   colorbar: (trace, ctx) => bar.colorbar!(trace, ctx),
   describe: describePolar,
 };

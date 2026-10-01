@@ -130,6 +130,13 @@ series apart without color, for print and color-blind readers. See
 
 <Example id="bar/patterns" />
 
+### 3D bars
+
+`depth` extrudes the bars toward the viewer and `bevel` rounds their edges; `layout.view3d` shows
+the plot in perspective (see [3D-native options](#_3d-native-options)).
+
+<Example id="bar/depth" />
+
 ## Styling
 
 - `marker.color`: one color, one per bar, or numbers mapped through `marker.colorscale`.
@@ -156,6 +163,21 @@ series apart without color, for print and color-blind readers. See
   `selected.marker` / `unselected.marker`).
 - **Click.** `chart.on('click', (e) => e.points[0].x)` gives the clicked category, for drill-down.
 - **Legend.** Click an entry to hide a trace; the remaining stacks and groups re-flow.
+
+## 3D-native options
+
+Holochart extensions (full bundle), see [Extrusion & 2.5D](/customization/extrusion-2-5d):
+
+- `depth`: extrusion toward the viewer in px, a percentage of the bar width (`'60%'`), or one
+  number per bar. `0` (default) draws flat bars.
+- `bevel.size` and `bevel.segments`: rounded front and side edges.
+- `material`: Plotly's lighting model (default), `flat`, or a three.js material type.
+- `layout.view3d`: the plot area in perspective (`tilt`, `rotation`, `perspective`), with hover,
+  click, zoom and selection still exact on the extruded bars.
+
+Grouped, stacked, relative and horizontal bars, negative values and `base` all extrude:
+
+<Example id="bar/depth-grouped" />
 
 ## Performance notes
 

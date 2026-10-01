@@ -247,8 +247,10 @@ function traceKwargs(
       case 'errorX':
       case 'errorXMinus':
       case 'errorY':
-      case 'errorYMinus': {
-        const key = role.startsWith('errorX') ? 'error_x' : 'error_y';
+      case 'errorYMinus':
+      case 'errorZ':
+      case 'errorZMinus': {
+        const key = `error_${role.charAt(5).toLowerCase()}`;
         const bar = (patch[key] ??= {}) as Record<string, unknown>;
         bar[role.endsWith('Minus') ? 'arrayminus' : 'array'] = values;
         break;

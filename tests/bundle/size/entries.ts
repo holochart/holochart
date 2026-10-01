@@ -72,8 +72,9 @@ export const FONT_PARTS = ['font-regular', 'font-bold', 'font-italic', 'font-bol
  * runtime's `dist/keyboard-*.js`, components' `dist/legend-keys-*.js`), the legend scrolling
  * (E5.2: components' `dist/legend-scroll-*.js`), the 3D mesh primitive with its lighting, material
  * types and transparency sorting (E2.11, E8.7, E2.14: render's `dist/mesh-lazy-*.js`), the 3D
- * lines, sprites and spheres (E14.2: render's `dist/lines-markers-3d-*.js`) and the
- * {@link FONT_PARTS}.
+ * lines, sprites and spheres (E14.2: render's `dist/lines-markers-3d-*.js`), the 2.5D view and
+ * extrusion primitive (E8.9: render's `dist/extrusion-lazy-*.js`), the 2.5D view component's view
+ * (E8.9: the full bundle's `dist/view3d-*.js`) and the {@link FONT_PARTS}.
  */
 export const LAZY_PARTS = [
   'fill',
@@ -89,6 +90,8 @@ export const LAZY_PARTS = [
   'legend-scroll',
   'mesh',
   'lines-markers-3d',
+  'extrusion',
+  'view3d',
   ...FONT_PARTS,
 ] as const;
 
@@ -186,6 +189,21 @@ const MESH_MODULE =
 const LINES_MARKERS_3D_MODULE =
   /[\\/]render[\\/](?:dist[\\/]lines-markers-3d-[\w-]+\.js|src[\\/]primitives[\\/](?:lines-markers-3d|line3d(?:-math|\.glsl)?|markers3d|spheres(?:\.glsl)?|depth-sort|blend3d)\.ts)$/;
 
+/**
+ * render's lazily loaded 2.5D code (E8.9: the extrusion primitive and prism geometry, the 2.5D
+ * view's camera math, projector and clipping): built (`dist/extrusion-lazy-*.js`), or from sources
+ * (`extrusion-loader.ts` is in the initial chunk).
+ */
+const EXTRUSION_MODULE =
+  /[\\/]render[\\/](?:dist[\\/]extrusion-lazy-[\w-]+\.js|src[\\/]primitives[\\/](?:extrusion(?:-lazy|-geometry|-cartesian|-domain)?|view3d(?:-camera)?)\.ts)$/;
+
+/**
+ * The full bundle's lazily loaded 2.5D view (E8.9: projectors on the subplots, their axes in 3D,
+ * turning drags): built (`holochart/dist/view3d-*.js`), or from sources.
+ */
+const VIEW3D_MODULE =
+  /[\\/]holochart[\\/](?:dist[\\/]view3d-[\w-]+\.js|src[\\/]view3d[\\/]view\.ts)$/;
+
 /** The {@link LAZY_PARTS} entry a module belongs to, if any. */
 export function lazyPartOf(moduleId: string): string | undefined {
   if (FILL_MODULE.test(moduleId)) return 'fill';
@@ -201,6 +219,8 @@ export function lazyPartOf(moduleId: string): string | undefined {
   if (LEGEND_SCROLL_MODULE.test(moduleId)) return 'legend-scroll';
   if (MESH_MODULE.test(moduleId)) return 'mesh';
   if (LINES_MARKERS_3D_MODULE.test(moduleId)) return 'lines-markers-3d';
+  if (EXTRUSION_MODULE.test(moduleId)) return 'extrusion';
+  if (VIEW3D_MODULE.test(moduleId)) return 'view3d';
   const face = FONT_MODULE.exec(moduleId)?.[1];
   return face ? `font-${face}` : undefined;
 }
@@ -454,6 +474,33 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     lazyPart: 'lines-markers-3d',
   },
   {
+    // Plan E8.9 / E9.10 (M6 wave 3): the 2.5D view and extrusion — the 2.5D camera (tilt,
+    // rotation, perspective, fit), the projector with its stencil clipping and pointer mapping, the
+    // prism geometry (rects, sectors, polygons with bevels) and the extrusion primitive with its
+    // lights and ray casts — loaded with a dynamic import() the first time a chart enables
+    // `layout.view3d` or extrudes a trace (`depth`; then with the mesh chunk). Measured 6.90 kB
+    // when split out (2026-09-30); budget = measured + ~10%. Raised with the extruded domain
+    // traces (E9.12: pie, treemap, icicle — their camera, sector and tile prisms, projected labels
+    // and exact ray casts, +3.45 kB) and cartesian traces (heatmap columns, area slabs): measured
+    // 12.51 kB (2026-09-30), budget = measured + ~8%.
+    id: 'extrusion-lazy',
+    name: '2.5D view and extrusion primitive (lazy chunk of full)',
+    limit: '13.5 kB',
+    lazyOf: 'full',
+    lazyPart: 'extrusion',
+  },
+  {
+    // Plan E8.9 (M6 wave 3): the full bundle's 2.5D view component — projectors on the subplots,
+    // their axes, grids and labels drawn in 3D, turning drags — loaded with a dynamic import() the
+    // first time a figure enables `layout.view3d`. Measured 2.43 kB when split out (2026-09-30);
+    // budget = measured + ~10%.
+    id: 'view3d-lazy',
+    name: '2.5D view component (lazy chunk of full)',
+    limit: '2.7 kB',
+    lazyOf: 'full',
+    lazyPart: 'view3d',
+  },
+  {
     // Self-contained script-tag build: the full bundle plus three.js (~170-190 kB min+gz on its
     // own). Budget = full + a three.js allowance of ~200 kB: 650 kB, raised to 690 kB for M5 by
     // decision (M5 wave 1: ~666.8 kB on CI; the IIFE inlines every lazy chunk, so a11y summaries and
@@ -472,9 +519,12 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     // traces (scatter3d, surface, mesh3d, cone), 3D hover and camera motion (2026-09-30, local);
     // 96.7 kB with M6 wave 2's streamtube, isosurface, volume (incl. ray marching), bar3d and 3D
     // tubes/ribbons (2026-09-30, local); budget raised to 105 kB for wave 3 by owner decision.
+    // 110.5 kB with M6 wave 3's 2.5D view and extrusion (depth on 7 traces), including the 2.5D
+    // view component's view, which the 2D script no longer carries (2026-09-30, local); budget
+    // raised to 115 kB by owner decision.
     id: 'iife-3d',
     name: '@mk7s/holochart 3D add-on IIFE (after the IIFE)',
-    limit: '105 kB',
+    limit: '115 kB',
     file: 'packages/holochart/dist/holochart-3d.iife.min.js',
   },
 ];

@@ -19,6 +19,10 @@ Holochart draws each part of the trace (markers, line, text, error bars, each pr
 surface) as one GPU draw call, whatever the number of points. Positions are uploaded once:
 orbiting only moves the camera, so a million points stay interactive.
 
+From a table of rows, [`hx.scatter3d` and `hx.line3d`](/express/mappings#3d-charts) (Express's
+`px.scatter_3d` and `px.line_3d`) build one trace per group, with a legend, a colorscale for a
+numeric `color`, marker sizes and animation frames.
+
 Pick a different chart when:
 
 - two variables are enough: a 2D [scatter plot](/charts/basic/scatter) (colored or sized by the
@@ -338,6 +342,8 @@ its default. Scene attributes (camera, axes, spikes, annotations) are under
 
 - [3D scenes](/fundamentals/3d-scenes): the camera, axes, controls, hover, spikes and annotations
   every 3D trace shares
+- [Express 3D charts](/express/mappings#3d-charts): `scatter3d` / `line3d` figures from tabular
+  data, grouped by color, symbol and line
 - [Scatter](/charts/basic/scatter): the same markers, lines and text in 2D
 - [Bubble chart](/charts/basic/bubble): encode a third variable as marker size in 2D
 - [Scatter plot matrix](/charts/statistical/splom): every pair of many variables at once

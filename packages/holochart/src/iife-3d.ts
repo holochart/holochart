@@ -10,7 +10,8 @@
  * It registers the 3D scene and trace modules (`traces3d`) into the main script's registry, adds
  * the named exports of `@mk7s/holochart-traces-3d` to `window.Holochart` (as the ESM full bundle
  * exports them), and provides render's lazily loaded 3D chunks (mesh, lines and markers) to the
- * main script's loaders.
+ * main script's loaders, and the 2.5D chunk (`layout.view3d`, `depth`: the extrusion primitive and
+ * the 2.5D view, with the full bundle's 2.5D view component's view).
  *
  * It bundles only the 3D package and those chunks: three.js, core, the runtime, render and
  * traces-basic are the main script's (the build maps them to `Holochart.__iife` and
@@ -20,8 +21,9 @@
  */
 import { register } from '@mk7s/holochart-runtime';
 import * as traces3dExports from '@mk7s/holochart-traces-3d';
-import { linesMarkers3D, mesh } from 'holochart-iife:render-3d';
+import { extrusion, linesMarkers3D, mesh } from 'holochart-iife:render-3d';
 import type { IIFEHost } from './iife/host.ts';
+import * as view3d from './view3d/view.ts';
 
 type Global = Record<string, unknown> & { __iife: IIFEHost };
 
@@ -40,6 +42,8 @@ function install(hc: Global): void {
   }
   host.provideLazy3D('mesh', mesh);
   host.provideLazy3D('lines-markers-3d', linesMarkers3D);
+  host.provideLazy3D('extrusion', extrusion);
+  host.provideLazy3D('view3d', view3d);
   register(...traces3dExports.traces3d);
   for (const [name, value] of Object.entries(traces3dExports)) {
     // Like the ESM bundle's `export *`, a name the main script already has keeps its value.

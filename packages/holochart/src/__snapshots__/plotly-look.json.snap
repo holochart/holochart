@@ -310,6 +310,13 @@
    "color": "rgba(68, 68, 68, 0.3)",
    "activecolor": "rgba(68, 68, 68, 0.7)"
   },
+  "view3d": {
+   "enabled": false,
+   "tilt": 20,
+   "rotation": -20,
+   "perspective": 0.5,
+   "interactive": true
+  },
   "xaxis": {
    "visible": true,
    "color": "rgb(68, 68, 68)",
@@ -830,7 +837,8 @@
    },
    "error_x": {
     "visible": false
-   }
+   },
+   "depth": 0
   },
   {
    "type": "bar",
@@ -905,7 +913,8 @@
    },
    "error_x": {
     "visible": false
-   }
+   },
+   "depth": 0
   },
   {
    "type": "scatter",
@@ -1146,7 +1155,9 @@
    "sort": true,
    "direction": "counterclockwise",
    "rotation": 0,
-   "pull": 0
+   "pull": 0,
+   "depth": 0,
+   "tilt": 0
   }
  ]
 }

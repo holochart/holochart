@@ -341,7 +341,7 @@ Customization is a **cascade**. Each layer overrides the one above it:
 11. Custom traces & components    Holochart.register(myTraceModule)
 ```
 
-**3D-native customization** (a Holochart differentiator): any 2D trace can take `depth` (extrusion), `material`, and `castShadow`. Any 2D subplot can set `layout.xaxis.domainTilt`/`layout.view3d` to be shown in perspective with lighting. Each of these is covered by a story in E8.
+**3D-native customization** (a Holochart differentiator): any 2D trace can take `depth` (extrusion), `material`, and `castShadow`. Any 2D subplot can set `layout.view3d` to be shown in perspective with lighting (domain traces — pie, treemap, icicle — take their own `tilt`/`perspective`, M6 wave 3). Each of these is covered by a story in E8.
 
 ---
 
@@ -978,11 +978,11 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] Built-in uniforms available: `uTime`, `uResolution`, `uPixelRatio`, `uHovered`, `uSelected`
 - [ ] Docs cookbook: pulsing markers, heat-glow lines, dissolve-on-deselect
 
-#### E8.9 — Extrusion & 2.5D view   `P2` `L`   deps: E2.7, E2.8, E8.7
+#### E8.9 — Extrusion & 2.5D view   `P2` `L`   deps: E2.7, E2.8, E8.7   · ✅ Done (M6 wave 3)
 > As a designer, I want to give bars, pies, areas, and treemaps physical depth and view any 2D subplot in perspective, so that I can create striking 3D-styled charts.
-- [ ] `trace.depth` (px or fraction of the category width) with `bevel` options on bar, pie, funnel, waterfall, treemap, icicle, area, and heatmap (cells as columns)
-- [ ] `layout.view3d: { enabled, tilt, rotation, perspective, interactive }` renders the 2D subplot in a 3D camera while keeping axes and hover working
-- [ ] Animated transition between flat and 3D views
+- [x] `trace.depth` (px or fraction of the category width) with `bevel` options on bar, pie, funnel, waterfall, treemap, icicle, area, and heatmap (cells as columns) — px, `'60%'` of the item's width, or per item; lazy 2.5D chunk (the 3D add-on in script builds), full bundle only (`withExtrusion`, installable hooks, so `basic` holds only tiny hooks). Funnel/waterfall connectors on the front plane; heatmap columns with height ∝ z (one merged mesh; flat with a warning above 100k cells); area fills as slabs (stacked areas layered); pie, treemap (terraces) and icicle with a per-trace `tilt`/`perspective` — *deferred: sunburst and funnelarea depth, heatmap zoom without rebuild, staggered area slabs, gradient/pattern slabs, shadows in 2.5D*
+- [x] `layout.view3d: { enabled, tilt, rotation, perspective, interactive }` renders the 2D subplot in a 3D camera while keeping axes and hover working — one setting for all cartesian subplots; tilt 0 equals the flat view exactly; hover, click, zoom, pan and selection map the pointer onto the plane or the prism; `dragmode: 'turntable' | 'orbit'` turns the view — *deferred: per-subplot settings, spike lines and the `hovermode: 'x'` axis label in 2.5D, above-trace shapes/annotations placed as flat, modebar button*
+- [x] Animated transition between flat and 3D views — `animate`/`react` with a transition (`relayout` switches instantly, as in Plotly); reduced motion snaps
 
 #### E8.10 — Patterns & texture fills   `P1` `M`   deps: E2.6, E2.7   · 🟡 Partial (M4 wave 2)
 > As a designer, I want hatch patterns and image textures on fills, so that charts work in print and grayscale and look distinctive.
@@ -1082,10 +1082,10 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] Cross-trace calc (stacking) shared with histogram, funnel, and waterfall — shared `stack` helper; traces in the `'bar-like'` group stack together
 - [x] Stacked totals labels recipe — done (M1 wave 3): a text-only scatter trace at each stack total
 
-#### E9.10 — `bar`: 3D-native extrusion   `P2` `M`   deps: E9.8, E8.9
+#### E9.10 — `bar`: 3D-native extrusion   `P2` `M`   deps: E9.8, E8.9   · ✅ Done (M6 wave 3)
 > As a designer, I want bars with physical depth, rounded bevels, and lighting, so that I can create 3D-styled bar charts in 2D subplots.
-- [ ] `depth`, `bevel.{size, segments}`, `material`
-- [ ] Hover and selection still exact in 2.5D view (ray-cast against extruded geometry)
+- [x] `depth`, `bevel.{size, segments}`, `material` — all barmodes, horizontal, negative, `base`; labels and error bars on the front faces — *deferred: outlines, corner radii and patterns on extruded bars*
+- [x] Hover and selection still exact in 2.5D view (ray-cast against extruded geometry)
 
 #### E9.11 — `pie` & donut   `P0` `L`   deps: E2.8, E4.5, E5.2   · ✅ Done (M2 wave 1; transitions with E7.3, patterns with E8.10)
 > As a developer, I want pie and donut charts, so that I can show parts of a whole.
@@ -1096,10 +1096,10 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] Legend click hides a slice and re-flows the others (animated) — re-flow is immediate; *animation deferred (E7.3)*
 - [x] Hover per slice. Click events. Pulled-slice transition. — *pulled-slice transition deferred (E7.3)*
 
-#### E9.12 — `pie`: 3D-native pie   `P2` `M`   deps: E9.11, E8.9
+#### E9.12 — `pie`: 3D-native pie   `P2` `M`   deps: E9.11, E8.9   · ✅ Done (M6 wave 3)
 > As a designer, I want extruded pies with tilt and explode animations, so that I can build 3D pies (responsibly).
-- [ ] `depth`, `tilt`, `bevel`, per-slice `depth` (arrayOk for "height-encoded" pies)
-- [ ] Docs includes a data-viz caveat on 3D pie perception
+- [x] `depth`, `tilt`, `bevel`, per-slice `depth` (arrayOk for "height-encoded" pies) — plus `material`, `perspective`; tilt per trace (animatable); donut annular sectors, `pull` in 3D — *deferred: `marker.line` drawn as gaps, patterns in 2.5D*
+- [x] Docs includes a data-viz caveat on 3D pie perception
 
 #### E9.13 — `table`   `P1` `L`   deps: E2.7, E2.9   · ✅ Done (M2)
 > As a developer, I want data tables inside figures, so that I can show exact values next to charts.
@@ -1896,8 +1896,8 @@ docs/
 - [x] Trendlines: `'ols'`, `'lowess'`, `'rolling'`, `'ewm'`, `'expanding'` with `trendlineOptions` and fit results available in hover and via `hx.getTrendlineResults()`
 - [x] Aggregations for bar/line (`histfunc`-like `agg`)
 
-#### E23.6 — Express function catalogue   `P1` `L`   deps: E23.2 + trace epics   · 🟡 Partial (M3 wave 3)
-- [ ] `scatter`, `line`, `area`, `bar`, `timeline`, `pie`, `sunburst`, `treemap`, `icicle`, `funnel`, `funnelArea`, `histogram`, `box`, `violin`, `strip`, `ecdf`, `densityHeatmap`, `densityContour`, `imshow`, `scatterMatrix`, `parallelCoordinates`, `parallelCategories`, `scatterPolar`, `linePolar`, `barPolar`, `scatterTernary`, `scatter3d`, `line3d`, and (stretch) `scatterGeo`, `choropleth` — *M3: `scatter`, `line`, `area`, `bar`, `timeline`, `pie`, `histogram`, `box`, `violin`, `strip`, `ecdf`, `densityHeatmap`, `densityContour`, `scatterMatrix`, `parallelCoordinates`, `parallelCategories`; M4: `imshow`; M5 wave 0: `funnel`, `funnelArea`, `scatterPolar`, `linePolar`, `barPolar`; M5 wave 1: `sunburst`, `treemap`, `icicle`; the rest with their trace epics*
+#### E23.6 — Express function catalogue   `P1` `L`   deps: E23.2 + trace epics   · 🟡 Partial (M3 wave 3; 3D in M6 wave 3)
+- [ ] `scatter`, `line`, `area`, `bar`, `timeline`, `pie`, `sunburst`, `treemap`, `icicle`, `funnel`, `funnelArea`, `histogram`, `box`, `violin`, `strip`, `ecdf`, `densityHeatmap`, `densityContour`, `imshow`, `scatterMatrix`, `parallelCoordinates`, `parallelCategories`, `scatterPolar`, `linePolar`, `barPolar`, `scatterTernary`, `scatter3d`, `line3d`, and (stretch) `scatterGeo`, `choropleth` — *M3: `scatter`, `line`, `area`, `bar`, `timeline`, `pie`, `histogram`, `box`, `violin`, `strip`, `ecdf`, `densityHeatmap`, `densityContour`, `scatterMatrix`, `parallelCoordinates`, `parallelCategories`; M4: `imshow`; M5 wave 0: `funnel`, `funnelArea`, `scatterPolar`, `linePolar`, `barPolar`; M5 wave 1: `sunburst`, `treemap`, `icicle`; M6 wave 3: `scatter3d`, `line3d` (px `scatter_3d`/`line_3d`: grouping, continuous color, size, symbols, error bars incl. z, log/range per axis, animation with scene ranges fixed across frames); still open: `scatterTernary`, (stretch) `scatterGeo`, `choropleth`*
 - [x] Each returns a `Figure` object (so it can be modified before rendering) or renders directly when given an element — a plain `{ data, layout, frames? }` object; `fn(el, data, options)` renders with `newPlot` and resolves with the chart
 
 ---
@@ -2046,6 +2046,48 @@ setup (carry-forward 1).
 
 **Verdict:** M3 is closed. M4 and M5 are closed with caveats: the P1 gaps above and the unverified
 real-GPU performance targets go to the carry-forward wave (§11.7) before M6.
+
+**M6 — 3D: exit review 2026-09-30** (PRs #28–#30 and the wave-3 PR).
+
+- Stories: E14.1a–d, E14.2–E14.10, E2.11, E7.5, E8.7, E8.9, E9.10 and E9.12 done; E23.6's 3D part
+  (`scatter3d`, `line3d`) done; E2.14 done but for OIT (P2). Not started: **E14.11** 3D
+  performance and quality (P1: frustum culling, LOD, lower DPR while orbiting, MSAA/FXAA).
+- Exit criterion "All Plotly 3D traces + bar3d, ray-marched volume, 2.5D extrusion": ✅ met. All
+  seven Plotly 3D traces (scatter3d, surface, mesh3d, cone, streamtube, isosurface, volume) plus
+  `bar3d`, each with ≥ 5 examples and a complete chart page; `volume` with `render: 'raymarch'`;
+  `layout.view3d` and `depth` on bar, pie, funnel, waterfall, heatmap, area, treemap and icicle.
+- Performance (`pnpm bench:gpu`, M1 Max, 2026-09-30; the machine was busy, so first draws are
+  pessimistic): 1M-point scatter3d orbits at 57.7–60 fps; the 1024² surface orbits at 60 fps but
+  its first draw is 262 ms against < 50 ms ✗; the 256³ ray-marched volume runs at 60 fps (first
+  draw 448 ms). The 4096² heatmap's first draw is still 695 ms against < 100 ms ✗.
+- Fixed at this review: legend glyphs of traces colored through a `coloraxis` were black (the
+  legend didn't pass the layout to `legendIcon`; 12 baselines updated); a 2.5D race left lifted
+  lines and markers stencil-clipped when a tilted frame came before the lift; the script-tag 2D
+  script no longer carries the 2.5D view (it comes from the 3D add-on with the rest of 2.5D),
+  which brought the 2D script back under its budget.
+- Release: ⏳ nothing published; all 14 packages at `0.0.0` with 64 pending changesets. The ship
+  backlog (`backlog.md`) lists what a first public release needs.
+- Health:
+  - CI on `main` is green with the 14 required checks; the interaction suite runs in 2 shards.
+  - Tests: 4,820 unit, 490 visual, 240 interaction, 17 bundle; 557 examples in the gallery.
+  - Budgets (local): core + scatter 153.8 / 157, basic 245.75 / 248, full ESM 536.68 / 540,
+    2D IIFE 684.88 / 690, 3D add-on 110.45 / 115 kB (raised 34 → 81 → 105 → 115 by decision in
+    M6). Full ESM has ~1.7 kB of headroom on CI.
+  - Docs: 105 pages (73 complete, 9 draft, 23 stub), a 3D overview page, and no `_dev` embeds on
+    the 3D pages; `docs/perf/gpu-benchmarks.md` now includes the 3D scenarios.
+- Carry-forward, in priority order:
+  1. E14.11 (P1): lower DPR while orbiting and full on idle, frustum culling, LOD for huge
+     meshes; the surface's first draw.
+  2. 3D and 2.5D accessibility: keyboard navigation and `describe` tables for bar3d, cone,
+     isosurface, mesh3d, streamtube and volume; keyboard orbit.
+  3. Worker dispatch for isosurface extraction and streamtube integration (both pure already).
+  4. Plotly gaps: volume `contour`, calendars on surface/volume, `hovertemplatefallback`, camera
+     linking; caps, slices and spaceframe for ray-marched volumes.
+  5. 2.5D: per-subplot `view3d`, spike lines and the `hovermode: 'x'` axis label when tilted,
+     depth on sunburst and funnelarea.
+
+**Verdict:** M6 is closed. E14.11 and the items above carry forward; the next step is the owner's
+call between M7 and the ship backlog.
 
 ### 11.2 M1 execution plan
 
@@ -2286,8 +2328,8 @@ performance targets are checked with `pnpm bench:gpu` on the real GPU.
 | 2 | `streamtube` | E14.6 ✅ |
 | 2 | `volume` (stacked isosurfaces and ray-marched) and `isosurface` | E14.7 ✅, E14.8 ✅ |
 | 2 | `bar3d` and 3D line extras | E14.9 ✅, E14.10 ✅ |
-| 3 | Extrusion and 2.5D view: bar and pie depth, `view3d` | E8.9, E9.10, E9.12 |
-| 3 | Express `scatter3d`/`line3d`, docs, exit review | E23.6 |
+| 3 | Extrusion and 2.5D view: bar and pie depth, `view3d` | E8.9 ✅, E9.10 ✅, E9.12 ✅ |
+| 3 | Express `scatter3d`/`line3d`, docs, exit review | E23.6 ✅ (3D part), docs ✅, exit review ✅ |
 
 M6 wave 0 decisions and notes: the script-tag build is split by decision —
 `holochart.iife.min.js` stays 2D (690 kB budget) and `holochart-3d.iife.min.js` is an add-on

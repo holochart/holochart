@@ -8,11 +8,16 @@
  * Restyling the colorscale swaps the LUT, and `zmin` / `zmax` / `zmid`, `reversescale`, gaps,
  * smoothing and opacity only set uniforms; zoom and pan set the transform (automatically sized
  * labels are resized when the cells' size in px changes). Only new data uploads the texture.
+ *
+ * With `depth` (2.5D, plan E8.9; the full bundle adds the attribute) the cells also stand up as
+ * columns as tall as their values, drawn by render's lazily loaded extrusion code
+ * (`extrudeHeatmap`); the flat heatmap stays under them as their floor, the labels move in front.
  */
 import type { FullTrace } from '@mk7s/holochart-core';
 import {
   createHeatmapPrimitive,
   createTextPrimitive,
+  extrudeHeatmap,
   type HeatmapData,
   type HeatmapPrimitive,
   type TextFont,
@@ -96,9 +101,15 @@ class HeatmapView implements TraceView<HeatmapCalc> {
 
   constructor(ctx: TracePlotContext<HeatmapCalc>) {
     this.#sync(ctx);
+    extrudeHeatmap(ctx, this, this.#heatmap, [this.#text]);
   }
 
   update(ctx: TracePlotContext<HeatmapCalc>, plan: TraceUpdatePlan): void {
+    this.#update(ctx, plan);
+    extrudeHeatmap(ctx, this, this.#heatmap, [this.#text]);
+  }
+
+  #update(ctx: TracePlotContext<HeatmapCalc>, plan: TraceUpdatePlan): void {
     if (!this.#heatmap || plan.calc || plan.plot) {
       this.#sync(ctx);
       return;

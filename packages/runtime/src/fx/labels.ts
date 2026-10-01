@@ -9,7 +9,12 @@
  *
  * Everything lives in one absolutely positioned, `pointer-events: none` layer on top of the
  * canvas. Label elements are pooled: hovering from point to point reuses them.
+ *
+ * Positions are container px of the flat plot; with a {@link HoverLayer.projector} (a subplot in
+ * the 2.5D view, E8.9) labels, the unified box and drag outlines are drawn where the tilted plot
+ * shows their points (spike lines are not shown there).
  */
+import type { ViewportProjector } from '@mk7s/holochart-render';
 import { avoidOverlaps, type Placed, type Rect } from './geometry.ts';
 import type { FontCss, LabelSpec, LabelStyle } from './hover.ts';
 import { appendRichText } from './richtext.ts';
@@ -90,6 +95,8 @@ export class HoverLayer {
   readonly #spikeDots: SVGCircleElement[] = [];
   #spikesShown = false;
   readonly #placed: Placed[] = [];
+  /** The 2.5D view of the hovered or dragged subplot: positions are projected through it. */
+  projector: ViewportProjector | null | undefined;
 
   constructor(container: HTMLElement) {
     this.#doc = container.ownerDocument;
@@ -151,6 +158,13 @@ export class HoverLayer {
    */
   showLabels(specs: readonly LabelSpec[], options: ShowLabelsOptions): void {
     this.hideLabels();
+    const pr = this.projector;
+    if (pr) {
+      specs = specs.map((s) => {
+        const [ax, ay] = pr.project(s.ax, s.ay);
+        return { ...s, ax, ay };
+      });
+    }
     const placed = this.#placed;
     placed.length = 0;
     const shown: { el: LabelEl; spec: LabelSpec; w: number; h: number; left: boolean }[] = [];
@@ -263,8 +277,9 @@ export class HoverLayer {
     box.style.display = 'block';
     const w = box.offsetWidth;
     const h = box.offsetHeight;
-    const x = options.x + 10 + w > options.width ? options.x - 10 - w : options.x + 10;
-    const y = Math.min(Math.max(options.y - h / 2, 0), Math.max(0, options.height - h));
+    const [px, py] = this.projector?.project(options.x, options.y) ?? [options.x, options.y];
+    const x = px + 10 + w > options.width ? px - 10 - w : px + 10;
+    const y = Math.min(Math.max(py - h / 2, 0), Math.max(0, options.height - h));
     box.style.left = `${Math.round(Math.max(0, x))}px`;
     box.style.top = `${Math.round(y)}px`;
   }
@@ -297,7 +312,7 @@ export class HoverLayer {
 
   /** Draw spike lines (container px); an empty scene hides them. */
   showSpikes(scene: SpikeScene): void {
-    if (scene.lines.length === 0 && scene.dots.length === 0) {
+    if (this.projector || (scene.lines.length === 0 && scene.dots.length === 0)) {
       this.hideSpikes();
       return;
     }
@@ -384,6 +399,10 @@ export class HoverLayer {
 
   /** Draw the zoom or selection box (container px). */
   showBox(x0: number, y0: number, x1: number, y1: number): void {
+    if (this.projector) {
+      this.showLasso([x0, y0, x1, y0, x1, y1, x0, y1]);
+      return;
+    }
     const path = this.#outline();
     (this.#svg as SVGSVGElement).style.display = 'block';
     path.setAttribute('d', `M${x0},${y0}H${x1}V${y1}H${x0}Z`);
@@ -394,8 +413,12 @@ export class HoverLayer {
     const path = this.#outline();
     (this.#svg as SVGSVGElement).style.display = 'block';
     let d = '';
+    const pr = this.projector;
     for (let i = 0; i + 1 < points.length; i += 2) {
-      d += `${i === 0 ? 'M' : 'L'}${points[i] as number},${points[i + 1] as number}`;
+      const [x, y] = pr
+        ? pr.project(points[i] as number, points[i + 1] as number)
+        : [points[i], points[i + 1]];
+      d += `${i === 0 ? 'M' : 'L'}${x},${y}`;
     }
     path.setAttribute('d', `${d}Z`);
   }

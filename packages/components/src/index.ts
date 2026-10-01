@@ -184,6 +184,13 @@ export * from './selections/index.ts';
 
 // Shared
 export { componentsReady } from './shared/ready.ts';
+// Views loaded on first use, for components in other packages (the full bundle's 2.5D view, E8.9).
+export { lazyRenderer } from './shared/lazy-view.ts';
+export type {
+  ComponentViewFactory,
+  LazyComponentRenderer,
+  LazyViewOptions,
+} from './shared/lazy-view.ts';
 export { plainText } from './shared/text.ts';
 
 /** Every component in this package, in registration order (the full bundle registers these). */

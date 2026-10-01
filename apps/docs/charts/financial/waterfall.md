@@ -193,6 +193,21 @@ createChart(document.getElementById('chart')!, {
 - **Zoom, pan and legend.** Drag to zoom, double-click to reset; a legend click hides a trace and
   the other waterfalls of the position re-flow.
 
+## 3D-native options
+
+Holochart extensions (full bundle), see [Extrusion & 2.5D](/customization/extrusion-2-5d#funnels-and-waterfalls):
+
+- `depth`: extrusion of the steps toward the viewer in px, a percentage of the bar width
+  (`'60%'`), or one number per step. `0` (default) draws a flat waterfall.
+- `bevel.size` and `bevel.segments`: rounded front and side edges.
+- `material`: Plotly's lighting model (default), `flat`, or a three.js material type.
+- `layout.view3d`: the plot area in perspective, with hover and click still exact on the steps.
+
+The connector lines run along the front faces of the bar ends (both `between` and `spanning`),
+and labels sit on the front faces.
+
+<Example id="waterfall/depth" />
+
 ## Performance notes
 
 - A waterfall draws in a constant number of draw calls whatever its bar count: one instanced rect

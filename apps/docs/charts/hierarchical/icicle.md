@@ -162,6 +162,25 @@ Path bar labels are sized with the cells. Drill-down clicks don't animate while 
   treemaps. See [Hierarchy clicks](/reference/events#hierarchy-clicks) in the events reference.
 - Icicles have no axes or legend entries, so zoom, pan, selection and legend toggling don't apply.
 
+## 3D-native options
+
+Holochart extensions (full bundle), see
+[Extrusion & 2.5D](/customization/extrusion-2-5d#pies-treemaps-and-icicles-depth-and-tilt):
+
+- `depth`: each tile's thickness in px, a percentage of its smaller side (`'20%'`), or one number
+  per node (per `labels` entry). `0` (default) draws flat tiles.
+- `tilt`: lays the chart back, degrees (±80); `0` (default) is the flat view. `perspective` (0–1,
+  default 0.5): 0 is a parallel projection, which keeps heights comparable.
+- `bevel.size` and `bevel.segments`: rounded edges. `material`: Plotly's lighting model (default),
+  `flat`, or a three.js material type.
+- Cells stand side by side, each level on the plane; with one `depth` per node, levels (or single
+  cells) rise to their own heights.
+- Labels sit on the tiles' tops, `marker.line` becomes a gap between tiles, and translucent colors
+  (`leaf.opacity`, `marker.depthfade`) are drawn as the flat chart shows them. Hover and click work
+  on the tilted tiles; a click still drills down, and the tiles glide to their new places in 3D.
+
+<Example id="icicle/depth" />
+
 ## Performance notes
 
 - An icicle draws in the same few draw calls as a treemap whatever its size: one instanced rect

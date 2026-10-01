@@ -214,6 +214,23 @@ describe('scatter defaults', () => {
       _max: 5,
     });
   });
+
+  it('colors the legend glyph through the color axis', () => {
+    const { fullData, fullLayout } = full(
+      [{ y: [1, 2], mode: 'markers', marker: { color: [1, 5], coloraxis: 'coloraxis' } }],
+      {
+        coloraxis: {
+          colorscale: [
+            [0, 'rgb(255, 0, 0)'],
+            [1, 'rgb(0, 0, 255)'],
+          ],
+        },
+      },
+    );
+    const glyph = scatter.legendIcon!(fullData[0] as FullTrace, { fullLayout });
+    // The first point is the axis minimum: the low end of the scale.
+    expect(glyph.marker?.color).toBe('rgb(255, 0, 0)');
+  });
 });
 
 describe('scatter calc', () => {

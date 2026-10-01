@@ -3,9 +3,12 @@ import * as Holochart from './index.ts';
 
 describe('@mk7s/holochart bundle', () => {
   it('registers the built-ins through the public registry', () => {
-    expect(Holochart.registry.getTrace('scatter')).toBe(Holochart.scatter);
+    expect(Holochart.registry.getTrace('box')).toBe(Holochart.box);
     expect(Holochart.registry.list().traces.map((t) => t.type)).toContain('scatter');
-    expect(Holochart.builtins).toContain(Holochart.scatter);
+    expect(Holochart.builtins).toContain(Holochart.box);
+    // Scatter with its fill's 2.5D depth (plan E8.9): the full bundle's own module.
+    expect(Holochart.registry.getTrace('scatter')).toBe(Holochart.extrudedScatter);
+    expect(Holochart.builtins).toContain(Holochart.extrudedScatter);
   });
 
   it('exposes the object and functional APIs, core, and a namespaced render layer', () => {

@@ -96,8 +96,10 @@ register(...basicTraces, ...statsTraces, ...builtinComponents);
 `heatmap` and `image` traces of traces-sci, and `scatterPolar`, `linePolar` and `barPolar` its
 polar traces (`register(...sciTraces)`); `funnel` and `funnelArea` use traces-finance
 (`register(...financeTraces)`); `sunburst`, `treemap` and `icicle` use traces-hier
-(`register(...hierTraces)`). Facet labels, legends, colorbars and animation controls are
-components.
+(`register(...hierTraces)`); `scatter3d` and `line3d` use the `scatter3d` trace and the 3D scene
+of traces-3d (`register(...traces3d)` from `@mk7s/holochart-traces-3d`; in the script-tag build,
+load `holochart-3d.iife.min.js` after `holochart.iife.min.js`). Facet labels, legends, colorbars
+and animation controls are components.
 
 ## Functions
 
@@ -125,13 +127,15 @@ components.
 | [`scatterPolar`](/express/mappings#polar-charts)                 | `px.scatter_polar`         | `scatterpolar` (markers)      |
 | [`linePolar`](/express/mappings#polar-charts)                    | `px.line_polar`            | `scatterpolar` (lines)        |
 | [`barPolar`](/express/mappings#polar-charts)                     | `px.bar_polar`             | `barpolar`                    |
+| [`scatter3d`](/express/mappings#3d-charts)                       | `px.scatter_3d`            | `scatter3d` (markers)         |
+| [`line3d`](/express/mappings#3d-charts)                          | `px.line_3d`               | `scatter3d` (lines)           |
 | [`sunburst`](/express/hierarchy)                                 | `px.sunburst`              | `sunburst`                    |
 | [`treemap`](/express/hierarchy)                                  | `px.treemap`               | `treemap`                     |
 | [`icicle`](/express/hierarchy)                                   | `px.icicle`                | `icicle`                      |
 | [`getTrendlineResults`](/express/statistics#fit-results)         | `px.get_trendline_results` | —                             |
 | [`data.fromCSV`](/express/data#csv)                              | `pd.read_csv`              | —                             |
 
-The rest of plotly.py's catalogue (ternary, 3D, geo) follows with its trace types (M5–M8).
+The rest of plotly.py's catalogue (ternary, geo) follows with its trace types (M7–M8).
 
 ## Options every function shares
 
@@ -185,5 +189,7 @@ or the `template` option. Pass `template: 'plotly-classic'` (or call
 - `barPolar`'s `barmode: 'overlay'` sets `layout.polar.barmode` (plotly.js ignores px's top-level
   `barmode` on polar bars, which always stack there); `barnorm` isn't offered, as polar bars
   don't read it.
+- `scatter3d` and `line3d` fix the scene's axis ranges over every frame of an animated figure
+  (px leaves that to `range_x` / `range_y` / `range_z`), as the 2D and polar functions do.
 - Not yet: `marginal` on `line` / `bar`, `text_auto` (except on `imshow`), `render_mode`,
   `color_discrete_map` given as a Plotly `px.colors` object, `px.Constant`.

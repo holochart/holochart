@@ -190,6 +190,11 @@ export class FillPrimitive implements Primitive<FillData> {
     return this.tri;
   }
 
+  /** The current data (read-only; extruded fills take their colors from it). */
+  get current(): Readonly<FillData> {
+    return this.data;
+  }
+
   update(patch: Partial<FillData>): void {
     if (this.disposed) return;
     const geometryChanged = GEOMETRY_KEYS.some((key) => key in patch);

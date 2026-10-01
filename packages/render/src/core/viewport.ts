@@ -15,6 +15,10 @@
  * camera still puts world (0, 0) at the rect's bottom-left. The scissor rect then decides what is
  * visible. Primitives receive the render-area size through `setViewport`, which is what their
  * screen-space sizing math needs.
+ *
+ * 2.5D view (plan E8.9, `layout.view3d`): a {@link ViewportProjector} set on a 2D viewport replaces
+ * its camera (the plot plane seen in perspective) and maps pointers between the screen and the plot
+ * plane. render's lazily loaded 2.5D module (`view3d.ts`) provides it.
  */
 import { OrthographicCamera, PerspectiveCamera, Scene, type Material, type Object3D } from 'three';
 import type { Primitive, RGBA, ViewportSize } from '../types.ts';
@@ -141,6 +145,21 @@ export function scissorFor(
   return { ...clip };
 }
 
+/**
+ * A 2.5D view of a 2D viewport (see the module comment): its camera draws instead of the flat one,
+ * and it converts container CSS px (top-left origin) between the flat plot plane (z = 0, as the
+ * flat view shows it) and the screen.
+ */
+export interface ViewportProjector {
+  readonly camera: OrthographicCamera | PerspectiveCamera;
+  /** Recompute the camera for the viewport's rect and render area (called by `layout()`). */
+  layout(viewport: Viewport): void;
+  /** Plot-plane point → where it appears on screen. */
+  project(x: number, y: number): [number, number];
+  /** Screen point → the plot-plane point under it (on extruded geometry: the point below it). */
+  unproject(x: number, y: number): [number, number];
+}
+
 let nextViewportId = 1;
 
 /** A scissored region of the canvas with its own scene and camera. Create via the render root. */
@@ -170,6 +189,8 @@ export class Viewport {
   #disposed = false;
   /** Set by the root so it can re-sort when `order` changes. */
   onOrderChange: (() => void) | null = null;
+  /** 2D only: the 2.5D view drawing this viewport (see {@link ViewportProjector}), if any. */
+  declare projector: ViewportProjector | null | undefined;
 
   constructor(host: ViewportHost, options: ViewportOptions = {}) {
     this.#host = host;
@@ -194,7 +215,7 @@ export class Viewport {
 
   /** The camera: orthographic for 2D; perspective or orthographic for 3D (see {@link setProjection}). */
   get camera(): OrthographicCamera | PerspectiveCamera {
-    return this.#camera;
+    return this.projector?.camera ?? this.#camera;
   }
 
   /**
@@ -344,7 +365,7 @@ export class Viewport {
 
     const width = Math.max(1, this.#area.width);
     const height = Math.max(1, this.#area.height);
-    const camera = this.camera;
+    const camera = this.#camera;
     if (this.kind === '2d') {
       const f = orthoFrustum(this.#rect, this.#area);
       const c = camera as OrthographicCamera;
@@ -375,6 +396,7 @@ export class Viewport {
     size.height = height;
     size.pixelRatio = host.pixelRatio;
     if (changed) for (const p of this.#primitives) p.setViewport(size);
+    this.projector?.layout(this);
     host.invalidate();
   }
 

@@ -1,7 +1,7 @@
 import { gaussian, rng } from './rng.ts';
 
 /**
- * Deterministic data for the `mesh3d` and `cone` examples (plan E14.4, E14.5): shapes with
+ * Deterministic data for the `mesh3d`, `cone` and `scene` examples (plan E14.4, E14.5): shapes with
  * explicit triangles, point clouds for `alphahull`, and vector fields.
  */
 
@@ -60,6 +60,44 @@ export function uvSphere(rings = 8, segments = 12): Mesh {
     tri(south, at(rings - 1, s + 1), at(rings - 1, s));
   }
   return m;
+}
+
+/**
+ * A torus around the z axis: tube center radius `R`, tube radius `r`, `rings` steps around the
+ * z axis and `segments` around the tube.
+ */
+export function torus(R = 1, r = 0.4, rings = 48, segments = 20): Mesh {
+  const m: Mesh = { x: [], y: [], z: [], i: [], j: [], k: [] };
+  for (let a = 0; a < rings; a++) {
+    const u = (a / rings) * 2 * Math.PI;
+    for (let b = 0; b < segments; b++) {
+      const v = (b / segments) * 2 * Math.PI;
+      m.x.push((R + r * Math.cos(v)) * Math.cos(u));
+      m.y.push((R + r * Math.cos(v)) * Math.sin(u));
+      m.z.push(r * Math.sin(v));
+    }
+  }
+  const at = (a: number, b: number) => (a % rings) * segments + (b % segments);
+  for (let a = 0; a < rings; a++) {
+    for (let b = 0; b < segments; b++) {
+      m.i.push(at(a, b), at(a, b));
+      m.j.push(at(a + 1, b), at(a + 1, b + 1));
+      m.k.push(at(a + 1, b + 1), at(a, b + 1));
+    }
+  }
+  return m;
+}
+
+/** `mesh` scaled by `scale` and moved by `offset` (a new mesh; the triangles are shared). */
+export function placed(mesh: Mesh, scale: number, offset: readonly [number, number, number]): Mesh {
+  return {
+    x: mesh.x.map((v) => v * scale + offset[0]),
+    y: mesh.y.map((v) => v * scale + offset[1]),
+    z: mesh.z.map((v) => v * scale + offset[2]),
+    i: mesh.i,
+    j: mesh.j,
+    k: mesh.k,
+  };
 }
 
 /** A hill-and-valley terrain sampled at `n` random points over [0, 10]². */

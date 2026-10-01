@@ -13,13 +13,14 @@ import * as runtime from '@mk7s/holochart-runtime';
 import { builtinThemes } from '@mk7s/holochart-themes';
 import { traces3d } from '@mk7s/holochart-traces-3d';
 import { traces2d } from './traces-2d.ts';
+import { withView3D } from './view3d/index.ts';
 
 /** Every built-in module, registered through the same public `register` API plugins use (E22.1). */
-export const builtins: readonly runtime.Registrable[] = [
+export const builtins: readonly runtime.Registrable[] = withView3D([
   ...traces2d,
   ...traces3d,
   ...builtinComponents,
-];
+]);
 
 runtime.register(...builtins, ...builtinThemes);
 // Every named palette and colorscale of plan E8.2 (partial bundles opt in; see core `colors`).

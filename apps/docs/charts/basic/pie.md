@@ -177,6 +177,41 @@ too.
 
 - Pies have no axes, so zoom, pan, and box or lasso selection don't apply to them.
 
+## 3D-native options
+
+Holochart extensions (full bundle), see
+[Extrusion & 2.5D](/customization/extrusion-2-5d#pies-treemaps-and-icicles-depth-and-tilt):
+
+- `depth`: the pie's thickness in px, a percentage of the radius (`'20%'`), or one number per
+  slice (per `labels` entry) for a height-encoded pie. `0` (default) draws a flat pie.
+- `tilt`: lays the pie back, degrees (±80); `0` (default) is the flat view. `perspective` (0–1,
+  default 0.5): 0 gives the classic parallel projection.
+- `bevel.size` and `bevel.segments`: rounded edges. `material`: Plotly's lighting model (default),
+  `flat`, or a three.js material type.
+- A donut's `hole` makes annular slices; `pull` moves slices out in 3D; `marker.line` becomes a gap
+  between the slices. Labels (inside and outside, with leader lines) sit on the slices' tops; hover,
+  click and legend clicks work on the tilted pie, and `tilt` animates with `animate` and `react`.
+
+<Example id="pie/depth" />
+
+<Example id="pie/depth-donut" />
+
+<Example id="pie/depth-height" />
+
+<Example id="pie/depth-exploded" />
+
+<Example id="pie/depth-tilt" />
+
+::: warning Reading a 3D pie
+A 3D pie is harder to read than a flat one, which is already harder to read than a bar chart:
+people compare angles and areas less accurately than lengths. Tilting adds distortion — slices in
+front look bigger than equal slices at the back, and only the front slices show their sides — so
+the same share looks different depending on where it is. Use a 3D pie for presentation, with the
+shares labelled (`textinfo: 'percent'`), and a flat pie or a bar chart when readers need to compare
+the parts. Heights in a height-encoded pie are foreshortened too: label them, and prefer
+`perspective: 0` so equal heights look equal.
+:::
+
 ## Performance notes
 
 - Pies are small data: rendering cost is not the limit, readability is. Hundreds of slices draw

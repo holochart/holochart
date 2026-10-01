@@ -63,6 +63,7 @@ import {
   pointKind,
   pointTween,
   sameValue,
+  view3dTween,
   type Tween,
 } from './interpolate.ts';
 import type {
@@ -510,6 +511,9 @@ export class Animation {
         layout,
       );
     }
+    // The 2.5D view (E8.9): angles move; turning it on or off moves through the flat view.
+    const view3d = view3dTween(from.full.fullLayout['view3d'], target.fullLayout['view3d']);
+    if (view3d) add(-1, 'view3d', view3d, false, layout);
     // Attributes components interpolate themselves (3D cameras, E7.5).
     for (const t of this.#host.tweens(from.full.fullLayout, target.fullLayout)) {
       add(-1, t.path, (e) => t.tween(e), false, layout, true);

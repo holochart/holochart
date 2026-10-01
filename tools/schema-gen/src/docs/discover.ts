@@ -1,6 +1,9 @@
 /**
  * Builds the registry the attribute reference documents: core's base layout/config plus every
- * trace module and layout component exported by the workspace's trace and component packages.
+ * trace module and layout component exported by the workspace's trace and component packages,
+ * then what the full bundle (`@mk7s/holochart`) adds or replaces: its 2.5D view component and the
+ * trace modules it registers extended (`bar` with `depth`, plan E8.9), which are not in the trace
+ * packages because the `basic` bundle has no room for them.
  *
  * Packages are discovered from `packages/*\/package.json` and imported from their TypeScript
  * sources (the `source` export condition, ADR-013), so the reference always matches the working
@@ -20,6 +23,8 @@ import {
 
 /** Packages scanned for trace modules and components. */
 const PACKAGE_NAME = /^@mk7s\/holochart-(traces-[\w-]+|components)$/;
+/** The full bundle, scanned last for the modules only it has (see the module comment). */
+const FULL_BUNDLE = '@mk7s/holochart';
 
 /** True for objects shaped like a {@link TraceModule}. */
 export function isTraceModule(v: unknown): v is TraceModule {
@@ -103,6 +108,7 @@ export async function discoverRegistry(repoRoot: string): Promise<Discovery> {
     .filter((d) => d.isDirectory())
     .map((d) => d.name)
     .sort();
+  let fullBundle: { dir: string; pkg: PackageJson } | undefined;
 
   for (const dir of dirs) {
     let pkg: PackageJson;
@@ -111,6 +117,7 @@ export async function discoverRegistry(repoRoot: string): Promise<Discovery> {
     } catch {
       continue;
     }
+    if (pkg.name === FULL_BUNDLE) fullBundle = { dir, pkg };
     if (!pkg.name || !PACKAGE_NAME.test(pkg.name)) continue;
     const entry = sourceEntry(pkg);
     if (!entry) {
@@ -128,6 +135,24 @@ export async function discoverRegistry(repoRoot: string): Promise<Discovery> {
     if (traces.length > 0) registry.register(...traces);
     if (components.length > 0) registry.registerComponent(...components);
     contributions[pkg.name] = [...traces.map((t) => t.type), ...components.map((c) => c.name)];
+  }
+  const entry = fullBundle && sourceEntry(fullBundle.pkg);
+  if (fullBundle && entry) {
+    try {
+      const exports: Record<string, unknown> = await import(
+        pathToFileURL(path.join(packagesDir, fullBundle.dir, entry)).href
+      );
+      // Of the modules it registers, only those the trace and component packages don't have (the
+      // others are the same objects).
+      const { traces, components } = collectModules({ builtins: exports['builtins'] });
+      const own = traces.filter((t) => registry.getModule(t.type) !== t);
+      const ownComponents = components.filter((c) => !registry.components().includes(c));
+      if (own.length > 0) registry.register(...own);
+      if (ownComponents.length > 0) registry.registerComponent(...ownComponents);
+      contributions[FULL_BUNDLE] = [...own.map((t) => t.type), ...ownComponents.map((c) => c.name)];
+    } catch (err) {
+      warnings.push(`${FULL_BUNDLE}: import failed (${(err as Error).message}); skipped.`);
+    }
   }
   return { registry, contributions, warnings };
 }
