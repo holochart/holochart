@@ -528,7 +528,11 @@ export function labelText(
   const name = String(trace['name'] ?? '');
   const template = perPoint(traceAttr(trace, entry.input, 'hovertemplate'), i, p.cell);
   const hovertext = perPoint(traceAttr(trace, entry.input, 'hovertext'), i, p.cell);
-  const text = hovertext ?? p.text ?? perPoint(trace['text'], i, p.cell);
+  // Plotly's `hovertext || text`: an empty `hovertext` (every trace's default) gives `text`.
+  const text =
+    (hovertext === '' || hovertext === null ? undefined : hovertext) ??
+    p.text ??
+    perPoint(trace['text'], i, p.cell);
   const style = labelStyle(entry, i, '#000', fullLayout, false);
   // Templates read point data; a hover with no point behind it (a fill) never uses one (Plotly).
   if (typeof template === 'string' && template !== '' && i >= 0) {

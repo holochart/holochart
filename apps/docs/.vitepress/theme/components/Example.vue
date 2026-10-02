@@ -5,7 +5,9 @@
  * - Client-only: the example registry and the example module are imported after mount, so SSR
  *   renders a static placeholder and never runs example code.
  * - Lazy: the example starts when it scrolls near the viewport (one WebGL context per live
- *   example, and browsers cap contexts at about 16).
+ *   example, and browsers cap contexts at about 16). Long pages stay under that cap: at most
+ *   `MAX_LIVE` examples run at once (`live-examples.ts`), the farthest from view is disposed when
+ *   another starts, and it starts again when it scrolls back.
  * - Disposes the example on unmount (page navigation).
  * - Tabs for the live preview and the TypeScript source (highlighted at build time), a copy
  *   button, and a link that opens the example in the dev sandbox.
@@ -15,6 +17,7 @@
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue';
 import { exampleAnchor } from '../example-anchor.ts';
+import { claimLiveSlot, rebalance } from '../live-examples.ts';
 
 type Runtime = typeof import('../example-runtime.ts');
 type Handle = import('../example-runtime.ts').ExampleHandle;
@@ -44,6 +47,12 @@ const stage = ref<HTMLElement | null>(null);
 
 let handle: Handle | undefined;
 let observer: IntersectionObserver | undefined;
+/** In or near the viewport, as the observer last reported (examples in view are never evicted). */
+let inView = false;
+/** Releases this example's slot in the page's live-example budget. */
+let releaseSlot: (() => void) | undefined;
+/** Bumped by each eviction, so a start still loading when evicted gives up. */
+let generation = 0;
 let unmounted = false;
 let runtime: Promise<Runtime> | undefined;
 let copiedTimer: ReturnType<typeof setTimeout> | undefined;
@@ -65,6 +74,8 @@ function message(err: unknown): string {
 }
 
 function dispose(): void {
+  releaseSlot?.();
+  releaseSlot = undefined;
   const h = handle;
   handle = undefined;
   try {
@@ -74,23 +85,35 @@ function dispose(): void {
   }
 }
 
+/** Disposes the example to free its WebGL context; it starts again when back in view. */
+function evict(): void {
+  generation++;
+  dispose();
+  status.value = 'idle';
+}
+
 async function start(): Promise<void> {
-  if (status.value !== 'idle') return;
+  if (status.value !== 'idle' || !root.value) return;
   status.value = 'loading';
+  const gen = generation;
+  const stale = (): boolean => unmounted || gen !== generation;
+  releaseSlot = claimLiveSlot({ el: root.value, inView: () => inView, evict });
   try {
     const rt = await loadRuntime();
     const mod = await rt.loadExample(props.id);
-    if (unmounted) return;
+    if (stale()) return;
     meta.value = mod.meta;
     height.value = props.height ?? mod.meta.size?.height ?? DEFAULT_HEIGHT;
     // Examples read the container size when they start, so apply the height first.
     await nextTick();
-    if (unmounted || !stage.value) return;
+    if (stale() || !stage.value) return;
     handle = mod.run(stage.value);
     await handle.ready;
-    if (!unmounted) status.value = 'ready';
+    if (!stale()) status.value = 'ready';
   } catch (err) {
-    if (unmounted) return;
+    if (stale()) return;
+    releaseSlot?.();
+    releaseSlot = undefined;
     status.value = 'error';
     errorMessage.value = message(err);
     console.error(`[Example ${props.id}]`, err);
@@ -136,16 +159,19 @@ async function copy(): Promise<void> {
 onMounted(() => {
   const el = root.value;
   if (!el || typeof IntersectionObserver === 'undefined') {
+    inView = true;
     void start();
     return;
   }
+  // Kept connected: an example evicted from the live budget starts again when back in view.
   observer = new IntersectionObserver(
     (entries) => {
-      if (entries.some((e) => e.isIntersecting)) {
-        observer?.disconnect();
-        observer = undefined;
-        void start();
-      }
+      const entry = entries[entries.length - 1];
+      if (!entry) return;
+      inView = entry.isIntersecting;
+      // Back in view: start (again). Out of view: the page may be over its live budget.
+      if (inView) void start();
+      else rebalance();
     },
     { rootMargin: '200px 0px' },
   );
