@@ -221,6 +221,18 @@ describe('RenderRoot', () => {
     expect(calls).toContain('render');
   });
 
+  it('reads the GPU limits, and again after a restore', () => {
+    const { root, renderer, canvas } = setup();
+    const fake = renderer as unknown as { capabilities?: { maxTextureSize: number } };
+    // The fake cannot say: the assumed limits.
+    expect(root.capabilities.maxTextureSize).toBe(4096);
+    expect(root.context.capabilities).toBe(root.capabilities);
+    fake.capabilities = { maxTextureSize: 8192 };
+    canvas.dispatchEvent(new Event('webglcontextlost'));
+    canvas.dispatchEvent(new Event('webglcontextrestored'));
+    expect(root.context.capabilities?.maxTextureSize).toBe(8192);
+  });
+
   it('routes points to the topmost viewport', () => {
     const { root } = setup();
     const a = root.addViewport({ rect: { x: 0, y: 0, width: 100, height: 100 } });

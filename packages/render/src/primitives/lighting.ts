@@ -483,6 +483,18 @@ export class LightRig {
     this.#applyRenderer();
   }
 
+  /**
+   * Draw again what only existed on the GPU, after the WebGL context was lost and restored: the
+   * generated environment (`'studio'`, `'city'`) is a render target, which three.js cannot
+   * upload again as it does buffers and textures.
+   */
+  restore(): void {
+    if (!this.#renderer || !this.#envTarget) return;
+    // Its GL objects went with the old context: there is nothing to delete.
+    this.#envTarget = null;
+    this.#applyRenderer();
+  }
+
   /** The scene's environment texture (or null), once available. */
   get environment(): Texture | null {
     return this.#envTarget?.texture ?? this.#envTexture;

@@ -1,5 +1,6 @@
 export * from './types.ts';
 export * from './resources.ts';
+export * from './capabilities.ts';
 export * from './primitives/index.ts';
 export * from './core/index.ts';
 export * from './colorscale/index.ts';

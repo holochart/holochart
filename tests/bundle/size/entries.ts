@@ -386,8 +386,9 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     // wave 2 by decision (patterns' plumbing, funnel axis defaults, legend parts: 238.6 kB on CI,
     // which measures ~0.3% more than a local macOS run; CI is the reference). Raised to 248 kB for
     // M5 by decision (M5 wave 1: locales, a11y config and summary hooks: ~241.6 kB on CI; wave 2 adds
-    // keyboard, touch and focus handling).
-    limit: '248 kB',
+    // keyboard, touch and focus handling). Raised to 250 kB in ship wave R2 by decision (the shared
+    // renderer and GPU capability checks, S2.1 and S2.2: 246.4 → 247.3 kB locally, ~248.0 kB on CI).
+    limit: '250 kB',
     imports: [
       { pkg: 'runtime' },
       { pkg: 'components' },

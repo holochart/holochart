@@ -18,6 +18,7 @@
  * use {@link RenderRoot.canvas}.
  */
 import { Color, SRGBColorSpace, WebGLRenderer, type WebGLRendererParameters } from 'three';
+import { readGpuCapabilities, type GpuCapabilities } from '../capabilities.ts';
 import { createResourceManager } from '../resources.ts';
 import type { PrimitiveContext, ResourceManager, RGBA, ViewportSize } from '../types.ts';
 import { Emitter } from './emitter.ts';
@@ -119,6 +120,7 @@ export class RenderRoot implements ViewportHost {
   readonly #client: SharedClient | null = null;
   readonly #present: CanvasRenderingContext2D | null = null;
   #tracked = false;
+  readonly #capabilities: GpuCapabilities;
 
   constructor(container: HTMLElement, options: RenderRootOptions = {}) {
     this.container = container;
@@ -175,7 +177,12 @@ export class RenderRoot implements ViewportHost {
     );
     this.loop.on('beforerender', (info) => this.#events.emit('beforerender', info));
     this.loop.on('afterrender', (info) => this.#events.emit('afterrender', info));
-    this.context = { resources: this.resources, invalidate: () => this.loop.invalidate() };
+    this.#capabilities = readGpuCapabilities(this.renderer);
+    this.context = {
+      resources: this.resources,
+      invalidate: () => this.loop.invalidate(),
+      capabilities: this.#capabilities,
+    };
 
     this.#size.pixelRatio = this.#fixedPixelRatio ?? defaultPixelRatio();
     if (!this.#shared) this.renderer.setPixelRatio(this.#size.pixelRatio);
@@ -221,6 +228,11 @@ export class RenderRoot implements ViewportHost {
   get viewports(): readonly Viewport[] {
     this.#sortViewports();
     return this.#viewports;
+  }
+
+  /** The device's GPU limits: read when the root is created, updated after a context restore. */
+  get capabilities(): GpuCapabilities {
+    return this.#capabilities;
   }
 
   get contextLost(): boolean {
@@ -482,6 +494,8 @@ export class RenderRoot implements ViewportHost {
 
   readonly #onContextRestored = (): void => {
     this.#contextLost = false;
+    // The new context may be on another GPU (updated in place: primitives hold the object).
+    Object.assign(this.#capabilities, readGpuCapabilities(this.renderer));
     this.#events.emit('contextrestored', undefined);
     this.loop.setPaused(false);
     this.invalidate();

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { DoubleSide, LinearFilter, NearestFilter, type DataTexture, type Vector3 } from 'three';
 import { createResourceManager } from '../resources.ts';
 import type { PrimitiveContext } from '../types.ts';
@@ -28,6 +28,19 @@ const PIXELS: RasterPixels = { data: [255, 0, 0, 255, 255, 255, 255, 128], width
 const texture = (r: ReturnType<typeof createRasterPrimitive>) =>
   r.uniforms.uTex.value as DataTexture;
 const vec3 = (v: unknown) => (v as Vector3).toArray();
+
+describe('device limits', () => {
+  it('draws nothing, with a warning, for pixels larger than a texture can be', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const ctx = { ...context(), capabilities: { maxTextureSize: 1, max3DTextureSize: 1 } };
+    const r = createRasterPrimitive(ctx, { pixels: PIXELS, x0: 0, x1: 2, y0: 0, y1: 1 });
+    expect(r.uniforms.uTex.value).toBeNull();
+    expect(r.object.visible).toBe(false);
+    expect(warn.mock.calls[0]![0]).toMatch(/image: 2×1 .*\(1 per side\); not drawn/);
+    warn.mockRestore();
+    r.dispose();
+  });
+});
 
 describe('premultiplyPixels', () => {
   it('multiplies color by alpha and pads missing pixels transparent', () => {

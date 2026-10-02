@@ -1,6 +1,6 @@
 import { loadMeshModule, type LightRig } from '@mk7s/holochart-render';
 import { PerspectiveCamera, Scene } from 'three';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { SceneLighting } from './scene-lighting.ts';
 
 function setup() {
@@ -56,5 +56,16 @@ describe('SceneLighting', () => {
     expect(rig.object.parent).toBeNull();
     expect(viewport.scene.children).toHaveLength(0);
     expect(given.at(-1)).toBeNull();
+  });
+
+  it('restore: has the rig draw its environment again', async () => {
+    const { lighting, mesh } = setup();
+    // No rig yet: nothing to do.
+    lighting.restore();
+    lighting.use(mesh);
+    await flush();
+    const restore = vi.spyOn(lighting.rig!, 'restore');
+    lighting.restore();
+    expect(restore).toHaveBeenCalledTimes(1);
   });
 });

@@ -29,6 +29,7 @@
  * for both the 2D pixel-space orthographic camera and 3D perspective cameras.
  */
 import type { BufferGeometry, Material, Object3D, Texture } from 'three';
+import type { GpuCapabilities } from './capabilities.ts';
 
 /** Affine map from data space to world space, per axis: `world = data * scale + offset`. */
 export interface DataTransform {
@@ -92,6 +93,8 @@ export interface PrimitiveContext {
   readonly resources: ResourceManager;
   /** Mark the owning chart dirty so a frame renders on the next animation frame (ADR-007). */
   invalidate(): void;
+  /** The device's GPU limits (a render root's context has them). */
+  readonly capabilities?: GpuCapabilities;
 }
 
 /** Viewport information a primitive needs for screen-space sizing. */

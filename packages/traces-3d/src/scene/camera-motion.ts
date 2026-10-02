@@ -277,7 +277,14 @@ export class SceneMotion {
     const chart = ctx.chart;
     if (!chart || this.#unsubscribe) return;
     const clear = (): void => this.#tweening.clear();
-    const offs = [chart.on('transitioned', clear), chart.on('transitioninterrupted', clear)];
+    const offs = [
+      chart.on('transitioned', clear),
+      chart.on('transitioninterrupted', clear),
+      // Emitted before the first frame on the new context.
+      chart.on('webglcontextrestored', () => {
+        for (const scene of this.#scenes) scene.lighting.restore();
+      }),
+    ];
     const view = chart.element.ownerDocument.defaultView;
     try {
       this.#query = view?.matchMedia?.('(prefers-reduced-motion: reduce)');

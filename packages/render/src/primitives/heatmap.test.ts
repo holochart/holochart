@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   DoubleSide,
   Group,
@@ -370,6 +370,34 @@ describe('HeatmapPrimitive', () => {
     expect(Array.from(edges.image.data as Float32Array)).toEqual([0, 1, 3, 6, 0, 1, 2]);
     expect(h.current.zmin).toBe(0);
     expect(h.current.zmax).toBe(50);
+    h.dispose();
+  });
+
+  it('packs rows no wider than the device allows', () => {
+    const ctx = { ...context(), capabilities: { maxTextureSize: 4, max3DTextureSize: 4 } };
+    const h = createHeatmapPrimitive(ctx, input());
+    // 6 values in rows of 4; 3 + 1 + 2 + 1 edges likewise.
+    const z = h.uniforms.uZ.value as DataTexture;
+    expect([z.image.width, z.image.height]).toEqual([4, 2]);
+    const edges = h.uniforms.uEdges.value as DataTexture;
+    expect([edges.image.width, edges.image.height]).toEqual([4, 2]);
+    expect(h.object.visible).toBe(true);
+    h.dispose();
+  });
+
+  it('draws nothing, with a warning, when the grid does not fit the device', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const ctx = { ...context(), capabilities: { maxTextureSize: 2, max3DTextureSize: 2 } };
+    // 6 values need 3 rows of 2.
+    const h = createHeatmapPrimitive(ctx, input());
+    expect(h.object.visible).toBe(false);
+    expect(h.uniforms.uZ.value).toBeNull();
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]![0]).toMatch(/heatmap of 3×2 cells.*\(2 per side\); not drawn/);
+    // A grid that fits draws again.
+    h.update({ z: [1], nx: 1, ny: 1, xEdges: [0, 1], yEdges: [0, 1] });
+    expect(h.object.visible).toBe(true);
+    warn.mockRestore();
     h.dispose();
   });
 

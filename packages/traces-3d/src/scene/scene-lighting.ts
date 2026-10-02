@@ -97,6 +97,11 @@ export class SceneLighting {
     };
   }
 
+  /** The WebGL context was lost and restored: draw the rig's environment map again. */
+  restore(): void {
+    this.#rig?.restore();
+  }
+
   /** Free the rig (a later `sync` or `use` creates a new one). */
   dispose(): void {
     this.#generation++;
