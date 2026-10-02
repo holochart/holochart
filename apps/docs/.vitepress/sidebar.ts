@@ -103,6 +103,8 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
         'frameworks',
         'typescript',
         'ssr',
+        'csp',
+        'troubleshooting',
       ]),
     },
     {
@@ -244,7 +246,13 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
     { text: 'JavaScript API', collapsed: true, items: apiSidebar },
     {
       text: 'More',
-      items: pages('reference/', ['events', 'colorscales', 'marker-symbols', 'plotly-compat']),
+      items: pages('reference/', [
+        'events',
+        'errors',
+        'colorscales',
+        'marker-symbols',
+        'plotly-compat',
+      ]),
     },
   ];
 

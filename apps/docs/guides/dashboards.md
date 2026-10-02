@@ -29,10 +29,12 @@ So a page uses at most 6 contexts for 5 charts or 500. Nothing to configure: a c
 shared renderer draws the same pixels, hovers, zooms and exports like any other.
 
 ```ts
-import { newPlot } from '@mk7s/holochart';
+import { newPlot, type Figure } from '@mk7s/holochart';
+
+declare const panels: [HTMLElement, Figure][];
 
 // 40 charts, 6 WebGL contexts.
-for (const [el, figure] of panels) await newPlot(el, figure.data, figure.layout);
+for (const [el, figure] of panels) await newPlot(el, figure);
 ```
 
 ### Choosing per chart
