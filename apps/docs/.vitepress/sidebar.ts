@@ -204,7 +204,10 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
   ];
 
   const demos: Item[] = [
-    { text: 'Demos', items: pages('demos/', ['openrouter', 'tqqq-soxl', 'science-basics']) },
+    {
+      text: 'Demos',
+      items: pages('demos/', ['openrouter', 'tqqq-soxl', 'science-basics', 'dallas-weather']),
+    },
   ];
 
   const manifest = readJson<ReferenceManifest>(
