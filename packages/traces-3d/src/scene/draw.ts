@@ -89,7 +89,13 @@ class Buffers {
       if (attr && attr.array.length === data.length) {
         (attr.array as Float32Array).set(data);
         attr.needsUpdate = true;
-      } else geometry.setAttribute(name, new BufferAttribute(new Float32Array(data), size));
+      } else {
+        // three frees an attribute's GPU buffer only with the geometry it is on: release the old
+        // buffers before the attribute is replaced, or they stay in the context (which, on a
+        // shared renderer, outlives the chart). The geometry is uploaded again on the next draw.
+        if (attr) geometry.dispose();
+        geometry.setAttribute(name, new BufferAttribute(new Float32Array(data), size));
+      }
     };
     set('position', this.pos, 3);
     set('color', this.col, 4);

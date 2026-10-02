@@ -80,7 +80,11 @@ test('Tab focuses the plot area first, with a focus ring', async ({ page }) => {
   await expect(target(page)).toHaveCSS('outline-width', '0px');
 });
 
-test('controls are reachable in the documented tab order', async ({ page }) => {
+test('controls are reachable in the documented tab order', async ({ page, browserName }) => {
+  // Known issue (docs/release/browser-support.md, W1): the range selector's buttons have no
+  // `tabindex`, and WebKit only tabs to buttons that have one (the legend, modebar, update menu
+  // and slider set it), so Tab leaves the chart after the toolbar.
+  test.fixme(browserName === 'webkit', 'W1: range selector buttons are not tab stops on WebKit');
   await tabIntoChart(page);
   const order = [await focused(page)];
   for (let i = 0; i < 6; i++) {

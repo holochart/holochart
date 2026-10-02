@@ -127,7 +127,12 @@ test.beforeEach(async ({ page }) => {
 
 test('every chart draws the same frame after its context is lost and restored', async ({
   page,
+  browserName,
 }) => {
+  // Known issues (docs/release/browser-support.md, F1 and F2): the frames match on Firefox, but
+  // it logs the mesh program's link warning and, for the shadow map, "Depth texture comparison
+  // requests (e.g. `LINEAR`) Filtering, but behavior is implementation-defined".
+  test.fixme(browserName === 'firefox', 'F1, F2: shader and shadow-map warnings on Firefox');
   const errors: string[] = [];
   page.on('console', (message) => {
     if (message.type() === 'error' || message.type() === 'warning') errors.push(message.text());

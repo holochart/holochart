@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 /** What `examples/_dev/interaction-*.ts` expose on `window.__interaction`. */
 export interface LoggedEvent {
@@ -145,13 +145,21 @@ export async function dragBetween(
  * the context needs `hasTouch: true`): one finger per path of page positions. The fingers land
  * together on their first positions, move together through each next position in `steps` moves
  * (the browser sees them as they would come from a real touch screen, `touch-action` included),
- * then lift together — or, with `liftOneByOne`, one at a time from the last.
+ * then lift together — or, with `liftOneByOne`, one at a time from the last. Skips the calling
+ * test on Firefox and WebKit, which have no CDP.
  */
 export async function touchGesture(
   page: Page,
   paths: readonly (readonly { x: number; y: number }[])[],
   { steps = 6, liftOneByOne = false }: { steps?: number; liftOneByOne?: boolean } = {},
 ): Promise<void> {
+  // Not a product limit: the gesture is injected through the DevTools protocol, which only
+  // Chromium has. Taps (`page.touchscreen.tap`) run everywhere; real touch on Safari and Firefox
+  // is on the manual checklist (docs/release/browser-support.md).
+  test.skip(
+    page.context().browser()?.browserType().name() !== 'chromium',
+    'multi-step touch gestures are injected with CDP Input.dispatchTouchEvent (Chromium only)',
+  );
   const cdp = await page.context().newCDPSession(page);
   const points = (seg: number, t: number) =>
     paths.map((path, id) => {

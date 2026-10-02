@@ -170,6 +170,10 @@ jobs:
     env:
       CI: 'true'
       HOME: /root
+      # Leak test (tests/interaction/leak.spec.ts): 10 create/update/destroy rounds per chart
+      # family here; its counts are exact, so 10 find what 100 find. The nightly workflow
+      # (browsers-nightly.yml) runs 100, where the heap-size check also applies.
+      LEAK_CYCLES: '10'
     strategy:
       fail-fast: false
       matrix:

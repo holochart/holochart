@@ -57,6 +57,12 @@ Run everything from the repository root.
 | `pnpm format`              | Format the repo with Prettier                                  |
 | `pnpm format:check`        | Check formatting without writing                               |
 
+The Playwright suites run on headless Chromium with software GL. `pnpm test:interaction` runs the
+interaction scenarios and the leak test (`tests/interaction/leak.spec.ts`; `LEAK_CYCLES=10`
+shortens it). To run the interaction or bundle suite on another engine, install it with
+`pnpm exec playwright install firefox webkit` and set `HOLOCHART_BROWSER=firefox` or `=webkit`;
+CI does that nightly. See [docs/release/browser-support.md](docs/release/browser-support.md).
+
 ## Repository layout
 
 ```
