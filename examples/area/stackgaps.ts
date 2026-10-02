@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type LayoutAnnotation, type ScatterTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -25,8 +25,8 @@ export function run(el: HTMLElement): ExampleHandle {
   const bx = ax.filter((v) => ![3, 4, 5, 8].includes(v));
   const by = bx.map((v) => 2 + v * 0.15);
 
-  const pair = (side: 'left' | 'right') => {
-    const axes = side === 'left' ? {} : { xaxis: 'x2', yaxis: 'y2' };
+  const pair = (side: 'left' | 'right'): ScatterTrace[] => {
+    const axes = side === 'left' ? {} : ({ xaxis: 'x2', yaxis: 'y2' } as const);
     return [
       {
         type: 'scatter',
@@ -57,7 +57,7 @@ export function run(el: HTMLElement): ExampleHandle {
   };
 
   // Panel labels sit inside the top of each plot: the legend row is above the plots.
-  const panel = (n: string, text: string) => ({
+  const panel = (n: string, text: string): LayoutAnnotation => ({
     xref: `${n} domain`,
     yref: `y${n.slice(1)} domain`,
     x: 0.5,

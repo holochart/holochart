@@ -95,6 +95,56 @@ export type DataArray = readonly unknown[] | TypedArray;
 /** A colorscale: a named scale (`'Viridis'`) or `[position, color]` stops from 0 to 1. */
 export type ColorScale = string | ReadonlyArray<readonly [number, string]>;
 
+/**
+ * A reference to a column of the figure's `datasets` (plan E1.6), e.g. `'@revenue'` with
+ * `dataset: 'sales'` on the trace.
+ */
+export type DatasetRef = `@${string}`;
+
+/** A trace's data attribute (`x`, `y`, `z`, `customdata`, …): a column of values or a dataset column. */
+export type DataColumn = DataArray | DatasetRef;
+
+/**
+ * A per-point (`arrayOk`) trace attribute: one value for every point, one value per point (`null`
+ * for a point without one; rows of values for the cells of a grid, such as a heatmap's `text` or a
+ * table's columns), a style function (plan E8.6) or a dataset column (`'@column'`).
+ */
+export type PerPoint<T> =
+  | T
+  | readonly (T | null | undefined | readonly (T | null | undefined)[])[]
+  | PointStyleFunction<T>
+  | DatasetRef;
+
+/**
+ * A style function (plan E8.6) as a per-point attribute takes it: called with a `StylePoint` (the
+ * point's value in each data array, and `pointNumber`), its index and the input trace. Declare the
+ * fields it reads: `(p: { y: number }) => (p.y > 10 ? 'gold' : 'gray')`.
+ */
+// The point is `any` so a function may declare the fields it reads, which `StylePoint` (an index
+// signature of `unknown`) can't be assigned to.
+export type PointStyleFunction<T> = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  point: any,
+  index: number,
+  trace: Readonly<Record<string, unknown>>,
+) => T;
+
+/** A per-point (`arrayOk`) number, such as `marker.size`: {@link PerPoint}, or a typed array. */
+export type PerPointNumber = PerPoint<number> | TypedArray;
+
+/**
+ * A per-point (`arrayOk`) color, such as `marker.color`: a CSS color, or per point a color or a
+ * number (mapped through the trace's colorscale), a typed array of numbers, or a style function.
+ * A dataset column is a `'@column'` string.
+ */
+export type PerPointColor =
+  | string
+  | readonly (
+      string | number | null | undefined | readonly (string | number | null | undefined)[]
+    )[]
+  | TypedArray
+  | PointStyleFunction<string | number>;
+
 /** A function-valued attribute (non-serializable, ADR-012). */
 // Parameters are `any` on purpose: accessors are called with trace-specific arguments.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -170,10 +220,12 @@ export interface AttrConstraints {
 export interface AttrSpec<TIn = unknown, TFull = unknown> extends NodeMeta, AttrConstraints {
   readonly kind: 'attr';
   readonly valType: ValType;
+  // `| undefined`: a spread copy (`{ ...spec, dflt }`) declares them so, which must still be an
+  // `AttrSpec` under `exactOptionalPropertyTypes` (backlog S2.13a).
   /** Phantom: input type. Never set at runtime. */
-  readonly '~in'?: [TIn];
+  readonly '~in'?: [TIn] | undefined;
   /** Phantom: full type. Never set at runtime. */
-  readonly '~full'?: [TFull];
+  readonly '~full'?: [TFull] | undefined;
 }
 
 /** Child map of a container node. */
@@ -228,7 +280,10 @@ export interface FullItemExtras {
  * type MarkerInput = InferInput<typeof marker>; // { size?: number | readonly number[] | TypedArray }
  * ```
  */
-export type InferInput<N> = N extends { readonly kind: 'attr'; readonly '~in'?: [infer I] }
+export type InferInput<N> = N extends {
+  readonly kind: 'attr';
+  readonly '~in'?: [infer I] | undefined;
+}
   ? I
   : N extends ObjectNode<infer C>
     ? InputObject<C>
@@ -242,7 +297,10 @@ export type InferInput<N> = N extends { readonly kind: 'attr'; readonly '~in'?: 
  * conditional defaults (e.g. `marker` only when `mode` includes `markers`) document where that
  * guarantee is weaker.
  */
-export type InferFull<N> = N extends { readonly kind: 'attr'; readonly '~full'?: [infer F] }
+export type InferFull<N> = N extends {
+  readonly kind: 'attr';
+  readonly '~full'?: [infer F] | undefined;
+}
   ? F
   : N extends ObjectNode<infer C>
     ? FullObject<C>

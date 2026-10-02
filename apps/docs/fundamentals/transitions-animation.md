@@ -25,9 +25,9 @@ draws it frame by frame from the old one:
 <Example id="animation/transitions" :height="440" />
 
 ```ts
-import type { FigureInput } from '@mk7s/holochart';
+import type { Figure } from '@mk7s/holochart';
 
-function ranking(values: number[]): FigureInput {
+function ranking(values: number[]): Figure {
   return {
     data: [{ type: 'bar', orientation: 'h', ids: ['a', 'b', 'c'], x: values, y: [1, 2, 3] }],
     layout: { transition: { duration: 750, easing: 'cubic-in-out' } },

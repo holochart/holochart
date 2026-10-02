@@ -3,14 +3,14 @@ import { fixtureRegistry } from '../__fixtures__/modules.ts';
 import { stripInternal } from '../util/objects.ts';
 import { contrastShade, isFullRange, requestRangeslider } from './rangeslider.ts';
 import { supplyDefaults } from './supply-defaults.ts';
-import type { FigureInput } from './types.ts';
+import type { AnyFigure } from './types.ts';
 
 const quiet = { onIssue: () => {} };
-const run = (figure: FigureInput) => supplyDefaults(figure, fixtureRegistry(), quiet).fullLayout;
+const run = (figure: AnyFigure) => supplyDefaults(figure, fixtureRegistry(), quiet).fullLayout;
 const DATES = { type: 'scatter', x: ['2024-01-01', '2024-02-01', '2024-03-01'], y: [1, 2, 3] };
 
 /** Stripped full output fed back in gives the same output (supply-defaults idempotence). */
-function idempotent(figure: FigureInput): void {
+function idempotent(figure: AnyFigure): void {
   const once = supplyDefaults(figure, fixtureRegistry(), quiet);
   const again = supplyDefaults(
     {
@@ -101,7 +101,7 @@ describe('range slider defaults (E5.9)', () => {
       },
     });
     const finance = { ...DATES, type: 'finance', xaxis: 'x2', yaxis: 'y2' };
-    const layout = (figure: FigureInput) => supplyDefaults(figure, registry, quiet).fullLayout;
+    const layout = (figure: AnyFigure) => supplyDefaults(figure, registry, quiet).fullLayout;
     const fl = layout({ data: [DATES, finance] });
     expect(fl.xaxis).not.toHaveProperty('rangeslider');
     expect(fl['xaxis2']).toMatchObject({ rangeslider: { visible: true, autorange: true } });
@@ -130,7 +130,7 @@ describe('range slider defaults (E5.9)', () => {
   it("does not let a partial thumbnail range hide the template's full one", () => {
     // Nightly regression (seed 360598440): `range: []` shadowed the template's range, then was
     // dropped, so the output fed back in took the template's.
-    const figure: FigureInput = {
+    const figure: AnyFigure = {
       data: [DATES],
       layout: {
         template: { layout: { xaxis: { rangeslider: { yaxis: { range: [0, 9] } } } } },

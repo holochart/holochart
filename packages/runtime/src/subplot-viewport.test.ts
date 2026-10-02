@@ -4,7 +4,7 @@
  * components per key, updated on every call, drawn before the overlay, and removed after a pass in
  * which nothing asked for them.
  */
-import { attr, type FullTrace } from '@mk7s/holochart-core';
+import { attr, type FullTrace, type FigureInput } from '@mk7s/holochart-core';
 import type { Viewport } from '@mk7s/holochart-render';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createChart, type Chart } from './chart.ts';
@@ -76,7 +76,7 @@ afterEach(() => {
 });
 
 async function chart(data: unknown[], layout: Record<string, unknown> = {}): Promise<Chart> {
-  const c = createChart(t.container, { data, layout }, t.options);
+  const c = createChart(t.container, { data, layout } as FigureInput, t.options);
   charts.push(c);
   await c.ready;
   return c;

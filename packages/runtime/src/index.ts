@@ -74,6 +74,10 @@ export {
 } from './registry.ts';
 export type { ChartRegistry, ChartRegistryOptions, RegistryListing } from './registry.ts';
 
+// Figure input types (backlog S1.6), from core: partial bundles type their figures with these and
+// the trace packages' types (`FigureInput<TracesBasic>`).
+export type { Config, FigureInput, Layout, LayoutInput, TraceInput } from '@mk7s/holochart-core';
+
 // Chart (E7.1, E4.1, E4.3)
 export { Chart, createChart, getChart, STACK_GROUPS } from './chart.ts';
 export { WebGLUnavailableError } from './fallback.ts';
@@ -176,4 +180,4 @@ export type {
 // Helpers for trace and component authors
 export { dataTransform, linearExtremes } from './axes.ts';
 export { domainRect, fitAspect, inscribedCircle, MIN_PLOT_SIZE } from './layout.ts';
-export type { AttributeUpdate, MaxPoints, StreamUpdate } from './plan.ts';
+export type { AttributeUpdate, LayoutUpdate, MaxPoints, StreamUpdate } from './plan.ts';

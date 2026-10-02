@@ -2,7 +2,13 @@
  * Plotly-compatible functional API (plan §7.1), keyed by element: every function finds the chart
  * living in `el` (see `getChart`). All of them return a promise that resolves after render.
  */
-import { isPlainObject, type FigureInput } from '@mk7s/holochart-core';
+import {
+  isPlainObject,
+  type Config,
+  type FigureInput,
+  type LayoutInput,
+  type TraceInput,
+} from '@mk7s/holochart-core';
 import {
   createChart,
   figureExportSource,
@@ -19,7 +25,7 @@ import type {
 } from './anim/types.ts';
 import type { DownloadImageOptions, ToImageOptions } from './export/types.ts';
 import { removeFallback } from './fallback.ts';
-import type { AttributeUpdate, MaxPoints, StreamUpdate } from './plan.ts';
+import type { AttributeUpdate, LayoutUpdate, MaxPoints, StreamUpdate } from './plan.ts';
 
 type TraceIndices = number | readonly number[];
 
@@ -30,15 +36,15 @@ type TraceIndices = number | readonly number[];
 function toFigure(dataOrFigure: unknown, layout?: unknown, config?: unknown): FigureInput {
   if (Array.isArray(dataOrFigure)) {
     return {
-      data: dataOrFigure,
-      ...(layout === undefined ? {} : { layout }),
-      ...(config === undefined ? {} : { config }),
+      data: dataOrFigure as readonly TraceInput[],
+      ...(layout === undefined ? {} : { layout: layout as LayoutInput }),
+      ...(config === undefined ? {} : { config: config as Config }),
     };
   }
   if (isPlainObject(dataOrFigure)) return dataOrFigure as FigureInput;
   return {
-    ...(layout === undefined ? {} : { layout }),
-    ...(config === undefined ? {} : { config }),
+    ...(layout === undefined ? {} : { layout: layout as LayoutInput }),
+    ...(config === undefined ? {} : { config: config as Config }),
   };
 }
 
@@ -59,9 +65,9 @@ function call<T>(fn: () => Promise<T>): Promise<T> {
 /** Draw a new chart in `el`, replacing any chart already there. Resolves after the first frame. */
 export function newPlot(
   el: HTMLElement,
-  dataOrFigure?: readonly unknown[] | FigureInput,
-  layout?: unknown,
-  config?: unknown,
+  dataOrFigure?: readonly TraceInput[] | FigureInput,
+  layout?: LayoutInput,
+  config?: Config,
   options?: ChartOptions,
 ): Promise<Chart> {
   return call(() => createChart(el, toFigure(dataOrFigure, layout, config), options).ready);
@@ -70,9 +76,9 @@ export function newPlot(
 /** Update `el` to show a new figure efficiently (diffing), or create the chart if needed. */
 export function react(
   el: HTMLElement,
-  dataOrFigure?: readonly unknown[] | FigureInput,
-  layout?: unknown,
-  config?: unknown,
+  dataOrFigure?: readonly TraceInput[] | FigureInput,
+  layout?: LayoutInput,
+  config?: Config,
   options?: ChartOptions,
 ): Promise<Chart> {
   const figure = toFigure(dataOrFigure, layout, config);
@@ -80,7 +86,10 @@ export function react(
   return chart ? chart.react(figure) : newPlot(el, figure, undefined, undefined, options);
 }
 
-/** Plotly `restyle`: see {@link Chart.restyle}. */
+/**
+ * Plotly `restyle`: see {@link Chart.restyle}. Takes attribute paths (`'marker.color'`) whose
+ * array values hold one value per trace, so it is not typed against the traces' attributes.
+ */
 export function restyle(
   el: HTMLElement,
   update: AttributeUpdate,
@@ -89,8 +98,11 @@ export function restyle(
   return call(() => chartIn(el, 'restyle').restyle(update, traces));
 }
 
-/** Plotly `relayout`: see {@link Chart.relayout}. */
-export function relayout(el: HTMLElement, update: AttributeUpdate): Promise<Chart> {
+/**
+ * Plotly `relayout`: see {@link Chart.relayout}. Takes attribute paths (`'xaxis.range[0]'`,
+ * untyped) and whole layout attributes (typed).
+ */
+export function relayout(el: HTMLElement, update: LayoutUpdate): Promise<Chart> {
   return call(() => chartIn(el, 'relayout').relayout(update));
 }
 
@@ -98,15 +110,16 @@ export function relayout(el: HTMLElement, update: AttributeUpdate): Promise<Char
 export function update(
   el: HTMLElement,
   traceUpdate: AttributeUpdate = {},
-  layoutUpdate: AttributeUpdate = {},
+  layoutUpdate: LayoutUpdate = {},
   traces?: TraceIndices,
 ): Promise<Chart> {
   return call(() => chartIn(el, 'update').updateAttributes(traceUpdate, layoutUpdate, traces));
 }
 
+/** Plotly `addTraces`: see {@link Chart.addTraces}. */
 export function addTraces(
   el: HTMLElement,
-  traces: Readonly<Record<string, unknown>> | readonly Readonly<Record<string, unknown>>[],
+  traces: TraceInput | readonly TraceInput[],
   newIndices?: TraceIndices,
 ): Promise<Chart> {
   return call(() => chartIn(el, 'addTraces').addTraces(traces, newIndices));

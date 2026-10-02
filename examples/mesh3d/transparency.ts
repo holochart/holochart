@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type LayoutScene, type Mesh3dTrace } from '@mk7s/holochart';
 import { placed, torus, uvSphere } from '../_lib/mesh3d-data.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -28,11 +28,17 @@ export function run(el: HTMLElement): ExampleHandle {
   const ball = uvSphere(24, 48);
   const camera = { eye: { x: 1.3, y: -1.6, z: 0.9 } };
   const hidden = { visible: false };
-  const scene = { xaxis: hidden, yaxis: hidden, zaxis: hidden, aspectmode: 'data', camera };
+  const scene: LayoutScene = {
+    xaxis: hidden,
+    yaxis: hidden,
+    zaxis: hidden,
+    aspectmode: 'data',
+    camera,
+  };
   const chart = createChart(el, {
     data: [
       { type: 'mesh3d', name: 'core', ...placed(ball, 0.22, [0, 0, 0]), color: '#ff7f0e' },
-      ...SPHERES.map(([center, color]) => ({
+      ...SPHERES.map(([center, color]): Mesh3dTrace => ({
         type: 'mesh3d',
         ...placed(ball, 0.5, center),
         color,

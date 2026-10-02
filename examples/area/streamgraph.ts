@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type ScatterTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -46,7 +46,7 @@ export function run(el: HTMLElement): ExampleHandle {
         showlegend: false,
         hoverinfo: 'skip',
       },
-      ...GENRES.map((name, k) => ({
+      ...GENRES.map((name, k): ScatterTrace => ({
         type: 'scatter',
         name,
         x,

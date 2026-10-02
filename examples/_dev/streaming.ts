@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type ScatterTrace } from '@mk7s/holochart';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -27,7 +27,7 @@ export function run(el: HTMLElement): ExampleHandle {
   let t = 0;
 
   // Seed each trace with a full window so the benchmark starts in steady state.
-  const data = Array.from({ length: TRACES }, (_, k) => {
+  const data = Array.from({ length: TRACES }, (_, k): ScatterTrace => {
     const x = new Float64Array(MAX_POINTS);
     const y = new Float64Array(MAX_POINTS);
     for (let i = 0; i < MAX_POINTS; i++) {

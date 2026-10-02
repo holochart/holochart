@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type HeatmapTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -18,11 +18,11 @@ export function run(el: HTMLElement): ExampleHandle {
   const z = Array.from({ length: 6 }, (_, j) =>
     Array.from({ length: 8 }, (_, i) => Math.cos(i / 1.6) * Math.sin(j / 1.3 + 0.4) + j / 6),
   );
-  const common = { type: 'heatmap', z, coloraxis: 'coloraxis' };
+  const common: HeatmapTrace = { type: 'heatmap', z, coloraxis: 'coloraxis' };
   const chart = createChart(el, {
     data: [
       { ...common, xaxis: 'x', yaxis: 'y' },
-      { ...common, zsmooth: 'best', xaxis: 'x2', yaxis: 'y2' },
+      { ...common, zsmooth: 'best' as const, xaxis: 'x2', yaxis: 'y2' },
     ],
     layout: {
       title: { text: 'zsmooth: false vs "best"' },

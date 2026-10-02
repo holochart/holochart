@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type BarTrace, type ScatterTrace } from '@mk7s/holochart';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -53,7 +53,7 @@ export function run(el: HTMLElement): ExampleHandle {
   const normal = gaussian(rng(91));
   const random = rng(92);
 
-  const traces = REGIONS.flatMap((r) => {
+  const traces = REGIONS.flatMap((r): (ScatterTrace | BarTrace)[] => {
     const rate = HOURS.map((h) => {
       const daily = 1 + 0.6 * Math.sin(((h - r.peak + 6) / 24) * 2 * Math.PI);
       return Math.round(r.base * daily * (1 + normal() * 0.04));
@@ -61,8 +61,8 @@ export function run(el: HTMLElement): ExampleHandle {
     const errors = rate.map((v) => Math.round((v / 100) * (0.5 + random())));
     return [
       {
-        type: 'scatter' as const,
-        mode: 'lines' as const,
+        type: 'scatter',
+        mode: 'lines',
         name: `${r.id} requests/s<br><span style="font-size:8px">${r.sites}</span>`,
         x: HOURS,
         y: rate,
@@ -71,7 +71,7 @@ export function run(el: HTMLElement): ExampleHandle {
         legendrank: r.rank,
       },
       {
-        type: 'bar' as const,
+        type: 'bar',
         name: `${r.id} errors/h`,
         x: HOURS,
         y: errors,

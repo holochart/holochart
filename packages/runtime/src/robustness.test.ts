@@ -4,7 +4,7 @@
  * chart; without WebGL2 the container shows a note and creation fails with a typed error; one
  * failing dispose doesn't stop the teardown.
  */
-import { HolochartError } from '@mk7s/holochart-core';
+import { HolochartError, type FigureInput } from '@mk7s/holochart-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { newPlot, purge } from './api.ts';
 import { createChart, getChart, type Chart } from './chart.ts';
@@ -40,7 +40,11 @@ afterEach(() => {
 });
 
 async function chart(data: unknown[] = [DOTS], s: TestSetup = t): Promise<Chart> {
-  const c = createChart(s.container, { data, layout: { margin: MARGIN, ...RANGES } }, s.options);
+  const c = createChart(
+    s.container,
+    { data, layout: { margin: MARGIN, ...RANGES } } as FigureInput,
+    s.options,
+  );
   charts.push(c);
   await c.ready;
   return c;

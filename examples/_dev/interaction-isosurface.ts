@@ -1,4 +1,4 @@
-import { createChart, sceneFor } from '@mk7s/holochart';
+import { createChart, sceneFor, type IsosurfaceTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 import type { MeshInteractionHook } from './interaction-mesh3d.ts';
 
@@ -46,7 +46,7 @@ function grid() {
 export function run(el: HTMLElement): ExampleHandle {
   const g = grid();
   const off = { show: false };
-  const plane = {
+  const plane: IsosurfaceTrace = {
     type: 'isosurface',
     ...g,
     isomin: 2,
@@ -62,7 +62,7 @@ export function run(el: HTMLElement): ExampleHandle {
       {
         ...plane,
         name: 'template',
-        scene: 'scene2',
+        scene: 'scene2' as const,
         hovertemplate: 'v=%{value} at %{x},%{y},%{z}<extra></extra>',
       },
     ],

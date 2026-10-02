@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type ScatterTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../../_lib/types.ts';
 import { fmtDate, fmtT } from './analysis.mts';
 import { AUTHORS, authorColor, authorName, MODELS, type Model } from './datasets.mts';
@@ -83,7 +83,7 @@ export function run(el: HTMLElement): ExampleHandle {
       },
       ...groups
         .filter((g) => g.models.length > 0)
-        .map((g) => ({
+        .map((g): ScatterTrace => ({
           type: 'scatter',
           mode: 'markers',
           name: g.author === 'others' ? 'Other authors' : authorName(g.author),

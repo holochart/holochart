@@ -34,3 +34,9 @@ export const sciTraces: readonly Registrable[] = [
   // Draws polar subplots (their axes) and runs their drags.
   polarComponent,
 ];
+
+/**
+ * Figure input types of this package's traces (backlog S1.6): one per trace type (`BarpolarTrace`, …) and
+ * their union, generated from the attribute schemas by `tools/schema-gen`.
+ */
+export type * from './generated/traces.ts';

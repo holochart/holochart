@@ -10,7 +10,7 @@
  * where that is well defined, and dropped otherwise, with a warning either way.
  */
 import { resolveDataRefs } from '../data/datasets.ts';
-import type { FigureInput } from '../defaults/types.ts';
+import type { AnyFigure, FigureInput } from '../defaults/types.ts';
 import type { Registry } from '../registry/types.ts';
 import type { SchemaNode, TypedArray } from '../schema/types.ts';
 import { isAttr, isItemsNode, isObjectNode, resolveChild } from '../schema/walk.ts';
@@ -429,10 +429,7 @@ function encodeFrames(frames: unknown, data: unknown, ctx: Ctx): Encoded {
  * // json.data[0].marker.color → ['gray', 'red'] (with a 'function-evaluated' warning)
  * ```
  */
-export function encodeFigure(
-  figure: FigureInput,
-  options: EncodeFigureOptions = {},
-): EncodedFigure {
+export function encodeFigure(figure: AnyFigure, options: EncodeFigureOptions = {}): EncodedFigure {
   if (!isPlainObject(figure)) throw new TypeError('encodeFigure: the figure must be an object');
   const ctx: Ctx = {
     registry: options.registry,

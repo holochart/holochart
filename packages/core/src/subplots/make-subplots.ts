@@ -127,8 +127,8 @@ export interface PlaceOptions {
 
 /** What {@link MakeSubplotsResult.place} sets on a trace. */
 export interface PlacedTrace {
-  xaxis?: string;
-  yaxis?: string;
+  xaxis?: 'x' | `x${number}`;
+  yaxis?: 'y' | `y${number}`;
   domain?: { x: Extent; y: Extent; [key: string]: unknown };
 }
 

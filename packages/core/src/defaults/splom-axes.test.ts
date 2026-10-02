@@ -11,7 +11,7 @@ import {
   stashSplomSubplot,
 } from './splom-axes.ts';
 import { supplyDefaults } from './supply-defaults.ts';
-import type { FigureInput, FullAxis, FullLayout } from './types.ts';
+import type { AnyFigure, FullAxis, FullLayout } from './types.ts';
 
 const quiet = { onIssue: () => {} };
 
@@ -56,7 +56,7 @@ const matrix: TraceModule = {
   },
 };
 
-const run = (figure: FigureInput) =>
+const run = (figure: AnyFigure) =>
   supplyDefaults(figure, fixtureRegistry().register(matrix), quiet);
 const axis = (fl: FullLayout, key: string) => fl[key] as FullAxis;
 const trace = (extra: Record<string, unknown> = {}) => ({

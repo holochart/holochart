@@ -5,7 +5,7 @@
  * components, and the helpers (`domainRect`, `fitAspect`, `inscribedCircle`). The container is
  * 640×400 with margins l 40, r 20, t 30, b 50: plot area x 40–620, y 30–350.
  */
-import { attr, type FullTrace } from '@mk7s/holochart-core';
+import { attr, type FullTrace, type FigureInput } from '@mk7s/holochart-core';
 import fc from 'fast-check';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createChart, type Chart } from './chart.ts';
@@ -113,7 +113,11 @@ afterEach(() => {
 });
 
 async function chart(data: unknown[], layout: Record<string, unknown> = {}): Promise<Chart> {
-  const c = createChart(t.container, { data, layout: { margin: MARGIN, ...layout } }, t.options);
+  const c = createChart(
+    t.container,
+    { data, layout: { margin: MARGIN, ...layout } } as FigureInput,
+    t.options,
+  );
   charts.push(c);
   await c.ready;
   return c;

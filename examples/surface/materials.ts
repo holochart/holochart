@@ -26,7 +26,7 @@ export function run(el: HTMLElement): ExampleHandle {
     axis,
     (x, y) => Math.exp(-(x * x + y * y) / 1.5) * Math.cos(1.6 * x) * Math.cos(1.6 * y),
   );
-  const common = { type: 'surface', x: axis, y: axis, z, showscale: false };
+  const common = { x: axis, y: axis, z, showscale: false };
   const hidden = { visible: false };
   const view = {
     xaxis: hidden,
@@ -36,18 +36,20 @@ export function run(el: HTMLElement): ExampleHandle {
   };
   const chart = createChart(el, {
     data: [
-      { ...common, material: { type: 'lambert' } },
+      { type: 'surface', ...common, material: { type: 'lambert' } },
       {
+        type: 'surface',
         ...common,
         scene: 'scene2',
         material: { type: 'standard', metalness: 0.4, castshadow: true },
       },
       {
+        type: 'surface',
         ...common,
         scene: 'scene3',
         material: { type: 'physical', clearcoat: 1, clearcoatroughness: 0.1, roughness: 0.6 },
       },
-      { ...common, scene: 'scene4', material: { type: 'toon', steps: 3 } },
+      { type: 'surface', ...common, scene: 'scene4', material: { type: 'toon', steps: 3 } },
     ],
     layout: {
       margin: { l: 10, r: 10, t: 40, b: 10 },

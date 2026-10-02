@@ -25,7 +25,7 @@
  * contract of React/Vue) or bump `datarevision` for in-place data edits.
  */
 import { isColumnRef } from '../data/datasets.ts';
-import type { FigureInput } from '../defaults/types.ts';
+import type { AnyFigure, FigureInput } from '../defaults/types.ts';
 import { planUpdate, type Change, type PlanOptions, type Stage } from '../edit/plan.ts';
 import { stringifyPath, type PathSegment } from '../path/path.ts';
 import type { Registry } from '../registry/types.ts';
@@ -323,7 +323,7 @@ function diffUnknown(a: unknown, b: unknown, ctx: Ctx): void {
  * }
  * ```
  */
-export function diffFigures(prev: FigureInput, next: FigureInput, registry: Registry): FigureDiff {
+export function diffFigures(prev: AnyFigure, next: AnyFigure, registry: Registry): FigureDiff {
   const changes: Change[] = [];
   const prevLayout = asRecord(prev.layout);
   const nextLayout = asRecord(next.layout);

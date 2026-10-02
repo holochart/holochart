@@ -1,5 +1,0 @@
----
-'@mk7s/holochart-render': minor
----
-
-3D mesh primitive (M6 wave 0): `createLazyMeshPrimitive` draws indexed triangle meshes with per-vertex or per-face colors or colorscale intensity (per vertex or per cell), flat or smooth shading with Plotly's normal epsilons, one- or two-sided faces, a clip box, shader hooks and GPU picking per vertex or triangle. It lights them with Plotly's model (`lighting`: ambient, diffuse, specular, roughness, fresnel; `lightposition` in clip space) or a three.js material (`material.type`: `flat`, `basic`, `lambert`, `phong`, `standard`, `physical`, `toon`, `matcap`). `createLightRig` (from `loadMeshModule()`) builds a scene's lights from a `layout.lighting`-style spec: ambient, directional (scene, camera or clip space), hemisphere, `'studio'` / `'city'` / image environments, shadow maps and a shadow-catching ground plane. Translucent meshes skip depth writes and sort their triangles back to front when the view changes. The code loads on first use, so 2D charts don't pay for it.

@@ -14,6 +14,8 @@ import {
   sceneScales,
   sceneSubplotDomain,
   toRGBA,
+  type CommonTraceAttributes,
+  type DataColumn,
   type Scene3D,
   type SceneCalc,
   type TraceModule,
@@ -137,6 +139,25 @@ export const scenePoints: TraceModule<PointsCalc> = {
   },
   plot: { create: (ctx) => new PointsView(ctx) },
 };
+
+/** A `scenepoints` trace, as figures give it. */
+export type ScenePointsTrace = CommonTraceAttributes & {
+  type: 'scenepoints';
+  scene?: 'scene' | `scene${number}`;
+  x?: DataColumn;
+  y?: DataColumn;
+  z?: DataColumn;
+  color?: string;
+  size?: number;
+};
+
+// Figures typed against the full bundle (`Figure`) accept `scenepoints` traces once this module is
+// part of the program: a plugin adds its trace type to `TraceTypes` (backlog S1.6).
+declare module '@mk7s/holochart' {
+  interface TraceTypes {
+    scenepoints: ScenePointsTrace;
+  }
+}
 
 /** Register `scenepoints` (once per page). */
 export function registerScenePoints(): void {

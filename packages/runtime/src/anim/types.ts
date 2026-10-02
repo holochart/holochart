@@ -2,7 +2,13 @@
  * Types of frames, `animate` and transitions (plan E7.3, E7.4). The animation code itself loads on
  * first use (`animation.ts`, a dynamic `import()` from the chart), so these live apart from it.
  */
-import type { FigureInput, FullLayout, Registry, SupplyDefaultsResult } from '@mk7s/holochart-core';
+import type {
+  FigureInput,
+  Frame,
+  FullLayout,
+  Registry,
+  SupplyDefaultsResult,
+} from '@mk7s/holochart-core';
 import type { FrameScheduler } from '@mk7s/holochart-render';
 import type { Chart, Plan } from '../chart.ts';
 import type { AxisInfo, LayoutTween } from '../contracts.ts';
@@ -85,25 +91,8 @@ export interface AnimationOptions {
   readonly transition?: TransitionOptions | readonly TransitionOptions[];
 }
 
-/**
- * An animation frame (`figure.frames[i]`, {@link Chart.addFrames}): trace and layout changes
- * applied as one step, like Plotly's frames.
- */
-export interface Frame {
-  /** Name to animate to (numbers are converted to strings). Unnamed frames get `'frame N'`. */
-  readonly name?: string | number;
-  /** Group name: `animate('group')` plays the frames of a group in order. */
-  readonly group?: string | number;
-  /** Trace changes, merged into the traces listed in `traces` (default: trace `i` for `data[i]`). */
-  readonly data?: readonly (Readonly<Record<string, unknown>> | null | undefined)[];
-  /** Trace indices `data` applies to. */
-  readonly traces?: number | readonly number[];
-  /** Layout changes (attribute strings such as `'xaxis.range'` work too). */
-  readonly layout?: Readonly<Record<string, unknown>>;
-  /** Name of a frame this one extends: its `data` and `layout` apply first. */
-  readonly baseframe?: string | number;
-  readonly [key: string]: unknown;
-}
+// An animation frame (`figure.frames[i]`, `Chart.addFrames`) is core's: `FigureInput` has them.
+export type { Frame };
 
 /**
  * What {@link Chart.animate} plays: `null` / `undefined` for every frame in order, a string or

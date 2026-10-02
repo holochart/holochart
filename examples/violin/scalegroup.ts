@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type ViolinTrace } from '@mk7s/holochart';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -27,8 +27,8 @@ export function run(el: HTMLElement): ExampleHandle {
   const samples = GROUPS.map(([, n, mu, sigma]) =>
     Array.from({ length: n }, () => mu + sigma * normal()),
   );
-  const traces = (axes: { xaxis: string; yaxis: string }, grouped: boolean) =>
-    GROUPS.map(([name], i) => ({
+  const traces = (axes: Pick<ViolinTrace, 'xaxis' | 'yaxis'>, grouped: boolean) =>
+    GROUPS.map(([name], i): ViolinTrace => ({
       type: 'violin',
       name,
       y: samples[i],

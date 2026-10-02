@@ -1,4 +1,4 @@
-import { componentsReady, createChart } from '@mk7s/holochart';
+import { componentsReady, createChart, type IndicatorTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -24,9 +24,9 @@ function bullet(
   target: number,
   max: number,
   y: [number, number],
-) {
+): IndicatorTrace {
   return {
-    type: 'indicator' as const,
+    type: 'indicator',
     mode: 'number+gauge+delta',
     value,
     delta: { reference },

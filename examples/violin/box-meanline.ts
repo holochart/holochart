@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type ViolinTrace } from '@mk7s/holochart';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -28,7 +28,7 @@ export function run(el: HTMLElement): ExampleHandle {
     pointpos: -1.2,
     jitter: 0.4,
     marker: { size: 3 },
-  };
+  } satisfies ViolinTrace;
   const chart = createChart(el, {
     data: [
       { ...style, name: 'Model A', y: draw(120, 0.72, 0.06) },

@@ -4,11 +4,11 @@ import { fixtureRegistry } from '../__fixtures__/modules.ts';
 import { stripInternal } from '../util/objects.ts';
 import { findAxisGroup, multiplyScales, updateConstraintGroups } from './constraints.ts';
 import { supplyDefaults } from './supply-defaults.ts';
-import type { FigureInput, FullAxis, FullLayout } from './types.ts';
+import type { AnyFigure, FullAxis, FullLayout } from './types.ts';
 
 const quiet = { onIssue: () => {} };
 const run = (layout: Record<string, unknown>, data: unknown[] = []): FullLayout =>
-  supplyDefaults({ data, layout } as FigureInput, fixtureRegistry(), quiet).fullLayout;
+  supplyDefaults({ data, layout } as AnyFigure, fixtureRegistry(), quiet).fullLayout;
 const ax = (fl: FullLayout, key: string): FullAxis & Record<string, unknown> =>
   fl[key] as FullAxis & Record<string, unknown>;
 

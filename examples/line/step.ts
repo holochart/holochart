@@ -31,7 +31,7 @@ export function run(el: HTMLElement): ExampleHandle {
     { shape: 'hv', name: "'hv': hold, then step" },
     { shape: 'vh', name: "'vh': step, then hold" },
     { shape: 'hvh', name: "'hvh': step halfway" },
-  ];
+  ] as const;
 
   const chart = createChart(el, {
     data: shapes.map(({ shape, name }, k) => ({

@@ -1,9 +1,19 @@
-// Typical usage, type-checked against the installed tarballs with `tsc --noEmit` (strict, no
-// skipLibCheck): the full bundle, a partial bundle, Express, locales and three.js interop.
-import { createChart, express, register as registerFull, type Chart } from '@mk7s/holochart';
+// Typical usage, type-checked against the installed tarballs with `tsc --noEmit` (strict,
+// `exactOptionalPropertyTypes`, no skipLibCheck): the full bundle's typed figures, a partial
+// bundle, Express, locales and three.js interop.
+import {
+  createChart,
+  express,
+  register as registerFull,
+  type Chart,
+  type Data,
+  type Figure,
+  type FigureInput,
+  type Layout,
+} from '@mk7s/holochart';
 import { de } from '@mk7s/holochart-locales';
 import { createChart as createPartialChart, register } from '@mk7s/holochart-runtime';
-import { bar, scatter } from '@mk7s/holochart-traces-basic';
+import { bar, scatter, type BarTrace, type TracesBasic } from '@mk7s/holochart-traces-basic';
 import * as THREE from 'three';
 
 export async function fullBundle(el: HTMLElement): Promise<Chart> {
@@ -40,7 +50,41 @@ export async function fullBundle(el: HTMLElement): Promise<Chart> {
 export function partialBundle(el: HTMLElement): Chart {
   register(scatter, bar, de);
   registerFull();
-  return createPartialChart(el, { data: [{ type: 'bar', x: ['a', 'b'], y: [1, 2] }] });
+  // The partial bundle's traces, typed with its packages' types.
+  const traces: BarTrace[] = [{ type: 'bar', x: ['a', 'b'], y: [1, 2], orientation: 'v' }];
+  const figure: FigureInput<TracesBasic> = { data: traces };
+  // The runtime alone takes any trace (plugins, untyped data).
+  createPartialChart(el, { data: [{ type: 'my-plugin', anything: true }] }).destroy();
+  return createPartialChart(el, figure);
+}
+
+/** Typed figures (backlog S1.6): `Figure`, `Data` and `Layout` from the full bundle. */
+export function typedFigures(el: HTMLElement): Chart {
+  const layout: Layout = {
+    title: { text: 'Typed', subtitle: { text: 'figures' } },
+    xaxis2: { range: [0, 10], type: 'log' },
+    scene: { camera: { eye: { x: 1.5, y: 1.5, z: 1 } } },
+    barmode: 'stack',
+  };
+  const traces: Data[] = [
+    {
+      x: [1, 2, 3],
+      y: [2, 1, 3],
+      mode: 'lines+markers',
+      marker: { color: ['red', 'blue', 'green'] },
+    },
+    { type: 'bar', x: ['a', 'b'], y: [1, 2], depth: 12 },
+  ];
+  const figure: Figure = { data: traces, layout, config: { responsive: true } };
+  for (const trace of traces) {
+    if (trace.type === 'bar') console.log(trace.orientation);
+  }
+  // @ts-expect-error — 'scater' is not a trace type.
+  const typo: Data = { type: 'scater' };
+  // @ts-expect-error — a bar's orientation is 'v' or 'h'.
+  const orientation: Data = { type: 'bar', orientation: 'x' };
+  console.log(typo, orientation);
+  return createChart(el, figure);
 }
 
 export async function expressChart(el: HTMLElement): Promise<void> {

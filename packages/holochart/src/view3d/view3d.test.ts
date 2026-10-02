@@ -62,7 +62,7 @@ afterEach(() => {
 /** Axes without labels: no SDF text to typeset (jsdom has no WebGL). */
 const NO_TEXT = { xaxis: { visible: false }, yaxis: { visible: false } };
 
-async function draw(figure: { data: unknown[]; layout?: Record<string, unknown> }): Promise<Chart> {
+async function draw(figure: { data: object[]; layout?: Record<string, unknown> }): Promise<Chart> {
   chart = createChart(container, { ...figure, layout: { ...NO_TEXT, ...figure.layout } }, options);
   await chart.ready;
   return chart;

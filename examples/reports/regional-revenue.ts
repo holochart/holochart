@@ -47,7 +47,7 @@ export function run(el: HTMLElement): ExampleHandle {
   const cagr = plan.map((p, i) => Math.sqrt(p / fy23[i]!) - 1);
   const weight = rows.map((r) => (r === 'Total' ? 'bold' : 'normal'));
   // Column data order as returned by the query: region, plan, FY23, FY24, CAGR.
-  const italicPlan = ['normal', 'italic', 'normal', 'normal', 'normal'];
+  const italicPlan: ('normal' | 'italic')[] = ['normal', 'italic', 'normal', 'normal', 'normal'];
 
   const chart = createChart(el, {
     data: [

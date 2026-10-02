@@ -144,7 +144,7 @@ describe('charts with style rules (E8.5)', () => {
   it('transitions interpolate what the rules give, and end on the new rules', async () => {
     const figure = (rules: unknown[]) => ({
       data: [trace({ styleRules: rules })],
-      layout: { transition: { duration: 160, easing: 'linear' } },
+      layout: { transition: { duration: 160, easing: 'linear' as const } },
     });
     const c = await make(figure([rule(4, { 'marker.size': 10 })]));
     expect(marker(c)['size']).toEqual(Float64Array.of(2, 10, 10));

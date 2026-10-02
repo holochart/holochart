@@ -34,3 +34,9 @@ export {
 
 /** Every hierarchical and flow trace module, for `register(...hierTraces)`. */
 export const hierTraces: readonly Registrable[] = [sunburst, treemap, icicle, sankey];
+
+/**
+ * Figure input types of this package's traces (backlog S1.6): one per trace type (`SunburstTrace`, …) and
+ * their union, generated from the attribute schemas by `tools/schema-gen`.
+ */
+export type * from './generated/traces.ts';

@@ -1,4 +1,9 @@
-import { createChart, interpolateCamera, type SceneCamera } from '@mk7s/holochart';
+import {
+  createChart,
+  interpolateCamera,
+  type Scatter3dTrace,
+  type SceneCamera,
+} from '@mk7s/holochart';
 import { createReadout, expectValue } from '../_lib/readout.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -25,7 +30,7 @@ export function run(el: HTMLElement): ExampleHandle {
   const from: SceneCamera = { eye: [1.7, 1.7, 1.2], center: [0, 0, 0], up: [0, 0, 1] };
   const to: SceneCamera = { eye: [-1.7, -1.7, 1.2], center: [0, 0, 0], up: [0, 0, 1] };
   const t = Array.from({ length: 80 }, (_, i) => (i / 80) * 4 * Math.PI);
-  const spiral = (scene: string) => ({
+  const spiral = (scene: Scatter3dTrace['scene']): Scatter3dTrace => ({
     type: 'scatter3d',
     mode: 'lines+markers',
     scene,

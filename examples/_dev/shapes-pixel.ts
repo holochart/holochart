@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type LayoutShape } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -33,7 +33,7 @@ export function run(el: HTMLElement): ExampleHandle {
     [3, 60],
     [5, 35],
   ] as const;
-  const ring = ([x, y]: readonly [number, number]) => ({
+  const ring = ([x, y]: readonly [number, number]): LayoutShape => ({
     type: 'circle',
     xsizemode: 'pixel',
     ysizemode: 'pixel',
@@ -110,7 +110,7 @@ export function run(el: HTMLElement): ExampleHandle {
           fillcolor: 'rgba(153, 98, 192, 0.18)',
           line: { color: '#9962c0', width: 1 },
         },
-        ...POSITIONS.map((p) => ({
+        ...POSITIONS.map((p): LayoutShape => ({
           type: 'rect',
           x0: 6.5,
           x1: 11.5,

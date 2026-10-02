@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type BarTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -27,7 +27,7 @@ export function run(el: HTMLElement): ExampleHandle {
 
   const chart = createChart(el, {
     data: [
-      ...SERIES.map((s) => ({
+      ...SERIES.map((s): BarTrace => ({
         type: 'bar',
         name: s.name,
         x: QUARTERS,

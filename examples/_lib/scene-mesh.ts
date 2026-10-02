@@ -18,6 +18,8 @@ import {
   sceneSubplotDomain,
   supplySceneLightingDefaults,
   toRGBA,
+  type CommonTraceAttributes,
+  type Mesh3dTrace,
   type Scene3D,
   type SceneCalc,
   type TraceModule,
@@ -132,6 +134,27 @@ export const sceneMesh: TraceModule<MeshCalc> = {
   },
   plot: { create: (ctx) => new MeshView(ctx) },
 };
+
+/** A `scenemesh` trace, as figures give it: lit like a `mesh3d`. */
+export type SceneMeshTrace = CommonTraceAttributes &
+  Pick<Mesh3dTrace, 'lighting' | 'lightposition' | 'material'> & {
+    type: 'scenemesh';
+    scene?: 'scene' | `scene${number}`;
+    shape?: 'torus' | 'sphere' | 'tile';
+    x?: number;
+    y?: number;
+    z?: number;
+    size?: number;
+    color?: string;
+  };
+
+// Figures typed against the full bundle (`Figure`) accept `scenemesh` traces once this module is
+// part of the program (see `TraceTypes`).
+declare module '@mk7s/holochart' {
+  interface TraceTypes {
+    scenemesh: SceneMeshTrace;
+  }
+}
 
 /** Register `scenemesh` (once per page). */
 export function registerSceneMesh(): void {

@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type ViolinTrace } from '@mk7s/holochart';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -18,7 +18,7 @@ const REGIONS = ['North', 'South', 'East', 'West'];
 
 export function run(el: HTMLElement): ExampleHandle {
   const normal = gaussian(rng(31));
-  const trace = (name: string, shift: number) => {
+  const trace = (name: string, shift: number): ViolinTrace => {
     const x: string[] = [];
     const y: number[] = [];
     REGIONS.forEach((region, r) => {

@@ -1,4 +1,4 @@
-import { componentsReady, createChart } from '@mk7s/holochart';
+import { componentsReady, createChart, type BarTrace, type ScatterTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -55,15 +55,16 @@ export function run(el: HTMLElement): ExampleHandle {
     (typeof CITIES)[number],
     (typeof CITIES)[number],
   ];
+  const traces: (ScatterTrace | BarTrace)[] = [
+    { name: 'Madrid °C', x: MONTHS, y: madrid.temp, line: { color: TEMP } },
+    { name: 'Mumbai °C', x: MONTHS, y: mumbai.temp, xaxis: 'x2', line: { color: TEMP } },
+    { name: 'Sydney °C', x: MONTHS, y: sydney.temp, xaxis: 'x3', line: { color: TEMP } },
+    { type: 'bar', name: 'Madrid mm', x: MONTHS, y: madrid.rain, yaxis: 'y2' },
+    { type: 'bar', name: 'Mumbai mm', x: MONTHS, y: mumbai.rain, xaxis: 'x2', yaxis: 'y2' },
+    { type: 'bar', name: 'Sydney mm', x: MONTHS, y: sydney.rain, xaxis: 'x3', yaxis: 'y2' },
+  ];
   const chart = createChart(el, {
-    data: [
-      { name: 'Madrid °C', x: MONTHS, y: madrid.temp, line: { color: TEMP } },
-      { name: 'Mumbai °C', x: MONTHS, y: mumbai.temp, xaxis: 'x2', line: { color: TEMP } },
-      { name: 'Sydney °C', x: MONTHS, y: sydney.temp, xaxis: 'x3', line: { color: TEMP } },
-      { type: 'bar', name: 'Madrid mm', x: MONTHS, y: madrid.rain, yaxis: 'y2' },
-      { type: 'bar', name: 'Mumbai mm', x: MONTHS, y: mumbai.rain, xaxis: 'x2', yaxis: 'y2' },
-      { type: 'bar', name: 'Sydney mm', x: MONTHS, y: sydney.rain, xaxis: 'x3', yaxis: 'y2' },
-    ].map((t) =>
+    data: traces.map((t) =>
       t.type === 'bar'
         ? { ...t, marker: { color: RAIN } }
         : { ...t, type: 'scatter' as const, mode: 'lines+markers' as const, marker: { size: 5 } },

@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type ScatterTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 import { exposeInteraction } from './spikes-hook.mts';
 
@@ -40,8 +40,14 @@ export function run(el: HTMLElement): ExampleHandle {
   ];
   const chart = createChart(el, {
     data: [
-      ...shapes.map((s) => ({ type: 'scatter', mode: 'lines', name: s.name, x: s.x, y: s.y })),
-      ...shapes.map((s) => ({
+      ...shapes.map((s): ScatterTrace => ({
+        type: 'scatter',
+        mode: 'lines',
+        name: s.name,
+        x: s.x,
+        y: s.y,
+      })),
+      ...shapes.map((s): ScatterTrace => ({
         type: 'scatter',
         mode: 'lines',
         name: s.name,

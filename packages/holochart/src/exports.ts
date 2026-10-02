@@ -3,31 +3,111 @@
  * (`bundle-2d.ts`): everything but the built-in module list, their registration and the 3D
  * package. No side effects.
  */
+import type { Config } from '@mk7s/holochart-core';
 import * as runtime from '@mk7s/holochart-runtime';
+import type {
+  AttributeUpdate,
+  Chart,
+  ChartOptions,
+  DownloadImageOptions,
+  LayoutUpdate,
+  ToImageOptions,
+} from '@mk7s/holochart-runtime';
+import type { Figure } from './figure.ts';
+import type { Data, Layout } from './generated/figure.ts';
 
 export * from '@mk7s/holochart-core';
 export * from '@mk7s/holochart-runtime';
 // Core's module types cover only the pure parts; the runtime's add the render parts.
 export type { ComponentModule, TraceModule } from '@mk7s/holochart-runtime';
 
+/**
+ * Figure types (backlog S1.6): `Figure`, `Frame`, `Data` (every built-in trace type) and `Layout`
+ * (every layout attribute of the bundle's traces and components). Named here, these replace the
+ * packages' types of the same name (core's base `Layout`, `traces-basic`'s `BarTrace` without the
+ * 2.5D attributes, …).
+ */
+export type { Figure, Frame } from './figure.ts';
+export type * from './generated/figure.ts';
+export type {
+  BarTrace,
+  Data,
+  FunnelTrace,
+  HeatmapTrace,
+  IcicleTrace,
+  Layout,
+  LayoutTitle,
+  PieTrace,
+  ScatterTrace,
+  TreemapTrace,
+  WaterfallTrace,
+} from './generated/figure.ts';
+
+type TraceIndices = number | readonly number[];
+
 // The entry points are re-bound locally (not only re-exported) so that using any of them keeps the
 // bundle module, and with it the registration of the built-ins, in a tree-shaken build
-// ("sideEffects": false).
-export const createChart = runtime.createChart;
-export const newPlot = runtime.newPlot;
-export const react = runtime.react;
+// ("sideEffects": false). The ones taking figures are typed against this bundle's `Figure`,
+// `Data` and `Layout` (types only: the functions are the runtime's).
+
+/** Create a chart in `el` (see the runtime's `createChart`), its figure typed as a {@link Figure}. */
+export const createChart: (el: HTMLElement, figure?: Figure, options?: ChartOptions) => Chart =
+  runtime.createChart;
+/** Draw a new chart in `el`: Plotly's `(el, data, layout?, config?)` or `(el, figure)`. */
+export const newPlot: (
+  el: HTMLElement,
+  dataOrFigure?: readonly Data[] | Figure,
+  layout?: Layout,
+  config?: Config,
+  options?: ChartOptions,
+) => Promise<Chart> = runtime.newPlot;
+/** Update `el` to show a new figure efficiently (diffing), or create the chart if needed. */
+export const react: (
+  el: HTMLElement,
+  dataOrFigure?: readonly Data[] | Figure,
+  layout?: Layout,
+  config?: Config,
+  options?: ChartOptions,
+) => Promise<Chart> = runtime.react;
+/**
+ * Plotly `restyle`: attribute paths (`'marker.color'`) whose array values hold one value per
+ * trace, so the update is not typed against the traces (`AttributeUpdate`).
+ */
 export const restyle = runtime.restyle;
-export const relayout = runtime.relayout;
-export const update = runtime.update;
-export const addTraces = runtime.addTraces;
+/** Plotly `relayout`: attribute paths (untyped) and whole layout attributes (typed). */
+export const relayout: (el: HTMLElement, update: LayoutUpdate<Layout>) => Promise<Chart> =
+  runtime.relayout;
+/** Plotly `update`: `restyle` and `relayout` in one step. */
+export const update: (
+  el: HTMLElement,
+  traceUpdate?: AttributeUpdate,
+  layoutUpdate?: LayoutUpdate<Layout>,
+  traces?: TraceIndices,
+) => Promise<Chart> = runtime.update;
+/** Plotly `addTraces`: add traces at the end, or at `newIndices`. */
+export const addTraces: (
+  el: HTMLElement,
+  traces: Data | readonly Data[],
+  newIndices?: TraceIndices,
+) => Promise<Chart> = runtime.addTraces;
 export const deleteTraces = runtime.deleteTraces;
 export const moveTraces = runtime.moveTraces;
 export const extendTraces = runtime.extendTraces;
 export const prependTraces = runtime.prependTraces;
 export const fromJSON = runtime.fromJSON;
 export const chartToJSON = runtime.chartToJSON;
-export const toImage = runtime.toImage;
-export const downloadImage = runtime.downloadImage;
+/** Plotly's `toImage`: render the chart in `el`, or a figure drawn offscreen, to a data URL. */
+export const toImage: (
+  target: HTMLElement | Figure,
+  options?: ToImageOptions,
+  chartOptions?: ChartOptions,
+) => Promise<string> = runtime.toImage;
+/** Plotly's `downloadImage`: {@link toImage} and save the file. Resolves to the file name. */
+export const downloadImage: (
+  target: HTMLElement | Figure,
+  options?: DownloadImageOptions,
+  chartOptions?: ChartOptions,
+) => Promise<string> = runtime.downloadImage;
 export const purge = runtime.purge;
 export const register = runtime.register;
 export const registry = runtime.registry;

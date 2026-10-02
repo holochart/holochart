@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type Scatter3dTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -18,7 +18,7 @@ export const meta: ExampleMeta = {
 export function run(el: HTMLElement): ExampleHandle {
   const bins = 120;
   const freq = Array.from({ length: bins }, (_, i) => (i / (bins - 1)) * 1000);
-  const data = Array.from({ length: 12 }, (_, k) => {
+  const data = Array.from({ length: 12 }, (_, k): Scatter3dTrace => {
     const time = k;
     const peak = 150 + 60 * k;
     const amp = freq.map(

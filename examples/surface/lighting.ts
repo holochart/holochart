@@ -19,19 +19,20 @@ export const meta: ExampleMeta = {
 export function run(el: HTMLElement): ExampleHandle {
   const axis = linspace(-3, 3, 64);
   const z = sample(axis, axis, (x, y) => Math.sin(x * 1.5) * Math.cos(y * 1.2) + 0.2 * x);
-  const common = { type: 'surface' as const, x: axis, y: axis, z, showscale: false };
+  const common = { x: axis, y: axis, z, showscale: false };
   const camera = { eye: { x: 1.5, y: -1.5, z: 1.1 } };
   const scene = { camera, xaxis: { showticklabels: false }, yaxis: { showticklabels: false } };
   const chart = createChart(el, {
     data: [
-      { ...common, scene: 'scene' },
+      { type: 'surface', ...common, scene: 'scene' },
       {
+        type: 'surface',
         ...common,
         scene: 'scene2',
         lighting: { ambient: 0.35, diffuse: 0.65, specular: 2, roughness: 0.3, fresnel: 0.5 },
         lightposition: { x: 1e4, y: 1e4, z: 1e4 },
       },
-      { ...common, scene: 'scene3', material: { type: 'flat' } },
+      { type: 'surface', ...common, scene: 'scene3', material: { type: 'flat' } },
     ],
     layout: {
       title: { text: 'Default, glossy and flat' },

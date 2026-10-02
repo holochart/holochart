@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { fixtureRegistry } from '../__fixtures__/modules.ts';
 import { supplyDefaults } from '../defaults/supply-defaults.ts';
-import type { FigureInput } from '../defaults/types.ts';
+import type { AnyFigure } from '../defaults/types.ts';
 import { validate } from '../validate/validate.ts';
 import { composeTemplates, resolveTemplate, type Template } from './templates.ts';
 
@@ -30,7 +30,7 @@ function registry() {
     .registerTemplate('dark', dark)
     .registerTemplate('presentation', presentation);
 }
-const run = (figure: FigureInput, r = registry()) => supplyDefaults(figure, r, quiet);
+const run = (figure: AnyFigure, r = registry()) => supplyDefaults(figure, r, quiet);
 const marker = (t: unknown) => (t as { marker: Record<string, unknown> }).marker;
 
 describe('template resolution & composition', () => {

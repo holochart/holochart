@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type ScatterTrace } from '@mk7s/holochart';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -20,7 +20,7 @@ export function run(el: HTMLElement): ExampleHandle {
   const x = Array.from({ length: 12 }, (_, i) => i);
   const y = x.map((v) => 10 + 4 * Math.sin(v / 1.8) + normal() * 1.2);
 
-  const lines = [
+  const lines: ScatterTrace[] = [
     { name: 'linear', line: { shape: 'linear', dash: 'dot', width: 1.5, color: '#80838f' } },
     { name: 'spline, smoothing 0.6', line: { shape: 'spline', smoothing: 0.6 } },
     { name: 'spline, smoothing 1', line: { shape: 'spline' } },
@@ -29,7 +29,7 @@ export function run(el: HTMLElement): ExampleHandle {
 
   const chart = createChart(el, {
     data: [
-      ...lines.map((l) => ({ type: 'scatter', mode: 'lines', x, y, ...l })),
+      ...lines.map((l): ScatterTrace => ({ type: 'scatter', mode: 'lines', x, y, ...l })),
       {
         type: 'scatter',
         mode: 'markers',

@@ -35,7 +35,7 @@ function settled(chart: Chart): Promise<void> {
 }
 
 export function run(el: HTMLElement): ExampleHandle {
-  const shapes = ['', '/', '\\', 'x', '-', '|', '+', '.'];
+  const shapes = ['', '/', '\\', 'x', '-', '|', '+', '.'] as const;
   const chart = createChart(el, {
     data: [
       {

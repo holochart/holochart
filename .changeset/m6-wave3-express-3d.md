@@ -1,6 +1,0 @@
----
-'@mk7s/holochart-express': minor
-'@mk7s/holochart': minor
----
-
-Express 3D charts (E23.6): `scatter3d` and `line3d` follow `px.scatter_3d` and `px.line_3d` — `x`, `y`, `z` columns as one `scatter3d` trace per group on one `scene` (`layout.scene.domain` filling the plot, `scene: 'scene'` on the traces), grouped by `color` (discrete: the colorway and `colorDiscreteMap`; numeric on `scatter3d`: a colorscale on `coloraxis` with a colorbar), `symbol`, and on `line3d` `lineDash`, `lineGroup` and `markers`, with `size` / `sizeMax`, `opacity`, `text`, `hoverName`, `hoverData`, `customData`, error bars on all three axes (`errorZ`, `errorZMinus` are new), px's hover templates (`x=%{x}<br>y=%{y}<br>z=%{z}`), and animation frames with px's controls. The scene's axes get px's `configure_3d_axes`: titles from `labels`, `logX` / `logY` / `logZ`, `rangeX` / `rangeY` / `rangeZ` (data units, also on log axes) and category orders; animated figures without a range keep every numeric scene axis fixed over all frames (a Holochart default, as on cartesian and polar charts). Like px, the 3D functions take no facets or marginals. Drawing them needs the 3D traces (`@mk7s/holochart`, or `register(...traces3d)`).

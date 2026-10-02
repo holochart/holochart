@@ -33,6 +33,7 @@ import {
   suggest,
   ValidationError,
   type AttrSpec,
+  type AnyFigure,
   type FigureInput,
   type FullTrace,
   type Issue,
@@ -76,7 +77,7 @@ const evaluated = new WeakMap<object, { datasets: unknown; out: unknown }>();
  * `pointSource` for `point`). A function that throws is dropped (with a warning), so the
  * attribute takes its default. Functions elsewhere are left for validation to report.
  */
-export function withStyleFunctions(figure: FigureInput, core: Registry): FigureInput {
+export function withStyleFunctions(figure: AnyFigure, core: Registry): AnyFigure {
   const data = figure.data;
   if (!Array.isArray(data)) return figure;
   let changed = false;

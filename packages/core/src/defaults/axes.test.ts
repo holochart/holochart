@@ -7,12 +7,12 @@ import { attr } from '../schema/attr.ts';
 import { stripInternal } from '../util/objects.ts';
 import { autoType, cleanDtick, cleanTick0 } from './axes.ts';
 import { supplyDefaults } from './supply-defaults.ts';
-import type { FigureInput, FullAxis } from './types.ts';
+import type { AnyFigure, FullAxis } from './types.ts';
 
 const quiet = { onIssue: () => {} };
-const run = (figure: FigureInput) => supplyDefaults(figure, fixtureRegistry(), quiet);
-const xaxis = (figure: FigureInput): FullAxis => run(figure).fullLayout.xaxis as FullAxis;
-const yaxis = (figure: FigureInput): FullAxis => run(figure).fullLayout.yaxis as FullAxis;
+const run = (figure: AnyFigure) => supplyDefaults(figure, fixtureRegistry(), quiet);
+const xaxis = (figure: AnyFigure): FullAxis => run(figure).fullLayout.xaxis as FullAxis;
+const yaxis = (figure: AnyFigure): FullAxis => run(figure).fullLayout.yaxis as FullAxis;
 
 describe('autoType (Plotly rules)', () => {
   it('detects multicategory from two-level arrays unless disabled', () => {
@@ -309,7 +309,7 @@ describe('supplyDefaults: axis defaults (E3)', () => {
     };
     const histogram: TraceModule = { ...line0, type: 'histogram' };
     const registry = createRegistry().register(line0, histogram);
-    const fl = (figure: FigureInput) => supplyDefaults(figure, registry, quiet).fullLayout;
+    const fl = (figure: AnyFigure) => supplyDefaults(figure, registry, quiet).fullLayout;
     expect(fl({ data: [{ type: 'line0', y: [1], x0: '2024-01-01' }] }).xaxis?.type).toBe('date');
     // The default x0 (0) does not type the axis.
     expect(fl({ data: [{ type: 'line0', y: ['a', 'b', 'c'] }] }).xaxis?.type).toBe('linear');

@@ -1,5 +1,5 @@
-import { createChart } from '@mk7s/holochart';
-import { registerSceneMesh } from '../_lib/scene-mesh.ts';
+import { createChart, type LayoutScene } from '@mk7s/holochart';
+import { registerSceneMesh, type SceneMeshTrace } from '../_lib/scene-mesh.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -21,7 +21,7 @@ export const meta: ExampleMeta = {
 
 export function run(el: HTMLElement): ExampleHandle {
   registerSceneMesh();
-  const objects = (scene: string) => [
+  const objects = (scene: SceneMeshTrace['scene']): SceneMeshTrace[] => [
     { type: 'scenemesh', scene, shape: 'torus', size: 0.8, z: 0.5, color: '#1f77b4' },
     {
       type: 'scenemesh',
@@ -44,7 +44,7 @@ export function run(el: HTMLElement): ExampleHandle {
     },
   ];
   const axes = { showbackground: false, range: [-1.7, 1.7] };
-  const box = {
+  const box: LayoutScene = {
     xaxis: axes,
     yaxis: axes,
     zaxis: { ...axes, range: [-0.1, 1.2] },
@@ -55,7 +55,7 @@ export function run(el: HTMLElement): ExampleHandle {
   const chart = createChart(el, {
     data: [
       ...objects('scene'),
-      ...objects('scene2').map((t) =>
+      ...objects('scene2').map((t): SceneMeshTrace =>
         t.shape === 'torus' ? { ...t, material: { type: 'plotly', castshadow: true } } : t,
       ),
     ],

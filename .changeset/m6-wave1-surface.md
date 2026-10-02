@@ -1,8 +1,0 @@
----
-'@mk7s/holochart-traces-3d': minor
-'@mk7s/holochart-render': minor
-'@mk7s/holochart-core': minor
-'@mk7s/holochart': minor
----
-
-`surface` trace (M6 wave 1, plan E14.3), with Plotly's attributes and defaults: `z` with `x` / `y` as vectors or 2D arrays (non-rectangular and parametric grids), `surfacecolor`, the `c` colorscale attributes (`cauto`, `cmin`, `cmax`, `cmid`, legacy `zmin` / `zmax`, `coloraxis`) with a colorbar, `opacity`, `opacityscale` (stops, or `'min'`, `'max'`, `'extremes'`), `hidesurface`, `connectgaps` (Plotly's Laplace fill), `contours.{x, y, z}` (`show`, `start` / `end` / `size` or the axis ticks, `color`, `width`, `usecolormap`, `project.{x, y, z}` onto the walls that follow the camera, and the `highlight` lines of the hovered point), `lighting` / `lightposition` (surface defaults) and the `material` extension. The surface is built in the vertex shader from float textures (heights, and `x` / `y`): no vertex buffers or CPU normals, so a 1024² grid rebuilds in about 40 ms; contour, highlight and wireframe lines are drawn in the fragment shader, exact at any zoom; translucent surfaces draw back to front by walking the grid from its far side. Hover snaps to the nearest grid point through an exact ray cast (with the scene's GPU picking for occlusion) and reports `x`, `y`, `z`, `surfacecolor` and `pointNumber: [row, column]`. Holochart extension: `wireframe.{show, color, width, step}`. The default look gives surfaces its sequential colorscale and slim colorbar. render's lazily loaded mesh chunk now also exports its Plotly-model shaders (`MESH_VERTEX_SHADER`, `MESH_FRAGMENT_SHADER`).

@@ -19,12 +19,26 @@ export const meta: ExampleMeta = {
 
 export function run(el: HTMLElement): ExampleHandle {
   const grid = cubeGrid(48, -1, 1, blobs);
-  const trace = { type: 'volume', ...grid, isomin: 0.1, isomax: 1 };
+  const trace = { ...grid, isomin: 0.1, isomax: 1 };
   const camera = { eye: { x: 1.4, y: -1.4, z: 1 } };
   const chart = createChart(el, {
     data: [
-      { ...trace, name: 'isosurfaces', opacity: 0.2, surface: { count: 10 }, showscale: false },
-      { ...trace, name: 'raymarch', scene: 'scene2', render: 'raymarch', opacity: 0.06 },
+      {
+        type: 'volume',
+        ...trace,
+        name: 'isosurfaces',
+        opacity: 0.2,
+        surface: { count: 10 },
+        showscale: false,
+      },
+      {
+        type: 'volume',
+        ...trace,
+        name: 'raymarch',
+        scene: 'scene2',
+        render: 'raymarch',
+        opacity: 0.06,
+      },
     ],
     layout: {
       title: { text: "render: 'isosurfaces' (left) and 'raymarch'" },

@@ -1,15 +1,15 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { fixtureRegistry } from '../__fixtures__/modules.ts';
-import type { FigureInput } from '../defaults/types.ts';
+import type { AnyFigure } from '../defaults/types.ts';
 import { planUpdate } from '../edit/plan.ts';
 import { diffFigures, matchTraces, planDiff } from './diff.ts';
 
 const registry = fixtureRegistry();
 
-const diff = (prev: FigureInput, next: FigureInput) => diffFigures(prev, next, registry);
-const paths = (prev: FigureInput, next: FigureInput) => diff(prev, next).changes.map((c) => c.path);
-const plan = (prev: FigureInput, next: FigureInput) =>
+const diff = (prev: AnyFigure, next: AnyFigure) => diffFigures(prev, next, registry);
+const paths = (prev: AnyFigure, next: AnyFigure) => diff(prev, next).changes.map((c) => c.path);
+const plan = (prev: AnyFigure, next: AnyFigure) =>
   planUpdate(diff(prev, next).changes, { registry });
 
 /** An array whose elements must never be read (length and index access throw). */
@@ -26,7 +26,7 @@ function untouchable(): number[] {
 
 describe('diffFigures: identity and value comparison', () => {
   it('reports nothing for the same figure', () => {
-    const f: FigureInput = { data: [{ type: 'scatter', x: [1], y: [2] }], layout: { title: 'a' } };
+    const f: AnyFigure = { data: [{ type: 'scatter', x: [1], y: [2] }], layout: { title: 'a' } };
     const d = diff(f, f);
     expect(d.empty).toBe(true);
     expect(d.changes).toEqual([]);
@@ -35,7 +35,7 @@ describe('diffFigures: identity and value comparison', () => {
 
   it('compares small non-data arrays and objects by value (fresh React literals are not edits)', () => {
     const x = [1, 2];
-    const make = (): FigureInput => ({
+    const make = (): AnyFigure => ({
       data: [{ x, y: x, marker: { color: 'red', line: { width: 2 } } }],
       layout: {
         xaxis: { range: [0, 10] },
@@ -49,7 +49,7 @@ describe('diffFigures: identity and value comparison', () => {
   });
 
   it('treats NaN as equal to NaN', () => {
-    const f = (): FigureInput => ({ layout: { xaxis: { range: [NaN, 1] } } });
+    const f = (): AnyFigure => ({ layout: { xaxis: { range: [NaN, 1] } } });
     expect(diff(f(), f()).empty).toBe(true);
   });
 
@@ -62,13 +62,13 @@ describe('diffFigures: identity and value comparison', () => {
 
   it('does not see in-place mutation of a data array unless datarevision changes', () => {
     const x = [1, 2];
-    const prev: FigureInput = { data: [{ x, y: [3, 4] }], layout: { datarevision: 1 } };
+    const prev: AnyFigure = { data: [{ x, y: [3, 4] }], layout: { datarevision: 1 } };
     const trace = prev.data?.[0] as { x: number[]; y: number[] };
-    const next: FigureInput = { data: [{ ...trace }], layout: { datarevision: 1 } };
+    const next: AnyFigure = { data: [{ ...trace }], layout: { datarevision: 1 } };
     x.push(3);
     expect(diff(prev, next).empty).toBe(true);
 
-    const bumped: FigureInput = { data: [trace], layout: { datarevision: 2 } };
+    const bumped: AnyFigure = { data: [trace], layout: { datarevision: 2 } };
     expect(paths(prev, bumped).sort()).toEqual(['datarevision', 'x', 'y']);
   });
 
@@ -111,11 +111,11 @@ describe('diffFigures: identity and value comparison', () => {
   });
 
   it('never mutates its inputs', () => {
-    const prev: FigureInput = {
+    const prev: AnyFigure = {
       data: [{ x: [1], uid: 'a' }],
       layout: { xaxis: { range: [0, 1] } },
     };
-    const next: FigureInput = { data: [{ x: [2], uid: 'b' }], layout: {} };
+    const next: AnyFigure = { data: [{ x: [2], uid: 'b' }], layout: {} };
     const before = structuredClone([prev, next]);
     diff(prev, next);
     expect([prev, next]).toEqual(before);
@@ -370,14 +370,14 @@ describe('diffFigures: datasets', () => {
     const date = [1, 2];
     const revenue = [3, 4];
     const cost = [5, 6];
-    const prev: FigureInput = {
+    const prev: AnyFigure = {
       datasets: { sales: { date, revenue, cost } },
       data: [
         { dataset: 'sales', x: '@date', y: '@revenue' },
         { dataset: 'sales', x: '@date', y: '@cost' },
       ],
     };
-    const next: FigureInput = { ...prev, datasets: { sales: { date, revenue: [3, 4], cost } } };
+    const next: AnyFigure = { ...prev, datasets: { sales: { date, revenue: [3, 4], cost } } };
     const d = diff(prev, next);
     expect(d.datasetsChanged).toEqual(['sales']);
     expect(d.changes).toEqual([{ target: 'trace', type: 'scatter', path: 'y', traceIndex: 0 }]);
@@ -386,8 +386,8 @@ describe('diffFigures: datasets', () => {
   it('does not report literal @-text or unknown attributes as reading a column', () => {
     const date = [1, 2];
     const trace = { dataset: 'sales', x: '@date', text: '@date', extra: '@date' };
-    const prev: FigureInput = { datasets: { sales: { date } }, data: [trace] };
-    const next: FigureInput = { datasets: { sales: { date: [1, 2] } }, data: [trace] };
+    const prev: AnyFigure = { datasets: { sales: { date } }, data: [trace] };
+    const next: AnyFigure = { datasets: { sales: { date: [1, 2] } }, data: [trace] };
     expect(diff(prev, next).changes).toEqual([
       { target: 'trace', type: 'scatter', path: 'x', traceIndex: 0 },
     ]);
@@ -395,12 +395,12 @@ describe('diffFigures: datasets', () => {
 
   it('marks every dataset changed when datarevision changes', () => {
     const ds = { sales: { a: [1] } };
-    const prev: FigureInput = {
+    const prev: AnyFigure = {
       datasets: ds,
       data: [{ dataset: 'sales', x: '@a' }],
       layout: { datarevision: 1 },
     };
-    const next: FigureInput = { ...prev, layout: { datarevision: 2 } };
+    const next: AnyFigure = { ...prev, layout: { datarevision: 2 } };
     const d = diff(prev, next);
     expect(d.datasetsChanged).toEqual(['sales']);
     expect(d.changes.map((c) => c.path).sort()).toEqual(['datarevision', 'x']);
@@ -461,7 +461,7 @@ describe('diffFigures: properties', () => {
     },
     { requiredKeys: [] },
   );
-  const figure: fc.Arbitrary<FigureInput> = fc.record(
+  const figure: fc.Arbitrary<AnyFigure> = fc.record(
     {
       data: fc.oneof(fc.array(fc.oneof(trace, value), { maxLength: 4 }), value),
       layout: fc.oneof(layout, value),
@@ -469,7 +469,7 @@ describe('diffFigures: properties', () => {
       datasets: fc.constantFrom(undefined, { ds: { a: [1] } }),
     },
     { requiredKeys: [] },
-  ) as fc.Arbitrary<FigureInput>;
+  ) as fc.Arbitrary<AnyFigure>;
 
   it('diff(f, f) is empty', () => {
     fc.assert(
@@ -540,7 +540,7 @@ describe('diffFigures: properties', () => {
     });
     fc.assert(
       fc.property(figure, (f) => {
-        expect(diff(f, copy(f) as FigureInput).empty).toBe(true);
+        expect(diff(f, copy(f) as AnyFigure).empty).toBe(true);
       }),
     );
   });

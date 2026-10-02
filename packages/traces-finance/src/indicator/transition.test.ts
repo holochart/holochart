@@ -149,7 +149,7 @@ const figure = (value: number, duration = 160) => ({
       gauge: { axis: { range: [0, 500] } },
     },
   ],
-  layout: { transition: { duration, easing: 'linear' } },
+  layout: { transition: { duration, easing: 'linear' as const } },
 });
 
 /** The number and delta of the last drawn frame (the first two texts). */

@@ -38,7 +38,7 @@ export function run(el: HTMLElement): ExampleHandle {
     type: 'scatter' as const,
     mode: 'markers' as const,
     name: `s${String(i + 1).padStart(2, '0')}`,
-    legend: 'legend2',
+    legend: 'legend2' as const,
     x,
     y: x.map((v) => 10 + i * 0.5 - v),
   }));

@@ -41,7 +41,7 @@ export function run(el: HTMLElement): ExampleHandle {
     { name: 'Commercial', y: [25, 31, 22, 18], shape: '/' },
     { name: 'Industrial', y: [18, 12, 30, 21], shape: 'x' },
     { name: 'Transport', y: [9, 14, 11, 16], shape: '.' },
-  ];
+  ] as const;
   const chart = createChart(el, {
     data: series.map((s, k) => ({
       type: 'bar' as const,

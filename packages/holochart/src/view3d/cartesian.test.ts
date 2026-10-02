@@ -45,7 +45,7 @@ afterEach(() => {
   chart = undefined;
 });
 
-async function draw(figure: { data: unknown[]; layout?: Record<string, unknown> }): Promise<Chart> {
+async function draw(figure: { data: object[]; layout?: Record<string, unknown> }): Promise<Chart> {
   const container = document.createElement('div');
   Object.defineProperty(container, 'clientWidth', { value: 640 });
   Object.defineProperty(container, 'clientHeight', { value: 400 });

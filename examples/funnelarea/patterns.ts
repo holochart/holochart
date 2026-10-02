@@ -19,7 +19,7 @@ export const meta: ExampleMeta = {
 
 const CHARACTERS = '0123456789.,%: ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const STAGES = ['Leads', 'Qualified', 'Proposal', 'Negotiation', 'Won'];
-const SHAPES = ['/', '.', 'x', '-', '+'];
+const SHAPES = ['/', '.', 'x', '-', '+'] as const;
 
 export function run(el: HTMLElement): ExampleHandle {
   let chart: Chart | undefined;

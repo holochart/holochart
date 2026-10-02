@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { attr, toRGBA, type FullTrace } from '@mk7s/holochart-core';
+import { attr, toRGBA, type FigureInput, type FullTrace } from '@mk7s/holochart-core';
 import { mixColors } from '@mk7s/holochart-render';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { linearExtremes } from '../axes.ts';
@@ -163,7 +163,7 @@ describe('react with layout.transition (E7.3)', () => {
   const base = (y: number[], extra: Record<string, unknown> = {}) => ({
     data: [{ type: 'blobs', x: [0, 1, 2], y, ...extra }],
     layout: {
-      transition: { duration: 160, easing: 'linear' },
+      transition: { duration: 160, easing: 'linear' as const },
       yaxis: { range: [0, 10] },
     },
   });
@@ -199,8 +199,8 @@ describe('react with layout.transition (E7.3)', () => {
 
   it('eases with the easing given', async () => {
     const c = await make(base([0, 0, 0]));
-    const next = base([8, 8, 8]);
-    next.layout.transition = { duration: 160, easing: 'quad-in' };
+    const next: FigureInput = { ...base([8, 8, 8]) };
+    next.layout = { ...next.layout, transition: { duration: 160, easing: 'quad-in' } };
     void c.react(next);
     await flush();
     await steps(5);
@@ -225,7 +225,7 @@ describe('react with layout.transition (E7.3)', () => {
   it('matches points by ids: entering points fade and grow in, exiting ones fade out', async () => {
     const figure = (ids: string[], x: number[]) => ({
       data: [{ type: 'blobs', ids, x, y: x, text: ids }],
-      layout: { transition: { duration: 160, easing: 'linear' } },
+      layout: { transition: { duration: 160, easing: 'linear' as const } },
     });
     const c = await make(figure(['a', 'b', 'c'], [1, 2, 3]));
     void c.react(figure(['c', 'd', 'a'], [30, 40, 10]));
@@ -246,10 +246,10 @@ describe('react with layout.transition (E7.3)', () => {
   });
 
   it("animates axis ranges; 'layout first' holds the traces until the end", async () => {
-    const figure = (y: number[], range: number[], ordering?: string) => ({
+    const figure = (y: number[], range: number[], ordering?: 'layout first' | 'traces first') => ({
       data: [{ type: 'blobs', x: [0, 1], y }],
       layout: {
-        transition: { duration: 160, easing: 'linear', ...(ordering ? { ordering } : {}) },
+        transition: { duration: 160, easing: 'linear' as const, ...(ordering ? { ordering } : {}) },
         yaxis: { range },
       },
     });
@@ -367,7 +367,7 @@ describe('frames and animate (E7.4)', () => {
     layout: { yaxis: { range: [0, 5] } },
     frames,
   });
-  const fast = { frame: { duration: 64 }, transition: { duration: 32, easing: 'linear' } };
+  const fast = { frame: { duration: 64 }, transition: { duration: 32, easing: 'linear' as const } };
 
   it('plays every frame in order, with Plotly’s events, and resolves at the end', async () => {
     const c = await make(figure());
@@ -400,7 +400,7 @@ describe('frames and animate (E7.4)', () => {
     const log = events(c, ['animated', 'transitioned']);
     const done = c.animate(['c'], {
       frame: { duration: 160 },
-      transition: { duration: 160, easing: 'linear' },
+      transition: { duration: 160, easing: 'linear' as const },
     });
     await flush();
     await steps(9);
@@ -554,7 +554,11 @@ describe('component tweens and animateCamera (E7.5)', () => {
 
   const figure = (y: number[], dial: number) => ({
     data: [{ type: 'blobs', x: [0, 1], y }],
-    layout: { transition: { duration: 160, easing: 'linear' }, dial, yaxis: { range: [0, 10] } },
+    layout: {
+      transition: { duration: 160, easing: 'linear' as const },
+      dial,
+      yaxis: { range: [0, 10] },
+    },
   });
 
   it("interpolates a component's attribute its way, outside `ordering`", async () => {

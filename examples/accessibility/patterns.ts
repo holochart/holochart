@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type BarTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -19,7 +19,7 @@ export const meta: ExampleMeta = {
 const REGIONS = ['North', 'South', 'East', 'West'];
 
 export function run(el: HTMLElement): ExampleHandle {
-  const bar = (name: string, y: number[]) => ({
+  const bar = (name: string, y: number[]): BarTrace => ({
     type: 'bar',
     name,
     x: REGIONS,

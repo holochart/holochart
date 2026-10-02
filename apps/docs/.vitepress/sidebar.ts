@@ -101,6 +101,7 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
         'dashboards',
         'export',
         'frameworks',
+        'typescript',
         'ssr',
       ]),
     },

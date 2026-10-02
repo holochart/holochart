@@ -6,7 +6,7 @@ import type { DataArray } from '../schema/types.ts';
 /**
  * Figure layout.
  */
-export interface Layout {
+export type Layout = {
   /**
    * Figure width in CSS pixels. Ignored when `autosize` fills the container.
    *
@@ -124,22 +124,86 @@ export interface Layout {
    */
   xaxis?: LayoutXaxis;
   /**
-   * Further `xaxis` containers (`xaxis2`, `xaxis3`, …), with the same attributes.
+   * Subplot `x2`: the same attributes as `xaxis`.
    */
-  [key: `xaxis${number}`]: LayoutXaxis | undefined;
+  xaxis2?: LayoutXaxis;
+  /**
+   * Subplot `x3`: the same attributes as `xaxis`.
+   */
+  xaxis3?: LayoutXaxis;
+  /**
+   * Subplot `x4`: the same attributes as `xaxis`.
+   */
+  xaxis4?: LayoutXaxis;
+  /**
+   * Subplot `x5`: the same attributes as `xaxis`.
+   */
+  xaxis5?: LayoutXaxis;
+  /**
+   * Subplot `x6`: the same attributes as `xaxis`.
+   */
+  xaxis6?: LayoutXaxis;
+  /**
+   * Subplot `x7`: the same attributes as `xaxis`.
+   */
+  xaxis7?: LayoutXaxis;
+  /**
+   * Subplot `x8`: the same attributes as `xaxis`.
+   */
+  xaxis8?: LayoutXaxis;
+  /**
+   * Subplot `x9`: the same attributes as `xaxis`.
+   */
+  xaxis9?: LayoutXaxis;
+  /**
+   * Further `xaxis` containers (`xaxis10`, …): the same attributes as `xaxis`, not type-checked.
+   */
+  [key: `xaxis${number}`]: unknown;
   /**
    * A y axis. `yaxis2`, `yaxis3`, … declare further y axes, referenced from traces as `'y2'`, `'y3'`, ….
    */
   yaxis?: LayoutYaxis;
   /**
-   * Further `yaxis` containers (`yaxis2`, `yaxis3`, …), with the same attributes.
+   * Subplot `y2`: the same attributes as `yaxis`.
    */
-  [key: `yaxis${number}`]: LayoutYaxis | undefined;
+  yaxis2?: LayoutYaxis;
+  /**
+   * Subplot `y3`: the same attributes as `yaxis`.
+   */
+  yaxis3?: LayoutYaxis;
+  /**
+   * Subplot `y4`: the same attributes as `yaxis`.
+   */
+  yaxis4?: LayoutYaxis;
+  /**
+   * Subplot `y5`: the same attributes as `yaxis`.
+   */
+  yaxis5?: LayoutYaxis;
+  /**
+   * Subplot `y6`: the same attributes as `yaxis`.
+   */
+  yaxis6?: LayoutYaxis;
+  /**
+   * Subplot `y7`: the same attributes as `yaxis`.
+   */
+  yaxis7?: LayoutYaxis;
+  /**
+   * Subplot `y8`: the same attributes as `yaxis`.
+   */
+  yaxis8?: LayoutYaxis;
+  /**
+   * Subplot `y9`: the same attributes as `yaxis`.
+   */
+  yaxis9?: LayoutYaxis;
+  /**
+   * Further `yaxis` containers (`yaxis10`, …): the same attributes as `yaxis`, not type-checked.
+   */
+  [key: `yaxis${number}`]: unknown;
   /**
    * Selections as layout objects (plan E5.12): each box or lasso drag in `select` / `lasso` mode adds one (shift keeps the others), and every selection on a subplot selects the points inside it (`selectedpoints` follows). Set them to restore a selection; drag one to move or resize it; a double-click clears them.
    */
-  selections?: Array<LayoutSelection>;
-}
+  selections?: readonly LayoutSelection[];
+};
 
 /**
  * Space around the plot area.
@@ -258,7 +322,22 @@ export interface LayoutFont {
    * @defaultValue `"none"`
    */
   lineposition?:
-    'under' | 'over' | 'through' | `${'under' | 'over' | 'through'}+${string}` | 'none';
+    | 'under'
+    | 'over'
+    | 'through'
+    | 'under+over'
+    | 'under+through'
+    | 'over+under'
+    | 'over+through'
+    | 'through+under'
+    | 'through+over'
+    | 'under+over+through'
+    | 'under+through+over'
+    | 'over+under+through'
+    | 'over+through+under'
+    | 'through+under+over'
+    | 'through+over+under'
+    | 'none';
   /**
    * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
    *
@@ -364,7 +443,22 @@ export interface LayoutTitleFont {
    * Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.
    */
   lineposition?:
-    'under' | 'over' | 'through' | `${'under' | 'over' | 'through'}+${string}` | 'none';
+    | 'under'
+    | 'over'
+    | 'through'
+    | 'under+over'
+    | 'under+through'
+    | 'over+under'
+    | 'over+through'
+    | 'through+under'
+    | 'through+over'
+    | 'under+over+through'
+    | 'under+through+over'
+    | 'over+under+through'
+    | 'over+through+under'
+    | 'through+under+over'
+    | 'through+over+under'
+    | 'none';
   /**
    * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
    */
@@ -532,13 +626,13 @@ export interface LayoutGridDomain {
    *
    * @defaultValue `[0,1]`
    */
-  x?: readonly [number, number];
+  x?: readonly number[];
   /**
    * Vertical extent `[start, end]` of the whole grid, as fractions of the plot area (from the bottom). An empty or reversed extent falls back to `[0, 1]`.
    *
    * @defaultValue `[0,1]`
    */
-  y?: readonly [number, number];
+  y?: readonly number[];
 }
 
 /**
@@ -594,7 +688,7 @@ export interface LayoutXaxis {
   /**
    * Visible range `[start, end]` in data units (numbers, dates or category names; exponents on log axes, as in Plotly). Setting it turns `autorange` off; `null` for one end autoranges that end only.
    */
-  range?: readonly [unknown, unknown];
+  range?: readonly unknown[];
   /**
    * Lowest value zoom and pan may reach, in range units (like `range`: exponents on log axes). Also caps the autorange.
    */
@@ -606,13 +700,13 @@ export interface LayoutXaxis {
   /**
    * Spans hidden from the axis (plan E3.8): the axis skips them, so a weekday-only stock chart has no gaps for weekends or nights. Date and linear axes; data inside a break is not drawn. Ticks never land in a break; hover, zoom and pan work across breaks.
    */
-  rangebreaks?: Array<LayoutXaxisRangebreak>;
+  rangebreaks?: readonly LayoutXaxisRangebreak[];
   /**
    * Fraction of the plot area `[start, end]` this axis spans.
    *
    * @defaultValue `[0,1]`
    */
-  domain?: readonly [number, number];
+  domain?: readonly number[];
   /**
    * The y axis this axis is drawn against, or `free`. Defaults to the y axis of the first subplot using this axis.
    *
@@ -753,7 +847,7 @@ export interface LayoutXaxis {
   /**
    * Zoom-dependent tick formats: the first enabled stop whose `dtickrange` contains the current tick step replaces `tickformat`.
    */
-  tickformatstops?: Array<LayoutXaxisTickformatstop>;
+  tickformatstops?: readonly LayoutXaxisTickformatstop[];
   /**
    * Format of this axis’ values in hover labels (same syntax as `tickformat`). Empty uses the tick format with extra precision.
    *
@@ -1023,7 +1117,22 @@ export interface LayoutXaxis {
    *
    * @defaultValue `"toaxis"`
    */
-  spikemode?: 'toaxis' | 'across' | 'marker' | `${'toaxis' | 'across' | 'marker'}+${string}`;
+  spikemode?:
+    | 'toaxis'
+    | 'across'
+    | 'marker'
+    | 'toaxis+across'
+    | 'toaxis+marker'
+    | 'across+toaxis'
+    | 'across+marker'
+    | 'marker+toaxis'
+    | 'marker+across'
+    | 'toaxis+across+marker'
+    | 'toaxis+marker+across'
+    | 'across+toaxis+marker'
+    | 'across+marker+toaxis'
+    | 'marker+toaxis+across'
+    | 'marker+across+toaxis';
   /**
    * `hovered data`: the spike follows the hovered point; `data`: the closest point within `spikedistance`, even when no label shows; `cursor`: the pointer position.
    *
@@ -1095,7 +1204,7 @@ export interface LayoutXaxisRangebreak {
   /**
    * Lower and upper bound of the break. Without `pattern`: values in data units (`['2024-01-06', '2024-01-08']`). With `pattern: 'day of week'`: day numbers 0–6 (Sunday = 0) or English day names (`['sat', 'mon']` hides Saturday and Sunday). With `pattern: 'hour'`: hours 0–24 (`[17, 9]` hides 17:00–09:00, wrapping past midnight). Patterns use UTC days and hours.
    */
-  bounds?: readonly [unknown, unknown];
+  bounds?: readonly unknown[];
   /**
    * How `bounds` repeat: `day of week` or `hour` (date axes only), or `''` for a single span. Defaults to `day of week` when `bounds` names days, else `''`.
    */
@@ -1163,7 +1272,22 @@ export interface LayoutXaxisTickfont {
    * Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.
    */
   lineposition?:
-    'under' | 'over' | 'through' | `${'under' | 'over' | 'through'}+${string}` | 'none';
+    | 'under'
+    | 'over'
+    | 'through'
+    | 'under+over'
+    | 'under+through'
+    | 'over+under'
+    | 'over+through'
+    | 'through+under'
+    | 'through+over'
+    | 'under+over+through'
+    | 'under+through+over'
+    | 'over+under+through'
+    | 'over+through+under'
+    | 'through+under+over'
+    | 'through+over+under'
+    | 'none';
   /**
    * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
    */
@@ -1191,7 +1315,7 @@ export interface LayoutXaxisTickformatstop {
   /**
    * Range `[min, max]` of the tick step (`dtick`) this format applies to; `null` for an open end. Date steps are in ms or `M<n>`.
    */
-  dtickrange?: readonly [unknown, unknown];
+  dtickrange?: readonly unknown[];
   /**
    * The `tickformat` to use while the tick step is inside `dtickrange`.
    *
@@ -1343,7 +1467,22 @@ export interface LayoutXaxisTitleFont {
    * Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.
    */
   lineposition?:
-    'under' | 'over' | 'through' | `${'under' | 'over' | 'through'}+${string}` | 'none';
+    | 'under'
+    | 'over'
+    | 'through'
+    | 'under+over'
+    | 'under+through'
+    | 'over+under'
+    | 'over+through'
+    | 'through+under'
+    | 'through+over'
+    | 'under+over+through'
+    | 'under+through+over'
+    | 'over+under+through'
+    | 'over+through+under'
+    | 'through+under+over'
+    | 'through+over+under'
+    | 'none';
   /**
    * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
    */
@@ -1391,15 +1530,47 @@ export interface LayoutXaxisRangeslider {
   /**
    * Range the slider spans, in data units, like the axis `range` (dates on date axes, exponents on log axes). The slider always covers the axis range in view as well.
    */
-  range?: readonly [unknown, unknown];
+  range?: readonly unknown[];
   /**
    * Thumbnail y range per y axis: `yaxis` for the subplot on `y`, `yaxis2` for `y2`, … (one thumbnail per subplot on this x axis, drawn over each other).
    */
   yaxis?: LayoutXaxisRangesliderYaxis;
   /**
-   * Further `yaxis` containers (`yaxis2`, `yaxis3`, …), with the same attributes.
+   * Subplot `y2`: the same attributes as `yaxis`.
    */
-  [key: `yaxis${number}`]: LayoutXaxisRangesliderYaxis | undefined;
+  yaxis2?: LayoutXaxisRangesliderYaxis;
+  /**
+   * Subplot `y3`: the same attributes as `yaxis`.
+   */
+  yaxis3?: LayoutXaxisRangesliderYaxis;
+  /**
+   * Subplot `y4`: the same attributes as `yaxis`.
+   */
+  yaxis4?: LayoutXaxisRangesliderYaxis;
+  /**
+   * Subplot `y5`: the same attributes as `yaxis`.
+   */
+  yaxis5?: LayoutXaxisRangesliderYaxis;
+  /**
+   * Subplot `y6`: the same attributes as `yaxis`.
+   */
+  yaxis6?: LayoutXaxisRangesliderYaxis;
+  /**
+   * Subplot `y7`: the same attributes as `yaxis`.
+   */
+  yaxis7?: LayoutXaxisRangesliderYaxis;
+  /**
+   * Subplot `y8`: the same attributes as `yaxis`.
+   */
+  yaxis8?: LayoutXaxisRangesliderYaxis;
+  /**
+   * Subplot `y9`: the same attributes as `yaxis`.
+   */
+  yaxis9?: LayoutXaxisRangesliderYaxis;
+  /**
+   * Further `yaxis` containers (`yaxis10`, …): the same attributes as `yaxis`, not type-checked.
+   */
+  [key: `yaxis${number}`]: unknown;
 }
 
 /**
@@ -1413,7 +1584,7 @@ export interface LayoutXaxisRangesliderYaxis {
   /**
    * Thumbnail y range for `rangemode: 'fixed'`, in data units, like the axis `range` (dates on date axes, exponents on log axes).
    */
-  range?: readonly [unknown, unknown];
+  range?: readonly unknown[];
 }
 
 /**
@@ -1427,7 +1598,7 @@ export interface LayoutXaxisRangeselector {
   /**
    * The buttons, left to right.
    */
-  buttons?: Array<LayoutXaxisRangeselectorButton>;
+  buttons?: readonly LayoutXaxisRangeselectorButton[];
   /**
    * Horizontal position in paper coordinates (fractions of the plot area width). Defaults to the start of the axis domain. Give `x` and `y` together; one alone is ignored.
    *
@@ -1569,7 +1740,22 @@ export interface LayoutXaxisRangeselectorFont {
    * Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.
    */
   lineposition?:
-    'under' | 'over' | 'through' | `${'under' | 'over' | 'through'}+${string}` | 'none';
+    | 'under'
+    | 'over'
+    | 'through'
+    | 'under+over'
+    | 'under+through'
+    | 'over+under'
+    | 'over+through'
+    | 'through+under'
+    | 'through+over'
+    | 'under+over+through'
+    | 'under+through+over'
+    | 'over+under+through'
+    | 'over+through+under'
+    | 'through+under+over'
+    | 'through+over+under'
+    | 'none';
   /**
    * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
    */
@@ -1629,7 +1815,7 @@ export interface LayoutYaxis {
   /**
    * Visible range `[start, end]` in data units (numbers, dates or category names; exponents on log axes, as in Plotly). Setting it turns `autorange` off; `null` for one end autoranges that end only.
    */
-  range?: readonly [unknown, unknown];
+  range?: readonly unknown[];
   /**
    * Lowest value zoom and pan may reach, in range units (like `range`: exponents on log axes). Also caps the autorange.
    */
@@ -1641,13 +1827,13 @@ export interface LayoutYaxis {
   /**
    * Spans hidden from the axis (plan E3.8): the axis skips them, so a weekday-only stock chart has no gaps for weekends or nights. Date and linear axes; data inside a break is not drawn. Ticks never land in a break; hover, zoom and pan work across breaks.
    */
-  rangebreaks?: Array<LayoutYaxisRangebreak>;
+  rangebreaks?: readonly LayoutYaxisRangebreak[];
   /**
    * Fraction of the plot area `[start, end]` this axis spans.
    *
    * @defaultValue `[0,1]`
    */
-  domain?: readonly [number, number];
+  domain?: readonly number[];
   /**
    * The x axis this axis is drawn against, or `free`. Defaults to the x axis of the first subplot using this axis.
    *
@@ -1788,7 +1974,7 @@ export interface LayoutYaxis {
   /**
    * Zoom-dependent tick formats: the first enabled stop whose `dtickrange` contains the current tick step replaces `tickformat`.
    */
-  tickformatstops?: Array<LayoutYaxisTickformatstop>;
+  tickformatstops?: readonly LayoutYaxisTickformatstop[];
   /**
    * Format of this axis’ values in hover labels (same syntax as `tickformat`). Empty uses the tick format with extra precision.
    *
@@ -2058,7 +2244,22 @@ export interface LayoutYaxis {
    *
    * @defaultValue `"toaxis"`
    */
-  spikemode?: 'toaxis' | 'across' | 'marker' | `${'toaxis' | 'across' | 'marker'}+${string}`;
+  spikemode?:
+    | 'toaxis'
+    | 'across'
+    | 'marker'
+    | 'toaxis+across'
+    | 'toaxis+marker'
+    | 'across+toaxis'
+    | 'across+marker'
+    | 'marker+toaxis'
+    | 'marker+across'
+    | 'toaxis+across+marker'
+    | 'toaxis+marker+across'
+    | 'across+toaxis+marker'
+    | 'across+marker+toaxis'
+    | 'marker+toaxis+across'
+    | 'marker+across+toaxis';
   /**
    * `hovered data`: the spike follows the hovered point; `data`: the closest point within `spikedistance`, even when no label shows; `cursor`: the pointer position.
    *
@@ -2122,7 +2323,7 @@ export interface LayoutYaxisRangebreak {
   /**
    * Lower and upper bound of the break. Without `pattern`: values in data units (`['2024-01-06', '2024-01-08']`). With `pattern: 'day of week'`: day numbers 0–6 (Sunday = 0) or English day names (`['sat', 'mon']` hides Saturday and Sunday). With `pattern: 'hour'`: hours 0–24 (`[17, 9]` hides 17:00–09:00, wrapping past midnight). Patterns use UTC days and hours.
    */
-  bounds?: readonly [unknown, unknown];
+  bounds?: readonly unknown[];
   /**
    * How `bounds` repeat: `day of week` or `hour` (date axes only), or `''` for a single span. Defaults to `day of week` when `bounds` names days, else `''`.
    */
@@ -2190,7 +2391,22 @@ export interface LayoutYaxisTickfont {
    * Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.
    */
   lineposition?:
-    'under' | 'over' | 'through' | `${'under' | 'over' | 'through'}+${string}` | 'none';
+    | 'under'
+    | 'over'
+    | 'through'
+    | 'under+over'
+    | 'under+through'
+    | 'over+under'
+    | 'over+through'
+    | 'through+under'
+    | 'through+over'
+    | 'under+over+through'
+    | 'under+through+over'
+    | 'over+under+through'
+    | 'over+through+under'
+    | 'through+under+over'
+    | 'through+over+under'
+    | 'none';
   /**
    * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
    */
@@ -2218,7 +2434,7 @@ export interface LayoutYaxisTickformatstop {
   /**
    * Range `[min, max]` of the tick step (`dtick`) this format applies to; `null` for an open end. Date steps are in ms or `M<n>`.
    */
-  dtickrange?: readonly [unknown, unknown];
+  dtickrange?: readonly unknown[];
   /**
    * The `tickformat` to use while the tick step is inside `dtickrange`.
    *
@@ -2370,7 +2586,22 @@ export interface LayoutYaxisTitleFont {
    * Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.
    */
   lineposition?:
-    'under' | 'over' | 'through' | `${'under' | 'over' | 'through'}+${string}` | 'none';
+    | 'under'
+    | 'over'
+    | 'through'
+    | 'under+over'
+    | 'under+through'
+    | 'over+under'
+    | 'over+through'
+    | 'through+under'
+    | 'through+over'
+    | 'under+over+through'
+    | 'under+through+over'
+    | 'over+under+through'
+    | 'over+through+under'
+    | 'through+under+over'
+    | 'through+over+under'
+    | 'none';
   /**
    * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
    */

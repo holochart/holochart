@@ -1,5 +1,5 @@
 import { createChart, interpolateCamera, type SceneCamera } from '@mk7s/holochart';
-import { registerScenePoints } from '../_lib/scene-points.ts';
+import { registerScenePoints, type ScenePointsTrace } from '../_lib/scene-points.ts';
 import { createReadout, expectValue } from '../_lib/readout.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -26,7 +26,7 @@ export function run(el: HTMLElement): ExampleHandle {
   const from: SceneCamera = { eye: [1.7, 1.7, 1.2], center: [0, 0, 0], up: [0, 0, 1] };
   const to: SceneCamera = { eye: [-1.7, -1.7, 1.2], center: [0, 0, 0], up: [0, 0, 1] };
   const t = Array.from({ length: 80 }, (_, i) => (i / 80) * 4 * Math.PI);
-  const points = (scene: string) => ({
+  const points = (scene: ScenePointsTrace['scene']): ScenePointsTrace => ({
     type: 'scenepoints',
     scene,
     x: t.map((v) => Math.cos(v) * (1 + v / 12)),

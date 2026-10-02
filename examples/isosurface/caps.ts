@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type IsosurfaceTrace } from '@mk7s/holochart';
 import { cubeGrid, gyroid } from '../_lib/volume-data.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -18,13 +18,13 @@ export const meta: ExampleMeta = {
 
 export function run(el: HTMLElement): ExampleHandle {
   const grid = cubeGrid(32, 0, 2 * Math.PI, gyroid);
-  const base = { type: 'isosurface', ...grid, isomin: 0, isomax: 2 };
+  const base: IsosurfaceTrace = { type: 'isosurface', ...grid, isomin: 0, isomax: 2 };
   const off = { show: false };
   const camera = { eye: { x: 1.5, y: -1.4, z: 1.1 } };
   const chart = createChart(el, {
     data: [
       { ...base, name: 'caps', showscale: false },
-      { ...base, name: 'no caps', scene: 'scene2', caps: { x: off, y: off, z: off } },
+      { ...base, name: 'no caps', scene: 'scene2' as const, caps: { x: off, y: off, z: off } },
     ],
     layout: {
       title: { text: 'Gyroid ≥ 0: with caps (left) and without' },

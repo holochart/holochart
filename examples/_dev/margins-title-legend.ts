@@ -1,4 +1,4 @@
-import { componentsReady, createChart } from '@mk7s/holochart';
+import { componentsReady, createChart, type ScatterTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -35,7 +35,7 @@ export function run(el: HTMLElement): ExampleHandle {
   const months = ['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06'];
   const chart = createChart(el, {
     data: [
-      ...REGIONS.map((name, k) => ({
+      ...REGIONS.map((name, k): ScatterTrace => ({
         mode: 'lines',
         name,
         x: months,
