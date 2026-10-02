@@ -59,7 +59,7 @@ afterEach(() => {
   container.remove();
 });
 
-async function draw(figure: { data: unknown[]; layout?: Record<string, unknown> }): Promise<Chart> {
+async function draw(figure: { data: object[]; layout?: Record<string, unknown> }): Promise<Chart> {
   chart = createChart(
     container,
     { ...figure, layout: { showlegend: false, margin: { l: 20, r: 20, t: 20, b: 20 } } },

@@ -1,4 +1,4 @@
-import { createChart, sceneFor } from '@mk7s/holochart';
+import { createChart, sceneFor, type VolumeTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 import type { MeshInteractionHook } from './interaction-mesh3d.ts';
 
@@ -39,12 +39,18 @@ function ball() {
 }
 
 export function run(el: HTMLElement): ExampleHandle {
-  const trace = { type: 'volume', ...ball(), isomin: 0, isomax: 0.45, showscale: false };
+  const trace: VolumeTrace = {
+    type: 'volume',
+    ...ball(),
+    isomin: 0,
+    isomax: 0.45,
+    showscale: false,
+  };
   const camera = { eye: { x: 2, y: 0, z: 0 } };
   const chart = createChart(el, {
     data: [
-      { ...trace, name: 'raymarch', render: 'raymarch', opacity: 1 },
-      { ...trace, name: 'isosurfaces', scene: 'scene2', opacity: 0.5 },
+      { ...trace, name: 'raymarch', render: 'raymarch' as const, opacity: 1 },
+      { ...trace, name: 'isosurfaces', scene: 'scene2' as const, opacity: 0.5 },
     ],
     layout: {
       margin: { l: 20, r: 20, t: 20, b: 20 },

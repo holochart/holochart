@@ -102,7 +102,7 @@ async function steps(n: number): Promise<void> {
   }
 }
 
-const transition = { duration: 160, easing: 'linear' };
+const transition = { duration: 160, easing: 'linear' as const };
 
 /** The same three.js objects (the primitives were updated in place, not rebuilt). */
 function expectSame(a: readonly object[], b: readonly object[]): void {

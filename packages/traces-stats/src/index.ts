@@ -92,3 +92,9 @@ export const statsTraces: readonly Registrable[] = [
   parcoords,
   parcats,
 ];
+
+/**
+ * Figure input types of this package's traces (backlog S1.6): one per trace type (`BoxTrace`, …) and
+ * their union, generated from the attribute schemas by `tools/schema-gen`.
+ */
+export type * from './generated/traces.ts';

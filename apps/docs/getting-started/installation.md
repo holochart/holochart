@@ -173,9 +173,9 @@ React:
 
 ```tsx
 import { useEffect, useRef } from 'react';
-import { newPlot, purge, react, type FigureInput } from '@mk7s/holochart';
+import { newPlot, purge, react, type Figure } from '@mk7s/holochart';
 
-export function Chart({ figure }: { figure: FigureInput }) {
+export function Chart({ figure }: { figure: Figure }) {
   const ref = useRef<HTMLDivElement>(null);
 
   // Create the chart once, and destroy it on unmount.
@@ -202,9 +202,9 @@ Vue:
 ```vue
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { createChart, type Chart, type FigureInput } from '@mk7s/holochart';
+import { createChart, type Chart, type Figure } from '@mk7s/holochart';
 
-const props = defineProps<{ figure: FigureInput }>();
+const props = defineProps<{ figure: Figure }>();
 const el = ref<HTMLDivElement>();
 let chart: Chart | undefined;
 
@@ -232,10 +232,10 @@ client (the mount hooks above already do that).
   are not supported.
 - **ES modules.** The npm packages are ESM-only and target ES2022. Use a bundler such as Vite,
   webpack, or Rollup, or the IIFE build above. Node 22 and newer can also `require()` them.
-- **TypeScript** types are included in every package. No `@types` package is needed. The chart
-  API is fully typed; figures are typed loosely for now (`FigureInput`), so trace and layout
-  attributes are not autocompleted yet. Look them up in the [attribute reference](/reference/);
-  typed figures are planned for the alpha releases.
+- **TypeScript** types are included in every package. No `@types` package is needed. Figures are
+  typed: `Figure`, `Data` (every trace type, discriminated on `type`) and `Layout` autocomplete
+  every attribute with its documentation, and `createChart`, `newPlot` and `react` check the
+  figures they get. See [TypeScript](/guides/typescript).
 
 ## Try it from the monorepo
 

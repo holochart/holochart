@@ -46,8 +46,11 @@ called out in the changelog.
   `~0.x.y` (or an exact version) rather than `^0.x.y` if you need to avoid surprises.
 - Every breaking change is listed under its own heading in the changeset and the changelog, with
   a migration note.
-- Milestone releases are prereleases: M1 ships as `0.1.0-alpha.N` on the `alpha` npm dist-tag
-  (Changesets pre mode). `latest` only ever points at a non-prerelease version.
+- The first releases are prereleases: `0.1.0-alpha.N` on the `alpha` npm dist-tag (Changesets pre
+  mode), installed with `@mk7s/holochart@alpha`. npm also points `latest` at a package's first
+  version, so until the first stable release `latest` follows the newest alpha. From then on,
+  `latest` only points at stable versions
+  ([details](releasing.md#dist-tags-in-pre-mode)).
 - Only the newest minor line receives fixes.
 
 ### From 1.0

@@ -1,4 +1,4 @@
-import { createChart, type Chart } from '@mk7s/holochart';
+import { createChart, type Chart, type Figure } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -20,7 +20,7 @@ export const meta: ExampleMeta = {
 
 const CATEGORIES = ['north', 'east', 'south', 'west', 'central'];
 
-function figure(mode: 'hide' | 'show') {
+function figure(mode: 'hide' | 'show'): Figure {
   return {
     data: [
       {

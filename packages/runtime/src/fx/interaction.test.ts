@@ -5,7 +5,7 @@
  * l 40, r 20, t 30, b 50, so the `xy` plot area is x 40–620, y 30–350; with x in [0, 10] and y in
  * [0, 100], data (x, y) sits at container (40 + 58·x, 350 − 3.2·y).
  */
-import { attr } from '@mk7s/holochart-core';
+import { attr, type FigureInput } from '@mk7s/holochart-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createChart, type Chart } from '../chart.ts';
 import type { ComponentModule, TraceModule } from '../contracts.ts';
@@ -43,7 +43,7 @@ async function chart(
 ): Promise<Chart> {
   const c = createChart(
     s.container,
-    { data, layout: { margin: MARGIN, ...RANGES, ...layout }, config },
+    { data, layout: { margin: MARGIN, ...RANGES, ...layout }, config } as FigureInput,
     s.options,
   );
   charts.push(c);

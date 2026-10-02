@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type VolumeTrace } from '@mk7s/holochart';
 import { blobs, cubeGrid } from '../_lib/volume-data.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -19,19 +19,19 @@ export const meta: ExampleMeta = {
 export function run(el: HTMLElement): ExampleHandle {
   const grid = cubeGrid(96, -1, 1, blobs);
   const trace = {
-    type: 'volume',
     ...grid,
     render: 'raymarch',
     isomin: 0.05,
     opacity: 0.25,
     opacityscale: 'max',
     colorscale: 'Plasma',
-  };
+  } satisfies Partial<VolumeTrace>;
   const camera = { eye: { x: 1.4, y: -1.3, z: 0.9 } };
   const chart = createChart(el, {
     data: [
-      { ...trace, name: 'plain', showscale: false },
+      { type: 'volume', ...trace, name: 'plain', showscale: false },
       {
+        type: 'volume',
         ...trace,
         name: 'shaded',
         scene: 'scene2',

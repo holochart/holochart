@@ -6,6 +6,7 @@
  * with margins l 40, r 20, t 30, b 50, so a full-size plot area is x 40–620, y 30–350 (580 × 320).
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { FigureInput } from '@mk7s/holochart-core';
 import { createChart, type Chart } from './chart.ts';
 import { setup, type TestSetup } from './__testing__/fakes.ts';
 
@@ -26,7 +27,11 @@ afterEach(() => {
 });
 
 async function chart(data: unknown[], layout: Record<string, unknown> = {}): Promise<Chart> {
-  const c = createChart(t.container, { data, layout: { margin: MARGIN, ...layout } }, t.options);
+  const c = createChart(
+    t.container,
+    { data, layout: { margin: MARGIN, ...layout } } as FigureInput,
+    t.options,
+  );
   charts.push(c);
   await c.ready;
   return c;

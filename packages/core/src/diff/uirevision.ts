@@ -18,7 +18,7 @@
  * `xaxis.autorange`) before relayouting `current`. `react(next)` then runs
  * `effective = applyUirevision(current, next, state)` and diffs `current` against `effective`.
  */
-import type { FigureInput } from '../defaults/types.ts';
+import type { AnyFigure } from '../defaults/types.ts';
 import { getIn, parsePath, stringifyPath, type PathSegment } from '../path/path.ts';
 import { isPlainObject } from '../util/objects.ts';
 import { deepEqual, own } from './equal.ts';
@@ -163,7 +163,7 @@ function applyEdits(container: unknown, edits: Map<string, GuiEdit>, keep: boole
  * identities.
  * @param next - The figure passed to `react`.
  */
-export function applyUirevision(prev: FigureInput, next: FigureInput, state: UiState): FigureInput {
+export function applyUirevision(prev: AnyFigure, next: AnyFigure, state: UiState): AnyFigure {
   const prevLayout = isPlainObject(prev.layout) ? prev.layout : undefined;
   const nextLayout = isPlainObject(next.layout) ? next.layout : undefined;
   const oldLayoutRev = prevLayout?.['uirevision'];
@@ -197,7 +197,7 @@ export function applyUirevision(prev: FigureInput, next: FigureInput, state: UiS
   }
 
   if (layoutOut === next.layout && dataOut === undefined) return next;
-  const out: FigureInput = { ...next };
+  const out: AnyFigure = { ...next };
   if (layoutOut !== next.layout) out.layout = layoutOut;
   if (dataOut !== undefined) out.data = dataOut;
   return out;

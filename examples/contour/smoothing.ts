@@ -26,7 +26,7 @@ export function run(el: HTMLElement): ExampleHandle {
     y,
     z,
     ncontours: 8,
-    coloraxis: 'coloraxis',
+    coloraxis: 'coloraxis' as const,
     line: { color: 'rgba(10, 10, 15, 0.7)', width: 1 },
   };
   const chart = createChart(el, {

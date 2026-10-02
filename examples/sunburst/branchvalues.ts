@@ -1,4 +1,10 @@
-import { componentsReady, createChart, render, type Chart } from '@mk7s/holochart';
+import {
+  componentsReady,
+  createChart,
+  render,
+  type Chart,
+  type SunburstTrace,
+} from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -25,7 +31,7 @@ const TREE = {
   parents: ['', 'Eve', 'Eve', 'Seth', 'Seth', 'Eve', 'Eve', 'Awan', 'Eve'],
   values: [65, 14, 12, 10, 2, 6, 6, 4, 4],
   textinfo: 'label+percent parent',
-};
+} satisfies Partial<SunburstTrace>;
 
 export function run(el: HTMLElement): ExampleHandle {
   let chart: Chart | undefined;

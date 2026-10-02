@@ -13,6 +13,7 @@ import {
 } from '@mk7s/holochart-core';
 import { createMarkers, type Primitive, type Viewport } from '@mk7s/holochart-render';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { FigureInput } from '@mk7s/holochart-core';
 import { linearExtremes } from './axes.ts';
 import { createChart, type Chart } from './chart.ts';
 import type { SubplotInfo, TraceModule, TracePlotContext, TraceUpdatePlan } from './contracts.ts';
@@ -170,7 +171,7 @@ afterEach(() => {
 async function chart(data: unknown[], layout: Record<string, unknown> = {}): Promise<Chart> {
   const c = createChart(
     t.container,
-    { data, layout: { margin: { l: 40, r: 20, t: 20, b: 40 }, ...layout } },
+    { data, layout: { margin: { l: 40, r: 20, t: 20, b: 40 }, ...layout } } as FigureInput,
     t.options,
   );
   charts.push(c);

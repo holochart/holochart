@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type BarTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -91,8 +91,8 @@ export function run(el: HTMLElement): ExampleHandle {
       ...[
         { name: 'H1 spend', y: H1, color: '#5e74d5' },
         { name: 'H2 spend', y: H2, color: '#8fa2e8' },
-      ].map((half, k) => ({
-        type: 'bar' as const,
+      ].map((half, k): BarTrace => ({
+        type: 'bar',
         name: half.name,
         xaxis: 'x2',
         yaxis: 'y2',
@@ -102,7 +102,7 @@ export function run(el: HTMLElement): ExampleHandle {
         alignmentgroup: 'spend',
         marker: { color: half.color },
         texttemplate: '%{y:.1f}',
-        textposition: 'outside' as const,
+        textposition: 'outside',
         meta: 'US$ M',
         hovertemplate: '%{x}, %{fullData.name}: %{y:.1f} %{meta}<extra></extra>',
         selectedpoints: over(half.y),

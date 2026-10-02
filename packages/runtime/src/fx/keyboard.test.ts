@@ -7,6 +7,7 @@
  */
 import fc from 'fast-check';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { FigureInput } from '@mk7s/holochart-core';
 import { createChart, type Chart } from '../chart.ts';
 import type { ChartEventName } from '../events.ts';
 import { setup, type TestSetup } from '../__testing__/fakes.ts';
@@ -143,7 +144,7 @@ async function chart(
 ): Promise<Chart> {
   const c = createChart(
     t.container,
-    { data, layout: { margin: MARGIN, ...RANGES, ...layout }, config },
+    { data, layout: { margin: MARGIN, ...RANGES, ...layout }, config } as FigureInput,
     t.options,
   );
   charts.push(c);

@@ -2,7 +2,7 @@ import fc from 'fast-check';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fixtureRegistry } from '../__fixtures__/modules.ts';
 import { figureArbitrary } from '../__testing__/schema-arbitrary.ts';
-import type { FigureInput } from '../defaults/types.ts';
+import type { AnyFigure } from '../defaults/types.ts';
 import type { TypedArray } from '../schema/types.ts';
 import {
   decodeFigure,
@@ -19,7 +19,7 @@ afterEach(() => {
 
 /** Encode with the fixture registry, collecting warnings. */
 function encode(
-  figure: FigureInput,
+  figure: AnyFigure,
   opts: EncodeFigureOptions = { registry },
 ): { json: ReturnType<typeof encodeFigure>; warnings: SerializeWarning[] } {
   const warnings: SerializeWarning[] = [];
@@ -28,7 +28,7 @@ function encode(
 }
 
 /** encode → JSON text → decode. */
-function roundTrip(figure: FigureInput, opts?: EncodeFigureOptions): FigureInput {
+function roundTrip(figure: AnyFigure, opts?: EncodeFigureOptions): AnyFigure {
   return decodeFigure(JSON.stringify(encode(figure, opts).json));
 }
 
@@ -82,7 +82,7 @@ const SPECIAL = [NaN, -0, 0, Infinity, -Infinity, 1.5];
 
 describe('encodeFigure / decodeFigure round trip', () => {
   const heat = [Float64Array.of(1, NaN, 3), Float64Array.of(-0, Infinity, 6)];
-  const figure: FigureInput = {
+  const figure: AnyFigure = {
     data: [
       {
         type: 'scatter',
@@ -188,10 +188,7 @@ describe('encodeFigure / decodeFigure round trip', () => {
   });
 
   it('works without a registry and keeps unknown top-level keys', () => {
-    const back = roundTrip(
-      { data: [{ x: Int8Array.of(1) }], extra: { a: [1] } } as FigureInput,
-      {},
-    );
+    const back = roundTrip({ data: [{ x: Int8Array.of(1) }], extra: { a: [1] } } as AnyFigure, {});
     expect(canon(back)).toEqual(canon({ data: [{ x: Int8Array.of(1) }], extra: { a: [1] } }));
   });
 
@@ -490,7 +487,7 @@ describe('other non-JSON values', () => {
     const frames: unknown[] = [fig];
     frames.push(frames);
     fig['frames'] = frames;
-    const { json, warnings } = encode(fig as FigureInput);
+    const { json, warnings } = encode(fig as AnyFigure);
     expect(json).toEqual({
       layout: { a: 1, shared: [1, 2] },
       config: { arr: [[1, 2], null], again: [1, 2] },
@@ -509,8 +506,8 @@ describe('other non-JSON values', () => {
   });
 
   it('rejects a non-object figure', () => {
-    expect(() => encodeFigure(null as unknown as FigureInput)).toThrow(TypeError);
-    expect(() => encodeFigure([] as unknown as FigureInput)).toThrow(TypeError);
+    expect(() => encodeFigure(null as unknown as AnyFigure)).toThrow(TypeError);
+    expect(() => encodeFigure([] as unknown as AnyFigure)).toThrow(TypeError);
   });
 });
 
@@ -600,7 +597,7 @@ describe('round-trip property (schema-derived figures)', () => {
         const figure = {
           ...generated,
           datasets: { ...(generated.datasets as object), extra },
-        } as FigureInput;
+        } as AnyFigure;
         const { json, warnings } = encode(figure);
         expect(JSON.parse(JSON.stringify(json))).toEqual(json);
         // Only function-valued config attributes (dropped) may warn on valid figures.

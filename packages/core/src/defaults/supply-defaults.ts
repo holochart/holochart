@@ -36,7 +36,7 @@ import { supplyDomainDefaults } from './domain.ts';
 import { gridAxisOverrides, supplyGridSizing } from './grid.ts';
 import { supplySelectionDefaults } from './selections.ts';
 import { splomAxisOverrides, splomGridFallback } from './splom-axes.ts';
-import type { FigureInput, FullConfig, FullLayout, FullTrace } from './types.ts';
+import type { AnyFigure, FigureInput, FullConfig, FullLayout, FullTrace } from './types.ts';
 
 /** Options for {@link supplyDefaults}. */
 export interface SupplyDefaultsOptions {
@@ -188,7 +188,7 @@ function supplyTrace(
  * deprecation notice. Otherwise issues are passed to `options.onIssue` (default: warn once per path).
  */
 export function supplyDefaults(
-  figure: FigureInput,
+  figure: AnyFigure,
   registry: Registry,
   options: SupplyDefaultsOptions = {},
 ): SupplyDefaultsResult {

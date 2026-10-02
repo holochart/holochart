@@ -11,14 +11,30 @@ import {
   type Change,
   type FullLayout,
   type FullTrace,
+  type Layout,
   type PathSegment,
   type Registry,
   type Stage,
 } from '@mk7s/holochart-core';
 import type { TraceUpdatePlan } from './contracts.ts';
 
-/** Attribute-string edits: `{ 'marker.color': 'red', 'xaxis.range[0]': 2 }`. */
+/**
+ * Attribute-string edits: `{ 'marker.color': 'red', 'xaxis.range[0]': 2 }`. Keys are attribute
+ * paths, so values are not typed: the escape hatch of `restyle`, whose array values hold one value
+ * per trace.
+ */
 export type AttributeUpdate = Readonly<Record<string, unknown>>;
+
+/**
+ * Layout edits for `relayout`: attribute paths (`'xaxis.range[0]'`, untyped) and whole layout
+ * attributes, typed like the layout (`{ title: { text: 'Sales' } }`). `null` resets an attribute to
+ * its default.
+ *
+ * @typeParam L - The layout type: the base layout by default, the full bundle's `Layout` there.
+ */
+export type LayoutUpdate<L extends object = Layout> = {
+  readonly [K in keyof L]?: L[K] | null;
+} & AttributeUpdate;
 
 // ---- Applying edits -----------------------------------------------------------------------------
 

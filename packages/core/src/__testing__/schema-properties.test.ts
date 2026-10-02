@@ -9,7 +9,7 @@ import { fixtureRegistry } from '../__fixtures__/modules.ts';
 import { configSchema } from '../config/schema.ts';
 import { coerceContainer } from '../defaults/container.ts';
 import { supplyDefaults } from '../defaults/supply-defaults.ts';
-import type { FigureInput } from '../defaults/types.ts';
+import type { AnyFigure } from '../defaults/types.ts';
 import { diffFigures } from '../diff/diff.ts';
 import { layoutSchema } from '../layout/schema.ts';
 import { plotSchema, schemaToJSON } from '../schema/json.ts';
@@ -32,8 +32,8 @@ const registry = fixtureRegistry();
 const quiet = { onIssue: () => {} };
 const MODES = ['valid', 'invalid'] as const;
 
-const asFigure = (f: GeneratedFigure): FigureInput => f as FigureInput;
-const datasetsOf = (f: GeneratedFigure): FigureInput['datasets'] => asFigure(f).datasets;
+const asFigure = (f: GeneratedFigure): AnyFigure => f as AnyFigure;
+const datasetsOf = (f: GeneratedFigure): AnyFigure['datasets'] => asFigure(f).datasets;
 
 /**
  * Freeze plain objects and arrays recursively, so any attempt to mutate the input throws (ES
@@ -389,7 +389,7 @@ describe('regressions found by the E20.2 properties', () => {
     const date = ['2024-01-01', '2024-01-02'];
     const region = ['north', 'south'];
     const datasets = { sales: { date, region, rev: [1, 2] } };
-    const fig: FigureInput = {
+    const fig: AnyFigure = {
       datasets,
       data: [
         {

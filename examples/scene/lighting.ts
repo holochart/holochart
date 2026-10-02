@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type LayoutScene, type Mesh3dTrace } from '@mk7s/holochart';
 import { placed, torus, uvSphere } from '../_lib/mesh3d-data.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -30,7 +30,10 @@ const TILE = {
   k: [2, 3],
 };
 
-function objects(scene: string, ringMaterial?: Record<string, unknown>) {
+function objects(
+  scene: Mesh3dTrace['scene'],
+  ringMaterial?: Mesh3dTrace['material'],
+): Mesh3dTrace[] {
   return [
     {
       type: 'mesh3d',
@@ -58,7 +61,7 @@ function objects(scene: string, ringMaterial?: Record<string, unknown>) {
 
 export function run(el: HTMLElement): ExampleHandle {
   const axes = { showbackground: false, range: [-1.7, 1.7] };
-  const box = {
+  const box: LayoutScene = {
     xaxis: axes,
     yaxis: axes,
     zaxis: { ...axes, range: [-0.1, 1.2] },

@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type ViolinTrace } from '@mk7s/holochart';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -20,7 +20,7 @@ const DAYS = ['Thu', 'Fri', 'Sat', 'Sun'];
 
 export function run(el: HTMLElement): ExampleHandle {
   const normal = gaussian(rng(23));
-  const trace = (name: string, side: 'negative' | 'positive', lift: number) => {
+  const trace = (name: string, side: 'negative' | 'positive', lift: number): ViolinTrace => {
     const x: string[] = [];
     const y: number[] = [];
     DAYS.forEach((day, d) => {

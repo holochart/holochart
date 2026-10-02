@@ -24,7 +24,7 @@ export function run(el: HTMLElement): ExampleHandle {
   const x = Array.from({ length: n }, () => random() * 10);
   const y = Array.from({ length: n }, () => random() * 4);
   const z = x.map((v, i) => 0.15 * v + 0.2 * y[i]! + random() * 0.3);
-  const scenes = ['scene', 'scene2', 'scene3'];
+  const scenes = ['scene', 'scene2', 'scene3'] as const;
   const chart = createChart(el, {
     data: scenes.map((scene) => ({
       type: 'scatter3d',

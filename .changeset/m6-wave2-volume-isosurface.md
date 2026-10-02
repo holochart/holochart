@@ -1,7 +1,0 @@
----
-'@mk7s/holochart-traces-3d': minor
-'@mk7s/holochart-core': minor
-'@mk7s/holochart': minor
----
-
-`isosurface` and `volume` traces (M6 wave 2). Both take a scalar field on a rectilinear 3D grid as flattened `x`, `y`, `z`, `value` columns (any nesting order and direction, uneven spacing; typed arrays used without copies; grids that aren't complete draw nothing, as in Plotly). `isosurface` draws the level surfaces between `isomin` and `isomax` with plotly.js' own extraction (five tetrahedra per cell, marching tetrahedra), so figures match Plotly: `surface.{show, count, fill, pattern}`, `caps.{x, y, z}.{show, fill}`, `slices.{x, y, z}.{show, locations, fill}`, `spaceframe.{show, fill}`, the value colorscale (automatic domain `[isomin, isomax]`, colorbar, `coloraxis`), `opacity`, `flatshading`, `lighting`, `lightposition` and `material`; hover snaps to the nearest grid point and shows `x`, `y`, `z` and `value: …` (`valuehoverformat`, `%{value}`). `volume` draws the same data as Plotly's stacked translucent isosurfaces with `opacityscale` (`'min'`, `'max'`, `'extremes'`, `'uniform'` or stops), or, with the Holochart extension `render: 'raymarch'`, by GPU ray marching through an 8-bit 3D texture with a transfer function (colorscale × `opacity` × `opacityscale`, per grid cell), clipped by the scene's axis ranges, with `raymarch.step` and gradient `raymarch.shading`; ray-marched volumes hover through a CPU ray cast. The default look gives both traces its slim colorbar. The script-tag build shares `Data3DTexture` and `LinearFilter` with the 3D add-on.

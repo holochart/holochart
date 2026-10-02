@@ -1,5 +1,7 @@
 /** Types of the supply-defaults output (`fullData`, `fullLayout`, `fullConfig`). */
 import type { configSchema } from '../config/schema.ts';
+import type { Config } from '../generated/config.ts';
+import type { Layout, LayoutTitle } from '../generated/layout.ts';
 import type { ReducedMotion } from './a11y.ts';
 import type { gridSchema } from '../layout/grid.ts';
 import type { layoutSchema, xaxisSchema } from '../layout/schema.ts';
@@ -8,17 +10,86 @@ import type { TraceModule } from '../registry/types.ts';
 import type { InferFull } from '../schema/types.ts';
 import type { Template } from '../templates/templates.ts';
 
-/** A figure as passed by the user (plan ADR-001). */
-export interface FigureInput {
-  data?: readonly unknown[];
-  layout?: unknown;
-  config?: unknown;
-  frames?: unknown;
+/**
+ * A trace of any type, as a registry that does not know it accepts it: the loose default of
+ * {@link FigureInput}. Any object fits, so partial bundles, plugins and data from untyped sources
+ * (JSON, Express) work; the full bundle's `Figure` (`@mk7s/holochart`) types every built-in trace
+ * instead, and each trace package exports its own trace types (`ScatterTrace`, `TracesBasic`, …).
+ */
+export type TraceInput = object;
+
+/**
+ * A layout as {@link FigureInput} takes it by default: the base layout attributes (axes, margins,
+ * …) typed, and any other attribute (those of registered components and traces, such as `legend`
+ * or `barmode`) accepted as it is. The full bundle's `Layout` types those too. `title` takes the
+ * attributes the title component adds (`subtitle`, `pad`, …).
+ */
+// Not `Omit<Layout, 'title'>`: `keyof Layout` reduces `'xaxis2'` into `` `xaxis${number}` ``, so
+// mapping over it would lose the typed numbered axes.
+export type LayoutInput = Layout & {
+  readonly title?: LayoutTitle | (LayoutTitle & { readonly [key: string]: unknown });
+  readonly [key: string]: unknown;
+};
+
+/**
+ * An animation frame (`figure.frames[i]`, `addFrames`): trace and layout changes applied as one
+ * step, like Plotly's frames.
+ *
+ * @typeParam D - The trace type (see {@link FigureInput}).
+ */
+export interface Frame<D extends object = TraceInput> {
+  /** Name to animate to (numbers are converted to strings). Unnamed frames get `'frame N'`. */
+  readonly name?: string | number;
+  /** Group name: `animate('group')` plays the frames of a group in order. */
+  readonly group?: string | number;
+  /**
+   * Trace changes, merged into the traces listed in `traces` (default: trace `i` for `data[i]`).
+   * A frame's trace may leave out `type`.
+   */
+  readonly data?: readonly (Partial<D> | null | undefined)[];
+  /** Trace indices `data` applies to. */
+  readonly traces?: number | readonly number[];
+  /** Layout changes (attribute strings such as `'xaxis.range'` work too). */
+  readonly layout?: Readonly<Record<string, unknown>>;
+  /** Name of a frame this one extends: its `data` and `layout` apply first. */
+  readonly baseframe?: string | number;
+  readonly [key: string]: unknown;
+}
+
+/**
+ * A figure as passed by the user (plan ADR-001).
+ *
+ * Generic so that one shape serves every bundle: the defaults accept any trace and type the base
+ * layout (partial bundles, plugins); `FigureInput<ScatterTrace | BarTrace>` types the traces a
+ * partial bundle registers; the full bundle's `Figure` is `FigureInput<Data, Layout>`, every
+ * built-in trace and layout attribute typed.
+ *
+ * @typeParam D - The trace type: a union discriminated on `type`, such as `Data`.
+ * @typeParam L - The layout type.
+ */
+export interface FigureInput<D extends object = TraceInput, L extends object = LayoutInput> {
+  data?: readonly D[];
+  layout?: L;
+  config?: Config;
+  frames?: readonly Frame<D>[];
   /**
    * Named column tables that traces reference with `dataset: 'name'` and `'@column'` strings
    * (plan E1.6), e.g. `{ sales: { date: [...], revenue: Float64Array } }`.
    */
   datasets?: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
+}
+
+/**
+ * A figure of any shape, as the pipeline takes it (`supplyDefaults`, `diffFigures`,
+ * `encodeFigure`, …): every part is validated, so nothing is assumed. Every {@link FigureInput} is
+ * one.
+ */
+export interface AnyFigure {
+  data?: readonly unknown[];
+  layout?: unknown;
+  config?: unknown;
+  frames?: unknown;
+  datasets?: FigureInput['datasets'];
 }
 
 /** A trace after defaults. Module-specific attributes are reached through the index signature. */

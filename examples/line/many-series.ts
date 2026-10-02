@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type ScatterTrace } from '@mk7s/holochart';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -32,7 +32,7 @@ export function run(el: HTMLElement): ExampleHandle {
     new Date(Date.UTC(2025, 0, 6) + i * 7 * 86_400_000).toISOString().slice(0, 10),
   );
 
-  const data = REGIONS.map((name, k) => {
+  const data = REGIONS.map((name, k): ScatterTrace => {
     let v = 20 + k * 6;
     const drift = (k % 3) - 1;
     return {

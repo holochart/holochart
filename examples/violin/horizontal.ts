@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type ViolinTrace } from '@mk7s/holochart';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -21,7 +21,12 @@ export function run(el: HTMLElement): ExampleHandle {
     Array.from({ length: 150 }, () =>
       Math.round(Math.min(90, Math.max(18, mu + sigma * normal()))),
     );
-  const style = { type: 'violin', spanmode: 'hard', bandwidth: 3, points: false };
+  const style = {
+    type: 'violin',
+    spanmode: 'hard',
+    bandwidth: 3,
+    points: false,
+  } satisfies ViolinTrace;
   const chart = createChart(el, {
     data: [
       { ...style, name: 'Podcast', x: ages(31, 7) },

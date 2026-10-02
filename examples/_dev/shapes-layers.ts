@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type LayoutShape } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -16,7 +16,7 @@ export const meta: ExampleMeta = {
 };
 
 export function run(el: HTMLElement): ExampleHandle {
-  const band = (y0: number, layer: string, color: string) => ({
+  const band = (y0: number, layer: 'below' | 'between' | 'above', color: string): LayoutShape => ({
     type: 'rect',
     layer,
     xref: 'x domain',

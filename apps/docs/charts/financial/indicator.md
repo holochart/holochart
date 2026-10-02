@@ -106,9 +106,9 @@ snaps:
 <Example id="indicator/count-up" />
 
 ```ts
-import { createChart } from '@mk7s/holochart';
+import { createChart, type Figure } from '@mk7s/holochart';
 
-const figure = (value: number) => ({
+const figure = (value: number): Figure => ({
   data: [{ type: 'indicator', mode: 'gauge+number', value, gauge: { axis: { range: [0, 500] } } }],
   layout: { transition: { duration: 800, easing: 'cubic-in-out' } },
 });

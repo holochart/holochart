@@ -1,7 +1,0 @@
----
-'@mk7s/holochart-runtime': minor
-'@mk7s/holochart-traces-3d': minor
-'@mk7s/holochart': minor
----
-
-3D camera animation, auto-rotation, materials and scene lights (M6 wave 1). `chart.animateCamera({ eye, center, up }, { duration, easing, subplot })` (and `animateCamera(el, …)`) flies a scene's camera along an orbit around its center, commits it with a `relayout` and resolves; a drag, a camera change or another flight interrupts it (rejects with `AnimationInterrupted`), and reduced motion jumps. `react` with `layout.transition` and `animate` frames now animate `scene.camera` along the same path. `scene.autorotate: { speed, axis, time }` turns a scene continuously while it is on screen, pausing while the user moves the camera and stopping under reduced motion (`time` freezes it). 3D traces get Plotly's `lighting` / `lightposition` (with plotly.js' per-type defaults) and the `material` extension (`type: 'plotly' | 'flat' | 'basic' | 'lambert' | 'phong' | 'standard' | 'physical' | 'toon' | 'matcap'`, three.js parameters, `castshadow` / `receiveshadow`) through shared builders (`sceneLightingAttributes`, `sceneMaterialAttributes`, `supplySceneLightingDefaults`, `sceneMeshLighting`); `scene.lighting` sets a scene's light rig (ambient, directional lights with shadows, hemisphere, `'studio'` / `'city'` / URL environments, a ground plane). Component views can animate the camera (`animateCamera`) and interpolate their own layout attributes in transitions (`layoutTweens`).

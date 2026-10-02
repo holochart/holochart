@@ -25,7 +25,7 @@ const POSITIONS = [
   'bottom left',
   'bottom center',
   'bottom right',
-];
+] as const;
 
 export function run(el: HTMLElement): ExampleHandle {
   const grid = POSITIONS.map((_, k) => ({ x: (k % 3) * 2, y: 4 - Math.floor(k / 3) * 1.5 }));

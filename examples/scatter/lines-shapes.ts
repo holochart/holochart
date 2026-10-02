@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type ScatterTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -20,7 +20,7 @@ const X = [0, 1, 2, 3, 4, 5, 6, 7];
 const Y = [0, 0.8, 0.3, 1.2, 0.6, 0.9, 0.1, 0.7];
 
 export function run(el: HTMLElement): ExampleHandle {
-  const series = [
+  const shapes: ScatterTrace[] = [
     { name: 'linear', line: { shape: 'linear' } },
     { name: 'spline', line: { shape: 'spline' } },
     { name: 'spline 1.3', line: { shape: 'spline', smoothing: 1.3 } },
@@ -28,7 +28,8 @@ export function run(el: HTMLElement): ExampleHandle {
     { name: 'vh', line: { shape: 'vh' } },
     { name: 'hvh', line: { shape: 'hvh' } },
     { name: 'vhv', line: { shape: 'vhv' } },
-  ].map((s, k) => ({
+  ];
+  const series = shapes.map((s, k): ScatterTrace => ({
     ...s,
     x: X,
     y: Y.map((v) => v + k * 1.6),
@@ -36,7 +37,7 @@ export function run(el: HTMLElement): ExampleHandle {
     marker: { size: 5 },
   }));
   const gappy = Y.map((v, i) => (i === 3 ? null : v + 7 * 1.6));
-  const top = [
+  const top: ScatterTrace[] = [
     {
       name: 'gap (dash)',
       x: X,

@@ -1,14 +1,14 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { fixtureRegistry } from '../__fixtures__/modules.ts';
-import type { FigureInput } from '../defaults/types.ts';
+import type { AnyFigure } from '../defaults/types.ts';
 import { diffFigures } from './diff.ts';
 import { applyUirevision, createUiState, recordGuiEdit, type UiState } from './uirevision.ts';
 
 const registry = fixtureRegistry();
 
 /** Simulate a zoom on `xaxis`: record both paths Plotly's zoom touches. */
-function zoom(state: UiState, before: FigureInput, range: [number, number]): void {
+function zoom(state: UiState, before: AnyFigure, range: [number, number]): void {
   const xaxis = ((before.layout as { xaxis?: Record<string, unknown> }).xaxis ?? {}) as Record<
     string,
     unknown
@@ -17,16 +17,16 @@ function zoom(state: UiState, before: FigureInput, range: [number, number]): voi
   recordGuiEdit(state, { kind: 'layout' }, 'xaxis.autorange', xaxis['autorange'], false);
 }
 
-const layoutOf = (f: FigureInput) => f.layout as Record<string, Record<string, unknown>>;
+const layoutOf = (f: AnyFigure) => f.layout as Record<string, Record<string, unknown>>;
 
 describe('applyUirevision: layout', () => {
   const x = [1, 2, 3];
-  const prev: FigureInput = { data: [{ x, y: x }], layout: { uirevision: 'u', title: 'a' } };
+  const prev: AnyFigure = { data: [{ x, y: x }], layout: { uirevision: 'u', title: 'a' } };
 
   it('keeps the zoom while uirevision is unchanged', () => {
     const state = createUiState();
     zoom(state, prev, [1, 2]);
-    const next: FigureInput = { data: [{ x, y: x }], layout: { uirevision: 'u', title: 'b' } };
+    const next: AnyFigure = { data: [{ x, y: x }], layout: { uirevision: 'u', title: 'b' } };
     const before = structuredClone(next);
     const out = applyUirevision(prev, next, state);
     expect(layoutOf(out)['xaxis']).toEqual({ range: [1, 2], autorange: false });
@@ -42,7 +42,7 @@ describe('applyUirevision: layout', () => {
   it('drops the zoom when uirevision changes, and does not resurrect it later', () => {
     const state = createUiState();
     zoom(state, prev, [1, 2]);
-    const next: FigureInput = { data: prev.data, layout: { uirevision: 'v' } };
+    const next: AnyFigure = { data: prev.data, layout: { uirevision: 'v' } };
     expect(applyUirevision(prev, next, state)).toBe(next);
     expect(state.layout.size).toBe(0);
     expect(applyUirevision(next, { layout: { uirevision: 'u' } }, state).layout).toEqual({
@@ -52,9 +52,9 @@ describe('applyUirevision: layout', () => {
 
   it('drops the zoom when uirevision is unset', () => {
     const state = createUiState();
-    const plain: FigureInput = { layout: {} };
+    const plain: AnyFigure = { layout: {} };
     zoom(state, plain, [1, 2]);
-    const next: FigureInput = { layout: {} };
+    const next: AnyFigure = { layout: {} };
     expect(applyUirevision(plain, next, state)).toBe(next);
     expect(state.layout.size).toBe(0);
   });
@@ -62,7 +62,7 @@ describe('applyUirevision: layout', () => {
   it('lets the app win when it sets the value itself', () => {
     const state = createUiState();
     zoom(state, prev, [1, 2]);
-    const next: FigureInput = { layout: { uirevision: 'u', xaxis: { range: [5, 6] } } };
+    const next: AnyFigure = { layout: { uirevision: 'u', xaxis: { range: [5, 6] } } };
     const out = applyUirevision(prev, next, state);
     // The app's range wins; autorange was untouched by the app, so the GUI value still applies.
     expect(layoutOf(out)['xaxis']).toEqual({ range: [5, 6], autorange: false });
@@ -70,10 +70,10 @@ describe('applyUirevision: layout', () => {
   });
 
   it('compares pre-GUI values by value (fresh literals count as unchanged)', () => {
-    const withRange: FigureInput = { layout: { uirevision: 'u', xaxis: { range: [0, 10] } } };
+    const withRange: AnyFigure = { layout: { uirevision: 'u', xaxis: { range: [0, 10] } } };
     const state = createUiState();
     zoom(state, withRange, [2, 3]);
-    const next: FigureInput = { layout: { uirevision: 'u', xaxis: { range: [0, 10] } } };
+    const next: AnyFigure = { layout: { uirevision: 'u', xaxis: { range: [0, 10] } } };
     expect(layoutOf(applyUirevision(withRange, next, state))['xaxis']).toEqual({
       range: [2, 3],
       autorange: false,
@@ -82,7 +82,7 @@ describe('applyUirevision: layout', () => {
 
   it('compares uirevision values by value', () => {
     const state = createUiState();
-    const p: FigureInput = { layout: { uirevision: { v: 1 } } };
+    const p: AnyFigure = { layout: { uirevision: { v: 1 } } };
     zoom(state, p, [1, 2]);
     const out = applyUirevision(p, { layout: { uirevision: { v: 1 } } }, state);
     expect(layoutOf(out)['xaxis']?.['range']).toEqual([1, 2]);
@@ -91,9 +91,9 @@ describe('applyUirevision: layout', () => {
   it('returns next unchanged when the app already echoes the GUI value', () => {
     const state = createUiState();
     recordGuiEdit(state, { kind: 'layout' }, 'xaxis.range', undefined, [1, 2]);
-    const next: FigureInput = { layout: { uirevision: 'u' } };
+    const next: AnyFigure = { layout: { uirevision: 'u' } };
     expect(applyUirevision(prev, next, state)).not.toBe(next);
-    const echoed: FigureInput = { layout: { uirevision: 'u', xaxis: { range: [1, 2] } } };
+    const echoed: AnyFigure = { layout: { uirevision: 'u', xaxis: { range: [1, 2] } } };
     // The app now holds [1, 2], not the pre-GUI `undefined`: the app owns the value from here on.
     expect(applyUirevision(prev, echoed, state)).toBe(echoed);
   });
@@ -119,7 +119,7 @@ describe('applyUirevision: layout', () => {
   it('drops an edit whose path now runs through a non-container', () => {
     const state = createUiState();
     recordGuiEdit(state, { kind: 'layout' }, 'xaxis.range', undefined, [1, 2]);
-    const next: FigureInput = { layout: { uirevision: 'u', xaxis: 'oops' } };
+    const next: AnyFigure = { layout: { uirevision: 'u', xaxis: 'oops' } };
     expect(applyUirevision(prev, next, state)).toBe(next);
     expect(state.layout.size).toBe(0);
   });
@@ -128,7 +128,7 @@ describe('applyUirevision: layout', () => {
     const state = createUiState();
     zoom(state, prev, [1, 2]);
     const yaxis = { range: [0, 1] };
-    const next: FigureInput = { data: [{ x }], layout: { uirevision: 'u', yaxis } };
+    const next: AnyFigure = { data: [{ x }], layout: { uirevision: 'u', yaxis } };
     const out = applyUirevision(prev, next, state);
     expect(layoutOf(out)['yaxis']).toBe(yaxis);
     expect(out.data).toBe(next.data);
@@ -138,15 +138,15 @@ describe('applyUirevision: layout', () => {
     const state = createUiState();
     zoom(state, prev, [1, 2]);
     // The API applied the zoom to the current input via relayout.
-    const current: FigureInput = {
+    const current: AnyFigure = {
       data: prev.data,
       layout: { uirevision: 'u', title: 'a', xaxis: { range: [1, 2], autorange: false } },
     };
-    const next: FigureInput = { data: prev.data, layout: { uirevision: 'u', title: 'b' } };
+    const next: AnyFigure = { data: prev.data, layout: { uirevision: 'u', title: 'b' } };
     const d = diffFigures(current, applyUirevision(current, next, state), registry);
     expect(d.changes).toEqual([{ target: 'layout', path: 'title' }]);
 
-    const reset: FigureInput = { data: prev.data, layout: { uirevision: 'new', title: 'a' } };
+    const reset: AnyFigure = { data: prev.data, layout: { uirevision: 'new', title: 'a' } };
     const d2 = diffFigures(current, applyUirevision(current, reset, state), registry);
     expect(d2.changes.map((c) => c.path).sort()).toEqual([
       'uirevision',
@@ -160,10 +160,10 @@ describe('applyUirevision: traces', () => {
   it('keeps a legend toggle on a uid trace, following it when traces are reordered', () => {
     const a = { uid: 'a', name: 'A' };
     const b = { uid: 'b', name: 'B' };
-    const prev: FigureInput = { data: [a, b], layout: { uirevision: 1 } };
+    const prev: AnyFigure = { data: [a, b], layout: { uirevision: 1 } };
     const state = createUiState();
     recordGuiEdit(state, { kind: 'trace', uid: 'b', index: 1 }, 'visible', undefined, 'legendonly');
-    const next: FigureInput = { data: [{ ...b }, a], layout: { uirevision: 1 } };
+    const next: AnyFigure = { data: [{ ...b }, a], layout: { uirevision: 1 } };
     const out = applyUirevision(prev, next, state);
     expect(out.data).toEqual([{ uid: 'b', name: 'B', visible: 'legendonly' }, a]);
     expect(out.data?.[1]).toBe(a);
@@ -173,7 +173,7 @@ describe('applyUirevision: traces', () => {
   it('uses trace.uirevision over layout.uirevision', () => {
     const state = createUiState();
     recordGuiEdit(state, { kind: 'trace', uid: 'a', index: 0 }, 'visible', undefined, false);
-    const prev: FigureInput = { data: [{ uid: 'a', uirevision: 't1' }], layout: { uirevision: 1 } };
+    const prev: AnyFigure = { data: [{ uid: 'a', uirevision: 't1' }], layout: { uirevision: 1 } };
     // Layout revision changed, trace revision did not: keep.
     const kept = applyUirevision(
       prev,
@@ -182,7 +182,7 @@ describe('applyUirevision: traces', () => {
     );
     expect(kept.data).toEqual([{ uid: 'a', uirevision: 't1', visible: false }]);
     // Trace revision changed: drop.
-    const next: FigureInput = { data: [{ uid: 'a', uirevision: 't2' }], layout: { uirevision: 2 } };
+    const next: AnyFigure = { data: [{ uid: 'a', uirevision: 't2' }], layout: { uirevision: 2 } };
     expect(applyUirevision(prev, next, state)).toBe(next);
     expect(state.traces.size).toBe(0);
   });
@@ -190,23 +190,23 @@ describe('applyUirevision: traces', () => {
   it('falls back to layout.uirevision for traces without their own', () => {
     const state = createUiState();
     recordGuiEdit(state, { kind: 'trace', index: 0 }, 'visible', undefined, 'legendonly');
-    const prev: FigureInput = { data: [{}], layout: { uirevision: 'r' } };
+    const prev: AnyFigure = { data: [{}], layout: { uirevision: 'r' } };
     const out = applyUirevision(prev, { data: [{ x: [1] }], layout: { uirevision: 'r' } }, state);
     expect(out.data).toEqual([{ x: [1], visible: 'legendonly' }]);
-    const next: FigureInput = { data: [{}], layout: { uirevision: 's' } };
+    const next: AnyFigure = { data: [{}], layout: { uirevision: 's' } };
     expect(applyUirevision(prev, next, state)).toBe(next);
   });
 
   it('drops index-keyed edits when the trace is gone or gained a uid', () => {
-    const prev: FigureInput = { data: [{}, {}], layout: { uirevision: 'r' } };
+    const prev: AnyFigure = { data: [{}, {}], layout: { uirevision: 'r' } };
     const state = createUiState();
     recordGuiEdit(state, { kind: 'trace', index: 1 }, 'visible', undefined, false);
-    const shorter: FigureInput = { data: [{}], layout: { uirevision: 'r' } };
+    const shorter: AnyFigure = { data: [{}], layout: { uirevision: 'r' } };
     expect(applyUirevision(prev, shorter, state)).toBe(shorter);
     expect(state.traces.size).toBe(0);
 
     recordGuiEdit(state, { kind: 'trace', index: 1 }, 'visible', undefined, false);
-    const withUid: FigureInput = { data: [{}, { uid: 'z' }], layout: { uirevision: 'r' } };
+    const withUid: AnyFigure = { data: [{}, { uid: 'z' }], layout: { uirevision: 'r' } };
     expect(applyUirevision(prev, withUid, state)).toBe(withUid);
     expect(state.traces.size).toBe(0);
   });
@@ -214,8 +214,8 @@ describe('applyUirevision: traces', () => {
   it('drops uid-keyed edits when the uid disappears', () => {
     const state = createUiState();
     recordGuiEdit(state, { kind: 'trace', uid: 'a', index: 0 }, 'visible', undefined, false);
-    const prev: FigureInput = { data: [{ uid: 'a' }], layout: { uirevision: 'r' } };
-    const next: FigureInput = { data: [{ uid: 'b' }], layout: { uirevision: 'r' } };
+    const prev: AnyFigure = { data: [{ uid: 'a' }], layout: { uirevision: 'r' } };
+    const next: AnyFigure = { data: [{ uid: 'b' }], layout: { uirevision: 'r' } };
     expect(applyUirevision(prev, next, state)).toBe(next);
     expect(state.traces.size).toBe(0);
   });
@@ -247,7 +247,7 @@ describe('applyUirevision: properties', () => {
       ),
     },
     { requiredKeys: [] },
-  ) as fc.Arbitrary<FigureInput>;
+  ) as fc.Arbitrary<AnyFigure>;
   const edit = fc.record({
     target: fc.oneof(
       fc.constant({ kind: 'layout' as const }),

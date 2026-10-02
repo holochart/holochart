@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type Histogram2dTrace } from '@mk7s/holochart';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -26,11 +26,18 @@ export function run(el: HTMLElement): ExampleHandle {
     x.push(r * Math.cos(a));
     y.push(r * Math.sin(a) * 0.8);
   }
-  const common = { type: 'histogram2d', x, y, nbinsx: 14, nbinsy: 14, coloraxis: 'coloraxis' };
+  const common: Histogram2dTrace = {
+    type: 'histogram2d',
+    x,
+    y,
+    nbinsx: 14,
+    nbinsy: 14,
+    coloraxis: 'coloraxis',
+  };
   const chart = createChart(el, {
     data: [
       { ...common, name: 'flat' },
-      { ...common, name: 'best', zsmooth: 'best', xaxis: 'x2', yaxis: 'y2' },
+      { ...common, name: 'best', zsmooth: 'best' as const, xaxis: 'x2', yaxis: 'y2' },
     ],
     layout: {
       title: { text: 'zsmooth: false vs best' },

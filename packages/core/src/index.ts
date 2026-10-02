@@ -31,6 +31,8 @@ export type {
   Children,
   ColorScale,
   DataArray,
+  DataColumn,
+  DatasetRef,
   EditFlag,
   EditType,
   FullItemExtras,
@@ -39,6 +41,10 @@ export type {
   ItemsNode,
   NodeMeta,
   ObjectNode,
+  PerPoint,
+  PerPointColor,
+  PerPointNumber,
+  PointStyleFunction,
   Primitive,
   SchemaNode,
   TypedArray,
@@ -60,15 +66,10 @@ export {
 export { plotSchema, schemaToJSON } from './schema/json.ts';
 export type { JSONSchemaNode, PlotSchema } from './schema/json.ts';
 
-// TS type generation (E1.2)
-export {
-  DEFAULT_GENERATED_HEADER,
-  generateTraceTypes,
-  generateTypes,
-} from './codegen/generate-types.ts';
-export type { GenerateTypesOptions, TraceTypeSource } from './codegen/generate-types.ts';
+// Figure input types generated from the schema by tools/schema-gen (E1.2, backlog S1.6)
 export type * from './generated/layout.ts';
 export type * from './generated/config.ts';
+export type * from './generated/trace-attributes.ts';
 
 // Attribute paths
 export { getIn, parsePath, setIn, stringifyPath } from './path/path.ts';
@@ -160,7 +161,11 @@ export {
 } from './defaults/splom-axes.ts';
 export type { GridFallback, SplomAxisStash, SplomStash } from './defaults/splom-axes.ts';
 export type {
+  AnyFigure,
   FigureInput,
+  Frame,
+  LayoutInput,
+  TraceInput,
   FullAxis,
   FullConfig,
   FullGrid,

@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type BarTrace, type ScatterTrace } from '@mk7s/holochart';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -34,9 +34,9 @@ export function run(el: HTMLElement): ExampleHandle {
   const random = rng(29);
   const days = Array.from({ length: 12 }, (_, m) => `2025-${String(m + 1).padStart(2, '0')}-15`);
 
-  const temps = CITIES.map((c) => ({
-    type: 'scatter' as const,
-    mode: 'lines+markers' as const,
+  const temps = CITIES.map((c): ScatterTrace => ({
+    type: 'scatter',
+    mode: 'lines+markers',
     name: c.name,
     x: days,
     y: days.map(
@@ -46,8 +46,8 @@ export function run(el: HTMLElement): ExampleHandle {
     line: { color: c.color, width: 2 },
     marker: { color: c.color, size: 5 },
   }));
-  const rain = CITIES.map((c) => ({
-    type: 'bar' as const,
+  const rain = CITIES.map((c): BarTrace => ({
+    type: 'bar',
     name: c.name,
     legend: 'legend2',
     x: days,

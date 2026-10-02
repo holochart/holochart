@@ -8,7 +8,7 @@ import { stripInternal } from '../util/objects.ts';
 import { validate } from '../validate/validate.ts';
 import { gridCellExtents } from './grid.ts';
 import { supplyDefaults } from './supply-defaults.ts';
-import type { FigureInput, FullAxis, FullLayout } from './types.ts';
+import type { AnyFigure, FullAxis, FullLayout } from './types.ts';
 
 const quiet = { onIssue: () => {} };
 
@@ -24,7 +24,7 @@ const donut: TraceModule = {
 };
 
 const registry = () => fixtureRegistry().register(donut);
-const run = (figure: FigureInput) => supplyDefaults(figure, registry(), quiet);
+const run = (figure: AnyFigure) => supplyDefaults(figure, registry(), quiet);
 const axis = (fl: FullLayout, key: string) => fl[key] as FullAxis;
 
 /** Scatter traces on the given `[xaxis, yaxis]` pairs. */

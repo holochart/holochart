@@ -1,4 +1,4 @@
-import { createChart, type Chart } from '@mk7s/holochart';
+import { createChart, type Chart, type Figure, type PieTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -19,8 +19,8 @@ export const meta: ExampleMeta = {
 
 const LABELS = ['Search', 'Direct', 'Social', 'Email', 'Referral', 'Ads', 'Other'];
 
-function figure(mode: 'hide' | 'show') {
-  const pie = (values: number[], x: [number, number]) => ({
+function figure(mode: 'hide' | 'show'): Figure {
+  const pie = (values: number[], x: [number, number]): PieTrace => ({
     type: 'pie',
     labels: LABELS,
     values,

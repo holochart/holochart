@@ -1,4 +1,4 @@
-import { bubbleSizeref, createChart } from '@mk7s/holochart';
+import { bubbleSizeref, createChart, type ScatterTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -21,7 +21,7 @@ export const meta: ExampleMeta = {
 export function run(el: HTMLElement): ExampleHandle {
   const values = [1, 2, 4, 8, 16, 32, 64];
   const x = values.map(String);
-  const row = (sizemode: 'area' | 'diameter', color: string) => ({
+  const row = (sizemode: 'area' | 'diameter', color: string): ScatterTrace => ({
     type: 'scatter',
     mode: 'markers',
     name: `sizemode: '${sizemode}'`,

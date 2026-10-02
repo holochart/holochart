@@ -21,12 +21,12 @@ export function run(el: HTMLElement): ExampleHandle {
   // A missing block and a missing stripe.
   for (let j = 8; j < 14; j++) for (let i = 10; i < 17; i++) z[j]![i] = null;
   for (let i = 0; i < 30; i++) if (i % 7 !== 0) z[22]![i] = null;
-  const common = { type: 'surface' as const, x: axis, y: axis, z, showscale: false };
+  const common = { x: axis, y: axis, z, showscale: false };
   const scene = { camera: { eye: { x: 1.3, y: -1.5, z: 1.1 } } };
   const chart = createChart(el, {
     data: [
-      { ...common, scene: 'scene' },
-      { ...common, scene: 'scene2', connectgaps: true },
+      { type: 'surface', ...common, scene: 'scene' },
+      { type: 'surface', ...common, scene: 'scene2', connectgaps: true },
     ],
     layout: {
       title: { text: 'Holes, and connectgaps' },

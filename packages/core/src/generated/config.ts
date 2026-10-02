@@ -6,7 +6,7 @@ import type { AnyFunction } from '../schema/types.ts';
 /**
  * Chart configuration (non-visual behavior).
  */
-export interface Config {
+export type Config = {
   /**
    * Resize the chart when its container or the window resizes.
    *
@@ -160,7 +160,7 @@ export interface Config {
    * @defaultValue `false`
    */
   debug?: boolean;
-}
+};
 
 /**
  * Fine-grained editability, overriding `editable` per element.

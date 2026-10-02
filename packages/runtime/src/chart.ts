@@ -58,13 +58,16 @@ import {
   type CategorySamples,
   type ConstraintAxisState,
   type ConstraintGroup,
+  type AnyFigure,
   type FigureInput,
   type FullAxis,
   type FullConfig,
   type FullLayout,
   type FullTrace,
+  type LayoutSelection,
   type Stage,
   type SupplyDefaultsResult,
+  type TraceInput,
   type UiState,
 } from '@mk7s/holochart-core';
 import {
@@ -162,6 +165,7 @@ import {
   usesStyles,
   withRangeImplications,
   type AttributeUpdate,
+  type LayoutUpdate,
   type MaxPoints,
   type StreamUpdate,
 } from './plan.ts';
@@ -498,7 +502,7 @@ function addStages(plan: Plan, index: number, stages: Iterable<Stage>): void {
   for (const s of stages) set.add(s);
 }
 
-function normalizeFigure(figure: FigureInput | undefined): Figure {
+function normalizeFigure(figure: AnyFigure | undefined): Figure {
   return {
     data: Array.isArray(figure?.data) ? [...(figure.data as unknown[])] : [],
     layout: isPlainObject(figure?.layout) ? figure.layout : {},
@@ -706,8 +710,8 @@ export class Chart {
   // ---- state ----------------------------------------------------------------------------------
 
   /** The figure's traces as given (after updates). Treat as read-only. */
-  get data(): readonly unknown[] {
-    return this.#figure.data;
+  get data(): readonly Readonly<Record<string, unknown>>[] {
+    return this.#figure.data as readonly Readonly<Record<string, unknown>>[];
   }
 
   get layout(): Readonly<Record<string, unknown>> {
@@ -1072,7 +1076,7 @@ export class Chart {
    * Change layout attributes by attribute string (Plotly `relayout`), e.g. `'xaxis.range[0]'`.
    * `gui: true` marks it as a user interaction (zoom, modebar), which `uirevision` preserves.
    */
-  relayout(update: AttributeUpdate, options: { gui?: boolean } = {}): Promise<Chart> {
+  relayout(update: LayoutUpdate, options: { gui?: boolean } = {}): Promise<Chart> {
     return this.#schedule((plan) => {
       if (options.gui) this.#recordLayoutGui(update);
       if (options.gui && Object.keys(update).some((k) => SELECTION_EDIT_PATH.test(k))) {
@@ -1085,7 +1089,7 @@ export class Chart {
   /** `restyle` and `relayout` in one update (Plotly's `update`). */
   updateAttributes(
     traceUpdate: AttributeUpdate,
-    layoutUpdate: AttributeUpdate,
+    layoutUpdate: LayoutUpdate,
     traces?: TraceIndices,
   ): Promise<Chart> {
     return this.#schedule((plan) => {
@@ -1136,7 +1140,7 @@ export class Chart {
   }
 
   /** The update `react(figure)` makes, or `undefined` when nothing changed. */
-  #reactPlan(figure: FigureInput): ((plan: Plan) => void) | undefined {
+  #reactPlan(figure: AnyFigure): ((plan: Plan) => void) | undefined {
     // Double-click "reset" returns to the ranges of the latest figure the app gave.
     this.#initialAxes.clear();
     const current = this.#figure;
@@ -1190,10 +1194,7 @@ export class Chart {
   }
 
   /** Add traces (at the end, or at `newIndices` in the final order, like Plotly). */
-  addTraces(
-    traces: Readonly<Record<string, unknown>> | readonly Readonly<Record<string, unknown>>[],
-    newIndices?: TraceIndices,
-  ): Promise<Chart> {
+  addTraces(traces: TraceInput | readonly TraceInput[], newIndices?: TraceIndices): Promise<Chart> {
     return this.#schedule((plan) => {
       const list = Array.isArray(traces) ? traces : [traces];
       const n = this.#figure.data.length;
@@ -1839,7 +1840,7 @@ export class Chart {
   }
 
   /** Supply-defaults with style functions evaluated and style rules applied (E8.5, E8.6). */
-  #defaults(figure: FigureInput, validate: boolean, plan?: Plan): SupplyDefaultsResult {
+  #defaults(figure: AnyFigure, validate: boolean, plan?: Plan): SupplyDefaultsResult {
     const core = this.#registry.core;
     const style = this.#style;
     if (!style) return supplyDefaults(figure, core, { validate });
@@ -3210,7 +3211,7 @@ export class Chart {
     if (!sel) return undefined;
     const current = this.#figure.layout['selections'];
     const list = shift && Array.isArray(current) ? [...(current as unknown[]), sel] : [sel];
-    this.relayout({ selections: list }, { gui: true }).catch(() => undefined);
+    this.relayout({ selections: list as LayoutSelection[] }, { gui: true }).catch(() => undefined);
     return list as Record<string, unknown>[];
   }
 

@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type ScatterTrace } from '@mk7s/holochart';
 import { gaussian, rng } from '../_lib/rng.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 import { exposeInteraction } from './spikes-hook.mts';
@@ -29,9 +29,9 @@ const CITIES = [
 export function run(el: HTMLElement): ExampleHandle {
   const normal = gaussian(rng(5));
   const weeks = Array.from({ length: 52 }, (_, i) => i + 1);
-  const ids = ['', '2', '3', '4'];
+  const ids = ['', '2', '3', '4'] as const;
   const chart = createChart(el, {
-    data: CITIES.map((c, k) => ({
+    data: CITIES.map((c, k): ScatterTrace => ({
       type: 'scatter',
       mode: 'lines',
       name: c.name,
@@ -41,8 +41,8 @@ export function run(el: HTMLElement): ExampleHandle {
           Math.round((c.mean - c.swing * Math.cos((2 * Math.PI * (w - 3)) / 52) + normal()) * 10) /
           10,
       ),
-      xaxis: `x${ids[k]}`,
-      yaxis: `y${ids[k]}`,
+      xaxis: `x${ids[k]!}`,
+      yaxis: `y${ids[k]!}`,
       hovertemplate: `${c.name}, week %{x}: %{y:.1f} °C<extra></extra>`,
     })),
     layout: {

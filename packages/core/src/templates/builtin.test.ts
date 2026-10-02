@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { fixtureRegistry } from '../__fixtures__/modules.ts';
 import { canonicalColor } from '../coerce/color.ts';
 import { supplyDefaults } from '../defaults/supply-defaults.ts';
-import type { FigureInput } from '../defaults/types.ts';
+import type { AnyFigure } from '../defaults/types.ts';
 import { createRegistry } from '../registry/registry.ts';
 import { stripInternal } from '../util/objects.ts';
 import {
@@ -14,7 +14,7 @@ import {
 } from './builtin.ts';
 
 const quiet = { onIssue: () => {} };
-const figure = (template?: unknown): FigureInput => ({
+const figure = (template?: unknown): AnyFigure => ({
   data: [
     { y: [1, 2], mode: 'lines+markers' },
     { y: [2, 1], mode: 'markers' },

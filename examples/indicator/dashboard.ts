@@ -1,4 +1,4 @@
-import { componentsReady, createChart } from '@mk7s/holochart';
+import { componentsReady, createChart, type IndicatorTrace } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -17,9 +17,15 @@ export const meta: ExampleMeta = {
 };
 
 /** A bullet gauge in the bottom-right cell, between `y0` and `y1`. */
-function bullet(title: string, value: number, max: number, color: string, y: [number, number]) {
+function bullet(
+  title: string,
+  value: number,
+  max: number,
+  color: string,
+  y: [number, number],
+): IndicatorTrace {
   return {
-    type: 'indicator' as const,
+    type: 'indicator',
     mode: 'number+gauge',
     value,
     number: { suffix: ' TB' },

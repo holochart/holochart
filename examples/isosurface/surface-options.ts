@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type IsosurfaceTrace } from '@mk7s/holochart';
 import { linspace, scalarGrid } from '../_lib/volume-data.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -19,7 +19,7 @@ export const meta: ExampleMeta = {
 export function run(el: HTMLElement): ExampleHandle {
   const a = linspace(24, -1, 1);
   const grid = scalarGrid(a, a, linspace(14, -1, 0.1), (x, y, z) => Math.hypot(x, y, z));
-  const base = {
+  const base: IsosurfaceTrace = {
     type: 'isosurface',
     ...grid,
     isomin: 0.3,
@@ -31,8 +31,13 @@ export function run(el: HTMLElement): ExampleHandle {
   const chart = createChart(el, {
     data: [
       { ...base, name: 'count 4', surface: { count: 4, fill: 1 } },
-      { ...base, name: 'fill 0.6', scene: 'scene2', surface: { count: 4, fill: 0.6 } },
-      { ...base, name: "pattern 'odd'", scene: 'scene3', surface: { count: 2, pattern: 'odd' } },
+      { ...base, name: 'fill 0.6', scene: 'scene2' as const, surface: { count: 4, fill: 0.6 } },
+      {
+        ...base,
+        name: "pattern 'odd'",
+        scene: 'scene3' as const,
+        surface: { count: 2, pattern: 'odd' as const },
+      },
     ],
     layout: {
       title: { text: "count: 4 · fill: 0.6 · pattern: 'odd'" },

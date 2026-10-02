@@ -1,4 +1,10 @@
-import { createChart, type Chart } from '@mk7s/holochart';
+import {
+  createChart,
+  type Chart,
+  type Data,
+  type LayoutAnnotation,
+  type LayoutYaxis,
+} from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../../_lib/types.ts';
 import {
   addWeeks,
@@ -85,7 +91,12 @@ export function mount(el: HTMLElement, options: Options = {}): ExampleHandle {
   const logTicks = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000].filter(
     (v) => Math.log10(v) >= (logRange[0] as number) && Math.log10(v) <= (logRange[1] as number),
   );
-  const logAxis = { type: 'log', range: logRange, tickmode: 'array', tickvals: logTicks };
+  const logAxis: LayoutYaxis = {
+    type: 'log',
+    range: logRange,
+    tickmode: 'array',
+    tickvals: logTicks,
+  };
   // Narrow containers (phones): the page heading names the chart, so drop the title and let a
   // wrapped legend take the top margin.
   const narrow = isNarrow(el);
@@ -101,7 +112,7 @@ export function mount(el: HTMLElement, options: Options = {}): ExampleHandle {
     ];
   });
 
-  const traces: Record<string, unknown>[] = [
+  const traces: Data[] = [
     {
       type: 'bar',
       name: 'Complete week',
@@ -122,46 +133,42 @@ export function mount(el: HTMLElement, options: Options = {}): ExampleHandle {
 
   if (CURRENT) {
     const i = N;
-    traces.push(
-      {
-        type: 'bar',
-        name: 'Current week (partial)',
-        x: [CURRENT.week],
-        y: [CURRENT.tokensT],
-        width: BAR_WIDTH,
-        marker: { color: PARTIAL },
-        customdata: [
-          [
-            fmtDate(CURRENT.week),
-            fmtT(CURRENT.tokensT),
-            CURRENT.forecastT === undefined ? '—' : fmtT(CURRENT.forecastT),
-            fmtT(expFn(i)),
-            ...topLines(CURRENT.top),
-          ],
+    traces.push({
+      type: 'bar',
+      name: 'Current week (partial)',
+      x: [CURRENT.week],
+      y: [CURRENT.tokensT],
+      width: BAR_WIDTH,
+      marker: { color: PARTIAL },
+      customdata: [
+        [
+          fmtDate(CURRENT.week),
+          fmtT(CURRENT.tokensT),
+          CURRENT.forecastT === undefined ? '—' : fmtT(CURRENT.forecastT),
+          fmtT(expFn(i)),
+          ...topLines(CURRENT.top),
         ],
-        hovertemplate:
-          '<b>Week of %{customdata[0]} · in progress</b><br>' +
-          '%{customdata[1]} so far<br>' +
-          'OpenRouter forecast: %{customdata[2]}<br>' +
-          'Exponential fit: %{customdata[3]}<br>' +
-          '<br>Top models<br>%{customdata[4]}<br>%{customdata[5]}<br>%{customdata[6]}' +
-          '<extra></extra>',
-      },
-      ...(CURRENT.forecastT === undefined
-        ? []
-        : [
-            {
-              // An outline-only bar: transparent fill, colored outline.
-              type: 'bar',
-              name: 'OpenRouter forecast',
-              x: [CURRENT.week],
-              y: [CURRENT.forecastT],
-              width: BAR_WIDTH,
-              marker: { color: 'rgba(0, 0, 0, 0)', line: { color: BAR, width: 1 } },
-              hoverinfo: 'skip',
-            },
-          ]),
-    );
+      ],
+      hovertemplate:
+        '<b>Week of %{customdata[0]} · in progress</b><br>' +
+        '%{customdata[1]} so far<br>' +
+        'OpenRouter forecast: %{customdata[2]}<br>' +
+        'Exponential fit: %{customdata[3]}<br>' +
+        '<br>Top models<br>%{customdata[4]}<br>%{customdata[5]}<br>%{customdata[6]}' +
+        '<extra></extra>',
+    });
+    if (CURRENT.forecastT !== undefined) {
+      traces.push({
+        // An outline-only bar: transparent fill, colored outline.
+        type: 'bar',
+        name: 'OpenRouter forecast',
+        x: [CURRENT.week],
+        y: [CURRENT.forecastT],
+        width: BAR_WIDTH,
+        marker: { color: 'rgba(0, 0, 0, 0)', line: { color: BAR, width: 1 } },
+        hoverinfo: 'skip',
+      });
+    }
   }
 
   traces.push(
@@ -202,7 +209,7 @@ export function mount(el: HTMLElement, options: Options = {}): ExampleHandle {
   );
 
   /** End-of-line labels; `y` is an exponent on a log axis. */
-  const labels = (log: boolean): Record<string, unknown>[] => {
+  const labels = (log: boolean): LayoutAnnotation[] => {
     const y = (v: number): number => (log ? Math.log10(v) : v);
     return [
       {

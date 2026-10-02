@@ -1,4 +1,4 @@
-import { createChart } from '@mk7s/holochart';
+import { createChart, type LayoutAnnotation } from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -30,7 +30,7 @@ export function run(el: HTMLElement): ExampleHandle {
   const angles = Array.from({ length: 73 }, (_, i) => (i / 72) * 2 * Math.PI);
   const radius = angles.map((a) => 1 + 0.18 * Math.sin(3 * a) + 0.08 * Math.cos(5 * a));
 
-  const panel = (n: string, text: string) => ({
+  const panel = (n: string, text: string): LayoutAnnotation => ({
     xref: `${n} domain`,
     yref: `y${n.slice(1)} domain`,
     x: 0.5,

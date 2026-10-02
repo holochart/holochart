@@ -1,4 +1,10 @@
-import { componentsReady, createChart, render, type Chart } from '@mk7s/holochart';
+import {
+  componentsReady,
+  createChart,
+  render,
+  type Chart,
+  type SunburstTrace,
+} from '@mk7s/holochart';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
 /**
@@ -49,7 +55,7 @@ export function run(el: HTMLElement): ExampleHandle {
     parents: ROWS.map((r) => r[1]),
     values: ROWS.map((r) => r[2]),
     textinfo: 'label+percent entry',
-  };
+  } satisfies SunburstTrace;
   const ready = render.preloadTextFont({ characters: CHARACTERS }).then(async () => {
     if (disposed) return;
     chart = createChart(el, {

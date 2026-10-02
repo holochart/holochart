@@ -6,10 +6,10 @@ import { stripInternal } from '../util/objects.ts';
 import { ValidationError } from '../validate/issues.ts';
 import { autoType } from './axes.ts';
 import { supplyDefaults } from './supply-defaults.ts';
-import type { FigureInput } from './types.ts';
+import type { AnyFigure } from './types.ts';
 
 const quiet = { onIssue: () => {} };
-const run = (figure: FigureInput) => supplyDefaults(figure, fixtureRegistry(), quiet);
+const run = (figure: AnyFigure) => supplyDefaults(figure, fixtureRegistry(), quiet);
 
 describe('supplyDefaults: layout', () => {
   it('fills every base layout attribute with canonical defaults', () => {
@@ -60,7 +60,7 @@ describe('supplyDefaults: layout', () => {
   it('keeps scaled title font sizes finite for huge layout font sizes', () => {
     // Nightly regression (seed 445820235): 1.4 × 1.284e308 overflowed to Infinity, an invalid
     // title size (and 1.2 × 1.5e308 an invalid axis title size).
-    const figure: FigureInput = { data: [{ y: [1, 2] }], layout: { font: { size: 1.5e308 } } };
+    const figure: AnyFigure = { data: [{ y: [1, 2] }], layout: { font: { size: 1.5e308 } } };
     const { fullLayout } = run(figure);
     expect(fullLayout.title.font.size).toBe(Number.MAX_VALUE);
     expect((fullLayout['xaxis'] as { title: { font: { size: number } } }).title.font.size).toBe(
