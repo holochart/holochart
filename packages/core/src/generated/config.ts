@@ -107,13 +107,21 @@ export type Config = {
    */
   toImageButtonOptions?: ConfigToImageButtonOptions;
   /**
-   * Renderer pixel ratio. `auto` uses `window.devicePixelRatio`.
+   * Renderer pixel ratio. `auto` uses `window.devicePixelRatio`, up to `maxPixelRatio`.
    *
    * Range: 0.25 – 8
    *
    * @defaultValue `"auto"`
    */
   pixelRatio?: number | 'auto';
+  /**
+   * Upper limit of the pixel ratio that `pixelRatio: "auto"` takes from the display. Raise it for sharper output on 3× screens, at the cost of drawing more pixels.
+   *
+   * Range: 0.25 – 8
+   *
+   * @defaultValue `2`
+   */
+  maxPixelRatio?: number;
   /**
    * Request an antialiased WebGL context (fixed at context creation).
    *

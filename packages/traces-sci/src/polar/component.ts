@@ -552,7 +552,10 @@ class PolarView implements ComponentView {
 
   #startZoom(sp: PolarSubplot, event: ComponentPointerEvent): void {
     const native = event.native as PointerEvent | undefined;
-    if (!native || typeof window === 'undefined') return;
+    // The chart's own window: it may be an iframe's or a popup's, not the script's.
+    const view =
+      native?.view ?? (native?.target as Node | null | undefined)?.ownerDocument?.defaultView;
+    if (!native || !view) return;
     this.#zoomEnd?.();
     const offX = native.clientX - event.x;
     const offY = native.clientY - event.y;
@@ -590,18 +593,18 @@ class PolarView implements ComponentView {
       }
     };
     const finish = (): void => {
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', end);
-      window.removeEventListener('pointercancel', cancel);
+      view.removeEventListener('pointermove', move);
+      view.removeEventListener('pointerup', end);
+      view.removeEventListener('pointercancel', cancel);
       this.#zoomEnd = undefined;
       this.#drawZoombox(sp, null, null, a0);
     };
     const cancel = (e: PointerEvent): void => {
       if (e.pointerId === pointerId) finish();
     };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', end);
-    window.addEventListener('pointercancel', cancel);
+    view.addEventListener('pointermove', move);
+    view.addEventListener('pointerup', end);
+    view.addEventListener('pointercancel', cancel);
     this.#zoomEnd = finish;
   }
 

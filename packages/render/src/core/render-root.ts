@@ -40,8 +40,13 @@ import {
 } from './viewport.ts';
 
 export interface RenderRootOptions {
-  /** Device pixel ratio. Default `min(devicePixelRatio, 2)`, re-evaluated when the DPR changes. */
+  /**
+   * Device pixel ratio. Default `min(devicePixelRatio, maxPixelRatio)`, re-evaluated when the DPR
+   * changes.
+   */
   pixelRatio?: number;
+  /** Upper limit of the automatic pixel ratio. Default 2. */
+  maxPixelRatio?: number;
   /** Resize with the container via `ResizeObserver`. Default true. */
   responsive?: boolean;
   /** Fixed CSS size when not responsive (defaults to the container's size at creation). */
@@ -83,9 +88,9 @@ export interface RenderRootEvents {
 
 const DEFAULT_BACKGROUND: RGBA = [1, 1, 1, 1];
 
-function defaultPixelRatio(): number {
+function defaultPixelRatio(max: number): number {
   const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
-  return Math.min(dpr, 2);
+  return Math.min(dpr, max);
 }
 
 export class RenderRoot implements ViewportHost {
@@ -106,6 +111,7 @@ export class RenderRoot implements ViewportHost {
   readonly #viewports: Viewport[] = [];
   readonly #size: ViewportSize = { width: 1, height: 1, pixelRatio: 1 };
   readonly #fixedPixelRatio: number | undefined;
+  readonly #maxPixelRatio: number;
   readonly #clear = new Color();
   readonly #vpColor = new Color();
   readonly #gl: ViewportRect = { x: 0, y: 0, width: 0, height: 0 };
@@ -125,6 +131,7 @@ export class RenderRoot implements ViewportHost {
   constructor(container: HTMLElement, options: RenderRootOptions = {}) {
     this.container = container;
     this.#fixedPixelRatio = options.pixelRatio;
+    this.#maxPixelRatio = options.maxPixelRatio ?? 2;
     this.#background = options.background === undefined ? DEFAULT_BACKGROUND : options.background;
 
     const parameters: WebGLRendererParameters = {
@@ -184,7 +191,7 @@ export class RenderRoot implements ViewportHost {
       capabilities: this.#capabilities,
     };
 
-    this.#size.pixelRatio = this.#fixedPixelRatio ?? defaultPixelRatio();
+    this.#size.pixelRatio = this.#fixedPixelRatio ?? defaultPixelRatio(this.#maxPixelRatio);
     if (!this.#shared) this.renderer.setPixelRatio(this.#size.pixelRatio);
     const responsive = options.responsive ?? true;
     this.resize(
@@ -481,7 +488,7 @@ export class RenderRoot implements ViewportHost {
 
   readonly #onPixelRatioChange = (): void => {
     if (this.#destroyed) return;
-    this.setPixelRatio(defaultPixelRatio());
+    this.setPixelRatio(defaultPixelRatio(this.#maxPixelRatio));
     this.#watchPixelRatio();
   };
 

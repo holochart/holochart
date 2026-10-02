@@ -48,6 +48,20 @@ export function resolveFigureSize(
   return { width: pick('width'), height: pick('height') };
 }
 
+/**
+ * Whether a dimension the figure leaves to its container cannot be measured yet: the container
+ * is hidden or has no size (an inactive tab, a closed dialog), so {@link resolveFigureSize} fell
+ * back to the default size for it.
+ */
+export function awaitsContainerSize(
+  layoutIn: Readonly<Record<string, unknown>>,
+  container: Readonly<Size>,
+): boolean {
+  return (['width', 'height'] as const).some(
+    (key) => !given(layoutIn[key]) && container[key] < MIN_FIGURE_SIZE,
+  );
+}
+
 function normalizePushes(pushes: readonly MarginPush[], reserved: boolean): Margins {
   const out: Margins = { l: 0, r: 0, t: 0, b: 0 };
   for (const p of pushes) {

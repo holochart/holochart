@@ -233,6 +233,15 @@ describe('RenderRoot', () => {
     expect(root.context.capabilities?.maxTextureSize).toBe(8192);
   });
 
+  it('caps the automatic pixel ratio at maxPixelRatio (default 2)', () => {
+    vi.stubGlobal('devicePixelRatio', 3);
+    expect(setup({ pixelRatio: undefined }).root.pixelRatio).toBe(2);
+    expect(setup({ pixelRatio: undefined, maxPixelRatio: 3 }).root.pixelRatio).toBe(3);
+    expect(setup({ pixelRatio: undefined, maxPixelRatio: 1.5 }).root.pixelRatio).toBe(1.5);
+    // An explicit ratio is not capped.
+    expect(setup({ pixelRatio: 4, maxPixelRatio: 2 }).root.pixelRatio).toBe(4);
+  });
+
   it('routes points to the topmost viewport', () => {
     const { root } = setup();
     const a = root.addViewport({ rect: { x: 0, y: 0, width: 100, height: 100 } });

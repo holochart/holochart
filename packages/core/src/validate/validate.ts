@@ -16,6 +16,7 @@ import type { AttrSpec, ObjectNode, SchemaNode } from '../schema/types.ts';
 import { isPlainObject } from '../util/objects.ts';
 import type { Issue } from './issues.ts';
 import { suggest } from './suggest.ts';
+import { tracePackage } from './trace-packages.ts';
 
 /** Options for {@link validate}. */
 export interface ValidateOptions {
@@ -228,10 +229,17 @@ function checkTemplate(template: unknown, registry: Registry, issues: Issue[]): 
 }
 
 function unknownType(type: string, path: string, registry: Registry): Issue {
-  const suggestion = suggest(type, registry.traceTypes());
+  // A built-in type whose package was left out of a partial bundle: say what to register.
+  const pkg = tracePackage(type);
+  const suggestion = pkg ? undefined : suggest(type, registry.traceTypes());
+  const hint = pkg
+    ? `: \`${type}\` is in ${pkg}; import it from there and call \`register(${type})\``
+    : suggestion !== undefined
+      ? `; did you mean '${suggestion}'?`
+      : '';
   return {
     path,
-    message: `unknown trace type '${type}'${suggestion !== undefined ? `; did you mean '${suggestion}'?` : ''} (the trace is hidden)`,
+    message: `unknown trace type '${type}'${hint} (the trace is hidden)`,
     value: type,
     expected: `one of ${
       registry

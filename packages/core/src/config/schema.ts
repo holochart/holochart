@@ -141,7 +141,15 @@ export const configSchema = attr.object(
       max: 8,
       extras: ['auto'],
       dflt: 'auto',
-      description: 'Renderer pixel ratio. `auto` uses `window.devicePixelRatio`.',
+      description:
+        'Renderer pixel ratio. `auto` uses `window.devicePixelRatio`, up to `maxPixelRatio`.',
+    }),
+    maxPixelRatio: attr.number({
+      min: 0.25,
+      max: 8,
+      dflt: 2,
+      description:
+        'Upper limit of the pixel ratio that `pixelRatio: "auto"` takes from the display. Raise it for sharper output on 3× screens, at the cost of drawing more pixels.',
     }),
     antialias: attr.boolean({
       dflt: true,

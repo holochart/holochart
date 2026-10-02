@@ -32,4 +32,35 @@ describe('@mk7s/holochart bundle', () => {
     }
     expect(typeof Holochart.render.createRenderRoot).toBe('function');
   });
+
+  it('exports the error classes a caller can catch', () => {
+    expect(new Holochart.ValidationError({} as never)).toBeInstanceOf(Holochart.HolochartError);
+    expect(new Holochart.WebGLUnavailableError(null)).toBeInstanceOf(Holochart.HolochartError);
+  });
+
+  it("core knows every built-in trace type's package (the unknown-trace-type hint)", () => {
+    const packages = {
+      basic: Holochart.basicTraces,
+      stats: Holochart.statsTraces,
+      sci: Holochart.sciTraces,
+      finance: Holochart.financeTraces,
+      hier: Holochart.hierTraces,
+      '3d': Holochart.traces3d,
+    };
+    const types: string[] = [];
+    for (const [name, modules] of Object.entries(packages)) {
+      for (const module of modules) {
+        // Components (polar, scene) are registered alongside their traces.
+        if (!('calc' in module) || typeof module.type !== 'string') continue;
+        types.push(module.type);
+        expect(Holochart.tracePackage(module.type), module.type).toBe(
+          `@mk7s/holochart-traces-${name}`,
+        );
+      }
+    }
+    expect(types.length).toBeGreaterThan(30);
+    // The module is exported under its type name, which is what the hint tells users to import.
+    for (const type of types) expect(Holochart).toHaveProperty(type);
+    expect(Holochart.tracePackage('scattergeo')).toBeUndefined();
+  });
 });
