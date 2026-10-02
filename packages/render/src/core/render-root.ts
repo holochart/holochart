@@ -1,21 +1,35 @@
 /**
- * Render root: one canvas + one WebGL2 context per figure (plan E2.1, ADR-004).
+ * Render root: one canvas per figure, drawn by a WebGL2 context of its own or by a shared one
+ * (plan E2.1, E2.16; ADR-004, ADR-023).
  *
- * Owns the `WebGLRenderer`, device-pixel-ratio handling, responsive resizing, the on-demand
- * {@link RenderLoop}, the shared {@link ResourceManager}, and the list of {@link Viewport}s drawn
- * each frame (scissored, in `order`, overlay last).
+ * Owns the canvas, the `WebGLRenderer` (unless shared), device-pixel-ratio handling, responsive
+ * resizing, the on-demand {@link RenderLoop}, the shared {@link ResourceManager}, and the list of
+ * {@link Viewport}s drawn each frame (scissored, in `order`, overlay last).
  *
  * ## Context loss
  * three.js re-initialises its GL state on `webglcontextrestored` and re-uploads buffers and textures
  * lazily from their CPU-side arrays, which every holochart primitive keeps. The root pauses the loop
  * while the context is lost and emits `contextlost` / `contextrestored` so higher layers can rebuild
  * anything they hold only on the GPU (e.g. render targets) before the next frame.
+ *
+ * ## Shared renderer
+ * With `shared`, the root draws through a {@link SharedRenderer} and copies each frame into its own
+ * 2D canvas, so it takes no WebGL context. `renderer.domElement` is then not the figure's canvas:
+ * use {@link RenderRoot.canvas}.
  */
 import { Color, SRGBColorSpace, WebGLRenderer, type WebGLRendererParameters } from 'three';
 import { createResourceManager } from '../resources.ts';
 import type { PrimitiveContext, ResourceManager, RGBA, ViewportSize } from '../types.ts';
 import { Emitter } from './emitter.ts';
 import { RenderLoop, type FrameInfo, type FrameScheduler } from './loop.ts';
+import {
+  acquireSharedRenderer,
+  dedicatedContextCount,
+  MAX_DEDICATED_CONTEXTS,
+  trackDedicatedContext,
+  type SharedClient,
+  type SharedRenderer,
+} from './shared-renderer.ts';
 import {
   toGLRect,
   Viewport,
@@ -36,7 +50,10 @@ export interface RenderRootOptions {
   background?: RGBA | null;
   /** MSAA for geometry edges. Default true. */
   antialias?: boolean;
-  /** Needed for `toDataURL` after the frame (export). Default false. */
+  /**
+   * Needed for `toDataURL` after the frame on a root with its own context. Default false. A shared
+   * root's canvas always keeps its pixels.
+   */
   preserveDrawingBuffer?: boolean;
   powerPreference?: WebGLPowerPreference;
   /** Create the figure-level overlay viewport. Default true. */
@@ -45,6 +62,12 @@ export interface RenderRootOptions {
   scheduler?: FrameScheduler;
   /** Injectable renderer factory (tests, or custom renderer setup). */
   createRenderer?: (parameters: WebGLRendererParameters) => WebGLRenderer;
+  /**
+   * Draw through a renderer shared with other roots instead of taking a WebGL context (ADR-023).
+   * `'auto'` shares once {@link MAX_DEDICATED_CONTEXTS} roots own a context, and never with a
+   * custom `createRenderer`. Default false.
+   */
+  shared?: boolean | 'auto';
 }
 
 export interface RenderRootEvents {
@@ -67,7 +90,10 @@ function defaultPixelRatio(): number {
 export class RenderRoot implements ViewportHost {
   readonly container: HTMLElement;
   readonly renderer: WebGLRenderer;
+  /** The figure's canvas in the page. Under a shared renderer this is not `renderer.domElement`. */
   readonly canvas: HTMLCanvasElement;
+  /** Whether the renderer (and its WebGL context) is shared with other roots. */
+  readonly shared: boolean;
   readonly resources: ResourceManager;
   /** Context handed to primitives. */
   readonly context: PrimitiveContext;
@@ -89,6 +115,10 @@ export class RenderRoot implements ViewportHost {
   #sized = false;
   #contextLost = false;
   #destroyed = false;
+  readonly #shared: SharedRenderer | null = null;
+  readonly #client: SharedClient | null = null;
+  readonly #present: CanvasRenderingContext2D | null = null;
+  #tracked = false;
 
   constructor(container: HTMLElement, options: RenderRootOptions = {}) {
     this.container = container;
@@ -104,16 +134,38 @@ export class RenderRoot implements ViewportHost {
       // The 2.5D view (E8.9) clips flat traces to the tilted plot area with the stencil buffer.
       stencil: true,
     };
-    this.renderer = options.createRenderer
-      ? options.createRenderer(parameters)
-      : new WebGLRenderer(parameters);
-    this.canvas = this.renderer.domElement;
-    // Viewports are cleared individually (scissored); `info` accumulates over the whole frame.
-    this.renderer.autoClear = false;
-    this.renderer.info.autoReset = false;
+    this.shared =
+      options.shared === 'auto'
+        ? !options.createRenderer && dedicatedContextCount() >= MAX_DEDICATED_CONTEXTS
+        : options.shared === true;
+    if (this.shared) {
+      parameters.preserveDrawingBuffer = false;
+      this.#shared = acquireSharedRenderer(parameters, options.createRenderer ?? defaultRenderer);
+      this.#client = {
+        size: this.#size,
+        contextLost: this.#onContextLost,
+        contextRestored: this.#onContextRestored,
+      };
+      this.#shared.add(this.#client);
+      this.renderer = this.#shared.renderer;
+      this.canvas = container.ownerDocument.createElement('canvas');
+      this.#present = context2d(this.canvas);
+    } else {
+      this.renderer = options.createRenderer
+        ? options.createRenderer(parameters)
+        : new WebGLRenderer(parameters);
+      this.canvas = this.renderer.domElement;
+      // Viewports are cleared individually (scissored); `info` accumulates over the whole frame.
+      this.renderer.autoClear = false;
+      this.renderer.info.autoReset = false;
+      this.canvas.addEventListener('webglcontextlost', this.#onContextLost, false);
+      this.canvas.addEventListener('webglcontextrestored', this.#onContextRestored, false);
+      if (!options.createRenderer) {
+        this.#tracked = true;
+        trackDedicatedContext(1);
+      }
+    }
     this.canvas.style.display = 'block';
-    this.canvas.addEventListener('webglcontextlost', this.#onContextLost, false);
-    this.canvas.addEventListener('webglcontextrestored', this.#onContextRestored, false);
     container.appendChild(this.canvas);
 
     this.resources = createResourceManager();
@@ -126,7 +178,7 @@ export class RenderRoot implements ViewportHost {
     this.context = { resources: this.resources, invalidate: () => this.loop.invalidate() };
 
     this.#size.pixelRatio = this.#fixedPixelRatio ?? defaultPixelRatio();
-    this.renderer.setPixelRatio(this.#size.pixelRatio);
+    if (!this.#shared) this.renderer.setPixelRatio(this.#size.pixelRatio);
     const responsive = options.responsive ?? true;
     this.resize(
       options.width ?? (container.clientWidth || 300),
@@ -194,6 +246,14 @@ export class RenderRoot implements ViewportHost {
     this.loop.flush();
   }
 
+  /**
+   * Point a shared renderer at this root (its pixel ratio) before drawing outside the frame, e.g.
+   * into a render target. Does nothing on a root with its own context.
+   */
+  activate(): void {
+    if (this.#client && !this.#destroyed) this.#shared!.begin(this.#client, this.canvas);
+  }
+
   /** Render synchronously now, regardless of the dirty flag (e.g. for image export). */
   renderNow(): void {
     this.loop.invalidate();
@@ -253,7 +313,7 @@ export class RenderRoot implements ViewportHost {
     this.#sized = true;
     this.#size.width = w;
     this.#size.height = h;
-    this.renderer.setSize(w, h, true);
+    this.#applySize();
     this.#relayout();
   }
 
@@ -261,8 +321,8 @@ export class RenderRoot implements ViewportHost {
   setPixelRatio(pixelRatio: number): void {
     if (this.#destroyed || pixelRatio === this.#size.pixelRatio) return;
     this.#size.pixelRatio = pixelRatio;
-    this.renderer.setPixelRatio(pixelRatio);
-    this.renderer.setSize(this.#size.width, this.#size.height, true);
+    if (!this.#shared) this.renderer.setPixelRatio(pixelRatio);
+    this.#applySize();
     this.#relayout();
   }
 
@@ -275,21 +335,27 @@ export class RenderRoot implements ViewportHost {
     this.#observer = null;
     this.#dprQuery?.removeEventListener('change', this.#onPixelRatioChange);
     this.#dprQuery = null;
-    this.canvas.removeEventListener('webglcontextlost', this.#onContextLost, false);
-    this.canvas.removeEventListener('webglcontextrestored', this.#onContextRestored, false);
     // A primitive whose dispose throws must not keep the context alive: log it and carry on.
     for (const vp of this.#viewports) disposeSafely(() => vp.dispose());
     this.#viewports.length = 0;
     disposeSafely(() => this.resources.disposeAll());
-    disposeSafely(() => {
-      this.renderer.renderLists.dispose();
-      this.renderer.dispose();
-    });
-    // Free the context slot now instead of waiting for GC (browsers cap live contexts at ~16).
-    try {
-      this.renderer.forceContextLoss();
-    } catch {
-      // Extension unavailable; the context is released on GC.
+    if (this.#shared) {
+      // The renderer outlives this root; it is disposed with its last client.
+      this.#shared.remove(this.#client!);
+    } else {
+      this.canvas.removeEventListener('webglcontextlost', this.#onContextLost, false);
+      this.canvas.removeEventListener('webglcontextrestored', this.#onContextRestored, false);
+      disposeSafely(() => {
+        this.renderer.renderLists.dispose();
+        this.renderer.dispose();
+      });
+      // Free the context slot now instead of waiting for GC (browsers cap live contexts at ~16).
+      try {
+        this.renderer.forceContextLoss();
+      } catch {
+        // Extension unavailable; the context is released on GC.
+      }
+      if (this.#tracked) trackDedicatedContext(-1);
     }
     this.canvas.remove();
     this.#events.clear();
@@ -299,6 +365,20 @@ export class RenderRoot implements ViewportHost {
 
   #assertAlive(): void {
     if (this.#destroyed) throw new Error('RenderRoot has been destroyed');
+  }
+
+  /** Size the canvas' backing store and CSS box from `#size`. Clears the canvas. */
+  #applySize(): void {
+    const { width, height, pixelRatio } = this.#size;
+    if (!this.#shared) {
+      this.renderer.setSize(width, height, true);
+      return;
+    }
+    // Same device size three gives a canvas of its own.
+    this.canvas.width = Math.floor(width * pixelRatio);
+    this.canvas.height = Math.floor(height * pixelRatio);
+    this.canvas.style.width = `${width}px`;
+    this.canvas.style.height = `${height}px`;
   }
 
   #relayout(): void {
@@ -318,10 +398,18 @@ export class RenderRoot implements ViewportHost {
     if (this.#contextLost || this.#destroyed) return;
     const renderer = this.renderer;
     const H = this.#size.height;
+    const shared = this.#shared;
     renderer.info.reset();
     renderer.setRenderTarget(null);
 
-    renderer.setScissorTest(false);
+    if (shared) {
+      // The frame goes in the bottom-left corner of a buffer other figures draw into as well.
+      shared.begin(this.#client!, this.canvas);
+      renderer.setScissor(0, 0, this.#size.width, H);
+      renderer.setScissorTest(true);
+    } else {
+      renderer.setScissorTest(false);
+    }
     const bg = this.#background;
     if (bg) renderer.setClearColor(this.#clear.setRGB(bg[0], bg[1], bg[2], SRGBColorSpace), bg[3]);
     else renderer.setClearColor(this.#clear.setRGB(0, 0, 0), 0);
@@ -359,6 +447,7 @@ export class RenderRoot implements ViewportHost {
       renderer.render(vp.scene, vp.camera);
     }
     renderer.setScissorTest(false);
+    if (shared && this.#present) shared.present(this.#present);
   };
 
   readonly #onResize = (entries: ResizeObserverEntry[]): void => {
@@ -397,6 +486,18 @@ export class RenderRoot implements ViewportHost {
     this.loop.setPaused(false);
     this.invalidate();
   };
+}
+
+function defaultRenderer(parameters: WebGLRendererParameters): WebGLRenderer {
+  return new WebGLRenderer(parameters);
+}
+
+function context2d(canvas: HTMLCanvasElement): CanvasRenderingContext2D | null {
+  try {
+    return canvas.getContext('2d');
+  } catch {
+    return null;
+  }
 }
 
 function disposeSafely(step: () => void): void {

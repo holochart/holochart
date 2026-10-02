@@ -286,7 +286,7 @@ export class SceneMotion {
     }
     const onChange = (): void => this.#update();
     this.#query?.addEventListener?.('change', onChange);
-    const canvas = chart.three.renderer.domElement;
+    const canvas = chart.three.root.canvas;
     if (typeof IntersectionObserver === 'function') {
       this.#observer = new IntersectionObserver((entries) => {
         const last = entries[entries.length - 1];

@@ -638,10 +638,10 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [x] When a trace or layout font family isn't registered, troika draws with the default font (Inter in the examples) but the metrics oracle measures the CSS family (`"Open Sans", verdana, arial, sans-serif`), i.e. whatever system font matches. Make the oracle measure with the font troika will use (e.g. register the default font under an internal CSS family and fall back to it) — done: `configureText({ defaultFontURL })` also registers a `holochart-default` face; unregistered families measure with it (`_dev/text-default-font` fails at 1.8 % without the fix)
 - [x] Ship a default font with the library (or document that one must be registered) so out-of-the-box charts measure and render identically on every platform — decided: with no default font configured, troika's CDN fallback faces are registered for measuring (loaded on first use); offline/deterministic use must register a font (documented). Bundling a font remains open. **Superseded (M2, default look):** TeX Gyre Heros ships with render as the default font (lazy per-face chunks for ESM, `dist/fonts/*.otf` next to the IIFE); no CDN fetch by default
 
-#### E2.16 — Shared renderer / context pooling   `P2` `M`   deps: E2.3
+#### E2.16 — Shared renderer / context pooling   `P2` `M`   deps: E2.3 · ✅ Done (ship wave R2, ADR-023)
 > As a developer building a dashboard with 50 charts, I want charts to share a WebGL context, so that I don't hit the browser context limit.
-- [ ] `config.sharedRenderer: true` renders all charts through one offscreen context and blits to each canvas (or uses one full-page canvas with viewports)
-- [ ] Graceful fallback when the limit is hit: oldest idle charts become static images
+- [x] `config.sharedRenderer: true` renders all charts through one offscreen context and blits to each canvas (or uses one full-page canvas with viewports) — the default `'auto'` gives the first 4 charts a context of their own and shares for the rest; image export always shares
+- [x] Graceful fallback when the limit is hit: oldest idle charts become static images — *not needed: with the shared renderer no chart is evicted (ADR-023)*
 
 ---
 
@@ -2521,7 +2521,7 @@ flowchart TD
 | R2 | **Text quality and cost** (thousands of SDF labels, rich text, CJK) | Medium | High | Spike C in M0. Label pooling and culling. DOM-overlay fallback (ADR-005). |
 | R3 | **Line rendering quality** (joins, dashes, AA across DPRs) | Medium | High | Spike B. Dedicated primitive with visual tests at DPR 1/2/3. |
 | R4 | **Non-deterministic GPU screenshots** in CI | Medium | Medium | SwiftShader pinned, fonts bundled, per-example tolerances, seeded data |
-| R5 | **WebGL context limits** on dashboards | Medium | Medium | Shared renderer (E2.16). Static-image fallback. Docs guidance. |
+| R5 | **WebGL context limits** on dashboards | Medium | Medium | Shared renderer with a context budget (E2.16, ADR-023). Docs guidance (guides/dashboards). |
 | R6 | **Vector export** is hard from a WebGL-first design | High | Medium | Render model kept backend-agnostic (primitives describe *what* to draw). SVG backend deferred to M7 and 2D-only. |
 | R7 | **Accessibility of canvas charts** | Medium | High | DOM mirror, auto summaries, data table, and keyboard navigation from M2, not bolted on at the end |
 | R8 | **three.js API churn** (WebGPU/TSL transition) | Medium | Medium | three as a peer dependency, tested version range, and primitives isolated behind our own interfaces so a TSL migration stays contained |

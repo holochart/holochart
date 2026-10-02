@@ -35,6 +35,7 @@ import {
   createPrimitiveMaterial,
   createUnitQuadTemplate,
   createViewportUniforms,
+  presentedCanvas,
   SCREEN_GLSL,
   syncViewportUniforms,
   UNIT_QUAD_KEY,
@@ -295,7 +296,7 @@ export class FlowParticles {
     mesh.onBeforeRender = (renderer) => {
       syncViewportUniforms(this.#viewport, renderer);
       this.#time.value = this.time();
-      this.#observe(renderer.domElement);
+      this.#observe(presentedCanvas(renderer));
     };
     try {
       this.#query = globalThis.matchMedia?.(QUERY);

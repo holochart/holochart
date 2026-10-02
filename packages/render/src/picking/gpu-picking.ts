@@ -47,6 +47,7 @@ import {
   type WebGLRenderer,
 } from 'three';
 import type { ViewportRect } from '../core/viewport.ts';
+import type { ViewportSize } from '../types.ts';
 import { effectiveMeshElement, meshPickCount, MeshPickMaterial } from './mesh-pick-material.ts';
 import { PickHitList, gatherPickHits } from './pick-hits.ts';
 import { PickIdLayout, type PickIdRange } from './pick-id.ts';
@@ -91,6 +92,17 @@ export interface GpuPickView {
   readonly scissor: Readonly<ViewportRect> | null;
   /** When set, only pickables attached to this scene are picked. */
   readonly scene?: Object3D;
+}
+
+/**
+ * The canvas a view belongs to (a `RenderRoot` satisfies it). Needed when the renderer is shared
+ * between figures, where the renderer's own size is not the figure's.
+ */
+export interface GpuPickHost {
+  /** CSS size and pixel ratio of the figure's canvas. */
+  readonly size: Readonly<ViewportSize>;
+  /** Point a shared renderer at this figure before drawing. */
+  activate?(): void;
 }
 
 /** Options for {@link GpuPicker.register}. */
@@ -165,6 +177,7 @@ export class GpuPicker {
   readonly renderer: WebGLRenderer;
   readonly view: GpuPickView;
 
+  readonly #host: GpuPickHost | undefined;
   readonly #registrations = new Map<number, Registration>();
   readonly #byTarget = new Map<Object3D | PickablePrimitive, Registration>();
   readonly #scene = new Scene();
@@ -182,9 +195,10 @@ export class GpuPicker {
   #nextId = 1;
   #disposed = false;
 
-  constructor(renderer: WebGLRenderer, view: GpuPickView) {
+  constructor(renderer: WebGLRenderer, view: GpuPickView, host?: GpuPickHost) {
     this.renderer = renderer;
     this.view = view;
+    this.#host = host;
     this.#scene.name = 'holochart:pick-scene';
     // Proxies carry world matrices copied from their sources; nothing to recompute.
     this.#scene.matrixWorldAutoUpdate = false;
@@ -288,10 +302,18 @@ export class GpuPicker {
     try {
       const view = this.view;
       const canvas = this.#canvas;
-      renderer.getSize(this.#cssSize);
-      canvas.width = this.#cssSize.x;
-      canvas.height = this.#cssSize.y;
-      canvas.pixelRatio = renderer.getPixelRatio();
+      const host = this.#host;
+      if (host) {
+        host.activate?.();
+        canvas.width = host.size.width;
+        canvas.height = host.size.height;
+        canvas.pixelRatio = host.size.pixelRatio;
+      } else {
+        renderer.getSize(this.#cssSize);
+        canvas.width = this.#cssSize.x;
+        canvas.height = this.#cssSize.y;
+        canvas.pixelRatio = renderer.getPixelRatio();
+      }
       const win = slot.win;
       const inside = computePickWindow(
         win,
@@ -557,6 +579,10 @@ function isInstanced(mesh: Mesh): mesh is InstancedMesh {
 }
 
 /** Create a GPU picker for one 3D view (plan E2.13). See {@link GpuPicker}. */
-export function createGpuPicker(renderer: WebGLRenderer, view: GpuPickView): GpuPicker {
-  return new GpuPicker(renderer, view);
+export function createGpuPicker(
+  renderer: WebGLRenderer,
+  view: GpuPickView,
+  host?: GpuPickHost,
+): GpuPicker {
+  return new GpuPicker(renderer, view, host);
 }

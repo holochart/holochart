@@ -28,9 +28,10 @@ per viewport (E2.3). 2D viewports use a pixel-space orthographic camera
 camera per `scene.camera.projection`. An overlay viewport renders figure-level components in paper
 coordinates.
 
-Optionally, a **shared renderer** can serve many figures (context pooling, `config.sharedRenderer`,
-E2.16, P2): one offscreen context renders and blits to each figure's canvas, and when the limit is hit
-the oldest idle charts fall back to static images.
+A **shared renderer** serves many figures from one context (`config.sharedRenderer`, E2.16): one
+offscreen context renders and copies each frame to that figure's canvas. Its design and the context
+budget it keeps are in [ADR-023](023-shared-renderer-context-budget.md), which amends this ADR: a
+figure still has one canvas and scissored viewports, but its context may be shared.
 
 ## Consequences
 
@@ -44,13 +45,15 @@ the oldest idle charts fall back to static images.
 
 - Viewport, scissor, and clip management is our responsibility (including `cliponaxis`).
 - One context loss affects the whole figure (mitigated by rebuild from `calcdata`, E2.1).
-- Dashboards with more than ~16 figures still need E2.16 context pooling.
+- Dashboards with more figures than the browser keeps contexts for (~16) need the shared renderer
+  ([ADR-023](023-shared-renderer-context-budget.md)).
 
 ### Follow-ups
 
 - **Spike D (E0.7):** 9 subplots scissored in one context; measure draw overhead and correctness.
   Its result moves this ADR to Accepted or Rejected.
-- E2.16 shared renderer and docs guidance for large dashboards (risk R5).
+- E2.16 shared renderer and docs guidance for large dashboards (risk R5): done in
+  [ADR-023](023-shared-renderer-context-budget.md).
 
 ## Alternatives considered
 

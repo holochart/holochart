@@ -127,6 +127,12 @@ export type Config = {
    */
   powerPreference?: 'default' | 'high-performance' | 'low-power';
   /**
+   * Draw through one WebGL context shared by every chart on the page instead of a context per chart (browsers keep about 16, fewer on mobile). `auto` gives the first 4 charts a context of their own and shares for the rest. `false` always takes a context.
+   *
+   * @defaultValue `"auto"`
+   */
+  sharedRenderer?: 'auto' | true | false;
+  /**
    * Run the calc stage in a Web Worker (ADR-011). `auto` switches on above a data-size threshold.
    *
    * @defaultValue `false`

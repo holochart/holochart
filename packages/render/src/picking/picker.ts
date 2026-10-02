@@ -17,7 +17,12 @@ import {
   type MarkerPositionsLike,
   type PointSource2D,
 } from './cpu-picking.ts';
-import { GpuPicker, type GpuPickableOptions, type GpuPickView } from './gpu-picking.ts';
+import {
+  GpuPicker,
+  type GpuPickableOptions,
+  type GpuPickHost,
+  type GpuPickView,
+} from './gpu-picking.ts';
 import {
   DEFAULT_PICK_RADIUS,
   type PickablePrimitive,
@@ -36,6 +41,9 @@ export function pickRouteFor(viewport: Pick<Viewport, 'kind'>): PickRoute {
 /** What the picker needs from its render root (a `RenderRoot` satisfies it). */
 export interface PickerHost {
   readonly renderer: WebGLRenderer;
+  /** The figure's canvas size; required when the renderer is shared between figures. */
+  readonly size?: GpuPickHost['size'];
+  activate?(): void;
   /** Topmost pickable viewport under a container-space CSS position. */
   viewportAt(x: number, y: number): Viewport | null;
 }
@@ -55,7 +63,11 @@ export interface GpuPickerLike {
 
 export interface PickerOptions {
   /** Factory for 3D viewports' GPU pickers. Default: `new GpuPicker(renderer, viewport)`. */
-  createGpuPicker?: (renderer: WebGLRenderer, view: GpuPickView) => GpuPickerLike;
+  createGpuPicker?: (
+    renderer: WebGLRenderer,
+    view: GpuPickView,
+    host?: GpuPickHost,
+  ) => GpuPickerLike;
 }
 
 /**
@@ -88,7 +100,7 @@ interface Handle {
  */
 export class Picker {
   readonly host: PickerHost;
-  readonly #createGpu: (renderer: WebGLRenderer, view: GpuPickView) => GpuPickerLike;
+  readonly #createGpu: NonNullable<PickerOptions['createGpuPicker']>;
   readonly #viewports = new Map<Viewport, ViewportPickers>();
   readonly #handles = new Map<number, Handle>();
   readonly #world = { x: 0, y: 0 };
@@ -98,7 +110,7 @@ export class Picker {
   constructor(host: PickerHost, options: PickerOptions = {}) {
     this.host = host;
     this.#createGpu =
-      options.createGpuPicker ?? ((renderer, view) => new GpuPicker(renderer, view));
+      options.createGpuPicker ?? ((renderer, view, gpu) => new GpuPicker(renderer, view, gpu));
   }
 
   /** Number of registrations across all viewports. */
@@ -134,7 +146,7 @@ export class Picker {
       if (isPointSource2D(target)) {
         throw new TypeError('3D viewports pick on the GPU: pass a MarkerSet or an Object3D');
       }
-      pickers.gpu ??= this.#createGpu(this.host.renderer, viewport);
+      pickers.gpu ??= this.#createGpu(this.host.renderer, viewport, gpuHost(this.host));
       pickers.gpu.register(target as Object3D | PickablePrimitive, options);
     }
     if (existing) return existing.id;
@@ -266,6 +278,11 @@ export class Picker {
     }
     return pickers;
   }
+}
+
+function gpuHost(host: PickerHost): GpuPickHost | undefined {
+  const size = host.size;
+  return size ? { size, activate: () => host.activate?.() } : undefined;
 }
 
 /** Create the unified picker for a render root (plan E2.13). */

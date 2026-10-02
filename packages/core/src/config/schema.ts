@@ -152,6 +152,12 @@ export const configSchema = attr.object(
       dflt: 'default',
       description: 'WebGL context power preference hint.',
     }),
+    sharedRenderer: attr.enumerated({
+      values: ['auto', true, false],
+      dflt: 'auto',
+      description:
+        'Draw through one WebGL context shared by every chart on the page instead of a context per chart (browsers keep about 16, fewer on mobile). `auto` gives the first 4 charts a context of their own and shares for the rest. `false` always takes a context.',
+    }),
     worker: attr.enumerated({
       values: [true, false, 'auto'],
       dflt: false,

@@ -26,6 +26,13 @@ function createFakeRenderer() {
       this.height = h;
       calls.push(`size ${w}x${h}`);
     },
+    setDrawingBufferSize(w: number, h: number, pixelRatio: number) {
+      this.pixelRatio = pixelRatio;
+      // What three does: floor the logical size times the ratio.
+      canvas.width = Math.floor(w * pixelRatio);
+      canvas.height = Math.floor(h * pixelRatio);
+      calls.push(`buffer ${canvas.width}x${canvas.height}@${pixelRatio}`);
+    },
     setRenderTarget: vi.fn(),
     setClearColor: vi.fn(),
     clear: (c: boolean, d: boolean) => void calls.push(`clear ${+c}${+d}`),
@@ -255,5 +262,158 @@ describe('RenderRoot', () => {
     canvas.dispatchEvent(new Event('webglcontextlost'));
     expect(lost).not.toHaveBeenCalled();
     expect(() => root.addViewport()).toThrow();
+  });
+});
+
+describe('RenderRoot on a shared renderer', () => {
+  /** Roots that share one fake renderer, each with a recording 2D context on its canvas. */
+  function shared() {
+    const fakes: ReturnType<typeof createFakeRenderer>[] = [];
+    const createRenderer = () => {
+      const fake = createFakeRenderer();
+      fakes.push(fake);
+      return fake.renderer as unknown as WebGLRenderer;
+    };
+    const drawImage = vi.fn();
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function (
+      this: HTMLCanvasElement,
+    ) {
+      return { canvas: this, drawImage, globalCompositeOperation: 'source-over' } as never;
+    });
+    const scheduler = createFakeScheduler();
+    const mount = (options: RenderRootOptions = {}) => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      return createRenderRoot(container, {
+        width: 400,
+        height: 300,
+        pixelRatio: 2,
+        scheduler,
+        createRenderer,
+        shared: true,
+        ...options,
+      });
+    };
+    return { fakes, drawImage, scheduler, mount };
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('draws several roots with one renderer, each into its own canvas', () => {
+    const { fakes, mount } = shared();
+    const a = mount();
+    const b = mount({ width: 600, height: 200 });
+    expect(fakes).toHaveLength(1);
+    expect(a.shared && b.shared).toBe(true);
+    expect(a.renderer).toBe(b.renderer);
+    expect(a.canvas).not.toBe(b.canvas);
+    expect(a.canvas).not.toBe(fakes[0]!.canvas);
+    expect(a.container.contains(a.canvas)).toBe(true);
+    expect(fakes[0]!.canvas.isConnected).toBe(false);
+    // Same backing size and CSS box three gives a canvas of its own.
+    expect([a.canvas.width, a.canvas.height]).toEqual([800, 600]);
+    expect([a.canvas.style.width, a.canvas.style.height]).toEqual(['400px', '300px']);
+    expect([b.canvas.width, b.canvas.height]).toEqual([1200, 400]);
+  });
+
+  it('clears and draws only its corner of the shared buffer, then copies it out', () => {
+    const { fakes, drawImage, scheduler, mount } = shared();
+    const a = mount();
+    mount({ width: 600, height: 200 });
+    a.overlay!.scene.add(new Object3D());
+    const { calls, canvas } = fakes[0]!;
+    calls.length = 0;
+    a.renderNow();
+    // The buffer fits the widest and the tallest root.
+    expect(calls.slice(0, 4)).toEqual([
+      'buffer 1200x600@2',
+      'scissor 0,0,400,300',
+      'scissorTest true',
+      'clear 11',
+    ]);
+    expect(calls).toContain('viewport 0,0,400,300');
+    expect(calls).toContain('render');
+    // Bottom-left of the buffer (GL origin) is the bottom of the canvas: rows 0..600 of 600.
+    expect(drawImage).toHaveBeenLastCalledWith(canvas, 0, 0, 800, 600, 0, 0, 800, 600);
+    scheduler.step();
+    // The shorter root's frame sits in the bottom 400 rows.
+    expect(drawImage).toHaveBeenLastCalledWith(canvas, 0, 200, 1200, 400, 0, 0, 1200, 400);
+  });
+
+  it('keeps one buffer size for roots with different pixel ratios', () => {
+    const { fakes, mount } = shared();
+    const a = mount({ width: 333, height: 211, pixelRatio: 1.5 });
+    const b = mount({ width: 100, height: 100, pixelRatio: 3 });
+    const { calls } = fakes[0]!;
+    a.renderNow();
+    b.renderNow();
+    a.renderNow();
+    expect(calls.filter((c) => c.startsWith('buffer'))).toEqual([
+      'buffer 500x317@1.5',
+      'buffer 500x317@3',
+      'buffer 500x317@1.5',
+    ]);
+  });
+
+  it('follows resizes and shrinks the buffer when the largest root goes', () => {
+    const { fakes, mount } = shared();
+    const a = mount();
+    const b = mount({ width: 600, height: 200 });
+    const { calls } = fakes[0]!;
+    a.resize(500, 500);
+    expect([a.canvas.width, a.canvas.height]).toEqual([1000, 1000]);
+    a.renderNow();
+    expect(calls).toContain('buffer 1200x1000@2');
+    b.destroy();
+    a.renderNow();
+    expect(calls.at(-1)).not.toBe('buffer 1200x1000@2');
+    expect(calls).toContain('buffer 1000x1000@2');
+  });
+
+  it('releases the renderer with its last root only', () => {
+    const { fakes, mount } = shared();
+    const a = mount();
+    const b = mount();
+    const { renderer } = fakes[0]!;
+    a.destroy();
+    expect(a.canvas.isConnected).toBe(false);
+    expect(renderer.dispose).not.toHaveBeenCalled();
+    b.renderNow();
+    b.destroy();
+    expect(renderer.dispose).toHaveBeenCalledTimes(1);
+    expect(renderer.forceContextLoss).toHaveBeenCalledTimes(1);
+    // The next root starts a new one.
+    mount();
+    expect(fakes).toHaveLength(2);
+  });
+
+  it('tells every root about a lost and restored context', () => {
+    const { fakes, mount } = shared();
+    const roots = [mount(), mount()];
+    const log: string[] = [];
+    roots.forEach((root, i) => {
+      root.on('contextlost', () => log.push(`lost ${i}`));
+      root.on('contextrestored', () => log.push(`restored ${i}`));
+    });
+    fakes[0]!.canvas.dispatchEvent(new Event('webglcontextlost'));
+    expect(roots.map((r) => r.contextLost)).toEqual([true, true]);
+    fakes[0]!.canvas.dispatchEvent(new Event('webglcontextrestored'));
+    expect(log).toEqual(['lost 0', 'lost 1', 'restored 0', 'restored 1']);
+    roots[0]!.destroy();
+    fakes[0]!.canvas.dispatchEvent(new Event('webglcontextlost'));
+    expect(log.at(-1)).toBe('lost 1');
+  });
+
+  it('does not share renderers with different context attributes, or with `auto` and a custom renderer', () => {
+    const { fakes, mount } = shared();
+    mount();
+    mount({ antialias: false });
+    expect(fakes).toHaveLength(2);
+    const own = mount({ shared: 'auto' });
+    expect(own.shared).toBe(false);
+    expect(fakes).toHaveLength(3);
+    expect(own.canvas).toBe(fakes[2]!.canvas);
   });
 });

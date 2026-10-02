@@ -220,6 +220,10 @@ export interface FigurePatch {
 
 /** Escape hatches into three.js (plan §7.2, E8.13). */
 export interface ChartThree {
+  /**
+   * The renderer that draws this chart. With `config.sharedRenderer` it also draws other charts,
+   * and its `domElement` is not this chart's canvas: use `root.canvas`.
+   */
   readonly renderer: WebGLRenderer;
   /** The render root: render loop, viewports, resources. */
   readonly root: RenderRoot;
@@ -1742,6 +1746,8 @@ export class Chart {
         background: null,
         antialias: config.antialias,
         powerPreference: config.powerPreference,
+        // Image export never takes a WebGL context of its own (ADR-023).
+        shared: offscreen ? true : config.sharedRenderer,
         ...(pixelRatio === undefined ? {} : { pixelRatio }),
         ...this.#options.renderRoot,
       });
@@ -3455,7 +3461,6 @@ export function figureExportSource(
         renderRoot: {
           ...(renderRoot?.createRenderer ? { createRenderer: renderRoot.createRenderer } : {}),
           ...(renderRoot?.scheduler ? { scheduler: renderRoot.scheduler } : {}),
-          preserveDrawingBuffer: true,
           pixelRatio,
         },
       });

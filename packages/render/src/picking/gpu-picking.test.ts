@@ -153,6 +153,19 @@ describe('GpuPicker registration lifecycle', () => {
     expect(picker.size).toBe(0);
   });
 
+  it('takes the canvas size from its host when the renderer is shared', async () => {
+    // The shared renderer's own size is that of its largest figure, not this one's.
+    const { renderer } = fakeRenderer();
+    renderer.getSize = (v: Vector2) => v.set(4000, 3000);
+    const activate = vi.fn();
+    const size = { width: CSS_W, height: CSS_H, pixelRatio: 1 };
+    const picker = createGpuPicker(renderer, view(), { size, activate });
+    picker.register(new Mesh(new BoxGeometry(), new MeshBasicMaterial()));
+    await picker.pick({ x: 200, y: 150 });
+    expect(activate).toHaveBeenCalledTimes(1);
+    expect(renderer.render).toHaveBeenCalledTimes(1);
+  });
+
   it('validates targets and options', () => {
     const picker = createGpuPicker(fakeRenderer().renderer, view());
     expect(() => picker.register({} as Object3D)).toThrow(TypeError);
