@@ -1,29 +1,186 @@
 ---
 title: Layout, axes & subplots
 description: Configure axes, place multiple subplots, and control figure size and margins.
-status: draft
+status: complete
 ---
 
 # Layout, axes & subplots
 
-This page will cover the `layout` object: axes, subplots, figure size, and margins.
+`layout` holds everything in a figure that is not a trace: the figure size and margins, the title,
+the axes and the subplots they form, and the legend. This page covers those. Every attribute is
+listed in the [layout reference](/reference/layout).
 
-Planned topics:
+Other parts of `layout` have pages of their own: [3D scenes](/fundamentals/3d-scenes),
+[shapes and images](/fundamentals/shapes-images),
+[buttons, dropdowns and sliders](/fundamentals/controls),
+[hover](/fundamentals/hover-text-templates) and [themes](/fundamentals/styling-themes).
 
-- Axis types: linear, log, date, category, and multicategory
-- Ranges and autorange, ticks and tick formatting, grid lines, and axis titles
-- Subplots with axis `domain`
-- Figure size, margins, and automargin
-- Title, legend, and other layout components
+The defaults quoted on this page are the attribute defaults, which match Plotly's. A chart without
+`layout.template` uses the [default look](/fundamentals/styling-themes#the-default-look), a
+template that sets some of them differently. Those are noted where they matter.
 
-See also the [layout attribute reference](/reference/layout).
+## Figure size and margins
+
+[`width`](/reference/layout#width) and [`height`](/reference/layout#height) set the figure size in
+px. A dimension that `layout` does not set takes the size of the chart's element, or 700 × 450 px
+when the element has no size: see [Size](/fundamentals/configuration#size).
+
+[`margin`](/reference/layout#margin) is the space around the plot area, where axis labels, the
+title and the legend go:
+
+- `l`, `r`, `t`, `b`: the four margins in px. The defaults are 80, 80, 100 and 80; the default
+  look uses 40, 16, 16 and 32.
+- `pad`: px between the plot area and the axis lines (default 0).
+- `autoexpand` (default `true`): lets the legend, colorbars, the range slider and axes with
+  `automargin` grow the margins. With `false`, the margins are exactly `l`, `r`, `t` and `b`.
+- `gutter`: px kept between the figure edge and whatever grew a margin (default 0; 4 in the
+  default look). Plotly has no `gutter`.
+
+An axis with [`automargin: true`](/reference/layout#xaxis.automargin) grows its margin until its
+tick labels and title fit. `automargin` is `false` by default; the default look turns it on for
+every axis, so its small margins grow as needed. To let an axis grow some margins only, combine
+`'left'`, `'right'`, `'top'`, `'bottom'`, `'width'` and `'height'` with `+`.
+
+Margins never leave less than 64 px of plot area in each direction: on a small figure they shrink
+in proportion.
+
+```ts
+createChart(el, {
+  data: [{ type: 'bar', x: ['Housing', 'Food', 'Transport'], y: [1450, 620, 310] }],
+  layout: {
+    width: 480,
+    height: 320,
+    margin: { l: 60, r: 20, t: 40, b: 40 },
+    yaxis: { automargin: false },
+  },
+});
+```
+
+## Figure title
+
+[`title.text`](/reference/layout#title.text) is the figure title. `title.x` and `title.y` place
+it, as fractions of the whole figure (`xref` / `yref: 'container'`, the default) or of the plot
+area (`'paper'`); `xanchor` and `yanchor` say which side of the text sits there. By default the
+title is centered in the top margin, in `layout.font` at 1.4 times its size. The default look
+draws it at the top left, 11 px, and sets `title.automargin`, so the top margin grows to hold it.
+`title.subtitle.text` adds a second line under it.
+
+## Axes
+
+A figure with cartesian traces has an x axis, `layout.xaxis`, and a y axis, `layout.yaxis`.
+Further axes are `xaxis2`, `yaxis2`, and so on. A trace picks its axes by id:
+`xaxis: 'x2'` is `layout.xaxis2`. An axis that a trace names exists even when `layout` has no
+entry for it. [Placing traces](/fundamentals/traces#placing-traces) lists which trace types use
+axes.
+
+### Type
+
+[`type`](/reference/layout#xaxis.type) is `'linear'`, `'log'`, `'date'`, `'category'` or
+`'multicategory'`. When it is not set, it is detected from the data of the first trace on the
+axis: see [Numbers, dates and categories](/fundamentals/data-formats#numbers-dates-and-categories).
+A log axis is never detected: set `type: 'log'`.
+
+### Range
+
+Without a [`range`](/reference/layout#xaxis.range), an axis fits its data (`autorange: true`).
+
+- `range: [0, 100]` fixes both ends and turns `autorange` off. Values are in data units: numbers,
+  date strings, or category names. On a log axis they are exponents: `range: [2, 6]` is 100 to
+  1,000,000.
+- `range: [0, null]` fixes one end; the `null` end still fits the data.
+- `autorange: 'reversed'` fits the data with the axis flipped.
+- `rangemode: 'tozero'` makes the fitted range include 0, and `'nonnegative'` keeps it from going
+  below 0. Linear axes only.
+- `autorangeoptions` constrains the fitted range: `minallowed` / `maxallowed` set an end exactly,
+  `clipmin` / `clipmax` bound it, and `include` names values it must contain.
+- `minallowed` / `maxallowed` on the axis stop zoom and pan there, and cap the fitted range.
+  `fixedrange: true` turns zoom and pan off for the axis.
+
+### Ticks, grid and lines
+
+- **Tick positions.** By default the axis picks round steps (`tickmode: 'auto'`); `nticks` caps
+  how many. Setting `dtick` places a tick every `dtick` from `tick0`: a number, or on date axes
+  milliseconds or `'M<n>'` for `n` months. Setting `tickvals` (with optional `ticktext`) places
+  ticks at exactly those values. Holochart does not support `tickmode: 'sync'`: it behaves as
+  `'auto'`.
+- **Tick labels.** [`tickformat`](/reference/layout#xaxis.tickformat) takes a d3-format specifier
+  for numbers (`'.2f'`, `'~s'`, `'$,'`) or a d3-time-format one for dates (`'%b %Y'`); see
+  [Date formatting](/fundamentals/dates-time-series#date-formatting). `tickprefix` and
+  `ticksuffix` add text around each label, `tickangle` rotates the labels, and
+  `showticklabels: false` hides them.
+- **Tick marks.** `ticks: 'outside'` or `'inside'` draws them, `''` (the default) does not; the
+  default look draws them outside. `minor` adds minor ticks and grid lines between the major ones.
+- **Grid and zero line.** `showgrid` and `zeroline` are `true` by default. The zero line shows on
+  linear axes whose range contains 0. `gridcolor`, `gridwidth` and `griddash` style the grid.
+- **Axis line.** `showline: true` draws it (`false` by default; the default look draws it).
+  `mirror: true` repeats it on the opposite side of the plot area.
+- **Title.** [`title.text`](/reference/layout#xaxis.title), in `title.font`; `title.standoff` is
+  the distance in px from the tick labels.
+- `visible: false` hides the line, ticks, labels, grid and title. The axis still maps its data.
+
+```ts
+createChart(el, {
+  data: [{ type: 'scatter', x: [1, 2, 3, 4], y: [120, 4500, 32000, 910000] }],
+  layout: {
+    xaxis: { title: { text: 'Week' }, dtick: 1 },
+    yaxis: { type: 'log', title: { text: 'Downloads' }, range: [2, 6] },
+  },
+});
+```
+
+[Log plots](/charts/scientific/log-plots) covers log axes, and
+[Dates & time series](/fundamentals/dates-time-series) covers date axes.
+
+## Subplots with `domain` and `anchor`
+
+A pair of axes that a trace uses is a subplot. Two attributes place an axis:
+
+- [`domain`](/reference/layout#xaxis.domain): the part of the plot area the axis spans, as
+  fractions `[start, end]` (default `[0, 1]`). Y domains count from the bottom.
+- [`anchor`](/reference/layout#xaxis.anchor): the axis it is drawn against. By default that is the
+  other axis of the first trace on it. `side` picks the edge of that axis: `'bottom'` or `'top'`
+  for an x axis, `'left'` or `'right'` for a y axis.
+
+Two subplots side by side need two x domains. The trace on `x2` and `y2` makes both axes, and
+each is anchored to the other:
+
+```ts
+createChart(el, {
+  data: [
+    { type: 'scatter', x: [1, 2, 3], y: [4, 2, 5] },
+    { type: 'bar', x: ['A', 'B', 'C'], y: [12, 9, 15], xaxis: 'x2', yaxis: 'y2' },
+  ],
+  layout: {
+    xaxis: { domain: [0, 0.45] },
+    xaxis2: { domain: [0.55, 1] },
+  },
+});
+```
+
+Two subplots stacked on one x axis need two y domains. The x axis is anchored to `y`, the axis of
+its first trace, so `anchor: 'y2'` moves it under the lower subplot:
+
+```ts
+const months = ['Jan', 'Feb', 'Mar', 'Apr'];
+
+createChart(el, {
+  data: [
+    { type: 'scatter', x: months, y: [11, 12, 14, 16] },
+    { type: 'bar', x: months, y: [96, 81, 55, 60], yaxis: 'y2' },
+  ],
+  layout: {
+    xaxis: { anchor: 'y2' },
+    yaxis: { domain: [0.55, 1] },
+    yaxis2: { domain: [0, 0.45] },
+  },
+});
+```
 
 ## Grids and `makeSubplots`
 
-Each pair of axes is a subplot, and axis `domain` places it in the plot area. Writing domains by
-hand gets tedious past two subplots, so there are two ways to lay out a grid: `layout.grid`, part
-of the figure (and so of its JSON), and `makeSubplots`, a helper that computes the layout up front
-like Python's `make_subplots`.
+Writing domains by hand gets tedious past two subplots, so there are two ways to lay out a grid:
+`layout.grid`, part of the figure (and so of its JSON), and `makeSubplots`, a helper that computes
+the layout up front like Python's `make_subplots`.
 
 Either way, traces pick their subplot the usual way, with `xaxis: 'x2'` and `yaxis: 'y2'`. The
 grid only decides where those axes go.
@@ -68,8 +225,8 @@ other attributes:
 
 - `roworder`: `'top to bottom'` (default) or `'bottom to top'`, which row is row 0.
 - `xgap` / `ygap`: space between columns and rows, as a fraction of a cell. The defaults are 0.1
-  for coupled axes and 0.2 / 0.3 for independent subplots, which need room for their own tick
-  labels.
+  for coupled axes and 0.2 / 0.3 for independent subplots (`pattern: 'independent'` or a
+  `subplots` array), which need room for their own tick labels.
 - `domain.x` / `domain.y`: the part of the plot area the grid fills (default `[0, 1]`).
 - `xside`: `'bottom plot'` (default) or `'top plot'` draws each x axis against the bottom-most or
   top-most subplot of its column; `'bottom'` or `'top'` draws it at the grid edge instead, as a
@@ -124,13 +281,14 @@ createChart(el, {
 ```
 
 The target axis must exist and must not overlay another axis itself; otherwise `overlaying` is
-ignored. A zoom box, pan, scroll or pinch on the plot area moves every axis drawn over it, so the
-secondary axis zooms with its primary one (each by the same pixels, as in Plotly); the drag strips
-beside an axis move that axis alone.
+ignored. A zoom box, pan, pinch or scroll (with
+[`config.scrollZoom`](/fundamentals/configuration#scrollzoom)) on the plot area moves every axis
+drawn over it, so the secondary axis zooms with its primary one (each by the same pixels, as in
+Plotly); the drag strips beside an axis move that axis alone.
 
-As in Plotly, the traces on the overlaying axis draw over those of the axis it overlays, and every
-grid and zero line of the pair (the overlaying axis draws its own with `showgrid: true`) draws under
-all of their traces.
+The traces on the overlaying axis draw over those of the axis it overlays, and every grid and zero
+line of the pair draws under all of their traces. Both axes draw their grid by default: set
+`showgrid: false` on one of them when the two grids do not line up.
 
 <Example id="axes/demand-temperature" :height="440" />
 
@@ -175,7 +333,8 @@ createChart(el, {
 `makeSubplots` builds a subplot grid in code, with the options of Python's `make_subplots` in
 camelCase: `rows`, `cols`, `sharedX`, `sharedY`, `startCell`, `specs`, `rowHeights`,
 `columnWidths`, `subplotTitles`, `horizontalSpacing`, and `verticalSpacing`. Rows and columns are
-1-based, and row 1 is at the top (`startCell: 'top-left'`).
+1-based, and row 1 is at the top (`startCell: 'top-left'`, the default; `'bottom-left'` puts it at
+the bottom).
 
 It returns:
 
@@ -228,9 +387,15 @@ If you add annotations of your own, concatenate them with the titles:
   it with `sp.place(trace, row, col, { secondaryY: true })`.
 - `l`, `r`, `t`, `b`: padding inside the cell, as plot-area fractions.
 
-Other subplot types (`scene`, `polar`, `ternary`, `geo`, `map`, `smith`) throw an error naming the
-milestone that adds them. To put polar subplots in a grid, set their `domain` (or `domain.row` /
-`domain.column` with `layout.grid`) instead: see [polar subplots](#polar-subplots).
+`makeSubplots` does not support other subplot types: `scene`, `polar`, `ternary`, `geo`, `map`,
+`mapbox` and `smith` throw an error. To put polar subplots or 3D scenes in a grid, set their
+`domain` (or `domain.row` / `domain.column` with `layout.grid`) instead: see
+[polar subplots](#polar-subplots) and [several scenes](/fundamentals/3d-scenes#several-scenes).
+
+`horizontalSpacing` and `verticalSpacing` are fractions of the plot area and default to
+`0.2 / cols` and `0.3 / rows`. `rowHeights` and `columnWidths` are relative sizes, one per row or
+column. Invalid options (a `specs` array of the wrong shape, overlapping spans, more titles than
+subplots) throw an `Error` whose message starts with `makeSubplots:`.
 
 #### Differences from Python's `make_subplots`
 
@@ -276,6 +441,8 @@ createChart(document.getElementById('chart')!, {
 });
 ```
 
+Two polar subplots, each with its own `domain` and axes (a log radial axis on the left):
+
 <Example id="polar/subplots" />
 
 ## Range breaks
@@ -309,22 +476,30 @@ createChart(el, {
 });
 ```
 
+The same two breaks on daily OHLC bars, with every 2024 market holiday in `values`. An `ohlc`
+trace turns the [range slider](#range-slider-and-range-selector) on, and the slider skips the
+breaks too:
+
 <Example id="ohlc/range-breaks" :height="400" />
 
-Overlapping breaks merge. Here nights and weekends together leave only the 09:00–17:00 sessions:
+Overlapping breaks merge. Here weekends (`bounds: ['sat', 'mon']`) and nights
+(`bounds: [17, 9], pattern: 'hour'`) together leave only the 09:00–17:00 sessions of a line of
+15-minute prices:
 
 <Example id="timeseries/business-hours" :height="400" />
 
 What to know:
 
-- **Patterns use UTC** days and hours (as Plotly; `layout.timezone` is not supported yet). UTC has
-  no daylight-saving changes, so every day loses exactly the same hours.
-- **Data inside a break is not drawn**, and the line joins the points on either side.
+- **Patterns use UTC** days and hours. Holochart does not support time zones: a date axis always
+  shows UTC, which has no daylight-saving changes, so every day loses exactly the same hours.
+- **Data inside a break is not drawn.** A point inside a break is a missing point: it leaves a
+  gap in a line, unless the trace sets `connectgaps: true`. A break with no points in it leaves
+  no gap: the line runs from the last point before it to the first point after it.
 - **Ticks never land in a break.** A tick that would fall inside one moves to its end (a weekly
   tick on Sunday shows as Monday), and ticks that end up crowded are dropped. With `'day of week'`
   breaks, day steps are 1, 2, 7 or 14 days.
-- **Hover, zoom and pan work across breaks.** Hover labels show the real dates, and the ranges a
-  zoom or pan reports (`relayout`, `fullLayout`) are real dates too.
+- **Hover, zoom and pan work across breaks.** Hover labels show the real dates, and the range a
+  zoom or pan reports in its `relayout` event is in real dates too.
 - A span break that covers the whole fixed `range` is ignored.
 
 How it works: an axis with breaks maps data to a _compressed_ linear space in which each break has
@@ -386,7 +561,8 @@ data, `'fixed'` uses `rangeslider.yaxis.range`; outside `'match'`, the part of t
 the y range in view is shaded.
 
 Range breaks carry over: the slider skips them like the axis does, and the selector counts
-calendar time back from the range end.
+calendar time back from the range end. Here a year of daily candles hides weekends and holidays;
+a `candlestick` trace turns the range slider on without `rangeslider: {}`:
 
 <Example id="candlestick/range-breaks" :height="440" />
 
@@ -417,12 +593,13 @@ keep their own `domain`, anchor and tick style but share one range:
 - they autorange together over the data of every linked axis;
 - a zoom, pan, scroll or `relayout` of any of them moves all of them (`relayout` reports every
   linked axis);
-- `range`, `autorange`, `rangemode`, `rangebreaks`, `constrain` and the category order are taken
-  from the first axis without `matches` (or the first one that sets them), and `fixedrange` on one
-  fixes them all.
+- `range`, `autorange`, `rangemode`, `rangebreaks`, `constrain`, `categoryorder` and
+  `categoryarray` are shared: each is taken from the axis the others match when it sets it,
+  otherwise from the first linked axis that sets it. `fixedrange` on one fixes them all.
 
-Link any number of axes to one (`xaxis2: { matches: 'x' }`, `xaxis3: { matches: 'x' }`). A link to
-an axis of another type, to a missing axis or one that would make a loop is ignored.
+Link any number of axes to one (`xaxis2: { matches: 'x' }`, `xaxis3: { matches: 'x' }`). The
+target can be an axis of the other letter (`yaxis: { matches: 'x' }`). A link to an axis of
+another type, to a missing axis or one that would make a loop is ignored.
 
 ```ts
 const weeks = [1, 2, 3, 4, 5, 6];
@@ -441,6 +618,9 @@ createChart(el, {
   },
 });
 ```
+
+Four panels in a 2×2 grid, every x axis matching `x` and every y axis matching `y`. They share
+one range over all four cities' data, and a zoom or pan in one panel moves the other three:
 
 <Example id="axes/linked-axes" :height="480" />
 
@@ -474,12 +654,17 @@ createChart(el, {
 });
 ```
 
+The same shapes twice, both with the y axis anchored to its x axis. Left, `constrain: 'range'`:
+the x range widens to fill the subplot. Right, `constrain: 'domain'` with
+`constraintoward: 'left'`: the x axis keeps its range and the subplot shrinks, pinned to the left.
+
 <Example id="axes/scaleanchor" :height="380" />
 
-Chains and groups work as in Plotly: axes linked by `scaleanchor` or `matches` form one group whose
-scales all agree, and an anchor that would make a loop (x anchored to y and y to x) is ignored.
-When an update sets the range of some axes in a group (a zoom, or `relayout`), those win and the
-others adapt; otherwise the axis showing the most data decides and the others widen.
+Axes linked by `scaleanchor` or `matches` form one group whose scales all agree. The anchor must
+be an axis of the same type. `scaleanchor` is ignored on an axis that also sets `matches`, and an
+anchor that would make a loop (x anchored to y and y to x) is ignored. When an update sets the
+range of some axes in a group (a zoom, or `relayout`), those win and the others adapt; otherwise
+the axis with the fewest pixels per unit (after `scaleratio`) decides and the others widen.
 
 ## Spike lines
 
@@ -497,8 +682,8 @@ turns them on):
   for no limit and `0` for no spikes.
 
 With `hovermode: 'x unified'` (or `'y unified'`), spikes are on by default for that axis, drawn
-`across`, dotted and 1.5 px wide. The modebar's spike button (add it with
-`config.modeBarButtonsToAdd: ['togglespikelines']`) turns them on and off on every axis.
+`across`, dotted, 1.5 px wide and in the axis `color`. The modebar's spike button (add it with
+`config.modeBarButtonsToAdd: ['toggleSpikelines']`) turns them on and off on every axis.
 
 ```ts
 const x = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -516,7 +701,29 @@ createChart(el, {
 <Example id="axes/spike-lines" />
 
 Spikes are drawn in the hover layer over the canvas, like hover labels: moving them never redraws
-a trace, and they are not part of image exports. Spike labels on the axis are not supported yet.
+a trace, and they are not part of image exports. Holochart does not draw a value label where a
+spike meets the axis. For spikes in 3D scenes, see [3D scenes](/fundamentals/3d-scenes#spikes).
+
+## Legend
+
+The legend lists one item per trace (one per label for pie-like traces). It shows when more than
+one trace has an item; [`showlegend`](/reference/layout#showlegend) forces it on or off, and
+`showlegend: false` on a trace removes that trace's item.
+
+- **Position.** `legend.x` and `legend.y` are fractions of the plot area (the default, `'paper'`
+  for `xref` and `yref`) or of the figure (`'container'`), and `xanchor` / `yanchor` say which
+  side of the legend sits there. `orientation` is `'v'` (default, a column at `x: 1.02`, `y: 1`:
+  right of the plot) or `'h'` (rows, by default at `x: 0`, `y: -0.1`: under the plot). A legend
+  outside the plot area grows the margin on that side.
+- **The default look** draws a horizontal legend above the plot area (`orientation: 'h'`, `x: 0`,
+  `y: 1`, `yanchor: 'bottom'`). For a column at the right, set all of
+  `legend: { orientation: 'v', x: 1.02, y: 1, yanchor: 'top' }`.
+- **Order.** Items follow trace order. `legend.traceorder: 'reversed'` flips it, and a trace's
+  `legendrank` (default 1000) sorts it: lower ranks come first.
+- **Clicks.** A click hides or shows the trace (`legend.itemclick: 'toggle'`), and a double-click
+  isolates it (`legend.itemdoubleclick: 'toggleothers'`). Set either to `false` to turn it off.
+- `legend.title.text` adds a title, and `bgcolor`, `bordercolor`, `borderwidth` and `font` style
+  the box.
 
 ## Legend groups and group titles
 
@@ -550,7 +757,15 @@ createChart(el, {
       legendgrouptitle: { text: 'Enterprise', font: { weight: 'bold' } },
     },
   ],
-  layout: { legend: { orientation: 'v', grouptitlefont: { color: '#eceef4' } } },
+  layout: {
+    legend: {
+      orientation: 'v',
+      x: 1.02,
+      y: 1,
+      yanchor: 'top',
+      grouptitlefont: { color: '#eceef4' },
+    },
+  },
 });
 ```
 
@@ -573,7 +788,7 @@ As in Plotly:
 
 <Example id="legends/group-titles" :height="420" />
 
-`table` traces never appear in the legend, as in Plotly (they have no `showlegend`).
+`table` traces never appear in the legend: `showlegend` has no effect on them.
 
 ## Multiple legends
 
