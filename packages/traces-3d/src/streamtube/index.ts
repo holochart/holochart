@@ -15,6 +15,7 @@ import type { FullTrace } from '@mk7s/holochart-core';
 import type { TraceModule } from '@mk7s/holochart-runtime';
 import { coloraxisLayoutSchema } from '@mk7s/holochart-traces-basic';
 import { numbersOf, supplyTraceColoraxisDefaults, traceColorbar } from '../mesh3d/colors.ts';
+import { sceneA11y } from '../a11y-loader.ts';
 import { sceneCrossTraceLayout, sceneSubplotDomain } from '../scene/layout.ts';
 import { streamtubeAttributes } from './attributes.ts';
 import { calcStreamtube, normExtent, type StreamtubeCalc } from './calc.ts';
@@ -60,6 +61,7 @@ export const streamtube: TraceModule<StreamtubeCalc, typeof streamtubeAttributes
   crossTraceLayout: sceneCrossTraceLayout,
   calc: calcStreamtube,
   plot: { create: (ctx) => new StreamtubeView(ctx) },
+  a11y: sceneA11y,
   hoverPoints: streamtubeHoverPoints,
   eventData: (calc, _trace, i) => ({ norm: calc.norm[i], divergence: calc.divergence[i] }),
   colorbar: (trace, ctx) => traceColorbar(trace, ctx.fullLayout, streamtubeNormExtent(trace)),

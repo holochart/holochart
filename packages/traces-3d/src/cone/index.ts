@@ -8,6 +8,7 @@
 import type { FullTrace } from '@mk7s/holochart-core';
 import type { TraceModule } from '@mk7s/holochart-runtime';
 import { coloraxisLayoutSchema } from '@mk7s/holochart-traces-basic';
+import { sceneA11y } from '../a11y-loader.ts';
 import { sceneCrossTraceLayout, sceneSubplotDomain } from '../scene/layout.ts';
 import { numbersOf, supplyTraceColoraxisDefaults, traceColorbar } from '../mesh3d/colors.ts';
 import { coneAttributes } from './attributes.ts';
@@ -64,6 +65,7 @@ export const cone: TraceModule<ConeCalc, typeof coneAttributes.children> = {
   crossTraceLayout: sceneCrossTraceLayout,
   calc: calcCone,
   plot: { create: (ctx) => new ConeView(ctx) },
+  a11y: sceneA11y,
   hoverPoints: coneHoverPoints,
   eventData: (calc, _trace, i) => ({ norm: calc.norm[i] }),
   colorbar: (trace, ctx) => traceColorbar(trace, ctx.fullLayout, coneNormExtent(trace)),

@@ -15,6 +15,7 @@
  */
 import type { TraceModule } from '@mk7s/holochart-runtime';
 import { coloraxisLayoutSchema } from '@mk7s/holochart-traces-basic';
+import { sceneA11y } from '../a11y-loader.ts';
 import { sceneCrossTraceLayout, sceneSubplotDomain } from '../scene/layout.ts';
 import { supplyTraceColoraxisDefaults, traceColorbar } from '../mesh3d/colors.ts';
 import { calcIso, isoColorValues, type IsoCalc } from '../isosurface/calc.ts';
@@ -43,6 +44,7 @@ export const volume: TraceModule<IsoCalc, typeof volumeAttributes.children> = {
   crossTraceLayout: sceneCrossTraceLayout,
   calc: (trace, ctx) => calcIso(trace, ctx, trace['render'] !== 'raymarch'),
   plot: { create: (ctx) => new VolumeView(ctx) },
+  a11y: sceneA11y,
   hoverPoints: (calc, trace, query, ctx) =>
     trace['render'] === 'raymarch'
       ? rayMarchHoverPoints(calc, trace, query, ctx)

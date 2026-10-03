@@ -49,6 +49,7 @@
  *   touchAction: 'none', // one-finger orbit, pinch zoom
  *   subplotDomain: sceneSubplotDomain, // placed by `layout.sceneN.domain`
  *   crossTraceLayout: sceneCrossTraceLayout, // shared: lays out every scene once per pass
+ *   a11y: sceneA11y, // keyboard orbit, dolly and reset of the scene, loaded on first focus
  *   calc(trace, ctx) {
  *     const axes = sceneScales(ctx.fullLayout, sceneOf(trace)); // x, y, z core Scales
  *     const x = axes.x.d2lArray(trace.x); // … y, z
@@ -133,6 +134,7 @@
  *   `lighting` (a render `LightRig`) lights three.js material types always, and Plotly's model only
  *   when set (else each mesh keeps its own `lightposition` light, as in Plotly).
  */
+export { sceneA11y } from '../a11y-loader.ts';
 export { sceneComponent } from './component.ts';
 export { sceneAttributes, sceneAxisAttributes, sceneIdAttribute } from './layout-attributes.ts';
 export { isSceneTrace, sceneIds, sceneOf } from './layout-defaults.ts';
