@@ -9,6 +9,7 @@ import {
 } from '../../scripts/build/iife-split.ts';
 import {
   DTS_OPTIONS,
+  dtsWithoutInternalMembers,
   dtsWithoutMapComment,
   productionPlugins,
 } from '../../scripts/build/tsdown-preset.ts';
@@ -111,7 +112,7 @@ export default defineConfig([
     sourcemap: true,
     dts: DTS_OPTIONS,
     clean: true,
-    plugins: [...productionPlugins(), dtsWithoutMapComment()],
+    plugins: [...productionPlugins(), dtsWithoutInternalMembers(), dtsWithoutMapComment()],
     outputOptions: { chunkFileNames },
   },
   {

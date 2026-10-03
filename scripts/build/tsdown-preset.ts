@@ -10,6 +10,7 @@
  * Set `HOLOCHART_KEEP_DESCRIPTIONS=1` to build `dist/index.js` without stripping (used to measure
  * what stripping saves; never for releases).
  */
+import ts from 'typescript';
 import { stripDescriptionsPlugin } from './strip-descriptions.ts';
 
 /** Options of {@link libraryConfig}. */
@@ -32,15 +33,66 @@ export function productionPlugins(): ReturnType<typeof stripDescriptionsPlugin>[
 /**
  * Declaration options of every published build (`dts` in tsdown):
  *
- * - `stripInternal`: members tagged `@internal` in TSDoc are left out of the shipped `.d.ts`
- *   (docs/release/versioning.md: they are not public API).
+ * - No `stripInternal`: an export tagged `@internal` is plumbing the Holochart packages share
+ *   (docs/release/versioning.md). It stays in the entry point, so its declaration has to stay
+ *   too: the compiler option would remove the declaration and leave the entry's re-export of it
+ *   dangling (the build fails), and other packages' declarations refer to these types. Members
+ *   tagged `@internal` are still left out of the shipped `.d.ts`, by
+ *   {@link dtsWithoutInternalMembers}.
  * - No declaration maps: they would point at `../src/*.ts`, which the packages don't ship (`files`
  *   is `dist` only). The JS sourcemaps embed their sources, so debugging is unaffected.
  */
 export const DTS_OPTIONS = {
   sourcemap: false,
-  compilerOptions: { stripInternal: true },
 };
+
+/** Whether the comment right before `node` is tagged `@internal` (the compiler's own test). */
+function isInternal(code: string, node: ts.Node): boolean {
+  const comments = ts.getLeadingCommentRanges(code, node.getFullStart());
+  const last = comments?.[comments.length - 1];
+  return last !== undefined && code.slice(last.pos, last.end).includes('@internal');
+}
+
+/**
+ * `code` (a bundled declaration file) without the class, interface and type-literal members whose
+ * doc comment is tagged `@internal`: what `stripInternal` does to members. Top-level declarations
+ * tagged `@internal` are kept (see {@link DTS_OPTIONS}).
+ */
+export function stripInternalMembers(code: string): string {
+  if (!code.includes('@internal')) return code;
+  const source = ts.createSourceFile('index.d.ts', code, ts.ScriptTarget.Latest, true);
+  const cuts: { from: number; to: number }[] = [];
+  const visit = (node: ts.Node): void => {
+    if ((ts.isClassElement(node) || ts.isTypeElement(node)) && isInternal(code, node)) {
+      cuts.push({ from: node.getFullStart(), to: node.end });
+      return;
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  let out = code;
+  for (const { from, to } of cuts.reverse()) out = out.slice(0, from) + out.slice(to);
+  return out;
+}
+
+/**
+ * Removes the members tagged `@internal` from the bundled declarations
+ * ({@link stripInternalMembers}). Add it to every build that emits declarations.
+ */
+export function dtsWithoutInternalMembers() {
+  return {
+    name: 'holochart:dts-without-internal-members',
+    generateBundle(
+      _options: unknown,
+      bundle: Record<string, { type: string; fileName: string; code?: string }>,
+    ): void {
+      for (const chunk of Object.values(bundle)) {
+        if (chunk.type !== 'chunk' || !chunk.fileName.endsWith('.d.ts') || !chunk.code) continue;
+        chunk.code = stripInternalMembers(chunk.code);
+      }
+    },
+  };
+}
 
 /**
  * Removes the `//# sourceMappingURL=….d.ts.map` comment from the bundled declarations: with
@@ -80,7 +132,7 @@ export function libraryConfig(options: LibraryConfigOptions = {}): Record<string
     ...base,
     dts: DTS_OPTIONS,
     clean: true,
-    plugins: [...productionPlugins(), dtsWithoutMapComment()],
+    plugins: [...productionPlugins(), dtsWithoutInternalMembers(), dtsWithoutMapComment()],
   };
   if (!options.development) return [production];
   return [
