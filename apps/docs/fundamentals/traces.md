@@ -48,6 +48,24 @@ figure rejects an unknown `type` and autocompletes the attributes of the one you
 trace type is also exported by name (`ScatterTrace`, `BarTrace`, …). See
 [TypeScript](/guides/typescript#narrowing-by-trace-type).
 
+## Attribute names
+
+An attribute that Plotly has keeps Plotly's name, letter for letter, in traces, in `layout` and
+in `config`: `showlegend`, `showticklabels`, `paper_bgcolor`, `scrollZoom`. Holochart has no
+second spelling for these names. A camelCase version, such as `showLegend` or `paperBgcolor`,
+is an unknown attribute: it is ignored, and the console warning suggests the Plotly name.
+
+```text
+[holochart] layout.paperBgcolor: unknown attribute 'paperBgcolor'; did you mean 'paper_bgcolor'?
+```
+
+Names that exist only in Holochart are camelCase: the trace attribute `styleRules`,
+`layout.colorscaleInterpolation`, config options such as `sharedRenderer` and `maxPixelRatio`,
+and every [Express](/express/) option. The exception is the 3D
+[material, lighting](/customization/materials-lighting) and scene attributes that Holochart
+adds, such as `castshadow`, `clearcoatroughness` and `autorotate`: they are lower case, like the
+Plotly attributes around them.
+
 ## Attributes every trace has
 
 These exist on every trace type:

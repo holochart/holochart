@@ -11,6 +11,11 @@ Plotly's attribute names, `hovertemplate` syntax and templates. Its functional A
 function names and argument order. For most charts, moving over is a change of import and of a
 few lines around the chart; this page lists those lines.
 
+Attribute names are Plotly's, letter for letter (`showticklabels`, `paper_bgcolor`), and
+Holochart has no camelCase spellings of them. What Holochart adds is named in camelCase
+(`styleRules`, `sharedRenderer`), except its 3D material and lighting attributes; see
+[Attribute names](/fundamentals/traces#attribute-names).
+
 It describes plotly.js 4. The [compatibility table](/reference/plotly-compat) has the attribute
 by attribute detail.
 

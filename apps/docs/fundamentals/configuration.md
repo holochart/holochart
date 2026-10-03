@@ -36,6 +36,10 @@ option is reported in the console:
 [holochart] config.responsve: unknown attribute 'responsve'; did you mean 'responsive'?
 ```
 
+Option names are Plotly's where Plotly has the option (`scrollZoom`, `displayModeBar`). Options
+that exist only in Holochart are camelCase too (`sharedRenderer`, `maxPixelRatio`). See
+[Attribute names](/fundamentals/traces#attribute-names).
+
 Templates do not apply to config, and there is no global config: every chart takes its own.
 
 <Example id="embedding/station-widget" :height="480" />
@@ -171,7 +175,7 @@ createChart(el, {
 });
 ```
 
-A function is not JSON: `chart.toJSON()` leaves `renderHover` out.
+A function is not JSON: `chartToJSON(chart)` leaves `renderHover` out.
 
 ## Modebar
 
