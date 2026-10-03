@@ -32,6 +32,7 @@ Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's
 | `3D lines, sprites and spheres (lazy …)`     | 3D lines, sprite markers, sphere impostors, depth sorting, on first 3D lines or markers             | 10.7 kB |
 | `2.5D view and extrusion primitive (…)`      | 2.5D camera, projector, stencil clipping, prisms, extrusion primitive, on first `view3d` or `depth` | 13.5 kB |
 | `2.5D view component (lazy chunk of full)`   | the `layout.view3d` component's view: tilted axes and grids, turning drags, on first `view3d`       | 2.7 kB  |
+| `trace keyboard stops and 3D descriptions …` | the trace packages' accessibility chunks (one per package, summed), on first keyboard focus         | 4.6 kB  |
 | `@mk7s/holochart IIFE, 2D (includes three)`  | `dist/holochart.iife.min.js` as shipped, **with** three.js: everything but 3D                       | 690 kB  |
 | `@mk7s/holochart 3D add-on IIFE (…)`         | `dist/holochart-3d.iife.min.js` as shipped: the 3D package and render's 3D chunks                   | 115 kB  |
 | each `@mk7s/holochart-*` package             | `export *` of that package                                                                          | report  |
@@ -163,6 +164,35 @@ entry measures the whole package instead and the report adds a footnote.
 In CI, the job writes the table to the job summary, uploads `size.json` as the `size-report`
 artifact, compares with the latest successful `main` run, and posts or updates one PR comment
 (same-repo PRs only; fork PRs get a read-only token, so they get the job summary only).
+
+## Sizes after S2.14: keyboard and screen-reader coverage (ship wave R3, 2026-10-03)
+
+S2.14 adds keyboard stops for every chart family, keyboard orbit of 3D scenes and descriptions of
+the remaining 3D traces. The full bundle had 2.4 kB of headroom locally (537.58 of 540 kB) and the
+script-tag build 4.2 kB, so the code is lazy: each trace package has one accessibility chunk
+(`dist/a11y-*.js`, the new row), loaded on a chart's first keyboard focus; the 3D chunk also loads
+after the first description of a 3D trace, and now holds the descriptions of `scatter3d` and
+`surface` too. The chunks import nothing. Their loaders (`a11y-loader.ts`) hand them the functions
+they need, because a lazy chunk that imports from its package makes a bundler split the modules
+they share into chunks of their own, whose import and export lists cost more than the code (the
+first version, with imports, added 4.2 kB to the full bundle's initial chunk; this one 0.5 kB),
+and because a bundle with one trace of a package would otherwise keep the other traces' hover code.
+
+The 2D script (`holochart.iife.min.js`) inlines every lazy chunk, and the 2D packages' chunks
+(about 2.9 kB) do not fit its budget, so its build replaces their loaders with no-ops
+(`scriptWithoutTraceA11yPlugin` in `packages/holochart/tsdown.config.ts`): in the script-tag build
+those families are not keyboard navigable yet. The 3D add-on carries the 3D chunk. Measured with
+`pnpm size` locally.
+
+| Entry                                      | Before    | After     | Budget |
+| ------------------------------------------ | --------- | --------- | ------ |
+| partial: core + scatter                    | 156.06 kB | 156.32 kB | 157 kB |
+| partial: basic                             | 247.73 kB | 247.95 kB | 250 kB |
+| keyboard navigation and legend keys (lazy) | 5.13 kB   | 5.42 kB   | 5.5 kB |
+| full, ESM                                  | 537.58 kB | 538.10 kB | 540 kB |
+| trace keyboard stops and 3D descriptions   | —         | 4.10 kB   | 4.6 kB |
+| IIFE (2D, includes three)                  | 685.77 kB | 686.64 kB | 690 kB |
+| 3D add-on IIFE                             | 110.57 kB | 111.54 kB | 115 kB |
 
 ## Sizes after M6 (waves 1–3, 2026-09-30)
 

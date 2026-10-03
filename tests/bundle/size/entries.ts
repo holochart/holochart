@@ -74,7 +74,8 @@ export const FONT_PARTS = ['font-regular', 'font-bold', 'font-italic', 'font-bol
  * types and transparency sorting (E2.11, E8.7, E2.14: render's `dist/mesh-lazy-*.js`), the 3D
  * lines, sprites and spheres (E14.2: render's `dist/lines-markers-3d-*.js`), the 2.5D view and
  * extrusion primitive (E8.9: render's `dist/extrusion-lazy-*.js`), the 2.5D view component's view
- * (E8.9: the full bundle's `dist/view3d-*.js`) and the {@link FONT_PARTS}.
+ * (E8.9: the full bundle's `dist/view3d-*.js`), the trace packages' accessibility code (S2.14:
+ * `dist/a11y-*.js` of each trace package) and the {@link FONT_PARTS}.
  */
 export const LAZY_PARTS = [
   'fill',
@@ -92,6 +93,7 @@ export const LAZY_PARTS = [
   'lines-markers-3d',
   'extrusion',
   'view3d',
+  'trace-a11y',
   ...FONT_PARTS,
 ] as const;
 
@@ -204,6 +206,13 @@ const EXTRUSION_MODULE =
 const VIEW3D_MODULE =
   /[\\/]holochart[\\/](?:dist[\\/]view3d-[\w-]+\.js|src[\\/]view3d[\\/]view\.ts)$/;
 
+/**
+ * The trace packages' lazily loaded accessibility code (S2.14: keyboard stops, the 3D scenes' view
+ * keys and the descriptions of 3D traces, loaded on a chart's first keyboard focus or after its
+ * first description): built (`dist/a11y-*.js`), or from sources.
+ */
+const TRACE_A11Y_MODULE = /[\\/]traces-[\w-]+[\\/](?:dist[\\/]a11y-[\w-]+\.js|src[\\/]a11y\.ts)$/;
+
 /** The {@link LAZY_PARTS} entry a module belongs to, if any. */
 export function lazyPartOf(moduleId: string): string | undefined {
   if (FILL_MODULE.test(moduleId)) return 'fill';
@@ -221,6 +230,7 @@ export function lazyPartOf(moduleId: string): string | undefined {
   if (LINES_MARKERS_3D_MODULE.test(moduleId)) return 'lines-markers-3d';
   if (EXTRUSION_MODULE.test(moduleId)) return 'extrusion';
   if (VIEW3D_MODULE.test(moduleId)) return 'view3d';
+  if (TRACE_A11Y_MODULE.test(moduleId)) return 'trace-a11y';
   const face = FONT_MODULE.exec(moduleId)?.[1];
   return face ? `font-${face}` : undefined;
 }
@@ -500,6 +510,20 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     limit: '2.7 kB',
     lazyOf: 'full',
     lazyPart: 'view3d',
+  },
+  {
+    // Backlog S2.14: the trace packages' accessibility code — the keyboard stops of the hierarchy,
+    // flow, statistical, grid, polar, funnelarea and scatter3d traces, the 3D scenes' view keys
+    // (keyboard orbit) and the descriptions of the 3D traces — one chunk per trace package,
+    // loaded with a dynamic import() on a chart's first keyboard focus (the 3D chunk also after
+    // the first description of a 3D trace); summed here (a figure using every package). The
+    // chunks import nothing: their loaders hand them what they need, so they add no shared chunk
+    // to an app's bundle. Measured 4.13 kB when split out (2026-10-03); budget = measured + ~10%.
+    id: 'trace-a11y-lazy',
+    name: 'trace keyboard stops and 3D descriptions (lazy chunks of full)',
+    limit: '4.6 kB',
+    lazyOf: 'full',
+    lazyPart: 'trace-a11y',
   },
   {
     // Self-contained script-tag build: the full bundle plus three.js (~170-190 kB min+gz on its

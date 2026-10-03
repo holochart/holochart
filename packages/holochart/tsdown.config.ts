@@ -38,6 +38,29 @@ function scriptFontFilesPlugin() {
   };
 }
 
+/** The 2D trace packages' loaders of their accessibility chunks (`src/a11y-loader.ts`, S2.14). */
+const TRACE_A11Y_LOADER = /[\\/]traces-(?!3d[\\/])[\w-]+[\\/]src[\\/]a11y-loader\.ts$/;
+
+/**
+ * 2D script only: leave out the trace packages' lazily loaded accessibility chunks (the keyboard
+ * stops of the hierarchy, flow, statistical, grid, polar and funnelarea traces, backlog S2.14).
+ * A single-file script would inline them (about 2.9 kB min+gz), which its size budget has no room
+ * for (docs/release/bundle-size.md); their loaders become no-ops, so those traces have no
+ * `a11y` and keyboard navigation skips them, as before S2.14. The ESM build loads the chunks on a
+ * chart's first keyboard focus, and the 3D add-on carries the 3D package's chunk. Remove this
+ * plugin from the 2D script's build to ship them in it.
+ */
+function scriptWithoutTraceA11yPlugin() {
+  return {
+    name: 'holochart:script-without-trace-a11y',
+    load: {
+      filter: { id: TRACE_A11Y_LOADER },
+      handler: () =>
+        'export const lazyA11y = () => undefined;\nexport const gridA11y = undefined;\n',
+    },
+  };
+}
+
 /** The 2.5D view's lazily loaded view (`src/view3d/view.ts`, plan E8.9). */
 const VIEW3D_VIEW = /[\\/]src[\\/]view3d[\\/]view\.ts$/;
 
@@ -107,6 +130,7 @@ export default defineConfig([
     plugins: [
       ...productionPlugins(),
       scriptFontFilesPlugin(),
+      scriptWithoutTraceA11yPlugin(),
       iife2DPlugin(source('./src/iife/host.ts')),
     ],
     inputOptions: SOURCE_CONDITIONS,
