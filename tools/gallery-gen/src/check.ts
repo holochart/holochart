@@ -2,8 +2,9 @@
  * `pnpm gallery:check` (CI, docs job): checks that the committed gallery is in sync with
  * `examples/` without a browser (plan E19.5).
  *
- * - The manifest lists exactly the examples that are visual tests (not tagged `no-visual-test` or
- *   `perf`), and every entry has its thumbnail; no thumbnail is orphaned.
+ * - The manifest lists exactly the public examples that are visual tests (not tagged
+ *   `no-visual-test` or `perf`), and every entry has its thumbnail; no thumbnail is orphaned.
+ * - Internal examples (`_dev/…`, `_spikes/…`) are never in the manifest.
  * - Where an example's `meta` is a literal (most are), its title, description, tags and size
  *   match the manifest. Computed meta (e.g. the theme sampler) is only checked by id.
  *
@@ -21,6 +22,7 @@ import {
   PUBLIC_DIR,
   REPO_ROOT,
   isExcluded,
+  isInternalExample,
   listThumbnails,
   readManifest,
   type GalleryEntry,
@@ -105,6 +107,10 @@ export function checkGallery(
   for (const [id, meta] of examples) {
     const excluded = meta?.tags ? isExcluded(meta.tags) : false;
     const entry = byId.get(id);
+    if (isInternalExample(id)) {
+      if (entry) problems.push(`${id}: internal example in the gallery manifest.`);
+      continue;
+    }
     if (excluded) {
       if (entry) problems.push(`${id}: excluded from the gallery by its tags but in the manifest.`);
       continue;
@@ -162,9 +168,11 @@ function main(): void {
   const problems = checkGallery(manifest.examples, examples, listThumbnails());
   for (const p of problems) console.error(`error  ${p}`);
   const computed = [...examples.values()].filter((m) => !m).length;
+  const internal = [...examples.keys()].filter(isInternalExample).length;
   console.log(
     `\ngallery: ${manifest.examples.length} entries, ${examples.size} examples ` +
-      `(${computed} with computed meta, checked by id only), thumbnails in ${rel(PUBLIC_DIR)}; ` +
+      `(${internal} internal, not published; ${computed} with computed meta, checked by id only), ` +
+      `thumbnails in ${rel(PUBLIC_DIR)}; ` +
       `${problems.length} problems.`,
   );
   if (problems.length > 0) {

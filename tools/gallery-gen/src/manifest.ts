@@ -46,7 +46,7 @@ export interface GalleryEntry {
   title: string;
   description: string;
   tags: string[];
-  /** First segment of the id (`scatter`, `recipes`, `_dev`, …). */
+  /** First segment of the id (`scatter`, `recipes`, `demos`, …). Never an internal folder. */
   category: string;
   /** Trace types the rendered chart(s) contain (`fullData[].type`), sorted. */
   traceTypes: string[];
@@ -73,6 +73,15 @@ export type GalleryRecord = { id: string; skipped: true } | { id: string; entry:
 
 export function isExcluded(tags: readonly string[]): boolean {
   return tags.some((t) => EXCLUDED_TAGS.includes(t));
+}
+
+/**
+ * Internal examples: ids whose first segment starts with `_` (`_dev/…` renderer and interaction
+ * test fixtures, `_spikes/…` measurements). They stay in the sandbox and the test suites but are
+ * never published: no manifest entry, no thumbnail, whatever their tags.
+ */
+export function isInternalExample(id: string): boolean {
+  return id.startsWith('_');
 }
 
 export function isThreeD(traceTypes: readonly string[], tags: readonly string[]): boolean {
@@ -103,7 +112,9 @@ export function readManifest(file = MANIFEST_FILE): GalleryManifest | undefined 
 /**
  * Merge a run's records into the previous manifest. Rendered examples replace their entry,
  * skipped ones are dropped, examples that were not part of this run (a `-g` subset, or a failed
- * test) keep their previous entry, and entries of deleted examples are removed.
+ * test) keep their previous entry, and entries of deleted examples are removed. Internal examples
+ * ({@link isInternalExample}) never get an entry, so any run also removes the ones an older
+ * manifest still lists.
  */
 export function mergeRecords(
   previous: GalleryManifest | undefined,
@@ -111,9 +122,10 @@ export function mergeRecords(
   existingIds: ReadonlySet<string>,
 ): GalleryManifest {
   const byId = new Map<string, GalleryEntry>();
-  for (const e of previous?.examples ?? []) if (existingIds.has(e.id)) byId.set(e.id, e);
+  const published = (id: string): boolean => existingIds.has(id) && !isInternalExample(id);
+  for (const e of previous?.examples ?? []) if (published(e.id)) byId.set(e.id, e);
   for (const r of records) {
-    if ('entry' in r) byId.set(r.id, r.entry);
+    if ('entry' in r && !isInternalExample(r.id)) byId.set(r.id, r.entry);
     else byId.delete(r.id);
   }
   const examples = [...byId.values()].sort((a, b) => a.id.localeCompare(b.id));

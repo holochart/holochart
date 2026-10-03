@@ -93,7 +93,7 @@ link to `/reference/<chart>`. Draft pages only get warnings.
 Embed any example from `examples/` by id (its path without `.ts`):
 
 ```md
-<Example id="_dev/markers-symbols" />
+<Example id="line/basic" />
 <Example id="scatter/basic" :height="320" />
 ```
 
@@ -101,16 +101,18 @@ The component renders the example live in the browser only (never during SSR), s
 scrolls into view, disposes it when the page unmounts, and has a TypeScript source tab (highlighted
 at build time), a copy button, and an "Open in sandbox" link. Examples follow the contract in
 `examples/_lib/types.ts`; new example files are picked up without registration. `lint:pages`
-fails if a page embeds an id that doesn't exist.
+fails if a page embeds an id that doesn't exist, or an internal example: `examples/_dev/` and
+`examples/_spikes/` hold fixtures for the test suites and measurements, not examples for readers.
 
 To add an example, create `examples/<category>/<trace>/<slug>.ts` exporting `meta` and `run(el)`
 (see CONTRIBUTING.md). The same file feeds the sandbox and the visual regression suite.
 
 ## Gallery
 
-`/gallery/` (plan E19.5) shows a thumbnail of every example that is a visual test (examples
-tagged `no-visual-test` or `perf` are left out), filterable by category, trace type, tag and
-"3D-native", with a title search. Selecting a card opens the example live with its source and
+`/gallery/` (plan E19.5) shows a thumbnail of every public example that is a visual test
+(examples tagged `no-visual-test` or `perf` are left out, and so are the internal ones, whose id
+starts with `_`: `_dev/…`, `_spikes/…`), filterable by category, trace type, tag and "3D-native",
+with a title search. Selecting a card opens the example live with its source and
 links to the docs pages that embed it (each `<Example>` has the anchor `#example-<id>`, `/`
 becoming `-`). The open example is in the URL hash (`/gallery/#scatter/basic`), the filters in
 the query string.

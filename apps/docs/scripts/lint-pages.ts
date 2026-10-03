@@ -4,6 +4,8 @@
  * Every page:
  * - has frontmatter with `title` and `status: stub | draft | complete`; stubs name a `milestone`.
  * - only embeds examples that exist (`<Example id="…" />` → `examples/<id>.ts`).
+ * - never embeds an internal example (`_dev/…`, `_spikes/…`): those are fixtures of the test
+ *   suites, kept out of the published docs and the gallery.
  *
  * Chart pages (`charts/<family>/<chart>.md`):
  * - name the trace type they document in `chart:`.
@@ -81,6 +83,14 @@ export function exampleIds(body: string): string[] {
   return [...body.matchAll(/<Example\b[^>]*?\bid=(["'])(.+?)\1/g)].map((m) => m[2] as string);
 }
 
+/**
+ * Internal examples: ids whose first segment starts with `_` (`_dev/…`, `_spikes/…`). The same
+ * rule keeps them out of the gallery (`isInternalExample` in `tools/gallery-gen/src/manifest.ts`).
+ */
+export function isInternalExample(id: string): boolean {
+  return id.startsWith('_');
+}
+
 /** H2 sections as `[title, content]`, in order. */
 export function sections(body: string): [string, string][] {
   const parts = body.split(/^##\s+(.+?)\s*#*\s*$/m);
@@ -113,7 +123,14 @@ export function lintPage(page: Page, knownExamples: ReadonlySet<string>): Findin
 
   const ids = exampleIds(page.body);
   for (const id of ids) {
-    if (!knownExamples.has(id)) add('error', `<Example id="${id}"> does not exist in examples/.`);
+    if (isInternalExample(id)) {
+      add(
+        'error',
+        `<Example id="${id}">: internal example embedded in a public page; embed a public example.`,
+      );
+    } else if (!knownExamples.has(id)) {
+      add('error', `<Example id="${id}"> does not exist in examples/.`);
+    }
   }
 
   if (!isChartPage(page.file) && !(isTemplate && page.file.startsWith('charts/'))) {

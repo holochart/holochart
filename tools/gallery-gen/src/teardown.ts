@@ -16,7 +16,8 @@ import {
 
 /**
  * Global teardown of the gallery run: merge the per-example records into the committed manifest
- * and delete thumbnails that no entry references any more (deleted or newly excluded examples).
+ * and delete thumbnails that no entry references any more (deleted, newly excluded or internal
+ * examples).
  */
 export default async function teardown(config: FullConfig): Promise<void> {
   const outputDir = config.projects[0]?.outputDir;
