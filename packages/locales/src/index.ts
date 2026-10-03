@@ -173,7 +173,7 @@ export {
   zhTW,
 };
 
-/** Every locale of this package (~31 kB gzipped together; import the ones you need). */
+/** Every locale of this package (~40 kB gzipped together; import the ones you need). */
 export const allLocales: readonly LocaleModule[] = [
   af,
   am,

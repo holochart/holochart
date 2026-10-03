@@ -196,6 +196,9 @@ describe('translated sentences at run time', () => {
   it('reach a regional locale through its language', () => {
     expect(deCH.dictionary?.[KEYBOARD_TEMPLATES.rotate]).toBeUndefined();
     expect(announce(layoutIn('de-CH'), 'rotate')).toBe('Ansicht gedreht.');
+    expect(announce(layoutIn('es-AR'), 'rotate')).toBe('Vista girada.');
+    expect(announce(layoutIn('es-PE'), 'rotate')).toBe('Vista girada.');
+    expect(announce(layoutIn('fr-CH'), 'rotate')).toBe('Vue pivotée.');
   });
 
   it('name a parcoords dimension without a label', () => {
