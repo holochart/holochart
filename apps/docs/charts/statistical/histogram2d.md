@@ -249,7 +249,10 @@ createChart(document.getElementById('chart')!, {
   [accessibility guide](/guides/accessibility)) says how many samples were binned into how many
   bins and names the fullest cell with its bin ranges, and its data table lists the non-empty cells
   (x range, y range, value).
-- **Keyboard:** there is no keyboard navigation between cells yet.
+- **Keyboard:** Tab moves into the plot area; the arrow keys then move a cell cursor along the row
+  (← / →) and the column (↑ / ↓), showing each cell's hover label. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Color:** use a sequential scale that is monotonic in lightness (the default, Viridis, Cividis)
   so that "more" reads as "brighter" without relying on hue, and keep the colorbar visible. For
   coarse grids, `texttemplate: '%{z}'` puts the exact values in the cells.

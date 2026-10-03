@@ -220,7 +220,10 @@ missing point to its neighbours (Plotly's clip), and lines and labels stop at it
   [accessibility guide](/guides/accessibility)) gives the grid size, the levels (or the
   constraint) and where the highest and lowest values are, and its data table lists the grid
   points.
-- **Keyboard:** there is no keyboard navigation yet.
+- **Keyboard:** Tab moves into the plot area; the arrow keys then move a cell cursor along the row
+  (← / →) and the column (↑ / ↓), showing each cell's hover label. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Color:** level labels (`showlabels`) carry the values without relying on color. Prefer a
   sequential scale that is monotonic in lightness (the default), and give constraint shadings
   different line dashes as well as colors, as in the constraint example.

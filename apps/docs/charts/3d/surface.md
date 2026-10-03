@@ -232,8 +232,9 @@ chart.on('click', (event) => {
 
 - **Screen readers:** the chart is a `<canvas>`; the hidden description names each surface, its
   grid size, the range of `x`, `y` and `z` and where the highest point is.
-- **Keyboard:** there is no keyboard navigation between grid points or keyboard camera control
-  yet.
+- **Keyboard:** Shift + arrow keys orbit the camera, `+` / `-` move it in and out and `0` resets it.
+  There is no keyboard navigation between the trace's own points yet. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family).
 - **Color and depth:** a surface's shape can hide parts of it from any one camera. Keep the
   colorbar, use a lightness-monotonic colorscale, add contour lines (and their projections) so
   levels read without turning the scene, and set a useful initial `scene.camera`. Consider a 2D

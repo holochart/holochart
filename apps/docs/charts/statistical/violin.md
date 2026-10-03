@@ -143,7 +143,10 @@ samples. On the right, the 30-sample violin is much thinner than the 300-sample 
 - **Screen readers:** each violin trace is described like a box trace — violin count, sample
   count, the range of the medians — with a hidden table of every violin's statistics. The density
   itself is not described. See the [accessibility guide](/guides/accessibility).
-- **Keyboard:** there is no keyboard navigation between violins yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then step through the violins, each stop showing
+  every statistic of its violin, and ↑ / ↓ move to the trace above or below. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Color:** split violins differ by side as well as color; keep the legend to name the halves.
 
 ## Attribute reference

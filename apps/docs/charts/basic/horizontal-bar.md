@@ -123,7 +123,9 @@ rows than fit on screen is hard to read anyway; show the top N and put the rest 
   not built yet (planned for M2, see the [accessibility guide](/guides/accessibility)). Add a
   caption or `aria-label`, and for ranked lists consider a plain ordered list or table next to the
   chart.
-- **Keyboard:** there is no keyboard navigation yet.
+- **Keyboard:** Tab moves into the plot area; ↑ / ↓ then step through the bars and ← / → move
+  between traces, each stop showing its hover label. See [the
+  keys](/guides/accessibility#keys-in-the-plot-area).
 - **Color:** value labels at the bar ends carry the numbers without color. When you highlight one
   bar by color, say which one in the title or caption too.
 

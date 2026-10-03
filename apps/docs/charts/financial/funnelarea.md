@@ -230,7 +230,10 @@ at the common size. `minsize` also raises smaller label fonts:
 - **Screen readers:** the hidden description (see the [accessibility guide](/guides/accessibility))
   reads `Funnel area "name": N stages, total X.` (and how many stages are hidden); its table
   lists each visible stage with its value and percent.
-- **Keyboard:** there is no keyboard navigation between stages yet.
+- **Keyboard:** Tab moves into the plot area; the arrow keys then step through the stages, each
+  showing its hover label. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Color:** the stages are in order from top to bottom, so label them directly
   (`textinfo: 'label+percent'`) rather than asking readers to match legend colors, and keep the
   outlines in the background color to separate neighbors. Pattern fills (`marker.pattern`) tell
@@ -264,6 +267,5 @@ and its default. [`funnelareacolorway`](/reference/layout#funnelareacolorway),
 - Patterns differ from Plotly's as pie's do: default colors are computed per stage when drawing
   (so they don't appear in `chart.fullData`), and with `fillmode: 'overlay'` each stage overlays
   its own color (see [the differences](/customization/markers-patterns#differences-from-plotly)).
-- Not supported yet: `marker.pattern.path`, `texttemplatefallback` / `hovertemplatefallback`,
-  keyboard navigation between stages.
+- Not supported yet: `marker.pattern.path`, `texttemplatefallback` / `hovertemplatefallback`.
 - An extruded 3D pyramid (`depth`, `shape`) is a planned Holochart extension.

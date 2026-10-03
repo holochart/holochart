@@ -148,7 +148,9 @@ with a second trace colored on a diverging scale around `cmid: 0`.
   assistive technology is not built yet (planned for M2, see the
   [accessibility guide](/guides/accessibility)). Add a caption or `aria-label`, and a table with
   the size values: they are the hardest part of a bubble chart to read.
-- **Keyboard:** there is no keyboard navigation between points yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then step through the points and ↑ / ↓ move to
+  the trace above or below, each stop showing its hover label. See [the
+  keys](/guides/accessibility#keys-in-the-plot-area).
 - **Color and size:** don't encode the key message in bubble size alone. Label the important
   bubbles, state the size scale in a caption, and pick a colorscale that reads in grayscale (such as
   `'Viridis'`).

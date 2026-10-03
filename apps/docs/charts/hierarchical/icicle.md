@@ -193,7 +193,10 @@ Holochart extensions (full bundle), see
 - **Screen readers:** the hidden description reads `Icicle "name": N nodes on M levels.`, the
   current root when drilled in and the largest branches; its table lists every node with its path,
   value and percent of the root.
-- **Keyboard:** there is no keyboard navigation or drilling between cells yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then move between sibling cells, ↑ goes to the
+  parent and ↓ to the first child, and Enter drills in like a click. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Color:** label cells directly rather than relying on the inherited colors.
 
 ## Attribute reference
@@ -222,4 +225,4 @@ default. [`iciclecolorway`](/reference/layout#iciclecolorway) and
   listener returning `false` also cancels the drill; the drill is a GUI `restyle` of `level`;
   labels fade in at the end of the transition.
 - Not supported yet: `texttemplatefallback` / `hovertemplatefallback`, animated `level` changes
-  through `animate` or `react`, keyboard navigation.
+  through `animate` or `react`.

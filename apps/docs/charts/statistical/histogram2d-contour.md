@@ -195,7 +195,10 @@ where the density is above 0.5% of the samples per bin, over the samples themsel
 - **Screen readers:** the chart is a `<canvas>`; the hidden description (see the
   [accessibility guide](/guides/accessibility)) says how many samples were binned into how many
   bins and where the highest value is, and its data table lists the non-empty bins.
-- **Keyboard:** there is no keyboard navigation yet.
+- **Keyboard:** Tab moves into the plot area; the arrow keys then move a cell cursor along the row
+  (← / →) and the column (↑ / ↓), showing each cell's hover label. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Color:** level labels (`showlabels`) carry the values without relying on color. Prefer a
   sequential scale that is monotonic in lightness (the default, Viridis), and for overlays use one
   high-contrast line color (`coloring: 'none'`).

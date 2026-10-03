@@ -146,7 +146,9 @@ The Arnold–Beltrami–Childress flow on a 10 × 10 × 10 grid: 1,000 cones in 
 
 - **Screen readers:** the chart is a `<canvas>`; the hidden description (see the
   [accessibility guide](/guides/accessibility)) names the trace.
-- **Keyboard:** there is no keyboard navigation of 3D traces yet.
+- **Keyboard:** Shift + arrow keys orbit the camera, `+` / `-` move it in and out and `0` resets it.
+  There is no keyboard navigation between the trace's own points yet. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family).
 - **Color:** the norms are shown twice, by size and by color, so the field reads without color
   too. Prefer ramps monotonic in lightness (the default ones are).
 

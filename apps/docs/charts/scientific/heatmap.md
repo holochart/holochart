@@ -309,7 +309,10 @@ flat, with a console warning.
 - **Screen readers:** the chart is a `<canvas>`; the hidden description (see the
   [accessibility guide](/guides/accessibility)) gives the grid size, the value range and the cell
   with the highest value, and its data table lists the cells that have a value (x, y, z).
-- **Keyboard:** there is no keyboard navigation between cells yet.
+- **Keyboard:** Tab moves into the plot area; the arrow keys then move a cell cursor along the row
+  (← / →) and the column (↑ / ↓), showing each cell's hover label. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Color:** use a sequential scale that is monotonic in lightness (the default, Viridis,
   Cividis) so that "more" reads as "brighter", and a diverging scale with `zmid` only when the
   data has a meaningful center. Keep the colorbar visible, and for small grids put the values in

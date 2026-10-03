@@ -229,7 +229,9 @@ the parts. Heights in a height-encoded pie are foreshortened too: label them, an
 - **Screen readers:** the chart is a `<canvas>`. The DOM mirror that describes slices to assistive
   technology is not built yet (planned for M2, see the [accessibility guide](/guides/accessibility)).
   Add a caption or `aria-label` that states the main split, and a table of the values.
-- **Keyboard:** there is no keyboard navigation between slices yet.
+- **Keyboard:** Tab moves into the plot area; the arrow keys then step through the slices, each
+  showing its hover label. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family).
 - **Color:** label slices directly (`textinfo: 'label+percent'`) so readers don't have to match
   legend colors, keep the number of slices small, and separate slices with outlines in the
   background color. Pattern fills (`marker.pattern`) tell slices apart in print and for

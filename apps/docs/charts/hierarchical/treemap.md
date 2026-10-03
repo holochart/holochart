@@ -276,7 +276,10 @@ Holochart extensions (full bundle), see
   reads `Treemap "name": N nodes on M levels.`, the current root when drilled in, and the largest
   branches with their shares; its table lists every node with its path, value and percent of the
   root.
-- **Keyboard:** there is no keyboard navigation or drilling between tiles yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then move between sibling tiles, ↑ goes to the
+  parent and ↓ to the first child, and Enter drills in like a click. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Color:** children inherit their parent's color, so label tiles directly (`textinfo`) rather
   than relying on color, and keep the outlines in the background color to separate neighbors.
 
@@ -309,5 +312,5 @@ default. [`treemapcolorway`](/reference/layout#treemapcolorway) and
   rather than an `animate` call; labels fade in at the end of the transition instead of moving
   with their tiles; path bar segments are hit-tested as rectangles.
 - Not supported yet: `texttemplatefallback` / `hovertemplatefallback`, animated `level` changes
-  through `animate` or `react` with a transition, keyboard navigation.
+  through `animate` or `react` with a transition.
 - `depth`, `tilt` and `perspective` (3D-native options above) are Holochart extensions.

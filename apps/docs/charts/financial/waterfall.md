@@ -226,7 +226,9 @@ and labels sit on the front faces.
 - **Screen readers:** the hidden description (see the [accessibility guide](/guides/accessibility))
   reads `Waterfall "name": N bars. Final value X.`; its table lists each bar's position, its change
   and the running total after it.
-- **Keyboard:** there is no keyboard navigation between bars yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then step through the bars and ↑ / ↓ move to the
+  trace above or below, each stop showing its hover label. See [the
+  keys](/guides/accessibility#keys-in-the-plot-area).
 - **Color:** rising and falling bars differ by color only, and green and red are hard to tell apart
   for many people. Labels with the signed change (`texttemplate: '%{delta:+}'`) carry the
   direction as text; colors that differ in lightness (teal and orange, as in the horizontal
@@ -262,5 +264,4 @@ its default. [`waterfallmode`](/reference/layout#waterfallmode),
 - The default look uses the colorway's emerald, red and blue with 1 px gray connectors;
   `template: 'plotly-classic'` gives Plotly's colors.
 - Not supported yet: `xhoverformat` / `yhoverformat` (bar has none either),
-  `texttemplatefallback` / `hovertemplatefallback`, `marker.pattern`, keyboard navigation
-  between bars.
+  `texttemplatefallback` / `hovertemplatefallback`, `marker.pattern`.

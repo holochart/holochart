@@ -197,7 +197,9 @@ Grouped, stacked, relative and horizontal bars, negative values and `base` all e
 - **Screen readers:** the chart is a `<canvas>`. The DOM mirror that describes bars to assistive
   technology is not built yet (planned for M2, see the [accessibility guide](/guides/accessibility)).
   Add a caption or `aria-label`, and consider a visible data table.
-- **Keyboard:** there is no keyboard navigation between bars yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then step through the bars and ↑ / ↓ move to the
+  trace above or below, each stop showing its hover label. See [the
+  keys](/guides/accessibility#keys-in-the-plot-area).
 - **Color:** bar labels (`texttemplate`) carry exact values without relying on color. In stacked
   bars, keep the segment order the same as the legend and use white outlines between segments.
   Hatch patterns (`marker.pattern`) tell series apart without color, for print and color-blind

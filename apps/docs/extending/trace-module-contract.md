@@ -26,7 +26,7 @@ interface TraceModule<Attrs, Calc> {
   plot: TraceRenderer<Calc>; // create / update / dispose
   hoverPoints?(calc, cursor, hovermode): HoverPoint[];
   selectPoints?(calc, selection): number[];
-  keyboardPoints?(calc, fullTrace): HoverPoint[]; // keyboard navigation order (domain traces)
+  keyboardPoints?(calc, fullTrace, ctx): KeyboardStops | undefined; // keyboard stops and their arrows
   touchAction?: 'pan-y' | 'none'; // touch gestures its own drags need (page scrolling keeps the rest)
   legendIcon?(fullTrace): LegendGlyph;
   colorbar?(fullTrace): ColorbarSpec | null;

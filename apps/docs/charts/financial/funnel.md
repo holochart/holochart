@@ -223,7 +223,9 @@ stages read as one continuous funnel; labels sit on the front faces.
 - **Screen readers:** the hidden description (see the [accessibility guide](/guides/accessibility))
   reads `Funnel "name": N bars.`; its table lists each stage with its value and its percentage of
   the first stage.
-- **Keyboard:** there is no keyboard navigation between stages yet.
+- **Keyboard:** Tab moves into the plot area; the arrow keys along the stage axis then step through
+  the stages (↑ / ↓ in the usual horizontal funnel) and the other two move between traces, each stop
+  showing its hover label. See [the keys](/guides/accessibility#keys-in-the-plot-area).
 - **Color:** stages are told apart by position and label, not color, so a single color per trace
   works well. Label the percentages (`textinfo: 'value+percent initial'`) so readers don't have to
   compare bar lengths across the gaps.
@@ -257,4 +259,4 @@ and [`funnelgroupgap`](/reference/layout#funnelgroupgap) are in the layout refer
 - `%{percentTotal}` in `texttemplate` is formatted as a percentage like the other two (Plotly's
   shows the raw ratio).
 - Not supported yet: `xhoverformat` / `yhoverformat` (bar has none either),
-  `texttemplatefallback` / `hovertemplatefallback`, keyboard navigation between stages.
+  `texttemplatefallback` / `hovertemplatefallback`.

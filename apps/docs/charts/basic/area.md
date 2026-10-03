@@ -224,7 +224,9 @@ apply to fills.
   technology is not built yet (planned for M2, see the [accessibility guide](/guides/accessibility)).
   Add a caption or `aria-label` that states the trend or the composition, and a table of the key
   values.
-- **Keyboard:** there is no keyboard navigation yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then step through the points and ↑ / ↓ move to
+  the trace above or below, each stop showing its hover label. See [the
+  keys](/guides/accessibility#keys-in-the-plot-area).
 - **Color:** adjacent bands in a stack need enough contrast between them. Label bands directly where
   you can, keep the number of stacked series small, and keep the lines between bands visible. Fill
   patterns (`fillpattern`) tell bands apart in grayscale printing.

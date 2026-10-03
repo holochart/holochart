@@ -178,7 +178,9 @@ chart.on('hover', (event) => console.log(event.points[0]?.pointNumber));
 
 - **Screen readers:** the chart is a `<canvas>`; the hidden description (see the
   [accessibility guide](/guides/accessibility)) names the trace.
-- **Keyboard:** there is no keyboard navigation of 3D traces yet.
+- **Keyboard:** Shift + arrow keys orbit the camera, `+` / `-` move it in and out and `0` resets it.
+  There is no keyboard navigation between the trace's own points yet. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family).
 - **Color and depth:** translucent layers blend colors, which can mislead. Keep the colorbar,
   prefer lightness-monotonic colorscales, use `opacityscale` to bring out the values that matter,
   and consider [isosurfaces](/charts/3d/isosurface) or slices for exact levels.

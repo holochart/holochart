@@ -200,7 +200,9 @@ createChart(document.getElementById('chart')!, {
 - **Screen readers:** the hidden description (see the [accessibility guide](/guides/accessibility))
   gives the bar count and date span, the first and last close, the lowest low and highest high
   with their dates, and how many bars rose and fell; its table lists each bar's date and prices.
-- **Keyboard:** there is no keyboard navigation between bars yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then step through the bars and ↑ / ↓ move to the
+  trace above or below, each stop showing its hover label. See [the
+  keys](/guides/accessibility#keys-in-the-plot-area).
 - **Color:** the directions differ by color only, and green and red are hard to tell apart for
   many people. The open and close ticks still show the direction; for dashboards consider a
   second cue, such as dotted falling bars (`decreasing.line.dash`) or colors that differ in
@@ -234,4 +236,4 @@ default. The range slider is under
 - `%{change}` and `%{changepercent}` in `hovertemplate` are Holochart additions.
 - The default look uses the colorway's green and red at 1 px; `template: 'plotly-classic'` gives
   Plotly's colors.
-- Not supported yet: `xcalendar`, keyboard navigation between bars.
+- Not supported yet: `xcalendar`.

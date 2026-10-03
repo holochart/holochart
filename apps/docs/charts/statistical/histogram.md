@@ -270,7 +270,10 @@ Holochart extension (M6) that histograms will share with bars.
   [accessibility guide](/guides/accessibility)) says how many samples were binned into how many
   bins, the range the bins cover, and the largest bin with its value and range. Its data table
   lists each bin's range and value (the first 100 rows).
-- **Keyboard:** there is no keyboard navigation between bars yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then step through the bins, each showing its
+  range and value, and ↑ / ↓ move to the trace above or below at that bin. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Color:** a histogram reads by bar length, not color. When overlaying distributions, pick
   colors that differ in lightness and keep `opacity` around 0.6 so both stay visible where they
   overlap; for more than two distributions, small multiples (one subplot each, with a shared
