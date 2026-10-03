@@ -16,10 +16,16 @@ export const meta: ExampleMeta = {
   tags: ['demo', 'bar', 'horizontal', 'categoryorder', 'text', 'hover'],
   size: { width: 960, height: 440 },
   testTolerance: 0.004,
-  // CI (Linux) draws the top bar's end and its outside "24.2%" label slightly differently from the
-  // macOS baseline: 79 px in one 32 px window, the same diff before and after the window rule
-  // (E20.3). Allowed here until the platform difference is understood (plan §11.5).
-  testTileTolerance: 96,
+  // CI (Linux) differs from the macOS baseline by 79 px in the 32 px window around the top bar's end
+  // and its outside "24.2%" label (backlog S2.8). The x autorange keeps room for the widest outside
+  // label, measured at the first calc, before the built-in font face has loaded: the canvas then
+  // measures with the OS fallback of the family list (Helvetica Neue on macOS, where "24.2%" is
+  // 2.946 em wide; an Arial-metric font gives 2.835 em, the width of the built-in face). The font
+  // load re-runs layout but not the trace extremes, so the range keeps the fallback's width and
+  // every bar end and label sits a little further left or right, most of all the longest bar's.
+  // Measuring with Arial until the face loads reproduces the 79 px on macOS. The limit is a
+  // fraction of the window's 1,024 px (it used to say 96, which switched the check off).
+  testTileTolerance: 96 / 1024,
 };
 
 const TOP = 15;
