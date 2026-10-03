@@ -222,7 +222,9 @@ docker run --rm -v "$PWD":/work -w /work mcr.microsoft.com/playwright:v1.63.0-no
 - Attributes are declared once in the schema; types, validation, defaults, and docs derive from it.
 - Attribute names: an attribute that exists in Plotly.js keeps Plotly's name verbatim
   (`showticklabels`, `paper_bgcolor`), with no camelCase alias. Attributes and options that exist
-  only in Holochart are camelCase (`styleRules`, `sharedRenderer`, Express options).
+  only in Holochart are camelCase (`styleRules`, `sharedRenderer`, Express options). The
+  exception is the 3D material, lighting and scene attributes (`castshadow`, `sheencolor`,
+  `autorotate`), which are lower case like the Plotly attributes they sit beside.
   Do not hand-write parallel types for schema attributes.
 
 ### Public API and stability tags
