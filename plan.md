@@ -1838,7 +1838,7 @@ docs/
 #### E21.6 — Further bundle trims   `P2` `S`   deps: E21.5   · 🟡 Partial (M3 wave 0)
 > As a developer, I want the last avoidable bytes out of partial bundles, so that budgets keep room for new traces.
 - [x] Keep the bar schema out of the scatter partial (`/* @__PURE__ */` on top-level schema objects, or per-module output — ADR-015 impact) — done (M3 wave 0): pure wrappers keep the bar, pie and table schemas out (−1.4 kB)
-- [ ] Decide whether `Chart#toJSON` should stay a method (always bundles the 2.3 kB serializer) or delegate to a lazily imported module — still open (API decision)
+- [x] Decide whether `Chart#toJSON` should stay a method (always bundles the 2.3 kB serializer) or delegate to a lazily imported module — decided (wave R3): the method is removed, `chartToJSON(chart)` is the only serializer entry, and `chart.toJSON()` / `JSON.stringify(chart)` throw a `TypeError` naming it
 - [x] Draw annotation boxes and arrowheads without the general fill path (earcut + self-intersection, 7.4 kB in `basic`) — superseded: annotations and shapes draw through the lazily loaded fill code
 - [x] Code-split render's ESM build so the fill primitive and exact-fill code (~8 kB) load only for traces with `fill` (decided after M2 wave 1, when budgets were raised to 142 / 212 kB; raised again to 153 / 234 kB after M2 wave 2) — done (M3 wave 0): `LazyFillPrimitive`, 8.5 kB lazy chunk; core + scatter 139.0 → 130.0 kB, basic 213.4 → 205.8 kB
 
@@ -2535,7 +2535,7 @@ flowchart TD
 ## 16. Open Questions
 
 1. **Name.** ✅ Decided: "Holochart". Docs at `mk7s.dev/holochart`, code at `github.com/holochart`, packages under the `mk7s` npm org as `@mk7s/holochart` + `@mk7s/holochart-*`. The bare unscoped `holochart` name was still free on npm as of 2026-09-23. It could be reserved later as an alias that re-exports `@mk7s/holochart`. **To do:** trademark search before the first public release.
-2. **Plotly attribute fidelity.** Keep Plotly's snake_case/concatenated names (`error_x`, `bgcolor`) for compatibility, or offer camelCase aliases? *Proposal: keep Plotly names canonical, accept camelCase aliases in TS builders only.*
+2. **Plotly attribute fidelity.** Keep Plotly's snake_case/concatenated names (`error_x`, `bgcolor`) for compatibility, or offer camelCase aliases? ✅ Decided (wave R3): figure attributes use Plotly's names verbatim, with no camelCase aliases; attributes and options that exist only in Holochart are camelCase (`styleRules`, `sharedRenderer`, Express options). An opt-in converter outside the core bundles stays possible after 1.0.
 3. **Default look.** Adopt Plotly's default template for familiarity, or ship a distinct Holochart visual identity? *Proposal: a distinct default, with `plotly` as a one-line template switch.*
 4. **Text renderer default.** SDF-in-WebGL vs DOM overlay. Spike C decides.
 5. **WebGPU timing.** Opt-in in 1.x, or wait for three's WebGPU to become the default?

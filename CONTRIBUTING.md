@@ -220,6 +220,9 @@ docker run --rm -v "$PWD":/work -w /work mcr.microsoft.com/playwright:v1.63.0-no
   `/* glsl */`, so no loader is needed anywhere. See
   [ADR-014](docs/adr/014-glsl-as-typescript-template-modules.md).
 - Attributes are declared once in the schema; types, validation, defaults, and docs derive from it.
+- Attribute names: an attribute that exists in Plotly.js keeps Plotly's name verbatim
+  (`showticklabels`, `paper_bgcolor`), with no camelCase alias. Attributes and options that exist
+  only in Holochart are camelCase (`styleRules`, `sharedRenderer`, Express options).
   Do not hand-write parallel types for schema attributes.
 
 ### Public API and stability tags

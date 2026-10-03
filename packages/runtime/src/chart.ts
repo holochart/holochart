@@ -34,7 +34,6 @@
  * Without pending text this is the same frame the update drew.
  */
 import {
-  type EncodedFigure,
   applyUirevision,
   axisTypeChangeEdits,
   coerceContainer,
@@ -170,7 +169,6 @@ import {
   type MaxPoints,
   type StreamUpdate,
 } from './plan.ts';
-import { chartToJSON, type ChartToJSONOptions } from './json.ts';
 import { describeChart, type ChartDescription, type OverviewInput } from './a11y/describe.ts';
 import { A11yMirror, type A11yChange } from './a11y/mirror.ts';
 import { removeFallback, showFallback, WebGLUnavailableError } from './fallback.ts';
@@ -746,14 +744,24 @@ export class Chart {
   }
 
   /**
-   * The current figure (`data`, `layout`, `config`, `frames`, `datasets`) as JSON-safe data
-   * (E18.3): typed arrays become Plotly's `{ dtype, bdata, shape }`, per-point style functions are
-   * evaluated, other functions dropped with a warning. `JSON.stringify(chart)` calls this too.
+   * The registry this chart resolves trace types and components from. `chartToJSON(chart)` reads
+   * it to decide which style functions become per-point arrays.
+   *
+   * @experimental
    */
-  toJSON(options?: ChartToJSONOptions | string): EncodedFigure {
-    // JSON.stringify passes the property key as the argument.
-    const opts = typeof options === 'object' ? options : {};
-    return chartToJSON(this, { registry: this.#registry, ...opts });
+  get registry(): ChartRegistry {
+    return this.#registry;
+  }
+
+  /**
+   * Not supported: a chart is not JSON data. Call `chartToJSON(chart)`, which keeps the serializer
+   * out of bundles that never save a figure. This stub makes `JSON.stringify(chart)` fail loudly
+   * instead of writing the chart object's own fields.
+   *
+   * @deprecated Use `chartToJSON(chart)`.
+   */
+  toJSON(): never {
+    throw new TypeError('holochart: chart.toJSON() is not available; use chartToJSON(chart)');
   }
 
   // ---- export (E18.1) --------------------------------------------------------------------------

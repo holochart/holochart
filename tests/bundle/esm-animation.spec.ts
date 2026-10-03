@@ -31,7 +31,10 @@ test('ESM: the animation code loads the first time a chart animates', async ({ p
     });
     await w.chart.ready;
     await w.chart.restyle({ 'marker.size': 9 });
-    await w.chart.react({ ...w.chart.toJSON(), layout: { width: 480, height: 360 } });
+    await w.chart.react({
+      ...w.Holochart.chartToJSON(w.chart),
+      layout: { width: 480, height: 360 },
+    });
   });
   expect(animationRequested()).toBe(false);
 

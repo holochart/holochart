@@ -351,7 +351,7 @@ export function setTrendlineResults(owner: object, results: readonly TrendlineRe
  * `px.get_trendline_results(fig)`): one result per trendline trace, with the group it was fit on
  * and statsmodels-like results (`params`, `rsquared`, `bse`, `pvalues`, …). Pass the figure an
  * Express function returned, or the chart it rendered (`await hx.scatter(el, …)`). The results
- * are kept beside the figure object, not in it, so they do not survive `toJSON`,
+ * are kept beside the figure object, not in it, so they do not survive `chartToJSON`,
  * `structuredClone` or a copy of the figure (as plotly.py keeps them on the Python figure only);
  * other kinds of trendline, and figures without one, give `[]`.
  *

@@ -495,7 +495,8 @@ the point index (flatbush) and the colorscale LUT, all used by scatter or hover;
   declarations saves 0.13 kB; one output file per module (tsdown `unbundle`) saves 0.18 kB for
   every such case but changes the published layout (ADR-015).
 - `Chart#toJSON` is a class method, so every chart bundles `core/serialize` and `runtime/json.ts`
-  (2.3 kB). Making it a separate `chartToJSON()` export is an API decision.
+  (2.3 kB). Making it a separate `chartToJSON()` export is an API decision. Decided in wave R3:
+  the method is gone and `chartToJSON(chart)` is the only way to serialize.
 - Fixed in E21.6 by loading the fill code lazily (below). In `basic`, annotations draw boxes and
   arrowheads with the fill primitive, which pulls in earcut
   and the self-intersection code (`fill-arrangement.ts`): 7.4 kB, of which the arrangement is
@@ -541,7 +542,7 @@ since bundlers keep the arguments' side effects. Also annotated: `plotlyjsGroup(
 no other unused package code. Left, with sizes:
 
 - `Chart#toJSON` still bundles the serializer (core `serialize/` + runtime `json.ts`, ~2.3 kB):
-  an API decision (plan E21.6).
+  an API decision (plan E21.6). Removed in wave R3 in favour of `chartToJSON(chart)`.
 - Scatter's trace-level fill code (`scatter/fill.ts`, `fill-trace.ts`, `shared/stack/area.ts`:
   7.3 kB gzipped per module before minification, a few kB min + gzip) stays in the initial chunk:
   calc, autorange and `hoveron: 'fills'` use it synchronously. Splitting it needs the trace

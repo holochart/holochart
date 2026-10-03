@@ -1,5 +1,5 @@
 /**
- * The points style functions (E8.6) are called with, shared by the chart runtime and `toJSON`
+ * The points style functions (E8.6) are called with, shared by the chart runtime and `chartToJSON`
  * (`encodeFigure`), so a function gives the same values when drawn and when saved.
  */
 import { isArrayLike } from '../coerce/coerce.ts';

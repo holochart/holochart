@@ -1,5 +1,5 @@
 /**
- * Chart ⇄ JSON (plan E18.3): `chart.toJSON()` and `Holochart.fromJSON()`.
+ * Chart ⇄ JSON (plan E18.3): `chartToJSON()` and `Holochart.fromJSON()`.
  *
  * The encoding itself lives in core (`encodeFigure` / `decodeFigure`: Plotly's typed-array
  * `{ dtype, bdata, shape }` encoding, Dates as ISO strings, style functions evaluated or dropped per

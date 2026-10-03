@@ -9,7 +9,7 @@ import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
  * - marks the readings of sites `A` and `B` inside the ±0.5 band with squares,
  * - and highlights the ten first readings (`pointNumber`) gold, winning over the other rules.
  *
- * The rules survive `toJSON()` unchanged, unlike style functions.
+ * The rules survive `chartToJSON()` unchanged, unlike style functions.
  */
 export const meta: ExampleMeta = {
   title: 'Scatter: style rules',

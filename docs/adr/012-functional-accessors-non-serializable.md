@@ -20,7 +20,7 @@ to the schema, validation, and docs. The figure spec is meant to be declarative 
 
 - **Functional accessors are allowed** on every `arrayOk` attribute (E8.6), with signature
   `(point, i, trace) => value`. The schema has a `function` value type marked non-serializable.
-- A figure containing functions is flagged **non-serializable**. `toJSON()` warns and evaluates the
+- A figure containing functions is flagged **non-serializable**. `chartToJSON()` warns and evaluates the
   functions into per-point arrays.
 - A serializable alternative, **`styleRules`**, is provided (E8.5):
   `styleRules: [{ when: { y: { gt: 10 } }, set: { 'marker.color': 'gold' } }]`, with operators such
@@ -40,7 +40,7 @@ to the schema, validation, and docs. The figure spec is meant to be declarative 
 ### Negative
 
 - Two ways to do conditional styling; docs must explain when to use which.
-- Figures with functions lose round-trip fidelity (`toJSON` bakes values), and their traces are not
+- Figures with functions lose round-trip fidelity (`chartToJSON` bakes values), and their traces are not
   worker-safe.
 - `styleRules` is a small query language we must design, validate, document, and keep stable.
 

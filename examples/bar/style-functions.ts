@@ -7,7 +7,7 @@ import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
  * `marker.color` is a function of the point (`(p) => (p.y < 0 ? red : green)`) and `text` a
  * function of the point and its index, and one style rule outlines the best months. Functions are
  * evaluated into per-point arrays before the bar trace sees the data, so any per-point (`arrayOk`)
- * attribute of any trace type takes one. They are not serializable: `toJSON()` stores the arrays.
+ * attribute of any trace type takes one. They are not serializable: `chartToJSON()` stores the arrays.
  */
 export const meta: ExampleMeta = {
   title: 'Bar: style functions and rules',
