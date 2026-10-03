@@ -214,8 +214,13 @@ test('shared charts keep their last frame while the context is lost', async ({ p
 });
 
 test('hover works again after a restore, in 2D and through GPU picking in 3D', async ({ page }) => {
+  // Software GL on a CI runner needs a while to upload four charts again and redraw two
+  // environment maps; a GPU pick is asynchronous and waits its turn behind that.
+  test.setTimeout(180_000);
   await lose(page);
   await restore(page);
+  // Reading every chart's frame back is synchronous: it returns once the GPU has caught up.
+  await capture(page, 'restored');
   for (const index of [0, 1, 2, 3]) {
     const p = await page.evaluate((i) => window.__contextLoss!.target(i), index);
     // Inside the chart's canvas, so the pointer is over the marker and nothing else.
@@ -232,6 +237,7 @@ test('hover works again after a restore, in 2D and through GPU picking in 3D', a
     await expect
       .poll(async () => (await events(page, 'hover')).includes(index), {
         message: `chart ${index} hovers after the restore`,
+        timeout: 30_000,
       })
       .toBe(true);
   }
