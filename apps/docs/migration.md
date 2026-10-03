@@ -47,8 +47,9 @@ with 1.0:
 - The contracts a custom trace or component implements (`TraceModule`, `ComponentModule` and the
   contexts they receive), and the helpers for writing one, such as `formatTemplate` or
   `linearExtremes`.
-- The parts of `chart.three` typed by the render package: `root`, `overlay`, `viewports` and
-  `subplot()`. `chart.three.renderer` and `chart.three.scene` are three.js objects and stable.
+- The chart members typed by those: `chart.three.root`, `.overlay`, `.viewports` and `.subplot()`,
+  and `chart.axes`, `chart.subplots` and `chart.interaction`. `chart.three.renderer` and
+  `chart.three.scene` are three.js objects and stable.
 
 If you write [custom traces](/extending/custom-trace) or
 [components](/extending/component-plugin), pin the minor version (`~0.x.y`) and read the changelog

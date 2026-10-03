@@ -214,6 +214,7 @@ export class Chart {
     animate(target?: AnimateTarget, options?: AnimationOptions): Promise<Chart>;
     animateCamera(camera: CameraTarget, options?: CameraAnimationOptions): Promise<Chart>;
     autoscale(): Promise<Chart>;
+    // @experimental
     get axes(): ReadonlyMap<string, AxisInfo>;
     clearSelection(): Promise<Chart>;
     commitRanges(ranges: Readonly<Record<string, readonly [number, number]>>): Promise<Chart>;
@@ -247,6 +248,7 @@ export class Chart {
         readonly yval?: unknown;
         readonly subplot?: string;
     }): void;
+    // @experimental
     get interaction(): FxSettings;
     // (undocumented)
     get layout(): Readonly<Record<string, unknown>>;
@@ -273,7 +275,7 @@ export class Chart {
     setHovermode(mode: Hovermode): Promise<Chart>;
     // Warning: (ae-forgotten-export) The symbol "Size" needs to be exported by the entry point index.d.ts
     get size(): Readonly<Size>;
-    // (undocumented)
+    // @experimental
     get subplots(): ReadonlyMap<string, SubplotInfo>;
     // (undocumented)
     get three(): ChartThree;

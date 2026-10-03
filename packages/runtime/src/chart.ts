@@ -896,11 +896,15 @@ export class Chart {
     return this.#size;
   }
 
-  /** The solved layout: axes and subplots (read-only snapshots of runtime state). */
+  /**
+   * The solved layout: axes and subplots (read-only snapshots of runtime state).
+   * @experimental
+   */
   get axes(): ReadonlyMap<string, AxisInfo> {
     return this.#axes;
   }
 
+  /** The solved subplots, by id (see {@link Chart.axes}). @experimental */
   get subplots(): ReadonlyMap<string, SubplotInfo> {
     return this.#subplots;
   }
@@ -952,7 +956,10 @@ export class Chart {
 
   // ---- interaction (E6) -------------------------------------------------------------------------
 
-  /** The interaction settings in effect (`hovermode`, `dragmode`, `clickmode`, …). */
+  /**
+   * The interaction settings in effect (`hovermode`, `dragmode`, `clickmode`, …).
+   * @experimental
+   */
   get interaction(): FxSettings {
     return resolveFxSettings(this.#full?.fullLayout, this.#full?.fullConfig, this.#figure.layout);
   }
