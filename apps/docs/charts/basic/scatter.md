@@ -169,7 +169,9 @@ selection still exact.
   markers drew their first frame in about 25 ms, and 1,000,000 markers of 3 px panned at over
   100 fps ([spike A](https://github.com/holochart/holochart/blob/main/docs/spikes/a-markers.md)).
   Larger markers cost more fill time (about half that frame rate at 8 px).
-- Pass typed arrays (`Float64Array`) for large data. They are read without conversion.
+- Pass typed arrays (`Float64Array`) for large data. On linear and date axes they are copied
+  with one native call, where a plain array is read and checked value by value. See
+  [Performance](/guides/performance#pass-typed-arrays).
 - Style updates are cheap. `chart.restyle({ 'marker.color': 'crimson' })` only rewrites a color
   buffer; changing `x` or `y` recomputes the trace. See
   [Updating charts](/fundamentals/updating-charts).

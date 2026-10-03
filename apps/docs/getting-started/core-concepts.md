@@ -54,9 +54,9 @@ state, so the same figure can be shown with different config in different places
 
 ### Frames
 
-`frames` is a list of named figure snapshots for animation. `chart.animate('frame-2')` will
-transition the chart to a frame; frame animation is planned for M3, so `frames` is not used yet.
-See [Transitions & animation](/fundamentals/transitions-animation).
+`frames` is a list of named figure snapshots for animation. `chart.animate(['frame-2'])`
+transitions the chart to the frame of that name, and `chart.animate(null)` plays every frame in
+order. See [Transitions & animation](/fundamentals/transitions-animation#frames).
 
 ## The schema is the source of truth
 
@@ -113,13 +113,17 @@ set on a trace or in layout always win over the template. Templates are the seco
 
 ## Updates and edit types
 
-Charts change after they are created. There are three ways to change them:
+Charts change after they are created. There are four ways to change them:
 
-| Method                              | Plotly equivalent | Use it to                                   |
-| ----------------------------------- | ----------------- | ------------------------------------------- |
-| `chart.update(patch, { traces })`   | `restyle`         | Change trace data or style                  |
-| `chart.relayout({ 'path': value })` | `relayout`        | Change layout: axes, titles, components     |
-| `chart.react(figure)`               | `react`           | Pass a whole new figure; only diffs applied |
+| Method                                     | Plotly equivalent | Use it to                                                |
+| ------------------------------------------ | ----------------- | -------------------------------------------------------- |
+| `chart.restyle({ 'path': value }, traces)` | `restyle`         | Change trace data or style by attribute path             |
+| `chart.relayout({ 'path': value })`        | `relayout`        | Change layout: axes, titles, components                  |
+| `chart.update(patch, { traces })`          | none              | Merge a partial figure, `{ data, layout, config }`       |
+| `chart.react(figure)`                      | `react`           | Pass a whole new figure; only what changed is recomputed |
+
+Plotly's `update`, a `restyle` and a `relayout` in one call, is `chart.updateAttributes`, or the
+function `update(el, …)`.
 
 Each attribute's `editType` tells the update planner which stages a change affects. Changing
 `marker.color` only restyles. Changing `x` recomputes that trace. Changing `xaxis.range`

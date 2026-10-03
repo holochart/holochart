@@ -216,8 +216,9 @@ series, so a decade of one-minute bars (2.6 million points) pans smoothly.
 What to know:
 
 - **It is automatic.** It applies to `mode: 'lines'` (and the line of `'lines+markers'`) when x
-  increases along the data, with `line.shape` `'linear'` or one of the steps (`'hv'`, `'vh'`,
-  `'hvh'`, `'vhv'`), on any axis type. Set [`line.simplify: false`](/reference/scatter#line.simplify)
+  increases along the data, with `line.shape: 'linear'`, on any axis type. Step shapes (`'hv'`,
+  `'vh'`, `'hvh'`, `'vhv'`) are decimated only from 100,000 points, through the pyramid; shorter
+  step lines are drawn whole. Set [`line.simplify: false`](/reference/scatter#line.simplify)
   to draw every vertex (Plotly's attribute: it simplifies SVG paths there, and is on by default in
   both).
 - **Only drawing is decimated.** Hover, click, selection, `fill` and markers use every point.
@@ -229,7 +230,7 @@ What to know:
 - **Streaming works.** [`extendTraces`](/fundamentals/updating-charts) and `prependTraces` rebuild
   only the pyramid chunks at the edited ends.
 - **Pass typed arrays.** A `Float64Array` of millisecond timestamps and one of values skip date
-  parsing and copying.
+  parsing: they are copied with one native call instead of being read value by value.
 - **Cost.** Building the pyramid of 2.6 million points takes about 50 ms, once per data set; a
   zoom step then costs 1–5 ms and a pan usually nothing (the drawn window is re-read only after
   panning a view width).
