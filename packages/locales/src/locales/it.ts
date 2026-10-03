@@ -3,6 +3,7 @@
  * 2016-2024 Plotly Technologies Inc.; see this package's THIRD_PARTY_NOTICES.md).
  */
 import type { LocaleModule } from '@mk7s/holochart-core';
+import { holochartIt } from '../holochart/it.ts';
 
 /** Italian (`it`). */
 export const it: LocaleModule = {
@@ -72,6 +73,9 @@ export const it: LocaleModule = {
     'outgoing flow count:': 'Flusso in uscita:',
     'Toggle show closest data on hover': 'Abilita mostra i dati più vicini al passaggio del mouse',
     concentration: 'concentrazione',
+    // Holochart's own strings (UI labels, keyboard announcements, chart summaries), not from
+    // plotly.js.
+    ...holochartIt,
   },
   format: {
     days: ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'],

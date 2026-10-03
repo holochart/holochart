@@ -3,6 +3,7 @@
  * 2016-2024 Plotly Technologies Inc.; see this package's THIRD_PARTY_NOTICES.md).
  */
 import type { LocaleModule } from '@mk7s/holochart-core';
+import { holochartPtBR } from '../holochart/pt-br.ts';
 
 /** Portuguese (Brazil) (`pt-BR`). */
 export const ptBR: LocaleModule = {
@@ -72,6 +73,9 @@ export const ptBR: LocaleModule = {
     target: 'destino',
     trace: 'série',
     'upper fence': 'limite superior',
+    // Holochart's own strings (UI labels, keyboard announcements, chart summaries), not from
+    // plotly.js.
+    ...holochartPtBR,
   },
   format: {
     days: [

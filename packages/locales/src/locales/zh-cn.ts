@@ -3,6 +3,7 @@
  * 2016-2024 Plotly Technologies Inc.; see this package's THIRD_PARTY_NOTICES.md).
  */
 import type { LocaleModule } from '@mk7s/holochart-core';
+import { holochartZhCN } from '../holochart/zh-cn.ts';
 
 /** Chinese (Simplified) (`zh-CN`). */
 export const zhCN: LocaleModule = {
@@ -68,6 +69,9 @@ export const zhCN: LocaleModule = {
     'kde:': 'kde:',
     'Click to enter radial axis title': '点击输入径向轴标题',
     'new text': '新建文本',
+    // Holochart's own strings (UI labels, keyboard announcements, chart summaries), not from
+    // plotly.js.
+    ...holochartZhCN,
   },
   format: {
     days: ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'],
