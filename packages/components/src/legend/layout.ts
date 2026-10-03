@@ -31,7 +31,7 @@ export const DEFAULT_RANK = 1000;
 /** Room a scrolling legend adds on its right for the scrollbar (Plotly: 6 px bar, 4 px margin). */
 export const SCROLLBAR_ROOM = 10;
 
-/** One legend item. */
+/** One legend item. @internal */
 export interface LegendEntry {
   /** Trace index in `data` (for per-point items: the first trace showing the item). */
   index: number;
@@ -102,6 +102,7 @@ function legendWidthOf(trace: FullTrace): { legendwidth?: number } {
  * `legendgrouptitle.text` starts with a title entry (the first titled item's, in rank order), as
  * plotly.js `get_legend_data` does. Without grouping (or when every `legendgroup` is blank) the
  * whole legend is one group, so a title heads it.
+ * @internal
  */
 export function legendEntries(
   fullData: readonly FullTrace[],
@@ -199,7 +200,7 @@ function markupOf(name: string): { markup?: string } {
   return /[<&]/.test(name) ? { markup: name } : {};
 }
 
-/** A laid-out item, relative to the legend's top-left corner. */
+/** A laid-out item, relative to the legend's top-left corner. @internal */
 export interface LegendItemBox {
   entry: LegendEntry;
   /** The item's text as drawn (plain, or rich runs). */
@@ -216,7 +217,7 @@ export interface LegendItemBox {
   textY: number;
 }
 
-/** The legend's size and content boxes, relative to its top-left corner. */
+/** The legend's size and content boxes, relative to its top-left corner. @internal */
 export interface LegendBoxes {
   width: number;
   /** Height of the box: of the content, or `maxheight` when that is less (the content scrolls). */
@@ -276,6 +277,7 @@ function itemHeight(box: TextBox, fontSize: number): number {
  * Item and title boxes (Plotly's legend metrics: 30 px glyph area, text 40 px from the item's
  * left, `max(text height, 16) + 3` px rows, 5 px padding). Vertical legends stack items (with
  * `tracegroupgap` between groups when grouped); horizontal ones fill rows up to `maxWidth`.
+ * @internal
  */
 export function layoutLegend(
   legend: FullLegend,
@@ -458,7 +460,7 @@ export function legendAnchors(legend: FullLegend): { x: string; y: string } {
   return { x, y };
 }
 
-/** Top-left corner of the legend box, container px. */
+/** Top-left corner of the legend box, container px. @internal */
 export function legendOrigin(
   legend: FullLegend,
   size: { width: number; height: number },
@@ -482,6 +484,7 @@ export function legendOrigin(
  * Margin the legend needs to stay inside the figure (paper-referenced legends only), solving
  * Plotly-style for the plot size the pushed margin leaves: e.g. a legend at `x = 1.02` anchored
  * left needs `r = (0.02·(W − l) + w) / 1.02`. `margin` holds the figure's base margins.
+ * @internal
  */
 export function legendMarginPush(
   legend: FullLegend,

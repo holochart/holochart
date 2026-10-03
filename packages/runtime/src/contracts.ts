@@ -523,10 +523,11 @@ export interface TraceModule<
 /**
  * What {@link TraceModule.a11y} resolves to: the parts of each trace type its chunk serves; `'*'`
  * holds the parts of any other type (a 3D scene's view keys, for trace modules built on it).
+ * @experimental
  */
 export type TraceA11yParts = Readonly<Record<string, TraceA11y | undefined>>;
 
-/** The parts of a trace module that {@link TraceModule.a11y} loads on first use. */
+/** The parts of a trace module that {@link TraceModule.a11y} loads on first use. @experimental */
 export interface TraceA11y {
   /** See {@link TraceModule.keyboardPoints}. */
   keyboardPoints?(calc: never, trace: FullTrace, ctx: HoverContext): KeyboardStops | undefined;
@@ -548,6 +549,7 @@ export interface TraceA11y {
 /**
  * A stop of keyboard navigation (see {@link TraceModule.keyboardPoints}): the hover point whose
  * label it shows, and what navigation needs beyond it.
+ * @experimental
  */
 export interface KeyboardPoint extends HoverPoint {
   /**
@@ -569,6 +571,7 @@ export interface KeyboardPoint extends HoverPoint {
 /**
  * The stops of a trace: an array, or anything with a `length` that builds stop `i` on demand (a
  * grid of many cells).
+ * @experimental
  */
 export interface KeyboardStops {
   readonly length: number;

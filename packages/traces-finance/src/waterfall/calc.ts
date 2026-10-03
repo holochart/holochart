@@ -31,7 +31,10 @@ export const INCREASING = 0;
 export const DECREASING = 1;
 export const TOTALS = 2;
 
-/** Waterfall calcdata: bar's calc (sizes are running totals) plus the waterfall values. */
+/**
+ * Waterfall calcdata: bar's calc (sizes are running totals) plus the waterfall values.
+ * @experimental
+ */
 export interface WaterfallCalc extends BarCalc {
   /** Per bar: {@link INCREASING}, {@link DECREASING} or {@link TOTALS}. */
   readonly direction: Uint8Array;

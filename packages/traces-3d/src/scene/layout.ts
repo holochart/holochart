@@ -25,7 +25,7 @@ import { SCENE_LETTERS, sceneOf, type SceneLetter } from './layout-defaults.ts';
 
 type Container = Record<string, unknown>;
 
-/** One axis of a laid-out scene. */
+/** One axis of a laid-out scene. @experimental */
 export interface SceneAxis {
   readonly letter: SceneLetter;
   /** The defaulted axis container (`fullLayout.scene.xaxis`, …). */
@@ -36,7 +36,7 @@ export interface SceneAxis {
   readonly range: readonly [number, number];
 }
 
-/** A scene laid out for one pass. */
+/** A scene laid out for one pass. @experimental */
 export interface SceneLayout {
   readonly id: string;
   /** The scene's rect (its `domain` on the plot area), container px, top-left origin. */
@@ -51,6 +51,7 @@ export interface SceneLayout {
 /**
  * What every 3D trace's calc carries (the contract of {@link sceneCrossTraceLayout}): its
  * autorange contribution, set by `calc`, and the laid-out scene, set before `plot`.
+ * @experimental
  */
 export interface SceneCalc {
   readonly sceneExtremes: SceneExtremes;
@@ -64,7 +65,7 @@ export interface SceneCalc {
   readonly sceneCrossTrace?: SceneCrossTrace;
 }
 
-/** See {@link SceneCalc.sceneCrossTrace}. */
+/** See {@link SceneCalc.sceneCrossTrace}. @experimental */
 export type SceneCrossTrace = (
   entries: readonly DomainTraceEntry<SceneCalc>[],
   fullLayout: FullLayout,
@@ -77,7 +78,10 @@ function extent(v: unknown): [number, number] | undefined {
     : undefined;
 }
 
-/** The scene domain of a 3D trace: the runtime's `subplotDomain` hook (placed like polar). */
+/**
+ * The scene domain of a 3D trace: the runtime's `subplotDomain` hook (placed like polar).
+ * @experimental
+ */
 export function sceneSubplotDomain(
   trace: FullTrace,
   fullLayout: FullLayout,
@@ -94,6 +98,7 @@ export function sceneSubplotDomain(
  * ({@link sceneRange}), the aspect ratio (`aspectmode`, from the data spans) and the transform.
  * Writes the aspect ratio in use and the axis ranges (range values) into the full layout, as
  * Plotly does.
+ * @internal
  */
 export function buildSceneLayout(
   fullLayout: FullLayout,
@@ -150,6 +155,7 @@ export function laidOutScene(fullLayout: FullLayout, id: string): SceneLayout | 
  * `crossTraceLayout`, with `subplotDomain: sceneSubplotDomain`): once per layout pass, with every
  * visible 3D trace, it lays out each scene from its traces' `sceneExtremes` and hands the result to
  * each of them (`calc.scene`) and to the scene component.
+ * @experimental
  */
 export function sceneCrossTraceLayout(
   entries: readonly DomainTraceEntry<SceneCalc>[],

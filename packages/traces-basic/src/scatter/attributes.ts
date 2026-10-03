@@ -25,6 +25,7 @@ import { TEXT_POSITIONS } from './text-position.ts';
 /**
  * Every accepted `marker.symbol` value, as in Plotly: names with variant suffixes
  * (`'diamond-open-dot'`), numeric codes (`102`) and numeric strings (`'102'`).
+ * @internal
  */
 export const SCATTER_SYMBOLS: readonly Primitive[] = MARKER_SYMBOLS.flatMap((def) =>
   SYMBOL_VARIANTS.flatMap((suffix, variant) => {
@@ -33,10 +34,10 @@ export const SCATTER_SYMBOLS: readonly Primitive[] = MARKER_SYMBOLS.flatMap((def
   }),
 );
 
-/** `line.shape` values (plotly.js). */
+/** `line.shape` values (plotly.js). @internal */
 export const LINE_SHAPES = ['linear', 'spline', 'hv', 'vh', 'hvh', 'vhv'] as const;
 
-/** `fill` values (plotly.js). */
+/** `fill` values (plotly.js). @internal */
 export const FILL_MODES = [
   'none',
   'tozeroy',
@@ -172,7 +173,10 @@ const selectionStyle = (which: 'selected' | 'unselected') =>
     },
   );
 
-/** The scatter schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core. */
+/**
+ * The scatter schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core.
+ * @experimental
+ */
 export const scatterAttributes = attr.object(
   {
     x: X.data,

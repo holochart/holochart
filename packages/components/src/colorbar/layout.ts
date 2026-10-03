@@ -53,7 +53,7 @@ export const TITLE_GAP = 4;
 /** Longest gradient strip, px: interpolated segments are drawn as strips at most this long. */
 export const STRIP_PX = 1;
 
-/** The defaulted colorbar attributes (see `colorbarAttributes` in traces-basic). */
+/** The defaulted colorbar attributes (see `colorbarAttributes` in traces-basic). @internal */
 export interface FullColorbar {
   orientation: 'h' | 'v';
   thicknessmode: 'fraction' | 'pixels';
@@ -117,7 +117,10 @@ const DEFAULTS: FullColorbar = {
   title: { text: '', side: 'top' },
 };
 
-/** A spec's attributes with defaults filled in (horizontal bars get their own position defaults). */
+/**
+ * A spec's attributes with defaults filled in (horizontal bars get their own position defaults).
+ * @internal
+ */
 export function fullColorbar(attributes: Readonly<Record<string, unknown>>): FullColorbar {
   const cb = { ...DEFAULTS, ...attributes } as FullColorbar;
   if (cb.orientation === 'h') {
@@ -135,20 +138,24 @@ export function fullColorbar(attributes: Readonly<Record<string, unknown>>): Ful
   return cb;
 }
 
-/** One colorbar request with the trace it came from (for keys and diagnostics). */
+/** One colorbar request with the trace it came from (for keys and diagnostics). @internal */
 export interface ColorbarEntry {
   /** `coloraxis` id, or `trace<N>` for a trace's own bar. */
   key: string;
   spec: ColorbarSpec;
 }
 
-/** The module a trace uses, from the draw context when available (it has the render parts). */
+/**
+ * The module a trace uses, from the draw context when available (it has the render parts).
+ * @internal
+ */
 export type ModuleOf = (trace: FullTrace) => Pick<TraceModule, 'colorbar'> | undefined;
 
 /**
  * The colorbars to draw: each visible trace's module `colorbar` hook, one bar per color axis (the
  * first trace referencing it wins) and one per trace with its own `showscale`, in trace order.
  * A throwing hook is skipped so one broken trace never hides the others.
+ * @internal
  */
 export function colorbarEntries(
   fullData: readonly FullTrace[],
@@ -176,7 +183,7 @@ export function colorbarEntries(
   return out;
 }
 
-/** Everything one colorbar draws, container px. */
+/** Everything one colorbar draws, container px. @internal */
 export interface ColorbarScene {
   /** The whole box (background, border and padding included). */
   box: { left: number; top: number; width: number; height: number };
@@ -207,6 +214,7 @@ function sameColor(a: RGBA, b: RGBA): boolean {
  * A segment between two stops of the same color — a discrete (stepped) scale, where stops repeat
  * positions to make hard edges — is one block; interpolated segments become strips at most
  * {@link STRIP_PX} long, colored at their middle (sRGB interpolation, like the GPU LUT).
+ * @internal
  */
 export function gradientRects(
   colorscale: readonly (readonly [number, string])[],
@@ -282,7 +290,7 @@ function colorbarAxis(
   } as unknown as FullAxis;
 }
 
-/** The inputs of a colorbar layout that do not come from the spec. */
+/** The inputs of a colorbar layout that do not come from the spec. @internal */
 export interface ColorbarEnv {
   /** The figure font, and the locale tick labels use (plan E17.6). */
   fullLayout: Pick<FullLayout, 'font' | '_locale'>;
@@ -475,7 +483,7 @@ function anchored(cb: FullColorbar): AnchoredBox {
   };
 }
 
-/** One colorbar's geometry in container px. */
+/** One colorbar's geometry in container px. @internal */
 export function layoutColorbar(spec: ColorbarSpec, env: ColorbarEnv): ColorbarScene {
   const cb = fullColorbar(spec.attributes);
   const sized = sizeColorbar(spec, cb, env);
@@ -483,7 +491,7 @@ export function layoutColorbar(spec: ColorbarSpec, env: ColorbarEnv): ColorbarSc
   return sized.build(Math.round(left), Math.round(top));
 }
 
-/** The margin one colorbar needs (paper-referenced placement only, like the legend). */
+/** The margin one colorbar needs (paper-referenced placement only, like the legend). @internal */
 export function colorbarMarginPush(
   spec: ColorbarSpec,
   env: ColorbarEnv,

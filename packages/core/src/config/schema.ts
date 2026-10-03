@@ -5,7 +5,7 @@
  */
 import { attr } from '../schema/attr.ts';
 
-/** The config schema. */
+/** The config schema. @experimental */
 export const configSchema = attr.object(
   {
     responsive: attr.boolean({

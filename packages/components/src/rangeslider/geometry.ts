@@ -25,7 +25,7 @@ export const RANGESLIDER_HANDLE = 4;
 /** Narrowest window a drag may leave, px. */
 const MIN_WINDOW = 1;
 
-/** A thumbnail's y range settings (`rangeslider.yaxis<N>`). */
+/** A thumbnail's y range settings (`rangeslider.yaxis<N>`). @internal */
 export interface RangesliderYaxis {
   readonly rangemode: 'auto' | 'fixed' | 'match';
   readonly range?: readonly unknown[];
@@ -108,7 +108,7 @@ export function windowPixels(
   return a <= b ? [a, b] : [b, a];
 }
 
-/** What a press on the slider grabs. */
+/** What a press on the slider grabs. @internal */
 export type SliderTarget = 'min' | 'max' | 'window' | 'background';
 
 /** What is under slider px `p`: an end of the window (±5 px), the window, or the background. */

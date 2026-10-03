@@ -14,6 +14,7 @@ import { deepMerge, isPlainObject } from '../util/objects.ts';
 /**
  * Resolve one attribute value with template support. `null`/`undefined` mean unset at every
  * level; invalid values fall through to the next source.
+ * @internal
  */
 export function resolveWithTemplate(
   spec: AttrSpec,
@@ -32,7 +33,7 @@ export function resolveWithTemplate(
   return canonicalDefault(spec, dflt);
 }
 
-/** Options for {@link coerceContainer}. */
+/** Options for {@link coerceContainer}. @internal */
 export interface CoerceContainerOptions {
   /** The template container at the same level (e.g. `template.layout.margin`). */
   template?: unknown;
@@ -95,6 +96,7 @@ function coerceInto(
 /**
  * Coerce every attribute of `node` from `input` into `output` (mutated and returned).
  * Containers are always created; attributes without a value or default are left absent.
+ * @internal
  */
 export function coerceContainer(
   node: ObjectNode,
@@ -115,6 +117,7 @@ export function coerceContainer(
  * - Named template items no user item references are appended, so template-level decorations
  *   (watermarks, reference lines) appear on every figure. They get `_index: -1`.
  * - Unnamed template items are ignored: there would be no way to override or remove them.
+ * @internal
  */
 export function coerceItems(
   node: ItemsNode,
@@ -180,7 +183,7 @@ function itemTemplate(
   return merged;
 }
 
-/** Coerce the attribute at `path` of `schema` (the trace/layout `coerce` helper). */
+/** Coerce the attribute at `path` of `schema` (the trace/layout `coerce` helper). @internal */
 export function coerceAtPath(
   schema: ObjectNode,
   input: unknown,

@@ -46,6 +46,7 @@ export function zorderOf(trace: Readonly<Record<string, unknown>>): number {
 /**
  * three.js `renderOrder` of a trace: `zorder`, then Plotly's layer of its type, then trace order.
  * Add fractions in [0, 1) for layers inside the trace.
+ * @internal
  */
 export function traceRenderOrder(trace: FullTrace, index: number): number {
   const rank = LAYER_RANK[trace.type] ?? TOP_RANK;

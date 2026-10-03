@@ -18,6 +18,7 @@ import { isHierarchyRoot, parentOf } from './levels.ts';
 /**
  * A node value with 10 significant digits, thousands separated (Plotly's `formatValue`), with
  * `separators` (decimal then thousands, default `'.,'`).
+ * @internal
  */
 export function formatNodeValue(v: number, separators?: string): string {
   return formatPieValue(v, separators);
@@ -32,6 +33,7 @@ export function formatNodeValue(v: number, separators?: string): string {
  * formatNodePercent(1 / 3); // '33%'
  * formatNodePercent(0.0012); // '0.12%'
  * ```
+ * @internal
  */
 export function formatNodePercent(ratio: number, separators?: string): string {
   const s = `${Math.round(100 * ratio).toFixed(0)}%`;
@@ -41,6 +43,7 @@ export function formatNodePercent(ratio: number, separators?: string): string {
 /**
  * The labels from the root down to the node's parent, each followed by `/` (Plotly's `getPath`):
  * `'/'` for the root, `'Eve/Seth/'` for a grandchild of `Eve`.
+ * @experimental
  */
 export function nodePath(node: HierNode): string {
   const labels: string[] = [];

@@ -37,6 +37,7 @@ export interface SankeyLinkInput {
   readonly value: number;
 }
 
+/** @experimental */
 export interface SankeyLayoutOptions {
   /** Extent along the flow (px). */
   readonly width: number;
@@ -111,6 +112,7 @@ export interface SankeyLink {
   path: CircularPath | undefined;
 }
 
+/** @experimental */
 export interface SankeyGraph {
   readonly nodes: SankeyNode[];
   readonly links: SankeyLink[];
@@ -290,6 +292,7 @@ function selectCircularTypes(links: readonly SankeyLink[]): void {
 /**
  * Lay out a sankey (see the module comment). `links` refer to node indices `0 … nodeCount − 1`;
  * links whose value is not positive, or whose ends are not nodes, must be filtered by the caller.
+ * @experimental
  */
 export function sankeyLayout(
   nodeCount: number,

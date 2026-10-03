@@ -5,12 +5,12 @@
  */
 import { isPlainObject } from '@mk7s/holochart-core';
 
-/** Zoom factor of the "Zoom in" button (half the span); "Zoom out" doubles it. */
+/** Zoom factor of the "Zoom in" button (half the span); "Zoom out" doubles it. @internal */
 export const MODEBAR_ZOOM_IN_FACTOR = 0.5;
-/** Zoom factor of the "Zoom out" button. */
+/** Zoom factor of the "Zoom out" button. @internal */
 export const MODEBAR_ZOOM_OUT_FACTOR = 2;
 
-/** The parts of a cartesian axis (`AxisInfo`) the modebar actions use. */
+/** The parts of a cartesian axis (`AxisInfo`) the modebar actions use. @internal */
 export interface ModebarAxisLike {
   /** Layout key: `'xaxis'`, `'yaxis2'`, … */
   readonly name: string;
@@ -24,16 +24,16 @@ export interface ModebarAxisLike {
   };
 }
 
-/** A layout update (attribute string → value), as passed to `chart.relayout`. */
+/** A layout update (attribute string → value), as passed to `chart.relayout`. @internal */
 export type ModebarLayoutUpdate = Record<string, unknown>;
 
-/** What {@link recordModebarResetState} remembers of one axis' input. */
+/** What {@link recordModebarResetState} remembers of one axis' input. @internal */
 export interface ModebarAxisResetEntry {
   readonly range?: readonly unknown[];
   readonly autorange?: unknown;
 }
 
-/** The initial axis ranges "Reset axes" returns to, by layout key (`'xaxis2'`). */
+/** The initial axis ranges "Reset axes" returns to, by layout key (`'xaxis2'`). @internal */
 export type ModebarResetState = ReadonlyMap<string, ModebarAxisResetEntry>;
 
 const AXIS_KEY = /^[xy]axis([2-9]|[1-9]\d+)?$/;
@@ -50,6 +50,7 @@ function fullField(axis: ModebarAxisLike, key: string): unknown {
 /**
  * Whether the axis may not be zoomed. `fixedrange` is read defensively: the axis schema does not
  * define it yet (contract gap), so today this is always `false`.
+ * @internal
  */
 export function modebarAxisFixed(axis: ModebarAxisLike): boolean {
   return fullField(axis, 'fixedrange') === true;
@@ -58,6 +59,7 @@ export function modebarAxisFixed(axis: ModebarAxisLike): boolean {
 /**
  * Scale a linear range about its center: `factor` 0.5 halves the span (zoom in), 2 doubles it
  * (zoom out). Reversed ranges stay reversed. `undefined` for non-finite input.
+ * @internal
  */
 export function modebarZoomRange(
   range: readonly [number, number],
@@ -74,6 +76,7 @@ export function modebarZoomRange(
  * The relayout update for "Zoom in"/"Zoom out": every non-fixed axis' range scaled about its
  * center in linear space, converted back to range values (`l2r`: exponents on log axes, ISO
  * strings on date axes), as `'<axis>.range': [a, b]`.
+ * @internal
  */
 export function modebarZoomUpdate(
   axes: Iterable<ModebarAxisLike>,
@@ -89,7 +92,10 @@ export function modebarZoomUpdate(
   return out;
 }
 
-/** The relayout update for "Autoscale": `'<axis>.autorange': true` on every non-fixed axis. */
+/**
+ * The relayout update for "Autoscale": `'<axis>.autorange': true` on every non-fixed axis.
+ * @internal
+ */
 export function modebarAutoscaleUpdate(axes: Iterable<ModebarAxisLike>): ModebarLayoutUpdate {
   const out: ModebarLayoutUpdate = {};
   for (const axis of axes) if (!modebarAxisFixed(axis)) out[`${axis.name}.autorange`] = true;
@@ -100,6 +106,7 @@ export function modebarAutoscaleUpdate(axes: Iterable<ModebarAxisLike>): Modebar
  * Remember the axis ranges of the user's input layout (`chart.layout`), for "Reset axes". Only
  * axes whose input has a `range` array or an `autorange` are recorded; the others reset to
  * autorange. Arrays are copied, so later edits of the input do not leak in.
+ * @internal
  */
 export function recordModebarResetState(
   layout: Readonly<Record<string, unknown>>,
@@ -125,6 +132,7 @@ export function recordModebarResetState(
  * is cleared (`null`) when autoranging, so the input returns to its original shape.
  *
  * @param layout - The current input layout (`chart.layout`), to know which ranges to clear.
+ * @internal
  */
 export function modebarResetUpdate(
   axes: Iterable<ModebarAxisLike>,
@@ -150,7 +158,10 @@ export function modebarResetUpdate(
   return out;
 }
 
-/** Whether any axis shows spike lines, and whether the axis schema has `showspikes` at all. */
+/**
+ * Whether any axis shows spike lines, and whether the axis schema has `showspikes` at all.
+ * @internal
+ */
 export function modebarSpikelinesState(axes: Iterable<ModebarAxisLike>): {
   readonly supported: boolean;
   readonly on: boolean;
@@ -169,6 +180,7 @@ export function modebarSpikelinesState(axes: Iterable<ModebarAxisLike>): {
  * The relayout update for "Toggle Spike Lines": `'<axis>.showspikes'` on every axis, flipped from
  * the current state. Empty when the axis schema has no `showspikes` (today: always — the button
  * is then a no-op until E6 adds spike lines).
+ * @internal
  */
 export function modebarSpikelinesUpdate(axes: Iterable<ModebarAxisLike>): ModebarLayoutUpdate {
   const list = [...axes];
@@ -179,7 +191,7 @@ export function modebarSpikelinesUpdate(axes: Iterable<ModebarAxisLike>): Modeba
   return out;
 }
 
-/** `config.toImageButtonOptions` as the modebar reads it (Plotly's). */
+/** `config.toImageButtonOptions` as the modebar reads it (Plotly's). @internal */
 export interface ModebarImageOptions {
   readonly format?: unknown;
   readonly filename?: unknown;
@@ -188,7 +200,7 @@ export interface ModebarImageOptions {
   readonly scale?: unknown;
 }
 
-/** What {@link modebarDownloadImage} passes to `chart.downloadImage`. */
+/** What {@link modebarDownloadImage} passes to `chart.downloadImage`. @internal */
 export interface ModebarDownloadRequest {
   format?: 'png' | 'jpeg' | 'webp';
   filename?: string;
@@ -197,14 +209,17 @@ export interface ModebarDownloadRequest {
   scale?: number;
 }
 
-/** The parts of a chart {@link modebarDownloadImage} uses. */
+/** The parts of a chart {@link modebarDownloadImage} uses. @internal */
 export interface ModebarImageSource {
   readonly fullConfig: { readonly toImageButtonOptions?: ModebarImageOptions } | undefined;
   /** The chart's raster export (E18.1): renders offscreen and saves the file. */
   downloadImage(options: ModebarDownloadRequest): Promise<unknown>;
 }
 
-/** The download request of `config.toImageButtonOptions` (unset fields: the export defaults). */
+/**
+ * The download request of `config.toImageButtonOptions` (unset fields: the export defaults).
+ * @internal
+ */
 export function modebarImageRequest(
   options: ModebarImageOptions | undefined,
 ): ModebarDownloadRequest {
@@ -226,6 +241,7 @@ export function modebarImageRequest(
  * `width` / `height` (default: the chart's size) and `scale` (default 1). The image is drawn
  * offscreen at that size, so it never contains the modebar or hover labels. Failures are logged,
  * not thrown (a click handler has no one to report to).
+ * @internal
  */
 export function modebarDownloadImage(chart: ModebarImageSource): Promise<void> {
   const request = modebarImageRequest(chart.fullConfig?.toImageButtonOptions);

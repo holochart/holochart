@@ -30,7 +30,7 @@ import { dataUriImageSize } from './source.ts';
 /** More pixels than this are not drawn (a warning is logged): 16.7 M, 4096². */
 export const MAX_PIXELS = 4096 * 4096;
 
-/** image calcdata. */
+/** image calcdata. @experimental */
 export interface ImageCalc {
   /** Pixel columns and rows. */
   readonly w: number;

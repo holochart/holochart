@@ -25,7 +25,10 @@ import { ONEDAY, ONEHOUR, ONEWEEK } from './date-math.ts';
 import { cleanNumber, createScale, dateToMs } from './scale.ts';
 import type { AxisType, Scale } from './types.ts';
 
-/** One `rangebreaks` item as given in the layout (anything; see {@link normalizeRangeBreak}). */
+/**
+ * One `rangebreaks` item as given in the layout (anything; see {@link normalizeRangeBreak}).
+ * @internal
+ */
 export interface RangeBreakInput {
   enabled?: unknown;
   /** `false` for a template-linked item without its template item: ignored. */
@@ -36,7 +39,7 @@ export interface RangeBreakInput {
   dvalue?: unknown;
 }
 
-/** A valid, enabled range break (Plotly's item defaults applied). */
+/** A valid, enabled range break (Plotly's item defaults applied). @internal */
 export type NormalizedRangeBreak =
   /** Repeats every week (`day of week`, bounds 0–6 with Sunday = 0) or day (`hour`, 0–24). */
   | { kind: 'pattern'; pattern: 'day of week' | 'hour'; bounds: readonly [number, number] }
@@ -45,7 +48,7 @@ export type NormalizedRangeBreak =
   /** `[v, v + dvalue)` for each raw value `v` (`values` without `bounds`). */
   | { kind: 'values'; values: readonly number[]; dvalue: number };
 
-/** Options of {@link createBreakMap} and {@link normalizeRangeBreak}. */
+/** Options of {@link createBreakMap} and {@link normalizeRangeBreak}. @internal */
 export interface BreakMapOptions {
   /**
    * Data value → raw number (ms on date axes). Default: `dateToMs` on date axes, `cleanNumber` on
@@ -62,6 +65,7 @@ export interface BreakMapOptions {
 /**
  * The compressed linear space of an axis with range breaks (see the module docs). Raw values are
  * ms since the epoch (UTC) on date axes and plain numbers on linear axes.
+ * @experimental
  */
 export interface BreakMap {
   /** Identity of the mapping: equal keys ⇒ same mapping (the runtime reuses scales by it). */
@@ -106,7 +110,7 @@ const DAY_NAMES: Readonly<Record<string, number>> = {
   sat: 6,
 };
 
-/** Plotly's `dvalue` default: one day. */
+/** Plotly's `dvalue` default: one day. @internal */
 export const RANGEBREAK_DVALUE = ONEDAY;
 
 /** 1969-12-28T00:00Z, the Sunday starting the week of the epoch (a Thursday). */
@@ -146,6 +150,7 @@ function defaultConverter(type: AxisType): (v: unknown) => number {
  *
  * Pattern breaks only apply to date axes (they are dropped on other types), and only date and
  * linear axes have breaks at all.
+ * @internal
  */
 export function normalizeRangeBreak(
   input: RangeBreakInput,
@@ -275,6 +280,7 @@ function lastAtOrBelow(sorted: Float64Array, v: number): number {
  * );
  * const scale = createScale({ type: 'date', breaks, range: [...], length: 800 });
  * ```
+ * @internal
  */
 export function createBreakMap(
   breaks: readonly RangeBreakInput[] | undefined,
@@ -509,6 +515,7 @@ export function createBreakMap(
  * point maps to the break's start rather than its end (the range shows what comes before the
  * break, not the break). Ticks and labels are computed on it (Plotly works in raw space). `scale`
  * itself when it has no breaks.
+ * @internal
  */
 export function rawScale(scale: Scale): Scale {
   const breaks = scale.breaks;
@@ -523,6 +530,7 @@ export function rawScale(scale: Scale): Scale {
 /**
  * A linear range in raw values: the lower end maps to the end of a break it sits on, the upper
  * end to its start (see {@link rawScale}). Keeps the direction.
+ * @internal
  */
 export function rawRange(breaks: BreakMap, range: readonly [number, number]): [number, number] {
   const [r0, r1] = range;

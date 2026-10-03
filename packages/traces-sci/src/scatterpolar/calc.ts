@@ -9,6 +9,7 @@ import { scatter, type ScatterCalc } from '@mk7s/holochart-traces-basic';
 import { polarCoordinates } from '../polar/coordinates.ts';
 import type { PolarCalc } from '../polar/cross-trace.ts';
 
+/** @experimental */
 export interface ScatterpolarCalc extends PolarCalc {
   /** Drawn marker diameters in px (one value, or per point), as scatter's calc gives them. */
   readonly markerSize: ScatterCalc['markerSize'];

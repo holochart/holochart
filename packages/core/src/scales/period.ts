@@ -24,10 +24,10 @@ import {
 import type { BreakMap } from './breaks.ts';
 import { cleanNumber, dateToMs } from './scale.ts';
 
-/** Where a point sits within its period. */
+/** Where a point sits within its period. @internal */
 export type PeriodAlignment = 'start' | 'middle' | 'end';
 
-/** Aligned positions with the bounds of each point's period (all in linear space). */
+/** Aligned positions with the bounds of each point's period (all in linear space). @internal */
 export interface AlignedPeriods {
   /** Positions to draw at (`starts`, `ends`, or their midpoints, per the alignment). */
   vals: Float64Array;
@@ -37,7 +37,7 @@ export interface AlignedPeriods {
   ends: Float64Array;
 }
 
-/** Options of {@link alignPeriod}. */
+/** Options of {@link alignPeriod}. @internal */
 export interface AlignPeriodOptions {
   /** The period: a positive number (ms on date axes) or `'M<n>'` on date axes. */
   period: unknown;
@@ -78,6 +78,7 @@ function parsePeriod(period: unknown, isDate: boolean): Period | undefined {
 /**
  * The default `period0`: 2000-01-01 on date axes, or 2000-01-02 (a Sunday) when the period is a
  * whole number of weeks, so weekly periods run Sunday to Sunday; 0 on other axes.
+ * @internal
  */
 export function defaultPeriod0(period: unknown, isDate: boolean): number {
   if (!isDate) return 0;
@@ -102,6 +103,7 @@ function outArray(a: Float64Array | undefined, n: number): Float64Array {
  * // Monthly data drawn mid-month:
  * alignPeriod([Date.UTC(2024, 0, 1)], { period: 'M1', isDate: true })!.vals[0]; // 2024-01-16T12:00
  * ```
+ * @internal
  */
 export function alignPeriod(
   values: ArrayLike<number>,

@@ -42,18 +42,18 @@ export type SceneLetter = (typeof SCENE_LETTERS)[number];
 
 type Container = Record<string, unknown>;
 
-/** The scene ids of a defaulted layout. */
+/** The scene ids of a defaulted layout. @internal */
 export function sceneIds(fullLayout: FullLayout | undefined): readonly string[] {
   const ids = fullLayout?.[SCENE_IDS];
   return Array.isArray(ids) ? (ids as string[]) : [];
 }
 
-/** Whether a (defaulted) trace is drawn in a 3D scene. */
+/** Whether a (defaulted) trace is drawn in a 3D scene. @internal */
 export function isSceneTrace(trace: FullTrace): boolean {
   return trace._module?.categories.includes('gl3d') === true;
 }
 
-/** The scene id of a 3D trace. */
+/** The scene id of a 3D trace. @experimental */
 export function sceneOf(trace: Readonly<Record<string, unknown>>): string {
   const s = trace['scene'];
   return typeof s === 'string' && s !== '' ? s : 'scene';

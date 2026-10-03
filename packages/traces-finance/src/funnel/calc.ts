@@ -21,7 +21,7 @@ import {
   type BarLikeLayout,
 } from '../bars/layout.ts';
 
-/** Funnel calcdata: bar's calc (bars centered on zero) plus the stage percentages. */
+/** Funnel calcdata: bar's calc (bars centered on zero) plus the stage percentages. @experimental */
 export interface FunnelCalc extends BarCalc {
   /** Value as a fraction of the first stage's (Plotly's `begR`). */
   readonly percentInitial: Float64Array;

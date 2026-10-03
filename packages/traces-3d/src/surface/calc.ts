@@ -16,7 +16,7 @@ import {
 } from './grid.ts';
 import type { SurfacePicker } from './pick.ts';
 
-/** What surface calc holds. */
+/** What surface calc holds. @experimental */
 export interface SurfaceCalc extends SceneCalc {
   readonly grid: SurfaceGrid | null;
   /**

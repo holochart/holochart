@@ -11,10 +11,10 @@ import type { Registry } from '../registry/types.ts';
 import { forEachAttr, inheritedEditType, walkPath } from '../schema/walk.ts';
 import type { EditFlag, ObjectNode, SchemaNode } from '../schema/types.ts';
 
-/** A pipeline stage an update can trigger. */
+/** A pipeline stage an update can trigger. @experimental */
 export type Stage = Exclude<EditFlag, 'none' | 'calcIfAutorange'>;
 
-/** Stages in pipeline order. */
+/** Stages in pipeline order. @internal */
 export const STAGE_ORDER: readonly Stage[] = [
   'calc',
   'crossTraceCalc',
@@ -28,12 +28,12 @@ export const STAGE_ORDER: readonly Stage[] = [
   'camera',
 ];
 
-/** A changed attribute: a trace attribute (of a given type) or a layout attribute. */
+/** A changed attribute: a trace attribute (of a given type) or a layout attribute. @experimental */
 export type Change =
   | { target: 'trace'; type: string; path: string; traceIndex?: number }
   | { target: 'layout'; path: string };
 
-/** Options for {@link planUpdate}. */
+/** Options for {@link planUpdate}. @experimental */
 export interface PlanOptions {
   registry: Registry;
   /** Used to resolve `calcIfAutorange` for trace changes with a `traceIndex`. */
@@ -68,6 +68,7 @@ function subtreeFlags(node: SchemaNode, inherited: readonly EditFlag[]): readonl
  * The edit flags for `path` within `schema`: the attribute's own (or inherited) `editType`, or the
  * union over the subtree when `path` names a container. Unknown paths get `['calc']`, the safe
  * choice.
+ * @internal
  */
 export function editFlagsForPath(schema: ObjectNode, path: string): readonly EditFlag[] {
   let walked;
@@ -110,6 +111,7 @@ function autoranged(change: Change, opts: PlanOptions): boolean {
  * planUpdate([{ target: 'trace', type: 'scatter', path: 'marker.color' }], { registry }); // {'style'}
  * planUpdate([{ target: 'layout', path: 'xaxis.range' }], { registry });                  // {'ticks','plot'}
  * ```
+ * @experimental
  */
 export function planUpdate(changes: Iterable<Change>, opts: PlanOptions): Set<Stage> {
   const stages = new Set<Stage>();
@@ -157,6 +159,7 @@ const DOWNSTREAM: Readonly<Record<Stage, readonly Stage[]>> = {
 /**
  * The stages a pipeline must execute for a plan, including everything downstream of each planned
  * stage (e.g. `calc` implies `layout`, `plot`, …), in pipeline order.
+ * @internal
  */
 export function expandStages(stages: Iterable<Stage>): Stage[] {
   const all = new Set<Stage>();
@@ -172,6 +175,7 @@ export function expandStages(stages: Iterable<Stage>): Stage[] {
  *
  * @param update - Attribute strings to new values, e.g. `{ 'marker.color': 'red' }`.
  * @param traceIndices - Traces the update applies to (all traces when omitted).
+ * @experimental
  */
 export function planRestyle(
   update: Readonly<Record<string, unknown>>,
@@ -190,7 +194,7 @@ export function planRestyle(
   return planUpdate(changes, { ...opts, fullData });
 }
 
-/** Plan a `relayout`: every attribute path in `update`. */
+/** Plan a `relayout`: every attribute path in `update`. @experimental */
 export function planRelayout(
   update: Readonly<Record<string, unknown>>,
   opts: PlanOptions,

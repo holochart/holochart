@@ -71,13 +71,13 @@ import {
 import type { PathValue } from './path.ts';
 import { shapesAttributes, supplyShapeDefaults, type FullShape } from './schema.ts';
 
-/** The defaulted shapes of a layout. */
+/** The defaulted shapes of a layout. @internal */
 export function shapesOf(fullLayout: Record<string, unknown>): FullShape[] {
   const list = fullLayout['shapes'];
   return Array.isArray(list) ? (list as FullShape[]) : [];
 }
 
-/** Where a shape sits in Plotly's layer stack. */
+/** Where a shape sits in Plotly's layer stack. @internal */
 export function shapeStack(
   s: Pick<FullShape, 'layer'>,
   x: Pick<ShapeDim, 'paper'>,
@@ -128,6 +128,7 @@ interface Group {
 /**
  * A closed ring as one polyline that starts and ends mid-edge, so its ends meet on a straight
  * segment (butt caps line up) instead of leaving a notch at a corner.
+ * @internal
  */
 export function closedPolyline(r: Pick<Ring, 'x' | 'y'>): { x: number[]; y: number[] } {
   const n = r.x.length;
@@ -139,7 +140,7 @@ export function closedPolyline(r: Pick<Ring, 'x' | 'y'>): { x: number[]; y: numb
   return { x, y };
 }
 
-/** Append one shape to its fill and line accumulators (pure; exported for tests). */
+/** Append one shape to its fill and line accumulators (pure; exported for tests). @internal */
 export function accumulateShape(
   g: ShapeGeometry,
   fill: FillAcc | undefined,
@@ -175,6 +176,7 @@ export function accumulateShape(
 
 type DragMode = 'move' | 'start' | 'end' | `resize-${string}`;
 
+/** @internal */
 interface Drag {
   index: number;
   mode: DragMode;
@@ -185,6 +187,7 @@ interface Drag {
   dy: number;
 }
 
+/** @internal */
 type Override = Partial<
   Pick<FullShape, 'x0' | 'x1' | 'y0' | 'y1' | 'path' | 'xanchor' | 'yanchor'>
 >;
@@ -213,6 +216,7 @@ const GRAB = 6;
 /**
  * What dragging at (`px`, `py`) does to a shape: move it, move a line end, or resize a box along
  * the edges it is near (`resize-nw`, `resize-e`, …). `undefined` when the point misses the shape.
+ * @internal
  */
 export function hitShape(g: ShapeGeometry, px: number, py: number): DragMode | undefined {
   const slop = Math.max(GRAB, g.lineWidth / 2 + 2);
@@ -267,7 +271,10 @@ function pathText(v: unknown): string {
   return typeof v === 'string' ? v.replace(' ', '_') : String(v);
 }
 
-/** A path with every coordinate moved by (`dx`, `dy`) px, written with absolute commands. */
+/**
+ * A path with every coordinate moved by (`dx`, `dy`) px, written with absolute commands.
+ * @internal
+ */
 export function movePath(d: string, x: ShapeDim, y: ShapeDim, dx: number, dy: number): string {
   const out: string[] = [];
   for (const seg of cachedPath(d).segments) {
@@ -282,7 +289,7 @@ export function movePath(d: string, x: ShapeDim, y: ShapeDim, dx: number, dy: nu
   return out.join('');
 }
 
-/** New positions of a dragged shape, in reference units (the `relayout` values). */
+/** New positions of a dragged shape, in reference units (the `relayout` values). @internal */
 export function dragOverride(drag: Drag, env: ShapeEnv): Override {
   const { base: g, mode, dx, dy } = drag;
   const s = g.shape;

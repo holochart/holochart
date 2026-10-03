@@ -17,7 +17,7 @@
  *   analytically, so both agree except within `ε` of a cell face.
  */
 
-/** A rectilinear grid with a vector per node. */
+/** A rectilinear grid with a vector per node. @experimental */
 export interface StreamGrid {
   /** Node coordinates per axis, ascending. */
   readonly xs: Float64Array;
@@ -62,6 +62,7 @@ const LETTERS = ['x', 'y', 'z'] as const;
 /**
  * Detect the grid of flattened columns (`len` entries of each: the shortest column's length) and
  * reorder its vectors x fastest. See the module comment.
+ * @internal
  */
 export function detectStreamGrid(
   x: ArrayLike<number>,
@@ -187,6 +188,7 @@ const cz = { i: 0, f: 0, h: 0 };
 /**
  * Sample the grid's vector at `(x, y, z)` into `out[0..2]` (trilinear, clamped to the grid) and,
  * with `jacobian`, its Jacobian `J[3·i + j] = ∂Vᵢ/∂Xⱼ` (see the module comment).
+ * @internal
  */
 export function sampleStreamGrid(
   grid: StreamGrid,

@@ -24,14 +24,20 @@ import { SceneLighting, type LightRigUser } from './scene-lighting.ts';
 
 type Container = Record<string, unknown>;
 
-/** What {@link acquireScene} needs: a trace's plot context or a component's draw context. */
+/**
+ * What {@link acquireScene} needs: a trace's plot context or a component's draw context.
+ * @experimental
+ */
 export interface SceneContext {
   readonly fullLayout: FullLayout;
   readonly plotArea?: Readonly<ViewportRect> | undefined;
   subplotViewport?(key: string, options: SubplotViewportOptions): Viewport;
 }
 
-/** A point on screen: container px (top-left origin) and NDC depth (−1 near … 1 far). */
+/**
+ * A point on screen: container px (top-left origin) and NDC depth (−1 near … 1 far).
+ * @experimental
+ */
 export interface ScreenPoint {
   x: number;
   y: number;
@@ -40,7 +46,7 @@ export interface ScreenPoint {
 
 const tmp = new Vector3();
 
-/** The live scene (see the module comment). Get it with {@link acquireScene}. */
+/** The live scene (see the module comment). Get it with {@link acquireScene}. @experimental */
 export class Scene3D {
   readonly id: string;
   readonly viewport: Viewport;
@@ -214,6 +220,7 @@ const BY_LAYOUT = new WeakMap<FullLayout, Map<string, Scene3D>>();
  * (a trace passes its `calc.scene`; else the pass's laid-out scene, or the previous layout, or one
  * laid out without data). `undefined` when the scene isn't in the layout or the context has no
  * `subplotViewport` (hand-built contexts).
+ * @experimental
  */
 export function acquireScene(
   ctx: SceneContext,
@@ -258,6 +265,7 @@ export function acquireScene(
 /**
  * The live scene of a 3D trace in the pass of `fullLayout` (hover and picking: `hoverPoints`
  * gets the full layout of the pass), once the trace's view or the component acquired it.
+ * @experimental
  */
 export function sceneFor(
   fullLayout: FullLayout,

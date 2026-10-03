@@ -21,7 +21,10 @@ function range(which: 'min' | 'max') {
   });
 }
 
-/** The image schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core. */
+/**
+ * The image schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core.
+ * @experimental
+ */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const imageAttributes = /* @__PURE__ */ (() =>
   attr.object(

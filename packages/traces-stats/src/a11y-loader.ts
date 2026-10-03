@@ -21,5 +21,6 @@ export const lazyA11y =
  * `TraceModule.a11y` of the grid traces: the cell cursor of `histogram2d` and
  * `histogram2dcontour`, and of the grid traces of `@mk7s/holochart-traces-sci` (`heatmap`,
  * `contour`), whose calcs have the same cell centers.
+ * @internal
  */
 export const gridA11y = /* @__PURE__ */ lazyA11y('grid');

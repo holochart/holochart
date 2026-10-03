@@ -155,7 +155,7 @@ export function angularConvertOf(polar: Container | undefined): AngularConvert {
   };
 }
 
-/** A polar subplot laid out (see the module comment). */
+/** A polar subplot laid out (see the module comment). @experimental */
 export class PolarSubplot {
   readonly id: string;
   /** The subplot's defaulted layout container (`fullLayout.polarN`) of the build. */

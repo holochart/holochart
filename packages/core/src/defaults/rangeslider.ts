@@ -29,10 +29,13 @@ import { isPlainObject } from '../util/objects.ts';
 import { coerceContainer } from './container.ts';
 import type { FullAxis, FullLayout, Subplots } from './types.ts';
 
-/** Paper-fraction gap between the range selector and the plot area top (Plotly's `yPad`). */
+/**
+ * Paper-fraction gap between the range selector and the plot area top (Plotly's `yPad`).
+ * @internal
+ */
 export const RANGESELECTOR_Y_PAD = 0.02;
 
-/** A usable `[start, end]` range: two values that are neither `null` nor `undefined`. */
+/** A usable `[start, end]` range: two values that are neither `null` nor `undefined`. @internal */
 export function isFullRange(range: unknown): range is readonly [unknown, unknown] {
   return (
     Array.isArray(range) &&
@@ -74,6 +77,7 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
 /**
  * Plotly's `Color.contrast(color, lightAmount, darkAmount)` (tinycolor semantics): a dark color
  * lightened by `light` %, a light one darkened by `dark` % (HSL lightness), as `rgb()`.
+ * @internal
  */
 export function contrastShade(css: string, light: number, dark: number): string {
   const c = toRGBA(css);
@@ -112,6 +116,7 @@ const REQUEST_KEY = '_requestRangeslider';
  * Called by a trace's supply-defaults (plan E12.2: `ohlc`, `candlestick`) to make the range slider
  * of x axis `xaxis` visible by default (Plotly's `layout._requestRangeslider`). The input's own
  * `rangeslider.visible` still wins.
+ * @internal
  */
 export function requestRangeslider(fullLayout: FullLayout, xaxis: string): void {
   ((fullLayout[REQUEST_KEY] ??= {}) as Record<string, boolean>)[xaxis] = true;

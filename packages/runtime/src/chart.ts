@@ -657,7 +657,7 @@ export class Chart {
     plotArea: () => this.#plotArea,
   });
 
-  /** Prefer {@link createChart}. A chart already in `el` is destroyed first. */
+  /** @internal Use {@link createChart}. A chart already in `el` is destroyed first. */
   constructor(el: HTMLElement, figure: FigureInput = {}, options: ChartOptions = {}) {
     this.element = el;
     this.#registry = options.registry ?? defaultRegistry;
@@ -899,7 +899,7 @@ export class Chart {
     return this.#full?.fullConfig;
   }
 
-  /** Calcdata of trace `index`, as produced by its module's `calc`. */
+  /** Calcdata of trace `index`, as produced by its module's `calc`. @experimental */
   getCalcdata(index: number): unknown {
     return this.#traces[index]?.calc;
   }
@@ -966,6 +966,7 @@ export class Chart {
   /**
    * Emit an event to this chart's listeners (components use it for `legendclick`, …). Returns
    * `false` when a listener returned `false`, i.e. the default action should be skipped.
+   * @experimental
    */
   emit<K extends ChartEventName>(type: K, payload: ChartEvents[K]): boolean {
     return this.#events.emit(type, payload);
@@ -1002,6 +1003,7 @@ export class Chart {
    * Hover again where the pointer is, on the next frame (M6: for hover sources that answer
    * asynchronously, such as a 3D scene's GPU picking, or whose points moved without a redraw,
    * such as an orbiting camera). No-op when the pointer is away or a gesture is in progress.
+   * @experimental
    */
   refreshHover(): void {
     this.#fx?.rehover();
@@ -1059,6 +1061,7 @@ export class Chart {
    * their ticks, linked axes (`matches`, `scaleanchor`) follow, and `relayouting` is emitted; the
    * input layout is untouched. Finish with {@link commitRanges}, or undo by previewing the ranges
    * shown before.
+   * @experimental
    */
   previewRanges(ranges: Readonly<Record<string, readonly [number, number]>>): void {
     if (this.#destroyed || !this.#full) return;
@@ -1080,6 +1083,7 @@ export class Chart {
    * Set axis ranges as a user interaction (M3 wave 2, E5.9): linear coordinates keyed by axis
    * id, committed with one GUI `relayout` (kept across `uirevision`) whose event carries Plotly's
    * `'xaxis.range[0]'` / `'xaxis.range[1]'` keys, like the end of a zoom drag.
+   * @experimental
    */
   commitRanges(ranges: Readonly<Record<string, readonly [number, number]>>): Promise<Chart> {
     const map = new Map<string, LinearRange>();

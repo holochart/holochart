@@ -28,7 +28,7 @@ export interface ContourLevelsOptions {
   ncontours?: number | undefined;
 }
 
-/** Resolved contour levels. */
+/** Resolved contour levels. @experimental */
 export interface ContourLevels {
   start: number;
   end: number;

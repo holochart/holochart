@@ -28,7 +28,10 @@ import {
 } from '@mk7s/holochart-traces-basic';
 import type { ColorbarSpec } from '@mk7s/holochart-runtime';
 
-/** Plotly's default colorscale for heatmap-like traces (`scales.RdBu`, its `defaultScale`). */
+/**
+ * Plotly's default colorscale for heatmap-like traces (`scales.RdBu`, its `defaultScale`).
+ * @internal
+ */
 export const DEFAULT_Z_COLORSCALE = 'RdBu';
 
 /** Coerce function shape of trace and layout defaults contexts. */
@@ -37,6 +40,7 @@ type Coerce = <T = unknown>(path: string, dflt?: unknown) => T;
 /**
  * The `z` colorscale attributes. `editType` is `'style'` for traces that map values in the shader
  * (histogram2d) and `'calc'` for contours, whose automatic levels depend on `zmin` / `zmax`.
+ * @internal
  */
 export function zColorscaleAttributes(editType: 'style' | 'calc') {
   return {
@@ -102,6 +106,7 @@ function isValidScale(value: unknown): boolean {
 /**
  * Plotly's `colorScaleDefaults` with `cLetter: 'z'` at the trace root. A trace linked to a color
  * axis only keeps `coloraxis`: the axis owns the rest.
+ * @internal
  */
 export function supplyZColorscaleDefaults(
   traceIn: Readonly<Record<string, unknown>>,
@@ -169,7 +174,7 @@ export function zExtentKey(trace: FullTrace): string {
 const MAX_EXTENTS = 512;
 const extents = new Map<string, readonly [number, number]>();
 
-/** Record the finite extent of a trace's aggregated values (called by calc). */
+/** Record the finite extent of a trace's aggregated values (called by calc). @internal */
 export function recordZExtent(trace: FullTrace, extent: readonly [number, number]): void {
   const key = zExtentKey(trace);
   extents.delete(key);
@@ -200,6 +205,7 @@ const AXIS_TRACES_KEY = '_zExtentKeys';
  * Layout defaults for the color axes histogram2d / histogram2dcontour traces reference: coerce each
  * axis (Plotly `colorAxisDefaults`) and remember which traces feed it, so their shared automatic
  * domain can be read once calc has run ({@link zDomain}).
+ * @internal
  */
 export function supplyZColoraxisDefaults(
   layoutIn: Readonly<Record<string, unknown>>,
@@ -246,6 +252,7 @@ function axisOf(trace: FullTrace, fullLayout: FullLayout): Record<string, unknow
  * The color domain of a trace (Plotly `colorscale/calc.js`): with `zauto` (`cauto` on a color
  * axis) the data extent — across every trace on the axis — widened to be symmetric around
  * `zmid`; else `zmin` / `zmax`. A zero-width domain grows to ±0.5; no data gives [0, 1].
+ * @internal
  */
 export function zDomain(
   trace: FullTrace,
@@ -282,7 +289,7 @@ export function zDomain(
   return [min, max];
 }
 
-/** A resolved `z` colorscale, in the render layer's terms. */
+/** A resolved `z` colorscale, in the render layer's terms. @internal */
 export interface ZColorMapping {
   /** Stops with `layout.colorscaleInterpolation` baked in (sRGB interpolation from here on). */
   readonly colorscale: Colorscale;
@@ -302,7 +309,7 @@ function autoScale(min: number, max: number, fullLayout: FullLayout): Colorscale
   return resolveColorscale(value) ?? resolveColorscale(fallback)!;
 }
 
-/** The colorscale mapping of a trace (its own, or its color axis'). */
+/** The colorscale mapping of a trace (its own, or its color axis'). @internal */
 export function zColorMapping(
   trace: FullTrace,
   fullLayout: FullLayout,
@@ -321,7 +328,7 @@ export function zColorMapping(
   };
 }
 
-/** CSS stops of a mapping's colorscale, reversed for `reversescale` (for colorbars). */
+/** CSS stops of a mapping's colorscale, reversed for `reversescale` (for colorbars). @internal */
 export function cssStops(mapping: ZColorMapping): [number, string][] {
   const stops = mapping.colorscale.map(([p, c]): [number, string] => [p, rgbaToCss(c)]);
   return mapping.reversescale
@@ -333,6 +340,7 @@ export function cssStops(mapping: ZColorMapping): [number, string][] {
  * The `colorbar` hook of heatmap-like traces: the trace's own bar (`showscale`), or its color
  * axis' (`layout.coloraxisN.showscale`). `null` before the first calc (the domain is not known
  * yet) or when no bar is shown.
+ * @internal
  */
 export function zColorbar(trace: FullTrace, fullLayout: FullLayout): ColorbarSpec | null {
   if (trace.visible !== true) return null;

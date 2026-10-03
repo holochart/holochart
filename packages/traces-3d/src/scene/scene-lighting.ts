@@ -18,7 +18,7 @@ import { sceneLightingSpec } from './lighting-attributes.ts';
 
 type Vec3 = [number, number, number];
 
-/** What takes the scene's rig: a mesh primitive (or its lazy loader). */
+/** What takes the scene's rig: a mesh primitive (or its lazy loader). @experimental */
 export interface LightRigUser {
   setLightRig(rig: LightRig | null): void;
 }
@@ -30,7 +30,7 @@ export interface SceneLightingHost {
 
 type LightRigCamera = Parameters<LightRig['setCamera']>[0];
 
-/** The lights of one live scene (see the module comment). */
+/** The lights of one live scene (see the module comment). @experimental */
 export class SceneLighting {
   readonly #host: SceneLightingHost;
   readonly #users = new Set<LightRigUser>();

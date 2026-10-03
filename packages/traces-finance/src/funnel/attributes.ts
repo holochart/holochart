@@ -17,7 +17,10 @@ import {
   hoverinfoAttribute,
 } from '../bars/attributes.ts';
 
-/** The funnel schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core. */
+/**
+ * The funnel schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core.
+ * @experimental
+ */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const funnelAttributes = /* @__PURE__ */ (() => {
   const B = barAttributes.children;
@@ -91,7 +94,7 @@ export const funnelAttributes = /* @__PURE__ */ (() => {
   );
 })();
 
-/** Layout attributes owned by `funnel` (coerced when a funnel trace is present). */
+/** Layout attributes owned by `funnel` (coerced when a funnel trace is present). @internal */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const funnelLayoutAttributes = /* @__PURE__ */ (() => {
   const a = barLikeLayoutAttributes('funnel', ['stack', 'group', 'overlay'], 'stack');

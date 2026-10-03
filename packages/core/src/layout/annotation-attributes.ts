@@ -11,7 +11,7 @@ import { fontSchema } from './schema.ts';
 const REF_DESCRIPTION =
   "`'paper'` (0–1 across the plot area), an axis id (`'x'`, `'x2'`: data units of that axis; log axes take exponents, as `range` does) or `'<axis> domain'` (0–1 across that axis' domain).";
 
-/** One annotation. */
+/** One annotation. @internal */
 export const annotationItemAttributes = /* @__PURE__ */ (() =>
   ({
     visible: attr.boolean({ dflt: true, description: 'Draw this annotation.' }),

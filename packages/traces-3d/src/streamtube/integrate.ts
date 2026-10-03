@@ -112,7 +112,7 @@ export function minStartSeparation(starts: Float64Array): number {
   return Number.isFinite(min) ? min : 1;
 }
 
-/** Integrated streamlines: samples of every tube, one after another. */
+/** Integrated streamlines: samples of every tube, one after another. @experimental */
 export interface StreamSet {
   /** Tube `t` holds samples `offsets[t]` to `offsets[t + 1] − 1` (one entry per start, + 1). */
   readonly offsets: Uint32Array;
@@ -203,7 +203,7 @@ function rk4(
   ];
 }
 
-/** Integrate a streamline from every start (3 floats each). See the module comment. */
+/** Integrate a streamline from every start (3 floats each). See the module comment. @internal */
 export function integrateStreams(
   grid: StreamGrid,
   starts: Float64Array,

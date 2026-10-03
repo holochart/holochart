@@ -7,10 +7,10 @@
  */
 import { getIn, isPlainObject, type FullLayout, type FullTrace } from '@mk7s/holochart-core';
 
-/** Methods a button or step can call. */
+/** Methods a button or step can call. @internal */
 export type CommandMethod = 'restyle' | 'relayout' | 'update' | 'animate' | 'skip';
 
-/** The chart methods commands call (a `Chart` satisfies it). */
+/** The chart methods commands call (a `Chart` satisfies it). @internal */
 export interface CommandChart {
   restyle(update: Readonly<Record<string, unknown>>, traces?: number | readonly number[]): unknown;
   relayout(update: Readonly<Record<string, unknown>>): unknown;
@@ -100,6 +100,7 @@ export function executeCommand(
 /**
  * What a command sets: a layout attribute, or a trace attribute of some traces (`null`: every
  * trace), with the value it sets (per listed trace for data bindings).
+ * @internal
  */
 export type CommandBinding =
   | { readonly type: 'layout'; readonly prop: string; readonly value: unknown }
@@ -200,14 +201,17 @@ export function commandBindings(
   }
 }
 
-/** A command list's shared binding and which command sets which value. */
+/** A command list's shared binding and which command sets which value. @internal */
 export interface SimpleBinding {
   readonly binding: CommandBinding;
   /** `String(value)` → index of the command setting it (the last one wins, like Plotly). */
   readonly lookup: ReadonlyMap<string, number>;
 }
 
-/** A command of a button or step; entries that are `undefined` (hidden items) are skipped. */
+/**
+ * A command of a button or step; entries that are `undefined` (hidden items) are skipped.
+ * @internal
+ */
 export interface CommandLike {
   readonly method?: unknown;
   readonly args?: unknown;

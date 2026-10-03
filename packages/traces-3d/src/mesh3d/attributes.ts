@@ -36,7 +36,7 @@ function hoverformat(letter: 'x' | 'y' | 'z') {
   });
 }
 
-/** The mesh3d schema. */
+/** The mesh3d schema. @experimental */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const mesh3dAttributes = /* @__PURE__ */ (() =>
   attr.object(

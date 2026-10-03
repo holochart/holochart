@@ -11,13 +11,14 @@
 
 export type Vec3 = [number, number, number];
 
-/** A scene camera in scene units (Plotly's `scene.camera` without `projection`). */
+/** A scene camera in scene units (Plotly's `scene.camera` without `projection`). @experimental */
 export interface SceneCamera {
   eye: Vec3;
   center: Vec3;
   up: Vec3;
 }
 
+/** @experimental */
 export type SceneProjection = 'perspective' | 'orthographic';
 
 /** Vertical field of view of the perspective camera, degrees (gl-plot3d's `fovy`, π/4). */
@@ -66,6 +67,7 @@ const xyz = (v: Vec3): { x: number; y: number; z: number } => ({ x: v[0], y: v[1
 /**
  * The `scene.camera` value of a relayout (Plotly's `getLayoutCamera` shape):
  * `{ up, center, eye, projection: { type } }`.
+ * @internal
  */
 export function sceneCameraPayload(
   c: SceneCamera,

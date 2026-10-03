@@ -55,20 +55,26 @@ import { annotationsAttributes, supplyAnnotationDefaults, type FullAnnotation } 
 /** Draw order in the overlay: above traces, axes, colorbars and the legend. */
 const ORDER = { fill: 30, lines: 31, text: 32 } as const;
 
-/** The polygons and segments of a set of annotations, ready for the fill and line primitives. */
+/**
+ * The polygons and segments of a set of annotations, ready for the fill and line primitives.
+ * @internal
+ */
 export interface AnnotationBatches {
   fill: { x: number[]; y: number[]; rings: number[]; polygons: number[]; color: number[] };
   lines: { x: number[]; y: number[]; starts: number[]; color: number[]; width: number[] };
   labels: LabelItem[];
 }
 
-/** The defaulted annotations of a layout. */
+/** The defaulted annotations of a layout. @internal */
 export function annotationsOf(fullLayout: Record<string, unknown>): FullAnnotation[] {
   const list = fullLayout['annotations'];
   return Array.isArray(list) ? (list as FullAnnotation[]) : [];
 }
 
-/** Geometry → primitive data (pure). Boxes first, so arrowheads and text draw over them. */
+/**
+ * Geometry → primitive data (pure). Boxes first, so arrowheads and text draw over them.
+ * @internal
+ */
 export function annotationBatches(geoms: readonly AnnotationGeometry[]): AnnotationBatches {
   const out: AnnotationBatches = {
     fill: { x: [], y: [], rings: [], polygons: [], color: [] },
@@ -141,7 +147,7 @@ function sameValue(a: unknown, b: unknown): boolean {
   return String(a) === String(b);
 }
 
-/** Every annotation's geometry for a draw context (pure given `measure`). */
+/** Every annotation's geometry for a draw context (pure given `measure`). @internal */
 export function buildAnnotationGeometries(
   ctx: Pick<ComponentDrawContext, 'fullLayout' | 'width' | 'height' | 'plotArea' | 'axes'>,
   measure: MeasureLine,

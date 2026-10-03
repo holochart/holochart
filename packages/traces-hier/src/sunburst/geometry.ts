@@ -20,7 +20,10 @@ import { findEntry, levelWindow, partition, type LevelWindow } from '../hierarch
 
 const TAU = Math.PI * 2;
 
-/** Placement of a sunburst in container px (top-left origin), set by `crossTraceLayout`. */
+/**
+ * Placement of a sunburst in container px (top-left origin), set by `crossTraceLayout`.
+ * @experimental
+ */
 export interface SunburstLayout {
   /** Center and outer radius (half the smaller side of the domain). */
   readonly cx: number;
@@ -31,7 +34,7 @@ export interface SunburstLayout {
   readonly height: number;
 }
 
-/** Calcdata of a sunburst trace. */
+/** Calcdata of a sunburst trace. @experimental */
 export interface SunburstCalc extends HierarchyCalc {
   /** Set by `crossTraceLayout` (`undefined` before the first layout). */
   layout: SunburstLayout | undefined;
@@ -46,7 +49,7 @@ export function calcSunburst(
   return { ...calcHierarchy(trace, ctx, options), layout: undefined };
 }
 
-/** One drawn sector (a disc for the entry). */
+/** One drawn sector (a disc for the entry). @internal */
 export interface Sector {
   readonly node: HierNode;
   /** Levels below the entry. */
@@ -104,7 +107,7 @@ export function sector(
   };
 }
 
-/** What a sunburst draws for its current `level`. */
+/** What a sunburst draws for its current `level`. @internal */
 export interface SunburstGeometry {
   /** The current root (Plotly's entry). */
   readonly entry: HierNode;

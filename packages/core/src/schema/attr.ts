@@ -44,7 +44,7 @@ type Accessor<T, O> = O extends { arrayOk: true }
 /** Shorthand for an attribute whose input and full types are derived from options `O`. */
 type Attr<T, O> = AttrSpec<T | Accessor<T, O>, Full<T, O>>;
 
-/** Options for `number`, `integer` and `angle`. */
+/** Options for `number`, `integer` and `angle`. @experimental */
 export interface NumberOptions extends NodeMeta {
   readonly dflt?: Primitive;
   readonly min?: number;
@@ -56,7 +56,7 @@ export interface NumberOptions extends NodeMeta {
   readonly extras?: readonly Primitive[];
 }
 
-/** Options for `string`. */
+/** Options for `string`. @experimental */
 export interface StringOptions extends NodeMeta {
   readonly dflt?: string;
   readonly arrayOk?: boolean;
@@ -66,13 +66,13 @@ export interface StringOptions extends NodeMeta {
   readonly values?: never;
 }
 
-/** Options for `boolean`. */
+/** Options for `boolean`. @experimental */
 export interface BooleanOptions extends NodeMeta {
   readonly dflt?: boolean;
   readonly arrayOk?: boolean;
 }
 
-/** Options for `enumerated`. */
+/** Options for `enumerated`. @experimental */
 export interface EnumeratedOptions extends NodeMeta {
   readonly values: readonly Primitive[];
   readonly dflt?: Primitive;
@@ -81,7 +81,7 @@ export interface EnumeratedOptions extends NodeMeta {
   readonly accepts?: (value: unknown) => boolean;
 }
 
-/** Options for `flaglist`. */
+/** Options for `flaglist`. @experimental */
 export interface FlaglistOptions extends NodeMeta {
   readonly flags: readonly string[];
   /** Values that stand alone and cannot be combined, e.g. `'none'`, `true`, `false`. */
@@ -90,23 +90,23 @@ export interface FlaglistOptions extends NodeMeta {
   readonly arrayOk?: boolean;
 }
 
-/** Options for `color`. */
+/** Options for `color`. @experimental */
 export interface ColorOptions extends NodeMeta {
   readonly dflt?: string;
   readonly arrayOk?: boolean;
 }
 
-/** Options for `colorlist`. */
+/** Options for `colorlist`. @experimental */
 export interface ColorlistOptions extends NodeMeta {
   readonly dflt?: readonly string[];
 }
 
-/** Options for `colorscale`. */
+/** Options for `colorscale`. @experimental */
 export interface ColorscaleOptions extends NodeMeta {
   readonly dflt?: ColorScale;
 }
 
-/** Options for `subplotId`. */
+/** Options for `subplotId`. @experimental */
 export interface SubplotIdOptions extends NodeMeta {
   /** Base id such as `'x'`, `'y'`, `'scene'`. Ids match `/^base([2-9]|[1-9]\d+)?$/`. */
   readonly dflt: string;
@@ -114,10 +114,10 @@ export interface SubplotIdOptions extends NodeMeta {
   readonly extras?: readonly Primitive[];
 }
 
-/** Options for `dataArray`. */
+/** Options for `dataArray`. @experimental */
 export type DataArrayOptions = NodeMeta;
 
-/** Options for `infoArray`. */
+/** Options for `infoArray`. @experimental */
 export interface InfoArrayOptions extends NodeMeta {
   /** One spec applied to every item, or one spec per position. */
   readonly items: AttrSpec | readonly AttrSpec[];
@@ -126,16 +126,16 @@ export interface InfoArrayOptions extends NodeMeta {
   readonly freeLength?: boolean;
 }
 
-/** Options for `any`. */
+/** Options for `any`. @experimental */
 export interface AnyOptions extends NodeMeta {
   readonly dflt?: unknown;
   readonly arrayOk?: boolean;
 }
 
-/** Options for `fn`. */
+/** Options for `fn`. @experimental */
 export type FunctionOptions = NodeMeta;
 
-/** Options for `items`. */
+/** Options for `items`. @experimental */
 export interface ItemsOptions extends NodeMeta {
   /** Singular item name; the template key `<itemName>defaults` applies to every item. */
   readonly itemName: string;
@@ -157,7 +157,7 @@ type InfoItemsFull<O> = O extends { items: infer I }
     : Exclude<InferFull<I>, undefined>[]
   : unknown[];
 
-/** Children added to every item of an `items` node so templates can target them. */
+/** Children added to every item of an `items` node so templates can target them. @experimental */
 export interface TemplatedItemChildren extends Children {
   readonly name: AttrSpec<string, string | undefined>;
   readonly templateitemname: AttrSpec<string, string | undefined>;
@@ -319,6 +319,7 @@ function items<const C extends Children>(
 /**
  * The schema DSL. Each builder returns a plain, JSON-like object, so schemas can be inspected,
  * merged and serialized to `plot-schema.json`.
+ * @experimental
  */
 export const attr = {
   number,

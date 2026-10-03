@@ -23,10 +23,13 @@ import { getIn, parsePath, stringifyPath, type PathSegment } from '../path/path.
 import { isPlainObject } from '../util/objects.ts';
 import { deepEqual, own } from './equal.ts';
 
-/** What a GUI edit applied to: the layout, or one trace (identified by `uid` when it has one). */
+/**
+ * What a GUI edit applied to: the layout, or one trace (identified by `uid` when it has one).
+ * @internal
+ */
 export type GuiTarget = { kind: 'layout' } | { kind: 'trace'; uid?: string; index: number };
 
-/** One recorded GUI edit. */
+/** One recorded GUI edit. @internal */
 export interface GuiEdit {
   /** The input value before the first GUI edit of this path (`undefined` if it was unset). */
   readonly preGui: unknown;
@@ -37,6 +40,7 @@ export interface GuiEdit {
 /**
  * Recorded GUI edits of one chart. Mutable by design: {@link recordGuiEdit} adds to it and
  * {@link applyUirevision} prunes records that no longer apply.
+ * @internal
  */
 export interface UiState {
   /** Layout edits by normalized attribute path. */
@@ -45,7 +49,7 @@ export interface UiState {
   readonly traces: Map<string, Map<string, GuiEdit>>;
 }
 
-/** An empty {@link UiState} for a new chart. */
+/** An empty {@link UiState} for a new chart. @internal */
 export function createUiState(): UiState {
   return { layout: new Map(), traces: new Map() };
 }
@@ -83,6 +87,7 @@ function findTrace(data: readonly unknown[], key: string): number | undefined {
  * @param preGuiValue - The input value at `path` before the edit (`undefined` if unset).
  * @param guiValue - The value the GUI set.
  * @throws If `path` is not a valid attribute path.
+ * @internal
  */
 export function recordGuiEdit(
   state: UiState,
@@ -162,6 +167,7 @@ function applyEdits(container: unknown, edits: Map<string, GuiEdit>, keep: boole
  * @param prev - The figure currently shown; supplies the old `uirevision` values and the old trace
  * identities.
  * @param next - The figure passed to `react`.
+ * @internal
  */
 export function applyUirevision(prev: AnyFigure, next: AnyFigure, state: UiState): AnyFigure {
   const prevLayout = isPlainObject(prev.layout) ? prev.layout : undefined;

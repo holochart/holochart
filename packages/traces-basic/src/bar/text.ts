@@ -108,6 +108,7 @@ const dirSign = (from: number, to: number): number => (to >= from ? 1 : -1);
  * Decide where one bar's label goes (Plotly's `appendBarText`). `auto` puts the label inside when
  * it fits (as is, rotated, or shrunk to the bar's width) and outside otherwise; only outermost
  * bars may have outside labels. Returns `null` for `none` or an empty label.
+ * @internal
  */
 export function placeBarText(box: BarBox, o: TextPlacementOptions): PlacedText | null {
   let position = o.position;
@@ -238,7 +239,10 @@ export function fontAt(font: unknown, i: number): { font: TextFont; color: RGBA 
   };
 }
 
-/** Axis formatters for label and hover values (hover precision), or `undefined` without axes. */
+/**
+ * Axis formatters for label and hover values (hover precision), or `undefined` without axes.
+ * @internal
+ */
 export interface ValueFormatters {
   readonly position?: (l: number) => string;
   readonly size?: (l: number) => string;
@@ -246,7 +250,7 @@ export interface ValueFormatters {
   readonly locale?: Locale;
 }
 
-/** Hover-precision formatters of the bar's position and size axes. */
+/** Hover-precision formatters of the bar's position and size axes. @internal */
 export function valueFormatters(
   calc: BarCalc,
   xaxis: AxisInfo | undefined,

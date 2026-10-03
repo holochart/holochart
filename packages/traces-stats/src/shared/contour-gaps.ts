@@ -67,6 +67,7 @@ function pass(
  * Fill the non-finite cells of a row-major grid (`z[j·nx + i]`) from their finite neighbours.
  * Returns a new array; the input is not modified. A grid without any finite value is returned
  * unchanged (all NaN).
+ * @internal
  */
 export function fillGaps(z: ArrayLike<number>, nx: number, ny: number): Float64Array {
   const n = nx * ny;

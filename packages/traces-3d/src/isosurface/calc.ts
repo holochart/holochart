@@ -20,6 +20,7 @@ import { emptyIsoGrid, processIsoGrid, type IsoGrid } from './grid.ts';
 type Vec3 = [number, number, number];
 type Container = Record<string, unknown>;
 
+/** @experimental */
 export interface IsoCalc extends SceneCalc {
   readonly grid: IsoGrid;
   /** The value range drawn (Plotly's `_vMin` / `_vMax`); NaN without values. */

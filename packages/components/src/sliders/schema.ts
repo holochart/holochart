@@ -10,7 +10,7 @@ import { padSchema } from '../updatemenus/schema.ts';
 const LAYOUT = ['layout'] as const;
 const DOM = ['modebar'] as const;
 
-/** One step of a slider. */
+/** One step of a slider. @internal */
 export const sliderStepAttributes = {
   visible: attr.boolean({
     dflt: true,
@@ -42,7 +42,7 @@ export const sliderStepAttributes = {
   }),
 } as const;
 
-/** `layout.sliders`. */
+/** `layout.sliders`. @internal */
 export const slidersAttributes = attr.items(
   {
     visible: attr.boolean({
@@ -215,7 +215,7 @@ export interface FullSlider {
   templateitemname?: string;
 }
 
-/** Plotly's slider colors on light papers (`sliders/attributes.js`). */
+/** Plotly's slider colors on light papers (`sliders/attributes.js`). @internal */
 export const SLIDER_LIGHT = {
   bgcolor: '#f8fafc',
   activebgcolor: '#dbdde0',
@@ -227,6 +227,7 @@ export const SLIDER_LIGHT = {
  * Plotly's dependent defaults: steps without `args` are hidden, labels default to `step-<i>` and
  * values to labels, a slider with fewer than two visible steps is hidden, an `active` step that is
  * hidden moves to the first visible one, fonts inherit, colors follow the paper. Idempotent.
+ * @internal
  */
 export function supplySliderDefaults(
   _layoutIn: Readonly<Record<string, unknown>>,

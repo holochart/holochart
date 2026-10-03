@@ -61,7 +61,7 @@ import type { ModebarIcon } from './icons.ts';
 
 // ---- Layout attributes ------------------------------------------------------------------------
 
-/** `layout.modebar` (Plotly-compatible). */
+/** `layout.modebar` (Plotly-compatible). @internal */
 export const modebarLayoutSchema = attr.object(
   {
     orientation: attr.enumerated({
@@ -116,6 +116,7 @@ function withAlpha(css: unknown, alpha: number): string | undefined {
  * `color` / `activecolor` from `layout.font.color` at 0.3 / 0.7. Alphas multiply the source alpha
  * (a transparent paper gives a transparent modebar, where Plotly would give 50% black). Only unset
  * values are filled, so running it twice changes nothing.
+ * @internal
  */
 export function supplyModebarDefaults(
   _layoutIn: Readonly<Record<string, unknown>>,
@@ -203,7 +204,10 @@ function iconElement(doc: Document, icon: ModebarIcon): Element {
 
 // ---- View -------------------------------------------------------------------------------------
 
-/** The parts of a {@link Chart} the modebar uses (the view factory takes this for testability). */
+/**
+ * The parts of a {@link Chart} the modebar uses (the view factory takes this for testability).
+ * @internal
+ */
 export interface ModebarChartLike {
   readonly element: HTMLElement;
   /** The user's input layout (for "Reset axes"). */
@@ -224,10 +228,10 @@ export interface ModebarChartLike {
   downloadImage(options: ModebarDownloadRequest): Promise<unknown>;
 }
 
-/** What the view reads from the component draw context. */
+/** What the view reads from the component draw context. @internal */
 export type ModebarViewContext = Pick<ComponentDrawContext, 'fullLayout' | 'fullData' | 'axes'>;
 
-/** Options of {@link createModebarView}. */
+/** Options of {@link createModebarView}. @internal */
 export interface ModebarViewOptions<Ctx extends ModebarViewContext> {
   /** Retry finding the chart on updates while it is unknown (e.g. created before being attached). */
   readonly locate?: (ctx: Ctx) => ModebarChartLike | undefined;
@@ -235,7 +239,10 @@ export interface ModebarViewOptions<Ctx extends ModebarViewContext> {
   readonly warn?: (message: string) => void;
 }
 
-/** A modebar view; `toolbar` is the mounted toolbar element, if any (for tests and debugging). */
+/**
+ * A modebar view; `toolbar` is the mounted toolbar element, if any (for tests and debugging).
+ * @internal
+ */
 export interface ModebarView<Ctx extends ModebarViewContext> {
   update(ctx: Ctx, plan?: ComponentUpdatePlan): void;
   dispose(): void;
@@ -271,6 +278,7 @@ function hasSelectable(fullData: readonly FullTrace[]): boolean {
  * `update` is cheap: it re-resolves the button set (a few small arrays) and rebuilds the button
  * DOM only when the set changed; otherwise it only refreshes pressed states, orientation and
  * colors. `displayModeBar: false` or `staticPlot: true` removes all DOM.
+ * @internal
  */
 export function createModebarView<Ctx extends ModebarViewContext>(
   initialChart: ModebarChartLike | undefined,

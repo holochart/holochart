@@ -18,7 +18,7 @@
 import type { HierNode } from '../hierarchy/build.ts';
 import type { PartitionCell } from '../hierarchy/levels.ts';
 
-/** `tiling.packing` of treemaps. */
+/** `tiling.packing` of treemaps. @internal */
 export type TreemapPacking = 'squarify' | 'binary' | 'dice' | 'slice' | 'slice-dice' | 'dice-slice';
 
 /** Paddings of a treemap layout, px. */

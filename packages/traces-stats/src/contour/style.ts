@@ -19,7 +19,7 @@ import { recordedZExtent, zColorMapping, type ZColorMapping } from '../histogram
 import { bandValue, contourColorRange, type ContourLevels } from '../shared/contour.ts';
 import { levelsOf } from './field.ts';
 
-/** Whether a trace draws constraint contours. */
+/** Whether a trace draws constraint contours. @internal */
 export function isConstraint(trace: FullTrace): boolean {
   return (trace['contours'] as { type?: unknown } | undefined)?.type === 'constraint';
 }
@@ -65,6 +65,7 @@ export function levelLineColors(
 /**
  * The colorscale of a contour trace: `undefined` for `coloring: 'none'` and constraint contours
  * (lines in `line.color` only). `extent` is the value extent.
+ * @internal
  */
 export function contourMapping(
   trace: FullTrace,
@@ -79,6 +80,7 @@ export function contourMapping(
 /**
  * The `colorbar` hook: bands for `fill` (hard steps at the levels, over the band colors' span
  * widened to the data), a continuous bar for `heatmap` and `lines`, nothing for `none`.
+ * @internal
  */
 export function contourColorbar(trace: FullTrace, fullLayout: FullLayout): ColorbarSpec | null {
   if (trace.visible !== true || isConstraint(trace)) return null;
@@ -144,6 +146,7 @@ function cssStops(mapping: ZColorMapping, a: number, b: number): [number, string
 /**
  * Legend glyph: the line for `coloring: 'none'`, the shaded region with its outline for
  * constraint contours, else a swatch of the colorscale.
+ * @internal
  */
 export function contourLegendIcon(trace: FullTrace, ctx?: LegendIconContext): LegendGlyph {
   const contours = (trace['contours'] ?? {}) as Record<string, unknown>;

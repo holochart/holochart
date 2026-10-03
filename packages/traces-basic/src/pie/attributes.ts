@@ -49,7 +49,7 @@ function textFont(description: string) {
   );
 }
 
-/** The pie schema. */
+/** The pie schema. @experimental */
 // A pure IIFE, so bundles without this trace drop the whole schema: a package ships as one file,
 // where top-level `attr.*()` calls would otherwise look side-effectful (E21.6).
 export const pieAttributes = /* @__PURE__ */ (() =>
@@ -223,7 +223,7 @@ export const pieAttributes = /* @__PURE__ */ (() =>
     { description: 'Pie or donut: slices of a circle proportional to their values.' },
   ))();
 
-/** Layout attributes owned by `pie` (coerced when a pie trace is present). */
+/** Layout attributes owned by `pie` (coerced when a pie trace is present). @internal */
 // A pure IIFE, so bundles without this trace drop the whole schema: a package ships as one file,
 // where top-level `attr.*()` calls would otherwise look side-effectful (E21.6).
 export const pieLayoutAttributes = /* @__PURE__ */ (() =>

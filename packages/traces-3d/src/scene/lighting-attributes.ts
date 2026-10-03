@@ -61,11 +61,11 @@ import { SRGBColorSpace, TextureLoader, type Texture } from 'three';
 type Vec3 = [number, number, number];
 type Container = Record<string, unknown>;
 
-/** Trace types with Plotly `lighting` / `lightposition` attributes. */
+/** Trace types with Plotly `lighting` / `lightposition` attributes. @experimental */
 export type SceneLightingTrace =
   'surface' | 'mesh3d' | 'cone' | 'streamtube' | 'isosurface' | 'volume';
 
-/** Plotly's `lighting` / `lightposition` defaults of one trace type. */
+/** Plotly's `lighting` / `lightposition` defaults of one trace type. @experimental */
 export interface SceneLightingDefaults {
   /** `lighting` defaults; the normal epsilons are declared only when given. */
   readonly lighting: Readonly<Partial<MeshLighting>>;
@@ -82,7 +82,7 @@ const VOLUME_DEFAULTS: SceneLightingDefaults = {
   lightposition: [1e5, 1e5, 0],
 };
 
-/** plotly.js' `lighting` / `lightposition` defaults per trace type. */
+/** plotly.js' `lighting` / `lightposition` defaults per trace type. @internal */
 export const SCENE_LIGHTING_DEFAULTS: Readonly<Record<SceneLightingTrace, SceneLightingDefaults>> =
   {
     surface: { lighting: LIGHTING_BASE, lightposition: [10, 1e4, 0] },
@@ -120,6 +120,7 @@ function lightingCoefficient(
 /**
  * Plotly's `lighting` and `lightposition` trace attributes with the defaults of `defaults` (a
  * trace type of {@link SCENE_LIGHTING_DEFAULTS} or custom defaults). Spread into a trace schema.
+ * @experimental
  */
 export function sceneLightingAttributes(defaults: SceneLightingTrace | SceneLightingDefaults) {
   const d = typeof defaults === 'string' ? SCENE_LIGHTING_DEFAULTS[defaults] : defaults;
@@ -198,7 +199,7 @@ export function sceneLightingAttributes(defaults: SceneLightingTrace | SceneLigh
   };
 }
 
-/** `material.type` values (core's, shared with extruded 2D traces). */
+/** `material.type` values (core's, shared with extruded 2D traces). @internal */
 export const SCENE_MATERIAL_TYPES: readonly MeshMaterialType[] = LIT_MATERIAL_TYPES;
 
 /** Material attribute → three.js material property (only where the names differ). */
@@ -215,6 +216,7 @@ const THREE_PARAM_NAMES: Readonly<Record<string, string>> = {
  * shared with extruded 2D traces. Spread into a trace schema. Unset parameters keep the three.js
  * material's defaults (seeded from Plotly's `lighting`: `roughness`, and `shininess` /
  * `specular` for `phong`).
+ * @experimental
  */
 export const sceneMaterialAttributes = /* @__PURE__ */ (() => ({
   material: litMaterialAttributes(
@@ -222,7 +224,10 @@ export const sceneMaterialAttributes = /* @__PURE__ */ (() => ({
   ),
 }))();
 
-/** Coerce `lighting`, `lightposition` and `material` (call from a 3D trace's `supplyDefaults`). */
+/**
+ * Coerce `lighting`, `lightposition` and `material` (call from a 3D trace's `supplyDefaults`).
+ * @experimental
+ */
 export function supplySceneLightingDefaults(ctx: TraceDefaultsContext): void {
   ctx.coerceContainer('lighting');
   ctx.coerceContainer('lightposition');
@@ -256,7 +261,7 @@ function vec3(v: unknown, fallback: Readonly<Vec3>): Vec3 {
   return [n('x', 0), n('y', 1), n('z', 2)];
 }
 
-/** The material spec of a defaulted trace (null: Plotly's model). */
+/** The material spec of a defaulted trace (null: Plotly's model). @internal */
 export function sceneMaterialSpec(
   trace: Readonly<Container>,
   onTextureLoad?: () => void,
@@ -288,6 +293,7 @@ export function sceneMaterialSpec(
  * The mesh primitive's lighting fields of a defaulted trace: Plotly's `lighting` /
  * `lightposition`, `material` (null for Plotly's model) and the shadow flags. `onTextureLoad` is
  * called when a `material.matcap` image has loaded (request a frame).
+ * @experimental
  */
 export function sceneMeshLighting(
   trace: Readonly<FullTrace | Container>,
@@ -327,7 +333,7 @@ const lightVector = (description: string) =>
     { editType: 'plot', description },
   );
 
-/** `layout.sceneN.lighting` (Holochart extension): the scene's light rig. */
+/** `layout.sceneN.lighting` (Holochart extension): the scene's light rig. @internal */
 export const sceneLightRigAttributes = /* @__PURE__ */ (() =>
   attr.object(
     {
@@ -474,6 +480,7 @@ function rgba(v: unknown): RGBA | undefined {
  * The render `LightingSpec` of a defaulted `scene.lighting` (null when unset), for a scene whose
  * axis box has the aspect ratio `aspect` (scene units; places the ground plane and sizes the
  * shadowed region).
+ * @internal
  */
 export function sceneLightingSpec(
   lighting: unknown,

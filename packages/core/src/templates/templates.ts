@@ -101,6 +101,7 @@ export function resolveTemplate(spec: unknown, source: TemplateSource): Resolved
 
 /**
  * The template trace for the `typeIndex`-th trace of `type`, cycling through the list.
+ * @internal
  */
 export function templateTraceFor(
   template: Template | null,

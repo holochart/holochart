@@ -21,7 +21,10 @@ import { calcHierarchy, type HierarchyCalc, type HierarchyCalcOptions } from '..
 import { findEntry, isLeaf, levelWindow, type PartitionCell } from '../hierarchy/levels.ts';
 import { treemapPartition, type TreemapPacking } from './tiling.ts';
 
-/** Placement of a treemap or icicle in container px (top-left origin), set by `crossTraceLayout`. */
+/**
+ * Placement of a treemap or icicle in container px (top-left origin), set by `crossTraceLayout`.
+ * @experimental
+ */
 export interface RectLayout {
   /** The domain rect. */
   readonly x: number;
@@ -44,7 +47,7 @@ export type CellLayout = (
   cutoff: number,
 ) => PartitionCell[];
 
-/** Calcdata of a treemap or icicle trace. */
+/** Calcdata of a treemap or icicle trace. @experimental */
 export interface RectCalc extends HierarchyCalc {
   /** The trace type's partition. */
   readonly cells: CellLayout;
@@ -52,7 +55,7 @@ export interface RectCalc extends HierarchyCalc {
   layout: RectLayout | undefined;
 }
 
-/** One tile (an icicle cell), px from the domain's top-left corner. */
+/** One tile (an icicle cell), px from the domain's top-left corner. @internal */
 export interface Tile extends PartitionCell {
   /** Below `maxdepth`: collapsed to its center, not drawn. */
   readonly hidden: boolean;
@@ -60,7 +63,10 @@ export interface Tile extends PartitionCell {
   readonly header: boolean;
 }
 
-/** One path bar segment: an ancestor of the entry, px from the domain's top-left corner. */
+/**
+ * One path bar segment: an ancestor of the entry, px from the domain's top-left corner.
+ * @internal
+ */
 export interface Segment {
   readonly node: HierNode;
   readonly x0: number;
@@ -69,7 +75,7 @@ export interface Segment {
   readonly y1: number;
 }
 
-/** What a treemap or icicle draws for its current `level`. */
+/** What a treemap or icicle draws for its current `level`. @internal */
 export interface RectGeometry {
   readonly entry: HierNode;
   /** Levels drawn from the entry (Plotly's `_maxDepth`), `Infinity` without `maxdepth`. */

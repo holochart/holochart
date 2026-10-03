@@ -57,6 +57,7 @@ export const polarHoverinfo = /* @__PURE__ */ (() =>
       "Which fields hover labels show (`r: …`, `θ: …`, the text and the trace name); `'skip'` also turns hover events off for this trace. Default `'all'`.",
   }))();
 
+/** @experimental */
 export const scatterpolarAttributes = /* @__PURE__ */ (() =>
   attr.object(
     {

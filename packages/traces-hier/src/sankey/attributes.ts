@@ -82,7 +82,7 @@ function outline(what: string, color: string, width: number) {
   );
 }
 
-/** The sankey schema. */
+/** The sankey schema. @experimental */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const sankeyAttributes = /* @__PURE__ */ (() =>
   attr.object(

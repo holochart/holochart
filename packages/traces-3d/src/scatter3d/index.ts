@@ -28,7 +28,10 @@ function at(v: unknown, i: number): unknown {
   return Array.isArray(v) || ArrayBuffer.isView(v) ? (v as ArrayLike<unknown>)[i] : v;
 }
 
-/** CSS color of point `i` (hover labels): the marker color (colorscale-mapped), else the line's. */
+/**
+ * CSS color of point `i` (hover labels): the marker color (colorscale-mapped), else the line's.
+ * @internal
+ */
 export function scatter3dPointColor(
   trace: FullTrace,
   i: number,
@@ -84,6 +87,7 @@ function hitPoint(hit: PickResult): number {
 /**
  * The hover point of data point `i` (`undefined` when it has no finite position): what GPU picking
  * found under the pointer, or a stop of keyboard navigation (`../a11y.ts`).
+ * @internal
  */
 export function scatter3dHoverPoint(
   pick: ScenePicks,

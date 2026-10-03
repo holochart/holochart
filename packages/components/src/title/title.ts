@@ -33,7 +33,7 @@ import {
 
 const TITLE_EDIT = ['layout', 'plot'] as const;
 
-/** The `title` container with subtitle, padding and automargin (plan E5.1). */
+/** The `title` container with subtitle, padding and automargin (plan E5.1). @internal */
 export const titleAttributes = attr.object(
   {
     ...layoutSchema.children.title.children,
@@ -91,7 +91,7 @@ interface FullTitle {
 /** Gap between title and subtitle, px. */
 const SUBTITLE_GAP = 2;
 
-/** Resolved title layout: labels in container px and the top-margin push. */
+/** Resolved title layout: labels in container px and the top-margin push. @internal */
 export interface TitleLayout {
   labels: LabelItem[];
   push: MarginPush | undefined;
@@ -130,6 +130,7 @@ function blocks(t: FullTitle, fullLayout: FullLayout, measure: MeasureLine) {
  * left/center/right (top/middle/bottom) by thirds; `y: 'auto'` centers the block in the top
  * margin (or, with `automargin` and `yref: paper`, sets it right above the plot area). `pad`
  * applies on the anchored side.
+ * @internal
  */
 export function titleLayout(
   fullLayout: FullLayout,

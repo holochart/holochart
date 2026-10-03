@@ -48,6 +48,7 @@ import type { ComputeTicks, Scale, Tick } from './types.ts';
 /**
  * Widen a linear range by 0.01% at both ends (keeping its direction), so ticks that land on the
  * range ends despite rounding are kept.
+ * @internal
  */
 export function expandRange(range: readonly [number, number]): [number, number] {
   // Scale before subtracting so ranges near ±Number.MAX_VALUE don't overflow to Infinity.
@@ -80,6 +81,7 @@ function round1(x: number): number {
  * Plotly's `tickIncrement`: the tick after `x` for a step (`reverse` steps backwards). Month
  * steps keep the time of day, `L<f>` steps linearly in data units, `D1`/`D2` go to the next digit.
  * Returns NaN for an unrecognized step.
+ * @internal
  */
 export function tickIncrement(x: number, dtick: Dtick, reverse = false): number {
   const sign = reverse ? -1 : 1;
@@ -110,6 +112,7 @@ function constrain(v: number, lo: number, hi: number): number {
 /**
  * Plotly's `tickFirst`: the first tick at or past the start of `range` (default `scale.range`)
  * for a step and anchor, in linear space. Category ticks stay within the category list.
+ * @internal
  */
 export function tickFirst(
   scale: Scale,
@@ -483,6 +486,7 @@ function hasNear(sorted: readonly number[], v: number, eps: number): boolean {
  * const scale = createScale({ type: 'linear', range: [0, 10], length: 400 });
  * computeTicks(scale, xaxis).map((t) => t.text); // ['0', '2', '4', '6', '8', '10']
  * ```
+ * @internal
  */
 export const computeTicks: ComputeTicks = (scale, axis) => {
   const breaks = scale.breaks;

@@ -6,10 +6,10 @@
  * function; the axis renderer supplies one backed by its glyph metrics.
  */
 
-/** Plotly's line height for multi-line labels, relative to the font size. */
+/** Plotly's line height for multi-line labels, relative to the font size. @internal */
 export const LINE_SPACING = 1.3;
 
-/** Input of {@link layoutTickLabels}. */
+/** Input of {@link layoutTickLabels}. @internal */
 export interface TickLabelLayoutInput {
   /** Label anchor positions along the axis, in px (the tick positions, or `labelL` in px). */
   positions: ArrayLike<number>;
@@ -31,7 +31,7 @@ export interface TickLabelLayoutInput {
   autoskip?: boolean;
 }
 
-/** Result of {@link layoutTickLabels}. */
+/** Result of {@link layoutTickLabels}. @internal */
 export interface TickLabelLayout {
   /** Rotation in degrees (clockwise, as `tickangle`). */
   angle: number;
@@ -48,6 +48,7 @@ function stripTags(line: string): string {
 /**
  * Distance along the axis two identical `w × h` label boxes rotated by `angle` need so they do
  * not overlap: translated boxes stay apart when separated along either box edge direction.
+ * @internal
  */
 export function requiredLabelSpacing(
   w: number,
@@ -72,6 +73,7 @@ export function requiredLabelSpacing(
  * fit the smallest spacing between neighbours wins (the most compact one if none fits). Then, if
  * labels still overlap and `autoskip` is on, only every k-th non-empty label is kept, with k the
  * smallest stride that fits (the first label is always kept).
+ * @internal
  */
 export function layoutTickLabels(input: TickLabelLayoutInput): TickLabelLayout {
   const { positions, texts, measure, fontSize, axisLetter } = input;

@@ -24,7 +24,7 @@ import { axisHoverText, dataValue, zText } from './hover.ts';
 /** Plotly's `LINE_SPACING`: line advance as a multiple of the font size. */
 const LINE_SPACING = 1.3;
 
-/** One label before its size is known. */
+/** One label before its size is known. @internal */
 export interface CellText {
   readonly text: string;
   readonly x: number;
@@ -101,7 +101,10 @@ export function cellTexts(
   return out;
 }
 
-/** What {@link autoCellFontSize} reads of a grid: its size and cell edges (linear coordinates). */
+/**
+ * What {@link autoCellFontSize} reads of a grid: its size and cell edges (linear coordinates).
+ * @internal
+ */
 export interface CellTextGrid {
   readonly nx: number;
   readonly ny: number;
@@ -113,6 +116,7 @@ export interface CellTextGrid {
  * Plotly's automatic cell-label size: the smallest cell (in px, less the gaps), divided by the
  * widest label's characters (× half the line spacing) and by its lines (× the line spacing),
  * capped at `layout.font.size`. 0 when labels cannot fit.
+ * @internal
  */
 export function autoCellFontSize(
   calc: CellTextGrid,
@@ -145,7 +149,7 @@ export function autoCellFontSize(
   return size > 0 && Number.isFinite(size) ? size : 0;
 }
 
-/** Render labels for a size: centered on each cell. */
+/** Render labels for a size: centered on each cell. @internal */
 export function cellLabels(texts: readonly CellText[], font: TextFont): TextLabel[] {
   return texts.map((t) => ({
     text: t.text,

@@ -29,6 +29,7 @@ import { hasMarkers, hasText, isBubble } from './defaults.ts';
 /**
  * A stacked trace's cross-trace calc (E9.4), written by `crossTraceCalc`: the `x` / `y` of the
  * calc then hold each point's stacked position.
+ * @experimental
  */
 export interface ScatterStack {
   /** The coordinates calc produced, before stacking (so a rerun restacks from scratch). */
@@ -45,7 +46,10 @@ export interface ScatterStack {
   readonly normalized: boolean;
 }
 
-/** A trace's place among the scatter traces of its subplot (E9.4), set by `crossTraceCalc`. */
+/**
+ * A trace's place among the scatter traces of its subplot (E9.4), set by `crossTraceCalc`.
+ * @experimental
+ */
 export interface ScatterLink {
   /** The trace a `tonext*` fill fills to: the previous one in the same `stackgroup` (or none). */
   readonly previous?: {
@@ -57,7 +61,10 @@ export interface ScatterLink {
   readonly first: boolean;
 }
 
-/** Scatter calcdata: linear coordinates per point (`NaN` where a point cannot be placed). */
+/**
+ * Scatter calcdata: linear coordinates per point (`NaN` where a point cannot be placed).
+ * @experimental
+ */
 export interface ScatterCalc {
   /** Per-point linear coordinates; stacked positions once `crossTraceCalc` stacked the trace. */
   x: Float64Array;

@@ -88,7 +88,10 @@ function parseDtype(dtype: string): ParsedDtype | undefined {
   return ctor === undefined ? undefined : { ctor, bigEndian: c === '>' };
 }
 
-/** The {@link Dtype} for a typed array. `Uint8ClampedArray` is `'u1c'` (plotly.js reads it). */
+/**
+ * The {@link Dtype} for a typed array. `Uint8ClampedArray` is `'u1c'` (plotly.js reads it).
+ * @internal
+ */
 export function dtypeOf(arr: TypedArray): Dtype {
   if (arr instanceof Float64Array) return 'f8';
   if (arr instanceof Float32Array) return 'f4';
@@ -105,6 +108,7 @@ export function dtypeOf(arr: TypedArray): Dtype {
  * True for an object shaped like a {@link TypedArraySpec} with a known dtype: a plain object with a
  * string `dtype`, a string or `ArrayBuffer` `bdata`, and an optional string/number/array `shape`.
  * Specs with dtypes neither Holochart nor plotly.js knows (e.g. numpy's `'i8'`) are not specs.
+ * @internal
  */
 export function isTypedArraySpec(v: unknown): v is TypedArraySpec {
   if (!isPlainObject(v)) return false;
@@ -230,6 +234,7 @@ export function littleEndianBytes(
  * ```ts
  * encodeTypedArray(Float64Array.of(1, 2)); // { dtype: 'f8', bdata: 'AAAAAAAA8D8AAAAAAAAAQA==' }
  * ```
+ * @experimental
  */
 export function encodeTypedArray(arr: TypedArray): EncodedTypedArray {
   return { dtype: dtypeOf(arr), bdata: bytesToBase64(littleEndianBytes(arr)) };
@@ -239,6 +244,7 @@ export function encodeTypedArray(arr: TypedArray): EncodedTypedArray {
  * Encode equal-length rows of one typed array type as a single 2D spec with `shape: 'rows,cols'`
  * (row-major). Returns `undefined` when the rows are empty, ragged or of mixed types; callers then
  * encode each row on its own.
+ * @internal
  */
 export function encodeTypedMatrix(rows: readonly unknown[]): EncodedTypedArray | undefined {
   const first = rows[0];
@@ -286,6 +292,7 @@ function parseShape(shape: TypedArraySpec['shape']): number[] | undefined {
  * decodeTypedArray({ dtype: 'f8', bdata: 'AAAAAAAA8D8AAAAAAAAAQA==' }); // Float64Array [1, 2]
  * decodeTypedArray({ dtype: '<i1', bdata: '/w==' });                  // Int8Array [-1]
  * ```
+ * @experimental
  */
 export function decodeTypedArray(
   spec: TypedArraySpec,

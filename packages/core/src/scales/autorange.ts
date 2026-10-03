@@ -24,10 +24,10 @@ import type { AxisExtremes, Autorange, ExtremePoint, Scale } from './types.ts';
 /** Plotly's `FP_SAFE`: data beyond this magnitude is treated as junk (it would overflow pads). */
 const FP_SAFE = Number.MAX_VALUE * 1e-4;
 
-/** A padding given once for all points, or per point (index-aligned with the data). */
+/** A padding given once for all points, or per point (index-aligned with the data). @internal */
 export type PadInput = number | ArrayLike<number>;
 
-/** Options of {@link findExtremes} (Plotly's `findExtremes` opts). */
+/** Options of {@link findExtremes} (Plotly's `findExtremes` opts). @internal */
 export interface FindExtremesOptions {
   /** Pixel padding on both sides of every point (e.g. marker radius). */
   ppad?: PadInput;
@@ -123,6 +123,7 @@ function collapse(
  * const ext = findExtremes(scale, [3, 1, 4], { ppad: 6, padded: true }); // markers
  * const range = autorange([ext], scale, axis);
  * ```
+ * @internal
  */
 export function findExtremes(
   scale: Scale,
@@ -206,6 +207,7 @@ export function findExtremes(
  * Merge the extremes of several traces into one collapsed pair of lists (Plotly's
  * `concatExtremes`). Traces flagged `tozero` add an unpadded 0 on linear scales. Non-finite points
  * are dropped.
+ * @internal
  */
 export function concatExtremes(
   extremes: readonly AxisExtremes[],
@@ -323,6 +325,7 @@ function defaultRange(scale: Scale, id: unknown): [number, number] {
  *   date axes (reversed when requested).
  *
  * The result is always finite with `r0 !== r1`.
+ * @internal
  */
 export const autorange: Autorange = (extremes, scale, axis) => {
   const a: AxisView = axis as unknown as AxisView;

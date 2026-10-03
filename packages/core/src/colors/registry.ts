@@ -146,6 +146,7 @@ export function colorscaleNames(): string[] {
 /**
  * Changes whenever the colorscale registry changes, so caches of resolved scales (e.g. the render
  * stops in traces) can tell when to drop entries.
+ * @internal
  */
 export function colorscaleRegistryVersion(): number {
   return version;

@@ -21,7 +21,10 @@ export interface ContourGrid {
   ny: number;
 }
 
-/** A contour polyline in fractional index (or, after conversion, data) coordinates. */
+/**
+ * A contour polyline in fractional index (or, after conversion, data) coordinates.
+ * @experimental
+ */
 export interface ContourPath {
   x: Float64Array;
   y: Float64Array;

@@ -35,13 +35,19 @@ import {
 /** A point relative to the funnel's center, container px (y down). */
 export type Corner = readonly [number, number];
 
-/** One stage: pie's slice (angles unused) plus its trapezoid, set by the cross-trace layout. */
+/**
+ * One stage: pie's slice (angles unused) plus its trapezoid, set by the cross-trace layout.
+ * @experimental
+ */
 export interface FunnelareaSlice extends PieSlice {
   /** Top-left, top-right, bottom-right and bottom-left corners (the top edge is wider). */
   corners: { tl: Corner; tr: Corner; br: Corner; bl: Corner } | undefined;
 }
 
-/** Funnelarea calcdata: pie-shaped (so pie's labels and hover read it) plus the stage shapes. */
+/**
+ * Funnelarea calcdata: pie-shaped (so pie's labels and hover read it) plus the stage shapes.
+ * @experimental
+ */
 export interface FunnelareaCalc extends PieCalc {
   readonly slices: FunnelareaSlice[];
   /** Half the funnel's height (Plotly's `r` after `setCoords`); `layout.r` is half its width. */

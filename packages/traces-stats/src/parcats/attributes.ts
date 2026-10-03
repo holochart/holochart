@@ -55,7 +55,7 @@ function dimension() {
   );
 }
 
-/** The parcats schema. */
+/** The parcats schema. @experimental */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const parcatsAttributes = /* @__PURE__ */ (() =>
   attr.object(

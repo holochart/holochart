@@ -140,7 +140,7 @@ function block(which: 'header' | 'cells', height: number) {
   );
 }
 
-/** The table schema. */
+/** The table schema. @experimental */
 // A pure IIFE, so bundles without this trace drop the whole schema: a package ships as one file,
 // where top-level `attr.*()` calls would otherwise look side-effectful (E21.6).
 export const tableAttributes = /* @__PURE__ */ (() =>

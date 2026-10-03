@@ -61,6 +61,7 @@ export const LINE_HEIGHT = 1.2;
 const TAU = Math.PI * 2;
 
 export type PieTextPosition = 'inside' | 'outside' | 'auto' | 'none';
+/** @internal */
 export type InsideOrientation = 'horizontal' | 'radial' | 'tangential' | 'auto';
 
 /** A text block size in px (unrotated, unscaled). */
@@ -71,7 +72,10 @@ export interface TextBox {
 
 // ---- Content ------------------------------------------------------------------------------------
 
-/** Template variables of a slice (also hover fields): Plotly's `makeTemplateVariables`. */
+/**
+ * Template variables of a slice (also hover fields): Plotly's `makeTemplateVariables`.
+ * @internal
+ */
 export function sliceValues(
   trace: FullTrace,
   calc: PieCalc,
@@ -93,6 +97,7 @@ export function sliceValues(
 /**
  * Formatted `value` and `percent` (Plotly's `valueLabel` / `percentLabel`), with the chart's
  * separators (`locale`, plan E17.6; default en-US).
+ * @internal
  */
 export function sliceLabels(
   calc: PieCalc,
@@ -109,6 +114,7 @@ export function sliceLabels(
 /**
  * The label of a slice (Plotly's `formatSliceLabel`), in pseudo-HTML: `texttemplate` when set,
  * else the `textinfo` parts (label, text, value, percent) joined with `<br>`.
+ * @internal
  */
 export function sliceText(
   trace: FullTrace,
@@ -194,6 +200,7 @@ export interface LabelFont {
 /**
  * Font of an inside label (Plotly's `determineInsideTextFont`): `insidetextfont`, then `textfont`,
  * then `layout.font`; the color contrasts with the slice unless one was set.
+ * @internal
  */
 export function insideFont(trace: FullTrace, slice: PieSlice, fullLayout: FullLayout): LabelFont {
   const fonts = [
@@ -246,7 +253,7 @@ export function titleBlockSize(trace: FullTrace, text: string): TextBox {
 
 // ---- Inside text (Plotly's transformInsideText) -------------------------------------------------
 
-/** Where a label goes relative to its slice (Plotly's text transform). */
+/** Where a label goes relative to its slice (Plotly's text transform). @internal */
 export interface SliceTextTransform {
   /** Font scale, ≤ 1 when shrunk to fit (0 = not drawn). */
   scale: number;
@@ -262,7 +269,7 @@ export interface SliceTextTransform {
   outside?: boolean;
 }
 
-/** The slice geometry inside-text placement needs. */
+/** The slice geometry inside-text placement needs. @internal */
 export interface SliceShape {
   readonly startAngle: number;
   readonly stopAngle: number;
@@ -331,6 +338,7 @@ function calcTanTransform(
  * `transformInsideText`): horizontal text inscribed in the slice's inscribed circle, radial or
  * tangential text as large as the ring allows; `auto` takes the largest. A scale < 1 means the
  * label must shrink to fit.
+ * @internal
  */
 export function transformInsideText(
   box: TextBox,

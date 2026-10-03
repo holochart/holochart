@@ -95,7 +95,10 @@ export const modebarIcons = {
   dot: icon('M12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10z'),
 } as const satisfies Readonly<Record<string, ModebarIcon>>;
 
-/** Whether `value` is a usable {@link ModebarIcon} (custom icons come from untyped config). */
+/**
+ * Whether `value` is a usable {@link ModebarIcon} (custom icons come from untyped config).
+ * @internal
+ */
 export function isModebarIcon(value: unknown): value is ModebarIcon {
   if (value === null || typeof value !== 'object') return false;
   const rec = value as Record<string, unknown>;

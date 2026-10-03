@@ -10,10 +10,11 @@
 /**
  * One constraint group (`fullLayout._axisConstraintGroups` item): axis id → ratio. A string ratio
  * has one `x`/`y` prefix per plot-aspect factor (cross-letter links), resolved with the plot size.
+ * @internal
  */
 export type ConstraintGroup = Readonly<Record<string, number | string>>;
 
-/** The state of one axis that {@link enforceConstraints} reads. */
+/** The state of one axis that {@link enforceConstraints} reads. @internal */
 export interface ConstraintAxisState {
   /** Linear range in use ([r0, r1], r0 > r1 when reversed). */
   range: readonly [number, number];
@@ -30,13 +31,16 @@ export interface ConstraintAxisState {
   shrinkable?: boolean;
 }
 
-/** Output of {@link enforceConstraints}: only the ranges and domains that changed. */
+/** Output of {@link enforceConstraints}: only the ranges and domains that changed. @internal */
 export interface ConstraintResult {
   ranges: Map<string, [number, number]>;
   domains: Map<string, [number, number]>;
 }
 
-/** Fraction along an axis (from its left / bottom end) of each `constraintoward` value. */
+/**
+ * Fraction along an axis (from its left / bottom end) of each `constraintoward` value.
+ * @internal
+ */
 export const FROM_BL: Readonly<Record<string, number>> = Object.freeze({
   left: 0,
   center: 0.5,
@@ -54,6 +58,7 @@ const PREFIX = /^[xy]*/;
 /**
  * Plotly `scaleZoom`: scale `range` by `factor` (> 1 zooms out) about the point at
  * `centerFraction` of the way from `range[0]` to `range[1]`.
+ * @internal
  */
 export function scaleZoom(
   range: readonly [number, number],
@@ -116,6 +121,7 @@ function shrinkDomain(
  * again) — and Plotly's re-padding of autoranged `domain`-constrained axes (which recomputes the
  * autorange padding for the shrunk domain) is not done. Axes missing from `axes`, and axes with an
  * empty range, zero length or a non-positive ratio, are ignored.
+ * @internal
  */
 export function enforceConstraints(
   groups: readonly ConstraintGroup[],

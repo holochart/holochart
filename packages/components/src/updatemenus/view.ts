@@ -35,19 +35,20 @@ import {
 } from './layout.ts';
 import type { FullUpdatemenu, FullUpdatemenuButton } from './schema.ts';
 
-/** The parts of a `Chart` the menus use. */
+/** The parts of a `Chart` the menus use. @internal */
 export interface UpdatemenusChartLike extends CommandChart {
   readonly element: HTMLElement;
   relayout(update: Readonly<Record<string, unknown>>, options?: { gui?: boolean }): unknown;
   emit(type: 'buttonclicked', payload: ButtonClickedEvent): unknown;
 }
 
-/** What the view reads from the draw context. */
+/** What the view reads from the draw context. @internal */
 export type UpdatemenusViewContext = Pick<
   ComponentDrawContext,
   'fullLayout' | 'fullData' | 'plotArea' | 'width' | 'height'
 >;
 
+/** @internal */
 export interface UpdatemenusViewOptions<Ctx extends UpdatemenusViewContext> {
   /** Find the chart later (a context without one at creation). */
   readonly locate?: (ctx: Ctx) => UpdatemenusChartLike | undefined;
@@ -56,6 +57,7 @@ export interface UpdatemenusViewOptions<Ctx extends UpdatemenusViewContext> {
   readonly measure?: MeasureLine;
 }
 
+/** @internal */
 export interface UpdatemenusView<Ctx extends UpdatemenusViewContext> {
   update(ctx: Ctx, plan?: ComponentUpdatePlan): void;
   dispose(): void;

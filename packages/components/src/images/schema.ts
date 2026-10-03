@@ -8,7 +8,7 @@ import { attr, type FullLayout } from '@mk7s/holochart-core';
 const REF =
   "`'paper'` (0–1 across the plot area), an axis id (`'x'`, `'x2'`: that axis' range units, so exponents on log axes) or `'<axis> domain'` (0–1 across that axis' domain).";
 
-/** One image. */
+/** One image. @internal */
 export const imageItemAttributes = {
   visible: attr.boolean({ dflt: true, description: 'Draw this image.' }),
   source: attr.string({
@@ -46,14 +46,14 @@ export const imageItemAttributes = {
   yref: attr.string({ dflt: 'paper', description: `Reference of \`y\` and \`sizey\`: ${REF}` }),
 } as const;
 
-/** `layout.images`. */
+/** `layout.images`. @internal */
 export const imagesAttributes = attr.items(imageItemAttributes, {
   itemName: 'image',
   editType: ['plot'],
   description: 'Pictures placed on the figure: logos, backgrounds (plan E5.6).',
 });
 
-/** A defaulted layout image. */
+/** A defaulted layout image. @internal */
 export interface FullLayoutImage {
   _index: number;
   visible: boolean;
@@ -71,7 +71,7 @@ export interface FullLayoutImage {
   yref: string;
 }
 
-/** Images without a `source` are hidden (Plotly). Idempotent. */
+/** Images without a `source` are hidden (Plotly). Idempotent. @internal */
 export function supplyImageDefaults(layoutOut: FullLayout): void {
   const list = layoutOut['images'];
   if (!Array.isArray(list)) return;

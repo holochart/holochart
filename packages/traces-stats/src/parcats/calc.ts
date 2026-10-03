@@ -45,7 +45,7 @@ export interface ParcatsPath {
   readonly valueInds: readonly number[];
 }
 
-/** Calcdata of a parcats trace. */
+/** Calcdata of a parcats trace. @experimental */
 export interface ParcatsCalc {
   readonly dimensions: readonly ParcatsDimension[];
   readonly paths: readonly ParcatsPath[];

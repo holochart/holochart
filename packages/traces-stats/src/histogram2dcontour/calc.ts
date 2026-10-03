@@ -11,7 +11,7 @@ import { binSamples2d, emptyHistogram2dCalc, type Histogram2dCalc } from '../his
 import { recordZExtent } from '../histogram2d/colorscale.ts';
 import { fillGaps } from '../shared/contour.ts';
 
-/** histogram2dcontour calcdata: the 2D histogram plus its contours. */
+/** histogram2dcontour calcdata: the 2D histogram plus its contours. @experimental */
 export interface Histogram2dContourCalc extends Histogram2dCalc, ContourField {}
 
 /** Contour a binned grid (empty bins filled from their neighbors first). */

@@ -12,7 +12,10 @@ const TRACE_PACKAGES: Readonly<Record<string, string>> = {
   '3d': 'scatter3d surface mesh3d cone bar3d streamtube isosurface volume',
 };
 
-/** The npm package that exports the trace module of `type`, or undefined for an unknown type. */
+/**
+ * The npm package that exports the trace module of `type`, or undefined for an unknown type.
+ * @internal
+ */
 export function tracePackage(type: string): string | undefined {
   for (const [name, types] of Object.entries(TRACE_PACKAGES)) {
     if (types.split(' ').includes(type)) return `@mk7s/holochart-traces-${name}`;

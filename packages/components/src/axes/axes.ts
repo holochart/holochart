@@ -59,7 +59,7 @@ interface SubplotBatches {
   dashes: Map<string, DashBatch>;
 }
 
-/** Everything the axes draw for the current layout, in container px. */
+/** Everything the axes draw for the current layout, in container px. @internal */
 export interface AxesScene {
   /** Lines, ticks and dividers drawn above traces. */
   over: RectItem[];
@@ -82,6 +82,7 @@ function inside(r: RectItem, rect: { x: number; y: number; width: number; height
  * per subplot the grid of both its axes, then zero lines, then in-plot items of `below traces`
  * axes. A subplot on an `overlaying` axis gets none: its items go to its main subplot's (see
  * {@link mainSubplots}), in axis order within each of the three groups.
+ * @internal
  */
 export function buildAxesScene(
   ctx: Pick<

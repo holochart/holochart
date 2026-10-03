@@ -38,7 +38,7 @@ import { recordZExtent } from './colorscale.ts';
 /** More cells than this are not drawn (a warning is logged): 16.7 M, a 4096² grid. */
 export const MAX_CELLS = 4096 * 4096;
 
-/** One binned direction. */
+/** One binned direction. @experimental */
 export interface Histogram2dAxisBins {
   readonly count: number;
   /** `count + 1` edges, linear coordinates (log10 on log axes), ascending. */
@@ -58,7 +58,7 @@ export interface Histogram2dAxisBins {
   readonly uniform: boolean;
 }
 
-/** histogram2d calcdata. */
+/** histogram2d calcdata. @experimental */
 export interface Histogram2dCalc {
   readonly x: Histogram2dAxisBins;
   readonly y: Histogram2dAxisBins;

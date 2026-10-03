@@ -10,6 +10,7 @@ import { deepMerge } from '../util/objects.ts';
 /**
  * Pattern shapes `config.a11y.patterns` hands out, in order: neighbours differ in direction or
  * texture, so two adjacent traces (or slices) never get mirror-image hatches.
+ * @internal
  */
 export const A11Y_PATTERN_SHAPES = ['/', '.', '\\', 'x', '-', '+', '|'] as const;
 
@@ -74,6 +75,7 @@ export type ReducedMotion = 'auto' | boolean;
  * for objects built by hand) whether the user prefers reduced motion (`prefers-reduced-motion:
  * reduce` in `view`, default the global window). Transitions, drill-down tweens and slider glides
  * check it.
+ * @internal
  */
 export function reducedMotion(owner: unknown, view?: Window | null): boolean {
   const setting = (owner as { _reducedMotion?: ReducedMotion } | null | undefined)?._reducedMotion;

@@ -35,7 +35,7 @@ import { sceneFor, type Scene3D } from './scene.ts';
 
 type Container = Record<string, unknown>;
 
-/** A trace's GPU hits under the pointer (see {@link scenePicks}). */
+/** A trace's GPU hits under the pointer (see {@link scenePicks}). @internal */
 export interface ScenePicks {
   readonly scene: Scene3D;
   /** This trace's hits within the pick radius, nearest first (`pointIndex` per pickable). */
@@ -46,6 +46,7 @@ export interface ScenePicks {
 /**
  * The hits of `trace` under the pointer, or `undefined` when there are none, the pointer is not
  * over the trace's scene, or the scene's `hovermode` is `false`.
+ * @internal
  */
 export function scenePicks(
   trace: FullTrace,
@@ -65,7 +66,7 @@ export function scenePicks(
   return hits ? { scene, hits, query } : undefined;
 }
 
-/** What a 3D trace reports for its hovered point (see {@link sceneHoverPoint}). */
+/** What a 3D trace reports for its hovered point (see {@link sceneHoverPoint}). @internal */
 export interface SceneHoverSpec {
   readonly pointIndex: number;
   /** Linear coordinates of the hovered position (label anchor, spikes, labels). */
@@ -99,7 +100,10 @@ function perPoint(v: unknown, i: number, cell?: readonly [number, number]): unkn
   return (v as ArrayLike<unknown>)[i];
 }
 
-/** A scene axis value as hover text: the axis' `hoverformat` or `format`, dates and categories. */
+/**
+ * A scene axis value as hover text: the axis' `hoverformat` or `format`, dates and categories.
+ * @internal
+ */
 export function sceneAxisHoverText(axis: SceneAxis, l: number, format?: unknown): string {
   if (!Number.isFinite(l)) return '';
   const full =
@@ -121,6 +125,7 @@ function hoverFlags(info: unknown): Set<string> {
  * The label text of a 3D point without `hovertemplate` (Plotly's `loneHover` for gl3d): `x: …`,
  * `y: …`, `z: …` lines for the flags `hoverinfo` sets (`(x, y)` when `z` is off), then the
  * point's `text`, then `extra` lines.
+ * @internal
  */
 export function sceneHoverText(
   labels: { readonly x: string; readonly y: string; readonly z: string },
@@ -149,6 +154,7 @@ export function sceneHoverText(
  * The runtime hover point of a 3D trace's hovered position: the label anchored at its
  * projection (overlay px), `x` / `y` / `z` values and labels, the label text per `hoverinfo`,
  * and the spikes' world position recorded for the scene component.
+ * @internal
  */
 export function sceneHoverPoint(
   pick: ScenePicks,

@@ -52,6 +52,7 @@ const ALL_FLAGS = 'label+text+value+percent+name';
 /**
  * Hover label text from `hoverinfo` flags (Plotly's pie hover): label, text (`hovertext`, else
  * `text`), value and percent, one per line. The `name` flag is the runtime's.
+ * @internal
  */
 export function pieHoverText(
   trace: FullTrace,

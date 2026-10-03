@@ -26,13 +26,13 @@ import { createLatestQueue, type Chart, type LatestQueue } from '@mk7s/holochart
 import type { Vec3 } from './camera.ts';
 import type { Scene3D } from './scene.ts';
 
-/** Pick radius of 3D hover in CSS px (gl-plot3d's `pickRadius`). */
+/** Pick radius of 3D hover in CSS px (gl-plot3d's `pickRadius`). @internal */
 export const SCENE_PICK_RADIUS = 10;
 
 /** How long the camera must rest before a hover hidden by its motion comes back, ms. */
 export const REST_MS = 150;
 
-/** Options of {@link registerScenePickable}. */
+/** Options of {@link registerScenePickable}. @internal */
 export interface ScenePickableOptions {
   /** What a generic mesh's pick ids count (see render's `MeshPickElement`); primitives ignore it. */
   readonly element?: MeshPickElement;
@@ -236,6 +236,7 @@ export function scenePicking(scene: Scene3D): ScenePicking {
  * `Object3D` whose meshes are picked) hoverable as trace `traceIndex` in `scene`. Call it when the
  * view creates the object and whenever the trace index may have changed (every update is fine);
  * {@link unregisterScenePickable} when the object goes.
+ * @internal
  */
 export function registerScenePickable(
   scene: Scene3D,
@@ -249,12 +250,13 @@ export function registerScenePickable(
 /**
  * What `scene` draws changed (a view's data, style or layout update): hover picks again instead of
  * reusing ids picked from the old drawing. Call it from every view update that changes geometry.
+ * @internal
  */
 export function invalidateScenePicks(scene: Scene3D): void {
   STATES.get(scene)?.invalidate();
 }
 
-/** Stop picking `target` in `scene`. */
+/** Stop picking `target` in `scene`. @internal */
 export function unregisterScenePickable(scene: Scene3D, target: PickTarget): void {
   STATES.get(scene)?.unregister(target);
 }

@@ -34,7 +34,10 @@ export function supplyHistogram2dLayoutDefaults(
   supplyZColoraxisDefaults(layoutIn, layoutOut, ctx);
 }
 
-/** Legend glyph (only shown with `showlegend: true`): a swatch of the colorscale's middle. */
+/**
+ * Legend glyph (only shown with `showlegend: true`): a swatch of the colorscale's middle.
+ * @internal
+ */
 export function heatmapLegendIcon(trace: FullTrace, ctx?: LegendIconContext): LegendGlyph {
   const stops = ctx ? cssStops(zColorMapping(trace, ctx.fullLayout, [0, 1])) : [];
   const mid = stops[Math.floor(stops.length / 2)]?.[1] ?? '#888';

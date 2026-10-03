@@ -49,14 +49,17 @@ const CSS = `
 
 // ---- View -------------------------------------------------------------------------------------
 
-/** The parts of a `Chart` the range selector uses (the view factory takes this for testability). */
+/**
+ * The parts of a `Chart` the range selector uses (the view factory takes this for testability).
+ * @internal
+ */
 export interface RangeselectorChartLike {
   readonly element: HTMLElement;
   readonly fullConfig: { readonly staticPlot?: unknown } | undefined;
   relayout(update: Record<string, unknown>, options?: { gui?: boolean }): Promise<unknown>;
 }
 
-/** The parts of an `AxisInfo` the view reads. */
+/** The parts of an `AxisInfo` the view reads. @internal */
 export interface RangeselectorViewAxis extends RangeselectorAxisLike {
   readonly id: string;
   readonly letter: 'x' | 'y';
@@ -67,14 +70,14 @@ export interface RangeselectorViewAxis extends RangeselectorAxisLike {
   };
 }
 
-/** What the view reads from the component draw context. */
+/** What the view reads from the component draw context. @internal */
 export interface RangeselectorViewContext {
   readonly axes: ReadonlyMap<string, RangeselectorViewAxis>;
   readonly plotArea: Readonly<ViewportRect>;
   readonly fullConfig?: { readonly staticPlot?: unknown } | undefined;
 }
 
-/** Options of {@link createRangeselectorView}. */
+/** Options of {@link createRangeselectorView}. @internal */
 export interface RangeselectorViewOptions<Ctx extends RangeselectorViewContext> {
   /** Retry finding the chart on updates while it is unknown. */
   readonly locate?: (ctx: Ctx) => RangeselectorChartLike | undefined;
@@ -82,7 +85,10 @@ export interface RangeselectorViewOptions<Ctx extends RangeselectorViewContext> 
   readonly measure?: MeasureLine;
 }
 
-/** A range selector view; `groups` are the mounted per-axis groups by axis id (for tests). */
+/**
+ * A range selector view; `groups` are the mounted per-axis groups by axis id (for tests).
+ * @internal
+ */
 export interface RangeselectorView<Ctx extends RangeselectorViewContext> {
   update(ctx: Ctx, plan?: ComponentUpdatePlan): void;
   dispose(): void;

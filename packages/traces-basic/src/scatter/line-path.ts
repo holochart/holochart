@@ -29,7 +29,7 @@ export interface LinePath {
   readonly decimated: boolean;
 }
 
-/** Options for {@link buildLinePath}. */
+/** Options for {@link buildLinePath}. @internal */
 export interface LinePathOptions {
   shape: LineShape;
   /** Plotly `line.smoothing` (0–1.3), spline only. */
@@ -113,6 +113,7 @@ export function sanitizeScale(s: number): number {
  * Runs of finite points (split at non-finite points unless `connectgaps`) are shaped
  * independently and joined with one NaN vertex. A single-point run is emitted as-is (the line
  * primitive draws nothing for it). O(n) time; no per-point object allocation.
+ * @internal
  */
 export function buildLinePath(
   x: ArrayLike<number>,

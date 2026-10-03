@@ -46,7 +46,7 @@ import {
 import { alignmentKey, BAR_ALIGNMENT_KEY, positionAxisId } from './defaults.ts';
 import { outsideTextPadding } from './text.ts';
 
-/** Bar calcdata. Index-aligned typed arrays, one entry per bar. */
+/** Bar calcdata. Index-aligned typed arrays, one entry per bar. @experimental */
 export interface BarCalc {
   readonly length: number;
   readonly orientation: 'v' | 'h';
@@ -267,6 +267,7 @@ function applyLayout(calc: BarCalc, bars: StackOutput, trace: FullTrace): void {
 /**
  * Bar calc: positions and sizes on the trace's axes, laid out as if the trace were alone
  * (`crossTraceCalc` then lays out all bars of the subplot together).
+ * @internal
  */
 export function calcBar(trace: FullTrace, ctx: CalcContext): BarCalc {
   const length = typeof trace['_length'] === 'number' ? trace['_length'] : 0;
@@ -304,6 +305,7 @@ export function calcBar(trace: FullTrace, ctx: CalcContext): BarCalc {
  * comes from `crossTraceCalc`): fills `bars`, `s0`/`s1`, `ends` and the error bars. For trace
  * types that build a {@link BarCalc} themselves (histogram), with `pos`, `size`, `base`,
  * `hasBase`, `sizeType` and `posType` set.
+ * @internal
  */
 export function layoutBarCalc(calc: BarCalc, trace: FullTrace, ctx: CalcContext): void {
   const options = stackOptions(
@@ -368,6 +370,7 @@ function withErrorBars(extremes: AxisExtremes, bars: ErrorBarCalc | undefined): 
  * bar calcdata: on the position axis, each bar's category index and its own size after
  * cross-trace calc (`barnorm`-normalized, not the stacked top, so `total` adds every trace of a
  * stack). A category size axis contributes nothing.
+ * @internal
  */
 export function barCategoryValues(
   calc: BarCalc,
@@ -378,7 +381,10 @@ export function barCategoryValues(
   return { index: calc.pos, value: calc.bars.value };
 }
 
-/** Autorange extremes: full position slots (unpadded), bar ends including zero, error bars. */
+/**
+ * Autorange extremes: full position slots (unpadded), bar ends including zero, error bars.
+ * @internal
+ */
 export function barExtremes(calc: BarCalc, trace: FullTrace, ctx: CalcContext): TraceExtremes {
   const sa = barAxes(calc.orientation, ctx.xaxis, ctx.yaxis)[1];
   const { posMin, posMax } = calc.bars;

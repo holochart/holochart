@@ -112,6 +112,7 @@ function sampleDistinct(a: ArrayLike<unknown>): unknown[] {
  * - more than twice as many categories (non-numeric strings, booleans) as numbers → `category`
  *   (with `autotypenumbers: 'strict'`, numeric strings are categories too);
  * - otherwise `linear` (typed arrays always are).
+ * @internal
  */
 export function autoType(values: unknown, opts: AutoTypeOptions = {}): DetectedAxisType {
   // Typed arrays can only hold numbers.

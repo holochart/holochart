@@ -8,7 +8,7 @@
  */
 import { color as d3color } from 'd3-color';
 
-/** sRGB 0–1 RGBA, alpha not premultiplied — the render layer's color format. */
+/** sRGB 0–1 RGBA, alpha not premultiplied — the render layer's color format. @experimental */
 export type RGBA = readonly [r: number, g: number, b: number, a: number];
 
 const CACHE_LIMIT = 1024;
@@ -25,6 +25,7 @@ function remember<V>(cache: Map<string, V>, key: string, value: V): V {
 /**
  * Parse any CSS color and return its canonical `rgb()`/`rgba()` string, or `null` if `value` is
  * not a valid color. `'transparent'` becomes `rgba(0, 0, 0, 0)`.
+ * @experimental
  */
 export function canonicalColor(value: unknown): string | null {
   if (typeof value !== 'string') return null;
@@ -34,7 +35,7 @@ export function canonicalColor(value: unknown): string | null {
   return remember(canonicalCache, value, c ? c.rgb().formatRgb() : null);
 }
 
-/** True if `value` is a string d3-color can parse. */
+/** True if `value` is a string d3-color can parse. @experimental */
 export function isValidColor(value: unknown): value is string {
   return canonicalColor(value) !== null;
 }
@@ -42,6 +43,7 @@ export function isValidColor(value: unknown): value is string {
 /**
  * Convert a CSS color to sRGB 0–1 RGBA floats for the renderer, or `null` if invalid.
  * Results are cached and frozen, so callers must not mutate them.
+ * @experimental
  */
 export function toRGBA(value: string): RGBA | null {
   const hit = rgbaCache.get(value);
@@ -63,6 +65,7 @@ export function toRGBA(value: string): RGBA | null {
 /**
  * Pack a list of CSS colors into a `Float32Array` of `4 * n` sRGB 0–1 floats (the render layer's
  * per-item color format). Invalid entries use `fallback`.
+ * @experimental
  */
 export function toRGBAArray(
   colors: ArrayLike<unknown>,

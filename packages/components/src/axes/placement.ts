@@ -5,10 +5,10 @@
 import type { ViewportRect } from '@mk7s/holochart-render';
 import type { AxisFrame, AxisLike, MirrorFrame } from './geometry.ts';
 
-/** Which figure margin an axis reaches into, when it sits on the plot-area edge. */
+/** Which figure margin an axis reaches into, when it sits on the plot-area edge. @internal */
 export type MarginSide = 'l' | 'r' | 't' | 'b';
 
-/** A subplot as far as placement is concerned. */
+/** A subplot as far as placement is concerned. @internal */
 export interface SubplotLike {
   readonly id: string;
   readonly xaxis: AxisLike;
@@ -16,7 +16,7 @@ export interface SubplotLike {
   readonly rect: Readonly<ViewportRect>;
 }
 
-/** Resolved placement of one axis. */
+/** Resolved placement of one axis. @internal */
 export interface AxisPlacement {
   frame: AxisFrame;
   mirrors: MirrorFrame[];
@@ -46,6 +46,7 @@ function sideOf(axis: AxisLike): 'bottom' | 'top' | 'left' | 'right' {
  * The margin an axis grows into, from domains only (so it can be decided before layout, in
  * `pushMargin`): an anchored axis whose counter axis' domain reaches the matching plot-area edge,
  * or a free axis at `position` 0 or 1 on its side.
+ * @internal
  */
 export function axisMarginSide(
   axis: AxisLike,
@@ -76,7 +77,7 @@ export function axisMarginSide(
   }
 }
 
-/** Whether `automargin` lets an axis on `side` grow that margin. */
+/** Whether `automargin` lets an axis on `side` grow that margin. @internal */
 export function automarginAllows(automargin: unknown, side: MarginSide): boolean {
   if (automargin === true) return true;
   if (typeof automargin !== 'string' || automargin === '') return false;
@@ -89,6 +90,7 @@ export function automarginAllows(automargin: unknown, side: MarginSide): boolean
 /**
  * Resolve the frame and mirrors of `axis`. `subplots` are the cartesian subplots (for
  * `mirror: 'all' | 'allticks'`), `area` the plot area and `pad` the figure's `margin.pad`.
+ * @internal
  */
 export function axisPlacement(
   axis: AxisLike,

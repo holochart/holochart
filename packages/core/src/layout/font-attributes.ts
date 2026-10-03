@@ -32,6 +32,7 @@ const SHADOW_DESCRIPTION =
  * A default font size scaled from another (`layout.title.font`: 1.4 × `layout.font.size`), rounded
  * like Plotly. Font sizes have no maximum, so the product can overflow: it is capped at the
  * largest finite number, keeping the default a valid size (and the full output valid input).
+ * @internal
  */
 export function scaledFontSize(size: number, factor: number): number {
   return Math.min(Math.round(size * factor), Number.MAX_VALUE);

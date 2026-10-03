@@ -10,6 +10,7 @@ import { polarCoordinateAttributes, polarHoverinfo } from '../scatterpolar/attri
 
 const B = barAttributes.children;
 
+/** @experimental */
 export const barpolarAttributes = /* @__PURE__ */ (() => {
   const { cornerradius: _, ...marker } = B.marker.children;
   return attr.object(

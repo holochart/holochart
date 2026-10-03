@@ -3,7 +3,7 @@ import { attr } from '../schema/attr.ts';
 import type { AttrSpec } from '../schema/types.ts';
 import type { StyleRule } from '../style/types.ts';
 
-/** Attributes every trace has. */
+/** Attributes every trace has. @experimental */
 export const commonTraceAttributes = {
   type: attr.string({
     noBlank: true,
@@ -199,7 +199,7 @@ export const commonTraceAttributes = {
   }) as AttrSpec<readonly StyleRule[], readonly StyleRule[] | undefined>,
 } as const;
 
-/** Attributes added to traces in the `cartesian` category. */
+/** Attributes added to traces in the `cartesian` category. @experimental */
 export const cartesianTraceAttributes = {
   xaxis: attr.subplotId({
     dflt: 'x',
@@ -220,6 +220,7 @@ export const cartesianTraceAttributes = {
  * pie, and later sunburst, treemap, funnelarea, indicator, … are placed by a fraction of the plot
  * area instead of axes. `row` / `column` pick a `layout.grid` cell, which then gives the default
  * `x` / `y`; without a grid they are dropped.
+ * @experimental
  */
 export const domainTraceAttributes = {
   domain: attr.object(

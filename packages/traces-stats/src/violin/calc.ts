@@ -25,7 +25,7 @@ import {
 } from '../box/calc.ts';
 import { kdeBandwidth, kdeGrid, kdeSpan, type SpanMode } from '../shared/stats.ts';
 
-/** Violin calcdata: box calcdata plus the density of each violin. */
+/** Violin calcdata: box calcdata plus the density of each violin. @experimental */
 export interface ViolinCalc extends BoxCalc {
   /** KDE bandwidth per violin (calc space). */
   readonly bandwidth: Float64Array;

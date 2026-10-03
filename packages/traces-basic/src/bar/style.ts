@@ -27,7 +27,7 @@ interface SelectionStyle {
   textfont?: { color?: unknown };
 }
 
-/** Per-bar style buffers in the render layer's formats (sRGB 0–1, straight alpha). */
+/** Per-bar style buffers in the render layer's formats (sRGB 0–1, straight alpha). @internal */
 export interface BarStyle {
   /** Fill per bar, 4 floats each, with marker opacity and selection applied. */
   readonly fill: Float32Array;
@@ -87,6 +87,7 @@ export function selectionSet(selected: readonly number[] | null | undefined): Se
  * Style buffers for `count` bars. With an active selection (`selected` not null), selected bars use
  * `selected.marker.*` and the others `unselected.marker.*`, dimmed to 0.2× their opacity by
  * default (Plotly). `fullLayout` resolves `coloraxis` references.
+ * @internal
  */
 export function barStyle(
   trace: FullTrace,

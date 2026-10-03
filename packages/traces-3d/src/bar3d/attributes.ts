@@ -50,7 +50,7 @@ function hoverformat(letter: string) {
   });
 }
 
-/** The bar3d schema. */
+/** The bar3d schema. @experimental */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const bar3dAttributes = /* @__PURE__ */ (() =>
   attr.object(

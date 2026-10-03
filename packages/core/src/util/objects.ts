@@ -1,6 +1,9 @@
 /** Small object helpers shared by the defaults, templates and diffing code. */
 
-/** A plain object (`{}` literal or `Object.create(null)`), not an array, class instance or null. */
+/**
+ * A plain object (`{}` literal or `Object.create(null)`), not an array, class instance or null.
+ * @internal
+ */
 export function isPlainObject(v: unknown): v is Record<string, unknown> {
   if (typeof v !== 'object' || v === null) return false;
   const proto = Object.getPrototypeOf(v) as unknown;
@@ -10,6 +13,7 @@ export function isPlainObject(v: unknown): v is Record<string, unknown> {
 /**
  * Recursively merge plain objects; `b` wins. Arrays and other values are replaced, not merged.
  * Returns new objects along merged paths; never mutates the inputs.
+ * @internal
  */
 export function deepMerge(a: unknown, b: unknown): unknown {
   if (b === undefined) return a;
@@ -22,6 +26,7 @@ export function deepMerge(a: unknown, b: unknown): unknown {
 /**
  * Deep copy of `v` without keys starting with `_` (internal back-references such as `_index`,
  * `_input`, `_subplots`). Data arrays and typed arrays are kept by reference.
+ * @internal
  */
 export function stripInternal(v: unknown): unknown {
   if (Array.isArray(v)) return v.map(stripInternal);

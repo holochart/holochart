@@ -27,6 +27,7 @@ import {
 /**
  * Histogram calcdata: a bar calc with one bar per kept bin (empty bins at both ends are dropped,
  * as in Plotly), plus what hover, selection and the description need.
+ * @experimental
  */
 export interface HistogramCalc extends BarCalc {
   /** The bins used (calc space of the position axis). */

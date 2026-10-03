@@ -24,7 +24,7 @@ export interface ErrorBar3d {
   readonly count: number;
 }
 
-/** What `scatter3d`'s calc produces. */
+/** What `scatter3d`'s calc produces. @experimental */
 export interface Scatter3dCalc extends SceneCalc {
   /** Point count (`_length`). */
   readonly length: number;

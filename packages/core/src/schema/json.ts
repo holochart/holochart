@@ -51,6 +51,7 @@ function jsonValue(v: unknown): unknown {
  * Convert a schema node to JSON. Leaves keep their `valType` and constraints; containers become
  * `{ role: 'object', ...meta, <children> }` and item arrays `{ role: 'items', itemName, items }`,
  * mirroring Plotly's plot-schema layout so existing tooling can read it.
+ * @experimental
  */
 export function schemaToJSON(node: SchemaNode): JSONSchemaNode {
   const out: JSONSchemaNode = {};

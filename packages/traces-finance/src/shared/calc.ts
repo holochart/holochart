@@ -25,6 +25,7 @@ import {
 /**
  * Where the bars of a trace sit around their positions, in x linear units. `ohlc` and
  * `candlestick` fill it from their own cross-trace calc.
+ * @experimental
  */
 export interface PriceSlot {
   /** Half the smallest spacing of positions (Plotly's `dPos`): autorange padding on x. */
@@ -37,7 +38,10 @@ export interface PriceSlot {
   readonly wHover: number;
 }
 
-/** Calcdata of an `ohlc` or `candlestick` trace. Index-aligned with the data (`length`). */
+/**
+ * Calcdata of an `ohlc` or `candlestick` trace. Index-aligned with the data (`length`).
+ * @experimental
+ */
 export interface PriceCalc {
   readonly length: number;
   /** Linear x positions after period alignment. */

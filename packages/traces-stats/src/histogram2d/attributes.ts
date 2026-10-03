@@ -134,7 +134,10 @@ export function histogram2dSampleAttributes() {
   } as const;
 }
 
-/** Cell-label font: `size` and `color` default to `'auto'` (fitted size, contrasting color). */
+/**
+ * Cell-label font: `size` and `color` default to `'auto'` (fitted size, contrasting color).
+ * @internal
+ */
 export const cellTextFont = /* @__PURE__ */ (() =>
   attr.object(
     {
@@ -172,7 +175,10 @@ export const cellTextFont = /* @__PURE__ */ (() =>
     { editType: 'plot', description: 'Font of the cell labels (`texttemplate`).' },
   ))();
 
-/** The histogram2d schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core. */
+/**
+ * The histogram2d schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core.
+ * @experimental
+ */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const histogram2dAttributes = /* @__PURE__ */ (() =>
   attr.object(

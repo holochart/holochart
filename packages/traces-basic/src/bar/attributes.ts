@@ -123,7 +123,10 @@ function selectionStyle(which: 'selected' | 'unselected') {
   );
 }
 
-/** The bar schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core. */
+/**
+ * The bar schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core.
+ * @experimental
+ */
 // A pure IIFE, so bundles without this trace drop the whole schema: a package ships as one file,
 // where top-level `attr.*()` calls would otherwise look side-effectful (E21.6).
 export const barAttributes = /* @__PURE__ */ (() =>
@@ -299,7 +302,7 @@ export const barAttributes = /* @__PURE__ */ (() =>
     { description: 'Bar: rectangles from a base to a value, vertical or horizontal.' },
   ))();
 
-/** Layout attributes owned by `bar` (coerced when a bar trace is present). */
+/** Layout attributes owned by `bar` (coerced when a bar trace is present). @internal */
 // A pure IIFE, so bundles without this trace drop the whole schema: a package ships as one file,
 // where top-level `attr.*()` calls would otherwise look side-effectful (E21.6).
 export const barLayoutAttributes = /* @__PURE__ */ (() =>

@@ -11,12 +11,16 @@
 import { DEFAULT_COLORWAY, DEFAULT_FONT_FAMILY } from '../layout/schema.ts';
 import type { Template } from './templates.ts';
 
-/** Name of the template the runtime's shared registry applies when `layout.template` is unset. */
+/**
+ * Name of the template the runtime's shared registry applies when `layout.template` is unset.
+ * @internal
+ */
 export const DEFAULT_TEMPLATE_NAME = 'holochart';
 
 /**
  * Font family of the default look. Charts draw it with the first family that is registered
  * (`fonts.register`) and otherwise with the renderer's bundled default font.
+ * @experimental
  */
 export const HOLOCHART_FONT_FAMILY = "'Helvetica Neue', Helvetica, Arial, sans-serif";
 
@@ -24,6 +28,7 @@ export const HOLOCHART_FONT_FAMILY = "'Helvetica Neue', Helvetica, Arial, sans-s
  * Colorway of the default look: saturated mid-luminance hues, ordered so neighbours differ in hue
  * (red, blue, indigo, emerald, orange, teal, gold, magenta), each legible as a 1.25 px line on
  * the `#0a0a0f` background.
+ * @experimental
  */
 export const HOLOCHART_COLORWAY = [
   '#ea2a37',

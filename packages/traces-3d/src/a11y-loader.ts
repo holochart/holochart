@@ -39,5 +39,8 @@ export const sceneKit = [
   traceNameText,
 ] as const;
 
-/** `TraceModule.a11y` of the 3D traces: their scene's view keys and their descriptions. */
+/**
+ * `TraceModule.a11y` of the 3D traces: their scene's view keys and their descriptions.
+ * @experimental
+ */
 export const sceneA11y = /* @__PURE__ */ lazyA11y('scene', ...sceneKit);

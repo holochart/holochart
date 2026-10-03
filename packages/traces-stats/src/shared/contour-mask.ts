@@ -19,7 +19,7 @@ import { marchingSquares, type ContourGrid, type ContourPath } from './contour-m
 /** Plotly's mask level: the boundary sits this far from an empty point towards a present one. */
 export const MASK_LEVEL = 0.9;
 
-/** The presence field of a grid: 1 where `z` is finite, 0 where it is empty. */
+/** The presence field of a grid: 1 where `z` is finite, 0 where it is empty. @internal */
 export function presenceField(z: ArrayLike<number>, n = z.length): Float64Array {
   const out = new Float64Array(n);
   for (let k = 0; k < n; k++) out[k] = Number.isFinite(z[k]) ? 1 : 0;

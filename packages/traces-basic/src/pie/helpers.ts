@@ -44,6 +44,7 @@ export function numSeparate(value: string, separators = '.,'): string {
  * formatPiePercent(1 / 3); // '33.3%'
  * formatPiePercent(0.5); // '50%'
  * ```
+ * @internal
  */
 export function formatPiePercent(v: number, separators?: string): string {
   return `${numSeparate(trimZeros((v * 100).toPrecision(3)), separators)}%`;
@@ -52,6 +53,7 @@ export function formatPiePercent(v: number, separators?: string): string {
 /**
  * A slice value with 10 significant digits, trailing zeros dropped (Plotly's `formatPieValue`),
  * written with `separators` (`layout.separators`, default `'.,'`).
+ * @internal
  */
 export function formatPieValue(v: number, separators?: string): string {
   return numSeparate(trimZeros(v.toPrecision(10)), separators);
@@ -75,6 +77,7 @@ export function getFirstFilled(array: unknown, indices: readonly number[]): unkn
 /**
  * A scalar-or-array attribute for an aggregated slice (Plotly's `castOption`): the first filled
  * array entry among the slice's data indices, or the scalar when truthy.
+ * @internal
  */
 export function castOption(item: unknown, indices: readonly number[]): unknown {
   if (isArrayLike(item)) return getFirstFilled(item, indices);
@@ -85,6 +88,7 @@ export function castOption(item: unknown, indices: readonly number[]): unknown {
  * A slice's `marker.pattern` (render's `PatternAttributes`): array attributes cast to the slice's
  * value (Plotly's `castOption`), and the background defaulting to `paper` (Plotly) unless the
  * pattern overlays the slice color. `undefined` without a shape.
+ * @internal
  */
 export function slicePattern(
   pattern: unknown,
@@ -192,6 +196,7 @@ const cache = new Map<string, readonly string[]>();
 /**
  * A colorway followed by every color 20% lighter, then every color 20% darker (Plotly's
  * `generateExtendedColors`, `extendpiecolors`). Cached per colorway.
+ * @internal
  */
 export function extendColors(colors: readonly string[]): readonly string[] {
   const key = JSON.stringify(colors);

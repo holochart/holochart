@@ -47,7 +47,10 @@ function coordinateType(letter: 'x' | 'y') {
   });
 }
 
-/** The heatmap schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core. */
+/**
+ * The heatmap schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core.
+ * @experimental
+ */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const heatmapAttributes = /* @__PURE__ */ (() =>
   attr.object(

@@ -14,7 +14,7 @@ import {
 } from '../hierarchy/attributes.ts';
 import { pathbarAttributes, tileTextposition } from '../treemap/attributes.ts';
 
-/** The icicle schema. */
+/** The icicle schema. @experimental */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const icicleAttributes = /* @__PURE__ */ (() =>
   attr.object(
@@ -56,6 +56,6 @@ export const icicleAttributes = /* @__PURE__ */ (() =>
     },
   ))();
 
-/** Layout attributes owned by `icicle` (coerced when an icicle trace is present). */
+/** Layout attributes owned by `icicle` (coerced when an icicle trace is present). @internal */
 // Pure IIFE: see above.
 export const icicleLayoutAttributes = /* @__PURE__ */ (() => hierarchyLayoutAttributes('icicle'))();

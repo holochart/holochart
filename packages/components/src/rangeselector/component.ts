@@ -10,7 +10,10 @@ import { oracleMeasure, type MeasureLine } from '../shared/text.ts';
 import { rangeselectorMarginPush, readRangeselector } from './layout.ts';
 import type { RangeselectorViewAxis } from './rangeselector.ts';
 
-/** Margin pushes of every x axis with a visible range selector (Plotly's `autoMargin`). */
+/**
+ * Margin pushes of every x axis with a visible range selector (Plotly's `autoMargin`).
+ * @internal
+ */
 export function rangeselectorMarginPushes(
   ctx: Pick<ComponentDrawContext, 'fullLayout' | 'width' | 'height'> & {
     readonly axes: ReadonlyMap<string, Pick<RangeselectorViewAxis, 'letter' | 'full'>>;

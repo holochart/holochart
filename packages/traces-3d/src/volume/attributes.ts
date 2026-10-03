@@ -8,7 +8,7 @@
 import { attr } from '@mk7s/holochart-core';
 import { isoAttributes } from '../isosurface/attributes.ts';
 
-/** The volume schema. */
+/** The volume schema. @experimental */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const volumeAttributes = /* @__PURE__ */ (() =>
   attr.object(

@@ -18,10 +18,10 @@
 import type { FullLayout } from '../defaults/types.ts';
 import { parsePath, stringifyPath } from '../path/path.ts';
 
-/** An axis type between which layout coordinates convert. */
+/** An axis type between which layout coordinates convert. @internal */
 export type ConvertibleAxisType = 'linear' | 'log';
 
-/** A range as a pair of finite numbers, in the units of the axis' current type. */
+/** A range as a pair of finite numbers, in the units of the axis' current type. @internal */
 export type AxisRangePair = readonly [number, number];
 
 /** Plotly's `isNumeric`: finite numbers and numeric strings. */
@@ -42,6 +42,7 @@ function numeric(v: unknown): number | undefined {
  * @param val - The linear value.
  * @param range - The axis' current range, in linear units.
  * @returns The log10 coordinate (may be non-finite when neither `val` nor `range` is positive).
+ * @internal
  */
 export function toLogRange(val: number, range: AxisRangePair): number {
   if (val > 0) return Math.log10(val);
@@ -62,6 +63,7 @@ export function toLogRange(val: number, range: AxisRangePair): number {
  * log).
  * @returns The converted coordinate, or `null` when it is not numeric (so it resets to its
  * default, as in Plotly).
+ * @internal
  */
 export function convertAxisCoord(
   value: unknown,
@@ -90,6 +92,7 @@ export function convertAxisCoord(
  * @param range - The axis' current range, in `from` units.
  * @returns The new position and size; `pos: null` (and `size: null`) when the position does not
  * convert, `size: null` alone when only the size does not.
+ * @internal
  */
 export function convertAxisSize(
   pos: unknown,
@@ -192,6 +195,7 @@ function rangePair(v: unknown): AxisRangePair | undefined {
  * @param fullLayout - The full layout before the update, if the chart has been drawn.
  * @returns `update` itself without a type edit, else a copy with the implied edits added
  * (`'yaxis.range': [0, 3]`, `'annotations[2].y': 1.5`, `'images[0].sizex': null`, …).
+ * @internal
  */
 export function axisTypeChangeEdits(
   update: Readonly<Record<string, unknown>>,

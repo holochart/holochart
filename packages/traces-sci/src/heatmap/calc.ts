@@ -51,7 +51,7 @@ import { isColumnZ } from './defaults.ts';
 /** More cells than this are not drawn (a warning is logged): 16.7 M, a 4096² grid. */
 export const MAX_CELLS = 4096 * 4096;
 
-/** One axis of the grid. */
+/** One axis of the grid. @experimental */
 export interface HeatmapAxisCells {
   /** Cell count. */
   readonly count: number;
@@ -71,7 +71,7 @@ export interface HeatmapAxisCells {
   readonly type: AxisType;
 }
 
-/** heatmap calcdata. */
+/** heatmap calcdata. @experimental */
 export interface HeatmapCalc {
   readonly x: HeatmapAxisCells;
   readonly y: HeatmapAxisCells;

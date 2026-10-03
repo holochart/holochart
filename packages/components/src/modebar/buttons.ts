@@ -17,7 +17,7 @@ import { warnOnce } from '@mk7s/holochart-core';
 import type { Chart, DrawDragmode } from '@mk7s/holochart-runtime';
 import { isModebarIcon, modebarIcons, type ModebarIcon } from './icons.ts';
 
-/** Built-in button names this modebar implements (Plotly names). */
+/** Built-in button names this modebar implements (Plotly names). @internal */
 export const MODEBAR_BUILTIN_BUTTONS = [
   'toImage',
   'zoom2d',
@@ -39,12 +39,13 @@ export const MODEBAR_BUILTIN_BUTTONS = [
   'eraseshape',
 ] as const;
 
-/** A built-in modebar button name. */
+/** A built-in modebar button name. @internal */
 export type ModebarBuiltinName = (typeof MODEBAR_BUILTIN_BUTTONS)[number];
 
 /**
  * How a button behaves: `action` buttons fire once; `dragmode`/`hovermode` buttons select a mode
  * (radio-like, shown pressed while their mode is active); `toggle` buttons flip a state.
+ * @internal
  */
 export type ModebarButtonKind = 'action' | 'dragmode' | 'hovermode' | 'toggle';
 
@@ -61,6 +62,7 @@ export type ModebarButtonKind = 'action' | 'dragmode' | 'hovermode' | 'toggle';
  *   },
  * });
  * ```
+ * @internal
  */
 export interface ModebarCustomButton {
   /** Identifies the button (`modeBarButtonsToRemove` matches it, case-insensitively). */
@@ -79,6 +81,7 @@ export interface ModebarCustomButton {
  * supply-defaults. It acts like a custom button, but its title is a Plotly dictionary key (it is
  * translated), `modeBarButtonsToRemove` / `layout.modebar.remove` match its `name` or one of its
  * lower-case `aliases`, and `pressed` gives its pressed state.
+ * @internal
  */
 export interface ModebarSubplotButton extends ModebarCustomButton {
   readonly title: string;
@@ -86,7 +89,7 @@ export interface ModebarSubplotButton extends ModebarCustomButton {
   pressed?(fullLayout: Readonly<Record<string, unknown>>): boolean;
 }
 
-/** One resolved button. */
+/** One resolved button. @internal */
 export interface ModebarButton {
   readonly name: string;
   /** Tooltip and accessible name (Plotly's titles for built-ins). */
@@ -105,10 +108,10 @@ export interface ModebarButton {
   readonly hovermode?: 'closest' | 'x';
 }
 
-/** A visually separated run of buttons. */
+/** A visually separated run of buttons. @internal */
 export type ModebarButtonGroup = readonly ModebarButton[];
 
-/** Inputs of {@link resolveModebarButtons}. */
+/** Inputs of {@link resolveModebarButtons}. @internal */
 export interface ModebarResolveInput {
   /** The (full) config: `modeBarButtonsToRemove`, `modeBarButtonsToAdd`. */
   readonly config?:
@@ -197,7 +200,7 @@ const BUILTINS: Readonly<Record<ModebarBuiltinName, BuiltinSpec>> = {
   eraseshape: { title: 'Erase active shape', icon: modebarIcons.eraseShape, kind: 'action' },
 };
 
-/** Build the descriptor of a built-in button. */
+/** Build the descriptor of a built-in button. @internal */
 export function modebarBuiltinButton(name: ModebarBuiltinName): ModebarButton {
   return { name, builtin: name, ...BUILTINS[name] };
 }
@@ -317,6 +320,7 @@ function customButton(button: ModebarCustomButton): ModebarButton {
  *   selectable traces. Cartesian buttons are ignored on figures without cartesian axes.
  * - Custom button objects from `config.modeBarButtonsToAdd` form their own last group.
  * - Unknown names are ignored, with one warning per name.
+ * @internal
  */
 export function resolveModebarButtons(input: ModebarResolveInput): ModebarButtonGroup[] {
   const warn = input.warn;
@@ -425,7 +429,7 @@ export function resolveModebarButtons(input: ModebarResolveInput): ModebarButton
   return groups.filter((g) => g.length > 0);
 }
 
-/** The state that decides which mode and toggle buttons are pressed. */
+/** The state that decides which mode and toggle buttons are pressed. @internal */
 export interface ModebarActiveState {
   /** `fullLayout.dragmode`. */
   readonly dragmode?: unknown;
@@ -439,6 +443,7 @@ export interface ModebarActiveState {
  * Whether `button` is pressed (active), or `undefined` for buttons without a pressed state
  * (plain actions and custom buttons). The compare button is active for every "points at the same
  * x/y" hovermode, unified or not.
+ * @internal
  */
 export function modebarButtonActive(
   button: ModebarButton,
@@ -465,6 +470,7 @@ export function modebarButtonActive(
 /**
  * A string identifying a button set (names in group order), to skip DOM rebuilds when nothing
  * changed. Custom buttons are prefixed so a custom `'zoom2d'` differs from the built-in one.
+ * @internal
  */
 export function modebarButtonsKey(groups: readonly ModebarButtonGroup[]): string {
   return groups

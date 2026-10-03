@@ -6,7 +6,7 @@
 import { attr, fontSchema } from '@mk7s/holochart-core';
 import { CONSTRAINT_OPERATIONS } from '../shared/contour-constraint.ts';
 
-/** The contour attributes (spread into a trace schema). */
+/** The contour attributes (spread into a trace schema). @internal */
 export function contourAttributes() {
   return {
     autocontour: attr.boolean({
