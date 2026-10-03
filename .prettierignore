@@ -11,5 +11,8 @@ apps/docs/reference/attributes
 apps/docs/reference/api
 apps/docs/public/plot-schema.json
 
+# API reports, written by API Extractor (api-reports/README.md)
+api-reports/*.api.md
+
 # Upstream plotly.py templates, kept byte-identical (see its README)
 packages/themes/src/__fixtures__/plotly-py/*.json

@@ -52,6 +52,8 @@ Run everything from the repository root.
 | `pnpm test:visual:report`  | Summarize the last visual run: pixelmatch vs exact diffs       |
 | `pnpm test:bundle`         | Build `@mk7s/holochart` and smoke-test its IIFE in Chromium    |
 | `pnpm size`                | Build packages and check bundle-size budgets (size-limit)      |
+| `pnpm api:report`          | Build packages and regenerate the API reports (`api-reports/`) |
+| `pnpm api:check`           | Build packages and fail if an API report is out of date        |
 | `pnpm changeset`           | Add a changeset for a user-facing change                       |
 | `pnpm lint`                | Run ESLint                                                     |
 | `pnpm format`              | Format the repo with Prettier                                  |
@@ -87,6 +89,7 @@ tools/           Internal tooling (schema-gen, ...)
 deploy/          Docs proxy for mk7s.dev (Cloudflare)
 docs/adr/        Architecture Decision Records
 docs/release/    Versioning policy, bundle size, release process, docs hosting
+api-reports/     Exports and stability tags of every package, generated (pnpm api:report)
 plan.md          The project plan
 ```
 
@@ -218,6 +221,20 @@ docker run --rm -v "$PWD":/work -w /work mcr.microsoft.com/playwright:v1.63.0-no
   [ADR-014](docs/adr/014-glsl-as-typescript-template-modules.md).
 - Attributes are declared once in the schema; types, validation, defaults, and docs derive from it.
   Do not hand-write parallel types for schema attributes.
+
+### Public API and stability tags
+
+Everything a package exports from `src/index.ts` is public API, and stable unless its TSDoc says
+otherwise ([docs/release/versioning.md](docs/release/versioning.md#stability-tags)):
+
+- `@experimental`: plugin-facing or provisional exports that may still change in a minor release.
+- `@internal`: stripped from the published declarations. Do not use it on something another
+  package imports.
+
+The exports of every package and their tags are recorded in `api-reports/`. If your change adds,
+removes or changes an export, run `pnpm api:report` and commit the updated reports with it; CI
+fails when they are out of date. Read the diff first: it is the list of what you are about to
+make public. See [api-reports/README.md](api-reports/README.md).
 
 ### GPU-native primitives
 

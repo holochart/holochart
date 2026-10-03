@@ -79,11 +79,18 @@ and the separate `tsc --emitDeclarationOnly` step.
   mixing three objects from another copy on the page breaks `instanceof` checks (documented in
   `packages/holochart/README.md`).
 - rolldown ships native binaries (optional per-platform dependencies), like esbuild did for tsup.
+- The bundled declarations are not byte-reproducible (found with the API reports, backlog S2.13):
+  where a type is inferred (the attribute schemas), the members of a union come out in an order
+  that changes between two builds of the same sources (`"h" | "v"` or `"v" | "h"`). The types are
+  equivalent; `tools/api-report` sorts union members so its reports are stable.
 
 ### Follow-ups
 
 - Optional: api-extractor on top of the bundled `.d.ts` for API reports (E21.1), and
   `publint` / `@arethetypeswrong/core` (both tsdown integrations) before the first publish (E21.3).
+  Done: API Extractor reads each bundled `dist/index.d.ts` and writes `api-reports/`
+  (`tools/api-report`, backlog S2.13); its bundled TypeScript 5.9 only has to parse declarations.
+  publint and attw run on the packed tarballs (`tests/package/lint.ts`, backlog S1.3).
 - A size budget for the IIFE once real traces land (E23).
 - If a per-trace or "lite" IIFE is needed, add entries to `packages/holochart/tsdown.config.ts`
   (the 3D add-on is the pattern for add-on scripts that share the main script's instances).

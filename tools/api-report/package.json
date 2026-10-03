@@ -1,0 +1,17 @@
+{
+  "name": "@mk7s/holochart-api-report",
+  "private": true,
+  "type": "module",
+  "description": "API reports of the published packages (backlog S2.13): API Extractor over each built dist/index.d.ts, written to api-reports/.",
+  "scripts": {
+    "report": "node src/cli.ts",
+    "check": "node src/cli.ts --check",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@microsoft/api-extractor": "~7.59.3",
+    "@types/node": "^26.6.2",
+    "diff": "^8.0.4",
+    "typescript": "catalog:"
+  }
+}

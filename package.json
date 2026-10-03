@@ -31,6 +31,8 @@
     "bench:gpu": "node tools/bench/src/gpu.ts",
     "size": "pnpm build:packages && node tests/bundle/size/bundle.ts && size-limit",
     "size:report": "node tests/bundle/size/report.ts",
+    "api:report": "pnpm build:packages && node tools/api-report/src/cli.ts",
+    "api:check": "pnpm build:packages && node tools/api-report/src/cli.ts --check",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release:pack": "pnpm build:packages && changeset pack --out-dir release-artifacts",

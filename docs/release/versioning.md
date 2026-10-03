@@ -23,9 +23,10 @@ We follow [SemVer 2.0.0](https://semver.org/). The public API is:
 - The supported `three` peer range (below).
 
 Not public API: anything not exported from an entry point, file layout inside `dist/`, and APIs
-marked `@experimental` or `@internal` in TSDoc. Until the plugin API is declared stable (plan E22,
-M7), the low-level `render` namespace and the trace/component contracts in
-`@mk7s/holochart-runtime` are **experimental** and may change in any minor release.
+marked `@experimental` or `@internal` in TSDoc ([stability tags](#stability-tags) below lists
+them). Until the plugin API is declared stable (plan E22, M7), the low-level `render` namespace and
+the trace/component contracts in `@mk7s/holochart-runtime` are **experimental** and may change in
+any minor release.
 
 Pixel output is not API: rendering may change between patch releases (anti-aliasing, tick
 placement, text metrics) as long as attributes keep their documented meaning. Visible changes are
@@ -39,6 +40,37 @@ called out in the changelog.
 | Removal or incompatible change of public API or of a default | major | minor |
 | Raising the minimum supported three.js version               | minor | minor |
 | Change to an `@experimental` API                             | minor | minor |
+
+### Stability tags
+
+Stability is declared in TSDoc, next to the code, and shown per export in the API reports
+([`api-reports/`](../../api-reports/README.md)):
+
+- **Stable** (`@public` in the reports): every export without a tag. The table above applies.
+- **`@experimental`**: exported, typed and documented, but its shape may change in any minor
+  release, with a changelog entry and without a deprecation period. Editors show the tag on hover.
+- **`@internal`**: not part of the API at all. The build strips these from the published
+  declarations.
+
+What is experimental today, all of it the plugin API of plan E22:
+
+| Package                   | Experimental                                                                                                                                                                                                                                                                     |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@mk7s/holochart-render`  | The whole package (its `@packageDocumentation` comment carries the tag), and with it the `render` namespace of `@mk7s/holochart`. Exceptions, tagged `@public`: the `fonts` and `symbols` registries and the types of their arguments.                                           |
+| `@mk7s/holochart-runtime` | The contracts trace and component modules implement (everything in `src/contracts.ts`: `TraceModule`, `ComponentModule`, their contexts and views, `HoverPoint`, `TraceDescription`, …).                                                                                         |
+|                           | The helpers for module authors: `dataTransform`, `linearExtremes`, `domainRect`, `fitAspect`, `inscribedCircle`, `MIN_PLOT_SIZE`, `STACK_GROUPS`, `formatTemplate`, `splitExtra`, the selection and geometry helpers, `createLatestQueue`, `fxComponent`, the a11y text helpers. |
+|                           | The members of `chart.three` typed by the render package: `root`, `overlay`, `viewports`, `subplot()`. `chart.three.renderer` and `chart.three.scene` are three.js objects and stable.                                                                                           |
+| `@mk7s/holochart-core`    | The pure half of the same contracts: `TraceModule`, `ComponentModule`, `TraceModuleMeta`, `TraceCategory`, `TraceDefaultsContext`, `LayoutDefaultsContext`, `Registry`, `createRegistry`.                                                                                        |
+
+Using the built-in modules is stable: `register(scatter, bar)`, `registry.list()`, the module
+objects the trace packages export and their trace types. Writing a module of your own against the
+contracts is what can break in a minor release.
+
+A new export is stable unless it is tagged, so plugin-facing or provisional exports get
+`@experimental` in the PR that adds them. CI fails when an export or a tag changes without the
+reports being regenerated (`pnpm api:check`; `pnpm api:report` regenerates them), which puts every
+change to the public API in a PR's diff. Dropping `@experimental` from an API is a `minor` change;
+adding it to a stable API is a breaking one.
 
 ### Before 1.0
 

@@ -250,6 +250,13 @@ jobs:
       - name: Pack-and-install smoke test
         if: ${{ !cancelled() }}
         run: pnpm exec playwright test -c tests/package/playwright.config.ts
+      # API reports (backlog S2.13): the exports of every published package and their stability
+      # tags are committed in api-reports/. This fails when a report differs from this build, so a
+      # change to the public API is always in the PR's diff; `pnpm api:report` regenerates them.
+      # It reads the declarations built above and takes about 10 s.
+      - name: API reports are up to date
+        if: ${{ !cancelled() }}
+        run: node tools/api-report/src/cli.ts --check
       - name: Upload package test results
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
