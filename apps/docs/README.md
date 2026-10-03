@@ -24,6 +24,7 @@ pnpm --filter @mk7s/holochart-docs typecheck
 | `reference/attributes/manifest.json` | same; read by `.vitepress/sidebar.ts`                  | (sidebar only)            |
 | `public/plot-schema.json`            | same                                                   | `/plot-schema.json`       |
 | `reference/api/**`                   | `scripts/gen-api.ts` (TypeDoc + markdown plugin)       | `/reference/api/`         |
+| `.vitepress/generated/changelog.md`  | `scripts/gen-changelog.ts`                             | included by `/changelog`  |
 
 Run `pnpm run gen:reference` or `pnpm run gen:api` on their own when iterating on one of them.
 `gen:api` accepts `--strict` to fail instead of writing placeholder pages when TypeDoc fails.
@@ -34,6 +35,21 @@ checked in: commit the change when the tables move, and don't edit between the m
 `gen:compat` needs `public/plot-schema.json`, so run `gen:reference` first; `--check` exits with
 1 instead of writing. plotly.js' schema comes from the reduced copy in `scripts/plotly-compat/`
 (see `reduce-plotly-schema.ts` there to refresh it).
+
+`gen:galleries` (`scripts/gen-galleries.ts`) works the same way for `reference/colorscales.md`
+and `reference/marker-symbols.md`: it rewrites the regions between their `generated:…` markers
+from the color registries of `@mk7s/holochart-core` and the symbol table of
+`@mk7s/holochart-render`, the pages are checked in, and `--check` exits with 1 when one is out
+of date.
+
+`gen:changelog` lists the pending changesets (`.changeset/*.md`) as "Unreleased" and merges the
+`CHANGELOG.md` files that `changeset version` writes into the packages, one entry per change and
+version. Its output is not checked in: `changelog.md` holds the introduction and pulls the
+generated list in with `<!--@include: …-->`, so a new changeset never leaves the page stale in
+git. The pure parts are tested in `tests/docs/gen-changelog.test.ts`.
+
+The API reference covers every published package (`PACKAGES` in `gen-api.ts`); add a new
+package there.
 
 Workspace packages and examples resolve to their TypeScript sources (`source` export condition,
 ADR-013), so no package build is needed first.
@@ -55,6 +71,8 @@ Environment variables:
   theme/                    theme: accents (custom.css), <Example>, status banner
 getting-started/ fundamentals/ charts/ customization/ guides/ express/ extending/ reference/ ...
 scripts/gen-api.ts          TypeDoc API reference
+scripts/gen-changelog.ts    changelog body from changesets
+scripts/gen-galleries.ts    colorscale and marker symbol tables
 scripts/lint-pages.ts       page lint
 public/                     static files (logo)
 ```
@@ -104,7 +122,7 @@ at build time), a copy button, and an "Open in sandbox" link. Examples follow th
 fails if a page embeds an id that doesn't exist, or an internal example: `examples/_dev/` and
 `examples/_spikes/` hold fixtures for the test suites and measurements, not examples for readers.
 
-To add an example, create `examples/<category>/<trace>/<slug>.ts` exporting `meta` and `run(el)`
+To add an example, create `examples/<category>/<slug>.ts` exporting `meta` and `run(el)`
 (see CONTRIBUTING.md). The same file feeds the sandbox and the visual regression suite.
 
 ## Gallery
@@ -137,9 +155,9 @@ pnpm gallery -g "bar/"        # re-render a subset; other entries are kept, dele
 pnpm gallery:check            # no browser: manifest and thumbnails match examples/ (CI)
 ```
 
-**Thumbnails are committed, not generated at build time.** Rendering ~110 examples needs
+**Thumbnails are committed, not generated at build time.** Rendering several hundred examples needs
 Playwright's Chromium and takes minutes, which the docs build and the deploy job (plain
-`ubuntu-latest`, no browsers) shouldn't pay on every run; the whole set is about 1 MB of WebP and
+`ubuntu-latest`, no browsers) shouldn't pay on every run; the whole set is about 7 MB of WebP and
 only changes when an example's look does. `pnpm gallery:check` runs in the CI docs job and fails
 when an example is added, removed or re-tagged, or its literal title, description, tags or size
 changed, without regenerating the gallery. It can't see pure rendering changes: when you update an
