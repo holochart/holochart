@@ -6,6 +6,7 @@
  *   pnpm bench:gpu --only heatmap          scenarios whose example id contains "heatmap"
  *   pnpm bench:gpu --runs 5 --dpr 2        more runs, retina pixel ratio
  *   pnpm bench:gpu --note "…"              add a note to the report (e.g. what else was running)
+ *   pnpm bench:gpu --only heatmap --profile  also print where each mount spends its CPU time
  *
  * Options: `--runs N` (3), `--duration MS` per sweep (3000), `--warmup MS` (500), `--dpr N` (1),
  * `--port N` for the sandbox dev server (5721, or BENCH_PORT), `--out DIR` (docs/perf).
@@ -24,6 +25,7 @@ import { parseArgs } from 'node:util';
 import { chromium, type Browser } from '@playwright/test';
 import * as prettier from 'prettier';
 import { openExample } from '../../../tests/visual/harness.ts';
+import { formatProfile, startProfile } from './profile.ts';
 import { evaluate, renderMarkdown, type Machine, type Report } from './report.ts';
 import { SCENARIOS, type Scenario } from './scenarios.ts';
 import type { RunOptions, RunResult } from './types.ts';
@@ -44,6 +46,7 @@ const { values: args } = parseArgs({
     port: { type: 'string', default: process.env['BENCH_PORT'] ?? '5721' },
     out: { type: 'string', default: path.join(REPO_ROOT, 'docs/perf') },
     note: { type: 'string', multiple: true, default: [] },
+    profile: { type: 'boolean', default: false },
   },
 });
 
@@ -153,8 +156,11 @@ function assertHardware(renderer: string): void {
 /** Vite reloads the page when it discovers and optimizes a new dependency on the first visit. */
 const RELOADED = /Execution context was destroyed|navigation/i;
 
-/** One measurement of `scenario` in a fresh browser; retried when Vite reloads the page. */
-async function runOnce(scenario: Scenario): Promise<RunResult> {
+/**
+ * One measurement of `scenario` in a fresh browser; retried when Vite reloads the page. With
+ * `profile`, the mount alone runs under the CPU profiler and its breakdown is printed.
+ */
+async function runOnce(scenario: Scenario, profile = false): Promise<RunResult> {
   const options: RunOptions = {
     example: scenario.example,
     drive: scenario.drive,
@@ -163,6 +169,7 @@ async function runOnce(scenario: Scenario): Promise<RunResult> {
     ...(scenario.perfGlobal ? { perfGlobal: scenario.perfGlobal } : {}),
     warmupMs: WARMUP_MS,
     durationMs: DURATION_MS,
+    ...(profile ? { mountOnly: true } : {}),
   };
   for (let attempt = 1; ; attempt++) {
     const browser = await launch();
@@ -187,11 +194,13 @@ async function runOnce(scenario: Scenario): Promise<RunResult> {
         (url) => import(/* @vite-ignore */ url).then(() => undefined),
         `/@fs${REPO_ROOT}/tools/bench/src/page.ts`,
       );
+      const stopProfile = profile ? await startProfile(page) : undefined;
       const result = await page.evaluate((o) => {
         const bench = window.__holochartBench;
         if (!bench) throw new Error('The benchmark harness did not load.');
         return bench.run(o);
       }, options);
+      if (stopProfile) console.log(formatProfile(await stopProfile()));
       assertHardware(result.renderer);
       return result;
     } catch (error) {
@@ -292,6 +301,10 @@ async function main(): Promise<void> {
         runs.push(result);
       }
       report.scenarios.push({ scenario, runs });
+      if (args.profile) {
+        console.log(`${scenario.example}: profiled mount (an extra run, not in the report)`);
+        await runOnce(scenario, true);
+      }
     }
   } finally {
     stop();
