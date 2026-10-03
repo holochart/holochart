@@ -11,7 +11,9 @@ import { createChartRegistry, type TracePlotContext } from '@mk7s/holochart-runt
 import { scatter } from '@mk7s/holochart-traces-basic';
 import { describe, expect, it, vi } from 'vitest';
 import { layoutSectors, sectorAt, sunburstGeometry, type SunburstCalc } from './geometry.ts';
-import { sunburstClick, sunburstHoverPoints } from './hover.ts';
+import { sectorHoverPoint, sunburstClick, sunburstHoverPoints } from './hover.ts';
+import { NODE_TEMPLATE, sunburst as sunburstParts } from '../a11y.ts';
+import { nodeContext } from '../hierarchy/format.ts';
 import { sunburst } from './index.ts';
 import { sectorArcs, sectorStyles } from './plot.ts';
 import { contrastColor, layoutSunburstText } from './text.ts';
@@ -639,5 +641,70 @@ describe('sunburst description', () => {
     expect(t.total).toBe(9);
     expect(Array.from({ length: 9 }, (_, i) => t.row!(i))).toEqual(all.rows);
     expect(t.row!(8)?.[0]).toBe('Enoch');
+  });
+});
+
+describe('sunburst keyboard stops (the lazily loaded accessibility parts)', () => {
+  const b = build([EVE]);
+  const calc = b.calcs[0]!;
+  const trace = b.traces[0]!;
+  const ctx = {
+    fullLayout: b.fullLayout,
+    xaxis: undefined,
+    yaxis: undefined,
+    transform: IDENTITY_TRANSFORM,
+  };
+  const parts = sunburstParts(sunburstGeometry, sectorHoverPoint, nodeContext)['sunburst']!;
+  const stops = parts.keyboardPoints!(calc as never, trace, ctx)!;
+  const all = Array.from({ length: stops.length }, (_, k) => stops.at(k)!);
+  const label = (k: number | undefined): unknown => all[k!]?.fields?.['label'];
+  const at = (name: string): number => all.findIndex((p) => p.fields?.['label'] === name);
+
+  it('has one stop per drawn sector: its hover point', () => {
+    expect(all).toHaveLength(9);
+    expect(label(0)).toBe('Eve');
+    const seth = all[at('Seth')]!;
+    const hovered = sunburstHoverPoints(
+      calc,
+      trace,
+      {
+        px: seth.px,
+        py: seth.py,
+        xl: 0,
+        yl: 0,
+        mode: 'closest',
+        distance: 0,
+        cx: seth.px,
+        cy: 400 - seth.py,
+      },
+      ctx,
+    )[0]!;
+    expect(seth).toMatchObject({ pointIndex: hovered.pointIndex, hoverText: hovered.hoverText });
+  });
+
+  it('links the stops along the tree: siblings, parent, first child, first and last sibling', () => {
+    const [left, right, up, down, home, end] = all[at('Cain')]!.nav!;
+    // Eve's children by value: Seth, Cain, Awan, Abel, Azura.
+    expect([left, right, up, down, home, end].map(label)).toEqual([
+      'Seth',
+      'Awan',
+      'Eve',
+      'Cain', // a leaf: down stays
+      'Seth',
+      'Azura',
+    ]);
+    const seth = all[at('Seth')]!.nav!;
+    expect(label(seth[0])).toBe('Seth'); // the first sibling: left stays
+    expect(label(seth[3])).toBe('Enos');
+    // The entry has no siblings and no parent among the stops.
+    expect(all[0]!.nav!.map(label)).toEqual(['Eve', 'Eve', 'Eve', 'Seth', 'Eve', 'Eve']);
+  });
+
+  it('announces a node with its level, its place among its siblings and its children', () => {
+    expect(all[at('Seth')]!.say).toEqual([
+      NODE_TEMPLATE,
+      { level: '2', n: '1', count: '5', children: '2' },
+    ]);
+    expect(all[at('Enoch')]!.say![1]).toEqual({ level: '3', n: '1', count: '1', children: '0' });
   });
 });

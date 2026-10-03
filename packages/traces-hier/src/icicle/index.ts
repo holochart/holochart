@@ -17,7 +17,7 @@ import { coloraxisLayoutSchema } from '@mk7s/holochart-traces-basic';
 import { hierarchyColorbar } from '../hierarchy/colors.ts';
 import { describeHierarchy } from '../hierarchy/describe.ts';
 import { calcRects, type RectCalc } from '../treemap/geometry.ts';
-import { rectHoverPoints } from '../treemap/hover.ts';
+import { rectA11y, rectHoverPoints } from '../treemap/hover.ts';
 import { rectCrossTraceLayout } from '../treemap/layout.ts';
 import { rectRenderer } from '../treemap/plot.ts';
 import { icicleAttributes, icicleLayoutAttributes } from './attributes.ts';
@@ -42,6 +42,7 @@ export const icicle: TraceModule<RectCalc, typeof icicleAttributes.children> = {
   crossTraceLayout: /* @__PURE__ */ rectCrossTraceLayout('icicle'),
   plot: rectRenderer,
   hoverPoints: rectHoverPoints,
+  a11y: rectA11y,
   colorbar: (trace, ctx) => hierarchyColorbar(trace, ctx.fullLayout),
   describe: (ctx) => describeHierarchy(ctx, 'Icicle'),
 };

@@ -16,7 +16,9 @@ import { sankeyAttributes } from './attributes.ts';
 import { calcSankey, type SankeyCalc } from './calc.ts';
 import { supplySankeyDefaults } from './defaults.ts';
 import { describeSankey } from './describe.ts';
-import { sankeyHoverPoints } from './hover.ts';
+import { lazyA11y } from '../a11y-loader.ts';
+import { hoverLabels, sankeyHoverPoints, toHoverPoints, traceRect } from './hover.ts';
+import { modelFor } from './model.ts';
 import { sankeyRenderer } from './plot.ts';
 
 export const sankey: TraceModule<SankeyCalc, typeof sankeyAttributes.children> = {
@@ -35,6 +37,7 @@ export const sankey: TraceModule<SankeyCalc, typeof sankeyAttributes.children> =
   calc: calcSankey,
   plot: sankeyRenderer,
   hoverPoints: sankeyHoverPoints,
+  a11y: lazyA11y('sankey', traceRect, modelFor, hoverLabels, toHoverPoints),
   describe: describeSankey,
 };
 
