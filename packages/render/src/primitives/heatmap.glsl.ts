@@ -15,6 +15,16 @@ import { TRANSFORM_GLSL } from './common.glsl.ts';
 /** Binary-search step bound for non-uniform edges: supports up to 2^24 cells per axis. */
 export const HEATMAP_MAX_SEARCH_STEPS = 24;
 
+/**
+ * Texel of a cell without a value (non-finite z, padding): the largest float32. The shader takes
+ * anything above {@link HEATMAP_HOLE_MIN} for a hole, a comparison of finite numbers (GLSL ES does
+ * not promise `isnan` / `isinf`).
+ */
+export const HEATMAP_HOLE = 3.4028234663852886e38;
+
+/** Values relative to zOrigin at or above this are holes (see {@link HEATMAP_HOLE}). */
+export const HEATMAP_HOLE_MIN = 3.0e38;
+
 export const HEATMAP_VERTEX_SHADER = /* glsl */ `
 ${TRANSFORM_GLSL}
 
@@ -30,7 +40,7 @@ void main() {
 export const HEATMAP_FRAGMENT_SHADER = /* glsl */ `
 uniform vec3 uScale;             // shared with the vertex stage (TRANSFORM_GLSL)
 uniform vec3 uOffset;
-uniform highp sampler2D uZ;      // RG32F, linear texel index k = j * nx + i: (value - zOrigin, valid)
+uniform highp sampler2D uZ;      // R32F, linear texel index k = j * nx + i: value - zOrigin, or a hole
 uniform highp sampler2D uEdges;  // R32F: directed x edges [0, nx], then y edges from uYBase
 uniform sampler2D uLut;
 uniform float uLutSize;
@@ -126,10 +136,12 @@ void hmLerp(int axis, float a, int cell, out int i0, out int i1, out float f) {
   i0 = cell; i1 = cell + 1; f = (a - c) / (cn - c);
 }
 
+// (value - zOrigin, 1), or (0, 0) for a cell without a value.
 vec2 hmZ(int i, int j) {
   int k = j * uCount.x + i;
   int w = textureSize(uZ, 0).x;
-  return texelFetch(uZ, ivec2(k % w, k / w), 0).rg;
+  float v = texelFetch(uZ, ivec2(k % w, k / w), 0).r;
+  return v < ${HEATMAP_HOLE_MIN.toExponential(1)} ? vec2(v, 1.0) : vec2(0.0);
 }
 
 void main() {

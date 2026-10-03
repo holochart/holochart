@@ -7,14 +7,16 @@
  * - **Geometry**: the shared unit quad (like `image.ts`), stretched in the vertex shader over the
  *   edge extent `[xEdges[0], xEdges[nx]] × [yEdges[0], yEdges[ny]]`. The RTC origin is the first
  *   edge of each axis, so the shader only sees small relative coordinates (ADR-008).
- * - **Values**: one `RG32F` texture (`RGFormat` + `FloatType`, nearest) packed *linearly*: cell
+ * - **Values**: one `R32F` texture (`RedFormat` + `FloatType`, nearest) packed *linearly*: cell
  *   `k = j * nx + i` is texel `(k % W, floor(k / W))` with `W = min(nx * ny, 4096, the device's
  *   max texture size)`, so any `nx` fits. A grid with more cells than `W × max texture size` is
- *   not drawn (a warning is logged). Texels hold `(value - zOrigin, valid)`: non-finite
- *   values (NaN, ±Infinity) are stored as `(0, 0)` and drawn transparent. A separate validity channel
- *   avoids GLSL `isnan`, which some compilers optimize away. `zOrigin` (the center of the finite z
- *   range) keeps float32 precision for values with a large common offset; zmin / zmax go to the
- *   shader relative to it, computed in float64.
+ *   not drawn (a warning is logged). Texels hold `value - zOrigin`; non-finite values (NaN,
+ *   ±Infinity) are stored as the largest float32 and drawn transparent (the shader compares with
+ *   3e38, which avoids GLSL `isnan`, which some compilers optimize away). One channel instead of
+ *   a (value, valid) pair halves the packing and the upload: 67 MB for a 4096² grid. `zOrigin`
+ *   (the center of the finite z range) keeps float32 precision for values with a large common
+ *   offset; zmin / zmax go to the shader relative to it, computed in float64. A value 3e38 or more
+ *   above `zOrigin` is drawn as a hole.
  * - **Edges**: one `R32F` texture with the same packing: x edges at texels `[0, nx]`, y edges at
  *   `[nx + 1, nx + ny + 1]`. Edges are stored *directed*, `a_k = dir * (edge_k - firstEdge)` with
  *   `dir = sign(lastEdge - firstEdge)`, so they ascend from 0 to the extent for both ascending and
@@ -48,7 +50,6 @@ import {
   NearestFilter,
   NoColorSpace,
   RedFormat,
-  RGFormat,
   Vector2,
   type BufferGeometry,
   type ShaderMaterial,
@@ -80,6 +81,7 @@ import {
 } from './common.ts';
 import {
   HEATMAP_FRAGMENT_SHADER,
+  HEATMAP_HOLE,
   HEATMAP_MAX_SEARCH_STEPS,
   HEATMAP_VERTEX_SHADER,
 } from './heatmap.glsl.ts';
@@ -413,7 +415,7 @@ export function heatmapZRange(z: ArrayLike<number>, count = z.length): [number, 
 // Texture layout
 // ---------------------------------------------------------------------------------------------
 
-/** A packed float texture image: `channels` floats per texel, row-major, `width × height`. */
+/** A packed float texture image: one float per texel, row-major, `width × height`. */
 export interface HeatmapTextureImage {
   data: Float32Array;
   width: number;
@@ -430,9 +432,9 @@ export function heatmapTextureSize(
 }
 
 /**
- * Pack values into the RG32F layout: texel `k = j * nx + i` at `(k % width, floor(k / width))`
- * holds `(z[k] - zOrigin, 1)`, or `(0, 0)` for non-finite / missing values and padding texels.
- * `out` is reused when it has the right length.
+ * Pack values into the R32F layout: texel `k = j * nx + i` at `(k % width, floor(k / width))`
+ * holds `z[k] - zOrigin`, or the largest float32 (3.4028235e38, a hole) for non-finite / missing
+ * values and padding texels. `out` is reused when it has the right length.
  */
 export function packHeatmapValues(
   z: ArrayLike<number>,
@@ -444,16 +446,17 @@ export function packHeatmapValues(
 ): HeatmapTextureImage {
   const count = Math.max(0, nx) * Math.max(0, ny);
   const { width, height } = heatmapTextureSize(count, maxWidth);
-  const size = width * height * 2;
+  const size = width * height;
   const data = out?.length === size ? out : new Float32Array(size);
   const n = Math.min(count, z.length);
   for (let k = 0; k < n; k++) {
     const v = z[k]!;
-    const ok = Number.isFinite(v);
-    data[2 * k] = ok ? v - zOrigin : 0;
-    data[2 * k + 1] = ok ? 1 : 0;
+    // Two stores, not `data[k] = ok ? … : HOLE`: on a first draw this loop runs before the
+    // optimizing compiler has it, and V8's mid tier boxes the selected number (2× slower).
+    if (Number.isFinite(v)) data[k] = v - zOrigin;
+    else data[k] = HEATMAP_HOLE;
   }
-  data.fill(0, 2 * n);
+  data.fill(HEATMAP_HOLE, n);
   return { data, width, height };
 }
 
@@ -477,14 +480,8 @@ export function packHeatmapEdges(
   return { data, width, height, yBase };
 }
 
-function createFloatTexture(image: HeatmapTextureImage, rg: boolean, name: string): DataTexture {
-  const texture = new DataTexture(
-    image.data,
-    image.width,
-    image.height,
-    rg ? RGFormat : RedFormat,
-    FloatType,
-  );
+function createFloatTexture(image: HeatmapTextureImage, name: string): DataTexture {
+  const texture = new DataTexture(image.data, image.width, image.height, RedFormat, FloatType);
   texture.minFilter = NearestFilter;
   texture.magFilter = NearestFilter;
   texture.wrapS = ClampToEdgeWrapping;
@@ -502,7 +499,6 @@ function createFloatTexture(image: HeatmapTextureImage, rg: boolean, name: strin
 function uploadInto(
   texture: DataTexture | undefined,
   image: HeatmapTextureImage,
-  rg: boolean,
   name: string,
 ): DataTexture {
   if (texture && texture.image.width === image.width && texture.image.height === image.height) {
@@ -511,7 +507,7 @@ function uploadInto(
     return texture;
   }
   texture?.dispose();
-  return createFloatTexture(image, rg, name);
+  return createFloatTexture(image, name);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -668,7 +664,7 @@ export class HeatmapPrimitive implements Primitive<HeatmapData> {
       const max = this.context.capabilities?.maxTextureSize ?? Infinity;
       this.edgeTexture =
         image.height <= max
-          ? uploadInto(this.edgeTexture, image, false, 'holochart:heatmap-edges')
+          ? uploadInto(this.edgeTexture, image, 'holochart:heatmap-edges')
           : this.drop(this.edgeTexture);
       u.uEdges.value = this.edgeTexture ?? null;
       u.uYBase.value = image.yBase;
@@ -704,7 +700,7 @@ export class HeatmapPrimitive implements Primitive<HeatmapData> {
       this.zOrigin,
       this.zTexture?.image.data as Float32Array | undefined,
     );
-    this.zTexture = uploadInto(this.zTexture, image, true, 'holochart:heatmap-values');
+    this.zTexture = uploadInto(this.zTexture, image, 'holochart:heatmap-values');
     this.uniforms.uZ.value = this.zTexture;
   }
 
