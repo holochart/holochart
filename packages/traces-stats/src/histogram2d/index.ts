@@ -17,6 +17,7 @@ import { calcHistogram2d, histogram2dExtremes, type Histogram2dCalc } from './ca
 import { cssStops, supplyZColoraxisDefaults, zColorbar, zColorMapping } from './colorscale.ts';
 import { supplyHistogram2dDefaults } from './defaults.ts';
 import { describeHistogram2d } from './describe.ts';
+import { gridA11y } from '../a11y-loader.ts';
 import { histogram2dHoverPoints } from './hover.ts';
 import { histogram2dRenderer } from './plot.ts';
 
@@ -57,6 +58,7 @@ export const histogram2d: TraceModule<Histogram2dCalc, typeof histogram2dAttribu
   extremes: histogram2dExtremes,
   plot: histogram2dRenderer,
   hoverPoints: histogram2dHoverPoints,
+  a11y: gridA11y,
   legendIcon: heatmapLegendIcon,
   colorbar: (trace, ctx) => zColorbar(trace, ctx.fullLayout),
   describe: describeHistogram2d,

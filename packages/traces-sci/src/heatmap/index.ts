@@ -9,6 +9,7 @@
  * `xcalendar` / `ycalendar`.
  */
 import {
+  gridA11y,
   supplyZColoraxisDefaults,
   heatmapLegendIcon,
   zColorbar,
@@ -40,6 +41,7 @@ export const heatmap: TraceModule<HeatmapCalc, typeof heatmapAttributes.children
   categoryValues: heatmapCategoryValues,
   plot: heatmapRenderer,
   hoverPoints: heatmapHoverPoints,
+  a11y: gridA11y,
   legendIcon: heatmapLegendIcon,
   colorbar: (trace, ctx) => zColorbar(trace, ctx.fullLayout),
   describe: describeHeatmap,

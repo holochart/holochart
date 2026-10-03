@@ -19,6 +19,7 @@ import {
   contourColorbar,
   contourLegendIcon,
   createContourRenderer,
+  gridA11y,
   supplyZColoraxisDefaults,
 } from '@mk7s/holochart-traces-stats';
 import { heatmapCellTexts } from '../heatmap/text.ts';
@@ -57,6 +58,7 @@ export const contour: TraceModule<ContourTraceCalc, typeof contourAttributes.chi
       heatmapCellTexts(ctx.calc, ctx.trace, mapping, ctx, ctx.fullLayout),
   }),
   hoverPoints: contourHoverPoints,
+  a11y: gridA11y,
   legendIcon: contourLegendIcon,
   colorbar: (trace, ctx) => contourColorbar(trace, ctx.fullLayout),
   describe: describeContour,

@@ -15,6 +15,8 @@ import { supplyPolarLayoutDefaults } from '../polar/layout-defaults.ts';
 import { barpolarAttributes } from './attributes.ts';
 import { calcBarpolar } from './calc.ts';
 import { supplyBarpolarDefaults } from './defaults.ts';
+import { lazyA11y } from '../a11y-loader.ts';
+import { barPixels } from './geometry.ts';
 import { barpolarHoverPoints } from './hover.ts';
 import { barpolarRenderer } from './plot.ts';
 
@@ -46,6 +48,7 @@ export const barpolar: TraceModule<PolarCalc, typeof barpolarAttributes.children
   crossTraceLayout: polarCrossTraceLayout,
   plot: barpolarRenderer,
   hoverPoints: barpolarHoverPoints,
+  a11y: lazyA11y('barpolar', barpolarHoverPoints, barPixels),
   selectPoints: barpolarSelectPoints,
   eventData: polarEventData,
   legendIcon: (trace, ctx) => bar.legendIcon!(trace, ctx),

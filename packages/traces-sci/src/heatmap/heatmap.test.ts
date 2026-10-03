@@ -38,6 +38,7 @@ import {
   type HeatmapCalc,
 } from './calc.ts';
 import { heatmap } from './index.ts';
+import { gridA11y } from '@mk7s/holochart-traces-stats';
 import { heatmapCellTexts, MAX_LABELLED_CELLS } from './text.ts';
 
 // troika typesets in a worker with browser globals; the view tests only need its object graph.
@@ -813,5 +814,66 @@ describe('heatmap describe', () => {
     const { rows, row } = d!.table!;
     expect([0, 1].map((k) => row!(k))).toEqual(rows);
     expect(row!(2)).toEqual(['0', '1', '3']);
+  });
+});
+
+describe('heatmap keyboard stops (the cell cursor loaded on first use)', () => {
+  /** A 3 × 2 grid on axes 300 × 200 px showing x in [-0.5, 2.5] and y in [-0.5, 1.5]. */
+  async function cursor(xRange: [number, number] = [-0.5, 2.5], trace: object = {}) {
+    const s = calcOf({
+      z: [
+        [1, 2, 3],
+        [4, 5, null],
+      ],
+      name: 'grid',
+      ...trace,
+    });
+    const sized = (a: AxisInfo, range: [number, number], length: number): AxisInfo =>
+      ({ ...a, scale: createScale({ type: 'linear', range, length }) }) as AxisInfo;
+    const xaxis = sized(s.xaxis, xRange, 300);
+    const yaxis = sized(s.yaxis, [-0.5, 1.5], 200);
+    const ctx: HoverContext = {
+      fullLayout: s.fullLayout,
+      xaxis,
+      yaxis,
+      transform: {
+        scaleX: 300 / (xRange[1] - xRange[0]),
+        scaleY: 100,
+        offsetX: (-xRange[0] * 300) / (xRange[1] - xRange[0]),
+        offsetY: 50,
+      },
+    };
+    const parts = (await gridA11y())['heatmap']!;
+    return parts.keyboardPoints!(s.calc as never, s.trace, ctx)!;
+  }
+
+  it('visits the cells row by row from the top, each its hover point', async () => {
+    const stops = await cursor();
+    expect(stops.length).toBe(6);
+    // The top row on screen is y = 1.
+    expect(stops.at(0)).toMatchObject({ cell: [1, 0], hoverText: 'x: 0<br>y: 1<br>z: 4' });
+    expect(stops.at(4)).toMatchObject({ cell: [0, 1], hoverText: 'x: 1<br>y: 0<br>z: 2' });
+    expect(stops.at(0)!.px).toBeCloseTo(50);
+    expect(stops.at(0)!.py).toBeCloseTo(150);
+    expect(stops.at(6)).toBeUndefined();
+    expect(stops.at(-1)).toBeUndefined();
+  });
+
+  it('leads ← / → along the row, ↑ / ↓ along the column, Home / End to the row ends', async () => {
+    const stops = await cursor();
+    // [←, →, ↑, ↓, Home, End] of the middle cell of the top row, then of the bottom right cell.
+    expect(stops.at(1)!.nav).toEqual([0, 2, 1, 4, 0, 2]);
+    expect(stops.at(5)!.nav).toEqual([4, 5, 2, 5, 3, 5]);
+    expect(stops.at(4)!.say![1]).toEqual({ row: '2', rows: '2', column: '2', columns: '3' });
+  });
+
+  it('keeps a stop on a gap that is not hovered, and only the cells in view', async () => {
+    const gaps = await cursor([-0.5, 2.5], { hoverongaps: false });
+    expect(gaps.at(2)).toMatchObject({ x: 2, y: 1 });
+    expect(gaps.at(2)!.hoverText).toBeUndefined();
+    // Zoomed to the first two columns.
+    const zoomed = await cursor([-0.5, 1.5]);
+    expect(zoomed.length).toBe(4);
+    expect(zoomed.at(1)!.nav).toEqual([0, 1, 1, 3, 0, 1]);
   });
 });

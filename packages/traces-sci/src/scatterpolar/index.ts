@@ -15,6 +15,8 @@ import { polarEventData, scatterpolarSelectPoints } from '../polar/select.ts';
 import { scatterpolarAttributes } from './attributes.ts';
 import { calcScatterpolar, type ScatterpolarCalc } from './calc.ts';
 import { supplyScatterpolarDefaults } from './defaults.ts';
+import { lazyA11y } from '../a11y-loader.ts';
+import { polarPositions } from '../polar/positions.ts';
 import { scatterpolarHoverPoints } from './hover.ts';
 import { scatterpolarRenderer } from './plot.ts';
 
@@ -45,6 +47,7 @@ export const scatterpolar: TraceModule<ScatterpolarCalc, typeof scatterpolarAttr
   crossTraceLayout: polarCrossTraceLayout,
   plot: scatterpolarRenderer,
   hoverPoints: scatterpolarHoverPoints,
+  a11y: lazyA11y('scatterpolar', scatterpolarHoverPoints, polarPositions),
   selectPoints: scatterpolarSelectPoints,
   eventData: polarEventData,
   legendIcon: (trace, ctx) => scatter.legendIcon!(trace, ctx),

@@ -8,7 +8,7 @@ import type { TraceModule } from '@mk7s/holochart-runtime';
 import { supplyGroupingDefaults } from '../box/defaults.ts';
 import { describeBox } from '../box/describe.ts';
 import { boxCategoryValues } from '../box/calc.ts';
-import { boxSelectPoints } from '../box/hover.ts';
+import { boxA11y, boxSelectPoints } from '../box/hover.ts';
 import { boxLegendIcon } from '../box/style.ts';
 import { violinAttributes, violinLayoutAttributes } from './attributes.ts';
 import { calcViolin, crossTraceCalcViolin, violinExtremes, type ViolinCalc } from './calc.ts';
@@ -39,6 +39,7 @@ export const violin: TraceModule<ViolinCalc, typeof violinAttributes.children> =
   categoryValues: boxCategoryValues,
   plot: violinRenderer,
   hoverPoints: violinHoverPoints,
+  a11y: boxA11y,
   selectPoints: (calc, trace, query) => boxSelectPoints(calc, trace, query),
   legendIcon: boxLegendIcon,
   describe: describeBox,
