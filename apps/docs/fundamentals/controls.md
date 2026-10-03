@@ -23,7 +23,7 @@ row (`'left'`, `'right'`) or a column (`'up'`, `'down'`). `x` and `y` place the 
 fractions, and `xanchor` / `yanchor` choose which side of the menu sits at that point. A menu
 outside the plot area pushes the margins to make room, like the legend does.
 
-<Example id="_dev/updatemenus-buttons" :height="420" />
+<Example id="controls/buttons" :height="420" />
 
 ```ts
 createChart(el, {
@@ -54,7 +54,7 @@ createChart(el, {
 opens the list on the `direction` side. Only the closed button pushes margins; the open list
 overlaps the chart.
 
-<Example id="_dev/updatemenus-dropdown" :height="420" />
+<Example id="controls/dropdowns" :height="420" />
 
 ## Methods and arguments
 
@@ -159,7 +159,7 @@ bottom margin by its height. `pad.t` (20 px by default) keeps it clear of the x-
 labels. Above the rail, `currentvalue` shows `prefix + label + suffix`. Tick labels are thinned
 out when they would overlap.
 
-<Example id="_dev/sliders-sweep" :height="440" />
+<Example id="controls/slider" :height="440" />
 
 ```ts
 const x = Array.from({ length: 100 }, (_, i) => i / 10);
@@ -235,7 +235,7 @@ tab order (plot area, legend, update menus, sliders, modebar, range selectors).
 widget colors, on a dark paper (the default look) they are tints of the background toward the text
 color. Sizes follow the font, so the dense default look gets compact controls:
 
-<Example id="_dev/updatemenus-classic" :height="460" />
+<Example id="controls/plotly-look" :height="460" />
 
 Templates style every menu and slider through `layout.template.layout.updatemenudefaults` and
 `sliderdefaults` (buttons and steps through `buttondefaults` and `stepdefaults` inside them), as in

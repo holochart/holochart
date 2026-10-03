@@ -44,7 +44,7 @@ createChart(el, {
 });
 ```
 
-<Example id="_dev/selections-rect" />
+<Example id="selections/box" />
 
 - **`type: 'rect'`** is the box from (`x0`, `y0`) to (`x1`, `y1`); **`type: 'path'`** is a polygon
   (a lasso), `M x,y L x,y … Z`, with `_` between date and time on date axes
@@ -67,7 +67,7 @@ createChart(el, {
   and `theta`; as in Plotly, their selections aren't stored in `layout.selections` (see
   [polar interactivity](/charts/scientific/polar#interactivity)).
 
-<Example id="_dev/selections-lasso" />
+<Example id="selections/lasso" />
 
 ## Keyboard
 
@@ -78,7 +78,7 @@ same keys as a drag). The legend, update menus, sliders, modebar and range selec
 tab order. The [accessibility guide](/guides/accessibility#keyboard-access) lists every key, the
 cursor rules and the tab order.
 
-<Example id="_dev/keyboard-navigation" :height="460" />
+<Example id="accessibility/keyboard-focus" :height="400" />
 
 ## Touch
 
@@ -128,7 +128,7 @@ on its axes): taps keep working, and the modebar, which appears after a tap, swi
 demand. With a coarse pointer its buttons grow to 32 px tap targets. Custom trace types whose
 views take drags declare what they need with `touchAction` on their module.
 
-<Example id="_dev/interaction-touch" />
+<Example id="interaction/touch" />
 
 ### Differences from Plotly
 

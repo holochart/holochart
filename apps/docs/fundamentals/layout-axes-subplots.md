@@ -55,12 +55,12 @@ createChart(el, {
 });
 ```
 
-<Example id="_dev/grid-coupled" />
+<Example id="layout/grid-coupled" />
 
 With `pattern: 'independent'`, each panel autoranges on its own data, so bars with category x axes
 can sit next to numeric scatter plots:
 
-<Example id="_dev/grid-independent" :height="480" />
+<Example id="layout/grid-independent" :height="480" />
 
 To choose the cell contents yourself, give `subplots`, a 2D array of subplot ids (`'xy'`,
 `'x2y3'`, or `''` for an empty cell), or `xaxes` / `yaxes`, the axis of each column and row. The
@@ -213,7 +213,7 @@ createChart(el, {
 });
 ```
 
-<Example id="_dev/grid-make-subplots" :height="480" />
+<Example id="layout/make-subplots" :height="480" />
 
 If you add annotations of your own, concatenate them with the titles:
 `annotations: [...((sp.layout['annotations'] as object[] | undefined) ?? []), myNote]`.
@@ -309,11 +309,11 @@ createChart(el, {
 });
 ```
 
-<Example id="_dev/rangebreaks-stocks" :height="440" />
+<Example id="ohlc/range-breaks" :height="400" />
 
-Overlapping breaks merge. Here nights and weekends together leave only the 09:30–16:00 sessions:
+Overlapping breaks merge. Here nights and weekends together leave only the 09:00–17:00 sessions:
 
-<Example id="_dev/rangebreaks-intraday" :height="380" />
+<Example id="timeseries/business-hours" :height="400" />
 
 What to know:
 
@@ -374,7 +374,7 @@ createChart(el, {
 });
 ```
 
-<Example id="_dev/rangeslider-timeseries" :height="440" />
+<Example id="timeseries/range-slider" :height="440" />
 
 The thumbnail is not a picture of the chart: the subplot's traces are drawn a second time, in a
 small viewport of their own, so it stays sharp, follows restyles and new data, and costs no extra
@@ -388,7 +388,7 @@ the y range in view is shaded.
 Range breaks carry over: the slider skips them like the axis does, and the selector counts
 calendar time back from the range end.
 
-<Example id="_dev/rangeslider-rangebreaks" :height="420" />
+<Example id="candlestick/range-breaks" :height="440" />
 
 What to know:
 
@@ -442,7 +442,7 @@ createChart(el, {
 });
 ```
 
-<Example id="_dev/matches-subplots" :height="480" />
+<Example id="axes/linked-axes" :height="480" />
 
 ## Aspect lock (`scaleanchor`)
 
@@ -474,7 +474,7 @@ createChart(el, {
 });
 ```
 
-<Example id="_dev/scaleanchor-square" :height="380" />
+<Example id="axes/scaleanchor" :height="380" />
 
 Chains and groups work as in Plotly: axes linked by `scaleanchor` or `matches` form one group whose
 scales all agree, and an anchor that would make a loop (x anchored to y and y to x) is ignored.
@@ -513,7 +513,7 @@ createChart(el, {
 });
 ```
 
-<Example id="_dev/spikes-hover" />
+<Example id="axes/spike-lines" />
 
 Spikes are drawn in the hover layer over the canvas, like hover labels: moving them never redraws
 a trace, and they are not part of image exports. Spike labels on the axis are not supported yet.

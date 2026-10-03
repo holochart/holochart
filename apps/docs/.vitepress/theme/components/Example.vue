@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * `<Example id="_dev/hello-cube" />`: a live embed of a canonical example (plan E19.2).
+ * `<Example id="scatter/basic" />`: a live embed of a canonical example (plan E19.2).
  *
  * - Client-only: the example registry and the example module are imported after mount, so SSR
  *   renders a static placeholder and never runs example code.

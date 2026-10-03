@@ -27,7 +27,7 @@ markup as Plotly, so the strings of an existing Plotly figure render the same wa
 Any tag can carry a `style` attribute (`<b style="color:#ea2a37">`). Styles apply to everything
 inside the tag, across `<br>` line breaks.
 
-<Example id="_dev/richtext-components" :height="500" />
+<Example id="text/rich-text" :height="500" />
 
 ```ts
 createChart(el, {
@@ -49,7 +49,7 @@ createChart(el, {
 Trace text works the same way: `text` and `texttemplate` of scatter, bar and pie traces, where
 templates can wrap values in tags (`'<b>%{y}</b><br>%{x}'`).
 
-<Example id="_dev/richtext-traces" :height="420" />
+<Example id="text/rich-text-labels" :height="420" />
 
 ### How it is drawn
 
@@ -96,9 +96,9 @@ chart.relayout({ uniformtext: { mode: 'hide', minsize: 8 } });
 - `mode: 'show'`: those labels are drawn at the uniform size anyway, even if they overflow.
 - `minsize` also raises trace fonts that are smaller than it.
 
-<Example id="_dev/uniformtext-bars" :height="420" />
+<Example id="bar/uniformtext" :height="420" />
 
-<Example id="_dev/uniformtext-pie" :height="420" />
+<Example id="pie/uniformtext" :height="420" />
 
 ## Still to come on this page
 

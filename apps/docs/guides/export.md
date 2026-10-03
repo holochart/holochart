@@ -14,7 +14,7 @@ const url = await chart.toImage({ format: 'png', width: 1200, height: 600, scale
 document.querySelector('img')!.src = url; // 'data:image/png;base64,…'
 ```
 
-<Example id="_dev/export-image" :height="520" />
+<Example id="export/to-image" :height="520" />
 
 ## Options
 

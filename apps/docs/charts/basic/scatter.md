@@ -38,7 +38,7 @@ const chart = createChart(document.getElementById('chart')!, {
 The chart fills its container, so give the element a size. Each trace takes the next color of the
 colorway. The live example below has three traces with different symbols, sizes, and colors:
 
-<Example id="_dev/chart-scatter-basic" />
+<Example id="scatter/clusters" />
 
 ## Data format
 
@@ -133,7 +133,7 @@ Hover, zoom, pan, and selection work on every scatter trace. Try them here: hove
 zoom, double-click to reset, and use the modebar (top right, on hover) to switch to pan, box
 select, or lasso.
 
-<Example id="_dev/interaction-scatter" />
+<Example id="scatter/interactive" />
 
 - **Hover.** `layout.hovermode` is `'closest'` by default. `'x'` and `'y'` show every trace at the
   hovered position, and `'x unified'` / `'y unified'` put them in one label. Change the label text

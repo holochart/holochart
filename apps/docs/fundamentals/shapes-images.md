@@ -25,7 +25,7 @@ A shape has a `type` and a position in the coordinates of its references:
 Style it with `line.color`, `line.width` (0 hides the outline), `line.dash`, `fillcolor` and
 `opacity`.
 
-<Example id="_dev/shapes-basic" :height="440" />
+<Example id="shapes/basic" :height="440" />
 
 ### Coordinates: `xref` and `yref`
 
@@ -73,7 +73,7 @@ The last argument takes any shape attribute. Pass `xref` / `yref` to target anot
 Shapes with a `paper` reference and `layer: 'below'` or `'between'` draw under every subplot (and
 can extend into the margins).
 
-<Example id="_dev/shapes-layers" :height="420" />
+<Example id="shapes/layers" :height="420" />
 
 ### SVG paths
 
@@ -86,7 +86,7 @@ On date axes write dates with `_` between date and time (`M 2024-01-05_12:00 10`
 commands and arcs need numbers. Arc radii are in the path's units and the sweep flag follows the
 data's y-up orientation (`1` = counter-clockwise on screen).
 
-<Example id="_dev/shapes-paths" :height="420" />
+<Example id="shapes/paths" :height="420" />
 
 ### Pixel-sized shapes
 
@@ -94,7 +94,7 @@ With `xsizemode: 'pixel'` (or `ysizemode`), `x0` / `x1` and path x values are **
 `xanchor` (a position in `xref` units; y offsets are positive up). The shape keeps its size when
 you zoom: callouts, rings around points, markers of your own.
 
-<Example id="_dev/shapes-pixel" :height="420" />
+<Example id="shapes/pixel-size" :height="420" />
 
 ### Labels
 
@@ -121,12 +121,12 @@ default). `xref` / `yref` default to `'paper'`. `sizing` decides how the picture
 - `'fill'`: cover the box, keeping the aspect ratio (cropped).
 - `'stretch'`: fill the box exactly.
 
-<Example id="_dev/images-logo" :height="400" />
+<Example id="layout-images/logo" :height="400" />
 
 `layer: 'below'` puts an image under the traces and the grid (with axis references it is clipped to
 the subplot and follows zoom), the default `'above'` over them. `opacity` fades it.
 
-<Example id="_dev/images-background" :height="400" />
+<Example id="layout-images/background" :height="400" />
 
 Images load asynchronously: `chart.ready` (and every update promise) resolves once they are
 drawn, so exports and screenshots include them. A picture that fails to load logs one warning and

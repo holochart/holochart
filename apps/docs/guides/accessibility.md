@@ -25,10 +25,10 @@ All accessibility options live in [`config.a11y`](/reference/config):
 | `a11y.reducedMotion` | `'auto'`   | [Reduced motion](#reduced-motion): `'auto'`, `true` or `false`.      |
 | `a11y.keyboard`      | `true`     | [Keyboard access](#keyboard-access) to the data and the legend.      |
 
-<Example id="_dev/a11y-description" :height="400" />
+<Example id="accessibility/description" :height="400" />
 
-The chart above draws nothing extra. Open your browser's accessibility inspector on it, or run
-`__interaction.chart.description` in the console of the sandbox, to see what a screen reader gets.
+The chart above draws nothing extra. Open your browser's accessibility inspector on it, or read
+[`chart.description`](#the-hidden-description) from code, to see what a screen reader gets.
 
 ## What the chart element gets
 
@@ -124,7 +124,7 @@ Nothing is rewritten when the text did not change.
 The description starts with the gist of the chart, written from its data: which way each series
 goes, from what to what, and the extremes worth knowing.
 
-<Example id="_dev/a11y-summary" :height="460" />
+<Example id="accessibility/summary" :height="460" />
 
 > USD by Month. Revenue rises from 1.2M (Jan 1, 2024) to 3.4M (Dec 1, 2024). It peaks at 3.6M
 > (Nov 1, 2024). Costs stays flat at about 2.0M.
