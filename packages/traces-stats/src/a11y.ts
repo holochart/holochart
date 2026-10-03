@@ -11,7 +11,8 @@
  *   cursor over the cells in view. ← / → move along the row, ↑ / ↓ along the column, Home / End
  *   to the ends of the row. The cells are built on demand, so a grid of millions costs nothing.
  * - `parcoords`: a line × axis cursor. ← / → move along a line from axis to axis, ↑ / ↓ to the
- *   previous / next line on the same axis; the label sits on the axis at the line's value.
+ *   previous / next line on the same axis; the label sits on the axis at the line's value (a
+ *   dimension without a label is named with {@link DIMENSION_TEMPLATE}).
  * - `parcats`: its categories. ← / → move between dimensions, ↑ / ↓ between the categories of
  *   one, Home / End to its first / last category.
  *
@@ -52,6 +53,8 @@ export const BOX_TEMPLATE = '{name}: {position}, {text}, {n} of {count}.';
 export const CELL_TEMPLATE = '{name}: {text}, row {row} of {rows}, column {column} of {columns}.';
 /** The announcement of a parcats category. */
 export const CATEGORY_TEMPLATE = '{name}: {dimension}, {category}, {text}, {n} of {count}.';
+/** The label of a parcoords dimension that has none, in its stops' labels (`{n}` counts from 1). */
+export const DIMENSION_TEMPLATE = 'Dimension {n}';
 
 /** A hover query at linear `(xl, yl)` of a cartesian trace, or at container `(xl, yl)` of a domain one. */
 function queryAt(ctx: HoverContext, xl: number, yl: number, mode: HoverQuery['mode']): HoverQuery {
@@ -228,6 +231,13 @@ export const parcoords = (
           const { dim, x } = axes[c]!;
           const v = dim.values[r];
           const u = dim.unit[r]!;
+          // A dimension without a label is named in the chart's language, like the announcements.
+          const label =
+            plain(dim.label) ||
+            (ctx.fullLayout._locale?._(DIMENSION_TEMPLATE) ?? DIMENSION_TEMPLATE).replace(
+              '{n}',
+              `${c + 1}`,
+            );
           return {
             pointIndex: r,
             // The same line on another axis is another stop.
@@ -235,7 +245,7 @@ export const parcoords = (
             distance: 0,
             px: x,
             py: height - toY(rect, Number.isFinite(u) ? u : 0.5),
-            hoverText: `${plain(dim.label) || `Dimension ${c + 1}`}: ${typeof v === 'number' ? number(v) : plain(v)}`,
+            hoverText: `${label}: ${typeof v === 'number' ? number(v) : plain(v)}`,
             showName: false,
             fields: { dimension: dim.index, label: dim.label, value: v },
             ...cell(k, columns, n),
