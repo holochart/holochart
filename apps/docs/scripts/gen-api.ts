@@ -35,7 +35,16 @@ const PACKAGES = [
   'packages/runtime',
   'packages/core',
   'packages/render',
+  'packages/components',
+  'packages/traces-basic',
+  'packages/traces-stats',
+  'packages/traces-sci',
+  'packages/traces-finance',
+  'packages/traces-hier',
+  'packages/traces-3d',
+  'packages/themes',
   'packages/express',
+  'packages/locales',
 ];
 
 interface SidebarItem {
@@ -117,6 +126,8 @@ function wrapPage(markdown: string, title: string): string {
 async function runTypeDoc(packages: readonly Pkg[]): Promise<boolean> {
   // With a single package TypeDoc writes it at the output root; keep the per-package layout.
   const only = packages.length === 1 ? packages[0] : undefined;
+  // Internal helper types referenced from public signatures are expected for now.
+  const validation = { notExported: false, invalidLink: true, rewrittenLink: true };
   const options: TypeDocOptions & PluginOptions = {
     entryPointStrategy: 'packages',
     entryPoints: packages.map((p) => p.dir),
@@ -127,6 +138,8 @@ async function runTypeDoc(packages: readonly Pkg[]): Promise<boolean> {
       readme: 'none',
       // Work-in-progress packages may not type-check; document them anyway.
       skipErrorChecking: true,
+      // Validation runs per package with this strategy, so the setting has to be repeated here.
+      validation,
     },
     plugin: ['typedoc-plugin-markdown'],
     out: only ? path.join(OUT_DIR, slug(only.name)) : OUT_DIR,
@@ -138,8 +151,7 @@ async function runTypeDoc(packages: readonly Pkg[]): Promise<boolean> {
     excludeExternals: true,
     disableSources: true,
     logLevel: LogLevel.Warn,
-    // Internal helper types referenced from public signatures are expected for now.
-    validation: { notExported: false, invalidLink: true, rewrittenLink: true },
+    validation,
     // Markdown output tuned for VitePress.
     entryFileName: 'index',
     excludeScopesInPaths: true,
