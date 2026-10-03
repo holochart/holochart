@@ -1,7 +1,7 @@
 ---
 title: Reference
-description: Generated attribute and API references, the events list, and the machine-readable schema.
-status: draft
+description: Generated attribute and API references, events, errors, colorscales, marker symbols, Plotly compatibility, and the machine-readable schema.
+status: complete
 ---
 
 # Reference
@@ -22,28 +22,34 @@ them, so what it shows can differ; `chart.fullLayout` and `chart.fullData` have 
 
 - [Layout](/reference/layout): axes, subplots, title, legend, and other figure-wide attributes
 - [Config](/reference/config): per-chart behavior
-- One page per trace type, such as [scatter](/reference/scatter). Trace pages appear in the
-  sidebar as trace types are registered.
+- One page per trace type, such as [scatter](/reference/scatter), listed in the sidebar.
 
 ## JavaScript API reference
 
-The [API reference](/reference/api/) documents every public function, class, and type, generated
-from the TypeScript sources with TypeDoc.
+The [API reference](/reference/api/) documents the exported functions, classes, and types of
+every published package, generated from the TypeScript sources with TypeDoc.
 
-## Events
+## Events and errors
 
-The [events reference](/reference/events) lists every event a chart emits and its payload.
+- The [events reference](/reference/events) lists every event a chart emits and its payload.
+- [Errors and warnings](/reference/errors) lists what warns, what rejects, and the error classes.
+
+## Colorscales and marker symbols
+
+Both pages are generated from the library's registries:
+
+- [Colorscales & palettes](/reference/colorscales): every built-in colorscale and qualitative
+  palette, with a swatch.
+- [Marker symbols](/reference/marker-symbols): every marker symbol with its name, code and
+  variants.
+
+## Plotly compatibility
+
+[Plotly compatibility](/reference/plotly-compat) compares Holochart's schema with plotly.js':
+which trace types, attributes, layout keys and config options are supported, partial or missing,
+and the known deviations.
 
 ## plot-schema.json
 
-The whole schema is published as [plot-schema.json](/plot-schema.json). Tools can use it to
-validate figures or to autocomplete figure JSON in an editor. A JSON Schema version for editor
-autocomplete will be published with each release.
-
-## Planned
-
-These reference pages will be generated from Holochart's registries:
-
-- [Colorscales & palettes](/reference/colorscales)
-- [Marker symbols](/reference/marker-symbols)
-- [Plotly compatibility table](/reference/plotly-compat)
+The whole schema is published as [plot-schema.json](/plot-schema.json), with the keys `traces`,
+`layout`, `config` and `defs`. The attribute reference is generated from the same data.
