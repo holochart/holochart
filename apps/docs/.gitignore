@@ -10,3 +10,5 @@ reference/attributes/
 public/plot-schema.json
 # TypeDoc API reference (scripts/gen-api.ts, plan E19.7)
 reference/api/
+# Changelog body (scripts/gen-changelog.ts), included by changelog.md
+.vitepress/generated/
