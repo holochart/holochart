@@ -282,23 +282,76 @@ The first arrow key starts at the first point of the first trace. Details:
   inside the x range, so after zooming in the cursor stays in view. For horizontal traces
   (`orientation: 'h'`) the roles turn with the chart: ↑ / ↓ step through the points along y, and
   ← / → move between traces.
-- **Pie slices** are visited in drawing order (← / ↑ previous, → / ↓ next). Scatter, line, bar,
-  waterfall, funnel, OHLC and candlestick traces are navigated; histograms, box and violin plots,
-  2D maps (heatmap, contour, histogram2d), polar, 3D and hierarchy traces are not yet.
+- **Other chart families** have stops of their own, each showing the hover label of what it is
+  on; see [Keys by chart family](#keys-by-chart-family).
 - **Events**: moving emits `hover` (like `chart.hover()`, without a DOM event), Escape `unhover`,
   Enter `click` with the same Plotly-shaped point as a mouse click and the `KeyboardEvent` as
   `event`. Zoom, pan and reset emit one `relayout` with the keys a drag emits
   (`'xaxis.range[0]'`, …) and respect `fixedrange` and `minallowed` / `maxallowed`.
 - **Announcements** go to a polite live region inside the plot area's focus target, with the text
-  of the hover label; zoom, pan and reset are announced too. They are localized like the modebar:
-  the English sentence is the locale dictionary key (`'{name}: {text}, point {n} of {count}.'`,
-  `'Zoomed in.'`, …).
+  of the hover label, its lines read as a list ("Share: Alpha, 40, 40%, point 1 of 5."); zoom, pan,
+  rotation and reset are announced too. They are localized like the modebar: the English sentence
+  is the locale dictionary key; see [Announcement sentences](#announcement-sentences).
 - Keys with Ctrl, Alt or Meta are left to the browser, and keys pressed while a control inside the
   chart has focus stay with that control.
 
 The plot area's focus target is `role="application"`, so screen readers in browse mode hand it
 the arrow keys; the rest of the figure stays browsable. Its code loads the first time the chart
-gets focus.
+gets focus, and so do the stops of the chart families below (one small chunk per trace package);
+keys pressed meanwhile are kept and replayed.
+
+### Keys by chart family
+
+Every stop shows the hover label(s) a pointer would get there and announces what they say, with
+the stop's place in the chart. Page Up / Page Down, Enter, Escape and the view keys work as above.
+
+| Traces                                              | Stops                                            | ← / →                                                   | ↑ / ↓                                                           | Home / End                  |
+| --------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------- | --------------------------------------------------------------- | --------------------------- |
+| scatter, line, bar, waterfall, funnel, OHLC, candle | data points, along x                             | previous / next point                                   | the trace next above / below at this x                          | first / last point          |
+| histogram                                           | bins: the range and the bar's value              | previous / next bin                                     | the trace next above / below at this bin                        | first / last bin            |
+| box, violin                                         | one per box: every statistic at once (max … min) | previous / next box                                     | the trace next above / below at this position                   | first / last box            |
+| heatmap, contour, histogram2d, histogram2dcontour   | cells in view, rows from the top                 | along the row                                           | along the column                                                | ends of the row             |
+| pie, funnelarea                                     | slices, stages, in drawing order                 | previous / next                                         | previous / next                                                 | first / last                |
+| sunburst, treemap, icicle                           | drawn nodes of the current level                 | previous / next sibling                                 | ↑ the parent, ↓ the first child                                 | first / last sibling        |
+| sankey                                              | nodes by column, and links                       | previous / next node (on a link: links of that node)    | ↓ downstream (first outgoing link, a link's target), ↑ upstream | first / last node (or link) |
+| parcats                                             | categories                                       | the category beside it in the previous / next dimension | previous / next category of the dimension                       | first / last category       |
+| parcoords                                           | each line on each axis (a label on the axis)     | the same line on the previous / next axis               | the previous / next line on this axis                           | first / last axis           |
+| scatterpolar, barpolar                              | points inside the subplot, bars, in data order   | previous / next                                         | previous / next                                                 | first / last                |
+| scatter3d                                           | points, in data order                            | previous / next                                         | previous / next                                                 | first / last                |
+
+- **Hierarchies**: Enter drills into the node like a click (out of the entry, like a click on the
+  center), and the cursor stays on its node through the transition.
+- **Grids** build their cells on demand, so the cursor costs the same on a 4096 × 4096 heatmap. A
+  gap with `hoverongaps: false` is still a stop, announced with its position.
+- **Box and violin** stops need box hover: a trace with `hoveron: 'points'` (a strip plot) has
+  none.
+- **3D scenes**: on a chart with a scene, Shift + arrows **orbit the camera** in steps of 15° (← / →
+  around the scene, ↑ / ↓ over it; a turntable, or a free orbit with `dragmode: 'orbit'`), `+` /
+  `-` move it in and out, and `0` resets it to the first drawn view. Each key is one GUI
+  `relayout` of `scene.camera`, as a drag is. With the cursor on a 3D point, its scene gets the
+  keys; without a cursor, every scene does. Surface, mesh3d, cone, streamtube, isosurface, volume
+  and bar3d have no stops yet (their scenes take the view keys).
+- **Not navigated yet**: `image`, `splom`, `table` cells and `indicator`.
+- **The script-tag build** (`holochart.iife.min.js`) leaves the 2D families' stops out for now
+  (histogram, box, violin, the grids, funnelarea, the hierarchies, sankey, parcats, parcoords and
+  polar): its size budget has no room for the chunks it would inline. Cartesian points, pie and,
+  with the 3D add-on, scatter3d and the scenes' view keys work there. The ESM build has them all.
+
+### Announcement sentences
+
+The sentences below are the locale dictionary keys; a translation keeps the `{placeholders}`, in
+any order. `{name}` is the trace name and `{text}` what the hover label(s) say.
+
+| Sentence                                                                   | Said for                                           |
+| -------------------------------------------------------------------------- | -------------------------------------------------- |
+| `{name}: {text}, point {n} of {count}.`                                    | data points, slices, stages, polar and 3D points   |
+| `{name}: {text}, {n} of {count}.`                                          | histogram bins, sankey nodes and links, a lone box |
+| `{name}: {position}, {text}, {n} of {count}.`                              | a box or violin at `{position}` of its trace       |
+| `{name}: {text}, row {row} of {rows}, column {column} of {columns}.`       | grid cells; parcoords lines (rows) on axes         |
+| `{name}: {text}, level {level}, {n} of {count}, children: {children}.`     | sunburst, treemap and icicle nodes                 |
+| `{name}: {dimension}, {category}, {text}, {n} of {count}.`                 | parcats categories                                 |
+| `No data points to explore.`                                               | a chart without stops                              |
+| `Zoomed in.` / `Zoomed out.` / `Panned.` / `View rotated.` / `View reset.` | the view keys                                      |
 
 ### The controls
 
@@ -467,6 +520,11 @@ export const myTrace: TraceModule<MyCalc> = {
 };
 ```
 
+A module can also ship its accessibility code in a chunk of its own that loads on first use, as the
+built-in 3D traces do: `a11y: () => import('./a11y.js').then((m) => m.parts)` resolves to
+`{ [traceType]: { describe, keyboardPoints, keyboardView } }`. The trace shows the generic line
+until the chunk is there, then the chart describes itself again; `chart.describe()` waits for it.
+
 Build at most `maxRows` rows and report the full count as `total`; `row(i)` formats any row, so a
 visible table can show all of them. The `insight` hands the summary code facts, not sentences: a
 `series` (values along x), `shares` (parts of a whole), `boxes`, `bins`, a `grid`, `prices` or a
@@ -474,10 +532,32 @@ single `value`, with the formatters to show them — the calc's own arrays, neve
 `describe()` that throws is logged and replaced by the generic line, so it can never break the
 chart.
 
+## Keyboard stops for a custom trace type
+
+A trace module lists its stops with `keyboardPoints(calc, trace, ctx)`: the hover points of what
+it draws, in reading order. A cartesian trace whose stops are its data points needs none. Stops
+may say where the arrows lead (`nav`: the indices ←, →, ↑, ↓, Home and End go to), show more
+labels (`more`) and bring their own sentence (`say`: an English template and its values):
+
+<!-- docs-gates: no-typecheck -->
+
+```ts
+keyboardPoints(calc, trace, ctx) {
+  return calc.cells.map((cell, k) => ({
+    ...hoverPointOf(cell, trace, ctx), // what hoverPoints returns on the cell
+    nav: [cell.left ?? k, cell.right ?? k, cell.up ?? k, cell.down ?? k],
+    say: ['{name}: {text}, ring {ring}.', { ring: String(cell.ring) }],
+  }));
+},
+```
+
+Return an array, or anything with a `length` and `at(i)` that builds stop `i` on demand. A trace
+drawn in a 3D scene gets the scene's view keys with `a11y: sceneA11y`.
+
 ## What's next
 
-Keyboard navigation of histograms, box plots, 2D maps, polar charts and hierarchies (with Enter
-drilling down), and keys for the range slider's handles and for editing selections, come later.
+Stops for the remaining 3D traces, `image` and `table`, the 2D families in the script-tag build,
+and keys for the range slider's handles and for editing selections, come later.
 [Locales](/fundamentals/locales) (E17.6) translate the modebar, format numbers and dates, and
 translate the generated summaries and keyboard announcements; the rest of the description (axes,
 trace lines, table captions) is English for now. Summaries don't announce changes as they happen (no live
