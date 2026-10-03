@@ -169,7 +169,7 @@ widen the axis autorange. See
 When the values follow from the data by a condition, you can describe the condition instead of
 computing the array. `styleRules` is a list of `{ when, set }` rules: points matching `when` get
 the per-point values in `set`, over the trace's own value. Rules are plain JSON, so they survive
-`chart.toJSON()`, can be stored or sent from a server, and are validated like the rest of the
+`chartToJSON(chart)`, can be stored or sent from a server, and are validated like the rest of the
 figure:
 
 <Example id="scatter/style-rules" />
@@ -224,7 +224,7 @@ createChart(el, {
 ```
 
 A function behaves exactly like the array of its results, but it can't be saved as JSON:
-`chart.toJSON()` stores the evaluated array instead, with a warning. See
+`chartToJSON(chart)` stores the evaluated array instead, with a warning. See
 [Conditional styling: style functions](/fundamentals/conditional-styling#style-functions).
 
 ## Combining them

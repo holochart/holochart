@@ -63,7 +63,7 @@ declare const rows: object[];
 const chart = await hx.histogram(el, rows, { x: 'total_bill', color: 'sex' });
 ```
 
-The figure is ordinary Holochart JSON: `createChart`, `react`, `chart.animate`, `toJSON` and the
+The figure is ordinary Holochart JSON: `createChart`, `react`, `chart.animate`, `chartToJSON` and the
 rest of the API work on it as on any figure.
 
 ## What to register

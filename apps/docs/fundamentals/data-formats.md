@@ -267,22 +267,22 @@ More to know:
 - To change a column, give `react` a figure whose dataset has a new array for it. Only the
   traces that read that column are recalculated. A column changed in place is not noticed, as
   with any data array.
-- `chart.toJSON()` writes the datasets once and keeps the references in the traces.
+- `chartToJSON(chart)` writes the datasets once and keeps the references in the traces.
 
 Datasets are a Holochart addition: Plotly has no `datasets` key.
 
 ## Saved figures
 
-`chart.toJSON()` returns the figure as JSON-safe data. Typed arrays are written in Plotly's
+`chartToJSON(chart)` returns the figure as JSON-safe data. Typed arrays are written in Plotly's
 base64 form, `{ dtype, bdata }`, with a `shape` for a grid of typed rows, and `Date` objects as
 ISO strings.
 `fromJSON` and `figureFromJSON` turn that form back into typed arrays, in figures saved by
 Holochart or by Plotly:
 
 ```ts
-import { fromJSON } from '@mk7s/holochart';
+import { chartToJSON, fromJSON } from '@mk7s/holochart';
 
-const saved = JSON.stringify(chart.toJSON());
+const saved = JSON.stringify(chartToJSON(chart));
 
 // Later, or on another page:
 const restored = fromJSON(el, saved);

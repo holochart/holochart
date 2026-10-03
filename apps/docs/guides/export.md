@@ -1,10 +1,10 @@
 ---
-title: Exporting images & vectors
-description: Export charts as PNG, JPEG or WebP images at any size and resolution, from code or the modebar.
+title: Exporting images
+description: Export charts as PNG, JPEG or WebP images at any size and resolution, from code or the modebar, and save the figure as JSON.
 status: complete
 ---
 
-# Exporting images & vectors
+# Exporting images
 
 `chart.toImage()` renders a chart to an image and resolves to a data URL, ready for an `<img>`, a
 download or an upload. It works like Plotly's `toImage`, with the same options.
@@ -109,11 +109,25 @@ const url = await toImage({ data, layout: { width: 600, height: 300 } }, { scale
 
 ## Exporting the figure as JSON
 
-`chart.toJSON()` (or `JSON.stringify(chart)`) exports the figure itself, with typed arrays in
-Plotly's base64 encoding; `fromJSON` loads it back. See [Plotly compatibility](/reference/plotly-compat).
+`chartToJSON(chart)` exports the figure itself as JSON-safe data, with typed arrays in Plotly's
+base64 encoding. `JSON.stringify` turns the result into text, and `fromJSON` loads it back:
 
-## Coming later
+```ts
+import { chartToJSON, fromJSON } from '@mk7s/holochart';
 
-- **Vector export** (SVG and PDF) of 2D charts, planned for M7 (plan E18.2).
-- **Server-side image generation** with a headless browser (E18.6).
-- **Clipboard** copy of the image and the data (E18.8).
+const saved = JSON.stringify(chartToJSON(chart));
+const restored = fromJSON(el, saved);
+await restored.ready;
+```
+
+`chartToJSON` is a function, not a method: pass it the chart. See
+[Saved figures](/fundamentals/data-formats#saved-figures).
+
+## Not supported
+
+- **Vector export.** There is no SVG or PDF export: `toImage` and `downloadImage` make raster
+  images only.
+- **Rendering without a browser.** Images are drawn with WebGL2, so export needs a browser. On
+  a server, that means a headless browser; see
+  [Troubleshooting](/guides/troubleshooting#no-webgl2) for the flags headless Chromium needs.
+- **Clipboard.** Holochart has no copy-to-clipboard action for the image or the data.

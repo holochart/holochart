@@ -130,7 +130,7 @@ for (const { groups, fit, traceIndex } of hx.getTrendlineResults(figure)) {
 | `logX`, `logY` | Whether x / y were fit on their logarithms                                                                         |
 
 The results are kept beside the figure object, not inside it: the figure stays plain Plotly JSON,
-and like plotly.py (which keeps them on the Python figure only) they don't survive `toJSON`,
+and like plotly.py (which keeps them on the Python figure only) they don't survive `chartToJSON`,
 `structuredClone` or a copy. Pass the figure Express returned, or the chart it rendered
 (`const chart = await hx.scatter(el, …)`). LOWESS and the moving-window kinds have no fit results,
 as in px. The fitting functions are exported too: `ols`, `lowess`, `rolling`, `expanding`, `ewm`.

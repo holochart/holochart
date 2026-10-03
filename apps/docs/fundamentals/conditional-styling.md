@@ -11,7 +11,7 @@ Any attribute that takes one value per point (a per-point or `arrayOk` attribute
 set from the data itself. Holochart gives you two ways to do it:
 
 - **Style rules** (`styleRules`): conditions and values written as plain JSON, such as "points
-  with `y > 10` are gold". They survive `toJSON()`, can be stored and sent over the wire, and are
+  with `y > 10` are gold". They survive `chartToJSON(chart)`, can be stored and sent over the wire, and are
   validated like the rest of the figure.
 - **Style functions**: a JavaScript function in place of the value, called once per point, as in
   d3. The most flexible option, but a function cannot be saved as JSON.
@@ -195,13 +195,15 @@ A function that throws is reported once, and the attribute takes its default.
 
 ### Functions and JSON
 
-A figure with functions cannot be saved as it is. `chart.toJSON()` (and `JSON.stringify(chart)`)
-evaluate each function into its array and warn once per attribute; the saved figure draws the
+A figure with functions cannot be saved as it is. `chartToJSON(chart)` evaluates each function
+into its array and warns once per attribute; the saved figure draws the
 same, but the function is gone. Use style rules when the styling must survive saving, sharing or
 a server round trip:
 
 ```ts
-const saved = JSON.stringify(chart.toJSON());
+import { chartToJSON } from '@mk7s/holochart';
+
+const saved = JSON.stringify(chartToJSON(chart));
 // console: holochart: toJSON: data[0].marker.color: style function evaluated into 12 per-point values (functions are not serializable)
 ```
 
