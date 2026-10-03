@@ -208,7 +208,13 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
   const demos: Item[] = [
     {
       text: 'Demos',
-      items: pages('demos/', ['openrouter', 'tqqq-soxl', 'science-basics', 'dallas-weather']),
+      items: pages('demos/', [
+        'openrouter',
+        'tqqq-soxl',
+        'science-basics',
+        'dallas-weather',
+        'tirzepatide',
+      ]),
     },
   ];
 
