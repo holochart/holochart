@@ -31,6 +31,7 @@ import {
   cleanZ,
   distinctValues,
   heatmapSmoothing,
+  heatmapZStats,
   isEvenlySpaced,
   makeBoundArray,
   MAX_CELLS,
@@ -257,6 +258,41 @@ describe('heatmap calc', () => {
     const { calc } = calcOf({ z: [Float32Array.of(1, NaN, 3), [4]] });
     expect(nan(calc.z)).toEqual([1, null, 3, 4, null, null]);
     expect([...calc.x.edges]).toEqual([-0.5, 0.5, 1.5, 2.5]);
+  });
+
+  it('copies typed rows natively with the same values, extent and statistics as a scan', () => {
+    const rows = [
+      Float32Array.of(1, 2.5, -3, 7),
+      Float64Array.of(7, 1e-9, 7, 0),
+      Float32Array.of(9, Infinity, -Infinity, NaN), // a non-finite value: the careful loop
+      Float64Array.of(8, 8), // short: padded with gaps
+      Int16Array.of(-7, 3, 8, 8),
+      Float32Array.of(8.5, 1, 8.5, 2, 99), // longer than the grid is wide (the first row)
+      ['4', null, 8.5, 'x'],
+      new Float64Array(0),
+    ];
+    const { calc } = calcOf({ z: rows });
+    expect([calc.nx, calc.ny]).toEqual([5, 8]);
+    const expected = rows.flatMap((row) =>
+      Array.from({ length: 5 }, (_, i) => {
+        const v = i < row.length ? Number(row[i] ?? NaN) : NaN;
+        return Number.isFinite(v) ? v : null;
+      }),
+    );
+    expect(nan(calc.z)).toEqual(expected);
+    expect(calc.zExtent).toEqual([-7, 99]);
+    // The first of the largest values (row 5, column 4), and the number of values.
+    expect(heatmapZStats(calc.z)).toEqual({
+      maxAt: 5 * 5 + 4,
+      finite: expected.filter((v) => v !== null).length,
+    });
+    // Equal maxima in different rows and kinds of rows: the first in grid order.
+    const ties = calcOf({ z: [Float32Array.of(1, 3, 3), [3, 3, 3], Float64Array.of(3, 0, 3)] });
+    expect(heatmapZStats(ties.calc.z)).toEqual({ maxAt: 1, finite: 9 });
+    expect(ties.calc.zExtent).toEqual([0, 3]);
+    const none = calcOf({ z: [Float32Array.of(NaN, NaN), Float64Array.of(Infinity, NaN)] });
+    expect(none.calc.zExtent).toEqual([NaN, NaN]);
+    expect(heatmapZStats(none.calc.z)).toEqual({ maxAt: -1, finite: 0 });
   });
 
   it('transposes', () => {
@@ -814,6 +850,23 @@ describe('heatmap describe', () => {
     const { rows, row } = d!.table!;
     expect([0, 1].map((k) => row!(k))).toEqual(rows);
     expect(row!(2)).toEqual(['0', '1', '3']);
+  });
+
+  it('takes the highest cell and the value count from calc instead of scanning the grid', () => {
+    const s = calcOf({
+      z: [
+        [null, 4, 9],
+        [9, 2, null],
+      ],
+    });
+    // The first of equal maxima, and the finite count, as a scan finds them.
+    expect(heatmapZStats(s.calc.z)).toEqual({ maxAt: 2, finite: 4 });
+    // A grid calc did not build (a contour's filled copy) is scanned once, then remembered.
+    const other = Float64Array.of(NaN, 1, Infinity, 7, 7, -Infinity);
+    const stats = heatmapZStats(other);
+    expect(stats).toEqual({ maxAt: 3, finite: 3 });
+    expect(heatmapZStats(other)).toBe(stats);
+    expect(heatmapZStats(new Float64Array(3).fill(NaN))).toEqual({ maxAt: -1, finite: 0 });
   });
 });
 

@@ -128,6 +128,58 @@ export function heatmapLookupAxes(
   return axes;
 }
 
+/** What a description says about a grid's values. */
+export interface HeatmapZStats {
+  /** Index of the largest finite value (the first of equal ones); −1 without finite values. */
+  readonly maxAt: number;
+  /** Number of finite values. */
+  readonly finite: number;
+}
+
+/** The finite extent of a grid's values (`lo > hi` without any) and its {@link HeatmapZStats}. */
+interface ZScan extends HeatmapZStats {
+  lo: number;
+  hi: number;
+}
+
+/** {@link ZScan} of `z` in one pass; non-finite values are skipped. */
+function scanZ(z: Float64Array): ZScan {
+  let lo = Infinity;
+  let hi = -Infinity;
+  let maxAt = -1;
+  let finite = 0;
+  for (let k = 0; k < z.length; k++) {
+    const v = z[k]!;
+    // `v - v` is 0 exactly for finite numbers.
+    if (v - v !== 0) continue;
+    finite++;
+    if (v < lo) lo = v;
+    if (v > hi) {
+      hi = v;
+      maxAt = k;
+    }
+  }
+  return { lo, hi, maxAt, finite };
+}
+
+/** Statistics of the grids calc built, by their `z` (calc already passes over every value). */
+const zStats = new WeakMap<Float64Array, HeatmapZStats>();
+
+/**
+ * The {@link HeatmapZStats} of a grid's values: known from calc for the grids it built, one pass
+ * over `z` (then remembered) for any other. Descriptions are rebuilt after every pipeline run with
+ * new content, so they must not scan a large grid each time.
+ */
+export function heatmapZStats(z: Float64Array): HeatmapZStats {
+  let stats = zStats.get(z);
+  if (!stats) {
+    const { maxAt, finite } = scanZ(z);
+    stats = { maxAt, finite };
+    zStats.set(z, stats);
+  }
+  return stats;
+}
+
 const EMPTY_AXIS: HeatmapAxisCells = {
   count: 0,
   edges: new Float64Array(0),
@@ -320,31 +372,67 @@ interface SourceGrid {
 }
 
 /**
- * Copy rows of a 2D `z` into the grid (the fast path of a grid that is not re-indexed): typed
- * rows without per-value checks beyond finiteness, other rows through {@link cleanZ}.
+ * Copy rows of a 2D `z` into the grid (the fast path of a grid that is not re-indexed), and return
+ * the {@link ZScan} of the grid, gathered on the way: a 4096² grid is 134 MB, and every further
+ * pass over it costs about as much as the copy.
+ *
+ * Float32Array and Float64Array rows are copied natively, then read once more for the statistics
+ * with a loop that has no data-dependent branch to mispredict (`bad` stays 0 while every value is
+ * finite); a row with a non-finite value, and any other kind of row, takes the careful loop.
  */
 function copyRows(
   rows: ArrayLike<ArrayLike<unknown> | undefined>,
   z: Float64Array,
   nx: number,
   ny: number,
-): void {
+): ZScan {
+  let lo = Infinity;
+  let hi = -Infinity;
+  let maxAt = -1;
+  let finite = 0;
   for (let j = 0; j < ny; j++) {
     const row = rows[j];
     const base = j * nx;
     const n = row ? Math.min(row.length, nx) : 0;
-    if (row && ArrayBuffer.isView(row)) {
-      const typed = row as unknown as ArrayLike<number>;
+    if (row instanceof Float32Array || row instanceof Float64Array) {
+      z.set(n < row.length ? row.subarray(0, n) : row, base);
+      let bad = 0;
+      let rowLo = Infinity;
+      let rowHi = -Infinity;
       for (let i = 0; i < n; i++) {
-        const v = typed[i]!;
-        // `v - v` is 0 exactly for finite numbers.
-        z[base + i] = v - v === 0 ? v : NaN;
+        const v = row[i]!;
+        // `v - v` is 0 exactly for finite numbers, NaN otherwise.
+        bad += v - v;
+        if (v < rowLo) rowLo = v;
+        if (v > rowHi) rowHi = v;
       }
-    } else if (row) {
-      for (let i = 0; i < n; i++) z[base + i] = cleanZ(row[i]);
+      if (bad === 0) {
+        finite += n;
+        if (rowLo < lo) lo = rowLo;
+        if (rowHi > hi) {
+          hi = rowHi;
+          maxAt = base + row.indexOf(rowHi);
+        }
+        z.fill(NaN, base + n, base + nx);
+        continue;
+      }
+    }
+    const typed = row && ArrayBuffer.isView(row) ? (row as unknown as ArrayLike<number>) : null;
+    for (let i = 0; i < n; i++) {
+      const v = typed ? typed[i]! : cleanZ(row![i]);
+      if (v - v === 0) {
+        z[base + i] = v;
+        finite++;
+        if (v < lo) lo = v;
+        if (v > hi) {
+          hi = v;
+          maxAt = base + i;
+        }
+      } else z[base + i] = NaN;
     }
     z.fill(NaN, base + n, base + nx);
   }
+  return { lo, hi, maxAt, finite };
 }
 
 function namesOf(values: unknown): string[] | undefined {
@@ -591,7 +679,8 @@ export function calcHeatmapGrid(
   const identity = colOf.every((c, i) => c === i) && rowOf.every((r, j) => r === j);
   let pointOf: Int32Array | undefined;
   if (source.pointOf) pointOf = new Int32Array(nx * ny).fill(-1);
-  if (identity && source.rowsIn) copyRows(source.rowsIn, z, nx, ny);
+  let scan: ZScan | undefined;
+  if (identity && source.rowsIn) scan = copyRows(source.rowsIn, z, nx, ny);
   else {
     for (let j = 0; j < ny; j++) {
       const r = rowOf[j]!;
@@ -603,7 +692,10 @@ export function calcHeatmapGrid(
       }
     }
   }
-  if (trace['connectgaps'] === true) z = fillGaps(z, nx, ny);
+  if (trace['connectgaps'] === true) {
+    z = fillGaps(z, nx, ny);
+    scan = undefined;
+  }
 
   // Source coordinates only place the cells when the grid was not re-indexed by categories.
   const xs = xb ? xb.coords : identity || xaxis.type !== 'category' ? source.xs : undefined;
@@ -617,13 +709,9 @@ export function calcHeatmapGrid(
     isEvenlySpaced(xb?.coords ?? source.xs ?? []) &&
     isEvenlySpaced(yb?.coords ?? source.ys ?? []);
 
-  let lo = Infinity;
-  let hi = -Infinity;
-  for (let k = 0; k < z.length; k++) {
-    const v = z[k]!;
-    if (v < lo) lo = v;
-    if (v > hi) hi = v;
-  }
+  // The extent, and what the description needs (see `heatmapZStats`).
+  const { lo, hi, maxAt, finite } = scan ?? scanZ(z);
+  zStats.set(z, { maxAt, finite });
   const zExtent: [number, number] = lo <= hi ? [lo, hi] : [NaN, NaN];
   const reindexed = !identity && !pointOf ? { source: { rows: rowOf, cols: colOf } } : {};
   return { x, y, nx, ny, z, zExtent, fastSmoothing, pointOf, ...reindexed };
