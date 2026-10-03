@@ -1112,3 +1112,32 @@ html.dark {
 .hc-demo-narrow {
   max-width: 640px;
 }
+
+/* Reference galleries (scripts/gen-galleries.ts): a colorscale as a bar, a palette as blocks. */
+.vp-doc .hc-colorscale {
+  display: inline-block;
+  width: 320px;
+  height: 18px;
+  vertical-align: middle;
+  border: 1px solid var(--hc-axis);
+  border-radius: 3px;
+}
+
+.vp-doc .hc-palette {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  vertical-align: middle;
+}
+
+.vp-doc .hc-palette > i {
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--hc-axis);
+  border-radius: 2px;
+}
+
+.vp-doc .hc-symbol {
+  display: block;
+  color: var(--hc-title);
+}

@@ -5625,6 +5625,18 @@
       "thumbnailSize": { "width": 640, "height": 480 }
     },
     {
+      "id": "scatter/marker-symbols",
+      "title": "Scatter: every marker symbol",
+      "description": "All built-in marker symbols with their numeric codes, each as filled, -open, -dot and -open-dot.",
+      "tags": ["scatter", "markers", "symbols"],
+      "category": "scatter",
+      "traceTypes": ["scatter"],
+      "size": { "width": 720, "height": 600 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/scatter/marker-symbols.webp",
+      "thumbnailSize": { "width": 640, "height": 533 }
+    },
+    {
       "id": "scatter/style-rules",
       "title": "Scatter: style rules",
       "description": "Serializable styleRules: per-point colors, sizes and symbols from conditions on y, customdata[1] and pointNumber; later rules win.",
