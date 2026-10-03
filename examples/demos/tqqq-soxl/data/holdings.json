@@ -1,0 +1,1340 @@
+{
+  "retrieved": "2026-10-01",
+  "TQQQ": {
+    "asOf": "2026-09-30",
+    "netAssets": 37727823951,
+    "index": "Nasdaq-100",
+    "source": "https://accounts.profunds.com/etfdata/ByFund/TQQQ-psdlyhld.csv",
+    "holdings": [
+      {
+        "kind": "swap",
+        "name": "BofA Merrill Lynch",
+        "exposure": 11968876825.5
+      },
+      {
+        "kind": "swap",
+        "name": "Barclays",
+        "exposure": 11522723313.5
+      },
+      {
+        "kind": "swap",
+        "name": "BNP Paribas",
+        "exposure": 11111509168.0
+      },
+      {
+        "kind": "swap",
+        "name": "Societe Generale",
+        "exposure": 11029467035.0
+      },
+      {
+        "kind": "swap",
+        "name": "Citibank",
+        "exposure": 10415580237.0
+      },
+      {
+        "kind": "swap",
+        "name": "Goldman Sachs",
+        "exposure": 9248684458.0
+      },
+      {
+        "kind": "swap",
+        "name": "UBS",
+        "exposure": 9013231442.5
+      },
+      {
+        "kind": "swap",
+        "name": "JPMorgan",
+        "exposure": 8595601103.5
+      },
+      {
+        "kind": "swap",
+        "name": "Nomura",
+        "exposure": 8486160912.0
+      },
+      {
+        "kind": "swap",
+        "name": "Morgan Stanley",
+        "exposure": 6008841234.0
+      },
+      {
+        "kind": "future",
+        "name": "Nasdaq-100 E-mini (Dec 2026)",
+        "contracts": 5040.0,
+        "exposure": 3094434000.0
+      },
+      {
+        "kind": "cash",
+        "name": "ProShares Genius Money Market ETF",
+        "value": 7016457350.0
+      },
+      {
+        "kind": "stock",
+        "ticker": "NVDA",
+        "name": "Nvidia Corp",
+        "shares": 4644500.0,
+        "value": 1060710910.0,
+        "exposure": 1060710910.0
+      },
+      {
+        "kind": "tbill",
+        "name": "T-bill 2026-10-06",
+        "maturity": "2026-10-06",
+        "value": 999478010.0
+      },
+      {
+        "kind": "stock",
+        "ticker": "AAPL",
+        "name": "Apple Inc",
+        "shares": 2812657.0,
+        "value": 936671034.1,
+        "exposure": 936671034.1
+      },
+      {
+        "kind": "tbill",
+        "name": "T-bill 2026-12-01",
+        "maturity": "2026-12-01",
+        "value": 794586856.0
+      },
+      {
+        "kind": "tbill",
+        "name": "T-bill 2026-11-10",
+        "maturity": "2026-11-10",
+        "value": 746737365.0
+      },
+      {
+        "kind": "stock",
+        "ticker": "MSFT",
+        "name": "Microsoft Corp",
+        "shares": 1430979.0,
+        "value": 733949129.1,
+        "exposure": 733949129.1
+      },
+      {
+        "kind": "tbill",
+        "name": "T-bill 2026-12-29",
+        "maturity": "2026-12-29",
+        "value": 693163786.0
+      },
+      {
+        "kind": "tbill",
+        "name": "T-bill 2027-01-12",
+        "maturity": "2027-01-12",
+        "value": 642505877.0
+      },
+      {
+        "kind": "stock",
+        "ticker": "MU",
+        "name": "Micron Technology Inc",
+        "shares": 600745.0,
+        "value": 639859507.0,
+        "exposure": 639859507.0
+      },
+      {
+        "kind": "tbill",
+        "name": "T-bill 2026-12-24",
+        "maturity": "2026-12-24",
+        "value": 569671572.8
+      },
+      {
+        "kind": "stock",
+        "ticker": "AMD",
+        "name": "Advanced Micro Devices",
+        "shares": 868268.0,
+        "value": 531171631.7,
+        "exposure": 531171631.7
+      },
+      {
+        "kind": "stock",
+        "ticker": "AMZN",
+        "name": "Amazon.Com Inc",
+        "shares": 2078417.0,
+        "value": 517837595.6,
+        "exposure": 517837595.6
+      },
+      {
+        "kind": "tbill",
+        "name": "T-bill 2027-01-19",
+        "maturity": "2027-01-19",
+        "value": 513531194.8
+      },
+      {
+        "kind": "stock",
+        "ticker": "META",
+        "name": "Meta Platforms Inc-Class A",
+        "shares": 572842.0,
+        "value": 415413561.6,
+        "exposure": 415413561.6
+      },
+      {
+        "kind": "tbill",
+        "name": "T-bill 2026-11-05",
+        "maturity": "2026-11-05",
+        "value": 398485180.0
+      },
+      {
+        "kind": "stock",
+        "ticker": "GOOGL",
+        "name": "Alphabet Inc-Cl A",
+        "shares": 1130678.0,
+        "value": 389043686.2,
+        "exposure": 389043686.2
+      },
+      {
+        "kind": "stock",
+        "ticker": "GOOG",
+        "name": "Alphabet Inc-Cl C",
+        "shares": 1065282.0,
+        "value": 362984188.7,
+        "exposure": 362984188.7
+      },
+      {
+        "kind": "stock",
+        "ticker": "TSLA",
+        "name": "Tesla Inc",
+        "shares": 1012284.0,
+        "value": 359168486.0,
+        "exposure": 359168486.0
+      },
+      {
+        "kind": "tbill",
+        "name": "T-bill 2026-11-03",
+        "maturity": "2026-11-03",
+        "value": 348753531.0
+      },
+      {
+        "kind": "stock",
+        "ticker": "SPCX",
+        "name": "Space Exploration Techn-Cl A",
+        "shares": 2282482.0,
+        "value": 344335234.5,
+        "exposure": 344335234.5
+      },
+      {
+        "kind": "stock",
+        "ticker": "INTC",
+        "name": "Intel Corp",
+        "shares": 2795689.0,
+        "value": 336125688.5,
+        "exposure": 336125688.5
+      },
+      {
+        "kind": "stock",
+        "ticker": "AVGO",
+        "name": "Broadcom Inc",
+        "shares": 916709.0,
+        "value": 321939033.7,
+        "exposure": 321939033.7
+      },
+      {
+        "kind": "stock",
+        "ticker": "WMT",
+        "name": "Walmart Inc",
+        "shares": 2587418.0,
+        "value": 268884478.6,
+        "exposure": 268884478.6
+      },
+      {
+        "kind": "stock",
+        "ticker": "PLTR",
+        "name": "Palantir Technologies Inc-A",
+        "shares": 1224062.0,
+        "value": 228960797.1,
+        "exposure": 228960797.1
+      },
+      {
+        "kind": "stock",
+        "ticker": "CSCO",
+        "name": "Cisco Systems Inc",
+        "shares": 2096855.0,
+        "value": 225684503.7,
+        "exposure": 225684503.7
+      },
+      {
+        "kind": "stock",
+        "ticker": "LRCX",
+        "name": "Lam Research Corp",
+        "shares": 665652.0,
+        "value": 218673338.5,
+        "exposure": 218673338.5
+      },
+      {
+        "kind": "stock",
+        "ticker": "AMAT",
+        "name": "Applied Materials Inc",
+        "shares": 422307.0,
+        "value": 215959353.7,
+        "exposure": 215959353.7
+      },
+      {
+        "kind": "stock",
+        "ticker": "COST",
+        "name": "Costco Wholesale Corp",
+        "shares": 236133.0,
+        "value": 214961315.2,
+        "exposure": 214961315.2
+      },
+      {
+        "kind": "tbill",
+        "name": "T-bill 2026-12-03",
+        "maturity": "2026-12-03",
+        "value": 200592750.8
+      },
+      {
+        "kind": "stock",
+        "ticker": "PANW",
+        "name": "Palo Alto Networks Inc",
+        "shares": 433384.0,
+        "value": 172187797.0,
+        "exposure": 172187797.0
+      },
+      {
+        "kind": "stock",
+        "ticker": "NFLX",
+        "name": "Netflix Inc",
+        "shares": 2215148.0,
+        "value": 154129997.8,
+        "exposure": 154129997.8
+      },
+      {
+        "kind": "stock",
+        "ticker": "CRWD",
+        "name": "Crowdstrike Holdings Inc - A",
+        "shares": 544874.0,
+        "value": 144255391.5,
+        "exposure": 144255391.5
+      },
+      {
+        "kind": "stock",
+        "ticker": "TXN",
+        "name": "Texas Instruments Inc",
+        "shares": 485832.0,
+        "value": 136076684.9,
+        "exposure": 136076684.9
+      },
+      {
+        "kind": "stock",
+        "ticker": "KLAC",
+        "name": "Kla Corp",
+        "shares": 695339.0,
+        "value": 135542431.3,
+        "exposure": 135542431.3
+      },
+      {
+        "kind": "stock",
+        "ticker": "SNDK",
+        "name": "Sandisk Corp",
+        "shares": 77858.0,
+        "value": 135464355.6,
+        "exposure": 135464355.6
+      },
+      {
+        "kind": "stock",
+        "ticker": "MRVL",
+        "name": "Marvell Technology Inc",
+        "shares": 466643.0,
+        "value": 123291747.0,
+        "exposure": 123291747.0
+      },
+      {
+        "kind": "stock",
+        "ticker": "AMGN",
+        "name": "Amgen Inc",
+        "shares": 287443.0,
+        "value": 121160098.9,
+        "exposure": 121160098.9
+      },
+      {
+        "kind": "stock",
+        "ticker": "LIN",
+        "name": "Linde Plc",
+        "shares": 245321.0,
+        "value": 116441612.7,
+        "exposure": 116441612.7
+      },
+      {
+        "kind": "stock",
+        "ticker": "STX",
+        "name": "Seagate Technology Holdings",
+        "shares": 120804.0,
+        "value": 111422361.4,
+        "exposure": 111422361.4
+      },
+      {
+        "kind": "stock",
+        "ticker": "QCOM",
+        "name": "Qualcomm Inc",
+        "shares": 558921.0,
+        "value": 102863820.8,
+        "exposure": 102863820.8
+      },
+      {
+        "kind": "stock",
+        "ticker": "ADI",
+        "name": "Analog Devices Inc",
+        "shares": 257722.0,
+        "value": 102240894.6,
+        "exposure": 102240894.6
+      },
+      {
+        "kind": "tbill",
+        "name": "T-bill 2026-10-15",
+        "maturity": "2026-10-15",
+        "value": 99851950.0
+      },
+      {
+        "kind": "tbill",
+        "name": "T-bill 2026-12-17",
+        "maturity": "2026-12-17",
+        "value": 99151396.0
+      },
+      {
+        "kind": "stock",
+        "ticker": "GILD",
+        "name": "Gilead Sciences Inc",
+        "shares": 659710.0,
+        "value": 98329775.5,
+        "exposure": 98329775.5
+      },
+      {
+        "kind": "stock",
+        "ticker": "SHOP",
+        "name": "Shopify Inc - Class A",
+        "shares": 643055.0,
+        "value": 95365056.5,
+        "exposure": 95365056.5
+      },
+      {
+        "kind": "stock",
+        "ticker": "TMUS",
+        "name": "T-Mobile Us Inc",
+        "shares": 570625.0,
+        "value": 93057525.0,
+        "exposure": 93057525.0
+      },
+      {
+        "kind": "stock",
+        "ticker": "PEP",
+        "name": "Pepsico Inc",
+        "shares": 725966.0,
+        "value": 91994411.52,
+        "exposure": 91994411.52
+      },
+      {
+        "kind": "stock",
+        "ticker": "ASML",
+        "name": "Asml Holding Nv-Ny Reg Shs",
+        "shares": 49883.0,
+        "value": 90371534.61,
+        "exposure": 90371534.61
+      },
+      {
+        "kind": "stock",
+        "ticker": "WDC",
+        "name": "Western Digital Corp",
+        "shares": 192018.0,
+        "value": 87264500.28,
+        "exposure": 87264500.28
+      },
+      {
+        "kind": "stock",
+        "ticker": "ISRG",
+        "name": "Intuitive Surgical Inc",
+        "shares": 188089.0,
+        "value": 76482630.07,
+        "exposure": 76482630.07
+      },
+      {
+        "kind": "stock",
+        "ticker": "VRTX",
+        "name": "Vertex Pharmaceuticals Inc",
+        "shares": 134689.0,
+        "value": 70416756.09,
+        "exposure": 70416756.09
+      },
+      {
+        "kind": "stock",
+        "ticker": "FTNT",
+        "name": "Fortinet Inc",
+        "shares": 390270.0,
+        "value": 69764665.2,
+        "exposure": 69764665.2
+      },
+      {
+        "kind": "stock",
+        "ticker": "ARM",
+        "name": "Arm Holdings Plc-Adr",
+        "shares": 232144.0,
+        "value": 67242831.04,
+        "exposure": 67242831.04
+      },
+      {
+        "kind": "stock",
+        "ticker": "BKNG",
+        "name": "Booking Holdings Inc",
+        "shares": 399556.0,
+        "value": 65091667.96,
+        "exposure": 65091667.96
+      },
+      {
+        "kind": "stock",
+        "ticker": "SBUX",
+        "name": "Starbucks Corp",
+        "shares": 606701.0,
+        "value": 57005625.96,
+        "exposure": 57005625.96
+      },
+      {
+        "kind": "stock",
+        "ticker": "ADP",
+        "name": "Automatic Data Processing",
+        "shares": 211434.0,
+        "value": 54562658.04,
+        "exposure": 54562658.04
+      },
+      {
+        "kind": "stock",
+        "ticker": "ADBE",
+        "name": "Adobe Inc",
+        "shares": 211579.0,
+        "value": 50766265.26,
+        "exposure": 50766265.26
+      },
+      {
+        "kind": "stock",
+        "ticker": "MAR",
+        "name": "Marriott International -Cl A",
+        "shares": 138643.0,
+        "value": 49311155.81,
+        "exposure": 49311155.81
+      },
+      {
+        "kind": "stock",
+        "ticker": "DDOG",
+        "name": "Datadog Inc - Class A",
+        "shares": 178374.0,
+        "value": 48847719.9,
+        "exposure": 48847719.9
+      },
+      {
+        "kind": "stock",
+        "ticker": "CDNS",
+        "name": "Cadence Design Sys Inc",
+        "shares": 146563.0,
+        "value": 48392904.16,
+        "exposure": 48392904.16
+      },
+      {
+        "kind": "stock",
+        "ticker": "CEG",
+        "name": "Constellation Energy",
+        "shares": 188714.0,
+        "value": 47937130.28,
+        "exposure": 47937130.28
+      },
+      {
+        "kind": "stock",
+        "ticker": "APP",
+        "name": "Applovin Corp-Class A",
+        "shares": 161802.0,
+        "value": 46992154.86,
+        "exposure": 46992154.86
+      },
+      {
+        "kind": "stock",
+        "ticker": "MELI",
+        "name": "Mercadolibre Inc",
+        "shares": 26940.0,
+        "value": 46566598.2,
+        "exposure": 46566598.2
+      },
+      {
+        "kind": "stock",
+        "ticker": "LITE",
+        "name": "Lumentum Holdings Inc",
+        "shares": 47740.0,
+        "value": 46367952.4,
+        "exposure": 46367952.4
+      },
+      {
+        "kind": "stock",
+        "ticker": "CSX",
+        "name": "Csx Corp",
+        "shares": 985516.0,
+        "value": 45836349.16,
+        "exposure": 45836349.16
+      },
+      {
+        "kind": "stock",
+        "ticker": "SNPS",
+        "name": "Synopsys Inc",
+        "shares": 101950.0,
+        "value": 44342133.0,
+        "exposure": 44342133.0
+      },
+      {
+        "kind": "stock",
+        "ticker": "MNST",
+        "name": "Monster Beverage Corp",
+        "shares": 1040700.0,
+        "value": 43313934.0,
+        "exposure": 43313934.0
+      },
+      {
+        "kind": "stock",
+        "ticker": "CTAS",
+        "name": "Cintas Corp",
+        "shares": 212722.0,
+        "value": 41493553.32,
+        "exposure": 41493553.32
+      },
+      {
+        "kind": "stock",
+        "ticker": "WBD",
+        "name": "Warner Bros Discovery Inc",
+        "shares": 1335714.0,
+        "value": 41340348.3,
+        "exposure": 41340348.3
+      },
+      {
+        "kind": "stock",
+        "ticker": "CMCSA",
+        "name": "Comcast Corp-Class A",
+        "shares": 1882877.0,
+        "value": 40971403.52,
+        "exposure": 40971403.52
+      },
+      {
+        "kind": "stock",
+        "ticker": "REGN",
+        "name": "Regeneron Pharmaceuticals",
+        "shares": 53726.0,
+        "value": 40738814.02,
+        "exposure": 40738814.02
+      },
+      {
+        "kind": "stock",
+        "ticker": "INTU",
+        "name": "Intuit Inc",
+        "shares": 145437.0,
+        "value": 40098435.27,
+        "exposure": 40098435.27
+      },
+      {
+        "kind": "stock",
+        "ticker": "DASH",
+        "name": "Doordash Inc - A",
+        "shares": 217651.0,
+        "value": 39949841.05,
+        "exposure": 39949841.05
+      },
+      {
+        "kind": "stock",
+        "ticker": "ROST",
+        "name": "Ross Stores Inc",
+        "shares": 170759.0,
+        "value": 39855150.6,
+        "exposure": 39855150.6
+      },
+      {
+        "kind": "stock",
+        "ticker": "MDLZ",
+        "name": "Mondelez International Inc-A",
+        "shares": 678901.0,
+        "value": 39254055.82,
+        "exposure": 39254055.82
+      },
+      {
+        "kind": "stock",
+        "ticker": "ORLY",
+        "name": "O'Reilly Automotive Inc",
+        "shares": 430196.0,
+        "value": 36743040.36,
+        "exposure": 36743040.36
+      },
+      {
+        "kind": "stock",
+        "ticker": "ABNB",
+        "name": "Airbnb Inc-Class A",
+        "shares": 223036.0,
+        "value": 35830733.4,
+        "exposure": 35830733.4
+      },
+      {
+        "kind": "stock",
+        "ticker": "HON",
+        "name": "Honeywell International Inc",
+        "shares": 168430.0,
+        "value": 35528624.2,
+        "exposure": 35528624.2
+      },
+      {
+        "kind": "stock",
+        "ticker": "MPWR",
+        "name": "Monolithic Power Systems Inc",
+        "shares": 25999.0,
+        "value": 35026372.78,
+        "exposure": 35026372.78
+      },
+      {
+        "kind": "stock",
+        "ticker": "AEP",
+        "name": "American Electric Power",
+        "shares": 289725.0,
+        "value": 34372974.0,
+        "exposure": 34372974.0
+      },
+      {
+        "kind": "stock",
+        "ticker": "TER",
+        "name": "Teradyne Inc",
+        "shares": 83400.0,
+        "value": 33435894.0,
+        "exposure": 33435894.0
+      },
+      {
+        "kind": "stock",
+        "ticker": "ALAB",
+        "name": "Astera Labs Inc",
+        "shares": 92370.0,
+        "value": 32880948.9,
+        "exposure": 32880948.9
+      },
+      {
+        "kind": "stock",
+        "ticker": "NXPI",
+        "name": "Nxp Semiconductors Nv",
+        "shares": 134378.0,
+        "value": 31918806.34,
+        "exposure": 31918806.34
+      },
+      {
+        "kind": "stock",
+        "ticker": "PCAR",
+        "name": "Paccar Inc",
+        "shares": 280216.0,
+        "value": 30770518.96,
+        "exposure": 30770518.96
+      },
+      {
+        "kind": "stock",
+        "ticker": "FAST",
+        "name": "Fastenal Co",
+        "shares": 610296.0,
+        "value": 30227960.88,
+        "exposure": 30227960.88
+      },
+      {
+        "kind": "stock",
+        "ticker": "NBIS",
+        "name": "Nebius Group Nv",
+        "shares": 126982.0,
+        "value": 29952514.16,
+        "exposure": 29952514.16
+      },
+      {
+        "kind": "stock",
+        "ticker": "MSTR",
+        "name": "Strategy Inc",
+        "shares": 193996.0,
+        "value": 29698847.64,
+        "exposure": 29698847.64
+      },
+      {
+        "kind": "stock",
+        "ticker": "BKR",
+        "name": "Baker Hughes Co",
+        "shares": 528293.0,
+        "value": 29003285.7,
+        "exposure": 29003285.7
+      },
+      {
+        "kind": "stock",
+        "ticker": "PDD",
+        "name": "Pdd Holdings Inc",
+        "shares": 355129.0,
+        "value": 27678754.26,
+        "exposure": 27678754.26
+      },
+      {
+        "kind": "stock",
+        "ticker": "FANG",
+        "name": "Diamondback Energy Inc",
+        "shares": 148895.0,
+        "value": 27368389.95,
+        "exposure": 27368389.95
+      },
+      {
+        "kind": "stock",
+        "ticker": "HONA",
+        "name": "Honeywell Aerospace Inc",
+        "shares": 168361.0,
+        "value": 26090904.17,
+        "exposure": 26090904.17
+      },
+      {
+        "kind": "stock",
+        "ticker": "PYPL",
+        "name": "Paypal Holdings Inc",
+        "shares": 455066.0,
+        "value": 23904616.98,
+        "exposure": 23904616.98
+      },
+      {
+        "kind": "stock",
+        "ticker": "CCEP",
+        "name": "Coca-Cola Europacific Partne",
+        "shares": 231490.0,
+        "value": 23544847.9,
+        "exposure": 23544847.9
+      },
+      {
+        "kind": "stock",
+        "ticker": "XEL",
+        "name": "Xcel Energy Inc",
+        "shares": 332202.0,
+        "value": 23413596.96,
+        "exposure": 23413596.96
+      },
+      {
+        "kind": "stock",
+        "ticker": "ADSK",
+        "name": "Autodesk Inc",
+        "shares": 111054.0,
+        "value": 23210286.0,
+        "exposure": 23210286.0
+      },
+      {
+        "kind": "stock",
+        "ticker": "MCHP",
+        "name": "Microchip Technology Inc",
+        "shares": 288883.0,
+        "value": 22466430.91,
+        "exposure": 22466430.91
+      },
+      {
+        "kind": "stock",
+        "ticker": "EXC",
+        "name": "Exelon Corp",
+        "shares": 548967.0,
+        "value": 22178266.8,
+        "exposure": 22178266.8
+      },
+      {
+        "kind": "stock",
+        "ticker": "RKLB",
+        "name": "Rocket Lab Corp",
+        "shares": 318230.0,
+        "value": 22174266.4,
+        "exposure": 22174266.4
+      },
+      {
+        "kind": "stock",
+        "ticker": "IDXX",
+        "name": "Idexx Laboratories Inc",
+        "shares": 42071.0,
+        "value": 21969055.49,
+        "exposure": 21969055.49
+      },
+      {
+        "kind": "stock",
+        "ticker": "KDP",
+        "name": "Keurig Dr Pepper Inc",
+        "shares": 723975.0,
+        "value": 21965401.5,
+        "exposure": 21965401.5
+      },
+      {
+        "kind": "stock",
+        "ticker": "CRWV",
+        "name": "Coreweave Inc-Cl A",
+        "shares": 244040.0,
+        "value": 21260764.8,
+        "exposure": 21260764.8
+      },
+      {
+        "kind": "stock",
+        "ticker": "FER",
+        "name": "Ferrovial Nv",
+        "shares": 388223.0,
+        "value": 21002864.3,
+        "exposure": 21002864.3
+      },
+      {
+        "kind": "stock",
+        "ticker": "TTWO",
+        "name": "Take-Two Interactive Softwre",
+        "shares": 99603.0,
+        "value": 20667622.5,
+        "exposure": 20667622.5
+      },
+      {
+        "kind": "stock",
+        "ticker": "WDAY",
+        "name": "Workday Inc-Class A",
+        "shares": 104120.0,
+        "value": 19830695.2,
+        "exposure": 19830695.2
+      },
+      {
+        "kind": "stock",
+        "ticker": "TRI",
+        "name": "Thomson Reuters Corp",
+        "shares": 200453.0,
+        "value": 19510090.49,
+        "exposure": 19510090.49
+      },
+      {
+        "kind": "stock",
+        "ticker": "ODFL",
+        "name": "Old Dominion Freight Line",
+        "shares": 110534.0,
+        "value": 19215230.56,
+        "exposure": 19215230.56
+      },
+      {
+        "kind": "stock",
+        "ticker": "PAYX",
+        "name": "Paychex Inc",
+        "shares": 189071.0,
+        "value": 18623493.5,
+        "exposure": 18623493.5
+      },
+      {
+        "kind": "stock",
+        "ticker": "ROP",
+        "name": "Roper Technologies Inc",
+        "shares": 52846.0,
+        "value": 18464920.86,
+        "exposure": 18464920.86
+      },
+      {
+        "kind": "stock",
+        "ticker": "AXON",
+        "name": "Axon Enterprise Inc",
+        "shares": 43083.0,
+        "value": 18203429.16,
+        "exposure": 18203429.16
+      },
+      {
+        "kind": "stock",
+        "ticker": "ALNY",
+        "name": "Alnylam Pharmaceuticals Inc",
+        "shares": 71162.0,
+        "value": 17558511.88,
+        "exposure": 17558511.88
+      },
+      {
+        "kind": "stock",
+        "ticker": "DXCM",
+        "name": "Dexcom Inc",
+        "shares": 200791.0,
+        "value": 17326255.39,
+        "exposure": 17326255.39
+      },
+      {
+        "kind": "stock",
+        "ticker": "GEHC",
+        "name": "Ge Healthcare Technology",
+        "shares": 240158.0,
+        "value": 15699128.46,
+        "exposure": 15699128.46
+      },
+      {
+        "kind": "stock",
+        "ticker": "CPRT",
+        "name": "Copart Inc",
+        "shares": 492498.0,
+        "value": 13435345.44,
+        "exposure": 13435345.44
+      },
+      {
+        "kind": "other",
+        "name": "Net other assets",
+        "value": 11915967236.72
+      }
+    ]
+  },
+  "SOXL": {
+    "asOf": "2026-10-01",
+    "netAssets": 23895032686,
+    "index": "ICE Semiconductor Index",
+    "sharesOutstanding": 161900060,
+    "source": "https://www.direxion.com/holdings/SOXL.csv",
+    "holdings": [
+      {
+        "kind": "stock",
+        "ticker": "AMD",
+        "name": "Advanced Micro Devices",
+        "shares": 2526033.0,
+        "price": 611.76,
+        "value": 1545325948.08,
+        "exposure": 1545325948.08,
+        "pct": 6.4671
+      },
+      {
+        "kind": "stock",
+        "ticker": "ADI",
+        "name": "Analog Devices Inc",
+        "shares": 1641510.0,
+        "price": 396.71,
+        "value": 651203432.1,
+        "exposure": 651203432.1,
+        "pct": 2.7252
+      },
+      {
+        "kind": "stock",
+        "ticker": "AMAT",
+        "name": "Applied Materials Inc",
+        "shares": 1297628.0,
+        "price": 511.38,
+        "value": 663581006.64,
+        "exposure": 663581006.64,
+        "pct": 2.777
+      },
+      {
+        "kind": "stock",
+        "ticker": "ARM",
+        "name": "Arm Holdings Plc-Adr",
+        "shares": 285648.0,
+        "price": 289.66,
+        "value": 82740799.68,
+        "exposure": 82740799.68,
+        "pct": 0.3463
+      },
+      {
+        "kind": "stock",
+        "ticker": "ASX",
+        "name": "Ase Technology Holding -Adr",
+        "shares": 3337418.0,
+        "price": 44.46,
+        "value": 148381604.28,
+        "exposure": 148381604.28,
+        "pct": 0.621
+      },
+      {
+        "kind": "stock",
+        "ticker": "ASML",
+        "name": "Asml Holding Nv-Ny Reg Shs",
+        "shares": 134459.0,
+        "price": 1811.67,
+        "value": 243595336.53,
+        "exposure": 243595336.53,
+        "pct": 1.0194
+      },
+      {
+        "kind": "stock",
+        "ticker": "ALAB",
+        "name": "Astera Labs Inc",
+        "shares": 1169131.0,
+        "price": 355.97,
+        "value": 416175562.07,
+        "exposure": 416175562.07,
+        "pct": 1.7417
+      },
+      {
+        "kind": "stock",
+        "ticker": "AVGO",
+        "name": "Broadcom Inc",
+        "shares": 3210969.0,
+        "price": 351.19,
+        "value": 1127660203.11,
+        "exposure": 1127660203.11,
+        "pct": 4.7192
+      },
+      {
+        "kind": "stock",
+        "ticker": "CBRS",
+        "name": "Cerebras Systems Inc - A",
+        "shares": 789663.0,
+        "price": 177.65,
+        "value": 140283631.95,
+        "exposure": 140283631.95,
+        "pct": 0.5871
+      },
+      {
+        "kind": "stock",
+        "ticker": "CRDO",
+        "name": "Credo Technology Group Holdi",
+        "shares": 1388542.0,
+        "price": 194.79,
+        "value": 270474096.18,
+        "exposure": 270474096.18,
+        "pct": 1.1319
+      },
+      {
+        "kind": "cash",
+        "name": "Dreyfus Govt Cash Man Ins",
+        "value": 848846186.89
+      },
+      {
+        "kind": "cash",
+        "name": "Dreyfus Trsry Securities Cash Mgmt",
+        "value": 3212300000.2
+      },
+      {
+        "kind": "stock",
+        "ticker": "ENTG",
+        "name": "Entegris Inc",
+        "shares": 1249157.0,
+        "price": 154.06,
+        "value": 192445127.42,
+        "exposure": 192445127.42,
+        "pct": 0.8054
+      },
+      {
+        "kind": "cash",
+        "name": "Goldman Finl Sq Trsry Inst 506",
+        "value": 1289699089.0
+      },
+      {
+        "kind": "swap",
+        "name": "Societe Generale",
+        "code": "ICESEMSGL",
+        "exposure": 290223000.0
+      },
+      {
+        "kind": "swap",
+        "name": "UBS",
+        "code": "ICESEMUBL",
+        "exposure": 3343798490.04
+      },
+      {
+        "kind": "swap",
+        "name": "Citibank",
+        "code": "ICESEMCTL",
+        "exposure": 3434989458.87
+      },
+      {
+        "kind": "swap",
+        "name": "Nomura",
+        "code": "ICESEMNML",
+        "exposure": 3439142550.0
+      },
+      {
+        "kind": "swap",
+        "name": "BNP Paribas",
+        "code": "ICESEMBPL",
+        "exposure": 3918054033.45
+      },
+      {
+        "kind": "swap",
+        "name": "JPMorgan",
+        "code": "ICESEMJPL",
+        "exposure": 6275941774.65
+      },
+      {
+        "kind": "swap",
+        "name": "BofA Merrill Lynch",
+        "code": "ICESEMMLL",
+        "exposure": 8382354188.58
+      },
+      {
+        "kind": "swap",
+        "name": "Barclays",
+        "code": "ICESEMBCL",
+        "exposure": 12869674832.07
+      },
+      {
+        "kind": "swap",
+        "name": "Goldman Sachs",
+        "code": "ICESEMGSL",
+        "exposure": 13101812600.85
+      },
+      {
+        "kind": "stock",
+        "ticker": "INTC",
+        "name": "Intel Corp",
+        "shares": 13286457.0,
+        "price": 120.23,
+        "value": 1597430725.11,
+        "exposure": 1597430725.11,
+        "pct": 6.6852
+      },
+      {
+        "kind": "cash",
+        "name": "Jp Morgan 100 Us Trsy Capital 3163",
+        "value": 1777000000.0
+      },
+      {
+        "kind": "stock",
+        "ticker": "KLAC",
+        "name": "Kla Corp",
+        "shares": 3388828.0,
+        "price": 194.93,
+        "value": 660584242.04,
+        "exposure": 660584242.04,
+        "pct": 2.7645
+      },
+      {
+        "kind": "stock",
+        "ticker": "LRCX",
+        "name": "Lam Research Corp",
+        "shares": 1972584.0,
+        "price": 328.51,
+        "value": 648013569.84,
+        "exposure": 648013569.84,
+        "pct": 2.7119
+      },
+      {
+        "kind": "stock",
+        "ticker": "MTSI",
+        "name": "Macom Technology Solutions H",
+        "shares": 585066.0,
+        "price": 284.82,
+        "value": 166638498.12,
+        "exposure": 166638498.12,
+        "pct": 0.6974
+      },
+      {
+        "kind": "stock",
+        "ticker": "MRVL",
+        "name": "Marvell Technology Inc",
+        "shares": 2809676.0,
+        "price": 264.21,
+        "value": 742344495.96,
+        "exposure": 742344495.96,
+        "pct": 3.1067
+      },
+      {
+        "kind": "stock",
+        "ticker": "MCHP",
+        "name": "Microchip Technology Inc",
+        "shares": 4385989.0,
+        "price": 77.77,
+        "value": 341098364.53,
+        "exposure": 341098364.53,
+        "pct": 1.4275
+      },
+      {
+        "kind": "stock",
+        "ticker": "MU",
+        "name": "Micron Technology Inc",
+        "shares": 1240271.0,
+        "price": 1065.11,
+        "value": 1321025044.81,
+        "exposure": 1321025044.81,
+        "pct": 5.5284
+      },
+      {
+        "kind": "stock",
+        "ticker": "MPWR",
+        "name": "Monolithic Power Systems Inc",
+        "shares": 389381.0,
+        "price": 1347.22,
+        "value": 524581870.82,
+        "exposure": 524581870.82,
+        "pct": 2.1953
+      },
+      {
+        "kind": "stock",
+        "ticker": "NVDA",
+        "name": "Nvidia Corp",
+        "shares": 5386123.0,
+        "price": 228.38,
+        "value": 1230082770.74,
+        "exposure": 1230082770.74,
+        "pct": 5.1478
+      },
+      {
+        "kind": "stock",
+        "ticker": "NXPI",
+        "name": "Nxp Semiconductors Nv",
+        "shares": 2070421.0,
+        "price": 237.53,
+        "value": 491787100.13,
+        "exposure": 491787100.13,
+        "pct": 2.0581
+      },
+      {
+        "kind": "stock",
+        "ticker": "ON",
+        "name": "On Semiconductor",
+        "shares": 3179314.0,
+        "price": 76.87,
+        "value": 244393867.18,
+        "exposure": 244393867.18,
+        "pct": 1.0228
+      },
+      {
+        "kind": "stock",
+        "ticker": "QCOM",
+        "name": "Qualcomm Inc",
+        "shares": 3487652.0,
+        "price": 184.04,
+        "value": 641867474.08,
+        "exposure": 641867474.08,
+        "pct": 2.6862
+      },
+      {
+        "kind": "stock",
+        "ticker": "SKHY",
+        "name": "Sk Hynix Inc-Adr",
+        "shares": 2765183.0,
+        "price": 184.15,
+        "value": 509208449.45,
+        "exposure": 509208449.45,
+        "pct": 2.131
+      },
+      {
+        "kind": "stock",
+        "ticker": "STM",
+        "name": "Stmicroelectronics Nv-Ny Shs",
+        "shares": 1298639.0,
+        "price": 53.36,
+        "value": 69295377.04,
+        "exposure": 69295377.04,
+        "pct": 0.29
+      },
+      {
+        "kind": "stock",
+        "ticker": "TSM",
+        "name": "Taiwan Semiconductor-Sp Adr",
+        "shares": 1095995.0,
+        "price": 456.19,
+        "value": 499981959.05,
+        "exposure": 499981959.05,
+        "pct": 2.0924
+      },
+      {
+        "kind": "stock",
+        "ticker": "TER",
+        "name": "Teradyne Inc",
+        "shares": 1275910.0,
+        "price": 400.91,
+        "value": 511525078.1,
+        "exposure": 511525078.1,
+        "pct": 2.1407
+      },
+      {
+        "kind": "stock",
+        "ticker": "TXN",
+        "name": "Texas Instruments Inc",
+        "shares": 2278970.0,
+        "price": 280.09,
+        "value": 638316707.3,
+        "exposure": 638316707.3,
+        "pct": 2.6713
+      },
+      {
+        "kind": "stock",
+        "ticker": "TSEM",
+        "name": "Tower Semiconductor Ltd",
+        "shares": 862767.0,
+        "price": 227.43,
+        "value": 196219098.81,
+        "exposure": 196219098.81,
+        "pct": 0.8212
+      },
+      {
+        "kind": "stock",
+        "ticker": "UMC",
+        "name": "United Microelectron-Sp Adr",
+        "shares": 4602410.0,
+        "price": 24.49,
+        "value": 112713020.9,
+        "exposure": 112713020.9,
+        "pct": 0.4717
+      }
+    ]
+  }
+}

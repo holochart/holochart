@@ -122,6 +122,18 @@ describe('labelText', () => {
     expect(labelText(entry({}, { hoverinfo: 'none' }), P, 'closest', true, LAYOUT).text).toBe('');
   });
 
+  it('falls back to text when hovertext is empty (its default)', () => {
+    // Every trace defaults `hovertext` to '' (Plotly): `%{text}` and the text line read `text`.
+    const templated = entry({ hovertext: '', text: ['a', 'b'], hovertemplate: '%{text}' });
+    expect(labelText(templated, P, 'closest', true, LAYOUT).text).toBe('b');
+    const flagged = entry({ hovertext: '', text: ['a', 'b'], hoverinfo: 'text' });
+    expect(labelText(flagged, P, 'closest', true, LAYOUT).text).toBe('b');
+    // Per point: an empty entry falls back, a given one wins.
+    const mixed = entry({ hovertext: ['h0', ''], text: ['a', 'b'], hovertemplate: '%{text}' });
+    expect(labelText(mixed, P, 'closest', true, LAYOUT).text).toBe('b');
+    expect(labelText(mixed, { ...P, pointIndex: 0 }, 'closest', true, LAYOUT).text).toBe('h0');
+  });
+
   it('writes unified rows as "name : value"', () => {
     expect(labelText(entry({ name: 'A' }), P, 'x unified', true, LAYOUT).text).toBe('A : 4.00');
   });

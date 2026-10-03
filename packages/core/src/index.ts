@@ -93,6 +93,8 @@ export { formatIssue, ValidationError } from './validate/issues.ts';
 export { HolochartError } from './errors.ts';
 export type { Issue, IssueCode } from './validate/issues.ts';
 export { editDistance, suggest } from './validate/suggest.ts';
+export { tracePackage } from './validate/trace-packages.ts';
+export { deprecate, warnOnce, type WarnFunction } from './util/warn.ts';
 
 // Layout & config schemas (E1.4, E1.9)
 export {

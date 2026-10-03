@@ -141,7 +141,15 @@ export const configSchema = attr.object(
       max: 8,
       extras: ['auto'],
       dflt: 'auto',
-      description: 'Renderer pixel ratio. `auto` uses `window.devicePixelRatio`.',
+      description:
+        'Renderer pixel ratio. `auto` uses `window.devicePixelRatio`, up to `maxPixelRatio`.',
+    }),
+    maxPixelRatio: attr.number({
+      min: 0.25,
+      max: 8,
+      dflt: 2,
+      description:
+        'Upper limit of the pixel ratio that `pixelRatio: "auto"` takes from the display. Raise it for sharper output on 3× screens, at the cost of drawing more pixels.',
     }),
     antialias: attr.boolean({
       dflt: true,
@@ -151,6 +159,12 @@ export const configSchema = attr.object(
       values: ['default', 'high-performance', 'low-power'],
       dflt: 'default',
       description: 'WebGL context power preference hint.',
+    }),
+    sharedRenderer: attr.enumerated({
+      values: ['auto', true, false],
+      dflt: 'auto',
+      description:
+        'Draw through one WebGL context shared by every chart on the page instead of a context per chart (browsers keep about 16, fewer on mobile). `auto` gives the first 4 charts a context of their own and shares for the rest. `false` always takes a context.',
     }),
     worker: attr.enumerated({
       values: [true, false, 'auto'],

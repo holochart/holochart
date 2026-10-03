@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test';
+import { browserProject } from '../browsers.ts';
 
 /**
  * Interaction tests (plan E20.4): scripted pointer scenarios (hover, box zoom, pan, lasso, click,
@@ -14,6 +15,9 @@ import { defineConfig } from '@playwright/test';
  * that passes on the retry counts as flaky, does not fail the job, and is listed in the job
  * summary by `node tests/interaction/report.ts` (from the JSON report written here). Locally
  * there are no retries, so a flake shows up as a failure.
+ *
+ * `HOLOCHART_BROWSER=firefox|webkit` runs the suite on that browser instead (tests/browsers.ts,
+ * backlog S2.5); the nightly workflow does. `LEAK_CYCLES` shortens leak.spec.ts for a quick run.
  */
 const PORT = Number(process.env.INTERACTION_PORT ?? 5198);
 const HOST = '127.0.0.1';
@@ -51,16 +55,14 @@ export default defineConfig({
     : [['list']],
   use: {
     baseURL: `http://${HOST}:${PORT}`,
-    browserName: 'chromium',
     viewport: { width: 1280, height: 800 },
     deviceScaleFactor: 1,
     colorScheme: 'light',
     locale: 'en-US',
     timezoneId: 'UTC',
     trace: 'retain-on-failure',
-    launchOptions: { args: CHROMIUM_ARGS },
   },
-  projects: [{ name: 'chromium-swiftshader' }],
+  projects: [browserProject(CHROMIUM_ARGS)],
   webServer: {
     command: `pnpm --filter @mk7s/holochart-sandbox exec vite --port ${PORT} --strictPort --host ${HOST}`,
     url: `http://${HOST}:${PORT}/`,

@@ -34,7 +34,9 @@ can draw (browsers usually allow up to 8192 or 16384 px per side; lower `scale` 
 
 The image is not a screenshot of the canvas. The figure is drawn again **offscreen** by a
 temporary chart laid out at the requested size, rendered once at `scale`, read back when every
-label, font and layout image is in, and thrown away. So:
+label, font and layout image is in, and thrown away. The temporary chart draws through the
+[shared renderer](./dashboards#webgl-contexts), so exporting does not use up a WebGL context
+however many exports run at once. So:
 
 - everything drawn in WebGL is included: traces, axes, text, the legend, annotations, shapes,
   layout images and colorbars, and the current selection (unselected points dimmed);

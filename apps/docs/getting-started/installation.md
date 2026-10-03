@@ -228,14 +228,32 @@ client (the mount hooks above already do that).
 
 ## Requirements
 
-- A browser with **WebGL2** (all current desktop and mobile browsers). Browsers without WebGL2
-  are not supported.
+- A browser with **WebGL2**. Browsers without WebGL2 are not supported; see
+  [Supported browsers](#supported-browsers).
 - **ES modules.** The npm packages are ESM-only and target ES2022. Use a bundler such as Vite,
   webpack, or Rollup, or the IIFE build above. Node 22 and newer can also `require()` them.
 - **TypeScript** types are included in every package. No `@types` package is needed. Figures are
   typed: `Figure`, `Data` (every trace type, discriminated on `type`) and `Layout` autocomplete
   every attribute with its documentation, and `createChart`, `newPlot` and `react` check the
   figures they get. See [TypeScript](/guides/typescript).
+
+## Supported browsers
+
+Holochart draws with WebGL2 only: there is no SVG, Canvas 2D or WebGL1 fallback. Without WebGL2,
+`createChart` throws a `WebGLUnavailableError`, `newPlot` rejects with one, and the container
+shows a text fallback (see
+[When WebGL2 is unavailable](/getting-started/first-chart#when-webgl2-is-unavailable)).
+
+| Browser                       | Status                                                                 |
+| ----------------------------- | ---------------------------------------------------------------------- |
+| Chrome and Edge, desktop      | Tested on every change (headless Chromium)                             |
+| Firefox, desktop              | Tested nightly; it logs two harmless WebGL warnings with 3D meshes     |
+| Safari, macOS                 | Its engine (WebKit) is tested nightly; Safari itself is not tested yet |
+| Safari on iOS, Chrome Android | Expected to work; not tested yet                                       |
+
+No minimum browser versions have been established. Two differences are known: Safari cannot
+export WebP (`toImage({ format: 'webp' })` rejects; PNG and JPEG work), and in Safari the range
+selector's buttons are not reached with Tab.
 
 ## Try it from the monorepo
 

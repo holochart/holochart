@@ -35,6 +35,7 @@ import {
 import type { Vec3 } from '../precision.ts';
 import type { DataTransform, Primitive, PrimitiveContext, ViewportSize } from '../types.ts';
 import { IDENTITY_TRANSFORM } from '../types.ts';
+import { fitsTexture } from '../capabilities.ts';
 import {
   UNIT_QUAD_KEY,
   applyTransformUniforms,
@@ -253,7 +254,7 @@ export class RasterPrimitive implements Primitive<RasterData> {
     const { pixels } = this.data;
     const w = Math.max(0, Math.floor(pixels.width));
     const h = Math.max(0, Math.floor(pixels.height));
-    if (w === 0 || h === 0) {
+    if (w === 0 || h === 0 || !fitsTexture(this.context.capabilities, 'image', w, h)) {
       this.texture?.dispose();
       this.texture = undefined;
       this.uniforms.uTex.value = null;

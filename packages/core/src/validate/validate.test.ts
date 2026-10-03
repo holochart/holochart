@@ -109,6 +109,19 @@ describe('validate', () => {
     expect(validate('nope', {}, registry)[0]?.path).toBe('data');
   });
 
+  it('names the package of a built-in trace type that is not registered', () => {
+    // The test registry has no sankey: a partial bundle that left traces-hier out.
+    const [issue] = validate([{ type: 'sankey' }], {}, registry);
+    expect(issue?.message).toBe(
+      "unknown trace type 'sankey': `sankey` is in @mk7s/holochart-traces-hier; import it from there and call `register(sankey)` (the trace is hidden)",
+    );
+    expect(issue?.suggestion).toBeUndefined();
+    // Not a built-in: the nearest registered type, as before.
+    expect(validate([{ type: 'scater' }], {}, registry)[0]?.message).toBe(
+      "unknown trace type 'scater'; did you mean 'scatter'? (the trace is hidden)",
+    );
+  });
+
   it('flags deprecated attributes, clamped values and item arrays', () => {
     const issues = validate(
       [{ legacy: 2 }],

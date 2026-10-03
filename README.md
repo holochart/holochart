@@ -109,9 +109,19 @@ install the runtime and only the packages you use, and `register(...)` them
 
 ## Browser support
 
-Any browser with **WebGL2**: current Chrome, Edge, Firefox and Safari, on desktop and mobile.
-Browsers without WebGL2 are not supported. So far CI tests Chromium only (headless, with
-software GL); Firefox and Safari are not tested yet.
+Any browser with **WebGL2**. Browsers without it are not supported: there is no SVG, Canvas 2D or
+WebGL1 fallback.
+
+| Browser                       | Status                                                                         |
+| ----------------------------- | ------------------------------------------------------------------------------ |
+| Chrome and Edge, desktop      | Tested on every PR (headless Chromium, software GL)                            |
+| Firefox, desktop              | Tested nightly (Playwright's Firefox); two console-warning issues are open     |
+| Safari, macOS                 | Engine tested nightly (Playwright's WebKit, not Safari itself); one issue open |
+| Safari on iOS, Chrome Android | Expected to work; not tested yet                                               |
+
+No minimum versions have been established. Safari cannot export WebP (its canvas has no encoder);
+PNG and JPEG work. Details, known issues and the manual release checklist:
+[docs/release/browser-support.md](docs/release/browser-support.md).
 
 ## Documentation
 

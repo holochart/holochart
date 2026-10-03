@@ -13,6 +13,7 @@
  * so do the shape-drawing buttons (`drawline`, `drawopenpath`, `drawclosedpath`, `drawcircle`,
  * `drawrect`, `eraseshape`), which join the drag group in the order they were added (Plotly).
  */
+import { warnOnce } from '@mk7s/holochart-core';
 import type { Chart, DrawDragmode } from '@mk7s/holochart-runtime';
 import { isModebarIcon, modebarIcons, type ModebarIcon } from './icons.ts';
 
@@ -286,18 +287,6 @@ const ZOOM_GROUP: readonly ModebarBuiltinName[] = [
   'resetScale2d',
 ];
 
-const defaultWarn = (message: string): void => console.warn(message);
-/** Names already warned about, per warn function (so tests with their own `warn` start fresh). */
-const warnedBy = new WeakMap<(message: string) => void, Set<string>>();
-
-function warnOnce(warn: (message: string) => void, key: string, message: string): void {
-  let seen = warnedBy.get(warn);
-  if (!seen) warnedBy.set(warn, (seen = new Set()));
-  if (seen.has(key)) return;
-  seen.add(key);
-  warn(message);
-}
-
 /** A name list given as an array or a single string (Plotly's `layout.modebar.add` is arrayOk). */
 function listOf(value: unknown): readonly unknown[] {
   if (Array.isArray(value)) return value.flat();
@@ -330,7 +319,7 @@ function customButton(button: ModebarCustomButton): ModebarButton {
  * - Unknown names are ignored, with one warning per name.
  */
 export function resolveModebarButtons(input: ModebarResolveInput): ModebarButtonGroup[] {
-  const warn = input.warn ?? defaultWarn;
+  const warn = input.warn;
   const removed = new Set<ModebarBuiltinName>();
   const removedOther = new Set<string>();
   const removedAny = new Set<string>();
@@ -357,17 +346,25 @@ export function resolveModebarButtons(input: ModebarResolveInput): ModebarButton
       const hit = ALIASES.get(lower);
       if (hit) for (const name of hit) added.add(name);
       else if (UNSUPPORTED.has(lower)) {
-        warnOnce(warn, `add:${lower}`, `[holochart] modebar button '${raw}' is not supported yet.`);
+        warnOnce(
+          `modebar:add:${lower}`,
+          `[holochart] modebar button '${raw}' is not supported yet.`,
+          warn,
+        );
       } else {
-        warnOnce(warn, `add:${lower}`, `[holochart] unknown modebar button '${raw}' ignored.`);
+        warnOnce(
+          `modebar:add:${lower}`,
+          `[holochart] unknown modebar button '${raw}' ignored.`,
+          warn,
+        );
       }
     } else if (isCustomButton(raw)) {
       customs.push(raw);
     } else {
       warnOnce(
-        warn,
-        'add:invalid',
+        'modebar:add:invalid',
         '[holochart] modeBarButtonsToAdd: custom buttons need a string `name` and a `click` function.',
+        warn,
       );
     }
   }
@@ -375,7 +372,11 @@ export function resolveModebarButtons(input: ModebarResolveInput): ModebarButton
   const customNames = new Set(customs.map((c) => c.name.toLowerCase()));
   for (const name of removedOther) {
     if (!customNames.has(name)) {
-      warnOnce(warn, `remove:${name}`, `[holochart] unknown modebar button '${name}' to remove.`);
+      warnOnce(
+        `modebar:remove:${name}`,
+        `[holochart] unknown modebar button '${name}' to remove.`,
+        warn,
+      );
     }
   }
 

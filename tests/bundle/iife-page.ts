@@ -63,11 +63,21 @@ export async function servePage(
     if (msg.type() === 'error') errors.push(msg.text());
     if (msg.type() === 'warning') warnings.push(msg.text());
   });
-  page.on('request', (req) => requests.push(req.url()));
+  // Network requests only: WebKit also reports the page's own blob: URLs (the text engine's worker
+  // and the font data it hands over).
+  page.on('request', (req) => {
+    if (!req.url().startsWith('blob:')) requests.push(req.url());
+  });
 
   const tags = scripts.map((file) => `<script src="${DIST_PATH}${file}"></script>`).join('');
   await page.route('**/*', async (route) => {
     const url = new URL(route.request().url());
+    // The page's own in-memory data (the text engine starts its worker from a blob). WebKit sends
+    // these through the route handler; Chromium and Firefox do not.
+    if (url.protocol === 'blob:') {
+      await route.continue();
+      return;
+    }
     if (url.origin !== ORIGIN) {
       await route.abort('internetdisconnected');
       return;

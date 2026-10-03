@@ -29,7 +29,9 @@ beforeEach(() => {
       return fake.renderer as unknown as WebGLRenderer;
     },
   };
-  // jsdom has no canvas encoder: answer in the requested type.
+  // jsdom has no 2D canvas (the offscreen chart copies its frame into one) ...
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+  // ... and no canvas encoder: answer in the requested type.
   vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockImplementation(
     (type?: string) => `data:${type ?? 'image/png'};base64,QUJD`,
   );
@@ -63,9 +65,9 @@ describe('chart.toImage', () => {
     const url = await c.toImage();
     expect(url).toBe('data:image/png;base64,QUJD');
     const { fake, params } = offscreen();
-    expect(params.preserveDrawingBuffer).toBe(true);
-    expect(fake.calls).toContain('size 640x400');
-    expect(fake.renderer['setPixelRatio']).toHaveBeenCalledWith(1);
+    // It draws through a shared renderer, whose canvas is copied from rather than read back.
+    expect(params.preserveDrawingBuffer).toBe(false);
+    expect(fake.calls).toContain('buffer 640x400@1');
     // The offscreen chart is gone, its canvas never touched the page, the live chart drew nothing.
     expect(fake.renderer.dispose).toHaveBeenCalled();
     expect(fake.canvas.isConnected).toBe(false);
@@ -78,8 +80,7 @@ describe('chart.toImage', () => {
     await c.ready;
     await c.toImage({ width: 300, height: 200, scale: 3, format: 'webp' });
     const { fake } = offscreen();
-    expect(fake.calls).toContain('size 300x200');
-    expect(fake.renderer['setPixelRatio']).toHaveBeenCalledWith(3);
+    expect(fake.calls).toContain('buffer 900x600@3');
     expect(HTMLCanvasElement.prototype.toDataURL).toHaveBeenLastCalledWith('image/webp');
     // The live chart keeps its size.
     expect(c.size).toEqual({ width: 640, height: 400 });
@@ -176,8 +177,7 @@ describe('functional toImage / downloadImage', () => {
     );
     expect(url).toBe('data:image/png;base64,QUJD');
     const only = created[0];
-    expect(only?.fake.calls).toContain('size 500x300');
-    expect(only?.fake.renderer['setPixelRatio']).toHaveBeenCalledWith(2);
+    expect(only?.fake.calls).toContain('buffer 1000x600@2');
   });
 
   it('rejects for an element without a chart', async () => {

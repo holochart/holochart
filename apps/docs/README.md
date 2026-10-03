@@ -28,6 +28,13 @@ pnpm --filter @mk7s/holochart-docs typecheck
 Run `pnpm run gen:reference` or `pnpm run gen:api` on their own when iterating on one of them.
 `gen:api` accepts `--strict` to fail instead of writing placeholder pages when TypeDoc fails.
 
+`gen` also runs `gen:compat` (`scripts/gen-plotly-compat.ts`), which rewrites the coverage tables
+of `reference/plotly-compat.md` between its `generated:plotly-compat` markers. That page is
+checked in: commit the change when the tables move, and don't edit between the markers.
+`gen:compat` needs `public/plot-schema.json`, so run `gen:reference` first; `--check` exits with
+1 instead of writing. plotly.js' schema comes from the reduced copy in `scripts/plotly-compat/`
+(see `reduce-plotly-schema.ts` there to refresh it).
+
 Workspace packages and examples resolve to their TypeScript sources (`source` export condition,
 ADR-013), so no package build is needed first.
 

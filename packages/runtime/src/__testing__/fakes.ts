@@ -49,6 +49,12 @@ export function createFakeRenderer(): FakeRenderer {
       this.height = h;
       calls.push(`size ${w}x${h}`);
     },
+    // Shared renderers size their drawing buffer this way (logged in device px).
+    setDrawingBufferSize(w: number, h: number, pixelRatio: number) {
+      calls.push(
+        `buffer ${Math.floor(w * pixelRatio)}x${Math.floor(h * pixelRatio)}@${pixelRatio}`,
+      );
+    },
     setRenderTarget: vi.fn(),
     setClearColor: vi.fn(),
     clear: vi.fn(),

@@ -103,6 +103,8 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
         'frameworks',
         'typescript',
         'ssr',
+        'csp',
+        'troubleshooting',
       ]),
     },
     {
@@ -203,7 +205,18 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
     },
   ];
 
-  const demos: Item[] = [{ text: 'Demos', items: pages('demos/', ['openrouter']) }];
+  const demos: Item[] = [
+    {
+      text: 'Demos',
+      items: pages('demos/', [
+        'openrouter',
+        'tqqq-soxl',
+        'science-basics',
+        'dallas-weather',
+        'tirzepatide',
+      ]),
+    },
+  ];
 
   const manifest = readJson<ReferenceManifest>(
     path.join(srcDir, 'reference/attributes/manifest.json'),
@@ -239,7 +252,13 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
     { text: 'JavaScript API', collapsed: true, items: apiSidebar },
     {
       text: 'More',
-      items: pages('reference/', ['events', 'colorscales', 'marker-symbols', 'plotly-compat']),
+      items: pages('reference/', [
+        'events',
+        'errors',
+        'colorscales',
+        'marker-symbols',
+        'plotly-compat',
+      ]),
     },
   ];
 

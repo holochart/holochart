@@ -107,13 +107,21 @@ export type Config = {
    */
   toImageButtonOptions?: ConfigToImageButtonOptions;
   /**
-   * Renderer pixel ratio. `auto` uses `window.devicePixelRatio`.
+   * Renderer pixel ratio. `auto` uses `window.devicePixelRatio`, up to `maxPixelRatio`.
    *
    * Range: 0.25 – 8
    *
    * @defaultValue `"auto"`
    */
   pixelRatio?: number | 'auto';
+  /**
+   * Upper limit of the pixel ratio that `pixelRatio: "auto"` takes from the display. Raise it for sharper output on 3× screens, at the cost of drawing more pixels.
+   *
+   * Range: 0.25 – 8
+   *
+   * @defaultValue `2`
+   */
+  maxPixelRatio?: number;
   /**
    * Request an antialiased WebGL context (fixed at context creation).
    *
@@ -126,6 +134,12 @@ export type Config = {
    * @defaultValue `"default"`
    */
   powerPreference?: 'default' | 'high-performance' | 'low-power';
+  /**
+   * Draw through one WebGL context shared by every chart on the page instead of a context per chart (browsers keep about 16, fewer on mobile). `auto` gives the first 4 charts a context of their own and shares for the rest. `false` always takes a context.
+   *
+   * @defaultValue `"auto"`
+   */
+  sharedRenderer?: 'auto' | true | false;
   /**
    * Run the calc stage in a Web Worker (ADR-011). `auto` switches on above a data-size threshold.
    *

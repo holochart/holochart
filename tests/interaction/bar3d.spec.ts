@@ -4,9 +4,9 @@ import { events, openInteraction, waitForEvent } from './helpers.ts';
 /**
  * `bar3d` hover on `_dev/interaction-bar3d` (plan E14.9, E20.4): per bar, the label shows the
  * position (categories by name), the bar's own height `z` and, for a bar with a `base` or on a
- * stack, where it starts (`base: …`); `hovertemplate` gets `%{base}` and `%{top}`; events carry
- * `base` and `top`. Also a `scatter3d` tube line (`line.render: 'tube'`, E14.10): a hit on the
- * mesh hovers the data point it was built around.
+ * stack, where it starts (`base: …`); `hovertemplate` gets `%{base}`, `%{top}` and `%{text}`;
+ * events carry `base` and `top`. Also a `scatter3d` tube line (`line.render: 'tube'`, E14.10): a
+ * hit on the mesh hovers the data point it was built around.
  *
  * The example: 800×640 px, four cube scenes in a 2 × 2 grid; bars at x = a, b, c (linear 0, 1,
  * 2), y = p (0), heights 3, 4, 5. The pointer aims at the middle of bars' front faces (y = −0.4).
@@ -99,11 +99,11 @@ test('stacked bars start on the bar below; hoverinfo all adds the text', async (
   ]);
 });
 
-test('hovertemplate reads base and top', async ({ page }) => {
+test('hovertemplate reads base, top and text', async ({ page }) => {
   const at = await aim(page, 3, 0, -0.4, 2.5);
   await page.mouse.move(at.x, at.y);
   await expect(labels(page)).toHaveCount(1);
-  await expect(labels(page).first()).toHaveText('a/p: 3 from 1 to 4');
+  await expect(labels(page).first()).toHaveText('a/p: 3 from 1 to 4 ta');
 });
 
 test('a tube line hovers the point it was built around', async ({ page }) => {

@@ -5,10 +5,12 @@
  * The image is not a screenshot of the live canvas. Like Plotly, the figure is drawn again by an
  * offscreen chart — a detached element with its own canvas — laid out at the requested width ×
  * height and rendered at `scale` pixels per CSS px. That chart is static (no hover labels,
- * selection outlines or modebar, which are DOM and never part of the WebGL frame), keeps its
- * drawing buffer, and is read back once `ready` says every text label, font and layout image is
- * in, and then destroyed. The live chart is not touched, so nothing flickers and hover, zoom and
- * pending updates carry on.
+ * selection outlines or modebar, which are DOM and never part of the WebGL frame) and is read back
+ * once `ready` says every text label, font and layout image is in, and then destroyed. The live
+ * chart is not touched, so nothing flickers and hover, zoom and pending updates carry on.
+ *
+ * The offscreen chart draws through the shared renderer (ADR-023), so an export does not take a
+ * WebGL context when the page already has one, and any number of exports use one between them.
  */
 import { isPlainObject, type FigureInput } from '@mk7s/holochart-core';
 import type {

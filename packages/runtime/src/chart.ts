@@ -144,6 +144,7 @@ import {
   domainRect,
   domainSpan,
   plotArea,
+  awaitsContainerSize,
   resolveFigureSize,
   resolveMargins,
   splitSubplotId,
@@ -220,6 +221,10 @@ export interface FigurePatch {
 
 /** Escape hatches into three.js (plan §7.2, E8.13). */
 export interface ChartThree {
+  /**
+   * The renderer that draws this chart. With `config.sharedRenderer` it also draws other charts,
+   * and its `domElement` is not this chart's canvas: use `root.canvas`.
+   */
   readonly renderer: WebGLRenderer;
   /** The render root: render loop, viewports, resources. */
   readonly root: RenderRoot;
@@ -590,6 +595,8 @@ export class Chart {
   #rootListeners: (() => void)[] = [];
   #observer: ResizeObserver | null = null;
   #observed: Size = { width: -1, height: -1 };
+  /** The observer only waits for a hidden container's first size (`responsive` is off). */
+  #untilSized = false;
   #size: Size = { width: 0, height: 0 };
   #margins: Margins = { l: 0, r: 0, t: 0, b: 0 };
   #plotArea: ViewportRect = { x: 0, y: 0, width: 0, height: 0 };
@@ -1742,6 +1749,9 @@ export class Chart {
         background: null,
         antialias: config.antialias,
         powerPreference: config.powerPreference,
+        maxPixelRatio: config.maxPixelRatio,
+        // Image export never takes a WebGL context of its own (ADR-023).
+        shared: offscreen ? true : config.sharedRenderer,
         ...(pixelRatio === undefined ? {} : { pixelRatio }),
         ...this.#options.renderRoot,
       });
@@ -1768,7 +1778,13 @@ export class Chart {
       root.on('contextlost', () => events.emit('webglcontextlost', undefined)),
       root.on('contextrestored', () => events.emit('webglcontextrestored', undefined)),
     ];
-    if (config.responsive && typeof ResizeObserver !== 'undefined') {
+    // Without `responsive`, a chart created in a hidden or unsized container (an inactive tab, a
+    // closed dialog) still takes the container's size once, when it first has one.
+    this.#untilSized =
+      !config.responsive &&
+      !offscreen &&
+      awaitsContainerSize(this.#figure.layout, this.#container());
+    if ((config.responsive || this.#untilSized) && typeof ResizeObserver !== 'undefined') {
       this.#observed = this.#container();
       this.#observer = new ResizeObserver(this.#onResize);
       this.#observer.observe(this.element);
@@ -1805,6 +1821,7 @@ export class Chart {
     this.#axes.clear();
     this.#observer?.disconnect();
     this.#observer = null;
+    this.#untilSized = false;
     for (const off of this.#rootListeners) off();
     this.#rootListeners = [];
     safely(() => this.#mirrors.clear());
@@ -1816,7 +1833,7 @@ export class Chart {
 
   readonly #onResize = (entries: ResizeObserverEntry[]): void => {
     const rect = entries[entries.length - 1]?.contentRect;
-    if (!rect || this.#destroyed) return;
+    if (!rect || this.#destroyed || !this.#observer) return;
     const w = Math.round(rect.width);
     const h = Math.round(rect.height);
     if (w === this.#observed.width && h === this.#observed.height) return;
@@ -1824,6 +1841,12 @@ export class Chart {
     const layoutIn = this.#figure.layout;
     // Only dimensions left to the container follow it (autosize semantics).
     if (layoutIn['width'] !== undefined && layoutIn['height'] !== undefined) return;
+    if (this.#untilSized) {
+      if (awaitsContainerSize(layoutIn, this.#observed)) return;
+      this.#untilSized = false;
+      this.#observer?.disconnect();
+      this.#observer = null;
+    }
     this.resize().catch(() => {
       // The error already rejected the promises of the calls batched with this resize.
     });
@@ -3455,7 +3478,6 @@ export function figureExportSource(
         renderRoot: {
           ...(renderRoot?.createRenderer ? { createRenderer: renderRoot.createRenderer } : {}),
           ...(renderRoot?.scheduler ? { scheduler: renderRoot.scheduler } : {}),
-          preserveDrawingBuffer: true,
           pixelRatio,
         },
       });

@@ -11,7 +11,7 @@ import {
   Texture,
   type WebGLRenderer,
 } from 'three';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { Vec3 } from '../precision.ts';
 import {
   clipToView,
@@ -248,6 +248,21 @@ describe('LightRig', () => {
     expect(renderer.shadowMap.enabled).toBe(true);
     expect(scene.environment).toBe(env);
     expect(scene.environmentIntensity).toBe(0.5);
+    rig.dispose();
+  });
+
+  it('restore: leaves environments that three.js uploads again by itself', () => {
+    const renderer = { shadowMap: { enabled: false } } as unknown as WebGLRenderer;
+    const scene = new Scene();
+    const env = new Texture();
+    const dispose = vi.spyOn(env, 'dispose');
+    const rig = createLightRig({ environment: env });
+    // Not attached: nothing to restore.
+    rig.restore();
+    rig.attach(renderer, scene);
+    rig.restore();
+    expect(scene.environment).toBe(env);
+    expect(dispose).not.toHaveBeenCalled();
     rig.dispose();
   });
 });

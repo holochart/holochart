@@ -8,8 +8,9 @@
  *   edge extent `[xEdges[0], xEdges[nx]] × [yEdges[0], yEdges[ny]]`. The RTC origin is the first
  *   edge of each axis, so the shader only sees small relative coordinates (ADR-008).
  * - **Values**: one `RG32F` texture (`RGFormat` + `FloatType`, nearest) packed *linearly*: cell
- *   `k = j * nx + i` is texel `(k % W, floor(k / W))` with `W = min(nx * ny, 4096)`, so any `nx`
- *   fits regardless of the max texture size. Texels hold `(value - zOrigin, valid)`: non-finite
+ *   `k = j * nx + i` is texel `(k % W, floor(k / W))` with `W = min(nx * ny, 4096, the device's
+ *   max texture size)`, so any `nx` fits. A grid with more cells than `W × max texture size` is
+ *   not drawn (a warning is logged). Texels hold `(value - zOrigin, valid)`: non-finite
  *   values (NaN, ±Infinity) are stored as `(0, 0)` and drawn transparent. A separate validity channel
  *   avoids GLSL `isnan`, which some compilers optimize away. `zOrigin` (the center of the finite z
  *   range) keeps float32 precision for values with a large common offset; zmin / zmax go to the
@@ -64,6 +65,7 @@ import type { ColorscaleInterpolation } from '../colorscale/interpolate.ts';
 import type { Vec3 } from '../precision.ts';
 import type { DataTransform, Primitive, PrimitiveContext, RGBA, ViewportSize } from '../types.ts';
 import { IDENTITY_TRANSFORM } from '../types.ts';
+import { fitsTexture } from '../capabilities.ts';
 import {
   UNIT_QUAD_KEY,
   applyTransformUniforms,
@@ -84,7 +86,10 @@ import {
 
 export { HEATMAP_MAX_SEARCH_STEPS } from './heatmap.glsl.ts';
 
-/** Row width (texels) of the value and edge textures; rows wrap past it. */
+/**
+ * Row width (texels) of the value and edge textures; rows wrap past it. Narrower on a device whose
+ * textures are smaller (`context.capabilities.maxTextureSize`).
+ */
 export const HEATMAP_TEXTURE_WIDTH = 4096;
 
 /** Plotly `zsmooth`: `false` = nearest cell, `'fast'` = index-space, `'best'` = data-space bilinear. */
@@ -656,11 +661,16 @@ export class HeatmapPrimitive implements Primitive<HeatmapData> {
       const image = packHeatmapEdges(
         x,
         y,
-        HEATMAP_TEXTURE_WIDTH,
+        this.textureWidth(),
         this.edgeTexture?.image.data as Float32Array | undefined,
       );
-      this.edgeTexture = uploadInto(this.edgeTexture, image, false, 'holochart:heatmap-edges');
-      u.uEdges.value = this.edgeTexture;
+      // Edges only outgrow a texture when the values do too, which is what the warning is about.
+      const max = this.context.capabilities?.maxTextureSize ?? Infinity;
+      this.edgeTexture =
+        image.height <= max
+          ? uploadInto(this.edgeTexture, image, false, 'holochart:heatmap-edges')
+          : this.drop(this.edgeTexture);
+      u.uEdges.value = this.edgeTexture ?? null;
       u.uYBase.value = image.yBase;
       u.uExtent.value.set(x.dir * x.extent, y.dir * y.extent);
       u.uUniform.value.set(x.uniform ? 1 : 0, y.uniform ? 1 : 0);
@@ -680,16 +690,43 @@ export class HeatmapPrimitive implements Primitive<HeatmapData> {
     if (count === 0) return;
     // Center of the finite range: small float32 deltas for values with a large common offset.
     this.zOrigin = (lo + hi) / 2;
+    const width = this.textureWidth();
+    if (!this.fits(heatmapTextureSize(count, width))) {
+      this.zTexture = this.drop(this.zTexture);
+      this.uniforms.uZ.value = null;
+      return;
+    }
     const image = packHeatmapValues(
       z,
       nx,
       ny,
-      HEATMAP_TEXTURE_WIDTH,
+      width,
       this.zOrigin,
       this.zTexture?.image.data as Float32Array | undefined,
     );
     this.zTexture = uploadInto(this.zTexture, image, true, 'holochart:heatmap-values');
     this.uniforms.uZ.value = this.zTexture;
+  }
+
+  /** Row width of the packed textures on this device. */
+  private textureWidth(): number {
+    const max = this.context.capabilities?.maxTextureSize ?? HEATMAP_TEXTURE_WIDTH;
+    return Math.min(HEATMAP_TEXTURE_WIDTH, max);
+  }
+
+  private fits(size: { width: number; height: number }): boolean {
+    const { nx, ny } = this.data;
+    return fitsTexture(
+      this.context.capabilities,
+      `heatmap of ${nx}×${ny} cells, packed`,
+      size.width,
+      size.height,
+    );
+  }
+
+  private drop(texture: DataTexture | undefined): undefined {
+    texture?.dispose();
+    return undefined;
   }
 
   /** Shared LUT (the new one is acquired before the old one is released). */
@@ -716,6 +753,7 @@ export class HeatmapPrimitive implements Primitive<HeatmapData> {
     this.object.visible =
       this.xAxis !== undefined &&
       this.yAxis !== undefined &&
+      this.edgeTexture !== undefined &&
       this.zTexture !== undefined &&
       this.lut !== undefined &&
       Number.isFinite(d.zmin) &&

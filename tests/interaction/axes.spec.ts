@@ -140,6 +140,7 @@ test('an x-only zoom box on an aspect-locked subplot zooms y by the same factor'
 
 test('zoom and pan across range breaks commit dates and keep the matched axis', async ({
   page,
+  browserName,
 }) => {
   await openInteraction(page, '_dev/rangebreaks-stocks');
   await events(page, true);
@@ -182,6 +183,11 @@ test('zoom and pan across range breaks commit dates and keep the matched axis', 
   const before = zoomed['x']?.range as number[];
   const after = panned['x']?.range as number[];
   expect(span(after)).toBeCloseTo(span(before), -2);
-  expect((after[0] as number) - (before[0] as number)).toBeCloseTo(span(before) * 0.8, -5);
+  // Chromium delivers the pointer at the fractional position asked for; Firefox and WebKit round
+  // it to whole pixels, and a pixel is ~3.6e6 ms here, so the drag is exact to a pixel at best.
+  expect((after[0] as number) - (before[0] as number)).toBeCloseTo(
+    span(before) * 0.8,
+    browserName === 'chromium' ? -5 : -7,
+  );
   expect(panned['x2']?.range).toEqual(after);
 });

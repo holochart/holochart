@@ -18,6 +18,7 @@
  *   triangle's provoking vertex (`pickKind: 'vertex'`).
  */
 import {
+  fitsTexture,
   acquireColorscaleTexture,
   effectiveTransform,
   loadMeshModule,
@@ -521,7 +522,13 @@ export class SurfacePrimitive implements Primitive<SurfaceData>, PickablePrimiti
   #writeTextures(): void {
     const g = this.#d.grid;
     const u = this.#uniforms;
-    if (!g || g.nx < 2 || g.ny < 2) {
+    if (
+      !g ||
+      g.nx < 2 ||
+      g.ny < 2 ||
+      // One texel per grid point.
+      !fitsTexture(this.#context.capabilities, 'surface grid', g.nx, g.ny)
+    ) {
       this.#geometry.setDrawRange(0, 0);
       this.#axes = null;
       return;

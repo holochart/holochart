@@ -104,8 +104,16 @@ test('drops the background with transparent', async ({ page }) => {
   expect(opaquePixels).toBeGreaterThan(1000);
 });
 
-test('encodes JPEG and WebP', async ({ page }) => {
+test('encodes JPEG and WebP', async ({ page, browserName }) => {
   for (const format of ['jpeg', 'webp'] as const) {
+    if (format === 'webp' && browserName === 'webkit') {
+      // Not a product limit: WebKit's canvas has no WebP encoder (Safari neither), and `toImage`
+      // says so instead of handing back a PNG.
+      await expect(toImage(page, { format, width: 300, height: 200 })).rejects.toThrow(
+        /this browser cannot encode webp/,
+      );
+      continue;
+    }
     const url = await toImage(page, { format, width: 300, height: 200, scale: 2 });
     expect(url.startsWith(`data:image/${format};base64,`)).toBe(true);
     expect(await imageSize(page, url)).toEqual({ width: 600, height: 400 });

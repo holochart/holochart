@@ -96,19 +96,15 @@ describe('computeVertexNormals (Plotly `vertexNormals`)', () => {
   });
 
   it('property: normals are unit or zero, and agree with face normals on planar meshes', () => {
+    // Coordinates on a grid and slopes in eighths, so every float32 position is exact and lies
+    // exactly on the plane: a fan triangle is then either degenerate (it contributes nothing) or
+    // well conditioned. Arbitrary floats produce slivers thinner than float32's rounding of
+    // `slope · x`, whose normals are noise (a commit-seeded run found one and shrank for 15 min).
+    const coordinate = fc.integer({ min: -40, max: 40 }).map((n) => n / 4);
     fc.assert(
       fc.property(
-        fc.array(
-          fc.tuple(
-            fc.float({ min: -10, max: 10, noNaN: true }),
-            fc.float({ min: -10, max: 10, noNaN: true }),
-          ),
-          {
-            minLength: 3,
-            maxLength: 12,
-          },
-        ),
-        fc.float({ min: -1, max: 1, noNaN: true }),
+        fc.array(fc.tuple(coordinate, coordinate), { minLength: 3, maxLength: 12 }),
+        fc.integer({ min: -8, max: 8 }).map((n) => n / 8),
         (points, slope) => {
           // Planar: z = slope · x; a fan from vertex 0.
           const p = new Float32Array(points.length * 3);

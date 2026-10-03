@@ -26,11 +26,12 @@
  *   hides it; opaque geometry *inside* the volume hides the whole ray behind it (the volume in
  *   front of it too): mixing both is approximate.
  */
-import type {
-  DataTransform,
-  Primitive,
-  PrimitiveContext,
-  ViewportSize,
+import {
+  fitsTexture,
+  type DataTransform,
+  type Primitive,
+  type PrimitiveContext,
+  type ViewportSize,
 } from '@mk7s/holochart-render';
 import {
   BackSide,
@@ -399,7 +400,16 @@ export class VolumeRayMarchPrimitive implements Primitive<RayMarchData> {
     const d = this.#d;
     const g = d.grid;
     // Ray marching needs a box: at least two points along every axis.
-    const grid = g && g.len > 0 && g.xs.length > 1 && g.ys.length > 1 && g.zs.length > 1 ? g : null;
+    const grid =
+      g &&
+      g.len > 0 &&
+      g.xs.length > 1 &&
+      g.ys.length > 1 &&
+      g.zs.length > 1 &&
+      // One texel per grid point.
+      fitsTexture(this.#context.capabilities, 'volume grid', g.xs.length, g.ys.length, g.zs.length)
+        ? g
+        : null;
     const domain = d.transfer.domain;
     const packed = this.#packed;
     if (

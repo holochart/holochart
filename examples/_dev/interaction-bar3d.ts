@@ -7,7 +7,8 @@ import type { MeshInteractionHook } from './interaction-mesh3d.ts';
  * grid. `scene`: three bars on
  * categorical axes (x `a`, `b`, `c`; y `p`), the middle one on a `base` of 2, default `hoverinfo`.
  * `scene2`: two traces stacked with `stackgroup` at the same three positions, `hoverinfo: 'all'`
- * and text. `scene3`: the same bars with a `hovertemplate` reading `%{base}` and `%{top}`.
+ * and text. `scene3`: the same bars with a `hovertemplate` reading `%{base}`, `%{top}` and
+ * `%{text}`.
  * `scene4`: a `scatter3d` line drawn as a tube (`line.render: 'tube'`) through (0, 0, 0),
  * (1, 0, 0), (2, 0, 0). Hover events are logged to `window.__interaction.events`;
  * `window.__interaction.toScreen(trace, x, y, z)` gives the container px of a linear position
@@ -54,7 +55,8 @@ export function run(el: HTMLElement): ExampleHandle {
         scene: 'scene3',
         ...BARS,
         base: 1,
-        hovertemplate: '%{x}/%{y}: %{z} from %{base} to %{top}<extra></extra>',
+        text: ['ta', 'tb', 'tc'],
+        hovertemplate: '%{x}/%{y}: %{z} from %{base} to %{top} %{text}<extra></extra>',
       },
       {
         type: 'scatter3d',

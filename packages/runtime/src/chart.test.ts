@@ -402,6 +402,54 @@ describe('lifecycle', () => {
     expect(FakeResizeObserver.instances[0]?.disconnected).toBe(true);
   });
 
+  it("takes a hidden container's size once, when it first has one", async () => {
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver);
+    FakeResizeObserver.instances = [];
+    // An inactive tab: no size yet.
+    const hidden = setup({ width: 0, height: 0 });
+    const c = chart({ data: [XY] }, hidden);
+    await c.ready;
+    expect(c.size).toEqual({ width: 700, height: 450 });
+    const observer = FakeResizeObserver.instances[0]!;
+    const show = (width: number, height: number): void => {
+      Object.defineProperty(hidden.container, 'clientWidth', { value: width, configurable: true });
+      Object.defineProperty(hidden.container, 'clientHeight', {
+        value: height,
+        configurable: true,
+      });
+      observer.fire(width, height);
+    };
+    // Still collapsed in one direction: keep waiting.
+    show(500, 0);
+    expect(observer.disconnected).toBe(false);
+    const resized = vi.fn();
+    c.on('resize', resized);
+    show(500, 300);
+    await vi.waitFor(() => expect(resized).toHaveBeenCalledWith({ width: 500, height: 300 }));
+    // Not responsive: later container changes are not followed.
+    expect(observer.disconnected).toBe(true);
+    show(800, 600);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(resized).toHaveBeenCalledTimes(1);
+    expect(c.size).toEqual({ width: 500, height: 300 });
+    c.destroy();
+    hidden.container.remove();
+  });
+
+  it('does not watch a container that has a size, or a figure with its own size', async () => {
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver);
+    FakeResizeObserver.instances = [];
+    const sized = chart({ data: [XY] });
+    await sized.ready;
+    const hidden = setup({ width: 0, height: 0 });
+    const fixed = chart({ data: [XY], layout: { width: 300, height: 200 } }, hidden);
+    await fixed.ready;
+    expect(FakeResizeObserver.instances).toHaveLength(0);
+    expect(fixed.size).toEqual({ width: 300, height: 200 });
+    fixed.destroy();
+    hidden.container.remove();
+  });
+
   it('exposes the three.js objects of a trace', async () => {
     const markerTrace: TraceModule<null> = {
       type: 'm',
