@@ -29,6 +29,7 @@ interface Hook {
     };
   }[];
   events: { chart: number; name: string }[];
+  target(chart: number): { x: number; y: number };
 }
 
 declare global {
@@ -216,15 +217,18 @@ test('hover works again after a restore, in 2D and through GPU picking in 3D', a
   await lose(page);
   await restore(page);
   for (const index of [0, 1, 2, 3]) {
+    const p = await page.evaluate((i) => window.__contextLoss!.target(i), index);
+    // Inside the chart's canvas, so the pointer is over the marker and nothing else.
     const box = await page.evaluate((i) => {
       const r = window.__contextLoss!.charts[i]!.three.root.canvas.getBoundingClientRect();
-      return { x: r.left, y: r.top, width: r.width, height: r.height };
+      return { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
     }, index);
-    // Sweep the middle row: it crosses the scatter line's markers and both 3D objects.
-    for (let step = 1; step < 32; step++) {
-      await page.mouse.move(box.x + (box.width * step) / 32, box.y + box.height / 2);
-      if ((await events(page, 'hover')).includes(index)) break;
-    }
+    expect(p.x).toBeGreaterThan(box.left + 12);
+    expect(p.x).toBeLessThan(box.right - 12);
+    expect(p.y).toBeGreaterThan(box.top + 12);
+    expect(p.y).toBeLessThan(box.bottom - 12);
+    await page.mouse.move(p.x + 2, p.y + 2);
+    await page.mouse.move(p.x, p.y);
     await expect
       .poll(async () => (await events(page, 'hover')).includes(index), {
         message: `chart ${index} hovers after the restore`,

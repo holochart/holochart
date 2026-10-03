@@ -1,4 +1,4 @@
-import { createChart, type Chart } from '@mk7s/holochart';
+import { createChart, sceneFor, type Chart } from '@mk7s/holochart';
 import { placed, uvSphere } from '../_lib/mesh3d-data.ts';
 import type { ExampleHandle, ExampleMeta } from '../_lib/types.ts';
 
@@ -27,6 +27,8 @@ export const meta: ExampleMeta = {
 export interface ContextLossHook {
   charts: Chart[];
   events: { chart: number; name: string }[];
+  /** Page px of a point to hover on chart `chart`: a scatter marker (2D) or the 3D marker. */
+  target(chart: number): { x: number; y: number };
 }
 
 declare global {
@@ -83,9 +85,10 @@ function lit(shared: boolean): Parameters<typeof createChart>[1] {
       {
         type: 'scatter3d',
         mode: 'markers',
-        x: [0.5],
+        // Above the ball, clear of it and of the scene's edges.
+        x: [-0.5],
         y: [0],
-        z: [0],
+        z: [0.9],
         marker: { size: 24 },
       },
     ],
@@ -108,11 +111,34 @@ function lit(shared: boolean): Parameters<typeof createChart>[1] {
   };
 }
 
+/** Page px of point `i` of trace 1 (the scatter or scatter3d trace of each figure). */
+function locate(chart: Chart, i: number): { x: number; y: number } {
+  const box = chart.three.root.canvas.getBoundingClientRect();
+  const full = chart.fullData[1]!;
+  const v = (k: 'x' | 'y' | 'z'): unknown => (full[k] as ArrayLike<unknown>)[i];
+  const scene = sceneFor(chart.fullLayout!, full);
+  if (scene) {
+    const [ax, ay, az] = scene.layout.axes;
+    const w = scene.toWorld(ax.scale.d2l(v('x')), ay.scale.d2l(v('y')), az.scale.d2l(v('z')));
+    const s = scene.project(w[0], w[1], w[2]);
+    return { x: box.left + s.x, y: box.top + s.y };
+  }
+  const sp = chart.subplots.get('xy')!;
+  return {
+    x: box.left + sp.rect.x + sp.xaxis.scale.d2p(v('x')),
+    y: box.top + sp.rect.y + sp.rect.height - sp.yaxis.scale.d2p(v('y')),
+  };
+}
+
 export function run(el: HTMLElement): ExampleHandle {
   const grid = el.ownerDocument.createElement('div');
   grid.style.cssText = `display:grid;grid-template-columns:repeat(2,${WIDTH}px);`;
   el.appendChild(grid);
-  const hook: ContextLossHook = { charts: [], events: [] };
+  const hook: ContextLossHook = {
+    charts: [],
+    events: [],
+    target: (chart) => locate(hook.charts[chart]!, 0),
+  };
   [flat(false), lit(false), flat(true), lit(true)].forEach((figure, index) => {
     const cell = el.ownerDocument.createElement('div');
     cell.style.cssText = `width:${WIDTH}px;height:${HEIGHT}px;`;
