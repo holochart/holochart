@@ -470,11 +470,16 @@ export interface TraceModule<
    */
   eventData?(calc: Calc, trace: FullTrace, pointIndex: number): Readonly<Record<string, unknown>>;
   /**
-   * Every point keyboard navigation (E6.5) visits, in reading order (pie: its slices in drawing
-   * order), shaped like {@link hoverPoints}' results. Cartesian traces don't need it (they are
-   * navigated along their `x` / `y` data); domain traces without it are skipped.
+   * Every stop keyboard navigation (E6.5) visits, in reading order (pie: its slices in drawing
+   * order), shaped like {@link hoverPoints}' results; a stop may say where the arrows lead from
+   * it ({@link KeyboardPoint.nav}: hierarchies, grids) and how it is announced. Cartesian traces
+   * whose stops are their data points don't need it (they are navigated along their `x` / `y`
+   * data). For other cartesian traces (histogram bins, box statistics) an array of stops is
+   * ordered along the position axis by its anchors, and stops built on demand (a grid's cells)
+   * are followed through `nav`. Domain traces without it are skipped. Called again after every
+   * pipeline run. It may load on first use instead: see {@link a11y}.
    */
-  keyboardPoints?(calc: Calc, trace: FullTrace, ctx: HoverContext): readonly HoverPoint[];
+  keyboardPoints?(calc: Calc, trace: FullTrace, ctx: HoverContext): KeyboardStops | undefined;
   /**
    * What the legend draws for this trace (E5.2). `ctx` (M1 wave 2, optional for callers) gives
    * `fullLayout`, e.g. to resolve colors linked to a `coloraxis`.
@@ -505,6 +510,69 @@ export interface TraceModule<
    * name, point count).
    */
   describe?(ctx: DescribeContext<Calc>): TraceDescription | undefined;
+  /**
+   * The module's accessibility code behind a dynamic `import()` (S2.14), so charts nobody
+   * navigates by keyboard don't load it: resolves to the parts by trace type (one chunk can serve
+   * every module of a package). The runtime loads it on the chart's first keyboard focus and, for
+   * a module without its own `describe`, after the chart's first description (the generic line
+   * shows until then). The module's own `keyboardPoints` and `describe` win over the loaded ones.
+   */
+  readonly a11y?: () => Promise<TraceA11yParts>;
+}
+
+/**
+ * What {@link TraceModule.a11y} resolves to: the parts of each trace type its chunk serves; `'*'`
+ * holds the parts of any other type (a 3D scene's view keys, for trace modules built on it).
+ */
+export type TraceA11yParts = Readonly<Record<string, TraceA11y | undefined>>;
+
+/** The parts of a trace module that {@link TraceModule.a11y} loads on first use. */
+export interface TraceA11y {
+  /** See {@link TraceModule.keyboardPoints}. */
+  keyboardPoints?(calc: never, trace: FullTrace, ctx: HoverContext): KeyboardStops | undefined;
+  /** See {@link TraceModule.describe}. */
+  describe?(ctx: DescribeContext<never>): TraceDescription | undefined;
+  /**
+   * Keys that move the view of a trace that is not on cartesian axes (3D scenes): `+` / `-`
+   * (`'zoomIn'`, `'zoomOut'`), Shift + arrows (`'panLeft'`, `'panRight'`, `'panUp'`, `'panDown'`:
+   * a scene orbits its camera) and `0` (`'reset'`). Returns the relayout that does it, applied
+   * like a drag's (a GUI relayout), or `undefined` when the key does nothing here.
+   */
+  keyboardView?(
+    trace: FullTrace,
+    ctx: HoverContext,
+    action: string,
+  ): Readonly<Record<string, unknown>> | undefined;
+}
+
+/**
+ * A stop of keyboard navigation (see {@link TraceModule.keyboardPoints}): the hover point whose
+ * label it shows, and what navigation needs beyond it.
+ */
+export interface KeyboardPoint extends HoverPoint {
+  /**
+   * The stops ←, →, ↑, ↓, Home and End lead to from this one, as indices into the trace's stops
+   * (this stop's own index to stay). Default, also for missing entries: ← / ↑ the previous stop,
+   * → / ↓ the next, Home / End the first / last.
+   */
+  readonly nav?: readonly (number | undefined)[];
+  /** Hover points shown and announced with this one (the other statistics of a box). */
+  readonly more?: readonly HoverPoint[];
+  /**
+   * The announcement of this stop instead of "{name}: {text}, point {n} of {count}.": an English
+   * sentence template, which is also its key in a locale dictionary, and values for its
+   * placeholders. The runtime fills in `{name}`, `{text}`, `{n}` and `{count}` unless given.
+   */
+  readonly say?: readonly [template: string, values?: Readonly<Record<string, string>>];
+}
+
+/**
+ * The stops of a trace: an array, or anything with a `length` that builds stop `i` on demand (a
+ * grid of many cells).
+ */
+export interface KeyboardStops {
+  readonly length: number;
+  at(i: number): KeyboardPoint | undefined;
 }
 
 /** Context for {@link TraceModule.describe}. @experimental */
@@ -716,6 +784,12 @@ export interface HoverContext {
   readonly transform: Readonly<DataTransform>;
   /** The trace's domain (M2 wave 1): set for domain traces, like {@link TracePlotContext.domain}. */
   readonly domain?: DomainInfo;
+  /**
+   * The figure's height in CSS px, set with {@link domain}: a domain trace's anchors are overlay
+   * px from the bottom (`py = height − y` of container px), and without a pointer query to take
+   * the height from (keyboard stops) this is it.
+   */
+  readonly height?: number;
 }
 
 /**

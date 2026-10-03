@@ -631,6 +631,8 @@ export class Chart {
   /** Generated summaries (E17.2): their code loads after the first description needs it. */
   #summarize: ((input: OverviewInput) => string) | null | undefined;
   #summaryLoad: Promise<void> | undefined;
+  /** The loads of trace modules' lazy `describe` (`TraceModule.a11y`) the description waits for. */
+  #partsLoad: Promise<unknown> | undefined;
   /** Frames and transitions (E7.3, E7.4): their code loads on first use. */
   #animation: Promise<Animation> | undefined;
   /** Style rules and functions (E8.5, E8.6): their code loads when a trace first uses them. */
@@ -837,9 +839,10 @@ export class Chart {
    */
   async describe(): Promise<ChartDescription | undefined> {
     const first = this.#describe();
-    if (this.#summaryLoad) await this.#summaryLoad;
+    await this.#summaryLoad;
+    await this.#partsLoad;
     await this.#a11y?.tablesReady;
-    return this.#summaryLoad ? this.#describe() : first;
+    return this.#summaryLoad || this.#partsLoad ? this.#describe() : first;
   }
 
   #describe(): ChartDescription | undefined {
@@ -858,6 +861,12 @@ export class Chart {
       },
       summarize: a11y.summaries ? this.#summarize : null,
       onPending: () => this.#loadSummary(),
+      // A trace's `describe` is still loading: describe the chart again when it is there.
+      onParts: (load) => {
+        this.#partsLoad = Promise.all([this.#partsLoad, load]).then(
+          () => this.#destroyed || this.#a11y?.update(),
+        );
+      },
       tables: a11y.dataTable !== false,
     });
   }
@@ -1820,6 +1829,7 @@ export class Chart {
           hover: (found) => fx.hoverFound(found),
           unhover: () => fx.unhover(),
           clickTrace: (index, x, y, event) => this.#clickTrace(index, x, y, event),
+          relayout: (update) => void this.relayout(update, { gui: true }).catch(() => undefined),
         });
       }
     }
@@ -2964,7 +2974,9 @@ export class Chart {
       full?.fullData.forEach((trace, index) => {
         const slot = this.#traces[index];
         const module = slot?.module;
-        if (!slot?.hasCalc || !module?.hoverPoints || trace.visible !== true) return;
+        // Traces without hover whose keyboard stops load on first use are entries too (parcoords).
+        if (!slot?.hasCalc || !(module?.hoverPoints || module?.a11y) || trace.visible !== true)
+          return;
         const domain = this.#domainOf(trace);
         if (!domain) return;
         const input = this.#figure.data[index];
@@ -2982,6 +2994,7 @@ export class Chart {
             yaxis: undefined,
             transform: IDENTITY_TRANSFORM,
             domain,
+            height: rect.height,
           },
           skip: traceAttr(trace, input, 'hoverinfo') === 'skip',
         });

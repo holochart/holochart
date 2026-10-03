@@ -15,6 +15,7 @@ import {
   type FullTrace,
 } from '@mk7s/holochart-core';
 import type { AxisInfo, TraceDescription, TraceInsight, TraceModule } from '../contracts.ts';
+import { a11yParts } from './lazy.ts';
 import { countText, formatAxisValue, listText, accessibleText, traceNameText } from './text.ts';
 
 /** Rows shown per hidden data table; longer data gets a "first N of M" caption. */
@@ -40,6 +41,11 @@ export interface DescribeInput {
   readonly summarize?: ((input: OverviewInput) => string) | null;
   /** Called when traces have insights but {@link summarize} is not loaded yet. */
   readonly onPending?: () => void;
+  /**
+   * Called with the load of a trace module's `describe` that is not there yet (`TraceModule.a11y`,
+   * `lazy.ts`); the trace gets the generic line until the chart is described again.
+   */
+  readonly onParts?: (load: Promise<unknown>) => void;
   /** Whether to build data tables (`config.a11y.dataTable` is not `false`). Default: `true`. */
   readonly tables?: boolean;
 }
@@ -227,12 +233,18 @@ function describeTrace(
   index: number,
   input: DescribeInput,
 ): TraceDescription | undefined {
-  if (!module?.describe) return undefined;
+  // The module's own `describe`, else the one its accessibility chunk brings (when loaded).
+  const parts = module?.describe ? module : a11yParts(module);
+  if (parts instanceof Promise) {
+    input.onParts?.(parts);
+    return undefined;
+  }
+  if (!parts?.describe) return undefined;
   try {
     return (
-      module.describe({
+      parts.describe({
         trace,
-        calc,
+        calc: calc as never,
         index,
         fullLayout: input.fullLayout,
         xaxis: axisOf(input, trace['xaxis']),

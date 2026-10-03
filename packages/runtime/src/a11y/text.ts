@@ -5,6 +5,11 @@
 import { formatValue } from '@mk7s/holochart-core';
 import type { AxisInfo } from '../contracts.ts';
 
+/** Keeps content in the accessibility tree while drawing nothing and taking no layout space. */
+export const VISUALLY_HIDDEN =
+  'position:absolute;left:0;top:0;width:1px;height:1px;margin:-1px;padding:0;border:0;' +
+  'overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;pointer-events:none;';
+
 const ENTITIES: Readonly<Record<string, string>> = {
   amp: '&',
   lt: '<',

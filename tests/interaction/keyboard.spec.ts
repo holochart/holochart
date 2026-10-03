@@ -295,9 +295,9 @@ test('pie slices: arrows move between slices, Enter clicks', async ({ page }) =>
   });
   await tabIntoChart(page);
   await page.keyboard.press('ArrowRight');
-  await expect(announcement(page)).toHaveText(/^Channels: Online 50 50%, point 1 of 3\./);
+  await expect(announcement(page)).toHaveText(/^Channels: Online, 50, 50%, point 1 of 3\./);
   await page.keyboard.press('ArrowDown');
-  await expect(announcement(page)).toHaveText(/^Channels: Retail 30 30%, point 2 of 3\./);
+  await expect(announcement(page)).toHaveText(/^Channels: Retail, 30, 30%, point 2 of 3\./);
   const label = page.locator('.holochart-hoverlabel').filter({ visible: true });
   await expect(label).toContainText('Retail');
   await events(page, true);
