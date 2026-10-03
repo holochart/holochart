@@ -40,13 +40,16 @@ createChart(el, {
 Accepted date values, per point:
 
 - **ISO strings**: `'2025-03-01'`, `'2025-03-01 14:30'`, `'2025-03-01T14:30:05.250'`. Plotly's
-  date strings, read as UTC.
-- **`Date` objects**: their instant (`getTime()`), shown in UTC.
+  date strings, read as UTC. A string that ends in `Z` or a UTC offset (`'2025-03-01T14:30+01:00'`)
+  is converted to UTC, so that one is shown at 13:30.
+- **`Date` objects**: their instant (`getTime()`), shown in UTC. Plotly shows a `Date` at the
+  browser's local time instead.
 - **Numbers** on a date axis: milliseconds since 1970-01-01 UTC (`Date.UTC(…)`, `Date.now()`). A
   `Float64Array` of milliseconds is the fastest input for long series: nothing is parsed.
 
-Dates have no time zone: an axis shows the UTC wall time of each value, as Plotly does
-(`layout.timezone` is not supported). To show local times, shift the values before plotting.
+Dates have no time zone: an axis shows the UTC wall time of each value, the same for every
+viewer (`layout.timezone` is not supported). To show local times, pass date strings that spell
+out the local time, or shift the values before plotting.
 
 Evenly spaced series can skip `x` entirely: `x0: '2025-01-01', dx: 86_400_000` puts point `i` at
 `x0 + i·dx` (in milliseconds on a date axis).
@@ -237,6 +240,8 @@ See the [performance guide](/guides/performance) for other large-data techniques
 
 ## Plotly differences
 
-- `layout.timezone` is not supported (as in Plotly.js, dates are shown in UTC).
+- A `Date` object is shown at its UTC time. Plotly shows it at the browser's local time. Date
+  strings without a UTC offset are read alike in both.
+- There is no `layout.timezone`: dates are always shown in UTC.
 - Plotly's `line.simplify` removes nearly collinear SVG path points; Holochart uses it to switch
   min/max decimation, with the same default (`true`).

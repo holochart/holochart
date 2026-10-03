@@ -696,7 +696,8 @@ here.
 ### Dates and text
 
 - A JavaScript `Date` is shown at its UTC time. Plotly shows it at the browser's local time.
-  Date strings are read alike, without a time zone. There is no `layout.timezone`, and no
+  Date strings without a UTC offset are read alike, without a time zone; Holochart converts a
+  string with an offset (`Z`, `+01:00`) to UTC. There is no `layout.timezone`, and no
   non-Gregorian calendar (`xcalendar`, `layout.calendar`).
 - Text is drawn from font files. A `font.family` that isn't
   [registered](/fundamentals/styling-themes#web-fonts) is drawn with the built-in font, TeX Gyre

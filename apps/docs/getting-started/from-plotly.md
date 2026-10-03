@@ -118,7 +118,8 @@ Differences:
   Holochart trace is drawn on the GPU, so there is no separate WebGL trace type. A trace with an
   unknown type is hidden, with a warning in the console that names the nearest type.
 - **`Date` objects**: Holochart shows a `Date` at its UTC time; Plotly shows it at the browser's
-  local time. Date strings are read the same way in both, without a time zone. If your data are
+  local time. Date strings without a UTC offset are read the same way in both, without a time
+  zone; Holochart converts a string with an offset (`Z`, `+01:00`) to UTC. If your data are
   `Date` objects and you want local times on the axis, pass date strings instead.
 - **Fonts**: text is drawn from font files, not from the fonts installed on the computer. A
   `font.family` that isn't registered is drawn with the built-in font. See
