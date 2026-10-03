@@ -47,7 +47,16 @@ export function traceTypesInSource(source: string): Set<string> {
 }
 
 /**
- * Map each known trace type to the ids of examples that reference it.
+ * True for examples that are not part of the public docs: ids whose first segment starts with `_`
+ * (`_dev/…` primitive and test fixtures, `_spikes/…`).
+ */
+export function isInternalExample(id: string): boolean {
+  return id.startsWith('_');
+}
+
+/**
+ * Map each known trace type to the ids of the public examples that reference it. Internal
+ * examples ({@link isInternalExample}) are left out: the reference is a public page.
  *
  * @param traceTypes - Registered trace types; other `type:` strings are ignored.
  */
@@ -58,6 +67,7 @@ export async function examplesByTrace(
   const known = new Set(traceTypes);
   const out: Record<string, string[]> = {};
   for (const id of await listExampleIds(examplesDir)) {
+    if (isInternalExample(id)) continue;
     const source = await readFile(path.join(examplesDir, `${id}.ts`), 'utf8');
     for (const type of traceTypesInSource(source)) {
       if (known.has(type)) (out[type] ??= []).push(id);
