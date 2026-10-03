@@ -24,7 +24,10 @@ import {
   type PathSegment,
 } from '@mk7s/holochart-core';
 
-/** Where template variables come from. Lookups go in this order; the first defined value wins. */
+/**
+ * Where template variables come from. Lookups go in this order; the first defined value wins.
+ * @experimental
+ */
 export interface TemplateContext {
   /**
    * Preformatted text per variable name, used when the variable has no format of its own (Plotly
@@ -43,7 +46,7 @@ export interface TemplateContext {
   readonly pointIndex?: number;
 }
 
-/** Options for {@link formatTemplate}. */
+/** Options for {@link formatTemplate}. @experimental */
 export interface TemplateOptions {
   /**
    * Text for variables with no value (Plotly's `hovertemplatefallback`). Default: keep the
@@ -138,6 +141,7 @@ function formatOne(
  *   values: { x: '2026-03-05', y: 3.14159, customdata: ['a'] },
  * }); // 'Mar 05: 3.1 (a)'
  * ```
+ * @experimental
  */
 export function formatTemplate(
   template: string,
@@ -179,6 +183,7 @@ export function formatTemplate(
 /**
  * Split a hover text into the main label and the `<extra>` box: `extra` is `undefined` when the
  * template has no `<extra>` tag (the trace name is shown), `''` when the box must be hidden.
+ * @experimental
  */
 export function splitExtra(text: string): { text: string; extra: string | undefined } {
   const m = /<extra>([\s\S]*?)<\/extra>/i.exec(text);

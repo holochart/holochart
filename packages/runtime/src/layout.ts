@@ -21,6 +21,7 @@ export interface Margins {
 /**
  * Smallest plot area (CSS px) margins may shrink it to, like Plotly's `minreduced{width,height}`:
  * big margins on a small figure give way instead of leaving no room for data.
+ * @experimental
  */
 export const MIN_PLOT_SIZE = 64;
 
@@ -174,6 +175,7 @@ export function axisName(id: string): string {
  * A domain trace's rect (plan E4.5): `domain.x` / `domain.y` fractions (y from the bottom) of the
  * plot area, in container px. Unlike axis spans this is not rounded: circular traces center on it
  * exactly. Reversed or out-of-range fractions are sorted and clamped to [0, 1].
+ * @experimental
  */
 export function domainRect(
   area: Readonly<ViewportRect>,
@@ -194,6 +196,7 @@ export function domainRect(
 /**
  * The largest rect of aspect ratio `aspect` (width / height) centered in `rect` (plan E4.5:
  * aspect-preserving fit, so pies stay circular in a wide domain).
+ * @experimental
  */
 export function fitAspect(rect: Readonly<ViewportRect>, aspect = 1): ViewportRect {
   const a = aspect > 0 && Number.isFinite(aspect) ? aspect : 1;
@@ -207,7 +210,10 @@ export function fitAspect(rect: Readonly<ViewportRect>, aspect = 1): ViewportRec
   };
 }
 
-/** The circle inscribed in a rect: center (container px) and radius (plan E4.5, pie). */
+/**
+ * The circle inscribed in a rect: center (container px) and radius (plan E4.5, pie).
+ * @experimental
+ */
 export function inscribedCircle(rect: Readonly<ViewportRect>): {
   cx: number;
   cy: number;

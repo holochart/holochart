@@ -28,7 +28,7 @@ export const CUSTOM_IMAGE_KIND = 4;
 /** At most this many SDF symbols, and this many distinct images / glyphs (atlas slots). */
 export const CUSTOM_SLOT_LIMIT = 256;
 
-/** A custom marker symbol for `symbols.register`. */
+/** A custom marker symbol for `symbols.register`. @public */
 export interface CustomSymbolDefinition {
   /** SVG path data (the `d` attribute) in {@link viewBox} coordinates (y down, like SVG). */
   path: string;
@@ -81,6 +81,7 @@ export function withCustomMarkers(work: (m: CustomMarkersModule) => unknown): vo
 /**
  * Resolves once every symbol registered and image requested so far is in the atlases (or failed).
  * The same promise until new work arrives.
+ * @public
  */
 export function customMarkersReady(): Promise<void> {
   return pending;
@@ -105,7 +106,7 @@ export function defineCustomSymbol(name: string, def: CustomSymbolDefinition): v
   withCustomMarkers((m) => m.setSymbol(s, def));
 }
 
-/** Names of the registered symbols, in registration order. */
+/** Names of the registered symbols, in registration order. @public */
 export function customSymbolNames(): string[] {
   return [...symbolSlots.keys()];
 }
@@ -144,6 +145,7 @@ export function customSymbolCode(symbol: string, glyphs = true): number | undefi
 /**
  * Whether `value` names a custom symbol: a registered name (with an optional variant suffix) or a
  * `text:` glyph. The schema's `marker.symbol` accepts these besides Plotly's symbols.
+ * @public
  */
 export function isCustomSymbol(value: unknown): boolean {
   return typeof value === 'string' && customSymbolCode(value, false) !== undefined;

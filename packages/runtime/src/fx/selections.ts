@@ -9,7 +9,7 @@
  */
 import type { AxisInfo, SelectionQuery } from '../contracts.ts';
 
-/** A defaulted `layout.selections[i]` (see core's selections schema). */
+/** A defaulted `layout.selections[i]` (see core's selections schema). @experimental */
 export interface FullSelection {
   readonly type?: 'rect' | 'path';
   readonly xref?: string;
@@ -25,7 +25,7 @@ export interface FullSelection {
 
 type Axis = Pick<AxisInfo, 'type' | 'scale'>;
 
-/** Linear coordinate of a selection position on `axis` (NaN when invalid). */
+/** Linear coordinate of a selection position on `axis` (NaN when invalid). @experimental */
 export function positionToLinear(axis: Axis, v: unknown): number {
   if (v === undefined || v === null || v === '') return NaN;
   let value = v;
@@ -35,7 +35,7 @@ export function positionToLinear(axis: Axis, v: unknown): number {
   return axis.type === 'log' ? axis.scale.d2l(value) : axis.scale.r2l(value);
 }
 
-/** Linear coordinate → selection position (inverse of {@link positionToLinear}). */
+/** Linear coordinate → selection position (inverse of {@link positionToLinear}). @experimental */
 export function linearToPosition(axis: Axis, l: number): number | string {
   return axis.type === 'log' ? 10 ** l : axis.scale.l2r(l);
 }
@@ -51,6 +51,7 @@ const COMMAND = /[MLHVZmlhvz]/;
  * Parse a selection polygon (`M x,y L x,y … Z`, also `H` / `V` and the relative commands for
  * numeric axes) into linear coordinates. Each `M` starts a new ring; only the first ring is used
  * (Plotly's selections are single polygons). `undefined` for fewer than 3 valid vertices.
+ * @experimental
  */
 export function parseSelectionPath(
   path: string,
@@ -111,6 +112,7 @@ export function parseSelectionPath(
 /**
  * The query a selection makes on its subplot's axes: a box for a complete `rect`, a lasso for a
  * `path` polygon; `undefined` when incomplete, invalid or hidden.
+ * @experimental
  */
 export function selectionQuery(
   sel: FullSelection,
@@ -150,6 +152,7 @@ export function selectionQuery(
  * The layout selection a finished box or lasso drag makes (Plotly's `newSelections`): a `rect`
  * with the box (an unbounded side — `selectdirection` `h` / `v` — spans the axis range in view)
  * or a `path` with the lasso polygon, on the subplot's axes.
+ * @experimental
  */
 export function selectionFromQuery(
   query: SelectionQuery,
@@ -184,7 +187,7 @@ export function selectionFromQuery(
   };
 }
 
-/** The visible selections of a defaulted layout. */
+/** The visible selections of a defaulted layout. @experimental */
 export function selectionsOf(fullLayout: unknown): FullSelection[] {
   const list = (fullLayout as { selections?: unknown } | undefined)?.selections;
   return Array.isArray(list)

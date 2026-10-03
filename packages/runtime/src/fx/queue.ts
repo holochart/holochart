@@ -12,7 +12,7 @@
  *   and then the waiting request starts: the latest request always resolves.
  */
 
-/** See the module docs. */
+/** See the module docs. @experimental */
 export interface LatestQueue<Req> {
   /** Ask for `request`; replaces any request still waiting to start. */
   push(request: Req): void;
@@ -27,6 +27,7 @@ export interface LatestQueue<Req> {
 /**
  * Create a {@link LatestQueue}: `run` performs one request; `deliver` receives each result that is
  * still current. A rejected `run` delivers nothing for that request but keeps the queue going.
+ * @experimental
  */
 export function createLatestQueue<Req, Res>(
   run: (request: Req) => Promise<Res>,

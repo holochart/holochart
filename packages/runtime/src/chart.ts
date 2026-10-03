@@ -219,21 +219,26 @@ export interface FigurePatch {
   config?: Readonly<Record<string, unknown>>;
 }
 
-/** Escape hatches into three.js (plan §7.2, E8.13). */
+/**
+ * Escape hatches into three.js (plan §7.2, E8.13). `renderer` and `scene` are three.js objects;
+ * the members typed by the render package (`root`, `overlay`, `viewports`, `subplot`) are
+ * experimental like that package.
+ */
 export interface ChartThree {
   /**
    * The renderer that draws this chart. With `config.sharedRenderer` it also draws other charts,
    * and its `domElement` is not this chart's canvas: use `root.canvas`.
    */
   readonly renderer: WebGLRenderer;
-  /** The render root: render loop, viewports, resources. */
+  /** The render root: render loop, viewports, resources. @experimental */
   readonly root: RenderRoot;
   /** The overlay viewport's scene (paper-space, drawn last): add custom objects here. */
   readonly scene: Scene;
+  /** The overlay viewport. @experimental */
   readonly overlay: Viewport;
-  /** Every viewport, in draw order. */
+  /** Every viewport, in draw order. @experimental */
   readonly viewports: readonly Viewport[];
-  /** The viewport of a cartesian subplot (`'xy'`, `'x2y2'`). */
+  /** The viewport of a cartesian subplot (`'xy'`, `'x2y2'`). @experimental */
   subplot(id: string): Viewport | undefined;
 }
 
@@ -352,6 +357,7 @@ const EMPTY_ENTRIES: readonly HoverEntry[] = [];
  * Trace categories that share cross-trace calc across trace types (see
  * `TraceModule.crossTraceCalc`): every trace whose module lists one of them stacks / groups with
  * the others on its subplot.
+ * @experimental
  */
 export const STACK_GROUPS: ReadonlySet<string> = new Set(['bar-like']);
 /** A zoom or pan preview: new transforms only (plan E6.2). */

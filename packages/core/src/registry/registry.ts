@@ -21,6 +21,7 @@ import type { ComponentModule, Registry, TraceModule } from './types.ts';
  * const registry = createRegistry().register(scatter, bar).registerTemplate('dark', dark);
  * const { fullData, fullLayout } = supplyDefaults(figure, registry);
  * ```
+ * @experimental
  */
 export function createRegistry(): Registry {
   const modules = new Map<string, TraceModule>();

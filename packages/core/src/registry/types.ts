@@ -15,6 +15,7 @@ import type { Issue } from '../validate/issues.ts';
  * take part in axis discovery; `domain` traces get `domain.{x, y, row, column}` and are placed by
  * a fraction of the plot area or a `layout.grid` cell (E4.5); `showLegend` traces count towards
  * the legend default.
+ * @experimental
  */
 export type TraceCategory =
   | 'cartesian'
@@ -28,7 +29,7 @@ export type TraceCategory =
   | 'geo'
   | (string & {});
 
-/** Docs metadata for a trace module. */
+/** Docs metadata for a trace module. @experimental */
 export interface TraceModuleMeta {
   /** Markdown description. */
   description: string;
@@ -38,7 +39,7 @@ export interface TraceModuleMeta {
   plotlyEquivalent?: string;
 }
 
-/** Helpers passed to a trace module's `supplyDefaults`. */
+/** Helpers passed to a trace module's `supplyDefaults`. @experimental */
 export interface TraceDefaultsContext {
   /**
    * Coerce the attribute at `path` into the full trace and return its value. Precedence: user
@@ -61,7 +62,7 @@ export interface TraceDefaultsContext {
   readonly index: number;
 }
 
-/** Helpers passed to layout-level `supplyLayoutDefaults` hooks. */
+/** Helpers passed to layout-level `supplyLayoutDefaults` hooks. @experimental */
 export interface LayoutDefaultsContext {
   /** Coerce a layout attribute (by path) with the same precedence as trace `coerce`. */
   coerce<T = unknown>(path: string, dflt?: unknown): T;
@@ -75,6 +76,7 @@ export interface LayoutDefaultsContext {
  * A trace type (plan §4.4). `schema` is the single source of truth for the trace's own
  * attributes; common attributes (`visible`, `name`, `opacity`, …, and `xaxis`/`yaxis` for
  * cartesian traces) are added by the registry.
+ * @experimental
  */
 export interface TraceModule<C extends Children = Children> {
   readonly type: string;
@@ -113,6 +115,7 @@ export interface TraceModule<C extends Children = Children> {
 /**
  * A layout component (legend, annotations, shapes, …) contributing layout attributes. Components
  * are always active, unlike trace-module layout attributes.
+ * @experimental
  */
 export interface ComponentModule {
   readonly name: string;
@@ -128,6 +131,7 @@ export interface ComponentModule {
  * Holds trace modules, components and named templates for a set of charts. Keeping this an
  * explicit object (rather than module-level state) keeps core pure and lets tests and apps run
  * isolated registries side by side.
+ * @experimental
  */
 export interface Registry extends TemplateSource {
   /** Register trace modules. Re-registering a type replaces it. Returns the registry. */

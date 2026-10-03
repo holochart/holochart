@@ -1,6 +1,9 @@
 /**
  * The contracts trace packages and components implement (plan §4.4, E22.1, E22.3; ADR-019).
  *
+ * Every type here is tagged `@experimental`: until the plugin API is declared stable (plan E22,
+ * M7) the contracts may change in any minor release (docs/release/versioning.md). Tag new ones too.
+ *
  * A trace package exports ONE module object that combines core's pure parts (`type`, `schema`,
  * `supplyDefaults`, `meta`) with the render parts declared here (`calc`, `extremes`, `plot`). Core
  * stays renderer-free: it types the render parts as `unknown`, and this package narrows them.
@@ -49,7 +52,7 @@ import type { Chart } from './chart.ts';
 
 // ---- Axes and subplots ------------------------------------------------------------------------
 
-/** A cartesian axis as seen by traces and components. */
+/** A cartesian axis as seen by traces and components. @experimental */
 export interface AxisInfo {
   /** Axis id: `'x'`, `'y2'`, … */
   readonly id: string;
@@ -72,7 +75,10 @@ export interface AxisInfo {
   l2c(l: number): number;
 }
 
-/** A cartesian subplot (`'xy'`, `'x2y2'`): one scissored 2D viewport (ADR-004, ADR-008). */
+/**
+ * A cartesian subplot (`'xy'`, `'x2y2'`): one scissored 2D viewport (ADR-004, ADR-008).
+ * @experimental
+ */
 export interface SubplotInfo {
   readonly id: string;
   readonly xaxis: AxisInfo;
@@ -94,6 +100,7 @@ export interface SubplotInfo {
  * into the overlay viewport, whose world units are container CSS px with a bottom-left origin, so a
  * container point `(x, y)` is at world `(x, viewport.size.height - y)`. Use `fitAspect` /
  * `inscribedCircle` (exported by the runtime) to keep circular traces round inside the rect.
+ * @experimental
  */
 export interface DomainInfo {
   /** `domain.x` in use: fractions of the plot area width, `[start, end]` with `start < end`. */
@@ -107,6 +114,7 @@ export interface DomainInfo {
 /**
  * A non-cartesian subplot's own 3D viewport (M6: 3D scenes; ADR-004), from
  * {@link TracePlotContext.subplotViewport} / {@link ComponentDrawContext.subplotViewport}.
+ * @experimental
  */
 export interface SubplotViewportOptions {
   /** Rect in container px (top-left origin); the viewport clips to it. */
@@ -117,12 +125,12 @@ export interface SubplotViewportOptions {
   readonly background?: RGBA | null;
 }
 
-/** One domain trace as seen by {@link TraceModule.crossTraceLayout}. */
+/** One domain trace as seen by {@link TraceModule.crossTraceLayout}. @experimental */
 export interface DomainTraceEntry<Calc = unknown> extends CrossTraceEntry<Calc> {
   readonly domain: DomainInfo;
 }
 
-/** Context for {@link TraceModule.crossTraceLayout}: the solved figure layout. */
+/** Context for {@link TraceModule.crossTraceLayout}: the solved figure layout. @experimental */
 export interface DomainLayoutContext {
   readonly fullLayout: FullLayout;
   /** Figure size in CSS px. */
@@ -134,7 +142,7 @@ export interface DomainLayoutContext {
 
 // ---- Trace contract ---------------------------------------------------------------------------
 
-/** Context for `calc` and `extremes`. */
+/** Context for `calc` and `extremes`. @experimental */
 export interface CalcContext {
   readonly fullLayout: FullLayout;
   /** Index of the trace in `data`. */
@@ -153,7 +161,7 @@ export interface CalcContext {
   readonly axes?: ReadonlyMap<string, AxisInfo>;
 }
 
-/** What a trace contributes to the autorange of each of its axes. */
+/** What a trace contributes to the autorange of each of its axes. @experimental */
 export interface TraceExtremes {
   readonly x?: AxisExtremes;
   readonly y?: AxisExtremes;
@@ -167,6 +175,7 @@ export interface TraceExtremes {
 /**
  * One cartesian subplot a multi-subplot trace draws on (M3 wave 2, E10.9; see
  * {@link TraceModule.cells}): the ids of its axes, e.g. `{ xaxis: 'x2', yaxis: 'y3' }`.
+ * @experimental
  */
 export interface TraceCellRef {
   readonly xaxis: string;
@@ -176,6 +185,7 @@ export interface TraceCellRef {
 /**
  * What changed since the last `update` of a {@link TraceView}. Flags are cumulative downstream:
  * `calc` implies `plot`, and `plot` implies `style`.
+ * @experimental
  */
 export interface TraceUpdatePlan {
   /** `ctx.calc` is new (data, or anything with `editType: 'calc'`): re-upload geometry. */
@@ -203,6 +213,7 @@ export interface TraceUpdatePlan {
  * removed from the other end by `maxPoints`. Retained points keep their values; their index moves
  * by `count` for prepends and by `-trimmed` for extends. Several calls batched into one update
  * are merged.
+ * @experimental
  */
 export interface TraceAppend {
   readonly at: 'end' | 'start';
@@ -219,7 +230,7 @@ export interface TraceAppend {
   readonly keys: readonly string[];
 }
 
-/** Everything a trace renderer may use. A fresh context is passed to every call. */
+/** Everything a trace renderer may use. A fresh context is passed to every call. @experimental */
 export interface TracePlotContext<Calc = unknown> {
   /** The defaulted trace. */
   readonly trace: FullTrace;
@@ -278,7 +289,7 @@ export interface TracePlotContext<Calc = unknown> {
   readonly selectedPoints?: readonly number[] | null;
 }
 
-/** A trace's live GPU objects, created by {@link TraceRenderer.create}. */
+/** A trace's live GPU objects, created by {@link TraceRenderer.create}. @experimental */
 export interface TraceView<Calc = unknown> {
   /** Bring the objects up to date. Only called when at least one plan flag is set. */
   update(ctx: TracePlotContext<Calc>, plan: TraceUpdatePlan): void;
@@ -297,7 +308,7 @@ export interface TraceView<Calc = unknown> {
   dispose?(): void;
 }
 
-/** The `plot` part of a trace module (plan E22.1). */
+/** The `plot` part of a trace module (plan E22.1). @experimental */
 export interface TraceRenderer<Calc = unknown> {
   /** Build the trace's objects and draw its current state (including `ctx.transform`). */
   create(ctx: TracePlotContext<Calc>): TraceView<Calc>;
@@ -311,6 +322,7 @@ export interface TraceRenderer<Calc = unknown> {
  * `selectPoints`, `legendIcon`; M1 wave 3: `colorbar`; M2 wave 1: `crossTraceLayout` and
  * `legendItems` (domain traces such as pie), and `hoverPoints` for domain traces (see
  * {@link HoverQuery}).
+ * @experimental
  */
 export interface TraceModule<
   Calc = unknown,
@@ -495,7 +507,7 @@ export interface TraceModule<
   describe?(ctx: DescribeContext<Calc>): TraceDescription | undefined;
 }
 
-/** Context for {@link TraceModule.describe}. */
+/** Context for {@link TraceModule.describe}. @experimental */
 export interface DescribeContext<Calc = unknown> {
   readonly trace: FullTrace;
   readonly calc: Calc;
@@ -512,7 +524,7 @@ export interface DescribeContext<Calc = unknown> {
   readonly maxRows: number;
 }
 
-/** A trace's accessible description (E17.1). */
+/** A trace's accessible description (E17.1). @experimental */
 export interface TraceDescription {
   /** One or two plain-text sentences, e.g. "Scatter 'Revenue': 120 points; x 2020–2024; y 3.1–9.8." */
   readonly summary: string;
@@ -555,6 +567,7 @@ export interface TraceDescription {
  * (`series`), parts of a whole (`shares`), distributions (`boxes`, `bins`), a grid of values
  * (`grid`), prices (`prices`) or a single value (`value`). Values are numbers as the trace
  * computes them (linear for axes); the `format*` functions show them as the chart does.
+ * @experimental
  */
 export type TraceInsight =
   | SeriesInsight
@@ -565,7 +578,7 @@ export type TraceInsight =
   | PricesInsight
   | ValueInsight;
 
-/** Values along a position: lines, areas, markers, bars on ordered axes. */
+/** Values along a position: lines, areas, markers, bars on ordered axes. @experimental */
 export interface SeriesInsight {
   readonly kind: 'series';
   readonly length: number;
@@ -581,7 +594,10 @@ export interface SeriesInsight {
   formatY(y: number): string;
 }
 
-/** Parts of a whole: pie slices, funnel stages, category bars, hierarchy branches, sankey flows. */
+/**
+ * Parts of a whole: pie slices, funnel stages, category bars, hierarchy branches, sankey flows.
+ * @experimental
+ */
 export interface SharesInsight {
   readonly kind: 'shares';
   readonly length: number;
@@ -597,7 +613,7 @@ export interface SharesInsight {
   formatValue(v: number): string;
 }
 
-/** Box plots and violins: five-number summaries per box. */
+/** Box plots and violins: five-number summaries per box. @experimental */
 export interface BoxesInsight {
   readonly kind: 'boxes';
   readonly length: number;
@@ -611,7 +627,7 @@ export interface BoxesInsight {
   formatValue(v: number): string;
 }
 
-/** Histogram bins: `[start, end)` per bin and the bin's value (count, density, …). */
+/** Histogram bins: `[start, end)` per bin and the bin's value (count, density, …). @experimental */
 export interface BinsInsight {
   readonly kind: 'bins';
   readonly length: number;
@@ -622,7 +638,7 @@ export interface BinsInsight {
   formatValue(v: number): string;
 }
 
-/** A grid of values (heatmaps, contours, 2D histograms), `z[j * nx + i]`. */
+/** A grid of values (heatmaps, contours, 2D histograms), `z[j * nx + i]`. @experimental */
 export interface GridInsight {
   readonly kind: 'grid';
   readonly nx: number;
@@ -634,7 +650,7 @@ export interface GridInsight {
   formatValue(v: number): string;
 }
 
-/** Open, high, low, close per point (candlestick, OHLC). */
+/** Open, high, low, close per point (candlestick, OHLC). @experimental */
 export interface PricesInsight {
   readonly kind: 'prices';
   /** The points drawn, in order (indices into the arrays below). */
@@ -649,7 +665,7 @@ export interface PricesInsight {
   formatY(y: number): string;
 }
 
-/** One value, optionally against a reference (indicators). */
+/** One value, optionally against a reference (indicators). @experimental */
 export interface ValueInsight {
   readonly kind: 'value';
   readonly value: number;
@@ -663,6 +679,7 @@ export interface ValueInsight {
  * One trace's calc as seen by {@link TraceModule.crossTraceCalc}. The calc is the one the trace's
  * slot holds: a fresh object when the trace was recalculated this pass (`calc` / `calcAppend`),
  * else the object the previous cross-trace pass mutated.
+ * @experimental
  */
 export interface CrossTraceEntry<Calc = unknown> {
   readonly trace: FullTrace;
@@ -678,6 +695,7 @@ export interface CrossTraceEntry<Calc = unknown> {
  * Context for {@link TraceModule.crossTraceCalc}. The subplot's rect and axis lengths are current;
  * ranges and transforms are still those of the previous layout pass (autorange needs `extremes`,
  * which run after cross-trace calc), so work in linear units, not px.
+ * @experimental
  */
 export interface CrossTraceContext {
   readonly fullLayout: FullLayout;
@@ -686,7 +704,10 @@ export interface CrossTraceContext {
   readonly yaxis: AxisInfo;
 }
 
-/** Axes and transform of the trace being queried, for converting between linear and px. */
+/**
+ * Axes and transform of the trace being queried, for converting between linear and px.
+ * @experimental
+ */
 export interface HoverContext {
   readonly fullLayout: FullLayout;
   readonly xaxis: AxisInfo | undefined;
@@ -704,6 +725,7 @@ export interface HoverContext {
  * Domain traces (M2 wave 1) have no subplot: for them the viewport is the overlay, so `px`/`py` are
  * figure px from the bottom-left corner, `xl`/`yl` equal `px`/`py` (identity transform), and
  * `mode` is always `closest` (Plotly shows one pie label whatever `hovermode` says).
+ * @experimental
  */
 export interface HoverQuery {
   /** Pointer in viewport px (bottom-left origin, same space as the transform's output). */
@@ -723,7 +745,7 @@ export interface HoverQuery {
   readonly cy?: number;
 }
 
-/** A point a trace reports under the pointer. */
+/** A point a trace reports under the pointer. @experimental */
 export interface HoverPoint {
   /** Index into the trace's data arrays (first index for aggregated points). */
   readonly pointIndex: number;
@@ -794,6 +816,7 @@ export interface HoverPoint {
 /**
  * A box or lasso selection in one subplot, in the trace's linear coordinates. On a non-cartesian
  * subplot (a {@link SelectArea}: polar) the coordinates are container px (top-left origin).
+ * @experimental
  */
 export interface SelectionQuery {
   readonly kind: 'rect' | 'lasso';
@@ -804,12 +827,12 @@ export interface SelectionQuery {
   readonly polygon?: readonly (readonly [number, number])[];
 }
 
-/** Context for {@link TraceModule.legendIcon}. */
+/** Context for {@link TraceModule.legendIcon}. @experimental */
 export interface LegendIconContext {
   readonly fullLayout: FullLayout;
 }
 
-/** One per-point legend item (M2 wave 1, see {@link TraceModule.legendItems}). */
+/** One per-point legend item (M2 wave 1, see {@link TraceModule.legendItems}). @experimental */
 export interface LegendItem {
   /** Identity of the item: the value toggled in `layout.hiddenlabels` (pie: the label). */
   readonly key: string;
@@ -820,7 +843,7 @@ export interface LegendItem {
   readonly hidden: boolean;
 }
 
-/** A colorbar request from one trace (E5.3). */
+/** A colorbar request from one trace (E5.3). @experimental */
 export interface ColorbarSpec {
   /** Colorscale stops `[position 0–1, CSS color]`, already reversed if `reversescale`. */
   readonly colorscale: readonly (readonly [number, string])[];
@@ -839,6 +862,7 @@ export interface ColorbarSpec {
 /**
  * One piece of a {@link LegendGlyph} of kind `'parts'`: a line segment or a filled rect, in px
  * from the glyph center (x right, y down; the glyph area is `legend.itemwidth` wide).
+ * @experimental
  */
 export type LegendGlyphPart =
   | {
@@ -854,7 +878,7 @@ export type LegendGlyphPart =
       readonly lineWidth?: number;
     };
 
-/** What the legend draws for one trace (E5.2). Colors are CSS color strings. */
+/** What the legend draws for one trace (E5.2). Colors are CSS color strings. @experimental */
 export interface LegendGlyph {
   /** `parts`: the {@link LegendGlyph.parts} only (M4: the two-direction `ohlc` / `candlestick` glyphs). */
   readonly kind: 'marker' | 'line' | 'lines+markers' | 'bar' | 'fill' | 'parts';
@@ -886,7 +910,10 @@ export interface LegendGlyph {
 
 // ---- Component contract -----------------------------------------------------------------------
 
-/** Room (CSS px) a component needs on each side of the plot area (legend, colorbar, automargin). */
+/**
+ * Room (CSS px) a component needs on each side of the plot area (legend, colorbar, automargin).
+ * @experimental
+ */
 export interface MarginPush {
   readonly l?: number;
   readonly r?: number;
@@ -900,7 +927,7 @@ export interface MarginPush {
   readonly reserved?: boolean;
 }
 
-/** Context for {@link ComponentModule.pushMargin}. */
+/** Context for {@link ComponentModule.pushMargin}. @experimental */
 export interface ComponentLayoutContext {
   readonly fullLayout: FullLayout;
   readonly fullData: readonly FullTrace[];
@@ -921,14 +948,14 @@ export interface ComponentLayoutContext {
   calcdata?(index: number): unknown;
 }
 
-/** Context for {@link ComponentModule.extremes}. */
+/** Context for {@link ComponentModule.extremes}. @experimental */
 export interface ComponentExtremesContext {
   readonly fullLayout: FullLayout;
   readonly fullData: readonly FullTrace[];
   readonly axes: ReadonlyMap<string, AxisInfo>;
 }
 
-/** Context for component drawing: the solved layout and the overlay viewport. */
+/** Context for component drawing: the solved layout and the overlay viewport. @experimental */
 export interface ComponentDrawContext {
   readonly fullLayout: FullLayout;
   readonly fullData: readonly FullTrace[];
@@ -1001,6 +1028,7 @@ export interface ComponentDrawContext {
 /**
  * Where and how a {@link SubplotMirror} draws: its viewport rect and the linear ranges of its x and
  * y axes (the traces' own linear space, so a range slider passes the linear range of its span).
+ * @experimental
  */
 export interface SubplotMirrorOptions {
   /** Viewport rect in container px (top-left origin); the mirror clips to it. */
@@ -1023,6 +1051,7 @@ export interface SubplotMirrorOptions {
  * plans (data, style, selection), so they stay in step; {@link set} only changes transforms.
  * Mirror views get no pointer events and are not hoverable. Traces that draw on several subplots
  * (`splom` cells) are not mirrored.
+ * @experimental
  */
 export interface SubplotMirror {
   /** The mirrored subplot's id (`'xy'`). */
@@ -1044,6 +1073,7 @@ export interface SubplotMirror {
  * A pointer event offered to component views before the chart's own hover / zoom / selection
  * handling (see {@link ComponentView.handlePointer}). The object is reused between events: read
  * it during the call, don't keep it.
+ * @experimental
  */
 export interface ComponentPointerEvent {
   /**
@@ -1073,6 +1103,7 @@ export interface ComponentPointerEvent {
  * {@link ComponentView.drawShape}, topmost first, once per animation frame while it moves, then
  * once more when it ends. A press without a drag stays a click. The runtime only tracks the
  * pointer; the view previews and commits the shape (the shapes component does, with `newshape`).
+ * @experimental
  */
 export interface DrawGesture {
   readonly mode: 'drawline' | 'drawopenpath' | 'drawclosedpath' | 'drawcircle' | 'drawrect';
@@ -1088,7 +1119,7 @@ export interface DrawGesture {
   readonly phase: 'move' | 'end' | 'cancel';
 }
 
-/** What changed since a component view's last update. */
+/** What changed since a component view's last update. @experimental */
 export interface ComponentUpdatePlan {
   /** Declared stages of the update (see core `STAGE_ORDER`), layout- and trace-level combined. */
   readonly stages: ReadonlySet<Stage>;
@@ -1096,6 +1127,7 @@ export interface ComponentUpdatePlan {
   readonly layout: boolean;
 }
 
+/** @experimental */
 export interface ComponentView {
   update(ctx: ComponentDrawContext, plan: ComponentUpdatePlan): void;
   dispose?(): void;
@@ -1136,7 +1168,10 @@ export interface ComponentView {
   layoutTweens?(from: FullLayout, to: FullLayout): readonly LayoutTween[];
 }
 
-/** What {@link ComponentView.animateCamera} gets: timing, the eased curve and the subplot. */
+/**
+ * What {@link ComponentView.animateCamera} gets: timing, the eased curve and the subplot.
+ * @experimental
+ */
 export interface CameraAnimationRun {
   /** Milliseconds (0: jump). */
   readonly duration: number;
@@ -1145,7 +1180,7 @@ export interface CameraAnimationRun {
   readonly subplot?: string | undefined;
 }
 
-/** An animated layout attribute (see {@link ComponentView.layoutTweens}). */
+/** An animated layout attribute (see {@link ComponentView.layoutTweens}). @experimental */
 export interface LayoutTween {
   /** Layout attribute path (`'scene.camera'`). */
   readonly path: string;
@@ -1153,7 +1188,10 @@ export interface LayoutTween {
   tween(e: number): unknown;
 }
 
-/** A non-cartesian subplot's selection area (see {@link ComponentView.selectArea}). */
+/**
+ * A non-cartesian subplot's selection area (see {@link ComponentView.selectArea}).
+ * @experimental
+ */
 export interface SelectArea {
   /** The subplot id (the traces' `subplot` attribute: `'polar'`, `'polar2'`, …). */
   readonly id: string;
@@ -1161,6 +1199,7 @@ export interface SelectArea {
   readonly rect: Readonly<ViewportRect>;
 }
 
+/** @experimental */
 export interface ComponentRenderer {
   create(ctx: ComponentDrawContext): ComponentView;
 }
@@ -1169,6 +1208,7 @@ export interface ComponentRenderer {
  * A layout component (plan E22.3): core's layout schema/defaults plus optional margin pushes and
  * drawing. Axes (E3.4), legend (E5.2), title (E5.1), … are components; so are third-party
  * watermarks or brushes.
+ * @experimental
  */
 export interface ComponentModule extends CoreComponentModule {
   readonly kind?: 'component';
@@ -1186,7 +1226,7 @@ export interface ComponentModule extends CoreComponentModule {
 
 // ---- Templates --------------------------------------------------------------------------------
 
-/** A named template (`layout.template: 'name'`), registrable with `register`. */
+/** A named template (`layout.template: 'name'`), registrable with `register`. @experimental */
 export interface TemplateModule {
   readonly kind: 'template';
   readonly name: string;
@@ -1198,5 +1238,6 @@ export interface TemplateModule {
 /**
  * Anything `register(...)` accepts. Locale modules (plan E17.6) are plotly.js's shape, so Plotly
  * locale files register as they are.
+ * @experimental
  */
 export type Registrable = TraceModule | ComponentModule | TemplateModule | LocaleModule;

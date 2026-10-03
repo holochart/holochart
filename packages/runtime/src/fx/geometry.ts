@@ -156,7 +156,10 @@ export function selectBoxAxes(
   return { x: true, y: true };
 }
 
-/** Whether `(x, y)` is inside a polygon (even-odd rule; vertices as `[x, y]` pairs). */
+/**
+ * Whether `(x, y)` is inside a polygon (even-odd rule; vertices as `[x, y]` pairs).
+ * @experimental
+ */
 export function pointInPolygon(
   polygon: readonly (readonly [number, number])[],
   x: number,
@@ -177,6 +180,7 @@ export function pointInPolygon(
 /**
  * Whether a point (linear coordinates) is inside a selection: the box for `rect` queries, the
  * polygon for `lasso` ones. Trace modules use this in `selectPoints`.
+ * @experimental
  */
 export function selectionContains(query: SelectionQuery, x: number, y: number): boolean {
   if (!(x >= query.x[0] && x <= query.x[1] && y >= query.y[0] && y <= query.y[1])) return false;

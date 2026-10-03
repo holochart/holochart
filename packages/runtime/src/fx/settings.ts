@@ -30,7 +30,7 @@ export type DrawDragmode =
 export type Dragmode =
   false | 'zoom' | 'pan' | 'select' | 'lasso' | 'orbit' | 'turntable' | DrawDragmode;
 
-/** The shape-drawing `dragmode`s, in Plotly's modebar order. */
+/** The shape-drawing `dragmode`s, in Plotly's modebar order. @experimental */
 export const DRAW_DRAGMODES: readonly DrawDragmode[] = [
   'drawline',
   'drawopenpath',
@@ -39,7 +39,7 @@ export const DRAW_DRAGMODES: readonly DrawDragmode[] = [
   'drawrect',
 ];
 
-/** Whether `mode` is a shape-drawing `dragmode`. */
+/** Whether `mode` is a shape-drawing `dragmode`. @experimental */
 export function isDrawDragmode(mode: unknown): mode is DrawDragmode {
   return DRAW_DRAGMODES.includes(mode as DrawDragmode);
 }
@@ -58,7 +58,10 @@ function fontObject(description: string) {
   );
 }
 
-/** Layout attributes of the `fx` component (hover labels, hover distance, click and select modes). */
+/**
+ * Layout attributes of the `fx` component (hover labels, hover distance, click and select modes).
+ * @experimental
+ */
 export const fxLayoutAttributes = {
   hoverdistance: attr.number({
     min: -1,
@@ -112,7 +115,10 @@ export const fxLayoutAttributes = {
   ),
 } as const;
 
-/** The built-in `fx` component: declares the interaction layout attributes (no drawing). */
+/**
+ * The built-in `fx` component: declares the interaction layout attributes (no drawing).
+ * @experimental
+ */
 export const fxComponent: ComponentModule = {
   name: 'fx',
   layoutSchema: fxLayoutAttributes,
@@ -123,7 +129,7 @@ export function ensureFx(registry: ChartRegistry): void {
   if (!registry.getComponent('fx')) registry.register(fxComponent);
 }
 
-/** Interaction settings resolved from the defaulted figure. */
+/** Interaction settings resolved from the defaulted figure. @experimental */
 export interface FxSettings {
   readonly hovermode: Hovermode;
   /** Px; `Infinity` for `hoverdistance: -1`. */
