@@ -40,6 +40,59 @@ export const END_BEVEL = 4;
  */
 export const OWN_EPS = 1 / 512;
 
+/**
+ * How far the quad of a segment extends past the stroke's sides, in units of the anti-aliasing
+ * ramp `aa` (one device px). Coverage is `clamp(0.5 - d / aa, 0, 1)` and `d` is at least the
+ * distance to the stroke's sides, so no pixel whose center is further than
+ * `halfWidth + 0.5 * aa` from the segment's axis is drawn; the other half is {@link QUAD_SLACK}.
+ * Mirrored in `line.glsl.ts`.
+ */
+export const QUAD_FRINGE = 1;
+
+/**
+ * Room around the centers of the pixels a segment draws, in units of `aa`: half a device px. The
+ * canvas is multisampled, and a pixel at the edge of a quad is only written to the samples the
+ * quad covers; with half a pixel of room every sample of every drawn pixel is inside (4× and 8×
+ * sample positions lie within 0.47 px of the center). With less, joins show pin holes.
+ */
+export const QUAD_SLACK = 0.5;
+
+/**
+ * How far the quad of a segment reaches beyond a vertex along the segment's axis (px): far enough
+ * for every pixel the segment draws there, and no further (mirror of the shader's `computeEnd`
+ * return value).
+ *
+ * - **Cap**: the cap's shape (nothing for butt, `halfWidth` for round and square) and its fringe.
+ *   With round joins a butt cap reaches `halfWidth` too: on a segment shorter than that, the disc
+ *   of the join at its other end covers pixels behind the cap.
+ * - **Join**: the segment draws only after the bisector through the vertex (the ownership split).
+ *   Within the stroke and its fringe, `|perp| < halfWidth + 0.5 * aa`, the bisector lies at most
+ *   `(halfWidth + 0.5 * aa) * tan(θ/2)` behind the vertex: at a gentle turn the quad ends half a
+ *   pixel past the vertex instead of `halfWidth + aa` past it. Capped at the join shape plus a
+ *   full ramp (`extent + aa`, the quad before plan E16.9), so a sharp miter's quad is what it
+ *   was.
+ *
+ * Every pixel the former quad drew is at least {@link QUAD_SLACK} inside this one, so the two draw
+ * the same image (`line-join.test.ts`, and the visual baselines). The shader uses this reach only
+ * for a segment whose ends have the same depth: the quad's corners carry the end points' depths,
+ * so a segment that crosses depths (a 2.5D view, a 3D scene) keeps the former quad.
+ */
+export function quadReach(
+  end: SegmentEnd,
+  halfWidth: number,
+  aa: number,
+  join: LineJoin = 'miter',
+): number {
+  const fringe = QUAD_FRINGE * aa;
+  if (end.tangent[0] === 0 && end.tangent[1] === 0) {
+    return (end.mode === END_BUTT && join !== 'round' ? 0 : halfWidth) + fringe;
+  }
+  // `bevel` is halfWidth · cos(θ/2).
+  const cosHalf = halfWidth > 0 ? Math.min(1, end.bevel / halfWidth) : 0;
+  const tanHalf = Math.sqrt(Math.max(0, 1 - cosHalf * cosHalf)) / Math.max(cosHalf, 1e-4);
+  return Math.min(end.extent + aa, (halfWidth + fringe) * tanHalf + QUAD_SLACK * aa);
+}
+
 /** Shader uniform codes. */
 export const JOIN_CODE: Record<LineJoin, number> = { miter: 0, round: 1, bevel: 2 };
 export const CAP_CODE: Record<LineCap, number> = { butt: 0, round: 1, square: 2 };

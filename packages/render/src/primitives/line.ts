@@ -22,9 +22,17 @@
  * and only dash *lengths* drift briefly, then snap back exactly. Solid lines skip all of this.
  * In 3D the phase uses projected screen lengths too, so dashes stay px-sized at any depth.
  *
+ * A pan changes no screen length: under a camera without perspective, a transform that differs
+ * only in its offsets keeps the phase, and nothing is recomputed or uploaded (plan E16.9: the
+ * re-uploads, not the dash math in the shader, were what made a dashed 1M-segment line cost twice
+ * a solid one while panning).
+ *
  * ## Streaming (E7.2) and memory (E16.9)
  *
- * Buffers are sized from an exact vertex count. {@link LinePrimitive.splice} takes new input
+ * A line with one color (anything but per-point colors) has no color buffer: the color is a
+ * uniform and the program is compiled with `LINE_UNIFORM_COLOR` (28 bytes per stream vertex
+ * instead of 44, and 8 floats fewer for the GPU to carry per vertex). Buffers are sized from an
+ * exact vertex count. {@link LinePrimitive.splice} takes new input
  * together with the range of it that is unchanged from the previous input (a rolling window, an
  * append): only the vertices around the unchanged range are rebuilt and uploaded, and the live
  * range slides inside the buffers (the instanced attributes are re-bound at the new offset)
@@ -40,6 +48,7 @@ import {
   InterleavedBufferAttribute,
   Matrix4,
   Mesh,
+  Vector4,
   type Camera,
   type InstancedBufferGeometry,
   type ShaderMaterial,
@@ -57,6 +66,7 @@ import {
   acquireInstancedGeometry,
   applyTransformUniforms,
   applyViewportUniforms,
+  colorAt,
   createPrimitiveMaterial,
   syncViewportUniforms,
   type ViewportSource,
@@ -169,11 +179,12 @@ interface StreamBuffers {
   geometry: InstancedBufferGeometry;
   source: Int32Array;
   points: Float32Array;
-  colors: Float32Array;
+  /** Per-vertex colors; absent for a line with one color (see `LINE_UNIFORM_COLOR`). */
+  colors: Float32Array | undefined;
   widths: Float32Array;
   dist: Float32Array;
   pointsBuffer: InstancedInterleavedBuffer;
-  colorBuffer: InstancedInterleavedBuffer;
+  colorBuffer: InstancedInterleavedBuffer | undefined;
   widthBuffer: InstancedInterleavedBuffer;
   distBuffer: InstancedInterleavedBuffer;
 }
@@ -195,11 +206,14 @@ export class LinePrimitive implements Primitive<LineData> {
   private transform: DataTransform = IDENTITY_TRANSFORM;
   private viewport: ViewportSize = { width: 1, height: 1, pixelRatio: 1 };
   private dashPattern: number[] = [];
+  /** Per-point colors (a color buffer) instead of one color (the `uColor` uniform). */
+  private vertexColors = false;
   /** Scratch for the head of a splice (built front to back, then placed before the retained part). */
   private scratch: LineStreamArrays = { source: new Int32Array(16), points: new Float32Array(64) };
   private readonly screenMatrix = Float64Array.from(PIXEL_SCREEN_MATRIX);
   private readonly throttle: ReturnType<typeof createThrottle>;
   private readonly tmpMatrix = new Matrix4();
+  private readonly color = [0, 0, 0, 1];
   private disposed = false;
 
   constructor(ctx: PrimitiveContext, data: Partial<LineData> = {}, options: LineOptions = {}) {
@@ -215,10 +229,12 @@ export class LinePrimitive implements Primitive<LineData> {
         uCap: { value: 0 },
         uMiterLimit: { value: 4 },
         uOpacity: { value: 1 },
+        uColor: { value: new Vector4(0, 0, 0, 1) },
         uDash: { value: new Float32Array(MAX_DASH_ENTRIES) },
         uDashCount: { value: 0 },
         uDashPeriod: { value: 0 },
       },
+      defines: { LINE_UNIFORM_COLOR: '' },
     });
     this.throttle = createThrottle(
       () => {
@@ -268,17 +284,31 @@ export class LinePrimitive implements Primitive<LineData> {
     for (const [key, value] of Object.entries(patch)) {
       if (value !== undefined) data[key] = value;
     }
+    // One color is a uniform; per-point colors need the color buffer and the other program.
+    const vertexColors = this.data.color instanceof Float32Array;
+    const colorModeChanged = vertexColors !== this.vertexColors;
+    if (colorModeChanged) {
+      this.vertexColors = vertexColors;
+      if (vertexColors) delete this.material.defines['LINE_UNIFORM_COLOR'];
+      else this.material.defines['LINE_UNIFORM_COLOR'] = '';
+      this.material.needsUpdate = true;
+    }
     const geometryChanged =
-      this.layout === undefined || GEOMETRY_KEYS.some((k) => patch[k] !== undefined);
+      this.layout === undefined ||
+      colorModeChanged ||
+      GEOMETRY_KEYS.some((k) => patch[k] !== undefined);
 
-    if (geometryChanged) this.rebuild(0, 0, 0);
+    if (geometryChanged) this.rebuild(0, 0, 0, colorModeChanged);
     const buffers = this.buffers!;
     const layout = this.layout!;
     const view = streamView(layout);
 
-    if (!geometryChanged && patch.color !== undefined) {
+    if (!vertexColors) {
+      colorAt(this.data.color, 0, this.color);
+      (this.material.uniforms.uColor!.value as Vector4).fromArray(this.color);
+    } else if (!geometryChanged && patch.color !== undefined && buffers.colors) {
       fillLineColors(view, this.data.color, buffers.colors.subarray(layout.head * 4));
-      markRange(buffers.colorBuffer, layout.head, layout.vertexCount);
+      markRange(buffers.colorBuffer!, layout.head, layout.vertexCount);
     }
     if (!geometryChanged && patch.width !== undefined) {
       fillLineWidths(view, this.data.width, buffers.widths.subarray(layout.head));
@@ -400,18 +430,16 @@ export class LinePrimitive implements Primitive<LineData> {
     layout.instanceCount = Math.max(0, layout.vertexCount - 3);
     layout.sourceBase = newBase;
 
-    // Uniform color and width: fill only the rewritten vertices.
+    // One color (a uniform) and one width: fill the widths of the rewritten vertices only.
     const headView = { vertexCount: headCount, source: source.subarray(head), sourceBase: newBase };
     const tailView = {
       vertexCount: end - u - 1,
       source: source.subarray(u + 1),
       sourceBase: newBase,
     };
-    fillLineColors(headView, data.color, b.colors.subarray(head * 4));
-    fillLineColors(tailView, data.color, b.colors.subarray((u + 1) * 4));
     fillLineWidths(headView, data.width, b.widths.subarray(head));
     fillLineWidths(tailView, data.width, b.widths.subarray(u + 1));
-    for (const buffer of [b.pointsBuffer, b.colorBuffer, b.widthBuffer]) {
+    for (const buffer of [b.pointsBuffer, b.widthBuffer]) {
       buffer.clearUpdateRanges();
       addRange(buffer, head, headCount);
       addRange(buffer, u + 1, end - u - 1);
@@ -429,14 +457,15 @@ export class LinePrimitive implements Primitive<LineData> {
   /**
    * Rebuild the whole stream from `this.data`. `slack` 0 sizes buffers exactly (E16.9), reusing
    * them when they are no more than twice the need; otherwise room for about as many vertices
-   * again is left at the end (`bias` 1, appends) or the start (`bias` -1, prepends).
+   * again is left at the end (`bias` 1, appends) or the start (`bias` -1, prepends). `fresh`
+   * allocates new buffers whatever their size (the color buffer comes or goes).
    */
-  private rebuild(bias: -1 | 0 | 1, sourceBase: number, slack: 0 | 1): void {
+  private rebuild(bias: -1 | 0 | 1, sourceBase: number, slack: 0 | 1, fresh = false): void {
     const count = countLineStream(this.data);
     const b = this.buffers!;
     const room = slack ? count + 64 : 0;
     const capacity = count + room;
-    const reuse = b.capacity >= capacity && b.capacity <= 2 * capacity + 64;
+    const reuse = !fresh && b.capacity >= capacity && b.capacity <= 2 * capacity + 64;
     const offset = bias < 0 ? (reuse ? b.capacity : capacity) - count : 0;
     const layout = buildLineLayout(
       this.data,
@@ -446,9 +475,12 @@ export class LinePrimitive implements Primitive<LineData> {
     const buffers = reuse ? b : this.reallocate(layout);
     this.layout = layout;
     const view = streamView(layout);
-    fillLineColors(view, this.data.color, buffers.colors.subarray(layout.head * 4));
+    if (buffers.colors) {
+      fillLineColors(view, this.data.color, buffers.colors.subarray(layout.head * 4));
+      markRange(buffers.colorBuffer!, layout.head, layout.vertexCount);
+    }
     fillLineWidths(view, this.data.width, buffers.widths.subarray(layout.head));
-    for (const buffer of [buffers.pointsBuffer, buffers.colorBuffer, buffers.widthBuffer]) {
+    for (const buffer of [buffers.pointsBuffer, buffers.widthBuffer]) {
       markRange(buffer, layout.head, layout.vertexCount);
     }
     this.bind(buffers, layout.head);
@@ -476,10 +508,30 @@ export class LinePrimitive implements Primitive<LineData> {
   }
 
   setTransform(transform: DataTransform): void {
+    const previous = this.transform;
     this.transform = transform;
     applyTransformUniforms(this.transformUniforms, transform, this.layout?.origin ?? [0, 0, 0]);
-    if (this.dashPattern.length > 0) this.throttle.request();
+    if (this.dashPattern.length > 0 && !this.keepsScreenLengths(previous, transform)) {
+      this.throttle.request();
+    }
     this.ctx.invalidate();
+  }
+
+  /**
+   * Whether going from transform `a` to `b` leaves every segment's screen length as it is: the
+   * same scales (only the offsets moved) under a screen matrix without perspective, which maps
+   * the difference of two points whatever their position.
+   */
+  private keepsScreenLengths(a: DataTransform, b: DataTransform): boolean {
+    const m = this.screenMatrix;
+    return (
+      a.scaleX === b.scaleX &&
+      a.scaleY === b.scaleY &&
+      (a.scaleZ ?? 1) === (b.scaleZ ?? 1) &&
+      m[3] === 0 &&
+      m[7] === 0 &&
+      m[11] === 0
+    );
   }
 
   setViewport(size: ViewportSize): void {
@@ -594,12 +646,12 @@ export class LinePrimitive implements Primitive<LineData> {
     const geometry = handle.geometry;
     const source = layout?.source ?? new Int32Array(capacity);
     const points = layout?.points ?? new Float32Array(capacity * 4);
-    const colors = new Float32Array(capacity * 4);
+    const colors = this.vertexColors ? new Float32Array(capacity * 4) : undefined;
     const widths = new Float32Array(capacity);
     const dist = new Float32Array(capacity * 2);
 
     const pointsBuffer = new InstancedInterleavedBuffer(points, 4, 1);
-    const colorBuffer = new InstancedInterleavedBuffer(colors, 4, 1);
+    const colorBuffer = colors && new InstancedInterleavedBuffer(colors, 4, 1);
     const widthBuffer = new InstancedInterleavedBuffer(widths, 1, 1);
     const distBuffer = new InstancedInterleavedBuffer(dist, 2, 1).setUsage(DynamicDrawUsage);
     geometry.instanceCount = 0;
@@ -656,8 +708,10 @@ function setStreamAttributes(b: StreamBuffers, head: number): void {
   g.setAttribute('aA', new InterleavedBufferAttribute(b.pointsBuffer, 4, p + 4));
   g.setAttribute('aB', new InterleavedBufferAttribute(b.pointsBuffer, 4, p + 8));
   g.setAttribute('aNext', new InterleavedBufferAttribute(b.pointsBuffer, 4, p + 12));
-  g.setAttribute('aColorA', new InterleavedBufferAttribute(b.colorBuffer, 4, p + 4));
-  g.setAttribute('aColorB', new InterleavedBufferAttribute(b.colorBuffer, 4, p + 8));
+  if (b.colorBuffer) {
+    g.setAttribute('aColorA', new InterleavedBufferAttribute(b.colorBuffer, 4, p + 4));
+    g.setAttribute('aColorB', new InterleavedBufferAttribute(b.colorBuffer, 4, p + 8));
+  }
   g.setAttribute('aWidth', new InterleavedBufferAttribute(b.widthBuffer, 1, head + 1));
   g.setAttribute('aDist', new InterleavedBufferAttribute(b.distBuffer, 2, 2 * head + 2));
 }

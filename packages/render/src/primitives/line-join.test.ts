@@ -5,10 +5,14 @@ import {
   computeSegmentFrame,
   END_BEVEL,
   END_MITER,
+  QUAD_FRINGE,
+  QUAD_SLACK,
+  quadReach,
   segmentDistance,
   type LineCap,
   type LineJoin,
 } from './line-join.ts';
+import { LINE_VERTEX_SHADER } from './line.glsl.ts';
 
 type P = [number, number];
 
@@ -188,12 +192,144 @@ describe('segment quad extents stay bounded (spike B regression)', () => {
       };
       const endA = computeEnd(norm(pts[i - 1]!, a), dir, true, hw, 'miter', 'butt', 4);
       const endB = computeEnd(dir, norm(b, pts[i + 2]!), true, hw, 'miter', 'butt', 4);
-      // Same quad the vertex shader emits: along [-(extA + aa), len + extB + aa] × ±(hw + aa).
-      const area = (len + endA.extent + endB.extent + 2 * aa) * 2 * (hw + aa);
+      // Same quad the vertex shader emits: along [-reachA, len + reachB] × ±(hw + fringe).
+      const along = len + quadReach(endA, hw, aa, 'miter') + quadReach(endB, hw, aa, 'miter');
+      const area = along * 2 * (hw + QUAD_FRINGE * aa);
       maxArea = Math.max(maxArea, area);
     }
     // A handful of px² per segment; the pathological case covered the whole 1024×640 canvas.
     expect(maxArea).toBeLessThan(40);
+  });
+});
+
+describe('segment quads hold every pixel the segment draws (plan E16.9)', () => {
+  const coord = fc.double({ min: -30, max: 30, noNaN: true });
+  const point = fc.tuple(coord, coord);
+  const joins: LineJoin[] = ['miter', 'round', 'bevel'];
+  const caps: LineCap[] = ['butt', 'round', 'square'];
+
+  type Frame = ReturnType<typeof computeSegmentFrame>;
+
+  it('keeps half a pixel around the drawn pixels, as float literals in the shader', () => {
+    // Less than half a pixel leaves pin holes at joins on a multisampled canvas.
+    expect(QUAD_FRINGE - QUAD_SLACK).toBe(0.5);
+    expect(QUAD_SLACK).toBeGreaterThanOrEqual(0.5);
+    // `const float X = 1;` does not compile in GLSL ES.
+    expect(LINE_VERTEX_SHADER).toContain('const float QUAD_FRINGE = 1.0000;');
+    expect(LINE_VERTEX_SHADER).toContain('const float QUAD_SLACK = 0.5000;');
+  });
+
+  /**
+   * Whether `p` is inside the quad the vertex shader emits for `f`, at least `inset` from every
+   * edge that moved (an edge where the former quad already ended needs no room: it covers what
+   * it covered).
+   */
+  function inQuad(f: Frame, p: P, aa: number, join: LineJoin, inset = 0): boolean {
+    const rel: P = [p[0] - f.a[0], p[1] - f.a[1]];
+    const t = rel[0] * f.dir[0] + rel[1] * f.dir[1];
+    const perp = -rel[0] * f.dir[1] + rel[1] * f.dir[0];
+    const reachA = quadReach(f.startEnd, f.halfWidth, aa, join);
+    const reachB = quadReach(f.endEnd, f.halfWidth, aa, join);
+    const roomA = reachA < f.startEnd.extent + aa ? inset : 0;
+    const roomB = reachB < f.endEnd.extent + aa ? inset : 0;
+    return (
+      t >= -reachA + roomA &&
+      t <= f.len + reachB - roomB &&
+      Math.abs(perp) <= f.halfWidth + QUAD_FRINGE * aa
+    );
+  }
+
+  /**
+   * The quad before plan E16.9: the join or cap shape and a full ramp at each end and side. It
+   * is what bounded the drawing at an exact reversal, whose ownership split leaves the segment
+   * everything beyond the vertex.
+   */
+  function inFormerQuad(f: Frame, p: P, aa: number): boolean {
+    const rel: P = [p[0] - f.a[0], p[1] - f.a[1]];
+    const t = rel[0] * f.dir[0] + rel[1] * f.dir[1];
+    const perp = -rel[0] * f.dir[1] + rel[1] * f.dir[0];
+    return (
+      t >= -(f.startEnd.extent + aa) &&
+      t <= f.len + f.endEnd.extent + aa &&
+      Math.abs(perp) <= f.halfWidth + aa
+    );
+  }
+
+  it('draws the pixels the former, larger quad drew: any join, cap, turn and width', () => {
+    fc.assert(
+      fc.property(
+        fc.option(point, { nil: undefined }),
+        point,
+        point,
+        fc.option(point, { nil: undefined }),
+        fc.double({ min: 0.2, max: 24, noNaN: true }),
+        fc.constantFrom(...joins),
+        fc.constantFrom(...caps),
+        fc.double({ min: 1, max: 12, noNaN: true }),
+        fc.constantFrom(1, 0.5),
+        fc.array(fc.tuple(fc.double({ min: -0.5, max: 1.5, noNaN: true }), coord), {
+          minLength: 40,
+          maxLength: 40,
+        }),
+        (prev, a, b, next, width, join, cap, limit, aa, samples) => {
+          fc.pre(Math.hypot(b[0] - a[0], b[1] - a[1]) > 1e-3);
+          fc.pre(!prev || Math.hypot(a[0] - prev[0], a[1] - prev[1]) > 1e-3);
+          fc.pre(!next || Math.hypot(next[0] - b[0], next[1] - b[1]) > 1e-3);
+          const f = computeSegmentFrame(prev, a, b, next, width, join, cap, limit);
+          for (const [u, v] of samples) {
+            // Points along and around the segment, well past both ends and both sides.
+            const p: P = [
+              a[0] + u * (b[0] - a[0]) + v * f.dir[1],
+              a[1] + u * (b[1] - a[1]) - v * f.dir[0],
+            ];
+            const d = segmentDistance(f, p);
+            // Coverage is clamp(0.5 - d / aa, 0, 1): drawn only when d < aa / 2.
+            const drawn = d !== undefined && d < 0.5 * aa && inFormerQuad(f, p, aa);
+            // Inside by half a pixel (the samples of a multisampled pixel lie within 0.47 px of
+            // its center), less the ownership split's offset from the vertex (OWN_EPS).
+            if (drawn) expect(inQuad(f, p, aa, join, 0.49 * aa)).toBe(true);
+            if (inQuad(f, p, aa, join)) expect(inFormerQuad(f, p, aa)).toBe(true);
+          }
+        },
+      ),
+      { numRuns: 2000 },
+    );
+  }, 60_000);
+
+  it('is never larger than the quad it replaced, and almost nothing at a gentle join', () => {
+    fc.assert(
+      fc.property(
+        fc.double({ min: 0, max: 2 * Math.PI, noNaN: true }),
+        fc.double({ min: 0, max: 2 * Math.PI, noNaN: true }),
+        fc.boolean(),
+        fc.double({ min: 0.05, max: 50, noNaN: true }),
+        fc.constantFrom(...joins),
+        fc.constantFrom(...caps),
+        fc.constantFrom(1, 0.5),
+        (inAngle, outAngle, isJoin, hw, join, cap, aa) => {
+          const dIn: P = [Math.cos(inAngle), Math.sin(inAngle)];
+          const dOut: P = [Math.cos(outAngle), Math.sin(outAngle)];
+          const end = computeEnd(dIn, dOut, isJoin, hw, join, cap, 4);
+          const reach = quadReach(end, hw, aa, join);
+          expect(reach).toBeGreaterThan(0);
+          expect(reach).toBeLessThanOrEqual(end.extent + aa);
+        },
+      ),
+    );
+    // A straight continuation: the neighbour owns everything before the vertex, and the quad
+    // keeps half a pixel of room for the samples of the pixels on the split.
+    const straight = computeEnd([1, 0], [1, 0], true, 0.75, 'miter', 'butt', 4);
+    expect(quadReach(straight, 0.75, 1)).toBeCloseTo(0.5, 6);
+    expect(quadReach(straight, 0.75, 0.5)).toBeCloseTo(0.25, 6);
+    // A reversal keeps the old quad: the join shape and a full ramp.
+    const back = computeEnd([1, 0], [-1, 0], true, 0.75, 'miter', 'butt', 4);
+    expect(quadReach(back, 0.75, 1)).toBe(0.75 + 1);
+    // Caps: the fringe for butt, the cap and its fringe for round and square.
+    const cap = (c: LineCap, join: LineJoin = 'miter') =>
+      quadReach(computeEnd([1, 0], [1, 0], false, 3, join, c, 4), 3, 1, join);
+    expect([cap('butt'), cap('round'), cap('square')]).toEqual([1, 4, 4]);
+    // With round joins, the join's disc at the other end of a short segment covers the cap.
+    expect([cap('butt', 'bevel'), cap('butt', 'round')]).toEqual([1, 4]);
   });
 });
 

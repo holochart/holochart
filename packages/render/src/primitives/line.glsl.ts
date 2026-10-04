@@ -1,8 +1,18 @@
 /**
  * Screen-space instanced line shaders (plan E2.5). The join/cap math is mirrored on the CPU in
  * `line-join.ts` (keep the two in sync — the unit tests exercise the CPU copy).
+ *
+ * `LINE_UNIFORM_COLOR` (a material define, plan E16.9): the line has one color, taken from the
+ * `uColor` uniform instead of two per-vertex attributes and two flat varyings, which were a
+ * third of the GPU time of a 1M-segment line (docs/perf).
+ *
+ * Along the segment, its quad ends where the pixels it can draw end (`quadReach` in
+ * `line-join.ts`): the fragment shader discards what the neighbour owns at a join, so a quad
+ * reaching half the line width and a pixel past every vertex ran it on fragments it then threw
+ * away.
  */
 import { SCREEN_GLSL, TRANSFORM_GLSL } from './common.glsl.ts';
+import { QUAD_FRINGE, QUAD_SLACK } from './line-join.ts';
 
 /** Maximum dash entries; must match `MAX_DASH_ENTRIES` in `line-dash.ts`. */
 const DASH_N = 16;
@@ -16,8 +26,10 @@ in vec4 aPrev;
 in vec4 aA;
 in vec4 aB;
 in vec4 aNext;
+#ifndef LINE_UNIFORM_COLOR
 in vec4 aColorA;
 in vec4 aColorB;
+#endif
 in float aWidth;
 // x = dash phase at A (mod period, px), y = screen length of A→B when the phase was computed.
 in vec2 aDist;
@@ -32,8 +44,10 @@ flat out vec4 vTangents;   // bisector tangent at A (xy) and B (zw); zero for ca
 flat out vec4 vEndA;       // outer normal xy, bevel distance, end mode
 flat out vec4 vEndB;
 flat out vec3 vDash;       // phase at A, dash px per screen px, alpha scale for hairlines
+#ifndef LINE_UNIFORM_COLOR
 flat out vec4 vColorA;
 flat out vec4 vColorB;
+#endif
 
 const float END_MITER = 0.0;
 const float END_BUTT = 1.0;
@@ -41,19 +55,33 @@ const float END_SQUARE = 2.0;
 const float END_ROUND = 3.0;
 const float END_BEVEL = 4.0;
 const float W_EPS = 1e-5;
+// In units of the anti-aliasing ramp (line-join.ts): the quad's margin past the stroke's sides, and
+// the room it keeps around the pixels a segment draws (half a pixel: the canvas is multisampled).
+const float QUAD_FRINGE = ${QUAD_FRINGE.toFixed(4)};
+const float QUAD_SLACK = ${QUAD_SLACK.toFixed(4)};
 
 vec2 safeNormalize(vec2 v, vec2 fallback) {
   float l = length(v);
   return l > 1e-6 ? v / l : fallback;
 }
 
-// Mirrors computeEnd() in line-join.ts. Returns the quad extent beyond the vertex.
-float computeEnd(vec2 dIn, vec2 dOut, bool isJoin, float hw, out vec2 tangent, out vec4 info) {
+// Mirrors computeEnd() and quadReach() in line-join.ts. Returns how far the quad reaches beyond
+// the vertex along the segment: no further than the pixels this segment draws there. former is
+// how far it reached before plan E16.9 (the join or cap shape and a full ramp), which a segment
+// that crosses depths still uses.
+float computeEnd(
+  vec2 dIn, vec2 dOut, bool isJoin, float hw, float aa,
+  out vec2 tangent, out vec4 info, out float former
+) {
+  float fringe = QUAD_FRINGE * aa;
+  former = hw + aa;
   if (!isJoin) {
     tangent = vec2(0.0);
     float mode = uCap < 0.5 ? END_BUTT : (uCap < 1.5 ? END_ROUND : END_SQUARE);
     info = vec4(0.0, 0.0, 0.0, mode);
-    return hw;
+    // A butt cap draws nothing past the vertex, unless the disc of a round join at the other end
+    // of a short segment reaches back over it.
+    return (mode == END_BUTT && (uJoin < 0.5 || uJoin > 1.5) ? 0.0 : hw) + fringe;
   }
   tangent = safeNormalize(dIn + dOut, dOut);
   float c = clamp(dot(dIn, dOut), -1.0, 1.0);
@@ -64,7 +92,11 @@ float computeEnd(vec2 dIn, vec2 dOut, bool isJoin, float hw, out vec2 tangent, o
   vec2 outer = vec2(turn * tangent.y, -turn * tangent.x);
   info = vec4(outer, hw * cosHalf, mode);
   float tanHalf = sqrt(max(0.0, 1.0 - cosHalf * cosHalf)) / max(cosHalf, 1e-4);
-  return mode == END_MITER ? max(hw, hw * tanHalf) : hw;
+  float ext = mode == END_MITER ? max(hw, hw * tanHalf) : hw;
+  former = ext + aa;
+  // The neighbour owns everything before the bisector, which the stroke and its fringe cross at
+  // most (hw + fringe) * tanHalf behind the vertex; never beyond the join shape and a full ramp.
+  return min(former, (hw + fringe) * tanHalf + QUAD_SLACK * aa);
 }
 
 void cull() {
@@ -108,14 +140,23 @@ void main() {
   vec2 tB;
   vec4 endA;
   vec4 endB;
-  float extA = computeEnd(dIn, dir, hasPrev, hw, tA, endA);
-  float extB = computeEnd(dir, dOut, hasNext, hw, tB, endB);
+  float formerA;
+  float formerB;
+  float reachA = computeEnd(dIn, dir, hasPrev, hw, aa, tA, endA, formerA);
+  float reachB = computeEnd(dir, dOut, hasNext, hw, aa, tB, endB, formerB);
+  // The quad's corners carry the depths of A and B, so a shorter quad tilts the depth of a
+  // segment whose ends differ in depth. Such a segment keeps the former quad (2.5D views and 3D
+  // scenes test depth); under the 2D camera every depth is the same.
+  if (cA.z / cA.w != cB.z / cB.w) {
+    reachA = formerA;
+    reachB = formerB;
+  }
 
   // position.x: 0 = A end, 1 = B end; position.y: -1 / +1 side.
   bool atB = position.x > 0.5;
-  float along = atB ? len + extB + aa : -(extA + aa);
+  float along = atB ? len + reachB : -reachA;
   vec2 normal = vec2(-dir.y, dir.x);
-  vec2 screen = a + dir * along + normal * position.y * (hw + aa);
+  vec2 screen = a + dir * along + normal * position.y * (hw + QUAD_FRINGE * aa);
 
   // NDC depth is affine in screen space for a planar quad, so interpolate it linearly.
   float f = len > 0.0 ? clamp(along / len, 0.0, 1.0) : 0.0;
@@ -130,8 +171,10 @@ void main() {
   // Dash units per screen px: exact (1.0) right after a phase recompute; drifts slightly while a
   // throttled recompute is pending, which keeps the phase continuous at the next vertex.
   vDash = vec3(aDist.x, len > 1e-6 ? aDist.y / len : 1.0, alphaScale);
+#ifndef LINE_UNIFORM_COLOR
   vColorA = aColorA;
   vColorB = aColorB;
+#endif
 }
 `;
 
@@ -151,8 +194,12 @@ flat in vec4 vTangents;
 flat in vec4 vEndA;
 flat in vec4 vEndB;
 flat in vec3 vDash;
+#ifdef LINE_UNIFORM_COLOR
+uniform vec4 uColor;
+#else
 flat in vec4 vColorA;
 flat in vec4 vColorB;
+#endif
 
 out highp vec4 fragColor;
 
@@ -169,19 +216,30 @@ float endDistance(vec4 info, vec2 rel, float beyond, float hw) {
   return -1e20; // miter: bounded by the ownership clip only
 }
 
+// Distance to the "on" interval [a, b] of the pattern and to its copies one period before and
+// after, combined with the nearest so far.
+float hcDashInterval(float best, float m, float a, float b) {
+  best = min(best, max(a - m, m - b));
+  best = min(best, max(a - (m - uDashPeriod), (m - uDashPeriod) - b));
+  best = min(best, max(a - (m + uDashPeriod), (m + uDashPeriod) - b));
+  return best;
+}
+
 // Signed distance to the nearest "on" interval of the repeating dash pattern (mirrors
 // dashDistance() in line-dash.ts).
 float hcDashDistance(float along) {
   float m = along - floor(along / uDashPeriod) * uDashPeriod;
+  // One dash and one gap ('dot', 'dash', 'longdash'): the first turn of the loop below, without
+  // the loop. Looping over all ${DASH_N} entries with a break made a dashed 1M-segment line cost
+  // a quarter more than a solid one: compilers unroll a constant bound and evaluate every turn.
+  if (uDashCount < 2.5) return hcDashInterval(1e20, m, 0.0, 0.0 + uDash[0]);
   float best = 1e20;
   float start = 0.0;
-  for (int i = 0; i < ${DASH_N}; i += 2) {
-    if (float(i) >= uDashCount) break;
+  int count = min(int(uDashCount), ${DASH_N});
+  for (int i = 0; i < count; i += 2) {
     float a = start;
     float b = start + uDash[i];
-    best = min(best, max(a - m, m - b));
-    best = min(best, max(a - (m - uDashPeriod), (m - uDashPeriod) - b));
-    best = min(best, max(a - (m + uDashPeriod), (m + uDashPeriod) - b));
+    best = hcDashInterval(best, m, a, b);
     start = b + uDash[i + 1];
   }
   return best;
@@ -228,7 +286,11 @@ void main() {
   }
 
   float coverage = clamp(0.5 - d / hcAAWidth(), 0.0, 1.0) * vDash.z;
+#ifdef LINE_UNIFORM_COLOR
+  vec4 color = uColor;
+#else
   vec4 color = mix(vColorA, vColorB, len > 0.0 ? clamp(t / len, 0.0, 1.0) : 0.0);
+#endif
   float alpha = color.a * coverage * uOpacity;
   if (alpha <= 0.0) discard;
   fragColor = vec4(color.rgb, alpha);

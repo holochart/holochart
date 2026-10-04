@@ -53,9 +53,13 @@ describe('3D line shaders (injected into the 2D line shaders)', () => {
 
   it('place the inner quad vertices on the end points (exact depth; the 2D quad is unchanged)', () => {
     expect(LINE3D_VERTEX_SHADER).toContain(
-      'float along = position.z > 0.5 ? (atB ? len : 0.0) : (atB ? len + extB + aa : -(extA + aa));',
+      'float along = position.z > 0.5 ? (atB ? len : 0.0) : (atB ? len + reachB : -reachA);',
     );
-    expect(LINE_VERTEX_SHADER).toContain('float along = atB ? len + extB + aa : -(extA + aa);');
+    expect(LINE_VERTEX_SHADER).toContain('float along = atB ? len + reachB : -reachA;');
+    // A segment that crosses depths keeps the quad it had (its corners carry the end depths).
+    for (const shader of [LINE_VERTEX_SHADER, LINE3D_VERTEX_SHADER]) {
+      expect(shader).toMatch(/if \(cA\.z \/ cA\.w != cB\.z \/ cB\.w\) \{\s+reachA = formerA;/);
+    }
     const line = new Line3D(context(), helix(4));
     expect(line.object.geometry.getAttribute('position').count).toBe(8);
     expect(line.object.geometry.index?.count).toBe(18);
