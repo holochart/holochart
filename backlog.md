@@ -304,16 +304,28 @@ Wave R2 notes (details in `docs/release/browser-support.md` and `tests/interacti
 - Heap bytes cannot be asserted to return to baseline; the test counts live instances after a
   forced GC instead, and GL objects per context (`renderer.info` alone misses L2 and L3).
 
-**S2.7 Coverage.** `vitest.config.ts` enforces 90% for `packages/core` only.
+**S2.7 Coverage.** `vitest.config.ts` enforces 90% for `packages/core` only. · ✅ Done (wave R3)
 
-- [ ] Add thresholds for runtime and render, and ≥ 85% for trace calc modules (plan.md L1772).
+- [x] Add thresholds for runtime and render, and ≥ 85% for trace calc modules (plan.md L1772). —
+      90% for runtime and render, 85% per package for `packages/traces-*/src/**/calc*.ts`; 925
+      new tests in 122 files, nothing excluded. Branches went from 76.7–88.4% to 89.2–94.4%.
+      Two single files are still under 85% branches (`traces-3d/src/surface/calc.ts`,
+      `traces-finance/src/ohlc/calc.ts`); their packages pass.
 
-**S2.8 Visual-test debt.**
+**S2.8 Visual-test debt.** · 🟡 Partly done (wave R3)
 
-- [ ] Explain or fix the `demos/openrouter/categories` Linux diff (`testTileTolerance: 96`,
-      plan.md L2190).
-- [ ] Regenerate the line baselines in the pinned container (L1802), and write the CONTRIBUTING
-      note about SwiftShader fixed-point shifts (L1804).
+- [x] Explain or fix the `demos/openrouter/categories` Linux diff (`testTileTolerance: 96`,
+      plan.md L2190). — Explained. The tolerance is a fraction of a window's 1,024 px, so `96`
+      switched the check off; it is now `96 / 1024` and the spec rejects values outside 0 to 1.
+      The diff itself is a library bug, listed under "Found in wave R3" below (text measured
+      before the font loads).
+- [ ] Regenerate the line baselines in the pinned container (L1802). Not done: it needs Docker.
+      `pnpm test:visual:update` never rewrites a baseline whose diff is exact-only, so delete the
+      PNGs first: `_dev/viewports-grid`, `_dev/lines-series`, `_dev/lines-joins-dashes`,
+      `_dev/lines-3d`, `_dev/lines-3d-opaque`; then run the update in the container with
+      `-g '_dev/(lines-|viewports-grid)'`, and repeat for any line example
+      `pnpm test:visual:report` still lists with a non-zero exact count.
+- [x] Write the CONTRIBUTING note about SwiftShader fixed-point shifts (L1804).
 
 ### Docs and migration
 
@@ -361,30 +373,41 @@ Found while writing these (wave R2), still open:
       `connect-src blob:`, `font-src blob:` and `style-src 'unsafe-inline'`; `data:` is not
       needed for fonts. Not tested in Safari.
 - [ ] `config.debug` is in the schema but nothing reads it.
-- [ ] Stale pages: `fundamentals/shapes-images.md` says the drawing tools are unavailable;
-      `dates-time-series.md` says `Date` objects behave as in Plotly (they are read as UTC).
+- [x] Stale pages: `fundamentals/shapes-images.md` says the drawing tools are unavailable;
+      `dates-time-series.md` says `Date` objects behave as in Plotly (they are read as UTC). —
+      Fixed in wave R3, with other false statements in finished pages (`core-concepts`,
+      `reference/events`, `reference/errors`, `colors-colorscales`, `guides/export`).
 
-**S2.11 Pages.** 23 stubs and 8 drafts.
+**S2.11 Pages.** 23 stubs and 8 drafts. · ✅ Done (wave R3); 10 stubs and 6 drafts remain
 
-- [ ] Adoption-critical pages first:
+- [x] Adoption-critical pages first:
   - `fundamentals/traces`, `data-formats`, `configuration` (strict mode for development) and
     `updating-charts`
   - `guides/performance`
   - `reference/colorscales` and `marker-symbols`
   - `changelog` (generated from changesets)
-- [ ] Also finish the draft `fundamentals/*` pages.
-- [ ] The TypeDoc reference covers holochart, runtime, core, render and express only
+  - — All complete. The colorscale and marker-symbol references and the changelog are generated
+    (`apps/docs/scripts/gen-galleries.ts`, `gen-changelog.ts`).
+- [x] Also finish the draft `fundamentals/*` pages.
+- [x] The TypeDoc reference covers holochart, runtime, core, render and express only
       (`apps/docs/scripts/gen-api.ts`). Add components, themes, locales and every `traces-*`
-      package.
-- [ ] Leave the extending, customization and cookbook stubs to phase 3, after the plugin API
-      settles.
+      package. — All 14 packages; `@internal` names get no page.
+- [x] Leave the extending, customization and cookbook stubs to phase 3, after the plugin API
+      settles. — Still stubs: `cookbook/index`, `customization/index`,
+      `customization/three-objects`, `extending/*` (3), `getting-started/from-chartjs`,
+      `from-d3`, `migration`, `playground/index`. Still drafts: `charts/index`,
+      `customization/extrusion-2-5d`, `guides/dashboards`, `guides/frameworks`, `guides/ssr`.
+- [x] The chart pages' "Keyboard" bullets said there was no keyboard navigation, also for
+      families that had it before R3. Each now states what its family does.
 
-**S2.12 Internals out of the public docs.**
+**S2.12 Internals out of the public docs.** · ✅ Done (wave R3)
 
-- [ ] Remove the ~49 `<Example id="_dev/…">` embeds from public pages (e.g.
+- [x] Remove the ~49 `<Example id="_dev/…">` embeds from public pages (e.g.
       `fundamentals/layout-axes-subplots.md`, `3d-scenes.md`, `customization/materials-lighting.md`);
-      promote the useful ones to public example folders.
-- [ ] Drop `_dev` entries (76) from the published gallery manifest.
+      promote the useful ones to public example folders. — 34 embeds on 8 pages: 28 became
+      public examples, 5 use existing ones. `lint:pages` fails on an internal embed. Seven of the
+      29 new baselines were rendered on macOS and may need the CI rendering.
+- [x] Drop `_dev` entries (76) from the published gallery manifest. — In the generator.
 
 ### API surface
 
@@ -394,17 +417,43 @@ Found while writing these (wave R2), still open:
 
 **S2.13a** (found in R0) `traces-finance`'s published types fail to type-check under
 `exactOptionalPropertyTypes` (not part of `strict`): the attribute schema's `AttrSpec` rejects
-`undefined`. Fix the type, then turn the flag on in the `tests/package` TypeScript fixture.
+`undefined`. Fix the type, then turn the flag on in the `tests/package` TypeScript fixture. ·
+✅ Done (the fix landed in R1; in R3 the fixture imports all 14 packages directly)
 
 **S2.13** There is no API-Extractor, no API report and no stability tags. `versioning.md` relies
-on `@experimental`, which is used once.
+on `@experimental`, which is used once. · ✅ Done (wave R3)
 
-- [ ] Add API-Extractor (or an equivalent export snapshot) per package, with a CI diff check so
-      accidental export changes are visible in review.
-- [ ] Tag the unstable surfaces (the `render` namespace, runtime contracts) `@experimental`, or
-      move them to an `/experimental` subpath.
-- [ ] Decide `Chart#toJSON` (plan.md E21.6, L1841) and the camelCase aliases question (Q2)
-      before the surface freezes.
+- [x] Add API-Extractor (or an equivalent export snapshot) per package, with a CI diff check so
+      accidental export changes are visible in review. — `api-reports/*.api.md` (14 packages and
+      `@mk7s/holochart/global`), `pnpm api:report` and `pnpm api:check`, a step in the CI package
+      job. The check also fails when the umbrella's export list and the tags disagree.
+- [x] Tag the unstable surfaces (the `render` namespace, runtime contracts) `@experimental`, or
+      move them to an `/experimental` subpath. — Tags. The plumbing packages export for each
+      other is `@internal`, and the umbrella exports an explicit list instead of `export *`:
+      1,627 names became 1,011 (703 public, 308 experimental, no internal). Cross-package name
+      collisions are renamed (`Base…` trace types, core's `CoreTraceModule`, `RGBAColor`,
+      runtime's `polygonContains`, …; see `.changeset/r3-curated-exports.md`). No `/internal`
+      subpaths: that waits for the plugin API freeze (S3.5).
+- [x] Decide `Chart#toJSON` (plan.md E21.6, L1841) and the camelCase aliases question (Q2)
+      before the surface freezes. — `chart.toJSON()` is removed; `chartToJSON(chart)` is the
+      serializer, and `JSON.stringify(chart)` throws. No camelCase aliases: Plotly attributes
+      keep their names, Holochart-only ones are camelCase, except the 14 lower-case 3D material,
+      lighting and scene attributes.
+
+Left open by R3:
+
+- [ ] `stripInternal` is off, because an `@internal` entry export breaks the declaration build;
+      a post-bundle step strips `@internal` members only. Two unreferenced interfaces
+      (`MatrixInternals`, `Column`) sit in render's `.d.ts`.
+- [ ] The declaration build is not reproducible: inferred unions come out in different orders
+      between clean builds in 4 to 5 packages (noted in ADR-015; the report tool sorts them).
+- [ ] 123 internal types still leak through public signatures (166 before), none with
+      bundler-made names.
+- [ ] Classification calls to review before the freeze: trace `*Attributes` schemas and `*Calc`
+      types are experimental; the traces-3d scene pick and hover API is internal, which a 3D
+      plugin with hover would need; `setBarExtruder` is experimental and not in the umbrella.
+- [ ] `chart.three.root` is experimental; the Dashboards guide reaches the canvas through
+      `chart.element.querySelector('canvas')`.
 
 ### Accessibility and i18n
 
@@ -414,21 +463,52 @@ on `@experimental`, which is used once.
 | S2.15 | Translate the accessibility strings                        | M    |
 
 **S2.14** `runtime/src/fx/keyboard.ts:40-41, 762-763` lists polar, 3D, grid, histogram and
-box/violin as not navigable. Among domain traces only pie has `keyboardPoints`.
+box/violin as not navigable. Among domain traces only pie has `keyboardPoints`. · ✅ Done (wave
+R3), except point stops for the other 3D traces
 
-- [ ] Keyboard points for sunburst, treemap, icicle, sankey, funnelarea, parcats and parcoords.
-- [ ] A bin or cell cursor for histogram and heatmap, and box/violin statistics.
-- [ ] 3D: keyboard orbit (plan.md L1391) and point navigation for scatter3d.
-- [ ] `describe` summaries for bar3d, cone, isosurface, mesh3d, streamtube and volume.
-- [ ] axe-core audits in CI over a sample of examples (E20.8).
+- [x] Keyboard points for sunburst, treemap, icicle, sankey, funnelarea, parcats and parcoords.
+- [x] A bin or cell cursor for histogram and heatmap, and box/violin statistics. — Also contour,
+      histogram2d and polar.
+- [x] 3D: keyboard orbit (plan.md L1391) and point navigation for scatter3d.
+- [x] `describe` summaries for bar3d, cone, isosurface, mesh3d, streamtube and volume. — In a
+      lazy chunk; scatter3d and surface descriptions moved there too and are now asynchronous.
+- [x] axe-core audits in CI over a sample of examples (E20.8). — 22 examples in the interaction
+      job (`tests/interaction/axe.spec.ts`).
+
+The per-trace code is a lazy chunk with its own budget (4.19 of 4.6 kB), loaded on the first
+keyboard focus. Left open by R3:
+
+- [ ] The script-tag build has no stops for the 2D families: with them `holochart.iife.min.js`
+      was at 689.6 of 690 kB. `scriptWithoutTraceA11yPlugin` in
+      `packages/holochart/tsdown.config.ts` leaves them out; shipping them costs about 3 kB of
+      that budget.
+- [ ] No point stops for surface, mesh3d, cone, streamtube, isosurface, volume and bar3d. Not
+      navigated at all: `image`, `splom`, `table`, `indicator`, strip plots.
+- [ ] Treemap and icicle tiles and sankey links are not highlighted under the keyboard cursor as
+      they are under the pointer.
+- [ ] Two `color-contrast` findings are allowlisted (`AXE_STRICT=1` shows them): the pressed
+      range selector button (4.39:1, from the built-in template) and white hover-label text on
+      the trace color (4.08:1 on `#636efa`, Plotly's rule).
 
 **S2.15** Keyboard announcements (`KEYBOARD_TEMPLATES`) aren't translated anywhere, and chart
 summaries exist only for de, fr and es (`locales/src/summaries.ts`). Some UI labels are
-English-only (plan.md L2251).
+English-only (plan.md L2251). · ✅ Done (wave R3), as machine translations without native review
 
-- [ ] Add the keys to the top 10 locales; English is the fallback elsewhere.
-- [ ] Test Arabic and Hebrew labels, and document the limits: the measurement fallback has no
-      bidi (`render/src/primitives/text-metrics.ts:27`), and legends and menus aren't mirrored.
+- [x] Add the keys to the top 10 locales; English is the fallback elsewhere. — `de`, `es`, `fr`,
+      `it`, `ja`, `ko`, `pt-BR`, `ru`, `tr`, `zh-CN`, in `locales/src/holochart/<locale>.ts`
+      (`summaries.ts` is gone). A test holds every translation to its source's placeholders.
+- [x] Test Arabic and Hebrew labels, and document the limits: the measurement fallback has no
+      bidi (`render/src/primitives/text-metrics.ts:27`), and legends and menus aren't mirrored. —
+      `tests/a11y/rtl-labels.test.ts` (the text engine is mocked: drawn glyphs are not tested).
+
+Left open by R3:
+
+- [ ] Native review. `it`, `pt-BR` and the new `de`/`fr`/`es` strings had no second reader.
+- [ ] Still English: the 3D trace descriptions, most of the hidden description (axis and 2D
+      trace lines, table captions), the modebar's "Chart toolbar" (initial chunk, no room), and
+      "Menu N", "Slider N", "none" and the range selector names (in the lazy controls chunk, so
+      cheap to route). Arabic and Hebrew have no UI strings.
+- [ ] `pt-PT` falls back to `pt-BR`'s sentences and `zh-TW`/`zh-HK` to `zh-CN`'s (documented).
 
 ### Performance targets still red
 
@@ -436,12 +516,61 @@ English-only (plan.md L2251).
 | ----- | -------------------------------- | ---- |
 | S2.16 | Heatmap first draw and line cost | M    |
 
+Wave R3 (numbers and method in `docs/perf/s2-16-first-draw-and-line-cost.md`; measured on a
+loaded machine, so trust the ratios):
+
 - [ ] 4096² heatmap first draw is ≈ 700 ms against < 100 ms (E11.1). Try R32F packing to halve the
-      134 MB upload (plan.md L2199), and incremental upload.
+      134 MB upload (plan.md L2199), and incremental upload. — 🟡 768 → 425 ms (benchmark
+      median). R32F halves the upload, and the description no longer rescans the grid, which was
+      37% of the time; the upload was about 5%. The target is not reachable as written: an empty
+      chart takes 135–170 ms to `ready` in the harness. Proposed instead: at most 100 ms over an
+      empty chart (the heatmap adds about 245 ms now). Left: calc ≈ 43 ms, pack ≈ 26 ms.
 - [ ] Lines cost 5× `Line2` solid and 10× dashed, against ≤ 2× and ≤ 3× targets (E16.9); markers
-      cost 1.4–1.7× a trivial shader (E16.10). Per-vertex u8 color packing and cheaper dashes.
-- [ ] A size policy so budgets stop being raised case by case (R9): each raise comes with a
-      named cause, and the full ESM bundle gets a hard ceiling.
+      cost 1.4–1.7× a trivial shader (E16.10). Per-vertex u8 color packing and cheaper dashes. —
+      🟡 Dashed 2.4–3.0× while panning (met), solid 2.1–2.6× (not met: 2× needs fewer fragments
+      or a cheaper vertex stage, and both change pixels). Markers measured at 1.38×, unchanged;
+      next experiment: a constant `aStyle` from a uniform. No baseline changed.
+- [x] A size policy so budgets stop being raised case by case (R9): each raise comes with a
+      named cause, and the full ESM bundle gets a hard ceiling. — A ledger in
+      `tests/bundle/size/policy.ts`, enforced by `pnpm test` and `pnpm size`. The ceiling is
+      560 kB (540 + 20), a proposal for the owner to confirm.
+
+### Found in wave R3
+
+Bugs and gaps the wave turned up and did not fix.
+
+- [ ] Text-dependent trace extremes are measured before the built-in font loads and never
+      re-measured (`#fontsChanged` in `runtime/src/chart.ts` schedules only `layout`), so the
+      room horizontal bars reserve for outside labels depends on the OS fallback font. This is
+      the `demos/openrouter/categories` Linux diff. Pie, funnelarea, sunburst, treemap, contour
+      labels and parcoords may be affected too (not checked).
+- [ ] A glyph missing from the bundled font makes troika fetch a fallback from jsDelivr;
+      offline, `ready` never resolves.
+- [ ] `BigInt64Array` passes validation, then throws in `core/src/scales/scale.ts:212`.
+- [ ] A plain color list as `colorscale` is ignored unless `autocolorscale: false`
+      (`traces-basic/src/shared/colorscale.ts:108`, `traces-3d/src/surface/defaults.ts:31`).
+- [ ] Contour `colorExtent` (`traces-sci/src/contour/calc.ts:100-123`) reads the raw `contours`
+      attributes: a reversed start/end or a missing size gives the right levels and a wrong
+      color domain. Expected values derived from plotly.js source, not from running it.
+- [ ] `imageExtremes` on a log axis collapses the autorange when the image starts at or below 0.
+- [ ] Strict mode does not validate style-only updates, and a rejected strict update leaves the
+      bad value in `chart.data`. `chart.update` with an out-of-range trace applies earlier
+      entries before rejecting.
+- [ ] Dead schema keys beyond `config.debug`: `config.worker`, `textRenderer`, `hoverRenderer`,
+      seven `edits` keys, `layout.autosize`, `hoverlabel.grouptitlefont`, and the `uirevision`
+      of legend, modebar, scene and polar.
+- [ ] `newPlot` does not decode `{ dtype, bdata }` (plotly.js does). Unknown colorscale names
+      give no warning. Histograms have no `LAYER_RANK` entry and draw at scatter rank.
+- [ ] Stale texts in generated output: `make-subplots.ts` errors name M4/M6, `modebar.ts:370`
+      says axes have no `showspikes`, shape schema descriptions say legend entries are "not
+      drawn yet", and plan ids such as "(E6.7)" appear in attribute descriptions.
+- [ ] `eraseActiveShape` is not exported. Public examples `shapes/draw` and `line/streaming`
+      would help.
+- [ ] Flaky: the scatter3d Delaunay property test fails on a near-degenerate sliver by a hair
+      over its 1e-9 tolerance (`FC_SEED=330387662`), and its 50k-point performance test has a
+      1,000 ms wall-clock limit that fails under load.
+- [ ] `demos/tqqq-soxl/drawdowns` and `rolling-vol` fail the visual suite on macOS (1.1–1.3% of
+      pixels): their baselines are the CI renderings since da0b545.
 
 ---
 
@@ -498,6 +627,165 @@ Recorded so they don't creep back in:
 - beeswarm
 - adaptive bins
 
+## After 1.0, ideas: network graphs
+
+Node-link charts: force-directed networks, DAGs and trees. Added 2026-10-03. None of this is in
+plan.md, and Plotly.js has no graph trace (its docs draw networks as `scatter` traces with positions
+from networkx), so these are Holochart extras (➕) with no parity pressure and nothing for the
+importer to do. They are ideas to pick from, not commitments, and decision 1 (pause new features)
+holds until 1.0 is out.
+
+**What is already there to build on**
+
+- Sankey is a node-link chart already: a `node`/`link` attribute shape, cycle detection
+  (`circularLinks`, `traces-hier/src/sankey/layout.ts:146`), longest-path layering, node dragging
+  that reports a restyle payload (`sankey/drag.ts`), link hover and a text description
+  (`sankey/describe.ts`).
+- Instanced SDF markers (`render/src/markers`), the line and arrow primitives
+  (`render/src/primitives/line.ts`, `arrow-geometry.ts`) and the pixel-space 2D camera (ADR-008)
+  cover drawing, zoom and pan.
+- The 3D scene with `scatter3d` markers and tube lines (E14.2, E14.10) covers a 3D graph.
+- ADR-006 allows d3 micro-libraries in the pure stages, which admits `d3-force`, `d3-quadtree` and
+  `d3-hierarchy`'s `tree`/`cluster`.
+
+| ID  | Item                                                                         | Size | Needs      |
+| --- | ---------------------------------------------------------------------------- | ---- | ---------- |
+| G1  | `graph` trace: nodes and links at given positions                            | M    | S3.5       |
+| G2  | Force-directed layout, deterministic, static or animated                     | L    | G1         |
+| G3  | Layered DAG layout (Sugiyama) with box nodes and routed edges                | L    | G1         |
+| G4  | Tree layouts: tidy, radial, dendrogram                                       | M    | G1         |
+| G5  | Graph interaction: neighbour highlight, drag and pin, expand and collapse    | M    | G1         |
+| G6  | `graph3d`: force layout in the 3D scene                                      | M    | G2         |
+| G7  | Large graphs: level of detail, edge bundling, layout in a worker             | L    | G2, S3.7   |
+| G8  | Related forms from existing primitives: arc diagram, chord, adjacency matrix | M    | —          |
+| G9  | Data in: Express `hx.graph` and adapters for common graph formats            | M    | G1         |
+| G10 | Accessibility, export and demos                                              | M    | G1, G2, G3 |
+
+**G1 `graph` trace.** The base everything else sits on, useful on its own for positions computed
+elsewhere (networkx, Graphviz, a server).
+
+- [ ] `node: { label, x, y, size, color, symbol, group, customdata }` and
+      `link: { source, target, value, color, width, dash, arrow, curve }`, shaped like sankey's so
+      the same data feeds both.
+- [ ] Two batches: all nodes as instanced markers, all links as one line buffer. Arrowheads stop
+      at the node's edge, not its center. Curved links for parallel edges, loops for self-links.
+- [ ] Labels with collision culling: the highest-degree nodes win, the rest appear on zoom.
+- [ ] Color by group (categorical) or by a value through a colorscale, with a legend or colorbar.
+      Size by degree as a built-in option.
+- [ ] Cartesian or domain placement: `xaxis`/`yaxis` for positions in data units (a network over
+      a scatter), a `domain` otherwise.
+
+**G2 Force-directed layout.**
+
+- [ ] `d3-force`-style simulation: link springs, many-body repulsion through a Barnes–Hut
+      quadtree, centering, collision by node size. Link `value` sets spring strength or length.
+- [ ] Deterministic: seeded phyllotaxis start and a fixed tick count, so the same figure gives the
+      same pixels in visual baselines, SSR and export.
+- [ ] Two modes: static (run to rest in calc, draw once) and `simulate: true` (animate the
+      cooling through the on-demand render loop, ADR-007). Reduced motion gets static.
+- [ ] Pinned nodes (`node.x`/`node.y` given for some), and forces toward a group center or along
+      one axis (a beeswarm-like timeline network).
+- [ ] ForceAtlas2 as a second algorithm; it separates communities better on scale-free graphs.
+
+**G3 Layered DAG layout.** Pipelines, dependency graphs, data lineage, state machines, commit
+graphs.
+
+- [ ] The Sugiyama steps: break cycles (reuse `circularLinks`), assign layers (longest path, as
+      sankey does; network simplex later for shorter edges), reduce crossings with barycenter
+      sweeps, place nodes (Brandes–Köpf), route long edges through dummy nodes.
+- [ ] `rankdir: 'TB' | 'LR' | 'BT' | 'RL'`, layer and node spacing, splines or orthogonal routes.
+- [ ] Box nodes sized to their label, with the text inside. This is what separates a DAG diagram
+      from a dot-and-line network, and it needs text measuring in calc.
+- [ ] Clusters: nodes grouped in a labelled frame (stages of a pipeline, packages of a monorepo).
+- [ ] Back edges of a cyclic input drawn as loops in a distinct style, not dropped.
+
+**G4 Tree layouts.**
+
+- [ ] Tidy tree (Reingold–Tilford) and radial tree from the same `ids`/`parents`/`labels` input
+      the hierarchical traces take (`traces-hier/src/hierarchy/build.ts`), so a treemap and a
+      tree swap with one attribute.
+- [ ] Dendrogram with branch heights from data and elbow links. This would give plan.md E11.9
+      (`ff.dendrogram`) a native layout to target instead of scatter lines.
+- [ ] Click to collapse and expand a subtree, with the tween the sunburst uses for drill-down.
+
+**G5 Interaction.**
+
+- [ ] Hovering a node highlights its links and neighbours and dims the rest; hovering a link
+      highlights its two ends. `hovertemplate` variables for degree, in- and out-degree.
+- [ ] Node drag on the `SankeyDrag` pattern, emitting a restyle with the new positions. In
+      simulate mode a drag reheats the layout, and a dragged node stays pinned until
+      double-clicked.
+- [ ] Box and lasso select over nodes; click, hover and select events carry node and link
+      indices.
+- [ ] `highlight: { hops: n }` for an n-hop neighbourhood, and a path highlight between two
+      selected nodes.
+
+**G6 `graph3d`.** The one that plays to Holochart's 3D scene; general charting libraries mostly
+leave it to dedicated tools such as 3d-force-graph.
+
+- [ ] Force layout in three dimensions (an octree in place of the quadtree) inside a `scene`.
+- [ ] Nodes as lit spheres or billboards, links as lines or tubes, the orbit camera and camera
+      animation as they are. GPU picking (ADR-010) for hover.
+- [ ] A layered DAG in 3D: layers as planes along z, force layout within each plane.
+
+**G7 Large graphs.** Targets to argue about: 10k nodes and 50k links laid out in under 2 s and
+panned at 60 fps; 100k nodes drawn at 60 fps from given positions.
+
+- [ ] Layout in a worker (S3.7, ADR-011) that streams positions back, so the graph settles on
+      screen instead of blocking.
+- [ ] Level of detail: labels and arrowheads only above a zoom threshold, link opacity scaled by
+      density, nodes below a pixel drawn as points.
+- [ ] Edge bundling for hairballs: hierarchical bundling when nodes have groups, force-directed
+      bundling otherwise.
+- [ ] Stretch: the simulation on the GPU with transform feedback. Worth a spike only if the
+      worker version misses the targets.
+
+**G8 Related forms.** Each is a layout over primitives that exist, and each avoids the hairball
+for some kind of graph.
+
+- [ ] Arc diagram: nodes on a line, links as arcs (`render/src/primitives/arc.ts`).
+- [ ] Chord diagram: sunburst ring geometry for the groups, ribbons between them. Plotly has
+      no chord trace.
+- [ ] Adjacency matrix: a heatmap with rows and columns reordered by cluster. Works at densities
+      where node-link fails.
+- [ ] Hive plot, as a lower priority.
+
+**G9 Data in.**
+
+- [ ] `hx.graph(edges, { source, target, weight, color })` from an edge table, with an optional
+      node table, matching the other Express calls.
+- [ ] Adapters: adjacency matrix, node-link JSON (networkx, graphology, Cytoscape), and a DOT
+      subset. GraphML only if someone asks.
+- [ ] Small pure helpers for the things people color and size by: degree, connected components,
+      and one community detection (Louvain). Anything past that belongs to a graph library, not
+      to a chart library.
+
+**G10 Accessibility, export and demos.**
+
+- [ ] A text summary on the `describe.ts` pattern (node and link counts, components, the
+      most-connected nodes) and a table view of the edge list.
+- [ ] Keyboard: arrow keys move from a node along its links, announcing the neighbour.
+- [ ] Demos that sell it: this monorepo's package dependency DAG, Les Misérables character
+      co-occurrence (force), a git commit graph, a data pipeline with clusters, a 3D network.
+
+**Decisions these need first**
+
+1. **One trace or several?** Recommended: one `graph` trace with a pluggable layout
+   (`'force' | 'layered' | 'tree' | 'radial' | 'circular' | 'grid' | 'preset'`), plus `graph3d`.
+   The attribute can't be called `layout`, which the figure owns; sankey's `arrangement` is the
+   precedent.
+2. **Own layouts or dependencies?** Recommended: `d3-force` and `d3-hierarchy` under ADR-006, our
+   own layered layout sharing code with sankey, and a layout hook from the plugin API (S3.5) so an
+   app can bring elkjs for the hard cases. Check the alternatives before starting G3: dagre and
+   d3-dag are small but have seen little maintenance, and elkjs is too large to bundle (sizes and
+   status here are from memory, not measured).
+3. **A new `traces-graph` package, outside the default bundle.** Full ESM is at 533.9 of 540 kB,
+   so graphs register through a partial bundle like any plugin. That makes G1 a real test of the
+   frozen trace module contract, which is why it waits for S3.5.
+4. **Order.** G1, then G3 or G2 by demand (layered DAGs are rare in general charting libraries;
+   force layouts are the crowd-pleaser), then G5. G8's chord diagram is independent and could go
+   first.
+
 ## Suggested waves
 
 | Wave | Items                                                                       | Notes                                                                                          |
@@ -505,5 +793,5 @@ Recorded so they don't creep back in:
 | R0   | S1.2, S1.3, S1.7 + S1.8, S1.4 + S1.5 + S1.9                                 | Four independent agents. S1.1's owner steps can happen in parallel.                            |
 | R1   | S1.6 (typed figures), then the S1.1 dry run and the `0.1.0-alpha.0` publish | S1.6 is the largest phase 1 item. The first publish waits for it.                              |
 | R2   | S2.1, S2.2 + S2.3 + S2.4, S2.5 + S2.6, S2.9 + S2.10                         | Robustness and docs in parallel.                                                               |
-| R3   | S2.11 + S2.12, S2.13, S2.14, S2.15 + S2.16 + S2.7 + S2.8                    | Ends with a beta release.                                                                      |
+| R3   | S2.11 + S2.12, S2.13, S2.14, S2.15 + S2.16 + S2.7 + S2.8                    | Ends with a beta release. Built 2026-10-03; the release itself waits on S1.1's owner steps.    |
 | M7   | Phase 3 in the order above                                                  | Plan it into waves when R3 closes, starting with the corpus runner so its report decides S3.2. |
