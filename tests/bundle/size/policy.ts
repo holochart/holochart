@@ -74,7 +74,16 @@ export const BUDGETS_AT_ADOPTION: Readonly<Record<string, string>> = {
  * like `{ id: 'full', from: '540 kB', to: '548 kB', date: '2026-11-02', cause: 'SVG export
  * (S3.4): the 2D scene walker cannot load lazily because … ; 536.1 → 545.3 kB on CI' }`.
  */
-export const BUDGET_CHANGES: readonly BudgetChange[] = [];
+export const BUDGET_CHANGES: readonly BudgetChange[] = [
+  {
+    id: 'trace-a11y-lazy',
+    from: 'new',
+    to: '4.6 kB',
+    date: '2026-10-03',
+    cause:
+      'Keyboard stops and 3D descriptions of the trace packages (S2.14), as lazy chunks of the full bundle loaded on first keyboard focus or description: 4.19 kB measured. With ordinary imports the same code added 4.18 kB to the full initial chunk, which had 2.4 kB of room.',
+  },
+];
 
 /** Fewest characters a cause can have and still say what grew. */
 export const MIN_CAUSE_LENGTH = 40;
