@@ -584,11 +584,6 @@ export function extrudeRects(host: ExtrusionHost, rects: {
     readonly object: Object3D;
 }, data: Partial<RectData>, lift: readonly LiftedPrimitive[]): void;
 
-// @experimental (undocumented)
-namespace extrusion_lazy_d_exports {
-    export { DomainCamera, DomainHost, DomainShape, DomainView, EXTRUSION_LIGHTING, EXTRUSION_THREE_LIGHTING, ExtrusionData, ExtrusionHit, ExtrusionHost, ExtrusionPrimitive, HEATMAP_BEVEL_MAX, HEATMAP_COLUMNS_MAX, HeatmapColumns, LiftedPrimitive, Outline, PrismBuffers, ShapeStyle, SlabGeometry, UNCLIPPED, VIEW3D_MAX_ANGLE, VIEW3D_MAX_FOV, View3DAngles, View3DCamera, View3DProjector, arcShapes, buildPrisms, clampBevel, createExtrusionPrimitive, createView3DProjector, domainActive, domainCapture, domainDepth, domainHover, domainKeyboard, domainPointer, extrudeOutline, extrusionDepths, extrusionMaterialSpec, heatmapColumns, over, paperColor, polygonOutline, raycastSlab, rectOutline, rectPrismVertexCount, rectShapes, sectorOutline, slabGeometry, syncDomain, syncExtrudedFills, syncExtrudedRects, syncHeatmapColumns, view3dCamera, view3dProject, view3dRay, view3dUnproject, writeSlab };
-}
-
 // @experimental
 export interface ExtrusionData {
     bevel: number;
@@ -655,10 +650,13 @@ export interface ExtrusionHost {
     };
 }
 
-// Warning: (ae-forgotten-export) The symbol "extrusion_lazy_d_exports" needs to be exported by the entry point index.d.ts
-//
+// @experimental (undocumented)
+export namespace ExtrusionLazy {
+    export { DomainCamera, DomainHost, DomainShape, DomainView, EXTRUSION_LIGHTING, EXTRUSION_THREE_LIGHTING, ExtrusionData, ExtrusionHit, ExtrusionHost, ExtrusionPrimitive, HEATMAP_BEVEL_MAX, HEATMAP_COLUMNS_MAX, HeatmapColumns, LiftedPrimitive, Outline, PrismBuffers, ShapeStyle, SlabGeometry, UNCLIPPED, VIEW3D_MAX_ANGLE, VIEW3D_MAX_FOV, View3DAngles, View3DCamera, View3DProjector, arcShapes, buildPrisms, clampBevel, createExtrusionPrimitive, createView3DProjector, domainActive, domainCapture, domainDepth, domainHover, domainKeyboard, domainPointer, extrudeOutline, extrusionDepths, extrusionMaterialSpec, heatmapColumns, over, paperColor, polygonOutline, raycastSlab, rectOutline, rectPrismVertexCount, rectShapes, sectorOutline, slabGeometry, syncDomain, syncExtrudedFills, syncExtrudedRects, syncHeatmapColumns, view3dCamera, view3dProject, view3dRay, view3dUnproject, writeSlab };
+}
+
 // @experimental
-export type ExtrusionModule = typeof extrusion_lazy_d_exports;
+export type ExtrusionModule = typeof ExtrusionLazy;
 
 // @experimental
 export function extrusionModuleLoaded(): ExtrusionModule | null;
@@ -1427,14 +1425,8 @@ export interface LineLayoutOptions {
 }
 
 // @experimental
-export interface LineOptions {
-    clock?: ThrottleClock;
-    dashThrottleMs?: number;
-}
-
-// @experimental
 export class LinePrimitive implements Primitive<LineData> {
-    constructor(ctx: PrimitiveContext, data?: Partial<LineData>, options?: LineOptions);
+    constructor(ctx: PrimitiveContext, data?: Partial<LineData>, options?: LinePrimitiveOptions);
     // (undocumented)
     dispose(): void;
     get instanceCount(): number;
@@ -1456,6 +1448,12 @@ export class LinePrimitive implements Primitive<LineData> {
 }
 
 // @experimental
+export interface LinePrimitiveOptions {
+    clock?: ThrottleClock;
+    dashThrottleMs?: number;
+}
+
+// @experimental
 export interface LineRetain {
     // (undocumented)
     readonly at: number;
@@ -1466,14 +1464,12 @@ export interface LineRetain {
 }
 
 // @experimental (undocumented)
-namespace lines_markers_3d_d_exports {
+export namespace LinesMarkers3DLazy {
     export { DEFAULT_SPHERE_LIGHTING, Line3D, Markers3D, SphereSet, createLine3D, createMarkers3D, createSpheres, depthOrder, viewDepthCoefficients };
 }
 
-// Warning: (ae-forgotten-export) The symbol "lines_markers_3d_d_exports" needs to be exported by the entry point index.d.ts
-//
 // @experimental
-export type LinesMarkers3DModule = typeof lines_markers_3d_d_exports;
+export type LinesMarkers3DModule = typeof LinesMarkers3DLazy;
 
 // @experimental
 export function linesMarkers3DModule(): LinesMarkers3DModule | null;
@@ -1748,11 +1744,6 @@ export function measurementFace(face: Omit<TextFont, 'size'>): MeasurementFace;
 export function measureText(text: string, font: TextFont, lineHeight?: number): MeasuredText;
 
 // @experimental (undocumented)
-namespace mesh_lazy_d_exports {
-    export { ClipUniforms, DEFAULT_FACE_NORMALS_EPSILON, DEFAULT_LIGHTING, DEFAULT_MESH_COLOR, DEFAULT_VERTEX_NORMALS_EPSILON, DirectionalLightSpec, HIDDEN_INTENSITY, LightRig, LightSpace, LightingSpec, MESH_FRAGMENT_SHADER, MESH_SORT_LIMIT, MESH_VERTEX_SHADER, MeshColorInputs, MeshColorSource, MeshData, MeshIndexArray, MeshInput, MeshLayout, MeshLighting, MeshMaterialSpec, MeshMaterialType, MeshPrimitive, MeshShaderHooks, PLOTLY_LIGHTING, PLOTLY_LIGHTPOSITION, ViewLights, applyMaterialParams, clipToView, computeFaceNormals, computeVertexNormals, computeViewLights, cornerVertex, createLightRig, createMeshPrimitive, createThreeMaterial, createToonGradient, createViewLights, defaultNormalScale, gatherVertices, hasTranslucency, injectClip, intensityOrigin, isThreeMaterialType, isValidTriangle, isValidVertex, itemVertex, lightViewPosition, meshColorSource, meshTriangleCount, needsColorAttribute, orderTranslucent, reorderTriangles, resolveMeshLighting, shininessFromRoughness, sortTrianglesByDepth, srgbToLinear, triangleCentroids, writeColors, writeIntensity };
-}
-
-// @experimental (undocumented)
 export const MESH_PICK_FRAGMENT = "\nprecision highp float;\nprecision highp int;\n\n\nvec4 holochartEncodePickId(uint id) {\n  uint v = id + 1u;\n  vec4 bytes = vec4(float(v >> 24u), float((v >> 16u) & 255u), float((v >> 8u) & 255u), float(v & 255u));\n  return min((bytes + 0.25) / 255.0, vec4(1.0));\n}\n\n\nflat in uint vPickId;\nout vec4 fragColor;\n\nvoid main() {\n#ifdef PICK_OCCLUDER\n  fragColor = vec4(0.0);\n#else\n  fragColor = holochartEncodePickId(vPickId);\n#endif\n}\n";
 
 // @experimental
@@ -1819,6 +1810,11 @@ export interface MeshLayout {
     vertexCount: number;
 }
 
+// @experimental (undocumented)
+export namespace MeshLazy {
+    export { ClipUniforms, DEFAULT_FACE_NORMALS_EPSILON, DEFAULT_LIGHTING, DEFAULT_MESH_COLOR, DEFAULT_VERTEX_NORMALS_EPSILON, DirectionalLightSpec, HIDDEN_INTENSITY, LightRig, LightSpace, LightingSpec, MESH_FRAGMENT_SHADER, MESH_SORT_LIMIT, MESH_VERTEX_SHADER, MeshColorInputs, MeshColorSource, MeshData, MeshIndexArray, MeshInput, MeshLayout, MeshLighting, MeshMaterialSpec, MeshMaterialType, MeshPrimitive, MeshShaderHooks, PLOTLY_LIGHTING, PLOTLY_LIGHTPOSITION, ViewLights, applyMaterialParams, clipToView, computeFaceNormals, computeVertexNormals, computeViewLights, cornerVertex, createLightRig, createMeshPrimitive, createThreeMaterial, createToonGradient, createViewLights, defaultNormalScale, gatherVertices, hasTranslucency, injectClip, intensityOrigin, isThreeMaterialType, isValidTriangle, isValidVertex, itemVertex, lightViewPosition, meshColorSource, meshTriangleCount, needsColorAttribute, orderTranslucent, reorderTriangles, resolveMeshLighting, shininessFromRoughness, sortTrianglesByDepth, srgbToLinear, triangleCentroids, writeColors, writeIntensity };
+}
+
 // @experimental
 export interface MeshLighting {
     ambient: number;
@@ -1841,10 +1837,8 @@ export interface MeshMaterialSpec {
 // @experimental
 export type MeshMaterialType = 'basic' | 'flat' | 'lambert' | 'matcap' | 'phong' | 'physical' | 'plotly' | 'standard' | 'toon';
 
-// Warning: (ae-forgotten-export) The symbol "mesh_lazy_d_exports" needs to be exported by the entry point index.d.ts
-//
 // @experimental
-export type MeshModule = typeof mesh_lazy_d_exports;
+export type MeshModule = typeof MeshLazy;
 
 // @experimental
 export function meshModuleLoaded(): MeshModule | null;
@@ -2012,16 +2006,16 @@ export function parseShadowColor(input: string): RGBA | null;
 // @experimental
 export function parseTextShadow(shadow: null | string | undefined, textColor?: RGBA, fontSize?: number): TextShadow | null;
 
-// @experimental (undocumented)
-namespace pattern_code_d_exports {
-    export { PATTERN_ATTRIBUTES, ResolvedPattern, contrastOf, patternShader, resolvePattern, writeInstancePattern };
-}
-
 // @experimental
 export const PATTERN_SHAPES: readonly ["", "/", "\\", "x", "-", "|", "+", "."];
 
 // @experimental
 export type PatternAttributes = Readonly<Record<string, unknown>>;
+
+// @experimental (undocumented)
+export namespace PatternCode {
+    export { PATTERN_ATTRIBUTES, ResolvedPattern, contrastOf, patternShader, resolvePattern, writeInstancePattern };
+}
 
 // @experimental
 export interface PatternFill {
@@ -2034,10 +2028,8 @@ export interface PatternFill {
     pattern: PatternAttributes | readonly (PatternAttributes | null | undefined)[];
 }
 
-// Warning: (ae-forgotten-export) The symbol "pattern_code_d_exports" needs to be exported by the entry point index.d.ts
-//
 // @experimental
-export type PatternModule = typeof pattern_code_d_exports;
+export type PatternModule = typeof PatternCode;
 
 // @experimental
 export type PatternShape = (typeof PATTERN_SHAPES)[number];
