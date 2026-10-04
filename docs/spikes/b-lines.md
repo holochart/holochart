@@ -98,6 +98,13 @@ Left half: `LinePrimitive`. Right half: `Line2` / `LineMaterial`. DPR 2:
 
 ## Follow-ups (E16)
 
+Done in ship wave R3 (S2.16), measured in
+[`docs/perf/s2-16-first-draw-and-line-cost.md`](../perf/s2-16-first-draw-and-line-cost.md): the
+buffers are sized from an exact count, a line with one color has no color buffer, dashes keep
+their phase through a pan and skip the pattern loop, and quads end where a segment's pixels end.
+At 1M segments the line now costs 2.1–2.6× `Line2` solid and 2.4–3.0× dashed. The list below is
+the original one.
+
 - Shrink the vertex stream. Most of the 110 MB is over-allocation: `buildLineLayout` sizes for the
   worst case of 2n vertices (a gap after every point) and rounds up to a power of two, so a 100k
   series gets 262,144 slots × 44 bytes (2.6× what it uses). Count first, then allocate; also pack

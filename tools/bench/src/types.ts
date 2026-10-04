@@ -40,6 +40,8 @@ export interface RunOptions {
   warmupMs: number;
   /** Measured length of each sweep. */
   durationMs: number;
+  /** Stop after the first draw (no sweeps): the profiled run of `--profile`. */
+  mountOnly?: boolean;
 }
 
 export interface Stats {

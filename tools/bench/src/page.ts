@@ -12,7 +12,15 @@
  * Modules of the page (the example registry, the chart runtime) are imported by URL at run time,
  * so this file type-checks without pulling the packages into the tooling project.
  */
-import type { PanSweep, RunOptions, RunResult, Stats, SweepResult, ZoomSweep } from './types.ts';
+import type {
+  Drive,
+  PanSweep,
+  RunOptions,
+  RunResult,
+  Stats,
+  SweepResult,
+  ZoomSweep,
+} from './types.ts';
 
 /** The parts of three's `WebGLRenderer` the probe uses. */
 interface Renderer {
@@ -341,7 +349,7 @@ async function run(options: RunOptions): Promise<RunResult> {
   let pan: SweepResult | null = null;
   let zoom: SweepResult | null = null;
   try {
-    const drive = options.drive;
+    const drive: Drive = options.mountOnly ? { kind: 'none' } : options.drive;
     if (drive.kind === 'ranges') {
       const chart = await findChart(root);
       if (options.pan) {

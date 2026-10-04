@@ -420,6 +420,52 @@ describe('sankey layout: properties', () => {
     );
   });
 
+  /**
+   * How far two nodes of a layer are from keeping `padding` between them (≤ 0 when they do),
+   * whichever is on top. Not "sort by `y0`, compare neighbours": a node without links has no
+   * height, and with no padding it sits exactly on the edge of the next one, so `y0` alone does
+   * not say which of the two comes first.
+   */
+  const overlap = (a: SankeyNode, b: SankeyNode, padding: number): number =>
+    Math.min(a.y1 + padding - b.y0, b.y1 + padding - a.y0);
+
+  // Shrunk from a failure of the property below when it sorted by `y0` (fast-check seed 1, numRuns
+  // 200,000): ten nodes share the last layer, eight without links. `@plotly/d3-sankey` 0.7.2 gives
+  // these positions to the last digit.
+  it('puts a node without height on the edge between its neighbours (no padding)', () => {
+    const g = sankeyLayout(
+      12,
+      links([
+        [1, 2, 1],
+        [0, 4, 100],
+      ]),
+      { width: 100, height: 60, nodeWidth: 10, nodePadding: 0 },
+    );
+    const ky = 60 / 101;
+    const edge = 100 * ky;
+    const [, , small, empty, big] = g.nodes as [
+      SankeyNode,
+      SankeyNode,
+      SankeyNode,
+      SankeyNode,
+      SankeyNode,
+    ];
+    expect(layersOf(g)).toEqual([0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+    expect(g.padding).toBe(0);
+    expect(g.ky).toBeCloseTo(ky, 12);
+    // Top to bottom: node 4 (0 … edge), node 3 (nothing, at the edge), node 2 (edge … 60).
+    expect([big.y0, big.y1]).toEqual([expect.closeTo(0, 9), expect.closeTo(edge, 9)]);
+    expect([empty.y0, empty.y1]).toEqual([expect.closeTo(edge, 9), expect.closeTo(edge, 9)]);
+    expect([small.y0, small.y1]).toEqual([expect.closeTo(edge, 9), expect.closeTo(60, 9)]);
+    // Nodes 2 and 3 start at the same y, and the lower index is the one with a height: ordering
+    // by `y0` alone reads them as overlapping.
+    expect(empty.y0).toBe(small.y0);
+    expect(overlap(empty, small, g.padding)).toBeLessThanOrEqual(1e-6);
+    expect(overlap(big, small, g.padding)).toBeLessThanOrEqual(1e-6);
+    // The other nodes without links are stacked at the bottom.
+    for (const node of g.nodes.slice(5)) expect([node.y0, node.y1]).toEqual([60, 60]);
+  });
+
   it('never overlaps nodes of a layer and keeps them in the height', () => {
     fc.assert(
       fc.property(dag, ([n, edges, width, height, pad]) => {
@@ -431,7 +477,9 @@ describe('sankey layout: properties', () => {
         });
         for (const column of columns(g)) {
           for (let i = 1; i < column.length; i++) {
-            expect(column[i]!.y0).toBeGreaterThanOrEqual(column[i - 1]!.y1 + g.padding - 1e-6);
+            for (let j = 0; j < i; j++) {
+              expect(overlap(column[i]!, column[j]!, g.padding)).toBeLessThanOrEqual(1e-6);
+            }
           }
           for (const node of column) {
             expect(node.y0).toBeGreaterThanOrEqual(-1e-6);

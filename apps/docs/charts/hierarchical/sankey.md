@@ -295,7 +295,10 @@ they hold still, spread evenly along the links.
 - **Screen readers:** the hidden description (see the [accessibility guide](/guides/accessibility))
   reads `Sankey diagram "name": N nodes, M links, total flow from sources T.` and mentions cycles;
   its table lists each link's source, target, value and label.
-- **Keyboard:** there is no keyboard navigation between nodes and links yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then move between nodes (on a link, between the
+  links of its node), ↓ follows the flow downstream and ↑ upstream. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Motion:** flow particles hold still under `prefers-reduced-motion: reduce`; they add no
   information the link widths don't carry, so a reader without them misses nothing.
 - **Color:** node colors only tell nodes apart; labels carry the meaning. Keep link colors
@@ -333,5 +336,5 @@ default.
   `targetLinks`), so events serialize.
 - `link.flow` (flow particles) is a Holochart extension; Plotly ignores it.
 - Not supported yet: `node.hoverlabel` / `link.hoverlabel` (the trace `hoverlabel` applies to
-  both), grouping nodes with a box or lasso selection, keyboard navigation. Extruded ribbons in a
+  both), grouping nodes with a box or lasso selection. Extruded ribbons in a
   2.5D view are a planned Holochart extension.

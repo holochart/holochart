@@ -475,8 +475,24 @@ function bins(b: BinsInsight, name: string, say: Say): string[] {
   return out;
 }
 
-function grid(g: GridInsight, name: string, say: Say): string[] {
+interface GridScan {
+  nx: number;
+  ny: number;
+  min: number;
+  max: number;
+  rowSum: Float64Array;
+  rowN: Uint32Array;
+  colSum: Float64Array;
+  colN: Uint32Array;
+}
+
+/** Scans of the grids summarized so far, by their `z`: a summary is rebuilt after every run. */
+const gridScans = new WeakMap<object, GridScan>();
+
+function scanGrid(g: GridInsight): GridScan {
   const { nx, ny, z } = g;
+  const known = gridScans.get(z);
+  if (known && known.nx === nx && known.ny === ny) return known;
   let min = -1;
   let max = -1;
   const rowSum = new Float64Array(ny);
@@ -496,6 +512,14 @@ function grid(g: GridInsight, name: string, say: Say): string[] {
       colN[i] = colN[i]! + 1;
     }
   }
+  const scan = { nx, ny, min, max, rowSum, rowN, colSum, colN };
+  gridScans.set(z, scan);
+  return scan;
+}
+
+function grid(g: GridInsight, name: string, say: Say): string[] {
+  const { nx, ny, z } = g;
+  const { min, max, rowSum, rowN, colSum, colN } = scanGrid(g);
   if (max < 0) return [say('empty', { name })];
   const fv = (c: number): string => g.formatValue(z[c]!);
   const out = [say('grid', { name, min: fv(min), max: fv(max) })];

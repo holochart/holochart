@@ -49,7 +49,7 @@ const VERTEX_NEXT = `bool hasNext = aNext.w > 0.5;`;
 const VERTEX_COLORS = `  vColorA = aColorA;
   vColorB = aColorB;
 `;
-const VERTEX_ALONG = `  float along = atB ? len + extB + aa : -(extA + aa);
+const VERTEX_ALONG = `  float along = atB ? len + reachB : -reachA;
 `;
 
 export const LINE3D_VERTEX_SHADER = [
@@ -85,7 +85,7 @@ flat out float vPickSplit;
   // The 3D quad has inner vertices on the end points (see the module comment).
   [
     VERTEX_ALONG,
-    `  float along = position.z > 0.5 ? (atB ? len : 0.0) : (atB ? len + extB + aa : -(extA + aa));
+    `  float along = position.z > 0.5 ? (atB ? len : 0.0) : (atB ? len + reachB : -reachA);
 `,
   ],
   [VERTEX_NEXT, `bool hasNext = aNext.w > 0.5 && sB == 0.0;`],

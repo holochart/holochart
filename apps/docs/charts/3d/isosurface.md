@@ -193,7 +193,9 @@ chart.on('click', (event) => console.log(event.points[0]?.pointNumber));
 
 - **Screen readers:** the chart is a `<canvas>`; the hidden description (see the
   [accessibility guide](/guides/accessibility)) names the trace.
-- **Keyboard:** there is no keyboard navigation of 3D traces yet.
+- **Keyboard:** Shift + arrow keys orbit the camera, `+` / `-` move it in and out and `0` resets it.
+  There is no keyboard navigation between the trace's own points yet. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family).
 - **Color and depth:** inner surfaces can hide behind outer ones. Use `surface.fill`, `opacity` or
   a `slices` plane to open them up, keep the colorbar, prefer lightness-monotonic colorscales and
   set a useful initial `scene.camera`.

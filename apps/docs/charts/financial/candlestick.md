@@ -207,7 +207,9 @@ createChart(document.getElementById('chart')!, {
   gives the candle count and date span, the first and last close, the lowest low and highest high
   with their dates, and how many candles rose and fell; its table lists each candle's date and
   prices.
-- **Keyboard:** there is no keyboard navigation between candles yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then step through the candles and ↑ / ↓ move to
+  the trace above or below, each stop showing its hover label. See [the
+  keys](/guides/accessibility#keys-in-the-plot-area).
 - **Color:** the directions differ by color, and green and red are hard to tell apart for many
   people. Hollow rising and filled falling candles (as in the styled example) add a second cue
   that doesn't rely on hue.

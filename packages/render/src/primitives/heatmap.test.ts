@@ -1,13 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-  DoubleSide,
-  Group,
-  RGFormat,
-  RedFormat,
-  type DataTexture,
-  type Vector2,
-  type Vector3,
-} from 'three';
+import { DoubleSide, Group, RedFormat, type DataTexture, type Vector2, type Vector3 } from 'three';
 import { colorscaleKey, type Colorscale } from '../colorscale/lut.ts';
 import { createResourceManager } from '../resources.ts';
 import type { PrimitiveContext } from '../types.ts';
@@ -30,7 +22,15 @@ import {
   type HeatmapInput,
   type HeatmapSampleInput,
 } from './heatmap.ts';
-import { HEATMAP_FRAGMENT_SHADER, HEATMAP_VERTEX_SHADER } from './heatmap.glsl.ts';
+import {
+  HEATMAP_FRAGMENT_SHADER,
+  HEATMAP_HOLE,
+  HEATMAP_HOLE_MIN,
+  HEATMAP_VERTEX_SHADER,
+} from './heatmap.glsl.ts';
+
+/** The texel of a cell without a value. */
+const HOLE = HEATMAP_HOLE;
 
 function context(): PrimitiveContext & {
   invalidations: number;
@@ -76,29 +76,35 @@ describe('texture layout', () => {
     expect(heatmapTextureSize(5, 2)).toEqual({ width: 2, height: 3 });
   });
 
-  it('packs values linearly as (value - zOrigin, valid), wrapping past the width', () => {
+  it('packs values linearly as value - zOrigin, wrapping past the width', () => {
     const image = packHeatmapValues([1, NaN, 3, Infinity, 5], 5, 1, 2, 1);
     expect([image.width, image.height]).toEqual([2, 3]);
-    // Texel k at (k % 2, floor(k / 2)); non-finite and padding texels are (0, 0).
-    expect(Array.from(image.data)).toEqual([0, 1, 0, 0, 2, 1, 0, 0, 4, 1, 0, 0]);
-    const texel = (x: number, y: number) => {
-      const t = (y * image.width + x) * 2;
-      return [image.data[t], image.data[t + 1]];
-    };
-    expect(texel(0, 2)).toEqual([4, 1]); // k = 4
+    // Texel k at (k % 2, floor(k / 2)); non-finite and padding texels are holes.
+    expect(Array.from(image.data)).toEqual([0, HOLE, 2, HOLE, 4, HOLE]);
+    expect(image.data[2 * image.width + 0]).toBe(4); // k = 4 at (0, 2)
   });
 
-  it('marks values missing from a short z as invalid and reuses a matching output array', () => {
-    const out = new Float32Array(8);
+  it('marks values missing from a short z as holes and reuses a matching output array', () => {
+    const out = new Float32Array(4);
     const image = packHeatmapValues([7, 8], 2, 2, undefined, 0, out);
     expect(image.data).toBe(out);
     expect([image.width, image.height]).toEqual([4, 1]);
-    expect(Array.from(out)).toEqual([7, 1, 8, 1, 0, 0, 0, 0]);
+    expect(Array.from(out)).toEqual([7, 8, HOLE, HOLE]);
     const wide = packHeatmapValues(new Float64Array(5000).fill(2), 5000, 1);
     expect([wide.width, wide.height]).toEqual([4096, 2]);
-    expect(wide.data[2 * 4999]).toBe(2);
-    expect(wide.data[2 * 4999 + 1]).toBe(1);
-    expect(wide.data[2 * 5000 + 1]).toBe(0);
+    expect(wide.data.length).toBe(4096 * 2);
+    expect(wide.data[4999]).toBe(2);
+    expect(wide.data[5000]).toBe(HOLE);
+  });
+
+  it('stores holes as the largest float32, which the shader tells from every value', () => {
+    expect(Math.fround(HEATMAP_HOLE)).toBe(HEATMAP_HOLE);
+    expect(Math.fround(HEATMAP_HOLE * (1 + 2 ** -24))).toBe(Infinity);
+    expect(HEATMAP_HOLE).toBeGreaterThan(HEATMAP_HOLE_MIN);
+    expect(HEATMAP_FRAGMENT_SHADER).toContain('v < 3.0e+38 ? vec2(v, 1.0) : vec2(0.0)');
+    // -Infinity is a hole; a value past float32 above zOrigin overflows to Infinity, a hole too.
+    const image = packHeatmapValues([-Infinity, -1e300, 1e300], 3, 1, undefined, -1e300);
+    expect(Array.from(image.data)).toEqual([HOLE, 0, Infinity]);
   });
 
   it('packs directed x then y edges into one texture', () => {
@@ -361,11 +367,9 @@ describe('HeatmapPrimitive', () => {
     expect(vec3(u.uScale.value)).toEqual([1, 1, 1]);
     expect(vec3(u.uOffset.value)).toEqual([100, 5, 0]);
     const { z, edges } = textures(h);
-    expect(z.format).toBe(RGFormat);
+    expect(z.format).toBe(RedFormat);
     expect([z.image.width, z.image.height]).toEqual([6, 1]);
-    expect(Array.from(z.image.data as Float32Array)).toEqual([
-      -25, 1, -15, 1, -5, 1, 5, 1, 15, 1, 25, 1,
-    ]);
+    expect(Array.from(z.image.data as Float32Array)).toEqual([-25, -15, -5, 5, 15, 25]);
     expect(edges.format).toBe(RedFormat);
     expect(Array.from(edges.image.data as Float32Array)).toEqual([0, 1, 3, 6, 0, 1, 2]);
     expect(h.current.zmin).toBe(0);
@@ -485,9 +489,7 @@ describe('HeatmapPrimitive', () => {
     expect(edges.version).toBe(ev);
     expect(h.current.zmin).toBe(1);
     expect(h.current.zmax).toBe(5);
-    expect(Array.from(z.image.data as Float32Array)).toEqual([
-      -2, 1, -1, 1, 0, 1, 1, 1, 2, 1, 0, 0,
-    ]);
+    expect(Array.from(z.image.data as Float32Array)).toEqual([-2, -1, 0, 1, 2, HOLE]);
     expect(vec2(h.uniforms.uZRange.value)).toEqual([-2, 2]);
     // Explicit limits stick.
     h.update({ zmin: 0, zmax: 100 });
@@ -609,7 +611,7 @@ describe('HeatmapPrimitive (M4: heatmap trace)', () => {
     expect([h.current.zmin, h.current.zmax]).toEqual([-100, 100]);
     // zOrigin is the range's center: the texture holds values relative to 0.
     expect(Array.from((h.uniforms.uZ.value as DataTexture).image.data as Float32Array)).toEqual([
-      0, 1, 10, 1, 20, 1, 30, 1,
+      0, 10, 20, 30,
     ]);
     h.update({ z: [1, 2, 3, 4] });
     expect(h.current.zRange).toBeUndefined();

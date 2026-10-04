@@ -179,7 +179,11 @@ of date values (ship dates) sit at category positions.
 - **Screen readers:** each box trace is described with its box count, sample count and the range
   of its medians, and a hidden table lists every box's position, count, min, quartiles, median, max
   and mean. See the [accessibility guide](/guides/accessibility).
-- **Keyboard:** there is no keyboard navigation between boxes yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then step through the boxes, each stop showing
+  every statistic of its box, and ↑ / ↓ move to the trace above or below. A trace with `hoveron:
+'points'` has no stops. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Color:** boxes are identified by position and trace name; with grouped boxes keep the legend
   visible, and prefer distinct fills and outlines over hue alone.
 

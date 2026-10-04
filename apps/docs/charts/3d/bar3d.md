@@ -253,7 +253,9 @@ createChart(document.getElementById('chart')!, {
 
 - **Screen readers:** the chart is a `<canvas>`; the hidden description (see the
   [accessibility guide](/guides/accessibility)) names the trace.
-- **Keyboard:** there is no keyboard navigation of 3D traces yet.
+- **Keyboard:** Shift + arrow keys orbit the camera, `+` / `-` move it in and out and `0` resets it.
+  There is no keyboard navigation between the trace's own points yet. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family).
 - **Color and depth:** nearer bars hide farther ones, and perspective distorts heights. Set an
   initial `scene.camera` that shows every row, keep the values in hover labels, and prefer a
   lightness-monotonic colorscale when coloring by height. For exact comparisons, offer a

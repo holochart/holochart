@@ -173,7 +173,9 @@ All line shapes, dash styles, and `connectgaps` on the same eight points:
 - **Screen readers:** the chart is a `<canvas>`, and the DOM mirror that describes it to assistive
   technology is not built yet (planned for M2, see the [accessibility guide](/guides/accessibility)).
   Add a caption or `aria-label` that states the trend, and a table of the key values.
-- **Keyboard:** there is no keyboard navigation yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then step through the points and ↑ / ↓ move to
+  the trace above or below, each stop showing its hover label. See [the
+  keys](/guides/accessibility#keys-in-the-plot-area).
 - **Color:** with several series, vary `line.dash` (and markers) as well as color, and label
   lines directly where you can. Keep the number of series small, or highlight one and gray out
   the rest.

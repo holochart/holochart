@@ -177,7 +177,9 @@ flow, near the poles, clips to the last color) with a titled colorbar.
 
 - **Screen readers:** the chart is a `<canvas>`; the hidden description (see the
   [accessibility guide](/guides/accessibility)) names the trace.
-- **Keyboard:** there is no keyboard navigation of 3D traces yet.
+- **Keyboard:** Shift + arrow keys orbit the camera, `+` / `-` move it in and out and `0` resets it.
+  There is no keyboard navigation between the trace's own points yet. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family).
 - **Color:** the norm is shown by color only; pair it with hover values, or prefer ramps monotonic
   in lightness (the default ones are).
 

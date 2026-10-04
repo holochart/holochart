@@ -260,7 +260,10 @@ paper color:
   reads `Sunburst "name": N nodes on M levels.`, the current root when drilled in, and the largest
   branches with their shares; its table lists every node with its path, value and percent of the
   root.
-- **Keyboard:** there is no keyboard navigation or drilling between sectors yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then move between sibling sectors, ↑ goes to the
+  parent and ↓ to the first child, and Enter drills in like a click. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Color:** children inherit their parent's color, so label sectors directly
   (`textinfo: 'label+percent parent'`) rather than relying on color, and keep the outlines in the
   background color to separate neighbors.
@@ -293,5 +296,5 @@ its default. [`sunburstcolorway`](/reference/layout#sunburstcolorway) and
   end of the transition instead of moving with their sectors; sectors wider than half a turn fit
   their labels like pie slices.
 - Not supported yet: `texttemplatefallback` / `hovertemplatefallback`, animated `level` changes
-  through `animate` or `react` with a transition, keyboard navigation.
+  through `animate` or `react` with a transition.
 - A layered 3D extrusion (`depth`, `depthstep`) is a planned Holochart extension.

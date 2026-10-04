@@ -269,8 +269,11 @@ rather than while it is dragged (see [Performance notes](#performance-notes)).
   24 to 30; … of 600 lines selected"). Its data table lists the first rows, one column per axis in display
   order, plus the color value for numeric `line.color` and a Selected column (yes / no) when
   axes are brushed.
-- **Keyboard:** there is no keyboard brushing or axis reordering yet; set `constraintrange` from
-  your own controls (a form, sliders) with `chart.restyle` for a keyboard path.
+- **Keyboard:** Tab moves into the plot area; ↑ / ↓ then step through the lines on an axis and ← / →
+  follow the same line to the next axis. There is no keyboard brushing or axis reordering yet; set
+  `constraintrange` from your own controls (a form, sliders) with `chart.restyle` for a keyboard
+  path. See [the keys by chart family](/guides/accessibility#keys-by-chart-family). The script-tag
+  build leaves these stops out for now.
 - **Color:** use a sequential scale that is monotonic in lightness (the default, Viridis,
   Cividis) for numeric colors and show the colorbar. Also add the colored variable as an axis, as
   the examples do, so its values can be read without relying on color.

@@ -187,7 +187,9 @@ selection still exact.
   points to assistive technology is not built yet (planned for M2, see the
   [accessibility guide](/guides/accessibility)). Until then, add your own text alternative: an
   `aria-label` or visible caption on the container, and a data table for the key numbers.
-- **Keyboard:** there is no keyboard navigation between points yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then step through the points and ↑ / ↓ move to
+  the trace above or below, each stop showing its hover label. See [the
+  keys](/guides/accessibility#keys-in-the-plot-area).
 - **Color:** don't rely on color alone. Vary `marker.symbol` between traces, and pick a colorscale
   that is readable in grayscale (such as `'Viridis'`) for numeric colors.
 

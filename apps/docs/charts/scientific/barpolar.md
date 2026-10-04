@@ -172,7 +172,10 @@ leaves the middle free:
   [accessibility guide](/guides/accessibility)) reads each trace as a "polar bar" with its bar
   count and the lowest and highest bar (`r` with its angle, formatted like the hover labels), and
   its data table lists the bars' `r` and `θ` (and `text` when given per bar).
-- **Keyboard:** there is no keyboard navigation between bars yet.
+- **Keyboard:** Tab moves into the plot area; the arrow keys then step through the bars, each
+  showing its hover label. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Reading the chart:** a bar's area grows with the square of its length, so outer segments of
   a wind rose look bigger than they are. Say what the radial axis measures (a `ticksuffix` or
   axis title), and keep the number of stacked bins small.

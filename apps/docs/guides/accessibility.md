@@ -170,8 +170,9 @@ stays.
 
 Every sentence comes from an English template with `{placeholders}`, and that template is also
 the key a locale's `dictionary` translates, like Plotly's UI strings. `@mk7s/holochart-locales`
-translates the summaries for `de`, `fr` and `es` (and their regional variants); for another
-language, add the sentences to the locale you register:
+translates the summaries in ten locales — `de`, `es`, `fr`, `it`, `ja`, `ko`, `pt-BR`, `ru`, `tr`
+and `zh-CN` — and [Languages](#languages) says what else they translate and how far to trust
+them. For another language, add the sentences to the locale you register:
 
 ```ts
 import { createChart, register } from '@mk7s/holochart';
@@ -189,8 +190,10 @@ register({
 createChart(el, { data, layout, config: { locale: 'nl' } });
 ```
 
-A translation keeps every placeholder and may reorder them. Sentences without a translation stay
-English. The templates, grouped by what they describe:
+A translation keeps every placeholder and may reorder them, or reword the sentence around them:
+the Russian, Turkish and Korean ones lead with the trace name and a colon, because a placeholder
+can't take a case ending or a particle that depends on its value. Sentences without a translation
+stay English. The templates, grouped by what they describe:
 
 - **Axes and totals**: `{y} by {x}.`, `{count} more traces are not summarized.`,
   `{name} has no values.`, `{name} has a single value, {value} ({x}).`
@@ -291,7 +294,8 @@ The first arrow key starts at the first point of the first trace. Details:
 - **Announcements** go to a polite live region inside the plot area's focus target, with the text
   of the hover label, its lines read as a list ("Share: Alpha, 40, 40%, point 1 of 5."); zoom, pan,
   rotation and reset are announced too. They are localized like the modebar: the English sentence
-  is the locale dictionary key; see [Announcement sentences](#announcement-sentences).
+  is the locale dictionary key, translated in [ten locales](#languages); see
+  [Announcement sentences](#announcement-sentences).
 - Keys with Ctrl, Alt or Meta are left to the browser, and keys pressed while a control inside the
   chart has focus stay with that control.
 
@@ -341,6 +345,9 @@ the stop's place in the chart. Page Up / Page Down, Enter, Escape and the view k
 
 The sentences below are the locale dictionary keys; a translation keeps the `{placeholders}`, in
 any order. `{name}` is the trace name and `{text}` what the hover label(s) say.
+`@mk7s/holochart-locales` translates them in the same [ten locales](#languages) as the summaries;
+elsewhere they are English, and you can add them to a locale the way
+[summaries](#summaries-in-other-languages) are added.
 
 | Sentence                                                                   | Said for                                           |
 | -------------------------------------------------------------------------- | -------------------------------------------------- |
@@ -350,6 +357,7 @@ any order. `{name}` is the trace name and `{text}` what the hover label(s) say.
 | `{name}: {text}, row {row} of {rows}, column {column} of {columns}.`       | grid cells; parcoords lines (rows) on axes         |
 | `{name}: {text}, level {level}, {n} of {count}, children: {children}.`     | sunburst, treemap and icicle nodes                 |
 | `{name}: {dimension}, {category}, {text}, {n} of {count}.`                 | parcats categories                                 |
+| `Dimension {n}`                                                            | in `{text}`: a parcoords dimension without a label |
 | `No data points to explore.`                                               | a chart without stops                              |
 | `Zoomed in.` / `Zoomed out.` / `Panned.` / `View rotated.` / `View reset.` | the view keys                                      |
 
@@ -464,6 +472,62 @@ follows the user.
 createChart(el, { data, layout, config: { a11y: { reducedMotion: true } } });
 ```
 
+## Languages
+
+A chart speaks the language of its [locale](/fundamentals/locales) where a translation exists, and
+English where none does. `@mk7s/holochart-locales` translates Holochart's own accessibility strings
+in ten of its locales: **`de`, `es`, `fr`, `it`, `ja`, `ko`, `pt-BR`, `ru`, `tr` and `zh-CN`**.
+Regional locales that fall back to one of them (`de-CH`, `es-AR`, `es-PE`, `fr-CH`) get its
+strings when both are registered. `pt-PT`, `zh-TW` and `zh-HK` have no translations of their own:
+registered alone they speak English, and registered next to `pt-BR` or `zh-CN` they fall back to
+it through the shared language, so a `zh-TW` chart then announces in Simplified Chinese and a
+`pt-PT` chart in Brazilian Portuguese. Register only the locale you use if you prefer English
+there.
+
+| What a screen reader hears                                                            | In the ten locales | Elsewhere                |
+| ------------------------------------------------------------------------------------- | ------------------ | ------------------------ |
+| [Generated summaries](#generated-summaries) (the overview)                            | translated         | English                  |
+| [Keyboard announcements](#announcement-sentences) of points and view changes          | translated         | English                  |
+| The plot area's keyboard hint and the legend toolbar's name                           | translated         | English                  |
+| Modebar button names, hover label words (`open:`, `median:`, …), default trace names  | translated         | where Plotly's locale is |
+| The chart type sentence, the axis and trace lines, "Axes:" and "Traces:"              | English            | English                  |
+| Data table captions ("first 100 of 5,000 rows")                                       | English            | English                  |
+| The modebar's toolbar name, fallback names of menus and sliders, range selector names | English            | English                  |
+
+The values inside summaries and announcements are formatted like the chart shows them (the
+locale's separators and month names), whatever language the sentence around them is in.
+
+**These are machine translations.** No native speaker has reviewed them. A test checks that each
+one keeps the placeholders of its English sentence, which says nothing about how it reads: expect
+wording a native speaker would improve. If a sentence reads wrong in your language, override it
+in the locale you register (the English sentence is the key, as in
+[Summaries in other languages](#summaries-in-other-languages)) and please open an issue.
+
+What stays English, and why:
+
+- **The rest of the hidden description** — the chart type sentence ("Line and bar chart with 2
+  traces."), the axis lines, the line each trace type writes about itself (the 3D traces' included)
+  and the table captions — is assembled in code from English fragments and English plurals, not
+  from templates, so a dictionary cannot translate it yet. The mirror therefore mixes languages on
+  a localized chart: a translated overview, then English lines. Set
+  [`config.ariaLabel`](#the-accessible-name) and name your traces and axes in your language to
+  carry the essentials.
+- **A few control names**: the modebar's toolbar is named "Chart toolbar", an update menu or
+  slider without a `name` is "Menu 1" or "Slider 1", and range selectors are "Range selector".
+  Give menus and sliders a `name` in your language.
+- **Sentence shapes that fit a language poorly.** A count of one reads like the English ("1 more
+  traces are not summarized") in German, French and Spanish. A trace name that is a plural noun
+  meets a singular verb in the Germanic and Romance translations, as it does in English ("Sales
+  rises"). French does not elide before a name ("de Août"). The Italian and Spanish price
+  sentences put an article before the change, which suits the percentage it almost always is.
+  Turkish writes the percent sign after the number, where it belongs before it: that is the
+  number format's doing, not the sentence's.
+- **Right-to-left languages.** No locale translates these strings into Arabic or Hebrew, and
+  plotly.js's `ar` and `he` have no UI strings either: such a chart has your right-to-left
+  titles and labels next to English controls and announcements. See
+  [Right-to-left scripts](/fundamentals/locales#right-to-left-scripts) for what the text layout
+  does and does not do.
+
 ## Make your charts easier to understand
 
 - **Give every chart a title and axis titles.** They become the accessible name, the axis
@@ -558,7 +622,8 @@ drawn in a 3D scene gets the scene's view keys with `a11y: sceneA11y`.
 
 Stops for the remaining 3D traces, `image` and `table`, the 2D families in the script-tag build,
 and keys for the range slider's handles and for editing selections, come later.
-[Locales](/fundamentals/locales) (E17.6) translate the modebar, format numbers and dates, and
-translate the generated summaries and keyboard announcements; the rest of the description (axes,
-trace lines, table captions) is English for now. Summaries don't announce changes as they happen (no live
-region) and don't detect seasonality.
+[Locales](/fundamentals/locales) (E17.6) translate the modebar, format numbers and dates, and in
+[ten of them](#languages) translate the generated summaries and keyboard announcements; the rest
+of the description (the chart type sentence, axis and trace lines, table captions) and a few
+control names are English for now, and the translations await review by native speakers.
+Summaries don't announce changes as they happen (no live region) and don't detect seasonality.

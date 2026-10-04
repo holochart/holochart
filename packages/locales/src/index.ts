@@ -2,7 +2,10 @@
  * @mk7s/holochart-locales — locale modules for Holochart (plan E17.6): UI strings, month and day
  * names, number separators and date formats, one module per locale so apps bundle only the ones
  * they use. They are plotly.js's locales (`lib/locales`, MIT), in the same shape, so any other
- * Plotly locale registers the same way.
+ * Plotly locale registers the same way. Ten of them (`de`, `es`, `fr`, `it`, `ja`, `ko`, `pt-BR`,
+ * `ru`, `tr`, `zh-CN`) also have Holochart's own strings, which plotly.js lacks (`holochart/`):
+ * chart summaries, keyboard announcements and a few labels, machine-translated and not reviewed
+ * by native speakers (backlog S2.15). The other locales fall back to English for those.
  *
  * @example
  * ```ts
@@ -170,7 +173,7 @@ export {
   zhTW,
 };
 
-/** Every locale of this package (~31 kB gzipped together; import the ones you need). */
+/** Every locale of this package (~40 kB gzipped together; import the ones you need). */
 export const allLocales: readonly LocaleModule[] = [
   af,
   am,

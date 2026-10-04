@@ -9,7 +9,7 @@ import {
   type TraceDescription,
 } from '@mk7s/holochart-runtime';
 import { axisHoverText } from '@mk7s/holochart-traces-stats';
-import type { HeatmapCalc } from './calc.ts';
+import { heatmapZStats, type HeatmapCalc } from './calc.ts';
 
 /** `describe()` of heatmap traces. */
 export function describeHeatmap(ctx: DescribeContext<HeatmapCalc>): TraceDescription {
@@ -21,11 +21,8 @@ export function describeHeatmap(ctx: DescribeContext<HeatmapCalc>): TraceDescrip
     axisHoverText(ctx.xaxis, calc.x.centers[i]!, trace['xhoverformat']);
   const yt = (j: number): string =>
     axisHoverText(ctx.yaxis, calc.y.centers[j]!, trace['yhoverformat']);
-  let best = -1;
-  for (let c = 0; c < calc.z.length; c++) {
-    const v = calc.z[c]!;
-    if (Number.isFinite(v) && (best < 0 || v > calc.z[best]!)) best = c;
-  }
+  // From calc: a description is rebuilt after every run, and a pass over 16.7M cells takes 40 ms.
+  const { maxAt: best, finite: total } = heatmapZStats(calc.z);
   let summary = `Heatmap "${name}": ${calc.nx} × ${calc.ny} cells.`;
   if (best >= 0) {
     const [lo, hi] = calc.zExtent;
@@ -39,11 +36,8 @@ export function describeHeatmap(ctx: DescribeContext<HeatmapCalc>): TraceDescrip
     formatPlainNumber(z[c]!),
   ];
   const rows: string[][] = [];
-  let total = 0;
-  for (let c = 0; c < size; c++) {
-    if (!Number.isFinite(z[c]!)) continue;
-    total++;
-    if (rows.length < ctx.maxRows) rows.push(cell(c));
+  for (let c = 0; c < size && rows.length < Math.min(ctx.maxRows, total); c++) {
+    if (Number.isFinite(z[c]!)) rows.push(cell(c));
   }
   // Row `k` of all `total` rows: the grid index of every listed cell, built on first use.
   let cells: Int32Array | undefined;

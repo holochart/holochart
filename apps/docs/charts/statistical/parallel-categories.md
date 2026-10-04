@@ -266,8 +266,10 @@ the right instead of from the left. The paths are curved and have one plain colo
   gives the number of paths and the total count. Its data table has one row per path (the first
   rows for large charts): its category in each dimension, in display order, its count and, for
   numeric `line.color`, its color value.
-- **Keyboard:** there is no keyboard navigation or reordering yet; the description table is the
-  keyboard-accessible way to read the counts.
+- **Keyboard:** Tab moves into the plot area; ↑ / ↓ then step through the categories of a dimension
+  and ← / → move to the dimension beside it. There is no keyboard reordering yet. See [the keys by
+  chart family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops
+  out for now.
 - **Color:** paths of different colors overlap at 60 % opacity, so pick two to four well
   separated colors for an outcome (as in the colored example) rather than a continuous scale, and
   say in the title or a legend annotation what each color means.

@@ -5,6 +5,11 @@ import path from 'node:path';
  * `tests/bundle/size/bundle.ts` (which builds one measurement bundle per entry) and
  * `.size-limit.ts` (which measures them). See docs/release/bundle-size.md.
  *
+ * **Changing a `limit` below?** Add a line to the ledger in `policy.ts` that names the cause (what
+ * grew, by how much, why it is not lazy or trimmed); `pnpm test` and `pnpm size` fail without it,
+ * and the full ESM bundle's budget may not pass its hard ceiling (plan R9, "Budget policy" in the
+ * doc above). The comments on the entries below are the history from before the policy.
+ *
  * Sizes are minified + gzipped, in decimal kB (1 kB = 1000 bytes, size-limit's unit). Every ESM
  * entry is bundled from the packages' built `dist/` with all dependencies included except `three`
  * (a peer dependency, ADR-003), so a number is what that import adds to an app that already has

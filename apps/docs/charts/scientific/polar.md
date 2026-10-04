@@ -268,7 +268,10 @@ createChart(document.getElementById('chart')!, {
   traces, polar line or polar scatter) with its point count and where `r` is lowest and highest
   (with the angle, formatted like the hover labels). Its data table lists the points' `r` and `θ`
   (and `text` when given per point).
-- **Keyboard:** there is no keyboard navigation between points yet.
+- **Keyboard:** Tab moves into the plot area; the arrow keys then step through the points, each
+  showing its hover label. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Reading the chart:** radar shapes are easy to misjudge: area grows with the square of the
   radius, and the order of the measures changes the shape. Keep the radial range fixed and
   starting at zero, and label the measures with their names.

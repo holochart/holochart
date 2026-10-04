@@ -244,7 +244,9 @@ The same line as a static shape, for a figure you build up front:
 - **Screen readers:** the chart is a `<canvas>`; see the [accessibility guide](/guides/accessibility)
   for what the DOM mirror describes. A schedule is also a table: show the tasks with their dates
   next to the chart, or in a disclosure.
-- **Keyboard:** there is no keyboard navigation between bars yet.
+- **Keyboard:** Tab moves into the plot area; ↑ / ↓ then step through the bars and ← / → move
+  between traces, each stop showing its hover label. See [the
+  keys](/guides/accessibility#keys-in-the-plot-area).
 - **Color:** don't encode status or team in color alone. Put the status in the row label or in
   `text`, and keep a legend or labels for the groups. Diamonds for milestones differ from bars by
   shape as well as color.

@@ -326,7 +326,9 @@ createChart(document.getElementById('chart')!, {
 - **Screen readers:** the chart is a `<canvas>`; the hidden description (see the
   [accessibility guide](/guides/accessibility)) names each 3D scatter trace, its number of points
   and the range of each of `x`, `y` and `z`, formatted like the axes.
-- **Keyboard:** there is no keyboard navigation between points or keyboard camera control yet.
+- **Keyboard:** Tab moves into the plot area; the arrow keys then step through the points in data
+  order, each showing its hover label. Shift + arrow keys orbit the camera, `+` / `-` move it in and
+  out and `0` resets it. See [the keys by chart family](/guides/accessibility#keys-by-chart-family).
 - **Color and depth:** a 3D view hides depth on a flat screen. Give each trace a distinct symbol
   as well as a color, color by a value with a lightness-monotonic scale (the default, Viridis) and
   keep the colorbar, and consider sphere markers or projections so position reads without

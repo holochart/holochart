@@ -3,6 +3,7 @@
  * 2016-2024 Plotly Technologies Inc.; see this package's THIRD_PARTY_NOTICES.md).
  */
 import type { LocaleModule } from '@mk7s/holochart-core';
+import { holochartTr } from '../holochart/tr.ts';
 
 /** Turkish (`tr`). */
 export const tr: LocaleModule = {
@@ -71,6 +72,9 @@ export const tr: LocaleModule = {
     'incoming flow count:': 'gelen akış sayısı:',
     'outgoing flow count:': 'giden akış sayısı:',
     'kde:': 'çekirdek yoğunluk tahmini (kde):',
+    // Holochart's own strings (UI labels, keyboard announcements, chart summaries), not from
+    // plotly.js.
+    ...holochartTr,
   },
   format: {
     days: ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'],

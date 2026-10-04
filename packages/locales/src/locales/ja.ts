@@ -3,6 +3,7 @@
  * 2016-2024 Plotly Technologies Inc.; see this package's THIRD_PARTY_NOTICES.md).
  */
 import type { LocaleModule } from '@mk7s/holochart-core';
+import { holochartJa } from '../holochart/ja.ts';
 
 /** Japanese (`ja`). */
 export const ja: LocaleModule = {
@@ -71,6 +72,9 @@ export const ja: LocaleModule = {
     'kde:': 'kde:',
     'Click to enter radial axis title': '放射軸タイトルを入力するにはクリック',
     'new text': '新規テキスト',
+    // Holochart's own strings (UI labels, keyboard announcements, chart summaries), not from
+    // plotly.js.
+    ...holochartJa,
   },
   format: {
     days: ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'],
