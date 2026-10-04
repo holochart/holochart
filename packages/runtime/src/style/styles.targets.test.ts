@@ -4,7 +4,7 @@ import {
   supplyDefaults,
   type Issue,
   type Registry,
-  type TraceModule,
+  type CoreTraceModule,
 } from '@mk7s/holochart-core';
 import { spots } from '../__testing__/spots.ts';
 import { applyStyleRules, styleRulePaths } from './styles.ts';
@@ -14,7 +14,7 @@ const xs = [0, 1, 2, 3, 4];
 const ys = [5, 12, 8, 20, 11];
 
 /** `spots` under another type name, with its defaults adjusted by `after`. */
-function variant(type: string, after: (out: Record<string, unknown>) => void): TraceModule {
+function variant(type: string, after: (out: Record<string, unknown>) => void): CoreTraceModule {
   return {
     ...spots,
     type,
@@ -221,7 +221,7 @@ describe('style rules: reporting (E8.5)', () => {
 
   it('validates the same rules again for a trace of another type', () => {
     // `marker.symbol` is per-point for spots; the other type has no such attribute.
-    const plain: TraceModule = {
+    const plain: CoreTraceModule = {
       ...spots,
       type: 'plain',
       schema: {
