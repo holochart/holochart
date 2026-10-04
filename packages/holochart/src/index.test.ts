@@ -1,3 +1,12 @@
+import * as components from '@mk7s/holochart-components';
+import * as core from '@mk7s/holochart-core';
+import * as runtime from '@mk7s/holochart-runtime';
+import * as traces3d from '@mk7s/holochart-traces-3d';
+import * as tracesBasic from '@mk7s/holochart-traces-basic';
+import * as tracesFinance from '@mk7s/holochart-traces-finance';
+import * as tracesHier from '@mk7s/holochart-traces-hier';
+import * as tracesSci from '@mk7s/holochart-traces-sci';
+import * as tracesStats from '@mk7s/holochart-traces-stats';
 import { describe, expect, it } from 'vitest';
 import * as Holochart from './index.ts';
 
@@ -33,6 +42,66 @@ describe('@mk7s/holochart bundle', () => {
     expect(typeof Holochart.render.createRenderRoot).toBe('function');
   });
 
+  it('lists its exports: package values unchanged, the shared plumbing left out', () => {
+    const packages: Record<string, Record<string, unknown>> = {
+      core,
+      runtime,
+      components,
+      tracesBasic,
+      tracesStats,
+      tracesSci,
+      tracesFinance,
+      tracesHier,
+      traces3d,
+    };
+    const bundle = Holochart as Record<string, unknown>;
+    const owners = new Map<string, string>();
+    for (const [pkg, ns] of Object.entries(packages)) {
+      for (const [name, value] of Object.entries(ns)) {
+        if (!(name in bundle)) continue;
+        // The same value under the same name: nothing is shadowed or taken from another package.
+        expect(bundle[name], `${pkg}.${name}`).toBe(value);
+        owners.set(name, pkg);
+      }
+    }
+    // Every value of the bundle is a package's, a namespace, or the bundle's own.
+    const own = [
+      'builtins',
+      'express',
+      'extrudedBar',
+      'extrudedIcicle',
+      'extrudedPie',
+      'extrudedScatter',
+      'extrudedTreemap',
+      'fonts',
+      'render',
+      'symbols',
+      'themes',
+      'view3dAttributes',
+      'view3dComponent',
+      'view3dEnabled',
+    ];
+    expect(
+      Object.keys(bundle)
+        .filter((name) => !owners.has(name))
+        .sort(),
+    ).toEqual(own);
+    // Plumbing the packages export for each other (`@internal`) is not a name of the bundle.
+    for (const name of [
+      'calcBar',
+      'editDistance',
+      'layoutBars',
+      'RANGESELECTOR_Y_PAD',
+      'setBarExtruder',
+      'stashSplomAxis',
+      'stripInternal',
+      'supplyColorscaleDefaults',
+      'warnOnce',
+    ]) {
+      expect(bundle, name).not.toHaveProperty(name);
+    }
+  });
+
   it('exports the error classes a caller can catch', () => {
     expect(new Holochart.ValidationError({} as never)).toBeInstanceOf(Holochart.HolochartError);
     expect(new Holochart.WebGLUnavailableError(null)).toBeInstanceOf(Holochart.HolochartError);
@@ -53,14 +122,12 @@ describe('@mk7s/holochart bundle', () => {
         // Components (polar, scene) are registered alongside their traces.
         if (!('calc' in module) || typeof module.type !== 'string') continue;
         types.push(module.type);
-        expect(Holochart.tracePackage(module.type), module.type).toBe(
-          `@mk7s/holochart-traces-${name}`,
-        );
+        expect(core.tracePackage(module.type), module.type).toBe(`@mk7s/holochart-traces-${name}`);
       }
     }
     expect(types.length).toBeGreaterThan(30);
     // The module is exported under its type name, which is what the hint tells users to import.
     for (const type of types) expect(Holochart).toHaveProperty(type);
-    expect(Holochart.tracePackage('scattergeo')).toBeUndefined();
+    expect(core.tracePackage('scattergeo')).toBeUndefined();
   });
 });

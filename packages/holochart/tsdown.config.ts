@@ -160,6 +160,7 @@ export default defineConfig([
       iife3DAddonPlugin({
         threeModule: source('./src/iife/three.ts'),
         entry: source('./src/iife-3d.ts'),
+        globalModules: [source('./src/exports.ts'), source('./src/iife/addon-shared.ts')],
       }),
     ],
     inputOptions: SOURCE_CONDITIONS,

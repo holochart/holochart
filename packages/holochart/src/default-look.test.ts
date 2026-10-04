@@ -1,3 +1,4 @@
+import { stripInternal } from '@mk7s/holochart-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as Holochart from './index.ts';
 
@@ -37,11 +38,8 @@ function defaulted(template?: unknown): string {
     Holochart.registry.core,
     { onIssue: () => undefined },
   );
-  const { template: _t, ...layout } = Holochart.stripInternal(fullLayout) as Record<
-    string,
-    unknown
-  >;
-  return `${JSON.stringify({ layout, data: Holochart.stripInternal(fullData) }, null, 1)}\n`;
+  const { template: _t, ...layout } = stripInternal(fullLayout) as Record<string, unknown>;
+  return `${JSON.stringify({ layout, data: stripInternal(fullData) }, null, 1)}\n`;
 }
 
 const PLOTLY_LOOK = './__snapshots__/plotly-look.json.snap';

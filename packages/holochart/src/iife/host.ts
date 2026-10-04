@@ -5,8 +5,9 @@
  *
  * The add-on is built with the packages it shares mapped to the main script's instances
  * (`scripts/build/iife-split.ts`): `three` → {@link IIFEHost.three}, `@mk7s/holochart-render` →
- * `Holochart.render`, and core, the runtime and traces-basic → `Holochart` itself (the main script
- * re-exports each of them whole and unchanged, which `iife.test.ts` checks). So a page has one
+ * `Holochart.render`, and core, the runtime, traces-basic and components → `Holochart` itself (the
+ * main script has their public exports, and the `@internal` ones the add-on imports:
+ * `addon-shared.ts`; the add-on's build checks every name it imports). So a page has one
  * three.js, one registry, one render root implementation and one copy of render's module state.
  */
 import type * as Render from '@mk7s/holochart-render';

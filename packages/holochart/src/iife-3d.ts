@@ -8,8 +8,8 @@
  * ```
  *
  * It registers the 3D scene and trace modules (`traces3d`) into the main script's registry, adds
- * the named exports of `@mk7s/holochart-traces-3d` to `window.Holochart` (as the ESM full bundle
- * exports them), and provides render's lazily loaded 3D chunks (mesh, lines and markers) to the
+ * the 3D package's public exports to `window.Holochart` (`exports-3d.ts`, the names the ESM full
+ * bundle exports), and provides render's lazily loaded 3D chunks (mesh, lines and markers) to the
  * main script's loaders, and the 2.5D chunk (`layout.view3d`, `depth`: the extrusion primitive and
  * the 2.5D view, with the full bundle's 2.5D view component's view).
  *
@@ -20,7 +20,7 @@
  * loaded.
  */
 import { register } from '@mk7s/holochart-runtime';
-import * as traces3dExports from '@mk7s/holochart-traces-3d';
+import * as traces3dExports from './exports-3d.ts';
 import { extrusion, linesMarkers3D, mesh } from 'holochart-iife:render-3d';
 import type { IIFEHost } from './iife/host.ts';
 import * as view3d from './view3d/view.ts';
@@ -46,7 +46,7 @@ function install(hc: Global): void {
   host.provideLazy3D('view3d', view3d);
   register(...traces3dExports.traces3d);
   for (const [name, value] of Object.entries(traces3dExports)) {
-    // Like the ESM bundle's `export *`, a name the main script already has keeps its value.
+    // A name the main script already has keeps its value.
     if (!(name in hc)) Object.defineProperty(hc, name, { value, enumerable: true });
   }
 }

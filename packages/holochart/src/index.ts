@@ -27,4 +27,4 @@ runtime.register(...builtins, ...builtinThemes);
 registerBuiltinColors();
 
 export * from './exports.ts';
-export * from '@mk7s/holochart-traces-3d';
+export * from './exports-3d.ts';
