@@ -378,6 +378,8 @@ Authors should self-review against this list; reviewers check it too.
       listeners.
 - [ ] The schema is the source of truth for any new or changed attribute.
 - [ ] Docs updated; architectural changes come with a new or updated ADR in `docs/adr/`.
-- [ ] Bundle size considered (new dependencies justified, tree-shakeable, `three` stays a peer).
+- [ ] Bundle size considered (new dependencies justified, tree-shakeable, `three` stays a peer). A
+      changed budget has a ledger line naming its cause, and the full ESM bundle stays under its
+      ceiling ([budget policy](docs/release/bundle-size.md#budget-policy)).
 - [ ] Accessibility considered (DOM mirror, keyboard, contrast) where the change is user-facing.
 - [ ] Changeset added for user-facing changes to published packages.

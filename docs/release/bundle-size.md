@@ -130,6 +130,38 @@ which [`.size-limit.ts`](../../.size-limit.ts) reads. The bundle smoke tests
 without controls, only the used component's chunks otherwise, drawn and in DOM order when
 `chart.ready` resolves), and the IIFE's inlined engine, fill code and controls (`iife.spec.ts`).
 
+## Budget policy
+
+Plan risk R9. Through ship wave R2 the budgets were raised more than a dozen times, mostly "by
+decision" after a wave had already outgrown them (the history is in the sections below and in the
+comments of `entries.ts`). Since ship wave R3 a budget is a commitment, and changing one has a
+cost:
+
+1. **A budget changes only with a ledger line.** [`tests/bundle/size/policy.ts`](../../tests/bundle/size/policy.ts)
+   holds every budget as it was when the policy began (`BUDGETS_AT_ADOPTION`) and an append-only
+   ledger of changes since (`BUDGET_CHANGES`). The `limit` of an entry in `entries.ts` must be its
+   adopted budget or the `to` of its latest ledger line; a new budgeted entry starts with a line
+   (`from: 'new'`), a removed one ends with one (`to: 'removed'`).
+2. **A ledger line names its cause**: what grew (the features or dependencies), by how much (kB
+   measured before and after, on CI), and why the code could not load lazily or be trimmed
+   instead. "By decision" is not a cause. Lowering a budget takes a line too: it says what made
+   the room.
+3. **The full ESM bundle has a hard ceiling of 560 kB** (`FULL_ESM_CEILING_KB`: the M6 budget of
+   540 kB plus 20 kB). Its budget can be raised up to the ceiling and no further. At the ceiling,
+   new code goes into a lazy chunk or an add-on package, or something else gets smaller first.
+   Moving the ceiling takes an ADR, not a ledger line.
+
+Order of work when an entry is over budget: make the new code lazy (a dynamic `import()` behind
+first use, as the fill, controls and animation chunks are), then trim, and only then raise the
+budget, to the measured size on CI plus at most 2 % (CI measures about 0.3 % more than a local
+macOS run, and CI is the reference).
+
+`checkBudgetPolicy` enforces rules 1–3 mechanically: `pnpm test` runs it
+(`tests/bundle/size/policy.test.ts`), and `.size-limit.ts` runs it before `pnpm size` measures
+anything, so a raised `limit` without a ledger line, a line without a cause, or a full ESM budget
+over the ceiling fails locally and in the `unit` and `bundle size` CI jobs. What it cannot check
+is whether a cause is a good one; that is the reviewer's part.
+
 ## Running it
 
 ```sh
