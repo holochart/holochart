@@ -8,8 +8,7 @@
  * (gl-plot3d's model matrix), so the default eye `(1.25, 1.25, 1.25)` looks at the unit cube from
  * 2.17 units away. Rotations are about `center`.
  */
-
-export type Vec3 = [number, number, number];
+import type { Vec3 } from '@mk7s/holochart-render';
 
 /** A scene camera in scene units (Plotly's `scene.camera` without `projection`). @experimental */
 export interface SceneCamera {

@@ -23,6 +23,7 @@ import {
   type TextFont,
   type TextLabel,
   type TextPrimitive,
+  type Vec3,
 } from '@mk7s/holochart-render';
 import type { ComponentDrawContext } from '@mk7s/holochart-runtime';
 import {
@@ -38,7 +39,7 @@ import {
   type Material,
 } from 'three';
 import { sceneTicks } from './axes.ts';
-import { sub, unitsPerPx, type Vec3 } from './camera.ts';
+import { sub, unitsPerPx } from './camera.ts';
 import { anchorsFor, cullOverlaps, labelBox, outwardNormal, type LabelBox } from './labels.ts';
 import type { Scene3D } from './scene.ts';
 import { boxFrame, closestCorner, type CornerPoint } from './walls.ts';

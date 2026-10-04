@@ -13,8 +13,7 @@ import {
   type Scale,
   type Tick,
 } from '@mk7s/holochart-core';
-import type { DataTransform } from '@mk7s/holochart-render';
-import type { Vec3 } from './camera.ts';
+import type { DataTransform, Vec3 } from '@mk7s/holochart-render';
 
 /**
  * What a 3D trace contributes to its scene's autorange: the `[min, max]` of its finite linear

@@ -1,8 +1,9 @@
 import fc from 'fast-check';
 import { OrthographicCamera, PerspectiveCamera, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
-import { SCENE_FOV, type Vec3 } from './camera.ts';
+import { SCENE_FOV } from './camera.ts';
 import { boxFrame, closestCorner, type CornerPoint } from './walls.ts';
+import type { Vec3 } from '@mk7s/holochart-render';
 
 /** NDC of the unit box's corners seen from `eye`, looking at the origin with z up. */
 function corners(eye: Vec3, ortho = false): CornerPoint[] {

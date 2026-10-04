@@ -16,11 +16,10 @@
  * (`W ⊙ n`, which the mesh's normal matrix turns back into `n`).
  */
 import type { StreamSet } from './integrate.ts';
+import type { Vec3 } from '@mk7s/holochart-render';
 
 /** Vertices per ring (gl-streamtube3d's `facets`). */
 export const TUBE_FACETS = 8;
-
-type Vec3 = [number, number, number];
 
 export interface TubeGeometry {
   /** Ring vertices, linear coordinates relative to `origin` ({@link TUBE_FACETS} per sample). */

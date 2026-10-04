@@ -25,9 +25,13 @@ import type {
 } from './anim/types.ts';
 import type { DownloadImageOptions, ToImageOptions } from './export/types.ts';
 import { removeFallback } from './fallback.ts';
-import type { AttributeUpdate, LayoutUpdate, MaxPoints, StreamUpdate } from './plan.ts';
-
-type TraceIndices = number | readonly number[];
+import type {
+  AttributeUpdate,
+  LayoutUpdate,
+  MaxPoints,
+  StreamUpdate,
+  TraceIndices,
+} from './plan.ts';
 
 /**
  * Accept both Plotly call styles: `(el, data, layout?, config?)` and `(el, { data, layout,

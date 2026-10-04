@@ -32,6 +32,7 @@ import {
   type Primitive,
   type PrimitiveContext,
   type ViewportSize,
+  type Vec3,
 } from '@mk7s/holochart-render';
 import {
   BackSide,
@@ -54,8 +55,6 @@ import {
 } from 'three';
 import { gridIndex, type IsoGrid } from '../isosurface/grid.ts';
 import { buildTransferFunction, TRANSFER_SIZE, type TransferSpec } from './transfer.ts';
-
-type Vec3 = [number, number, number];
 
 /** Entries of a non-uniform axis' lookup table. */
 export const AXIS_TABLE_SIZE = 1024;

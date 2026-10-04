@@ -14,8 +14,7 @@ import {
   tubeMesh,
 } from './line-mesh.ts';
 import { lineMesh3d, lineRender3d } from './plot.ts';
-
-type Vec3 = [number, number, number];
+import type { Vec3 } from '@mk7s/holochart-render';
 
 const registry = createChartRegistry().register(scatter3d, sceneComponent);
 

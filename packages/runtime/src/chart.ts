@@ -168,6 +168,7 @@ import {
   type LayoutUpdate,
   type MaxPoints,
   type StreamUpdate,
+  type TraceIndices,
 } from './plan.ts';
 import { describeChart, type ChartDescription, type OverviewInput } from './a11y/describe.ts';
 import { A11yMirror, type A11yChange } from './a11y/mirror.ts';
@@ -239,8 +240,6 @@ export interface ChartThree {
   /** The viewport of a cartesian subplot (`'xy'`, `'x2y2'`). @experimental */
   subplot(id: string): Viewport | undefined;
 }
-
-type TraceIndices = number | readonly number[];
 
 interface Figure {
   data: unknown[];

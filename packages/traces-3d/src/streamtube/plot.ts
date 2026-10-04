@@ -10,6 +10,7 @@ import {
   createLazyMeshPrimitive,
   type LazyMeshPrimitive,
   type MeshInput,
+  type Vec3,
 } from '@mk7s/holochart-render';
 import type { TracePlotContext, TraceUpdatePlan, TraceView } from '@mk7s/holochart-runtime';
 import { traceColorMapping } from '../mesh3d/colors.ts';
@@ -21,7 +22,6 @@ import type { StreamtubeCalc } from './calc.ts';
 import { tubeGeometry, TUBE_FACETS } from './tube.ts';
 
 type Ctx = TracePlotContext<StreamtubeCalc>;
-type Vec3 = [number, number, number];
 
 /** Per-vertex intensity: each sample's norm on its ring's vertices. */
 export function tubeIntensity(calc: StreamtubeCalc): Float32Array {

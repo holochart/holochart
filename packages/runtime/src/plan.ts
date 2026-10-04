@@ -251,6 +251,9 @@ export function tracePlan(
 export type MaxPoints =
   number | Readonly<Record<string, readonly number[]>> | { readonly maxPoints: number };
 
+/** Which traces an update applies to: one trace index, or several. */
+export type TraceIndices = number | readonly number[];
+
 /** Streaming updates: per attribute string, one array of new values per listed trace. */
 export type StreamUpdate = Readonly<Record<string, readonly ArrayLike<unknown>[]>>;
 

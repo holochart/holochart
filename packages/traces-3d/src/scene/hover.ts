@@ -26,9 +26,8 @@ import {
   type FullLayout,
   type FullTrace,
 } from '@mk7s/holochart-core';
-import type { PickResult } from '@mk7s/holochart-render';
+import type { PickResult, Vec3 } from '@mk7s/holochart-render';
 import type { HoverContext, HoverPoint, HoverQuery } from '@mk7s/holochart-runtime';
-import type { Vec3 } from './camera.ts';
 import type { SceneAxis } from './layout.ts';
 import { scenePicking } from './pick.ts';
 import { sceneFor, type Scene3D } from './scene.ts';

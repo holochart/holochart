@@ -21,9 +21,9 @@ import {
   type Picker,
   type PickResult,
   type PickTarget,
+  type Vec3,
 } from '@mk7s/holochart-render';
 import { createLatestQueue, type Chart, type LatestQueue } from '@mk7s/holochart-runtime';
-import type { Vec3 } from './camera.ts';
 import type { Scene3D } from './scene.ts';
 
 /** Pick radius of 3D hover in CSS px (gl-plot3d's `pickRadius`). @internal */

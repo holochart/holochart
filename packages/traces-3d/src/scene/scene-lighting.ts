@@ -12,11 +12,14 @@
  * - The scene component calls {@link SceneLighting.sync} on every pass with the scene's defaulted
  *   container: a changed `lighting` updates the rig (shadow maps, environment) in place.
  */
-import { loadMeshModule, type LightingSpec, type LightRig } from '@mk7s/holochart-render';
+import {
+  loadMeshModule,
+  type LightingSpec,
+  type LightRig,
+  type Vec3,
+} from '@mk7s/holochart-render';
 import type { Scene as ThreeScene, WebGLRenderer } from 'three';
 import { sceneLightingSpec } from './lighting-attributes.ts';
-
-type Vec3 = [number, number, number];
 
 /** What takes the scene's rig: a mesh primitive (or its lazy loader). @experimental */
 export interface LightRigUser {

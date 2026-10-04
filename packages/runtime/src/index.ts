@@ -190,4 +190,10 @@ export type {
 // Helpers for trace and component authors
 export { dataTransform, linearExtremes } from './axes.ts';
 export { domainRect, fitAspect, inscribedCircle, MIN_PLOT_SIZE } from './layout.ts';
-export type { AttributeUpdate, LayoutUpdate, MaxPoints, StreamUpdate } from './plan.ts';
+export type {
+  AttributeUpdate,
+  LayoutUpdate,
+  MaxPoints,
+  StreamUpdate,
+  TraceIndices,
+} from './plan.ts';

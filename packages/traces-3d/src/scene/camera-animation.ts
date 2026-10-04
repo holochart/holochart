@@ -26,8 +26,8 @@ import {
   rotate,
   sub,
   type SceneCamera,
-  type Vec3,
 } from './camera.ts';
+import type { Vec3 } from '@mk7s/holochart-render';
 
 const EPS = 1e-9;
 

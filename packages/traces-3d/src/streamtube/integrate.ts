@@ -31,8 +31,7 @@
  *   sizeref · 0.5 · minDistance` everywhere, as in gl-streamtube3d.
  */
 import { sampleStreamGrid, type StreamGrid } from './grid.ts';
-
-type Vec3 = [number, number, number];
+import type { Vec3 } from '@mk7s/holochart-render';
 
 /** Plotly's default starts: the x–z plane at the grid's lowest y (3 floats per start). */
 export function defaultStreamStarts(grid: StreamGrid): Float64Array {

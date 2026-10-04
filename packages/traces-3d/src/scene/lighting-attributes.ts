@@ -55,11 +55,9 @@ import type {
   MeshMaterialSpec,
   MeshMaterialType,
   RGBA,
+  Vec3,
 } from '@mk7s/holochart-render';
 import { SRGBColorSpace, TextureLoader, type Texture } from 'three';
-
-type Vec3 = [number, number, number];
-type Container = Record<string, unknown>;
 
 /** Trace types with Plotly `lighting` / `lightposition` attributes. @experimental */
 export type SceneLightingTrace =
@@ -263,7 +261,7 @@ function vec3(v: unknown, fallback: Readonly<Vec3>): Vec3 {
 
 /** The material spec of a defaulted trace (null: Plotly's model). @internal */
 export function sceneMaterialSpec(
-  trace: Readonly<Container>,
+  trace: Readonly<Record<string, unknown>>,
   onTextureLoad?: () => void,
 ): MeshMaterialSpec | null {
   const m = trace['material'];
@@ -296,10 +294,10 @@ export function sceneMaterialSpec(
  * @experimental
  */
 export function sceneMeshLighting(
-  trace: Readonly<FullTrace | Container>,
+  trace: Readonly<FullTrace | Record<string, unknown>>,
   onTextureLoad?: () => void,
 ): Pick<MeshData, 'lighting' | 'lightposition' | 'material' | 'castShadow' | 'receiveShadow'> {
-  const t = trace as Container;
+  const t = trace as Record<string, unknown>;
   const l = isPlainObject(t['lighting']) ? t['lighting'] : {};
   const lighting: Partial<MeshLighting> = {};
   for (const key of LIGHTING_KEYS) {
@@ -450,9 +448,9 @@ export const sceneLightRigAttributes = /* @__PURE__ */ (() =>
  * is kept only when given. Called from the scene defaults.
  */
 export function supplySceneLightingLayout(
-  input: Readonly<Container>,
-  template: Readonly<Container> | undefined,
-  out: Container,
+  input: Readonly<Record<string, unknown>>,
+  template: Readonly<Record<string, unknown>> | undefined,
+  out: Record<string, unknown>,
 ): void {
   const lIn = isPlainObject(input['lighting']) ? input['lighting'] : undefined;
   const lT = isPlainObject(template?.['lighting']) ? template['lighting'] : undefined;
@@ -487,8 +485,10 @@ export function sceneLightingSpec(
   aspect: Readonly<Vec3> = [1, 1, 1],
 ): LightingSpec | null {
   if (!isPlainObject(lighting)) return null;
-  const obj = (k: string): Container => (isPlainObject(lighting[k]) ? lighting[k] : {});
-  const num = (o: Container, k: string, d: number): number => (typeof o[k] === 'number' ? o[k] : d);
+  const obj = (k: string): Record<string, unknown> =>
+    isPlainObject(lighting[k]) ? lighting[k] : {};
+  const num = (o: Record<string, unknown>, k: string, d: number): number =>
+    typeof o[k] === 'number' ? o[k] : d;
   const ambient = obj('ambient');
   const lights = Array.isArray(lighting['directional']) ? lighting['directional'] : [];
   const directional: DirectionalLightSpec[] = [];

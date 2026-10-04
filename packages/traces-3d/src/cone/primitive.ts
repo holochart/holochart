@@ -37,6 +37,7 @@ import {
   type Primitive,
   type PrimitiveContext,
   type ViewportSize,
+  type Vec3,
 } from '@mk7s/holochart-render';
 import {
   DoubleSide,
@@ -55,8 +56,6 @@ import {
   type Camera,
   type IUniform,
 } from 'three';
-
-type Vec3 = [number, number, number];
 
 /** Instance values at least this large are gaps (hidden cones). */
 const HIDDEN = 3.0e38;

@@ -5,7 +5,7 @@
  * their extremes, and by the scene component for scenes whose traces are all hidden.
  */
 import type { FullLayout, FullTrace, Scale } from '@mk7s/holochart-core';
-import type { DataTransform, ViewportRect } from '@mk7s/holochart-render';
+import type { DataTransform, ViewportRect, Vec3 } from '@mk7s/holochart-render';
 import {
   domainRect,
   type DomainLayoutContext,
@@ -20,16 +20,13 @@ import {
   type AspectMode,
   type SceneExtremes,
 } from './axes.ts';
-import type { Vec3 } from './camera.ts';
 import { SCENE_LETTERS, sceneOf, type SceneLetter } from './layout-defaults.ts';
-
-type Container = Record<string, unknown>;
 
 /** One axis of a laid-out scene. @experimental */
 export interface SceneAxis {
   readonly letter: SceneLetter;
   /** The defaulted axis container (`fullLayout.scene.xaxis`, …). */
-  readonly full: Readonly<Container>;
+  readonly full: Readonly<Record<string, unknown>>;
   /** Data ↔ linear mapping; its range is the axis range (linear coordinates). */
   readonly scale: Scale;
   /** Range in linear coordinates (`range[0] > range[1]` when reversed). */
@@ -106,13 +103,13 @@ export function buildSceneLayout(
   plotArea: Readonly<ViewportRect>,
   extremes: readonly SceneExtremes[],
 ): SceneLayout | undefined {
-  const scene = fullLayout[id] as Container | undefined;
+  const scene = fullLayout[id] as Record<string, unknown> | undefined;
   if (!scene) return undefined;
-  const d = (scene['domain'] ?? {}) as Container;
+  const d = (scene['domain'] ?? {}) as Record<string, unknown>;
   const rect = domainRect(plotArea, extent(d['x']) ?? [0, 1], extent(d['y']) ?? [0, 1]);
   const spans: Vec3 = [0, 0, 0];
   const axes = SCENE_LETTERS.map((letter, i): SceneAxis => {
-    const full = (scene[`${letter}axis`] ?? {}) as Container;
+    const full = (scene[`${letter}axis`] ?? {}) as Record<string, unknown>;
     const scale = sceneScale(full);
     const data = unionExtent(extremes.map((e) => e[letter]));
     spans[i] = data ? data[1] - data[0] : 0;
@@ -121,7 +118,7 @@ export function buildSceneLayout(
     full['range'] = [scale.l2r(range[0]), scale.l2r(range[1])];
     return { letter, full, scale, range };
   }) as [SceneAxis, SceneAxis, SceneAxis];
-  const r = (scene['aspectratio'] ?? {}) as Container;
+  const r = (scene['aspectratio'] ?? {}) as Record<string, unknown>;
   const manual: Vec3 = [Number(r['x']) || 1, Number(r['y']) || 1, Number(r['z']) || 1];
   const aspect = sceneAspect(
     (scene['aspectmode'] ?? 'auto') as AspectMode,

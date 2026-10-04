@@ -36,6 +36,7 @@ import {
   type PrimitiveContext,
   type RGBA,
   type ViewportSize,
+  type Vec3,
 } from '@mk7s/holochart-render';
 import {
   BufferGeometry,
@@ -58,8 +59,6 @@ import {
 import type { ContourLevels } from './contours.ts';
 import { finiteExtent, gridX, gridY, type SurfaceGrid } from './grid.ts';
 import { SURFACE_FRAGMENT_HOOKS, SURFACE_VERTEX_SHADER } from './shader.ts';
-
-type Vec3 = [number, number, number];
 
 /** Values at least this large (in magnitude) are gaps in the textures. */
 export const HIDDEN_VALUE = 3.0e38;

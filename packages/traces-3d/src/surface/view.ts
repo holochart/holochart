@@ -18,6 +18,7 @@ import {
   createLazyMeshPrimitive,
   type LazyMeshPrimitive,
   type MeshInput,
+  type Vec3,
 } from '@mk7s/holochart-render';
 import type {
   ComponentPointerEvent,
@@ -47,7 +48,6 @@ import { gridNormals } from './normals.ts';
 import { opacityscaleTable, SurfacePrimitive, type SurfaceData } from './primitive.ts';
 import { farWalls, ProjectionLines, type ProjectionSpec } from './projections.ts';
 
-type Vec3 = [number, number, number];
 type Container = Record<string, unknown>;
 
 const LETTERS = ['x', 'y', 'z'] as const;

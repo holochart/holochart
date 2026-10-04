@@ -5,11 +5,10 @@
  * onto the other two walls, reaching the box edges. `spikecolor` and `spikethickness` (px) per
  * axis. Drawn with the screen-space 3D line primitive (lazily loaded), in scene units.
  */
-import type { Line3D } from '@mk7s/holochart-render';
+import type { Line3D, Vec3 } from '@mk7s/holochart-render';
 import { toRGBA } from '@mk7s/holochart-core';
 import { linesMarkers3DModule, loadLinesMarkers3D } from '@mk7s/holochart-render';
 import type { ComponentDrawContext } from '@mk7s/holochart-runtime';
-import type { Vec3 } from './camera.ts';
 import { SCENE_LETTERS } from './layout-defaults.ts';
 import type { Scene3D } from './scene.ts';
 import { closestCorner } from './walls.ts';

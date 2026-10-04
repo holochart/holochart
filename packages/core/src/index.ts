@@ -7,6 +7,7 @@
 export { attr } from './schema/attr.ts';
 export type {
   AnyOptions,
+  AttrBuilders,
   BooleanOptions,
   ColorOptions,
   ColorlistOptions,
