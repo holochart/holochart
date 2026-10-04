@@ -14,9 +14,10 @@ is not supported.
 We follow [SemVer 2.0.0](https://semver.org/). The public API is:
 
 - Everything exported from a package's entry point (`import … from '@mk7s/holochart-…'`), with its
-  TypeScript types, and the `window.Holochart` global of the IIFE build and its 3D add-on
-  (`Holochart.__iife`, the handle between the two scripts, is internal; the add-on requires the
-  main script of the same version).
+  TypeScript types, and the `window.Holochart` global of the IIFE build and its 3D add-on: the
+  members `@mk7s/holochart/global` types, which are the exports of `@mk7s/holochart`. (What else
+  the main script sets for the add-on, `Holochart.__iife` and a few `@internal` exports, is
+  internal; the add-on requires the main script of the same version.)
 - The figure spec: trace and layout attribute names, types, allowed values, and defaults, as
   declared in the schema ([ADR-002](../adr/002-schema-first-attribute-dsl.md)), plus events and
   their payloads.
@@ -49,27 +50,49 @@ Stability is declared in TSDoc, next to the code, and shown per export in the AP
 - **Stable** (`@public` in the reports): every export without a tag. The table above applies.
 - **`@experimental`**: exported, typed and documented, but its shape may change in any minor
   release, with a changelog entry and without a deprecation period. Editors show the tag on hover.
-- **`@internal`**: not part of the API at all. The build strips these from the published
-  declarations.
+- **`@internal`**: not part of the API at all, and no compatibility promise: it can change or go
+  in any release, without a changelog entry. Two kinds:
+  - An **export** tagged `@internal` is plumbing the Holochart packages share (core's scale and
+    coercion helpers, the trace packages' shared calc and layout code, components' scene
+    builders). It stays exported from its `@mk7s/holochart-*` package, with its declaration,
+    because sibling packages import it; all packages have one version, so they always match. It
+    is not a name of `@mk7s/holochart`, is hidden from the API reference, and is marked
+    `@internal` in the API reports. Do not import it in an app or a plugin.
+  - A **member** (of a class or an interface) tagged `@internal` is left out of the published
+    declarations.
 
-What is experimental today, all of it the plugin API of plan E22:
+`@mk7s/holochart` lists what it exports by name (`packages/holochart/src/exports.ts`): every stable
+and experimental export of core, the runtime, components and the trace packages, and no
+`@internal` one. Moving the internal exports to `/internal` subpaths is deferred to the plugin API
+freeze (plan E22, M7).
 
-| Package                   | Experimental                                                                                                                                                                                                                                                                       |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@mk7s/holochart-render`  | The whole package (its `@packageDocumentation` comment carries the tag), and with it the `render` namespace of `@mk7s/holochart`. Exceptions, tagged `@public`: the `fonts` and `symbols` registries and the types of their arguments.                                             |
-| `@mk7s/holochart-runtime` | The contracts trace and component modules implement (everything in `src/contracts.ts`: `TraceModule`, `ComponentModule`, their contexts and views, `HoverPoint`, `TraceDescription`, …).                                                                                           |
-|                           | The helpers for module authors: `dataTransform`, `linearExtremes`, `domainRect`, `fitAspect`, `inscribedCircle`, `MIN_PLOT_SIZE`, `STACK_GROUPS`, `formatTemplate`, `splitExtra`, the selection and geometry helpers, `createLatestQueue`, `fxComponent`, the a11y text helpers.   |
-|                           | The chart members typed by experimental types: `chart.three.root`, `.overlay`, `.viewports` and `.subplot()` (render package), `chart.axes`, `chart.subplots` and `chart.interaction` (contracts). `chart.three.renderer` and `chart.three.scene` are three.js objects and stable. |
-| `@mk7s/holochart-core`    | The pure half of the same contracts: `TraceModule`, `ComponentModule`, `TraceModuleMeta`, `TraceCategory`, `TraceDefaultsContext`, `LayoutDefaultsContext`, `Registry`, `createRegistry`.                                                                                          |
+What is experimental today, all of it the plugin API of plan E22 (the API reports list every
+name):
+
+| Package                     | Experimental                                                                                                                                                                                                                                                                                  |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@mk7s/holochart-render`    | The whole package (its `@packageDocumentation` comment carries the tag), and with it the `render` namespace of `@mk7s/holochart`. Exceptions, tagged `@public`: the `fonts` and `symbols` registries and the types of their arguments.                                                        |
+| `@mk7s/holochart-runtime`   | The contracts trace and component modules implement (everything in `src/contracts.ts`: `TraceModule`, `ComponentModule`, their contexts and views, `HoverPoint`, `TraceDescription`, …).                                                                                                      |
+|                             | The helpers for module authors: `dataTransform`, `linearExtremes`, `domainRect`, `fitAspect`, `inscribedCircle`, `MIN_PLOT_SIZE`, `STACK_GROUPS`, `formatTemplate`, `splitExtra`, the selection and geometry helpers, `createLatestQueue`, `fxComponent`, the a11y text helpers.              |
+|                             | The chart members typed by experimental types: `chart.three.root`, `.overlay`, `.viewports` and `.subplot()` (render package), `chart.axes`, `chart.subplots` and `chart.interaction` (contracts). `chart.three.renderer` and `chart.three.scene` are three.js objects and stable.            |
+|                             | The chart members components and traces call: `chart.emit`, `chart.getCalcdata`, `chart.previewRanges`, `chart.commitRanges`, `chart.refreshHover`. (The `Chart` constructor is `@internal`: use `createChart`.)                                                                              |
+| `@mk7s/holochart-core`      | The pure half of the same contracts: `CoreTraceModule`, `CoreComponentModule`, `TraceModuleMeta`, `TraceCategory`, `TraceDefaultsContext`, `LayoutDefaultsContext`, `Registry`, `createRegistry`.                                                                                             |
+|                             | The schema DSL a module declares its attributes with: `attr` and its option types, the schema node types (`AttrSpec`, `ObjectNode`, `InferFull`, …), the schema objects (`layoutSchema`, `configSchema`, `commonTraceAttributes`, …), `withExtrusion`.                                        |
+|                             | Color and date parsing (`toRGBA`, `parseDate`, …), update planning (`diffFigures`, `planUpdate`, …), and the scale types the contracts are written in (`Scale`, `AxisType`, `Tick`, `AxisExtremes`).                                                                                          |
+| Trace packages              | Each trace's attribute schema (`barAttributes`, …) and calc type (`BarCalc`, …), which the module objects are typed by. `setBarExtruder` (2.5D bars in a partial bundle). The hierarchy helpers of `@mk7s/holochart-traces-hier` (`buildHierarchy`, `partition`, `nodePath`, `sankeyLayout`). |
+| `@mk7s/holochart-traces-3d` | The scene API a custom 3D trace is written with: `Scene3D`, `acquireScene`, `sceneFor`, `sceneOf`, `sceneScales`, the lighting and material attributes and helpers, `sceneA11y`, `interpolateCamera`.                                                                                         |
 
 Using the built-in modules is stable: `register(scatter, bar)`, `registry.list()`, the module
 objects the trace packages export and their trace types. Writing a module of your own against the
 contracts is what can break in a minor release.
 
 A new export is stable unless it is tagged, so plugin-facing or provisional exports get
-`@experimental` in the PR that adds them. CI fails when an export or a tag changes without the
-reports being regenerated (`pnpm api:check`; `pnpm api:report` regenerates them), which puts every
-change to the public API in a PR's diff. Dropping `@experimental` from an API is a `minor` change;
+`@experimental`, and exports that exist only for another Holochart package `@internal`, in the PR
+that adds them. CI fails when an export or a tag changes without the reports being regenerated
+(`pnpm api:check`; `pnpm api:report` regenerates them), which puts every change to the public API
+in a PR's diff. The same check fails when a stable or experimental export of a package is missing
+from `@mk7s/holochart`'s list, when an `@internal` one is in it, and when a stable or experimental
+declaration needs an `@internal` type. Dropping `@experimental` from an API is a `minor` change;
 adding it to a stable API is a breaking one.
 
 ### Before 1.0

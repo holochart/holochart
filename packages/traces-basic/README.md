@@ -22,9 +22,11 @@ newer can also `require()` it.
 
 - **`basicTraces`:** every trace module below, to register at once
 - **Trace modules:** `scatter`, `bar`, `pie`, `table`
-- **Attribute schemas:** `scatterAttributes`, `barAttributes`, `pieAttributes`, `tableAttributes`
+- **Attribute schemas** (experimental): `scatterAttributes`, `barAttributes`, `pieAttributes`,
+  `tableAttributes`
 - **`timeline`:** builds a Gantt figure (horizontal bars on a date axis) from a table
-- Shared helpers (colorscales, bar stacking, slice labels) that the other trace packages build on
+- Shared helpers (colorscales, bar stacking, slice labels) that the other trace packages build on.
+  These are tagged `@internal`: not API, and not exported by `@mk7s/holochart`.
 
 ## Usage
 

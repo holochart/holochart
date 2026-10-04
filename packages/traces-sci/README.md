@@ -24,7 +24,7 @@ newer can also `require()` it.
 - **Trace modules:** `heatmap`, `contour`, `image`, `scatterpolar`, `barpolar`
 - **Polar subplot:** `polarComponent` (draws `layout.polar` axes; needed by the polar traces),
   `polarAttributes`
-- **Attribute schemas:** `heatmapAttributes`, `contourAttributes`, `imageAttributes`,
+- **Attribute schemas** (experimental): `heatmapAttributes`, `contourAttributes`, `imageAttributes`,
   `scatterpolarAttributes`, `barpolarAttributes`
 
 ## Usage

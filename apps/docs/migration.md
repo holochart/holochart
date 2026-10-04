@@ -25,6 +25,40 @@ before 1.0.
 
 See [Coming from Plotly](/getting-started/from-plotly#default-look) for what differs.
 
+## Unreleased: a curated export list
+
+`@mk7s/holochart` now exports a list of names instead of everything its packages export. The chart
+API, typed figures, the trace and component modules, themes, errors, the documented helpers and
+the experimental plugin API are all still there. What is gone is plumbing the packages share with
+each other (`layoutBars`, `calcBar`, `supplyColorscaleDefaults`, `stripInternal`, `editDistance`,
+`warnOnce`, …), now tagged `@internal`. If you imported one of those, copy the few lines you need:
+internal exports carry no compatibility promise.
+
+Some names meant two different things in two packages. Each now has one meaning, and the less
+public one was renamed:
+
+| Package                                  | Before                                 | Now                                                |
+| ---------------------------------------- | -------------------------------------- | -------------------------------------------------- |
+| `@mk7s/holochart-core`, `-runtime`       | `Layout`                               | `BaseLayout` (`Layout` is the full bundle's)       |
+| `@mk7s/holochart-core`                   | `LayoutTitle`                          | `BaseLayoutTitle`                                  |
+| `@mk7s/holochart-core`, `-runtime`       | `Frame`                                | `FrameInput` (`Frame` is the full bundle's)        |
+| `@mk7s/holochart-traces-basic`           | `BarTrace`, `PieTrace`, `ScatterTrace` | `BaseBarTrace`, `BasePieTrace`, `BaseScatterTrace` |
+| `@mk7s/holochart-traces-finance`         | `FunnelTrace`, `WaterfallTrace`        | `BaseFunnelTrace`, `BaseWaterfallTrace`            |
+| `@mk7s/holochart-traces-hier`            | `IcicleTrace`, `TreemapTrace`          | `BaseIcicleTrace`, `BaseTreemapTrace`              |
+| `@mk7s/holochart-traces-sci`             | `HeatmapTrace`                         | `BaseHeatmapTrace`                                 |
+| `@mk7s/holochart-traces-basic`           | `TimelineOptions`                      | `TimelineFigureOptions`                            |
+| `@mk7s/holochart-traces-stats`           | `StripOptions`                         | `StripFigureOptions`                               |
+| `@mk7s/holochart-express`                | `AnimationOptions`                     | `AnimationFrameOptions`                            |
+| `@mk7s/holochart-core` (experimental)    | `TraceModule`, `ComponentModule`       | `CoreTraceModule`, `CoreComponentModule`           |
+| `@mk7s/holochart-core` (experimental)    | `RGBA`, `Primitive`                    | `RGBAColor`, `PrimitiveValue`                      |
+| `@mk7s/holochart-runtime` (experimental) | `pointInPolygon(polygon, x, y)`        | `polygonContains(polygon, x, y)`                   |
+| `@mk7s/holochart-render` (experimental)  | `LineOptions`                          | `LinePrimitiveOptions`                             |
+
+The figure types you import from `@mk7s/holochart` did not change: its `BarTrace`, `ScatterTrace`,
+`Layout`, `Frame` and the others are the same types as before, and the `Base…` types are what a
+partial bundle imports from the packages. The other renames apply to `@mk7s/holochart` too, where
+it exported the name: `StripOptions`, `TimelineOptions`, `RGBA`, `Primitive` and `pointInPolygon`.
+
 ## Versioning
 
 Holochart follows semantic versioning. Deprecated APIs keep working for at least one minor version
@@ -33,9 +67,10 @@ breaking changes and a patch release never does.
 
 ### Stable and experimental APIs
 
-Everything a package exports is stable unless its documentation says `@experimental`: the chart
-API (`createChart`, `newPlot`, `react`, `restyle`, …), figures and their attributes, events,
-`register` and the built-in trace and component modules, themes, locales and Express.
+Everything a package exports is stable unless its documentation says `@experimental` or
+`@internal`: the chart API (`createChart`, `newPlot`, `react`, `restyle`, …), figures and their
+attributes, events, `register` and the built-in trace and component modules, themes, locales and
+Express.
 
 An experimental API works and is typed, but it can change in any minor release without a
 deprecation period. Your editor shows the tag when you hover the name, and the
@@ -47,9 +82,18 @@ with 1.0:
 - The contracts a custom trace or component implements (`TraceModule`, `ComponentModule` and the
   contexts they receive), and the helpers for writing one, such as `formatTemplate` or
   `linearExtremes`.
+- What a module is declared with and built on: the schema DSL (`attr`), the attribute schemas and
+  calc types of the built-in traces (`barAttributes`, `BarCalc`), and the 3D scene API
+  (`acquireScene`, `sceneFor`).
 - The chart members typed by those: `chart.three.root`, `.overlay`, `.viewports` and `.subplot()`,
   and `chart.axes`, `chart.subplots` and `chart.interaction`. `chart.three.renderer` and
   `chart.three.scene` are three.js objects and stable.
+- The chart members components call: `chart.emit`, `chart.getCalcdata`, `chart.previewRanges`,
+  `chart.commitRanges` and `chart.refreshHover`.
+
+An `@internal` export is not API at all. The `@mk7s/holochart-*` packages export some of their
+plumbing for each other (scale and coercion helpers, shared calc and layout code); it is tagged
+`@internal`, left out of `@mk7s/holochart` and of the API reference, and can change in any release.
 
 If you write [custom traces](/extending/custom-trace) or
 [components](/extending/component-plugin), pin the minor version (`~0.x.y`) and read the changelog

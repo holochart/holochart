@@ -233,8 +233,14 @@ Everything a package exports from `src/index.ts` is public API, and stable unles
 otherwise ([docs/release/versioning.md](docs/release/versioning.md#stability-tags)):
 
 - `@experimental`: plugin-facing or provisional exports that may still change in a minor release.
-- `@internal`: stripped from the published declarations. Do not use it on something another
-  package imports.
+- `@internal`: not API. On an export, it marks plumbing that is only there for another Holochart
+  package: it stays exported from its package, is not exported by `@mk7s/holochart` and is hidden
+  from the API reference. On a member of a class or an interface, it is left out of the published
+  declarations.
+
+`@mk7s/holochart` lists its exports by name (`packages/holochart/src/exports.ts`,
+`exports-3d.ts`). A new stable or experimental export of core, the runtime, components or a trace
+package has to be added there; `pnpm api:check` fails until it is.
 
 The exports of every package and their tags are recorded in `api-reports/`. If your change adds,
 removes or changes an export, run `pnpm api:report` and commit the updated reports with it; CI

@@ -21,9 +21,9 @@ newer can also `require()` it.
 
 - **`hierTraces`:** every trace module below, to register at once
 - **Trace modules:** `sunburst`, `treemap`, `icicle`, `sankey`
-- **Attribute schemas:** `sunburstAttributes`, `treemapAttributes`, `icicleAttributes`,
+- **Attribute schemas** (experimental): `sunburstAttributes`, `treemapAttributes`, `icicleAttributes`,
   `sankeyAttributes`
-- **Hierarchy helpers:** `buildHierarchy`, `partition`, `nodePath` (for preparing data or reading
+- **Hierarchy helpers** (experimental): `buildHierarchy`, `partition`, `nodePath` (for preparing data or reading
   click payloads), and `sankeyLayout`
 
 ## Usage

@@ -4,6 +4,8 @@
  * the output is gitignored.
  *
  * - Packages are documented from their TypeScript sources (`src/index.ts`), so no build is needed.
+ * - Exports and members tagged `@internal` are left out (`excludeInternal`); `@experimental` ones
+ *   are documented, with the tag.
  * - Thin packages are tolerated: a package without exports gets a placeholder page, a package that
  *   only re-exports others (the `@mk7s/holochart` bundle today) gets a page linking to them instead
  *   of a duplicate copy, and TypeScript errors in work-in-progress packages don't fail the docs
@@ -133,6 +135,8 @@ async function runTypeDoc(packages: readonly Pkg[]): Promise<boolean> {
     entryPoints: packages.map((p) => p.dir),
     packageOptions: {
       entryPoints: ['src/index.ts'],
+      // Exports tagged `@internal` (plumbing the packages share, docs/release/versioning.md) are not
+      // API: they get no page.
       excludeInternal: true,
       excludePrivate: true,
       readme: 'none',

@@ -23,9 +23,11 @@ newer can also `require()` it.
 - **`statsTraces`:** every trace module below, to register at once
 - **Trace modules:** `histogram`, `histogram2d`, `histogram2dcontour`, `box`, `violin`, `splom`,
   `parcoords`, `parcats`
-- **Attribute schemas:** `histogramAttributes`, `boxAttributes`, `violinAttributes`, and so on
+- **Attribute schemas** (experimental): `histogramAttributes`, `boxAttributes`,
+  `violinAttributes`, and so on
 - **`strip`:** builds a strip-plot figure (jittered points per category) from a table
-- Grid and contouring helpers that `@mk7s/holochart-traces-sci` builds on
+- Grid and contouring helpers that `@mk7s/holochart-traces-sci` builds on. These are tagged
+  `@internal`: not API, and not exported by `@mk7s/holochart`.
 
 ## Usage
 

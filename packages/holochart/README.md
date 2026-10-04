@@ -46,9 +46,12 @@ The Plotly-style functional API is exported too: `newPlot`, `react`, `restyle`, 
 
 ## What it exports
 
-- Everything from `@mk7s/holochart-runtime` (charts, updates, events, `register`) and
-  `@mk7s/holochart-core` (figure model, schema, validation, colors).
-- Every trace module and component, from the `traces-*` and `components` packages.
+- The stable and experimental exports of `@mk7s/holochart-runtime` (charts, updates, events,
+  `register`) and `@mk7s/holochart-core` (figure model, schema, validation, colors).
+- Every trace module and component, with their types and helpers, from the `traces-*` and
+  `components` packages.
+- Not the plumbing those packages share with each other (tagged `@internal`): the bundle lists
+  its exports by name.
 - Namespaces: `themes` (`@mk7s/holochart-themes`), `express` (`@mk7s/holochart-express`:
   `express.scatter(rows, { x, y })`), `render` (the low-level three.js primitives; experimental
   until the plugin API is stable), `fonts` and `symbols`.
