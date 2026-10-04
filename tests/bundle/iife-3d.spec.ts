@@ -24,7 +24,7 @@ test('3D add-on bundles only 3D code', () => {
   const sources = mapSources(BUNDLE_3D);
   const shared = sources.filter(
     (s) =>
-      !/(?:traces-3d\/src\/|render\/src\/primitives\/|render\/src\/precision\.ts$|^\.\.\/src\/iife-3d\.ts$|^\.\.\/src\/view3d\/view\.ts$)/.test(
+      !/(?:traces-3d\/src\/|render\/src\/primitives\/|render\/src\/precision\.ts$|^\.\.\/src\/(?:iife|exports)-3d\.ts$|^\.\.\/src\/view3d\/view\.ts$)/.test(
         s,
       ),
   );
@@ -63,8 +63,10 @@ test('3D add-on draws a scene with the main script’s three.js and render', asy
         'sceneOf',
         'sceneScales',
         'sceneExtent',
-        'buildSceneLayout',
+        'sceneCrossTraceLayout',
       ].filter((name) => typeof hc[name] !== 'function'),
+      // The package's `@internal` exports are not names of the global (only its public list is).
+      internal: ['buildSceneLayout', 'scenePicks'].filter((name) => name in hc),
     };
 
     // A minimal 3D trace on the scene contract (like examples/_lib/scene-points.ts): a flat red
@@ -146,7 +148,7 @@ test('3D add-on draws a scene with the main script’s three.js and render', asy
   });
 
   expect(result).toEqual({
-    exports: { traces3d: true, scene: true, functions: [] },
+    exports: { traces3d: true, scene: true, functions: [], internal: [] },
     allObject3D: true,
     walls: true,
     lines: true,
