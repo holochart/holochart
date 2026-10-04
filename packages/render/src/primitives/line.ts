@@ -58,6 +58,7 @@ import type {
   DataTransform,
   Primitive,
   PrimitiveContext,
+  RGBA,
   ScalarInput,
   ViewportSize,
 } from '../types.ts';
@@ -66,7 +67,6 @@ import {
   acquireInstancedGeometry,
   applyTransformUniforms,
   applyViewportUniforms,
-  colorAt,
   createPrimitiveMaterial,
   syncViewportUniforms,
   type ViewportSource,
@@ -213,7 +213,6 @@ export class LinePrimitive implements Primitive<LineData> {
   private readonly screenMatrix = Float64Array.from(PIXEL_SCREEN_MATRIX);
   private readonly throttle: ReturnType<typeof createThrottle>;
   private readonly tmpMatrix = new Matrix4();
-  private readonly color = [0, 0, 0, 1];
   private disposed = false;
 
   constructor(ctx: PrimitiveContext, data: Partial<LineData> = {}, options: LineOptions = {}) {
@@ -304,8 +303,7 @@ export class LinePrimitive implements Primitive<LineData> {
     const view = streamView(layout);
 
     if (!vertexColors) {
-      colorAt(this.data.color, 0, this.color);
-      (this.material.uniforms.uColor!.value as Vector4).fromArray(this.color);
+      (this.material.uniforms.uColor!.value as Vector4).fromArray(this.data.color as RGBA);
     } else if (!geometryChanged && patch.color !== undefined && buffers.colors) {
       fillLineColors(view, this.data.color, buffers.colors.subarray(layout.head * 4));
       markRange(buffers.colorBuffer!, layout.head, layout.vertexCount);

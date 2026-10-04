@@ -9,6 +9,21 @@
  * multiplies it by the axis direction (sign of `lastEdge - firstEdge`), so
  * every lookup runs on ascending "directed" edges `a_k = dir * (edge_k - firstEdge)` in
  * `[0, extent]`, whatever the input edge order.
+ *
+ * `hmLocal` takes the fragment's RTC data coordinate from its pixel center (2D pixel camera,
+ * ADR-008) rather than from the interpolated varying: the two triangles of the quad interpolate
+ * slightly differently, which made cell edges and gaps that fall on a pixel boundary jitter along
+ * the quad's diagonal. (The shader text ships in the bundle: the reasons and the uniforms' meaning
+ * live here.)
+ *
+ * Uniforms: `uZ` is R32F, linear texel index `k = j * nx + i`, holding `value - zOrigin` or a
+ * hole; `uEdges` is R32F, the directed x edges `[0, nx]`, then the y edges from texel `uYBase`;
+ * `uCount` = nx, ny; `uExtent` = signed `lastEdge - firstEdge` per axis; `uUniform` = 1 for
+ * equal-width cells on that axis (no texture search); `uSmoothing` = 0 nearest, 1 `'fast'`
+ * (index space), 2 `'best'` (data space); `uGap` = xgap, ygap in CSS px (smoothing off only);
+ * `uZRange` = zmin, zmax relative to zOrigin; `uResolution` = viewport size in CSS px (= 2D world
+ * px); `uViewport` = the GL viewport in device px; `uScale` / `uOffset` are shared with the
+ * vertex stage (`TRANSFORM_GLSL`). `vLocal` is the RTC data coordinate.
  */
 import { TRANSFORM_GLSL } from './common.glsl.ts';
 
@@ -28,8 +43,8 @@ export const HEATMAP_HOLE_MIN = 3.0e38;
 export const HEATMAP_VERTEX_SHADER = /* glsl */ `
 ${TRANSFORM_GLSL}
 
-uniform vec2 uExtent;  // signed (lastEdge - firstEdge) per axis
-out vec2 vLocal;       // RTC data coordinate
+uniform vec2 uExtent;
+out vec2 vLocal;
 
 void main() {
   vLocal = position.xy * uExtent;
@@ -38,30 +53,28 @@ void main() {
 `;
 
 export const HEATMAP_FRAGMENT_SHADER = /* glsl */ `
-uniform vec3 uScale;             // shared with the vertex stage (TRANSFORM_GLSL)
+uniform vec3 uScale;
 uniform vec3 uOffset;
-uniform highp sampler2D uZ;      // R32F, linear texel index k = j * nx + i: value - zOrigin, or a hole
-uniform highp sampler2D uEdges;  // R32F: directed x edges [0, nx], then y edges from uYBase
+uniform highp sampler2D uZ;
+uniform highp sampler2D uEdges;
 uniform sampler2D uLut;
 uniform float uLutSize;
-uniform ivec2 uCount;            // nx, ny
-uniform vec2 uExtent;            // signed (lastEdge - firstEdge) per axis
-uniform vec2 uUniform;           // 1 = equal-width cells on that axis (no texture search)
-uniform int uYBase;              // first y edge texel
-uniform int uSmoothing;          // 0 = nearest, 1 = 'fast' (index space), 2 = 'best' (data space)
-uniform vec2 uGap;               // xgap, ygap in CSS px (smoothing off only)
-uniform vec2 uZRange;            // zmin, zmax relative to zOrigin
+uniform ivec2 uCount;
+uniform vec2 uExtent;
+uniform vec2 uUniform;
+uniform int uYBase;
+uniform int uSmoothing;
+uniform vec2 uGap;
+uniform vec2 uZRange;
 uniform float uReverse;
 uniform float uOpacity;
-uniform vec2 uResolution;        // viewport size, CSS px (= 2D world px)
-uniform vec4 uViewport;          // GL viewport, device px
+uniform vec2 uResolution;
+uniform vec4 uViewport;
 
 in vec2 vLocal;
 out highp vec4 fragColor;
 
-// The fragment's RTC data coordinate from its pixel center (2D pixel camera, ADR-008), rather than
-// the interpolated varying: the two triangles of the quad interpolate slightly differently, which
-// made cell edges and gaps that fall on a pixel boundary jitter along the quad's diagonal.
+// The fragment's RTC data coordinate, from its pixel center.
 vec2 hmLocal() {
   vec2 world = (gl_FragCoord.xy - uViewport.xy) * uResolution / uViewport.zw;
   vec2 local = (world - uOffset.xy) / uScale.xy;

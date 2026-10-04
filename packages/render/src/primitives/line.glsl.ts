@@ -9,7 +9,40 @@
  * Along the segment, its quad ends where the pixels it can draw end (`quadReach` in
  * `line-join.ts`): the fragment shader discards what the neighbour owns at a join, so a quad
  * reaching half the line width and a pixel past every vertex ran it on fragments it then threw
- * away.
+ * away. `computeEnd` returns that reach, and in `former` how far the quad reached before (the
+ * join or cap shape and a full ramp). A segment whose ends differ in depth keeps the former
+ * quad: the corners carry the depths of A and B, so a shorter quad would tilt its depth, and
+ * 2.5D views and 3D scenes test depth. Under the 2D camera every depth is the same.
+ *
+ * Dashes: one dash and one gap ('dot', 'dash', 'longdash') take the first turn of the pattern
+ * loop without the loop, and longer patterns loop over the entries in use. A loop over all 16
+ * entries with a `break` made a dashed 1M-segment line cost a quarter more than a solid one
+ * (compilers unroll a constant bound and evaluate every turn).
+ *
+ * The shader text ships in the bundle, comments included: keep those short, and the layout and
+ * the reasons here.
+ *
+ * - **Attributes**: `aPrev`, `aA`, `aB`, `aNext` are the stream vertices (xyz = RTC position, w =
+ *   1 valid / 0 sentinel); `aDist` is the dash phase at A (mod period, px) and the screen length
+ *   of A→B when the phase was computed. `uJoin`: 0 miter, 1 round, 2 bevel; `uCap`: 0 butt, 1
+ *   round, 2 square.
+ * - **Varyings** (all flat): `vAB` = a.xy, b.xy in screen px; `vFrame` = dir.xy, len, half width;
+ *   `vTangents` = bisector tangent at A (xy) and B (zw), zero for caps; `vEndA` / `vEndB` = outer
+ *   normal xy, bevel distance, end mode; `vDash` = phase at A, dash px per screen px, alpha scale
+ *   for hairlines.
+ *
+ * - **Fragment position** comes from `gl_FragCoord` rather than an interpolated varying: both
+ *   segments at a join then see bit-identical positions, so the ownership test can never drop a
+ *   pixel on both sides (the notches at miter tips seen in spike B).
+ * - **Ownership** is an exact partition at joins (a shared edge: no anti-aliasing there). The
+ *   boundary is offset by `OWN_EPS` so it never sits exactly on pixel centers: at a symmetric
+ *   join the partition is axis-aligned through the vertex, the test is 0 at every pixel of that
+ *   column, and the two segments' independently rounded tangents could then both discard it (the
+ *   white notches at miter tips in spike B). Rounding error (~1e-6 px) is far below `OWN_EPS`, so
+ *   both sides always agree.
+ * - **Dash units per screen px** (`vDash.y`) are exact (1.0) right after a phase recompute and
+ *   drift slightly while a throttled recompute is pending, which keeps the phase continuous at
+ *   the next vertex.
  */
 import { SCREEN_GLSL, TRANSFORM_GLSL } from './common.glsl.ts';
 import { QUAD_FRINGE, QUAD_SLACK } from './line-join.ts';
@@ -21,7 +54,6 @@ export const LINE_VERTEX_SHADER = /* glsl */ `
 ${TRANSFORM_GLSL}
 ${SCREEN_GLSL}
 
-// Stream vertices (prev, A, B, next): xyz = RTC position, w = 1 valid / 0 sentinel.
 in vec4 aPrev;
 in vec4 aA;
 in vec4 aB;
@@ -31,19 +63,18 @@ in vec4 aColorA;
 in vec4 aColorB;
 #endif
 in float aWidth;
-// x = dash phase at A (mod period, px), y = screen length of A→B when the phase was computed.
 in vec2 aDist;
 
-uniform float uJoin;       // 0 miter, 1 round, 2 bevel
-uniform float uCap;        // 0 butt, 1 round, 2 square
+uniform float uJoin;
+uniform float uCap;
 uniform float uMiterLimit;
 
-flat out vec4 vAB;         // a.xy, b.xy in screen px
-flat out vec4 vFrame;      // dir.xy, len, half width
-flat out vec4 vTangents;   // bisector tangent at A (xy) and B (zw); zero for caps
-flat out vec4 vEndA;       // outer normal xy, bevel distance, end mode
+flat out vec4 vAB;
+flat out vec4 vFrame;
+flat out vec4 vTangents;
+flat out vec4 vEndA;
 flat out vec4 vEndB;
-flat out vec3 vDash;       // phase at A, dash px per screen px, alpha scale for hairlines
+flat out vec3 vDash;
 #ifndef LINE_UNIFORM_COLOR
 flat out vec4 vColorA;
 flat out vec4 vColorB;
@@ -55,8 +86,6 @@ const float END_SQUARE = 2.0;
 const float END_ROUND = 3.0;
 const float END_BEVEL = 4.0;
 const float W_EPS = 1e-5;
-// In units of the anti-aliasing ramp (line-join.ts): the quad's margin past the stroke's sides, and
-// the room it keeps around the pixels a segment draws (half a pixel: the canvas is multisampled).
 const float QUAD_FRINGE = ${QUAD_FRINGE.toFixed(4)};
 const float QUAD_SLACK = ${QUAD_SLACK.toFixed(4)};
 
@@ -65,10 +94,7 @@ vec2 safeNormalize(vec2 v, vec2 fallback) {
   return l > 1e-6 ? v / l : fallback;
 }
 
-// Mirrors computeEnd() and quadReach() in line-join.ts. Returns how far the quad reaches beyond
-// the vertex along the segment: no further than the pixels this segment draws there. former is
-// how far it reached before plan E16.9 (the join or cap shape and a full ramp), which a segment
-// that crosses depths still uses.
+// Mirrors computeEnd() and quadReach() in line-join.ts. Returns the quad's reach past the vertex.
 float computeEnd(
   vec2 dIn, vec2 dOut, bool isJoin, float hw, float aa,
   out vec2 tangent, out vec4 info, out float former
@@ -79,8 +105,6 @@ float computeEnd(
     tangent = vec2(0.0);
     float mode = uCap < 0.5 ? END_BUTT : (uCap < 1.5 ? END_ROUND : END_SQUARE);
     info = vec4(0.0, 0.0, 0.0, mode);
-    // A butt cap draws nothing past the vertex, unless the disc of a round join at the other end
-    // of a short segment reaches back over it.
     return (mode == END_BUTT && (uJoin < 0.5 || uJoin > 1.5) ? 0.0 : hw) + fringe;
   }
   tangent = safeNormalize(dIn + dOut, dOut);
@@ -94,8 +118,6 @@ float computeEnd(
   float tanHalf = sqrt(max(0.0, 1.0 - cosHalf * cosHalf)) / max(cosHalf, 1e-4);
   float ext = mode == END_MITER ? max(hw, hw * tanHalf) : hw;
   former = ext + aa;
-  // The neighbour owns everything before the bisector, which the stroke and its fringe cross at
-  // most (hw + fringe) * tanHalf behind the vertex; never beyond the join shape and a full ramp.
   return min(former, (hw + fringe) * tanHalf + QUAD_SLACK * aa);
 }
 
@@ -144,9 +166,7 @@ void main() {
   float formerB;
   float reachA = computeEnd(dIn, dir, hasPrev, hw, aa, tA, endA, formerA);
   float reachB = computeEnd(dir, dOut, hasNext, hw, aa, tB, endB, formerB);
-  // The quad's corners carry the depths of A and B, so a shorter quad tilts the depth of a
-  // segment whose ends differ in depth. Such a segment keeps the former quad (2.5D views and 3D
-  // scenes test depth); under the 2D camera every depth is the same.
+  // A segment that crosses depths keeps the former quad.
   if (cA.z / cA.w != cB.z / cB.w) {
     reachA = formerA;
     reachB = formerB;
@@ -168,8 +188,6 @@ void main() {
   vTangents = vec4(tA, tB);
   vEndA = endA;
   vEndB = endB;
-  // Dash units per screen px: exact (1.0) right after a phase recompute; drifts slightly while a
-  // throttled recompute is pending, which keeps the phase continuous at the next vertex.
   vDash = vec3(aDist.x, len > 1e-6 ? aDist.y / len : 1.0, alphaScale);
 #ifndef LINE_UNIFORM_COLOR
   vColorA = aColorA;
@@ -216,8 +234,7 @@ float endDistance(vec4 info, vec2 rel, float beyond, float hw) {
   return -1e20; // miter: bounded by the ownership clip only
 }
 
-// Distance to the "on" interval [a, b] of the pattern and to its copies one period before and
-// after, combined with the nearest so far.
+// The nearest of best and the distances to the "on" interval [a, b] and its two neighbours.
 float hcDashInterval(float best, float m, float a, float b) {
   best = min(best, max(a - m, m - b));
   best = min(best, max(a - (m - uDashPeriod), (m - uDashPeriod) - b));
@@ -229,9 +246,6 @@ float hcDashInterval(float best, float m, float a, float b) {
 // dashDistance() in line-dash.ts).
 float hcDashDistance(float along) {
   float m = along - floor(along / uDashPeriod) * uDashPeriod;
-  // One dash and one gap ('dot', 'dash', 'longdash'): the first turn of the loop below, without
-  // the loop. Looping over all ${DASH_N} entries with a break made a dashed 1M-segment line cost
-  // a quarter more than a solid one: compilers unroll a constant bound and evaluate every turn.
   if (uDashCount < 2.5) return hcDashInterval(1e20, m, 0.0, 0.0 + uDash[0]);
   float best = 1e20;
   float start = 0.0;
@@ -246,9 +260,7 @@ float hcDashDistance(float along) {
 }
 
 void main() {
-  // Fragment position in screen px, from gl_FragCoord rather than an interpolated varying: both
-  // segments at a join then see bit-identical positions, so the ownership test below can never
-  // drop a pixel on both sides (the notches at miter tips seen in spike B).
+  // Screen px, from gl_FragCoord: bit-identical for both segments at a join.
   vec2 vPos = (gl_FragCoord.xy - uViewport.xy) / uViewport.zw * uResolution;
   vec2 a = vAB.xy;
   vec2 b = vAB.zw;
@@ -258,11 +270,7 @@ void main() {
   vec2 rel = vPos - a;
   vec2 relB = vPos - b;
 
-  // Exact ownership partition at joins (shared edge: no anti-aliasing here). The boundary is offset
-  // by OWN_EPS so it never sits exactly on pixel centers: at a symmetric join the partition is
-  // axis-aligned through the vertex, the test is 0 at every pixel of that column, and the two
-  // segments' independently rounded tangents could then both discard it (the white notches at miter
-  // tips in spike B). Rounding error (~1e-6 px) is far below OWN_EPS, so both sides always agree.
+  // Exact ownership partition at joins, offset by OWN_EPS off the pixel centers.
   if (vTangents.xy != vec2(0.0) && dot(rel, vTangents.xy) < OWN_EPS) discard;
   if (vTangents.zw != vec2(0.0) && dot(relB, vTangents.zw) >= OWN_EPS) discard;
 
