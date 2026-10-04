@@ -15,6 +15,10 @@
  * the stability tags, and the result is written or compared. The reports depend only on the built
  * declarations and the pinned API Extractor, so regenerating is deterministic.
  *
+ * Two things are not API Extractor's: the report of `@mk7s/holochart/global` (the members of
+ * `window.Holochart`, read with the compiler: `GLOBALS`), and a check that the full bundle's export
+ * list matches the tags of the packages it lists (`FULL_BUNDLE`), which fails both commands.
+ *
  * API Extractor bundles its own TypeScript (5.9, ADR-015 "Alternatives"), older than the
  * repo's. It only has to parse declaration files, which TypeScript 6 writes in syntax 5.9 reads;
  * its "newer TypeScript" notice is printed once. Compiler errors it reports are printed, since
@@ -38,11 +42,16 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
+import ts from 'typescript';
 import {
   finishReport,
+  globalReport,
+  listedBundleProblems,
   packageStability,
   publicNames,
   reportFileName,
+  type GlobalMember,
+  type ListedBundle,
   type ReportPackage,
 } from './report.ts';
 
@@ -54,6 +63,22 @@ const MAX_DIFF_LINES = 80;
 interface Package extends ReportPackage {
   /** Absolute package directory. */
   readonly dir: string;
+  /** Absolute path of the declarations the report is made from. */
+  readonly entry: string;
+  /** Set for the types of a global ({@link GLOBALS}): reported by {@link globalReport}. */
+  readonly global?: GlobalTypes;
+}
+
+/** A hand-written declaration file that types a global of a script-tag build. */
+interface GlobalTypes {
+  /** The file, relative to the package. */
+  readonly file: string;
+  /** The exported type of the global. */
+  readonly type: string;
+  /** The global variable. */
+  readonly variable: string;
+  /** Report of the package whose exports the global's members are. */
+  readonly signatures: string;
 }
 
 /** A package's bundled declarations: what API Extractor analyses. */
@@ -63,6 +88,81 @@ function entryPoint(dir: string): string {
     throw new Error(`${relative(ROOT, entry)} is missing: run \`pnpm build:packages\` first.`);
   }
   return entry;
+}
+
+/**
+ * Subpath entry points that type a global, by package and subpath. They get a report of their own
+ * (the members of the global), not API Extractor's: such a file builds the global's type from the
+ * package's own bundled declarations, which API Extractor would report a second time, in full.
+ */
+const GLOBALS: Readonly<Record<string, Readonly<Record<string, GlobalTypes>>>> = {
+  '@mk7s/holochart': {
+    // `window.Holochart`, the script-tag build's global.
+    global: {
+      file: 'global.d.ts',
+      type: 'HolochartGlobal',
+      variable: 'Holochart',
+      signatures: 'holochart.api.md',
+    },
+  },
+};
+
+/**
+ * The full bundle lists its exports by name (`packages/holochart/src/exports.ts`,
+ * `exports-3d.ts`): everything the packages below export but their `@internal` plumbing. The
+ * other packages are namespaces of the bundle (`render`, `themes`, `express`) or not in it
+ * (`locales`).
+ */
+const FULL_BUNDLE: ListedBundle = {
+  name: '@mk7s/holochart',
+  packages: [
+    '@mk7s/holochart-core',
+    '@mk7s/holochart-runtime',
+    '@mk7s/holochart-components',
+    '@mk7s/holochart-traces-basic',
+    '@mk7s/holochart-traces-stats',
+    '@mk7s/holochart-traces-sci',
+    '@mk7s/holochart-traces-finance',
+    '@mk7s/holochart-traces-hier',
+    '@mk7s/holochart-traces-3d',
+  ],
+  // How a partial bundle wires 2.5D bars; the full bundle does it itself.
+  except: ['setBarExtruder', 'BarExtruder'],
+};
+
+/** What reading declarations needs of the compiler (as API Extractor is configured below). */
+const DECLARATION_OPTIONS: ts.CompilerOptions = {
+  target: ts.ScriptTarget.ES2022,
+  lib: ['lib.es2023.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'],
+  module: ts.ModuleKind.ESNext,
+  moduleResolution: ts.ModuleResolutionKind.Bundler,
+  strict: true,
+  skipLibCheck: true,
+  types: [],
+  noEmit: true,
+};
+
+/** The members of the global type `pkg.global` declares, read with the compiler. */
+function globalMembers(pkg: Package & { global: GlobalTypes }): GlobalMember[] {
+  const program = ts.createProgram({ rootNames: [pkg.entry], options: DECLARATION_OPTIONS });
+  const checker = program.getTypeChecker();
+  const source = program.getSourceFile(pkg.entry);
+  const module = source && checker.getSymbolAtLocation(source);
+  const symbol =
+    module && checker.getExportsOfModule(module).find((s) => s.name === pkg.global.type);
+  if (!symbol) {
+    throw new Error(`${relative(ROOT, pkg.entry)} does not export the type ${pkg.global.type}.`);
+  }
+  const members = checker
+    .getPropertiesOfType(checker.getDeclaredTypeOfSymbol(symbol))
+    .map((member) => ({
+      name: member.name,
+      optional: (member.flags & ts.SymbolFlags.Optional) !== 0,
+    }));
+  if (members.length === 0) {
+    throw new Error(`${pkg.global.type} has no members: is ${pkg.name} built?`);
+  }
+  return members;
 }
 
 /** Every publishable package of the workspace (`packages/*`, not private), by directory name. */
@@ -77,12 +177,24 @@ function publishedPackages(): Package[] {
       private?: boolean;
     };
     if (manifest.private) continue;
+    const stability = packageStability(readFileSync(join(dir, 'src/index.ts'), 'utf8'));
     packages.push({
       name: manifest.name,
       dir,
-      stability: packageStability(readFileSync(join(dir, 'src/index.ts'), 'utf8')),
+      entry: entryPoint(dir),
+      stability,
       publicNames: publicNames(readFileSync(entryPoint(dir), 'utf8')),
     });
+    for (const [subpath, global] of Object.entries(GLOBALS[manifest.name] ?? {})) {
+      packages.push({
+        name: `${manifest.name}/${subpath}`,
+        dir,
+        entry: join(dir, global.file),
+        stability,
+        publicNames: new Set(),
+        global,
+      });
+    }
   }
   return packages;
 }
@@ -91,7 +203,7 @@ let versionNoticePrinted = false;
 
 /** The report API Extractor generates for `pkg`, unprocessed. */
 function extract(pkg: Package, tempDir: string): string {
-  const entry = entryPoint(pkg.dir);
+  const { entry } = pkg;
   const fileName = reportFileName(pkg.name);
   const none = { logLevel: ExtractorLogLevel.None };
   const config = ExtractorConfig.prepare({
@@ -138,6 +250,12 @@ function extract(pkg: Package, tempDir: string): string {
           // docs gates' business.
           default: none,
           'ae-forgotten-export': { logLevel: ExtractorLogLevel.Warning, addToApiReportFile: true },
+          // A stable or experimental export whose signature needs an `@internal` type: flagged
+          // in the report like a forgotten export, so the leak is fixed or shows in review.
+          'ae-incompatible-release-tags': {
+            logLevel: ExtractorLogLevel.Warning,
+            addToApiReportFile: true,
+          },
         },
         tsdocMessageReporting: { default: none },
       },
@@ -183,15 +301,25 @@ function main(): void {
   // API Extractor copies its report here (unused) and does not create the folder itself.
   mkdirSync(join(tempDir, 'report'));
   const stale: string[] = [];
+  const unlisted: string[] = [];
   let written = 0;
   try {
     if (!check) mkdirSync(REPORTS, { recursive: true });
     const expected = new Set<string>();
+    const reports = new Map<string, string>();
     for (const pkg of packages) {
       const fileName = reportFileName(pkg.name);
       expected.add(fileName);
       const path = join(REPORTS, fileName);
-      const fresh = finishReport(extract(pkg, tempDir), pkg, experimental);
+      const fresh = pkg.global
+        ? globalReport(
+            pkg.name,
+            pkg.global.variable,
+            pkg.global.signatures,
+            globalMembers({ ...pkg, global: pkg.global }),
+          )
+        : finishReport(extract(pkg, tempDir), pkg, experimental);
+      reports.set(pkg.name, fresh);
       const committed = existsSync(path) ? readFileSync(path, 'utf8') : undefined;
       if (committed === fresh) continue;
       if (!check) {
@@ -234,8 +362,17 @@ function main(): void {
         console.log(`  removed api-reports/${file}`);
       }
     }
+    unlisted.push(...listedBundleProblems(FULL_BUNDLE, reports));
   } finally {
     rmSync(tempDir, { recursive: true, force: true });
+  }
+
+  if (unlisted.length > 0) {
+    console.error(
+      `\n${FULL_BUNDLE.name} and the packages it lists disagree (see api-reports/README.md):\n` +
+        unlisted.map((problem) => `  - ${problem}`).join('\n'),
+    );
+    process.exitCode = 1;
   }
 
   if (stale.length > 0) {
