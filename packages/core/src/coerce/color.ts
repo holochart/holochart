@@ -9,11 +9,11 @@
 import { color as d3color } from 'd3-color';
 
 /** sRGB 0–1 RGBA, alpha not premultiplied — the render layer's color format. @experimental */
-export type RGBA = readonly [r: number, g: number, b: number, a: number];
+export type RGBAColor = readonly [r: number, g: number, b: number, a: number];
 
 const CACHE_LIMIT = 1024;
 const canonicalCache = new Map<string, string | null>();
-const rgbaCache = new Map<string, RGBA | null>();
+const rgbaCache = new Map<string, RGBAColor | null>();
 
 function remember<V>(cache: Map<string, V>, key: string, value: V): V {
   // Colors in real figures are a small set; a full reset is cheaper than LRU bookkeeping.
@@ -45,7 +45,7 @@ export function isValidColor(value: unknown): value is string {
  * Results are cached and frozen, so callers must not mutate them.
  * @experimental
  */
-export function toRGBA(value: string): RGBA | null {
+export function toRGBA(value: string): RGBAColor | null {
   const hit = rgbaCache.get(value);
   if (hit !== undefined) return hit;
   const c = d3color(value.trim());
@@ -53,7 +53,7 @@ export function toRGBA(value: string): RGBA | null {
   const { r, g, b, opacity } = c.rgb();
   // d3 parses 'transparent' with NaN channels; treat any NaN channel as 0.
   const clamp = (v: number): number => (Number.isNaN(v) ? 0 : Math.min(1, Math.max(0, v)));
-  const rgba: RGBA = Object.freeze([
+  const rgba: RGBAColor = Object.freeze([
     clamp(r / 255),
     clamp(g / 255),
     clamp(b / 255),
@@ -69,7 +69,7 @@ export function toRGBA(value: string): RGBA | null {
  */
 export function toRGBAArray(
   colors: ArrayLike<unknown>,
-  fallback: RGBA = [0, 0, 0, 1],
+  fallback: RGBAColor = [0, 0, 0, 1],
   out: Float32Array = new Float32Array(colors.length * 4),
 ): Float32Array {
   for (let i = 0; i < colors.length; i++) {

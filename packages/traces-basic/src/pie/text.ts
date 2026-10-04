@@ -29,7 +29,7 @@ import {
   type FullLayout,
   type FullTrace,
   type Locale,
-  type RGBA,
+  type RGBAColor,
   type UniformText,
   type UniformTextItem,
 } from '@mk7s/holochart-core';
@@ -187,14 +187,14 @@ function toFont(fonts: readonly FontContainer[], pts: readonly number[]): TextFo
   };
 }
 
-function colorOf(v: unknown): RGBA | null {
+function colorOf(v: unknown): RGBAColor | null {
   return typeof v === 'string' ? toRGBA(v) : null;
 }
 
 /** A resolved label font and color. */
 export interface LabelFont {
   readonly font: TextFont;
-  readonly color: RGBA;
+  readonly color: RGBAColor;
 }
 
 /**
@@ -636,7 +636,7 @@ export interface PieLabel {
   readonly font: TextFont;
   /** Styled runs at the fitted size (E2.10), when the label mixes styles. */
   readonly runs?: TextRunLines;
-  readonly color: RGBA;
+  readonly color: RGBAColor;
   /** Index in `calc.slices`, or -1 for the title. */
   readonly slice: number;
   readonly outside: boolean;
@@ -645,7 +645,7 @@ export interface PieLabel {
 /** One leader line. */
 export interface PieLeaderLine {
   readonly points: readonly (readonly [number, number])[];
-  readonly color: RGBA;
+  readonly color: RGBAColor;
   readonly width: number;
 }
 

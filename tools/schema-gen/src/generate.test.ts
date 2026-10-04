@@ -38,8 +38,13 @@ describe('generated files', async () => {
     for (const type of ['scatter', 'bar', 'bar3d', 'scatter3d', 'pie', 'sankey', 'splom']) {
       expect(types).toContain(type);
     }
-    // The modules the full bundle extends get types of their own, with the 2.5D attributes.
-    expect(figure).toMatch(/export type BarTrace = TracesBasicBarTrace & ExtrusionAttributes;/);
+    // The modules the full bundle extends get types of their own, with the 2.5D attributes, built
+    // on the package's `Base…` type.
+    expect(figure).toMatch(/export type BarTrace = BaseBarTrace & ExtrusionAttributes;/);
+    const basic = files['packages/traces-basic/src/generated/traces.ts']!;
+    expect(basic).toMatch(/export type BaseBarTrace = /);
+    expect(basic).toMatch(/export type TableTrace = /);
+    expect(basic).not.toMatch(/export type BarTrace = /);
   });
 
   it.each(Object.entries(files))('%s is up to date', async (rel, expected) => {

@@ -76,7 +76,7 @@ export type EditType = EditFlag | readonly EditFlag[];
 export type AttrRole = 'data' | 'style' | 'info' | 'layout';
 
 /** Values allowed in `enumerated.values` and `flaglist.extras`. @experimental */
-export type Primitive = string | number | boolean;
+export type PrimitiveValue = string | number | boolean;
 
 /** Any JS typed array except `BigInt64Array`/`BigUint64Array` (charts deal in doubles). */
 export type TypedArray =
@@ -188,7 +188,7 @@ export interface AttrConstraints {
   /** Clamp out-of-range numbers instead of falling back to `dflt`. */
   readonly clamp?: boolean;
   /** Allowed values for `enumerated`. */
-  readonly values?: readonly Primitive[];
+  readonly values?: readonly PrimitiveValue[];
   /**
    * `enumerated` only: also accept values this predicate approves, e.g. marker symbols registered
    * at runtime (plan E8.11). Not serialized (`plot-schema.json` lists `values` only).
@@ -200,7 +200,7 @@ export interface AttrConstraints {
    * Special values accepted verbatim: flaglist extras (`'none'`), numeric extras (`'auto'`),
    * subplot-id extras (`'paper'`, `'free'`).
    */
-  readonly extras?: readonly Primitive[];
+  readonly extras?: readonly PrimitiveValue[];
   /** Accept per-point arrays in addition to a scalar value. */
   readonly arrayOk?: boolean;
   /** Reject empty strings (`string`). */

@@ -8,7 +8,7 @@ import { buildFigure } from '../core/engine.ts';
 import { expressFunction } from '../core/render.ts';
 import { trendlineConfig, type TrendlineArgs } from '../core/trendline.ts';
 import type {
-  AnimationOptions,
+  AnimationFrameOptions,
   AxisOptions,
   ColumnRef,
   CommonOptions,
@@ -44,7 +44,7 @@ export interface ScatterOptions
     ContinuousColorOptions,
     HoverOptions,
     FacetOptions,
-    AnimationOptions,
+    AnimationFrameOptions,
     AxisOptions,
     SymbolOptions,
     ErrorBarOptions,
@@ -68,7 +68,7 @@ export interface LineOptions
     DiscreteColorOptions,
     HoverOptions,
     FacetOptions,
-    AnimationOptions,
+    AnimationFrameOptions,
     AxisOptions,
     SymbolOptions,
     LineDashOptions,

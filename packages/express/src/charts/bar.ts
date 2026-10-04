@@ -8,7 +8,7 @@ import { buildFigure } from '../core/engine.ts';
 import { expressFunction } from '../core/render.ts';
 import type { DataInput } from '../data/table.ts';
 import type {
-  AnimationOptions,
+  AnimationFrameOptions,
   AxisOptions,
   ColumnRef,
   CommonOptions,
@@ -41,7 +41,7 @@ export interface BarOptions
     PatternOptions,
     HoverOptions,
     FacetOptions,
-    AnimationOptions,
+    AnimationFrameOptions,
     AxisOptions,
     ErrorBarOptions {
   /** Column of bar bases (where each bar starts). */
@@ -70,7 +70,7 @@ export interface TimelineOptions
     PatternOptions,
     HoverOptions,
     FacetOptions,
-    AnimationOptions {
+    AnimationFrameOptions {
   /** Column of start dates (ISO strings, `Date`s or ms). */
   readonly xStart: ColumnRef;
   /** Column of end dates. */

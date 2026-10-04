@@ -10,7 +10,7 @@
  *   paper (Plotly's `_hovered` line).
  * - Pattern: `marker.pattern` per node, on the paper unless it overlays the fill.
  */
-import { toRGBA, type FullTrace, type RGBA } from '@mk7s/holochart-core';
+import { toRGBA, type FullTrace, type RGBAColor } from '@mk7s/holochart-core';
 import type { HierNode } from '../hierarchy/build.ts';
 import { DEFAULT_LINE } from '../hierarchy/colors.ts';
 import { nodeAttr } from '../hierarchy/format.ts';
@@ -19,15 +19,15 @@ import { contrastColor } from '../hierarchy/text.ts';
 import { fadeColor, nodePattern } from '../hierarchy/view.ts';
 import type { RectGeometry } from './geometry.ts';
 
-const GREY: RGBA = [0.5, 0.5, 0.5, 1];
-const CLEAR: RGBA = [0, 0, 0, 0];
+const GREY: RGBAColor = [0.5, 0.5, 0.5, 1];
+const CLEAR: RGBAColor = [0, 0, 0, 0];
 
 /** How a tile or path bar segment is drawn. */
 export interface RectStyle {
   /** Fill, alpha multiplied by `opacity`. */
-  readonly fill: RGBA;
+  readonly fill: RGBAColor;
   /** Outline color, alpha multiplied by `opacity`. */
-  readonly line: RGBA;
+  readonly line: RGBAColor;
   /** Outline width, px. */
   readonly width: number;
   /** `leaf.opacity` for icicle leaves, else 1 (patterns fade with it too). */
@@ -57,7 +57,7 @@ function combine(front: RGB255, back: RGB255): RGB255 {
  * `color` faded `n` steps towards `background` (Plotly's treemap `depthfade`): the faded color is
  * the background at 75% over the color, and step `i` lays it at `0.5·i/n` opacity over the result.
  */
-export function depthfadeColor(color: string, background: string, n: number): RGBA {
+export function depthfadeColor(color: string, background: string, n: number): RGBAColor {
   let fill = rgb255(color);
   if (n > 0) {
     const bg = rgb255(background);
@@ -105,7 +105,7 @@ export function rectStyles(
   const leafOpacity = (trace['leaf'] as { opacity?: unknown } | undefined)?.opacity;
   const background = typeof paper === 'string' ? paper : '#fff';
   // Nodes share few colors: parse (and fade) each color once.
-  const parsed = new Map<string, { rgba: RGBA | null; faded: RGBA[] }>();
+  const parsed = new Map<string, { rgba: RGBAColor | null; faded: RGBAColor[] }>();
   const parse = (css: string) => {
     let p = parsed.get(css);
     if (!p) parsed.set(css, (p = { rgba: toRGBA(css), faded: [] }));

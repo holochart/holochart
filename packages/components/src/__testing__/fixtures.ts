@@ -8,12 +8,12 @@ import {
   createScale,
   supplyDefaults,
   type AxisType,
-  type ComponentModule,
+  type CoreComponentModule,
   type FullAxis,
   type FullLayout,
   type FullTrace,
   type Registry,
-  type TraceModule,
+  type CoreTraceModule,
 } from '@mk7s/holochart-core';
 import type { ViewportRect } from '@mk7s/holochart-render';
 import type { AxisLike } from '../axes/geometry.ts';
@@ -24,7 +24,7 @@ import type { MeasureLine } from '../shared/text.ts';
 export const measure: MeasureLine = (line, font) => line.length * font.size * 0.5;
 
 /** A minimal cartesian trace module (enough for supply-defaults and legend entries). */
-export function fakeTraceModule(extra: Partial<TraceModule> = {}): TraceModule {
+export function fakeTraceModule(extra: Partial<CoreTraceModule> = {}): CoreTraceModule {
   return {
     type: 'fake',
     categories: ['cartesian', 'showLegend'],
@@ -48,8 +48,8 @@ export function fakeTraceModule(extra: Partial<TraceModule> = {}): TraceModule {
 
 /** Registry with the fake trace type and the given components. */
 export function testRegistry(
-  components: readonly ComponentModule[] = [],
-  trace: TraceModule = fakeTraceModule(),
+  components: readonly CoreComponentModule[] = [],
+  trace: CoreTraceModule = fakeTraceModule(),
 ): Registry {
   const registry = createRegistry().register(trace);
   for (const c of components) registry.registerComponent(c);

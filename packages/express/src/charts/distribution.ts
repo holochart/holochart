@@ -8,7 +8,7 @@ import { buildFigure } from '../core/engine.ts';
 import { expressFunction } from '../core/render.ts';
 import type { DataInput } from '../data/table.ts';
 import type {
-  AnimationOptions,
+  AnimationFrameOptions,
   AxisOptions,
   CommonOptions,
   DiscreteColorOptions,
@@ -30,7 +30,7 @@ export interface HistogramOptions
     PatternOptions,
     HoverOptions,
     FacetOptions,
-    AnimationOptions,
+    AnimationFrameOptions,
     AxisOptions {
   /** Aggregation of the other column (`y` of a vertical histogram): default `'count'`, `'sum'` when both x and y are given. */
   readonly histfunc?: 'count' | 'sum' | 'avg' | 'min' | 'max';
@@ -58,7 +58,7 @@ interface CategoricalOptions
     DiscreteColorOptions,
     HoverOptions,
     FacetOptions,
-    AnimationOptions,
+    AnimationFrameOptions,
     AxisOptions {}
 
 /** Options of {@link box}: px.box's arguments in camelCase. */

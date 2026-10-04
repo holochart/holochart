@@ -78,7 +78,7 @@ export interface LayoutDefaultsContext {
  * cartesian traces) are added by the registry.
  * @experimental
  */
-export interface TraceModule<C extends Children = Children> {
+export interface CoreTraceModule<C extends Children = Children> {
   readonly type: string;
   readonly categories: readonly TraceCategory[];
   readonly schema: ObjectNode<C>;
@@ -117,7 +117,7 @@ export interface TraceModule<C extends Children = Children> {
  * are always active, unlike trace-module layout attributes.
  * @experimental
  */
-export interface ComponentModule {
+export interface CoreComponentModule {
   readonly name: string;
   readonly layoutSchema?: Children;
   supplyLayoutDefaults?(
@@ -135,13 +135,13 @@ export interface ComponentModule {
  */
 export interface Registry extends TemplateSource {
   /** Register trace modules. Re-registering a type replaces it. Returns the registry. */
-  register(...modules: TraceModule[]): Registry;
+  register(...modules: CoreTraceModule[]): Registry;
   /** Register layout components. Re-registering a name replaces it. Returns the registry. */
-  registerComponent(...components: ComponentModule[]): Registry;
-  getModule(type: string): TraceModule | undefined;
+  registerComponent(...components: CoreComponentModule[]): Registry;
+  getModule(type: string): CoreTraceModule | undefined;
   /** Registered trace types in registration order. */
   traceTypes(): string[];
-  components(): readonly ComponentModule[];
+  components(): readonly CoreComponentModule[];
   /** Full schema for a trace type: common attributes merged with the module's schema. */
   getTraceSchema(type: string): ObjectNode | undefined;
   /** Base layout schema merged with every module's and component's layout attributes. */

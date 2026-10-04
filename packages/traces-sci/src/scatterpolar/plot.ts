@@ -13,7 +13,7 @@
  * Zooming and rotating the subplot redraw the views through the subplot's change notification
  * (no pipeline run), so drags stay interactive.
  */
-import { toRGBA, type FullTrace, type RGBA } from '@mk7s/holochart-core';
+import { toRGBA, type FullTrace, type RGBAColor } from '@mk7s/holochart-core';
 import {
   createLazyFillPrimitive,
   LinePrimitive,
@@ -48,7 +48,8 @@ function opacityOf(trace: FullTrace): number {
 function lineStyle(trace: FullTrace) {
   const line = (trace['line'] ?? {}) as { color?: unknown; width?: unknown; dash?: unknown };
   return {
-    color: (typeof line.color === 'string' ? toRGBA(line.color) : null) ?? ([0, 0, 0, 1] as RGBA),
+    color:
+      (typeof line.color === 'string' ? toRGBA(line.color) : null) ?? ([0, 0, 0, 1] as RGBAColor),
     width: typeof line.width === 'number' ? line.width : 2,
     dash: typeof line.dash === 'string' ? line.dash : 'solid',
     opacity: opacityOf(trace),
@@ -56,7 +57,7 @@ function lineStyle(trace: FullTrace) {
 }
 
 /** Fill color: `fillcolor`, else the line color at half opacity. */
-export function fillColorOf(trace: FullTrace): RGBA {
+export function fillColorOf(trace: FullTrace): RGBAColor {
   const c = trace['fillcolor'];
   const rgba = typeof c === 'string' ? toRGBA(c) : null;
   if (rgba) return rgba;

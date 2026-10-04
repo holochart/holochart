@@ -8,7 +8,13 @@
  * Pure: labels are in data space (linear coordinates), so zoom only moves them; the automatic
  * size depends on the cell size in px and is recomputed by the view when that changes.
  */
-import { localeOf, toRGBA, type FullLayout, type FullTrace, type RGBA } from '@mk7s/holochart-core';
+import {
+  localeOf,
+  toRGBA,
+  type FullLayout,
+  type FullTrace,
+  type RGBAColor,
+} from '@mk7s/holochart-core';
 import {
   sampleColorscale,
   textContrastColor,
@@ -32,7 +38,7 @@ export interface CellText {
   readonly lines: number;
   /** Longest line, in characters (Plotly sizes by characters). */
   readonly chars: number;
-  readonly color: RGBA;
+  readonly color: RGBAColor;
 }
 
 /** The labels of every cell (see the module comment), in data space. */
@@ -79,7 +85,7 @@ export function cellTexts(
         { fallback: '', locale },
       );
       if (!text) continue;
-      let color: RGBA;
+      let color: RGBAColor;
       if (fixed) color = fixed;
       else if (empty) color = textContrastColor(background);
       else {

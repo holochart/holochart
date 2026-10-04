@@ -11,7 +11,7 @@ import { groupValue } from '../core/labels.ts';
 import { expressFunction } from '../core/render.ts';
 import { isMissing, type DataInput } from '../data/table.ts';
 import type {
-  AnimationOptions,
+  AnimationFrameOptions,
   ColumnRef,
   CommonOptions,
   ContinuousColorOptions,
@@ -25,7 +25,7 @@ import { continuousColor, opacityPatch, tailRoles } from './shared.ts';
 
 /** Options every 3D function takes: the columns, error bars and the scene's axes. */
 export interface Chart3dOptions
-  extends CommonOptions, DiscreteColorOptions, HoverOptions, AnimationOptions, SymbolOptions {
+  extends CommonOptions, DiscreteColorOptions, HoverOptions, AnimationFrameOptions, SymbolOptions {
   /** Column of x values. */
   readonly x?: ColumnRef;
   /** Column of y values. */

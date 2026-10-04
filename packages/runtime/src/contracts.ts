@@ -28,7 +28,7 @@ import type {
   AxisType,
   CategorySamples,
   Children,
-  ComponentModule as CoreComponentModule,
+  CoreComponentModule,
   FullAxis,
   FullConfig,
   FullLayout,
@@ -37,7 +37,7 @@ import type {
   Scale,
   Stage,
   Template,
-  TraceModule as CoreTraceModule,
+  CoreTraceModule,
 } from '@mk7s/holochart-core';
 import type {
   DataTransform,

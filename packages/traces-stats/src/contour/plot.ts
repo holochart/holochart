@@ -26,7 +26,7 @@ import {
   toRGBA,
   type FullTrace,
   type Locale,
-  type RGBA,
+  type RGBAColor,
 } from '@mk7s/holochart-core';
 import {
   createHeatmapPrimitive,
@@ -269,7 +269,7 @@ function pieces(calc: ContourCalc): LinePiece[] {
 /** Concatenate pieces (closed ones re-closed) into line primitive input with per-point colors. */
 function lineGeometry(
   list: readonly LinePiece[],
-  colors: readonly RGBA[],
+  colors: readonly RGBAColor[],
   alpha: number,
 ): Pick<LineData, 'x' | 'y' | 'starts' | 'color'> {
   let n = 0;
@@ -314,7 +314,7 @@ export function labelLayout(
   trace: FullTrace,
   transform: Readonly<DataTransform>,
   rect: { width: number; height: number },
-  colors: readonly RGBA[],
+  colors: readonly RGBAColor[],
   font: TextFont,
   locale?: Locale,
 ): { labels: TextLabel[]; lines: LinePiece[] } {

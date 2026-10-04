@@ -25,7 +25,7 @@ import type {
   ItemsNode,
   NodeMeta,
   ObjectNode,
-  Primitive,
+  PrimitiveValue,
   TypedArray,
 } from './types.ts';
 import type { StyleFunction } from '../style/types.ts';
@@ -46,14 +46,14 @@ type Attr<T, O> = AttrSpec<T | Accessor<T, O>, Full<T, O>>;
 
 /** Options for `number`, `integer` and `angle`. @experimental */
 export interface NumberOptions extends NodeMeta {
-  readonly dflt?: Primitive;
+  readonly dflt?: PrimitiveValue;
   readonly min?: number;
   readonly max?: number;
   /** Clamp out-of-range values instead of falling back to `dflt`. */
   readonly clamp?: boolean;
   readonly arrayOk?: boolean;
   /** Non-numeric values accepted verbatim, e.g. `['auto']`. */
-  readonly extras?: readonly Primitive[];
+  readonly extras?: readonly PrimitiveValue[];
 }
 
 /** Options for `string`. @experimental */
@@ -74,8 +74,8 @@ export interface BooleanOptions extends NodeMeta {
 
 /** Options for `enumerated`. @experimental */
 export interface EnumeratedOptions extends NodeMeta {
-  readonly values: readonly Primitive[];
-  readonly dflt?: Primitive;
+  readonly values: readonly PrimitiveValue[];
+  readonly dflt?: PrimitiveValue;
   readonly arrayOk?: boolean;
   /** Also accept values this predicate approves (values registered at runtime). */
   readonly accepts?: (value: unknown) => boolean;
@@ -85,8 +85,8 @@ export interface EnumeratedOptions extends NodeMeta {
 export interface FlaglistOptions extends NodeMeta {
   readonly flags: readonly string[];
   /** Values that stand alone and cannot be combined, e.g. `'none'`, `true`, `false`. */
-  readonly extras?: readonly Primitive[];
-  readonly dflt?: Primitive;
+  readonly extras?: readonly PrimitiveValue[];
+  readonly dflt?: PrimitiveValue;
   readonly arrayOk?: boolean;
 }
 
@@ -111,7 +111,7 @@ export interface SubplotIdOptions extends NodeMeta {
   /** Base id such as `'x'`, `'y'`, `'scene'`. Ids match `/^base([2-9]|[1-9]\d+)?$/`. */
   readonly dflt: string;
   /** Extra values accepted verbatim, e.g. `['free']` or `['paper']`. */
-  readonly extras?: readonly Primitive[];
+  readonly extras?: readonly PrimitiveValue[];
 }
 
 /** Options for `dataArray`. @experimental */

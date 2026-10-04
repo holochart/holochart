@@ -21,7 +21,7 @@ import {
   uniformTextOf,
   uniformTextScale,
   uniformTextSize,
-  type RGBA,
+  type RGBAColor,
 } from '@mk7s/holochart-core';
 import { scaleTextRuns, type TextFont, type TextRunLines } from '@mk7s/holochart-render';
 import {
@@ -47,12 +47,12 @@ export interface FunnelareaLabel {
   readonly font: TextFont;
   /** Styled runs at the drawn size, when the label mixes styles. */
   readonly runs?: TextRunLines;
-  readonly color: RGBA;
+  readonly color: RGBAColor;
   /** Index in `calc.slices`, or -1 for the title. */
   readonly slice: number;
 }
 
-const DEFAULT_LINE: RGBA = [68 / 255, 68 / 255, 68 / 255, 1];
+const DEFAULT_LINE: RGBAColor = [68 / 255, 68 / 255, 68 / 255, 1];
 
 /** A label's font and runs at `scale` (≤ 1), quantized so small changes don't re-typeset. */
 function scaled(
@@ -113,7 +113,7 @@ export function layoutFunnelareaText(
     x: number;
     y: number;
     scale: number;
-    color: RGBA;
+    color: RGBAColor;
     slice: number;
   }[] = [];
   calc.slices.forEach((slice, index) => {

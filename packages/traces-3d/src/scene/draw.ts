@@ -15,7 +15,7 @@
  * Walls and lines draw first in the transparent pass without writing depth, so the data draws over
  * them and hides them where it is in front.
  */
-import { richTextLabel, toRGBA, type FullLayout, type RGBA } from '@mk7s/holochart-core';
+import { richTextLabel, toRGBA, type FullLayout, type RGBAColor } from '@mk7s/holochart-core';
 import {
   createTextPrimitive,
   measureText,
@@ -67,7 +67,7 @@ class ObjectPrimitive implements Primitive<never> {
 class Buffers {
   readonly pos: number[] = [];
   readonly col: number[] = [];
-  #c: RGBA = [0, 0, 0, 0];
+  #c: RGBAColor = [0, 0, 0, 0];
   readonly #tmp = new Color();
   color(css: unknown): this {
     const c = typeof css === 'string' ? toRGBA(css) : null;
@@ -365,7 +365,7 @@ function candidate(
   x: number,
   y: number,
   font: TextFont,
-  color: RGBA,
+  color: RGBAColor,
   anchorX: 'left' | 'center' | 'right',
   anchorY: 'top' | 'middle' | 'bottom',
   angle: number,

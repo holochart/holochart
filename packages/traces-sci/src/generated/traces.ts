@@ -575,7 +575,7 @@ export interface ContourTraceLine {
 /**
  * Heatmap: a grid of values drawn as colored cells (one GPU texture with a colorscale lookup), with optional cell labels.
  */
-export type HeatmapTrace = Omit<CommonTraceAttributes, 'hovertext'> &
+export type BaseHeatmapTrace = Omit<CommonTraceAttributes, 'hovertext'> &
   CartesianTraceAttributes & {
     /**
      * Trace type.
@@ -1082,4 +1082,4 @@ export interface ScatterpolarTraceLine {
  * Any trace of `@mk7s/holochart-traces-sci`, discriminated on `type`. Type a partial bundle's figures with it: `FigureInput<TracesSci>`.
  */
 export type TracesSci =
-  BarpolarTrace | ContourTrace | HeatmapTrace | ImageTrace | ScatterpolarTrace;
+  BarpolarTrace | ContourTrace | BaseHeatmapTrace | ImageTrace | ScatterpolarTrace;

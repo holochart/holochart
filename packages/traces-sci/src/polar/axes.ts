@@ -7,7 +7,7 @@
  * {@link buildPolarScene} is pure and works in geometric px (center at the origin, y up); the
  * view maps it into the overlay.
  */
-import { richTextLabel, toRGBA, type RGBA } from '@mk7s/holochart-core';
+import { richTextLabel, toRGBA, type RGBAColor } from '@mk7s/holochart-core';
 import type { TextFont, TextLabel } from '@mk7s/holochart-render';
 import { deg2rad, gridLinePoints, mod, polygonScale, regionRings } from './geometry.ts';
 import type { PolarSubplot } from './subplot.ts';
@@ -21,7 +21,7 @@ const MID_SHIFT = 0.35;
 export interface Strokes {
   readonly x: number[];
   readonly y: number[];
-  readonly color: RGBA;
+  readonly color: RGBAColor;
   readonly width: number;
   readonly dash: string;
 }
@@ -32,7 +32,7 @@ export interface PolarLabel {
   readonly x: number;
   readonly y: number;
   readonly font: TextFont;
-  readonly color: RGBA;
+  readonly color: RGBAColor;
   readonly anchorX: 'left' | 'center' | 'right';
   readonly anchorY: 'baseline' | 'middle' | 'top' | 'bottom';
   /** Clockwise degrees on screen. */
@@ -48,7 +48,7 @@ export interface AxisLayer {
 
 export interface PolarScene {
   /** Background: region rings (counterclockwise outer, clockwise holes). */
-  readonly background: { x: number[]; y: number[]; rings: number[]; color: RGBA } | null;
+  readonly background: { x: number[]; y: number[]; rings: number[]; color: RGBAColor } | null;
   readonly grid: Strokes[];
   readonly below: AxisLayer;
   readonly above: AxisLayer;
@@ -58,7 +58,7 @@ function num(v: unknown, fallback: number): number {
   return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
 }
 
-function color(v: unknown, fallback: RGBA = [0, 0, 0, 0]): RGBA {
+function color(v: unknown, fallback: RGBAColor = [0, 0, 0, 0]): RGBAColor {
   return (typeof v === 'string' ? toRGBA(v) : null) ?? fallback;
 }
 

@@ -32,7 +32,7 @@ export type { ParcatsCalc } from './parcats/index.ts';
 export { splom, splomAttributes } from './splom/index.ts';
 export type { SplomCalc } from './splom/index.ts';
 export { strip } from './strip/strip.ts';
-export type { StripData, StripFigure, StripOptions } from './strip/strip.ts';
+export type { StripData, StripFigure, StripFigureOptions } from './strip/strip.ts';
 
 // Grid helpers shared with the `heatmap` and `image` traces of @mk7s/holochart-traces-sci (M4):
 // the `z` colorscale, cell labels, cell hover text and gap filling.

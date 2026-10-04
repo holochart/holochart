@@ -80,7 +80,13 @@ export type { ChartRegistry, ChartRegistryOptions, RegistryListing } from './reg
 
 // Figure input types (backlog S1.6), from core: partial bundles type their figures with these and
 // the trace packages' types (`FigureInput<TracesBasic>`).
-export type { Config, FigureInput, Layout, LayoutInput, TraceInput } from '@mk7s/holochart-core';
+export type {
+  Config,
+  FigureInput,
+  BaseLayout,
+  LayoutInput,
+  TraceInput,
+} from '@mk7s/holochart-core';
 
 // Chart (E7.1, E4.1, E4.3)
 export { Chart, createChart, getChart, STACK_GROUPS } from './chart.ts';
@@ -132,7 +138,7 @@ export type {
   CameraVector,
   ComputedFrame,
   EasingName,
-  Frame,
+  FrameInput,
   FrameOptions,
   TransitionOptions,
 } from './anim/types.ts';
@@ -159,7 +165,7 @@ export type { ChartFigureSource, ChartToJSONOptions } from './json.ts';
 // Interaction (E5.7, E6.1–E6.4, E2.17)
 export { formatTemplate, splitExtra } from './fx/template.ts';
 export type { TemplateContext, TemplateOptions } from './fx/template.ts';
-export { pointInPolygon, selectionContains } from './fx/geometry.ts';
+export { polygonContains, selectionContains } from './fx/geometry.ts';
 // Selections as layout objects (E5.12)
 export {
   linearToPosition,

@@ -160,7 +160,7 @@ export function selectBoxAxes(
  * Whether `(x, y)` is inside a polygon (even-odd rule; vertices as `[x, y]` pairs).
  * @experimental
  */
-export function pointInPolygon(
+export function polygonContains(
   polygon: readonly (readonly [number, number])[],
   x: number,
   y: number,
@@ -185,7 +185,7 @@ export function pointInPolygon(
 export function selectionContains(query: SelectionQuery, x: number, y: number): boolean {
   if (!(x >= query.x[0] && x <= query.x[1] && y >= query.y[0] && y <= query.y[1])) return false;
   if (query.kind === 'rect' || !query.polygon) return true;
-  return pointInPolygon(query.polygon, x, y);
+  return polygonContains(query.polygon, x, y);
 }
 
 /** 1D label placement input: desired center and size; `pos` receives the placed center. */

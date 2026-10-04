@@ -8,7 +8,7 @@ import {
   createRegistry,
   plotSchema,
   type PlotSchema,
-  type TraceModule,
+  type CoreTraceModule,
 } from '@mk7s/holochart-core';
 import { collectModules, isComponentModule, isTraceModule } from './discover.ts';
 import { DEFAULT_DOCS_PATHS, renderDocsFiles } from './generate-docs.ts';
@@ -21,7 +21,7 @@ import {
 } from './render.ts';
 import { chartFromFrontmatter, examplesByTrace, traceTypesInSource } from './scan.ts';
 
-const widget: TraceModule = {
+const widget: CoreTraceModule = {
   type: 'widget',
   categories: ['cartesian', 'showLegend'],
   meta: { description: 'A test trace with `<angle>` brackets.', plotlyEquivalent: 'scatter' },

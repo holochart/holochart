@@ -15,7 +15,7 @@
  * drawn path (`line.shape`, `line.smoothing`, `connectgaps`) also declares `crossTraceCalc`: the
  * trace filled to this one redraws too.
  */
-import { attr, type EditFlag, type Primitive } from '@mk7s/holochart-core';
+import { attr, type EditFlag, type PrimitiveValue } from '@mk7s/holochart-core';
 import { isCustomSymbol, MARKER_SYMBOLS, SYMBOL_VARIANTS } from '@mk7s/holochart-render';
 import { colorscaleAttributes } from '../shared/colorscale.ts';
 import { patternAttributes } from '../shared/pattern.ts';
@@ -27,7 +27,7 @@ import { TEXT_POSITIONS } from './text-position.ts';
  * (`'diamond-open-dot'`), numeric codes (`102`) and numeric strings (`'102'`).
  * @internal
  */
-export const SCATTER_SYMBOLS: readonly Primitive[] = MARKER_SYMBOLS.flatMap((def) =>
+export const SCATTER_SYMBOLS: readonly PrimitiveValue[] = MARKER_SYMBOLS.flatMap((def) =>
   SYMBOL_VARIANTS.flatMap((suffix, variant) => {
     const code = def.code + 100 * variant;
     return [def.name + suffix, code, String(code)];

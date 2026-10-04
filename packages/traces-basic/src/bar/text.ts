@@ -20,7 +20,7 @@ import {
   uniformTextSize,
   type FullTrace,
   type Locale,
-  type RGBA,
+  type RGBAColor,
   type UniformText,
   type UniformTextItem,
 } from '@mk7s/holochart-core';
@@ -222,7 +222,7 @@ export function textPositionAt(trace: FullTrace, i: number): TextPosition {
 }
 
 /** The font of bar `i` (per-bar `size`/`color` resolved). */
-export function fontAt(font: unknown, i: number): { font: TextFont; color: RGBA | null } {
+export function fontAt(font: unknown, i: number): { font: TextFont; color: RGBAColor | null } {
   const f = (font ?? {}) as FullFont;
   const color = valueAt(f.color, i);
   const weight = f.weight;
@@ -384,7 +384,7 @@ export interface BarTextContext {
   readonly yRange: readonly [number, number] | undefined;
   /** Bar fills before opacity (4 per bar), for contrasting inside text. */
   readonly fill: Float32Array;
-  readonly background: RGBA;
+  readonly background: RGBAColor;
   readonly formatters: ValueFormatters;
   /** Linear coordinate the size axis starts from for bars below a log axis. */
   readonly floor: number;
@@ -404,7 +404,7 @@ function clip(v: number, range: readonly [number, number] | undefined): number {
   return v < lo ? lo : v > hi ? hi : v;
 }
 
-function selectionTextColor(trace: FullTrace, selected: boolean): RGBA | null {
+function selectionTextColor(trace: FullTrace, selected: boolean): RGBAColor | null {
   const style = trace[selected ? 'selected' : 'unselected'] as
     { textfont?: { color?: unknown } } | undefined;
   const c = style?.textfont?.color;
@@ -417,7 +417,7 @@ interface PlannedLabel {
   readonly options: TextPlacementOptions;
   readonly placed: PlacedText;
   readonly content: RichLabel;
-  readonly color: RGBA;
+  readonly color: RGBAColor;
   /** Explicit run colors are multiplied by this (selection dimming). */
   readonly fade: number;
 }

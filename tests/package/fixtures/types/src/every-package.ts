@@ -27,7 +27,7 @@ export interface EveryPackage {
   runtime: runtime.Chart;
   themes: typeof themes.builtinThemes;
   traces3d: traces3d.Scatter3dTrace;
-  tracesBasic: tracesBasic.ScatterTrace;
+  tracesBasic: tracesBasic.BaseScatterTrace;
   tracesFinance: tracesFinance.CandlestickTrace;
   tracesHier: tracesHier.SankeyTrace;
   tracesSci: tracesSci.ContourTrace;

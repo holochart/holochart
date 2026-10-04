@@ -180,7 +180,7 @@ import type {
   AnimationOptions,
   CameraAnimationOptions,
   CameraTarget,
-  Frame,
+  FrameInput,
 } from './anim/types.ts';
 import { registry as defaultRegistry, type ChartRegistry } from './registry.ts';
 import {
@@ -1391,7 +1391,7 @@ export class Chart {
    * `'frame <n>'`. See {@link animate}.
    */
   addFrames(
-    frames: readonly Frame[] | null | undefined,
+    frames: readonly FrameInput[] | null | undefined,
     indices?: number | readonly (number | null | undefined)[],
   ): Promise<Chart> {
     return this.#animate((a) => {

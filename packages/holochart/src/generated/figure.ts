@@ -29,34 +29,34 @@ import type {
 } from '@mk7s/holochart-traces-3d';
 
 import type {
-  BarTrace as TracesBasicBarTrace,
+  BaseBarTrace,
+  BasePieTrace,
+  BaseScatterTrace,
   ColorbarTickfont,
   ColorbarTitle,
-  PieTrace as TracesBasicPieTrace,
-  ScatterTrace as TracesBasicScatterTrace,
   TableTrace,
 } from '@mk7s/holochart-traces-basic';
 
 import type {
+  BaseFunnelTrace,
+  BaseWaterfallTrace,
   CandlestickTrace,
-  FunnelTrace as TracesFinanceFunnelTrace,
   FunnelareaTrace,
   IndicatorTrace,
   OhlcTrace,
-  WaterfallTrace as TracesFinanceWaterfallTrace,
 } from '@mk7s/holochart-traces-finance';
 
 import type {
-  IcicleTrace as TracesHierIcicleTrace,
+  BaseIcicleTrace,
+  BaseTreemapTrace,
   SankeyTrace,
   SunburstTrace,
-  TreemapTrace as TracesHierTreemapTrace,
 } from '@mk7s/holochart-traces-hier';
 
 import type {
   BarpolarTrace,
+  BaseHeatmapTrace,
   ContourTrace,
-  HeatmapTrace as TracesSciHeatmapTrace,
   ImageTrace,
   ScatterpolarTrace,
 } from '@mk7s/holochart-traces-sci';
@@ -75,12 +75,12 @@ import type {
 /**
  * Bar: rectangles from a base to a value, vertical or horizontal.
  */
-export type BarTrace = TracesBasicBarTrace & ExtrusionAttributes;
+export type BarTrace = BaseBarTrace & ExtrusionAttributes;
 
 /**
  * Pie or donut: slices of a circle proportional to their values.
  */
-export type PieTrace = TracesBasicPieTrace &
+export type PieTrace = BasePieTrace &
   ExtrusionAttributes & {
     /**
      * Tilt of the trace in 2.5D (Holochart extension), degrees: positive looks from above, 0 (default) is the flat view. With `depth`, slices and tiles show their sides.
@@ -103,7 +103,7 @@ export type PieTrace = TracesBasicPieTrace &
 /**
  * Scatter: markers, lines, text labels and filled or stacked areas at x/y positions.
  */
-export type ScatterTrace = TracesBasicScatterTrace &
+export type ScatterTrace = BaseScatterTrace &
   Omit<ExtrusionAttributes, 'depth'> & {
     /**
      * Fill extrusion (Holochart extension, 2.5D, with `fill`): the thickness in CSS px of the slab the fill becomes, or a percentage of the plot area's width; lines, markers and labels are drawn on its front face. Filled traces share the depth, so stacked areas form layers of one slab. 0 (default) draws the trace flat.
@@ -116,17 +116,17 @@ export type ScatterTrace = TracesBasicScatterTrace &
 /**
  * Funnel: stages of a process as bars centered on the value axis, with connector regions between them.
  */
-export type FunnelTrace = TracesFinanceFunnelTrace & ExtrusionAttributes;
+export type FunnelTrace = BaseFunnelTrace & ExtrusionAttributes;
 
 /**
  * Waterfall: bars showing how a running total is built from positive and negative changes, with sum bars and connector lines.
  */
-export type WaterfallTrace = TracesFinanceWaterfallTrace & ExtrusionAttributes;
+export type WaterfallTrace = BaseWaterfallTrace & ExtrusionAttributes;
 
 /**
  * Icicle: a hierarchy as rows (or columns) of cells, children next to their parents, with a path bar and drill-down.
  */
-export type IcicleTrace = TracesHierIcicleTrace &
+export type IcicleTrace = BaseIcicleTrace &
   ExtrusionAttributes & {
     /**
      * Tilt of the trace in 2.5D (Holochart extension), degrees: positive looks from above, 0 (default) is the flat view. With `depth`, slices and tiles show their sides.
@@ -149,7 +149,7 @@ export type IcicleTrace = TracesHierIcicleTrace &
 /**
  * Treemap: a hierarchy as nested rectangles sized by value, with a path bar and drill-down.
  */
-export type TreemapTrace = TracesHierTreemapTrace &
+export type TreemapTrace = BaseTreemapTrace &
   ExtrusionAttributes & {
     /**
      * Tilt of the trace in 2.5D (Holochart extension), degrees: positive looks from above, 0 (default) is the flat view. With `depth`, slices and tiles show their sides.
@@ -172,7 +172,7 @@ export type TreemapTrace = TracesHierTreemapTrace &
 /**
  * Heatmap: a grid of values drawn as colored cells (one GPU texture with a colorscale lookup), with optional cell labels.
  */
-export type HeatmapTrace = TracesSciHeatmapTrace &
+export type HeatmapTrace = BaseHeatmapTrace &
   Omit<ExtrusionAttributes, 'depth'> & {
     /**
      * Cells as columns (Holochart extension, 2.5D): the height in CSS px of a column at `zmax` (or a percentage of the mean cell width, `'300%'`); heights grow linearly from 0 (from `zmin` with negative values), colored like the cells. 0 (default) draws the heatmap flat.

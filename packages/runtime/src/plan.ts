@@ -11,7 +11,7 @@ import {
   type Change,
   type FullLayout,
   type FullTrace,
-  type Layout,
+  type BaseLayout,
   type PathSegment,
   type Registry,
   type Stage,
@@ -32,7 +32,7 @@ export type AttributeUpdate = Readonly<Record<string, unknown>>;
  *
  * @typeParam L - The layout type: the base layout by default, the full bundle's `Layout` there.
  */
-export type LayoutUpdate<L extends object = Layout> = {
+export type LayoutUpdate<L extends object = BaseLayout> = {
   readonly [K in keyof L]?: L[K] | null;
 } & AttributeUpdate;
 

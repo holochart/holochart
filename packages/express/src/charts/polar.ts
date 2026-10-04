@@ -11,7 +11,7 @@ import { groupValue } from '../core/labels.ts';
 import { expressFunction } from '../core/render.ts';
 import { isMissing, type DataInput } from '../data/table.ts';
 import type {
-  AnimationOptions,
+  AnimationFrameOptions,
   ColumnRef,
   CommonOptions,
   ContinuousColorOptions,
@@ -26,7 +26,7 @@ import { defined, opacityPatch, tailRoles } from './shared.ts';
 
 /** Options every polar function takes. */
 export interface PolarOptions
-  extends CommonOptions, DiscreteColorOptions, HoverOptions, AnimationOptions {
+  extends CommonOptions, DiscreteColorOptions, HoverOptions, AnimationFrameOptions {
   /** Column of radii. */
   readonly r?: ColumnRef;
   /** Column of angles (degrees) or angular categories (`'N'`, `'NNE'`, …). */

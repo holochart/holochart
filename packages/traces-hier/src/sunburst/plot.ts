@@ -23,7 +23,7 @@ import {
   uniformTextOf,
   uniformTextSize,
   type FullTrace,
-  type RGBA,
+  type RGBAColor,
   type UniformText,
 } from '@mk7s/holochart-core';
 import {
@@ -76,7 +76,7 @@ import {
 
 export { CLICK_TRANSITION_TIME } from '../hierarchy/view.ts';
 
-const GREY: RGBA = [0.5, 0.5, 0.5, 1];
+const GREY: RGBAColor = [0.5, 0.5, 0.5, 1];
 
 /**
  * Render orders in the overlay: sunburst primitives stay in [-10, 0), below figure components
@@ -87,8 +87,8 @@ const ORDER = { arcs: -9, text: -3 } as const;
 /** How a sector is drawn: fill, outline and pattern (Plotly's `styleOne`). */
 export interface SectorStyle {
   /** Fill, alpha multiplied by `leaf.opacity` for leaves. */
-  readonly fill: RGBA;
-  readonly line: RGBA;
+  readonly fill: RGBAColor;
+  readonly line: RGBAColor;
   /** Outline width, px. */
   readonly width: number;
   /** `leaf.opacity` for leaves, else 1 (patterns fade with it too). */
@@ -168,7 +168,7 @@ export function sectorArcs(
   const opacity = new Float32Array(count).fill(1);
   const wx = center.cx;
   const wy = height - center.cy;
-  const set = (k: number, s: SectorState, r0: number, r1: number, color: RGBA): void => {
+  const set = (k: number, s: SectorState, r0: number, r1: number, color: RGBAColor): void => {
     x[k] = wx;
     y[k] = wy;
     innerRadius[k] = r0;

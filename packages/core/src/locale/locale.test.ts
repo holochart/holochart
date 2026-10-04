@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { supplyDefaults } from '../defaults/supply-defaults.ts';
 import { attr } from '../schema/attr.ts';
 import { createRegistry } from '../registry/registry.ts';
-import type { TraceModule } from '../registry/types.ts';
+import type { CoreTraceModule } from '../registry/types.ts';
 import { createScale } from '../scales/scale.ts';
 import { formatDateLabel, formatNumber, formatValue } from '../scales/format.ts';
 import {
@@ -251,7 +251,7 @@ describe('formatting with a locale', () => {
 });
 
 describe('supplyDefaults', () => {
-  const dots: TraceModule = {
+  const dots: CoreTraceModule = {
     type: 'dots',
     categories: ['cartesian'],
     schema: attr.object({ x: attr.dataArray(), y: attr.dataArray() }),

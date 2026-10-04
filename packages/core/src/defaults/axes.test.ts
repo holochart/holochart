@@ -2,7 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { fixtureRegistry } from '../__fixtures__/modules.ts';
 import { createRegistry } from '../registry/registry.ts';
-import type { TraceModule } from '../registry/types.ts';
+import type { CoreTraceModule } from '../registry/types.ts';
 import { attr } from '../schema/attr.ts';
 import { stripInternal } from '../util/objects.ts';
 import { autoType, cleanDtick, cleanTick0 } from './axes.ts';
@@ -292,7 +292,7 @@ describe('supplyDefaults: axis defaults (E3)', () => {
   });
 
   it('types from x0 and keeps histogram count axes linear', () => {
-    const line0: TraceModule = {
+    const line0: CoreTraceModule = {
       type: 'line0',
       categories: ['cartesian'],
       schema: attr.object({
@@ -307,7 +307,7 @@ describe('supplyDefaults: axis defaults (E3)', () => {
         ctx.coerce('orientation');
       },
     };
-    const histogram: TraceModule = { ...line0, type: 'histogram' };
+    const histogram: CoreTraceModule = { ...line0, type: 'histogram' };
     const registry = createRegistry().register(line0, histogram);
     const fl = (figure: AnyFigure) => supplyDefaults(figure, registry, quiet).fullLayout;
     expect(fl({ data: [{ type: 'line0', y: [1], x0: '2024-01-01' }] }).xaxis?.type).toBe('date');

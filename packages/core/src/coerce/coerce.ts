@@ -13,7 +13,7 @@
  * - Per-point arrays (`arrayOk`) and data arrays are kept by reference — validating or copying
  *   millions of points here would defeat zero-copy ingestion; the calc stage handles bad points.
  */
-import type { AttrSpec, Primitive } from '../schema/types.ts';
+import type { AttrSpec, PrimitiveValue } from '../schema/types.ts';
 import { getColorway } from '../colors/registry.ts';
 import { canonicalColor } from './color.ts';
 
@@ -47,7 +47,7 @@ export function toNumber(v: unknown): number | undefined {
 }
 
 function hasExtra(spec: AttrSpec, v: unknown): boolean {
-  return spec.extras !== undefined && spec.extras.includes(v as Primitive);
+  return spec.extras !== undefined && spec.extras.includes(v as PrimitiveValue);
 }
 
 function coerceNumeric(spec: AttrSpec, v: unknown, integer: boolean): CoerceResult {
@@ -177,7 +177,7 @@ export function coerceValue(spec: AttrSpec, v: unknown): CoerceResult {
     case 'enumerated': {
       if (spec.arrayOk === true && isArrayLike(v)) return valid(v);
       const values = spec.values ?? [];
-      if (values.includes(v as Primitive) || spec.accepts?.(v) === true) return valid(v);
+      if (values.includes(v as PrimitiveValue) || spec.accepts?.(v) === true) return valid(v);
       // '1' for a numeric enum: same leniency as numeric attributes.
       const n = typeof v === 'string' ? toNumber(v) : undefined;
       return n !== undefined && values.includes(n) ? valid(n) : INVALID;
@@ -243,7 +243,7 @@ export function canonicalDefault(spec: AttrSpec, dflt: unknown): unknown {
   return r.ok ? r.value : dflt;
 }
 
-function quote(v: Primitive): string {
+function quote(v: PrimitiveValue): string {
   return typeof v === 'string' ? `'${v}'` : String(v);
 }
 

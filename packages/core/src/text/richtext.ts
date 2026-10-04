@@ -29,7 +29,7 @@
  * text primitive has always done; Plotly turns them into spaces (`newlines: 'space'`). `<br/>` is
  * a line break too (Plotly shows `<br/>` literally). The `popup` link attribute is ignored.
  */
-import { toRGBA, type RGBA } from '../coerce/color.ts';
+import { toRGBA, type RGBAColor } from '../coerce/color.ts';
 
 /** Formatting tags (every known tag except `<br>`). @internal */
 export type RichTextTag = 'b' | 'strong' | 'i' | 'em' | 'u' | 's' | 'sup' | 'sub' | 'span' | 'a';
@@ -99,7 +99,7 @@ export interface RichTextRun {
   /** Overrides of the base font; absent when the run uses the base font. */
   font?: RichTextRunFont;
   /** sRGB 0–1 RGBA from a `color` style; absent for the base color. */
-  color?: RGBA;
+  color?: RGBAColor;
   /** Baseline shift in px, positive up (`<sup>`), negative down (`<sub>`). */
   shift?: number;
   /** The enclosing link, if any. */
@@ -399,7 +399,7 @@ interface RunState {
   weight: RichTextRunFont['weight'];
   style: RichTextRunFont['style'];
   family: string | undefined;
-  color: RGBA | undefined;
+  color: RGBAColor | undefined;
   under: boolean;
   over: boolean;
   through: boolean;
@@ -535,7 +535,7 @@ function sameRunStyle(a: RichTextRun, b: RichTextRun): boolean {
     (a.color === b.color ||
       (a.color !== undefined &&
         b.color !== undefined &&
-        a.color.every((c, k) => c === (b.color as RGBA)[k]))) &&
+        a.color.every((c, k) => c === (b.color as RGBAColor)[k]))) &&
     fa?.family === fb?.family &&
     fa?.size === fb?.size &&
     fa?.weight === fb?.weight &&

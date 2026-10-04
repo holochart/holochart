@@ -111,7 +111,7 @@ export interface LineData extends LineGeometryInput {
 }
 
 /** Construction options for {@link LinePrimitive}. */
-export interface LineOptions {
+export interface LinePrimitiveOptions {
   /** Min interval between dash-phase recomputes during zoom/camera motion. Default 50 ms. */
   dashThrottleMs?: number;
   /** Clock override (tests). */
@@ -202,7 +202,11 @@ export class LinePrimitive implements Primitive<LineData> {
   private readonly tmpMatrix = new Matrix4();
   private disposed = false;
 
-  constructor(ctx: PrimitiveContext, data: Partial<LineData> = {}, options: LineOptions = {}) {
+  constructor(
+    ctx: PrimitiveContext,
+    data: Partial<LineData> = {},
+    options: LinePrimitiveOptions = {},
+  ) {
     this.ctx = ctx;
     this.data = { x: new Float64Array(0), y: new Float64Array(0), ...DEFAULTS };
     this.material = createPrimitiveMaterial({

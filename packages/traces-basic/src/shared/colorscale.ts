@@ -24,7 +24,7 @@ import {
   type FullTrace,
   type LayoutDefaultsContext,
   type ObjectNode,
-  type RGBA,
+  type RGBAColor,
   PLOTLYJS_COLORSCALES,
 } from '@mk7s/holochart-core';
 import {
@@ -61,7 +61,7 @@ const namedCache = new Map<string, Colorscale>();
 let namedCacheVersion = -1;
 
 function toStops(css: CssColorscale): Colorscale {
-  const black: RGBA = [0, 0, 0, 1];
+  const black: RGBAColor = [0, 0, 0, 1];
   return css.map(([p, c]) => [p, toRGBA(c) ?? black] as const);
 }
 
@@ -92,7 +92,7 @@ export function resolveColorscale(value: unknown): Colorscale | undefined {
   if (!Array.isArray(value) || value.length === 0) return undefined;
   const hit = resolvedCache.get(value);
   if (hit) return hit;
-  const stops: [number, RGBA][] = [];
+  const stops: [number, RGBAColor][] = [];
   for (const stop of value as unknown[]) {
     if (!Array.isArray(stop) || typeof stop[0] !== 'number' || typeof stop[1] !== 'string') {
       return undefined;
@@ -661,7 +661,7 @@ export function resolveColorMapping(
 export function mapColor(
   value: number,
   mapping: ColorMapping,
-  nanColor: RGBA = [0.5, 0.5, 0.5, 1],
+  nanColor: RGBAColor = [0.5, 0.5, 0.5, 1],
 ): [number, number, number, number] {
   if (!Number.isFinite(value)) return [...nanColor];
   const span = mapping.cmax - mapping.cmin;

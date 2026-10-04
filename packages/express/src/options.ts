@@ -108,7 +108,7 @@ export interface FacetOptions {
 }
 
 /** Animation frames from data (plan E23.4). */
-export interface AnimationOptions {
+export interface AnimationFrameOptions {
   /**
    * Column of frame values: one frame per value (in `categoryOrders` / first-appearance order),
    * with a Play / Pause update menu and a slider. Axis ranges are fixed across frames.

@@ -4,7 +4,7 @@
  */
 import type {
   FigureInput,
-  Frame,
+  FrameInput,
   FullLayout,
   Registry,
   SupplyDefaultsResult,
@@ -92,7 +92,7 @@ export interface AnimationOptions {
 }
 
 // An animation frame (`figure.frames[i]`, `Chart.addFrames`) is core's: `FigureInput` has them.
-export type { Frame };
+export type { FrameInput };
 
 /**
  * What {@link Chart.animate} plays: `null` / `undefined` for every frame in order, a string or
@@ -105,8 +105,8 @@ export type AnimateTarget =
   | number
   | null
   | undefined
-  | Frame
-  | readonly (string | number | Frame | null | undefined)[];
+  | FrameInput
+  | readonly (string | number | FrameInput | null | undefined)[];
 
 /** A frame with its `baseframe` chain applied (the `frame` of `animatingframe`). */
 export interface ComputedFrame {

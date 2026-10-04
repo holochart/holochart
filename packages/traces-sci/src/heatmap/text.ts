@@ -9,7 +9,13 @@
  * Pure: labels are in data space (linear coordinates), so zoom only moves them. Grids of more than
  * {@link MAX_LABELLED_CELLS} cells get no labels (they could not be read at any size anyway).
  */
-import { localeOf, toRGBA, type FullLayout, type FullTrace, type RGBA } from '@mk7s/holochart-core';
+import {
+  localeOf,
+  toRGBA,
+  type FullLayout,
+  type FullTrace,
+  type RGBAColor,
+} from '@mk7s/holochart-core';
 import { sampleColorscale, textContrastColor } from '@mk7s/holochart-render';
 import { formatTemplate, type AxisInfo } from '@mk7s/holochart-runtime';
 import {
@@ -69,7 +75,7 @@ export function heatmapCellTexts(
         { fallback: '', locale },
       );
       if (!text) continue;
-      let color: RGBA;
+      let color: RGBAColor;
       if (fixed) color = fixed;
       else if (empty) color = textContrastColor(background);
       else {
