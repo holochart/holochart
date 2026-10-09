@@ -400,8 +400,11 @@ describe('the default pause', () => {
   it('lets waiting tasks in', async () => {
     const pause = createPause();
     let ran = false;
-    setTimeout(() => (ran = true), 0);
-    for (let k = 0; k < 50 && !ran; k++) await pause();
+    // Node's default pause uses setImmediate. A zero-delay timer has a minimum
+    // delay and need not be due even after many fast check-phase turns.
+    setImmediate(() => (ran = true));
+    expect(ran).toBe(false);
+    await pause();
     expect(ran).toBe(true);
   });
 });

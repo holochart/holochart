@@ -8,16 +8,8 @@
     "memoryGiB": 64,
     "platform": "darwin",
     "arch": "arm64",
-    "loadAverageAtStart": [
-      49.44873046875,
-      45.52685546875,
-      45.55029296875
-    ],
-    "loadAverageAtEnd": [
-      35.59423828125,
-      42.08056640625,
-      44.232421875
-    ]
+    "loadAverageAtStart": [49.44873046875, 45.52685546875, 45.55029296875],
+    "loadAverageAtEnd": [35.59423828125, 42.08056640625, 44.232421875]
   },
   "profile": {
     "viewport": {

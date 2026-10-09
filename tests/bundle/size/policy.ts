@@ -251,6 +251,14 @@ export const BUDGET_CHANGES: readonly BudgetChange[] = [
     cause:
       'Express gained `graph`, `chord` and `adjacencyMatrix` (G9): 688.37 kB measured locally, about 3.4 kB more than before the graphs epic (684.95 kB), of which the three functions are about 3.0 kB and the rest is the runtime (the second calc pass of a pending layout, the keyboard contract). CI measures about 0.3 % above a local build, which would put this file at 690.4 kB against 690. The script-tag build exposes Express as one namespace and has no lazy chunks, so the functions cannot load later; `adjacencyMatrix` draws there (a heatmap), while `graph` and `chord` figures need a graph script that does not exist yet, so leaving those two out of this build (a second Express entry) is the trim to make if the budget has to come back down.',
   },
+  {
+    id: 'full',
+    from: '540 kB',
+    to: '542 kB',
+    date: '2026-10-09',
+    cause:
+      'Calibrate the first alpha against Linux CI: the same full ESM entry measures 538.05 kB locally and 540.009 kB on CI (run 37996311768), exceeding the old budget by 9 bytes. The graph-era Express helpers and shared runtime changes left less room than the estimated 0.3% CI difference; the observed difference is 0.36%. Geo and graph trace implementations remain separate optional entries and heavy rendering remains lazy. This 2 kB adjustment provides 0.37% headroom above the measured CI artifact without changing shipped code or the 560 kB hard ceiling; moving public synchronous Express helpers to async imports would change their API.',
+  },
 ];
 
 /** Fewest characters a cause can have and still say what grew. */

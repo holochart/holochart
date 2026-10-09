@@ -123,6 +123,7 @@ export const holochartPlugin = {
 
 export default defineConfig(
   globalIgnores([
+    '.claude/worktrees/**',
     '**/dist/**',
     '**/coverage/**',
     '**/.turbo/**',

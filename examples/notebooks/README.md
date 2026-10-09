@@ -19,6 +19,9 @@ python3 examples/notebooks/generate.py
 python3 examples/notebooks/generate.py --check
 ```
 
+`--check` verifies committed downloads and guides without requiring ignored VitePress fragments.
+Normal generation (also run before the docs build) writes those fragments.
+
 Generation uses Python's standard library. `.py` files are authoritative; edit those rather
 than the `.ipynb`, public copies or generated web cells. Notebooks contain no saved outputs or
 private paths. Their metadata names the user-facing `holochart` kernel; verification can select

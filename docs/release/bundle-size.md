@@ -2,6 +2,16 @@
 
 Plan E21.1 and §5 ("Size tracking"). Budgets are checked in CI by the `bundle size` job.
 
+## First alpha CI calibration (2026-10-09)
+
+PR #39's Linux CI measured the full ESM bundle at 540.009 kB, compared with 538.05 kB
+for the same entry locally. The observed 0.36% difference exceeded the previous estimate
+of 0.3%, leaving the 540 kB budget short by 9 bytes. The budget is now 542 kB, providing
+about 0.37% headroom above the CI measurement. The 560 kB hard ceiling is unchanged.
+No runtime code or optional-package boundaries changed: geo and graph remain separate
+entries, and heavy rendering is already lazy. The shared runtime and synchronous Express
+helpers must remain available in the initial chunk. The budget ledger records this calibration.
+
 ## Budgets
 
 Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's unit), and
@@ -26,7 +36,7 @@ Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's
 | `controls views (lazy chunks of basic)`            | menus, sliders, range selector/slider, selections views                                               | 16 kB    |
 | `keyboard navigation and legend keys (…)`          | data keyboard navigation (first focus) and legend keys (two chunks)                                   | 5.7 kB   |
 | `legend scrolling (lazy chunk of basic)`           | scrolled legend viewport, scrollbar, wheel/drag/touch/keyboard scrolling, on first overflow           | 1.8 kB   |
-| `@mk7s/holochart (full, ESM)`                      | everything the full bundle exports, 3D included                                                       | 540 kB   |
+| `@mk7s/holochart (full, ESM)`                      | everything the full bundle exports, 3D included                                                       | 542 kB   |
 | `sankey flow particles (lazy chunk of full)`       | the `link.flow` particle primitive, on first sankey flow                                              | 3.6 kB   |
 | `3D mesh primitive and lighting (lazy …)`          | mesh primitive, lighting, light rigs, material types, transparency sorting, on first 3D mesh          | 11.7 kB  |
 | `3D lines, sprites and spheres (lazy …)`           | 3D lines, sprite markers, sphere impostors, depth sorting, on first 3D lines or markers               | 10.7 kB  |

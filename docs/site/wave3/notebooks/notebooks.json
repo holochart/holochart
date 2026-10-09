@@ -6,9 +6,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/first-chart.py",
@@ -25,9 +23,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/plotly-express.py",
@@ -44,9 +40,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/graph-objects.py",
@@ -63,9 +57,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/line-with-bars.py",
@@ -82,9 +74,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/widgets.py",
@@ -101,9 +91,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/bar-basic.py",
@@ -120,9 +108,7 @@
     "controlChanged": true,
     "rerunViews": 1,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/widget-controls.py",
@@ -139,9 +125,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/heatmap-field.py",
@@ -158,9 +142,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/heatmap-basic.py",
@@ -177,9 +159,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/histogram.py",
@@ -196,9 +176,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/histogram-notebook-starter.py",
@@ -215,9 +193,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/comparison-bars.py",
@@ -234,9 +210,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/bar-horizontal.py",
@@ -253,9 +227,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/bar-stacked.py",
@@ -272,9 +244,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/bar-relative.py",
@@ -291,9 +261,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/bar-text.py",
@@ -310,9 +278,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/time-series-gaps.py",
@@ -329,9 +295,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/line-gaps.py",
@@ -348,9 +312,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/line-step.py",
@@ -367,9 +329,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/line-dashes.py",
@@ -386,9 +346,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/distribution-starters.py",
@@ -405,9 +363,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/box-precomputed.py",
@@ -424,9 +380,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/box-horizontal.py",
@@ -443,9 +397,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/violin-basic.py",
@@ -462,9 +414,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/histogram-cumulative.py",
@@ -481,9 +431,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/subplot-layouts.py",
@@ -500,9 +448,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/layout-grid-independent.py",
@@ -519,9 +465,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/layout-grid-coupled.py",
@@ -538,9 +482,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/themes-labels.py",
@@ -557,9 +499,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/themes-plotly_white.py",
@@ -576,9 +516,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/themes-high-contrast.py",
@@ -595,9 +533,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/scatter-text-labels.py",
@@ -614,9 +550,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/spatial-starters.py",
@@ -633,9 +567,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/scatter3d-basic.py",
@@ -652,9 +584,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/surface-basic.py",
@@ -671,9 +601,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/data-troubleshooting.py",
@@ -690,9 +618,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/heatmap-uneven.py",
@@ -709,9 +635,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09",
     "source": "examples/notebooks/variants/scatter-error-bars.py",

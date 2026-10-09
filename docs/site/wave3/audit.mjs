@@ -1,4 +1,5 @@
 /** Whole-page axe evidence; use the frozen production preview for final reports. */
+import process from 'node:process';
 import { chromium } from '@playwright/test';
 import { createRequire } from 'node:module';
 import { writeFile } from 'node:fs/promises';

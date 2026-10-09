@@ -1004,12 +1004,7 @@
           "count": 4,
           "levels": { "unassessed": 4 },
           "variants": { "typescript": 4 },
-          "exampleIds": [
-            "log/colorbar",
-            "log/log-log",
-            "log/minor-grid",
-            "log/semilog-y"
-          ]
+          "exampleIds": ["log/colorbar", "log/log-log", "log/minor-grid", "log/semilog-y"]
         }
       ]
     },
@@ -2847,11 +2842,7 @@
       "status": "complete",
       "internal": false,
       "chart": null,
-      "embeds": [
-        "express/imshow",
-        "express/imshow-rgb",
-        "express/imshow-facets"
-      ],
+      "embeds": ["express/imshow", "express/imshow-rgb", "express/imshow-facets"],
       "snippets": { "ts": 3 }
     },
     {
@@ -3042,12 +3033,7 @@
       "status": "complete",
       "internal": false,
       "chart": null,
-      "embeds": [
-        "chord/links",
-        "graph/force",
-        "graph/layered",
-        "express/adjacency-matrix"
-      ],
+      "embeds": ["chord/links", "graph/force", "graph/layered", "express/adjacency-matrix"],
       "snippets": { "ts": 13 }
     },
     {
@@ -3956,10 +3942,7 @@
           }
         }
       ],
-      "embeddedBy": [
-        "/fundamentals/interaction-events",
-        "/guides/accessibility"
-      ]
+      "embeddedBy": ["/fundamentals/interaction-events", "/guides/accessibility"]
     },
     {
       "id": "accessibility/patterns",
@@ -4051,10 +4034,7 @@
           }
         }
       ],
-      "embeddedBy": [
-        "/fundamentals/controls",
-        "/fundamentals/transitions-animation"
-      ]
+      "embeddedBy": ["/fundamentals/controls", "/fundamentals/transitions-animation"]
     },
     {
       "id": "animation/transitions",
@@ -5040,10 +5020,7 @@
           }
         }
       ],
-      "embeddedBy": [
-        "/customization/per-point-styling",
-        "/fundamentals/conditional-styling"
-      ]
+      "embeddedBy": ["/customization/per-point-styling", "/fundamentals/conditional-styling"]
     },
     {
       "id": "bar/text",
@@ -18804,10 +18781,7 @@
           }
         }
       ],
-      "embeddedBy": [
-        "/charts/basic/horizontal-bar",
-        "/customization/per-point-styling"
-      ]
+      "embeddedBy": ["/charts/basic/horizontal-bar", "/customization/per-point-styling"]
     },
     {
       "id": "recipes/stacked-totals",
@@ -19129,10 +19103,7 @@
           }
         }
       ],
-      "embeddedBy": [
-        "/customization/per-point-styling",
-        "/fundamentals/colors-colorscales"
-      ]
+      "embeddedBy": ["/customization/per-point-styling", "/fundamentals/colors-colorscales"]
     },
     {
       "id": "scatter/custom-symbols",
@@ -19322,10 +19293,7 @@
           }
         }
       ],
-      "embeddedBy": [
-        "/customization/per-point-styling",
-        "/fundamentals/conditional-styling"
-      ]
+      "embeddedBy": ["/customization/per-point-styling", "/fundamentals/conditional-styling"]
     },
     {
       "id": "scatter/style-rules-colorscale",
@@ -21320,10 +21288,7 @@
           }
         }
       ],
-      "embeddedBy": [
-        "/customization/themes-templates",
-        "/fundamentals/styling-themes"
-      ]
+      "embeddedBy": ["/customization/themes-templates", "/fundamentals/styling-themes"]
     },
     {
       "id": "themes/gridon",
@@ -21445,10 +21410,7 @@
           }
         }
       ],
-      "embeddedBy": [
-        "/customization/themes-templates",
-        "/fundamentals/styling-themes"
-      ]
+      "embeddedBy": ["/customization/themes-templates", "/fundamentals/styling-themes"]
     },
     {
       "id": "themes/neon",
@@ -21593,10 +21555,7 @@
           }
         }
       ],
-      "embeddedBy": [
-        "/customization/themes-templates",
-        "/fundamentals/styling-themes"
-      ]
+      "embeddedBy": ["/customization/themes-templates", "/fundamentals/styling-themes"]
     },
     {
       "id": "themes/plotly-classic",
@@ -21619,10 +21578,7 @@
           }
         }
       ],
-      "embeddedBy": [
-        "/customization/themes-templates",
-        "/fundamentals/styling-themes"
-      ]
+      "embeddedBy": ["/customization/themes-templates", "/fundamentals/styling-themes"]
     },
     {
       "id": "themes/presentation",
@@ -21760,10 +21716,7 @@
           }
         }
       ],
-      "embeddedBy": [
-        "/fundamentals/dates-time-series",
-        "/fundamentals/layout-axes-subplots"
-      ]
+      "embeddedBy": ["/fundamentals/dates-time-series", "/fundamentals/layout-axes-subplots"]
     },
     {
       "id": "timeseries/date-formatting",
@@ -21859,10 +21812,7 @@
           }
         }
       ],
-      "embeddedBy": [
-        "/fundamentals/dates-time-series",
-        "/fundamentals/layout-axes-subplots"
-      ]
+      "embeddedBy": ["/fundamentals/dates-time-series", "/fundamentals/layout-axes-subplots"]
     },
     {
       "id": "timeseries/unified-hover",
@@ -21885,10 +21835,7 @@
           }
         }
       ],
-      "embeddedBy": [
-        "/fundamentals/dates-time-series",
-        "/fundamentals/hover-text-templates"
-      ]
+      "embeddedBy": ["/fundamentals/dates-time-series", "/fundamentals/hover-text-templates"]
     },
     {
       "id": "treemap/basic",

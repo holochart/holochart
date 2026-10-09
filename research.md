@@ -15,15 +15,15 @@ tagged `spike`, run with the isolated runner, starting at low scale.
 
 Both ideas depend on the same parts of the stack:
 
-| Area              | Current state                                                                                                                                                  |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Renderer          | three.js `WebGLRenderer`, one WebGL2 context per figure ([render-root.ts](packages/render/src/core/render-root.ts), ADR-004)                                    |
-| Shaders           | GLSL3 `ShaderMaterial`s (ADR-009). WebGPU is opt-in after v1 via `WebGPURenderer` and TSL (plan E16.8, P3, M8)                                                   |
-| Colour            | sRGB output (`SRGBColorSpace`). Colours parsed with `d3-color`, which cannot read `oklch()` or `color(display-p3 …)`. Colorscale LUTs are 256×1 RGBA8 textures |
-| Frame scheduling  | On-demand `RenderLoop` with an **injectable `FrameScheduler`** ([loop.ts](packages/render/src/core/loop.ts), ADR-007)                                            |
-| Animation         | `layout.transition` is in the schema; attribute transitions (E7.3), frames and `animate` (E7.4) and camera animation (E7.5) are not built yet                   |
-| Export            | `renderImage` renders offscreen and reads back with `canvas.toDataURL` (PNG/JPEG/WebP) ([image.ts](packages/runtime/src/export/image.ts))                        |
-| Visual tests      | SwiftShader PNG baselines, bit-stable across runs and OSes (ADR-018, spike E)                                                                                   |
+| Area             | Current state                                                                                                                                                  |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Renderer         | three.js `WebGLRenderer`, one WebGL2 context per figure ([render-root.ts](packages/render/src/core/render-root.ts), ADR-004)                                   |
+| Shaders          | GLSL3 `ShaderMaterial`s (ADR-009). WebGPU is opt-in after v1 via `WebGPURenderer` and TSL (plan E16.8, P3, M8)                                                 |
+| Colour           | sRGB output (`SRGBColorSpace`). Colours parsed with `d3-color`, which cannot read `oklch()` or `color(display-p3 …)`. Colorscale LUTs are 256×1 RGBA8 textures |
+| Frame scheduling | On-demand `RenderLoop` with an **injectable `FrameScheduler`** ([loop.ts](packages/render/src/core/loop.ts), ADR-007)                                          |
+| Animation        | `layout.transition` is in the schema; attribute transitions (E7.3), frames and `animate` (E7.4) and camera animation (E7.5) are not built yet                  |
+| Export           | `renderImage` renders offscreen and reads back with `canvas.toDataURL` (PNG/JPEG/WebP) ([image.ts](packages/runtime/src/export/image.ts))                      |
+| Visual tests     | SwiftShader PNG baselines, bit-stable across runs and OSes (ADR-018, spike E)                                                                                  |
 
 ---
 
@@ -78,17 +78,17 @@ Plan them as two phases: wide gamut first, then extended range.
 
 ### Research spikes
 
-| ID  | Question                                                                                                                                                                                                                                      | Output                                     |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| ID  | Question                                                                                                                                                                                                                                                                      | Output                                     |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
 | H1  | **Platform matrix.** Which browser, OS and display combinations show extended range from a WebGPU canvas, and P3 from WebGL? Test a MacBook XDR screen, an external HDR monitor on Windows, and Android. What happens when the window moves between an SDR and an HDR screen? | Support table plus a probe page            |
-| H2  | **three.js `WebGPURenderer`.** Can it present to an `rgba16float` extended-range canvas? What would it take to port one primitive (markers) to TSL (ADR-009, E16.8)?                                                                             | Working marker demo, or a list of blockers |
-| H3  | **A WebGL-only route.** Does `drawingBufferStorage(RGBA16F)` plus `drawingBufferColorSpace` show values above 1.0 in any browser? This decides whether HDR must wait for the WebGPU renderer.                                                  | Yes/no with evidence                       |
-| H4  | **Headroom detection.** How much brighter than SDR white can we go, and how do we find out? Evaluate the `dynamic-range: high` media query and the `dynamic-range-limit` CSS property, and check whether any API reports headroom. | Detection strategy                         |
-| H5  | **Colour pipeline.** Options for parsing OKLCH and P3 (extend d3-color or replace it), the cost of RGBA16F LUTs, and how to interpolate perceptually above 1.0.                                                                                          | Short ADR draft                            |
-| H6  | **Mixing DOM and canvas.** A glowing marker beside an SDR DOM tooltip or the modebar: capture it on real hardware and set the visual rules.                                                                                              | Screenshots and design rules               |
-| H7  | **Testing.** Can headless Chromium (SwiftShader) create an `rgba16float` canvas and read it back? Otherwise, which CI path is needed for HDR assertions?                                                                                                      | Test approach                              |
-| H8  | **Performance.** Cost of an RGBA16F framebuffer with MSAA versus RGBA8 at 1M markers, reusing the spike A harness.                                                                                                                                     | fps table                                  |
-| H9  | **HDR stills.** Can the browser encode PNG with a cICP tag, or HDR AVIF?                                                                                                                                                                              | Yes/no per browser                         |
+| H2  | **three.js `WebGPURenderer`.** Can it present to an `rgba16float` extended-range canvas? What would it take to port one primitive (markers) to TSL (ADR-009, E16.8)?                                                                                                          | Working marker demo, or a list of blockers |
+| H3  | **A WebGL-only route.** Does `drawingBufferStorage(RGBA16F)` plus `drawingBufferColorSpace` show values above 1.0 in any browser? This decides whether HDR must wait for the WebGPU renderer.                                                                                 | Yes/no with evidence                       |
+| H4  | **Headroom detection.** How much brighter than SDR white can we go, and how do we find out? Evaluate the `dynamic-range: high` media query and the `dynamic-range-limit` CSS property, and check whether any API reports headroom.                                            | Detection strategy                         |
+| H5  | **Colour pipeline.** Options for parsing OKLCH and P3 (extend d3-color or replace it), the cost of RGBA16F LUTs, and how to interpolate perceptually above 1.0.                                                                                                               | Short ADR draft                            |
+| H6  | **Mixing DOM and canvas.** A glowing marker beside an SDR DOM tooltip or the modebar: capture it on real hardware and set the visual rules.                                                                                                                                   | Screenshots and design rules               |
+| H7  | **Testing.** Can headless Chromium (SwiftShader) create an `rgba16float` canvas and read it back? Otherwise, which CI path is needed for HDR assertions?                                                                                                                      | Test approach                              |
+| H8  | **Performance.** Cost of an RGBA16F framebuffer with MSAA versus RGBA8 at 1M markers, reusing the spike A harness.                                                                                                                                                            | fps table                                  |
+| H9  | **HDR stills.** Can the browser encode PNG with a cICP tag, or HDR AVIF?                                                                                                                                                                                                      | Yes/no per browser                         |
 
 H1 and H3 come first: together they decide whether HDR is a WebGL feature soon, or a WebGPU feature
 that follows E16.8.
@@ -109,6 +109,7 @@ exist today:
 - **Controls:** an SDR/HDR toggle and a headroom readout, plus a still export.
 
 **Done when:**
+
 - The page looks deliberate on an HDR display and identical to today's look on SDR.
 - The SDR path passes the normal visual suite.
 - The HDR path has float readback tests.
@@ -174,18 +175,18 @@ timeline (keyframes, camera, captions, audio)
 
 ### Research spikes
 
-| ID  | Question                                                                                                                                                                                                                  | Output                              |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| V1  | **Codec matrix.** H.264, VP9 and AV1 encode support and hardware acceleration via `VideoEncoder.isConfigSupported` in Chrome, Safari and Firefox on macOS, Windows and Linux. Also 4K and 60fps limits, and even-dimension requirements.                       | Support table plus a probe page     |
-| V2  | **Muxer choice.** Compare Mediabunny (successor to mp4-muxer and webm-muxer) with alternatives on streaming-to-disk, fragmented MP4, audio support and bundle size.                                                                                                | Recommendation                      |
-| V3  | **Frame capture cost.** Speed of `new VideoFrame(canvas)` from a WebGL canvas: does it stay on the GPU or read back through the CPU? Measure 4K throughput on an M1 against `readPixels` plus `VideoFrame` from a buffer.                                               | Frames per second at 1080p and 4K   |
-| V4  | **Virtual clock.** Prototype a stepping `FrameScheduler`. Confirm the loop, resize and on-demand invalidation behave, with no dependence on real time anywhere in the render path.                                             | Prototype plus a list of problems   |
-| V5  | **Repeatability.** Does the same timeline give byte-identical frames under SwiftShader (as spike E found for stills)? Does the *encoded* file vary between runs?                                                                        | Result, and a video test strategy   |
-| V6  | **Chroma subsampling.** Encode a test chart (1px gridlines, 10px text, red on dark) at 4:2:0; compare supersampling, line and text scaling, and 4:4:4 availability.                                                       | Side-by-side captures, "video mode" defaults |
-| V7  | **Colour accuracy.** Check sRGB to BT.709 tagging in QuickTime, Chrome, Safari, and after upload to a social platform.                                                                                                                                  | Colour settings that survive        |
-| V8  | **Rendering in a worker.** Can a three.js `WebGLRenderer` on an `OffscreenCanvas` inside a worker keep the main thread free during long renders? What would that cost in the architecture (calculation is already in a worker, ADR-011)?             | Yes/no plus the cost                |
-| V9  | **Audio.** Mux a music track with `AudioEncoder` and align beats to keyframes. Is audio-reactive animation (e.g. pulses on beats) worth adding?                                                                                  | Prototype                           |
-| V10 | **HDR video** (shared with HDR mode). Can WebCodecs encode 10-bit PQ or HLG output (HEVC or AV1 Main10) from an `rgba16float` source?                                                                                                  | Yes/no per platform                 |
+| ID  | Question                                                                                                                                                                                                                                 | Output                                       |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| V1  | **Codec matrix.** H.264, VP9 and AV1 encode support and hardware acceleration via `VideoEncoder.isConfigSupported` in Chrome, Safari and Firefox on macOS, Windows and Linux. Also 4K and 60fps limits, and even-dimension requirements. | Support table plus a probe page              |
+| V2  | **Muxer choice.** Compare Mediabunny (successor to mp4-muxer and webm-muxer) with alternatives on streaming-to-disk, fragmented MP4, audio support and bundle size.                                                                      | Recommendation                               |
+| V3  | **Frame capture cost.** Speed of `new VideoFrame(canvas)` from a WebGL canvas: does it stay on the GPU or read back through the CPU? Measure 4K throughput on an M1 against `readPixels` plus `VideoFrame` from a buffer.                | Frames per second at 1080p and 4K            |
+| V4  | **Virtual clock.** Prototype a stepping `FrameScheduler`. Confirm the loop, resize and on-demand invalidation behave, with no dependence on real time anywhere in the render path.                                                       | Prototype plus a list of problems            |
+| V5  | **Repeatability.** Does the same timeline give byte-identical frames under SwiftShader (as spike E found for stills)? Does the _encoded_ file vary between runs?                                                                         | Result, and a video test strategy            |
+| V6  | **Chroma subsampling.** Encode a test chart (1px gridlines, 10px text, red on dark) at 4:2:0; compare supersampling, line and text scaling, and 4:4:4 availability.                                                                      | Side-by-side captures, "video mode" defaults |
+| V7  | **Colour accuracy.** Check sRGB to BT.709 tagging in QuickTime, Chrome, Safari, and after upload to a social platform.                                                                                                                   | Colour settings that survive                 |
+| V8  | **Rendering in a worker.** Can a three.js `WebGLRenderer` on an `OffscreenCanvas` inside a worker keep the main thread free during long renders? What would that cost in the architecture (calculation is already in a worker, ADR-011)? | Yes/no plus the cost                         |
+| V9  | **Audio.** Mux a music track with `AudioEncoder` and align beats to keyframes. Is audio-reactive animation (e.g. pulses on beats) worth adding?                                                                                          | Prototype                                    |
+| V10 | **HDR video** (shared with HDR mode). Can WebCodecs encode 10-bit PQ or HLG output (HEVC or AV1 Main10) from an `rgba16float` source?                                                                                                    | Yes/no per platform                          |
 
 V1, V3 and V4 come first. Together they show whether a one-minute 4K60 render (3,600 frames) can
 finish in about real time on a laptop.
@@ -211,6 +212,7 @@ Exported from one timeline JSON as:
 - WebM (VP9) fallback
 
 **Done when:**
+
 - All three files come from the same timeline with no per-format edits.
 - Two renders of the same timeline produce identical frames (V5).
 - The 1px gridlines and axis labels stay legible after encoding (V6).

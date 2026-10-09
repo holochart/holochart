@@ -1,4 +1,5 @@
 /** Repeatable production measurements. Run from repository root with Node 22+. */
+import process from 'node:process';
 import { chromium } from '@playwright/test';
 import { cpus, totalmem, platform, arch, loadavg } from 'node:os';
 import { writeFile } from 'node:fs/promises';

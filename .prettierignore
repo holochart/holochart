@@ -30,3 +30,11 @@ apps/docs/public/gallery/artifacts/
 
 # Local production rollback archive
 apps/docs/.vitepress/rollback/
+
+# Local agent checkouts are separate repositories.
+.claude/worktrees/
+
+# Generated VitePress includes and local Python caches.
+apps/docs/.vitepress/generated/
+**/.pytest_cache/
+**/__pycache__/

@@ -6,9 +6,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09"
   },
@@ -19,9 +17,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09"
   },
@@ -32,9 +28,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09"
   },
@@ -45,9 +39,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09"
   },
@@ -58,9 +50,7 @@
     "controlChanged": true,
     "rerunViews": 1,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09"
   },
@@ -71,9 +61,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09"
   },
@@ -84,9 +72,7 @@
     "controlChanged": null,
     "rerunViews": null,
     "errors": [],
-    "hostWarnings": [
-      "Cannot read properties of undefined (reading 'schema')"
-    ],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
     "browser": "153.0.8010.12",
     "date": "2026-10-09"
   }

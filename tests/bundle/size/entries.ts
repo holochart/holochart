@@ -504,8 +504,8 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     // Raised from 450 kB to 475 kB for M5 by decision (M5 wave 1: treemap/icicle, Express hierarchy,
     // accessibility, sankey flow: ~451.6 kB on CI), and to 540 kB for M6 by decision (the 3D scene
     // and, from wave 1, the 3D traces are in the full bundle; their heavy render code is in the lazy
-    // rows below).
-    limit: '540 kB',
+    // rows below). CI calibration on 2026-10-09 adds 2 kB of headroom; see the budget ledger.
+    limit: '542 kB',
     imports: [{ pkg: 'holochart' }],
   },
   {

@@ -15,9 +15,7 @@
           "id": "color-contrast",
           "nodes": [
             {
-              "target": [
-                "code"
-              ],
+              "target": ["code"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             }
           ]
@@ -334,9 +332,7 @@
           "id": "color-contrast",
           "nodes": [
             {
-              "target": [
-                ".line:nth-child(43) > span:nth-child(9)"
-              ],
+              "target": [".line:nth-child(43) > span:nth-child(9)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             }
           ]
@@ -405,15 +401,11 @@
           "id": "color-contrast",
           "nodes": [
             {
-              "target": [
-                ".line:nth-child(57) > span:nth-child(9)"
-              ],
+              "target": [".line:nth-child(57) > span:nth-child(9)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(68) > span:nth-child(12)"
-              ],
+              "target": [".line:nth-child(68) > span:nth-child(12)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             }
           ]
@@ -482,15 +474,11 @@
           "id": "color-contrast",
           "nodes": [
             {
-              "target": [
-                ".line:nth-child(7) > span:nth-child(9)"
-              ],
+              "target": [".line:nth-child(7) > span:nth-child(9)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(4) > span:nth-child(17)"
-              ],
+              "target": [".line:nth-child(4) > span:nth-child(17)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             }
           ]
@@ -707,9 +695,7 @@
           "id": "color-contrast",
           "nodes": [
             {
-              "target": [
-                "code"
-              ],
+              "target": ["code"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             }
           ]
@@ -914,9 +900,7 @@
           "id": "color-contrast",
           "nodes": [
             {
-              "target": [
-                "pre > code"
-              ],
+              "target": ["pre > code"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it partially overlaps other elements"
             }
           ]
@@ -1044,231 +1028,155 @@
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".language-html > pre > code > .line:nth-child(5) > span:nth-child(8)"
-              ],
+              "target": [".language-html > pre > code > .line:nth-child(5) > span:nth-child(8)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".language-html > pre > code > .line:nth-child(6) > span:nth-child(6)"
-              ],
+              "target": [".language-html > pre > code > .line:nth-child(6) > span:nth-child(6)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(9) > span:nth-child(10)"
-              ],
+              "target": [".line:nth-child(9) > span:nth-child(10)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(9) > span:nth-child(12)"
-              ],
+              "target": [".line:nth-child(9) > span:nth-child(12)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(10) > span:nth-child(10)"
-              ],
+              "target": [".line:nth-child(10) > span:nth-child(10)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(10) > span:nth-child(12)"
-              ],
+              "target": [".line:nth-child(10) > span:nth-child(12)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(11) > span:nth-child(10)"
-              ],
+              "target": [".line:nth-child(11) > span:nth-child(10)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(11) > span:nth-child(12)"
-              ],
+              "target": [".line:nth-child(11) > span:nth-child(12)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(12) > span:nth-child(8)"
-              ],
+              "target": [".line:nth-child(12) > span:nth-child(8)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(12) > span:nth-child(10)"
-              ],
+              "target": [".line:nth-child(12) > span:nth-child(10)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(13) > span:nth-child(8)"
-              ],
+              "target": [".line:nth-child(13) > span:nth-child(8)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(13) > span:nth-child(10)"
-              ],
+              "target": [".line:nth-child(13) > span:nth-child(10)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(3) > span:nth-child(8)"
-              ],
+              "target": [".line:nth-child(3) > span:nth-child(8)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(4) > span:nth-child(8)"
-              ],
+              "target": [".line:nth-child(4) > span:nth-child(8)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".language-ts > pre > code > .line:nth-child(5) > span:nth-child(8)"
-              ],
+              "target": [".language-ts > pre > code > .line:nth-child(5) > span:nth-child(8)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(6) > span:nth-child(8)"
-              ],
+              "target": [".line:nth-child(6) > span:nth-child(8)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(7) > span:nth-child(10)"
-              ],
+              "target": [".line:nth-child(7) > span:nth-child(10)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(7) > span:nth-child(13)"
-              ],
+              "target": [".line:nth-child(7) > span:nth-child(13)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(8) > span:nth-child(5)"
-              ],
+              "target": [".line:nth-child(8) > span:nth-child(5)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(20) > span:nth-child(24)"
-              ],
+              "target": [".line:nth-child(20) > span:nth-child(24)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(20) > span:nth-child(26)"
-              ],
+              "target": [".line:nth-child(20) > span:nth-child(26)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(20) > span:nth-child(28)"
-              ],
+              "target": [".line:nth-child(20) > span:nth-child(28)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(20) > span:nth-child(30)"
-              ],
+              "target": [".line:nth-child(20) > span:nth-child(30)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(20) > span:nth-child(32)"
-              ],
+              "target": [".line:nth-child(20) > span:nth-child(32)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(20) > span:nth-child(34)"
-              ],
+              "target": [".line:nth-child(20) > span:nth-child(34)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(33) > span:nth-child(18)"
-              ],
+              "target": [".line:nth-child(33) > span:nth-child(18)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(33) > span:nth-child(20)"
-              ],
+              "target": [".line:nth-child(33) > span:nth-child(20)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(33) > span:nth-child(25)"
-              ],
+              "target": [".line:nth-child(33) > span:nth-child(25)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(33) > span:nth-child(28)"
-              ],
+              "target": [".line:nth-child(33) > span:nth-child(28)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(34) > span:nth-child(9)"
-              ],
+              "target": [".line:nth-child(34) > span:nth-child(9)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(40) > span:nth-child(7)"
-              ],
+              "target": [".line:nth-child(40) > span:nth-child(7)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(41) > span:nth-child(7)"
-              ],
+              "target": [".line:nth-child(41) > span:nth-child(7)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(42) > span:nth-child(7)"
-              ],
+              "target": [".line:nth-child(42) > span:nth-child(7)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(43) > span:nth-child(9)"
-              ],
+              "target": [".line:nth-child(43) > span:nth-child(9)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(47) > span:nth-child(11)"
-              ],
+              "target": [".line:nth-child(47) > span:nth-child(11)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(50) > span:nth-child(7)"
-              ],
+              "target": [".line:nth-child(50) > span:nth-child(7)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(51) > span:nth-child(7)"
-              ],
+              "target": [".line:nth-child(51) > span:nth-child(7)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(54) > span:nth-child(12)"
-              ],
+              "target": [".line:nth-child(54) > span:nth-child(12)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             }
           ]
@@ -1337,291 +1245,195 @@
           "id": "color-contrast",
           "nodes": [
             {
-              "target": [
-                ".line:nth-child(5) > span:nth-child(8)"
-              ],
+              "target": [".line:nth-child(5) > span:nth-child(8)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(6) > span:nth-child(6)"
-              ],
+              "target": [".line:nth-child(6) > span:nth-child(6)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(9) > span:nth-child(10)"
-              ],
+              "target": [".line:nth-child(9) > span:nth-child(10)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(9) > span:nth-child(12)"
-              ],
+              "target": [".line:nth-child(9) > span:nth-child(12)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(10) > span:nth-child(10)"
-              ],
+              "target": [".line:nth-child(10) > span:nth-child(10)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(10) > span:nth-child(12)"
-              ],
+              "target": [".line:nth-child(10) > span:nth-child(12)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(11) > span:nth-child(10)"
-              ],
+              "target": [".line:nth-child(11) > span:nth-child(10)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(11) > span:nth-child(12)"
-              ],
+              "target": [".line:nth-child(11) > span:nth-child(12)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(12) > span:nth-child(8)"
-              ],
+              "target": [".line:nth-child(12) > span:nth-child(8)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(12) > span:nth-child(10)"
-              ],
+              "target": [".line:nth-child(12) > span:nth-child(10)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(13) > span:nth-child(7)"
-              ],
+              "target": [".line:nth-child(13) > span:nth-child(7)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(17) > span:nth-child(8)"
-              ],
+              "target": [".line:nth-child(17) > span:nth-child(8)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(18) > span:nth-child(6)"
-              ],
+              "target": [".line:nth-child(18) > span:nth-child(6)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(18) > span:nth-child(8)"
-              ],
+              "target": [".line:nth-child(18) > span:nth-child(8)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(19) > span:nth-child(6)"
-              ],
+              "target": [".line:nth-child(19) > span:nth-child(6)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(19) > span:nth-child(8)"
-              ],
+              "target": [".line:nth-child(19) > span:nth-child(8)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(20) > span:nth-child(8)"
-              ],
+              "target": [".line:nth-child(20) > span:nth-child(8)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(21) > span:nth-child(10)"
-              ],
+              "target": [".line:nth-child(21) > span:nth-child(10)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(21) > span:nth-child(13)"
-              ],
+              "target": [".line:nth-child(21) > span:nth-child(13)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(22) > span:nth-child(5)"
-              ],
+              "target": [".line:nth-child(22) > span:nth-child(5)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(34) > span:nth-child(19)"
-              ],
+              "target": [".line:nth-child(34) > span:nth-child(19)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(34) > span:nth-child(22)"
-              ],
+              "target": [".line:nth-child(34) > span:nth-child(22)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(34) > span:nth-child(24)"
-              ],
+              "target": [".line:nth-child(34) > span:nth-child(24)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(34) > span:nth-child(26)"
-              ],
+              "target": [".line:nth-child(34) > span:nth-child(26)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(34) > span:nth-child(28)"
-              ],
+              "target": [".line:nth-child(34) > span:nth-child(28)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(34) > span:nth-child(30)"
-              ],
+              "target": [".line:nth-child(34) > span:nth-child(30)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(34) > span:nth-child(32)"
-              ],
+              "target": [".line:nth-child(34) > span:nth-child(32)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(34) > span:nth-child(34)"
-              ],
+              "target": [".line:nth-child(34) > span:nth-child(34)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(47) > span:nth-child(14)"
-              ],
+              "target": [".line:nth-child(47) > span:nth-child(14)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(47) > span:nth-child(16)"
-              ],
+              "target": [".line:nth-child(47) > span:nth-child(16)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(47) > span:nth-child(18)"
-              ],
+              "target": [".line:nth-child(47) > span:nth-child(18)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(47) > span:nth-child(20)"
-              ],
+              "target": [".line:nth-child(47) > span:nth-child(20)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(47) > span:nth-child(25)"
-              ],
+              "target": [".line:nth-child(47) > span:nth-child(25)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(47) > span:nth-child(28)"
-              ],
+              "target": [".line:nth-child(47) > span:nth-child(28)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(48) > span:nth-child(9)"
-              ],
+              "target": [".line:nth-child(48) > span:nth-child(9)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(54) > span:nth-child(5)"
-              ],
+              "target": [".line:nth-child(54) > span:nth-child(5)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(54) > span:nth-child(7)"
-              ],
+              "target": [".line:nth-child(54) > span:nth-child(7)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(55) > span:nth-child(5)"
-              ],
+              "target": [".line:nth-child(55) > span:nth-child(5)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(55) > span:nth-child(7)"
-              ],
+              "target": [".line:nth-child(55) > span:nth-child(7)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(56) > span:nth-child(7)"
-              ],
+              "target": [".line:nth-child(56) > span:nth-child(7)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(57) > span:nth-child(9)"
-              ],
+              "target": [".line:nth-child(57) > span:nth-child(9)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(61) > span:nth-child(9)"
-              ],
+              "target": [".line:nth-child(61) > span:nth-child(9)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(61) > span:nth-child(11)"
-              ],
+              "target": [".line:nth-child(61) > span:nth-child(11)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(64) > span:nth-child(7)"
-              ],
+              "target": [".line:nth-child(64) > span:nth-child(7)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(65) > span:nth-child(7)"
-              ],
+              "target": [".line:nth-child(65) > span:nth-child(7)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(66) > span:nth-child(7)"
-              ],
+              "target": [".line:nth-child(66) > span:nth-child(7)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(68) > span:nth-child(10)"
-              ],
+              "target": [".line:nth-child(68) > span:nth-child(10)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(68) > span:nth-child(12)"
-              ],
+              "target": [".line:nth-child(68) > span:nth-child(12)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
@@ -1696,39 +1508,27 @@
           "id": "color-contrast",
           "nodes": [
             {
-              "target": [
-                ".language-sh > pre > code > .line:nth-child(6) > span:nth-child(5)"
-              ],
+              "target": [".language-sh > pre > code > .line:nth-child(6) > span:nth-child(5)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".language-sh > pre > code > .line:nth-child(6) > span:nth-child(6)"
-              ],
+              "target": [".language-sh > pre > code > .line:nth-child(6) > span:nth-child(6)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".language-sh > pre > code > .line:nth-child(6) > span:nth-child(7)"
-              ],
+              "target": [".language-sh > pre > code > .line:nth-child(6) > span:nth-child(7)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".language-sh > pre > code > .line:nth-child(7) > span:nth-child(7)"
-              ],
+              "target": [".language-sh > pre > code > .line:nth-child(7) > span:nth-child(7)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".language-sh > pre > code > .line:nth-child(7) > span:nth-child(8)"
-              ],
+              "target": [".language-sh > pre > code > .line:nth-child(7) > span:nth-child(8)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(7) > span:nth-child(9)"
-              ],
+              "target": [".line:nth-child(7) > span:nth-child(9)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
@@ -1738,75 +1538,51 @@
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(3) > span:nth-child(19)"
-              ],
+              "target": [".line:nth-child(3) > span:nth-child(19)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(3) > span:nth-child(21)"
-              ],
+              "target": [".line:nth-child(3) > span:nth-child(21)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(3) > span:nth-child(23)"
-              ],
+              "target": [".line:nth-child(3) > span:nth-child(23)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                "span:nth-child(25)"
-              ],
+              "target": ["span:nth-child(25)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(4) > span:nth-child(11)"
-              ],
+              "target": [".line:nth-child(4) > span:nth-child(11)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(4) > span:nth-child(13)"
-              ],
+              "target": [".line:nth-child(4) > span:nth-child(13)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(4) > span:nth-child(15)"
-              ],
+              "target": [".line:nth-child(4) > span:nth-child(15)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(4) > span:nth-child(17)"
-              ],
+              "target": [".line:nth-child(4) > span:nth-child(17)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(1) > span:nth-child(14)"
-              ],
+              "target": [".line:nth-child(1) > span:nth-child(14)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(1) > span:nth-child(16)"
-              ],
+              "target": [".line:nth-child(1) > span:nth-child(16)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(1) > span:nth-child(19)"
-              ],
+              "target": [".line:nth-child(1) > span:nth-child(19)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(1) > span:nth-child(21)"
-              ],
+              "target": [".line:nth-child(1) > span:nth-child(21)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
@@ -1816,39 +1592,27 @@
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(2) > span:nth-child(14)"
-              ],
+              "target": [".line:nth-child(2) > span:nth-child(14)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(2) > span:nth-child(16)"
-              ],
+              "target": [".line:nth-child(2) > span:nth-child(16)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(2) > span:nth-child(18)"
-              ],
+              "target": [".line:nth-child(2) > span:nth-child(18)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(8) > span:nth-child(18)"
-              ],
+              "target": [".line:nth-child(8) > span:nth-child(18)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(8) > span:nth-child(20)"
-              ],
+              "target": [".line:nth-child(8) > span:nth-child(20)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(8) > span:nth-child(22)"
-              ],
+              "target": [".line:nth-child(8) > span:nth-child(22)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             }
           ]
@@ -1957,75 +1721,51 @@
           "id": "color-contrast",
           "nodes": [
             {
-              "target": [
-                "span:nth-child(25)"
-              ],
+              "target": ["span:nth-child(25)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                "span:nth-child(27)"
-              ],
+              "target": ["span:nth-child(27)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(4) > span:nth-child(10)"
-              ],
+              "target": [".line:nth-child(4) > span:nth-child(10)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(4) > span:nth-child(12)"
-              ],
+              "target": [".line:nth-child(4) > span:nth-child(12)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(4) > span:nth-child(15)"
-              ],
+              "target": [".line:nth-child(4) > span:nth-child(15)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(4) > span:nth-child(17)"
-              ],
+              "target": [".line:nth-child(4) > span:nth-child(17)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(4) > span:nth-child(19)"
-              ],
+              "target": [".line:nth-child(4) > span:nth-child(19)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(4) > span:nth-child(21)"
-              ],
+              "target": [".line:nth-child(4) > span:nth-child(21)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(4) > span:nth-child(23)"
-              ],
+              "target": [".line:nth-child(4) > span:nth-child(23)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(6) > span:nth-child(16)"
-              ],
+              "target": [".line:nth-child(6) > span:nth-child(16)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(6) > span:nth-child(18)"
-              ],
+              "target": [".line:nth-child(6) > span:nth-child(18)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                ".line:nth-child(6) > span:nth-child(20)"
-              ],
+              "target": [".line:nth-child(6) > span:nth-child(20)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             }
           ]
@@ -2082,45 +1822,31 @@
           "id": "color-contrast",
           "nodes": [
             {
-              "target": [
-                ".line:nth-child(3) > span:nth-child(8)"
-              ],
+              "target": [".line:nth-child(3) > span:nth-child(8)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                ".line:nth-child(3) > span:nth-child(10)"
-              ],
+              "target": [".line:nth-child(3) > span:nth-child(10)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                "span:nth-child(15)"
-              ],
+              "target": ["span:nth-child(15)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                "span:nth-child(17)"
-              ],
+              "target": ["span:nth-child(17)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             },
             {
-              "target": [
-                "span:nth-child(20)"
-              ],
+              "target": ["span:nth-child(20)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                "span:nth-child(22)"
-              ],
+              "target": ["span:nth-child(22)"],
               "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
             },
             {
-              "target": [
-                "span:nth-child(24)"
-              ],
+              "target": ["span:nth-child(24)"],
               "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
             }
           ]

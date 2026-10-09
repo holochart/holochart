@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { assert, describe, expect, it } from 'vitest';
 import recipes from '../../apps/docs/cookbook/catalog.json';
 import { exampleIds, lintPage, parsePage } from '../../apps/docs/scripts/lint-pages.ts';
 import { chartFamilies } from '../../examples/_lib/families.ts';
@@ -76,6 +76,7 @@ describe('cookbook source contracts', () => {
             .update(readFileSync(path.join(REPO_ROOT, python.source)))
             .digest('hex'),
         ).toBe(python.verification.sourceSha256);
+        assert(python.download, 'Python variants must include a download');
         const links = /<NotebookLinks\s+([^>]+)>/.exec(source)?.[1];
         expect(links).toContain(`variant="${path.basename(python.download, '.py')}"`);
         expect(links).toContain(`slug="${path.basename(python.notebook!, '.ipynb')}"`);

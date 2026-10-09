@@ -26,7 +26,7 @@
     "test:visual:report": "node tests/visual/report.ts",
     "gallery": "playwright test -c tools/gallery-gen/playwright.config.ts",
     "gallery:check": "node tools/gallery-gen/src/check.ts",
-    "test:interaction": "playwright test -c tests/interaction/playwright.config.ts",
+    "test:interaction": "pnpm build:packages && playwright test -c tests/interaction/playwright.config.ts",
     "test:interaction:report": "node tests/interaction/report.ts",
     "build:packages": "turbo run build --filter=./packages/*",
     "bench:gpu": "node tools/bench/src/gpu.ts",
