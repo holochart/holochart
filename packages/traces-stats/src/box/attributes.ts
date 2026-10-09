@@ -242,7 +242,10 @@ export function textAttributes() {
 const statArray = (description: string) =>
   attr.dataArray({ editType: 'calc', role: 'data', description });
 
-/** The box schema. Common trace attributes (`name`, `opacity`, `hovertemplate`, …) come from core. */
+/**
+ * The box schema. Common trace attributes (`name`, `opacity`, `hovertemplate`, …) come from core.
+ * @experimental
+ */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const boxAttributes = /* @__PURE__ */ (() =>
   attr.object(
@@ -343,7 +346,7 @@ export const boxAttributes = /* @__PURE__ */ (() =>
     },
   ))();
 
-/** Layout attributes owned by `box` (coerced when a box trace is present). */
+/** Layout attributes owned by `box` (coerced when a box trace is present). @internal */
 export const boxLayoutAttributes = /* @__PURE__ */ (() => {
   const { mode, gap, groupgap } = groupingLayoutAttributes('box');
   return { boxmode: mode, boxgap: gap, boxgroupgap: groupgap };

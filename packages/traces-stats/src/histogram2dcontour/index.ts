@@ -10,6 +10,7 @@ import type { TraceModule } from '@mk7s/holochart-runtime';
 import { createContourRenderer } from '../contour/plot.ts';
 import { contourColorbar, contourLegendIcon } from '../contour/style.ts';
 import { describeHistogram2d } from '../histogram2d/describe.ts';
+import { gridA11y } from '../a11y-loader.ts';
 import { histogram2dHoverPoints } from '../histogram2d/hover.ts';
 import { supplyHistogram2dLayoutDefaults } from '../histogram2d/index.ts';
 import { cellTexts } from '../histogram2d/text.ts';
@@ -46,6 +47,7 @@ export const histogram2dcontour: TraceModule<
   }),
   hoverPoints: (calc, trace, query, ctx) =>
     histogram2dHoverPoints(calc, trace, query, ctx, { ranges: false }),
+  a11y: gridA11y,
   legendIcon: contourLegendIcon,
   colorbar: (trace, ctx) => contourColorbar(trace, ctx.fullLayout),
   describe: describeHistogram2d,

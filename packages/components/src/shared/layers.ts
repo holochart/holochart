@@ -25,13 +25,16 @@ import type { AxisInfo, ComponentDrawContext, SubplotInfo } from '@mk7s/holochar
 import { BELOW_TRACES_ORDER } from './batches.ts';
 import { findChart, rectTransform } from './host.ts';
 
-/** Where an item sits in Plotly's stack: `lower` = `below`/`between` items with a paper ref. */
+/**
+ * Where an item sits in Plotly's stack: `lower` = `below`/`between` items with a paper ref.
+ * @internal
+ */
 export type LayerStack = 'lower' | 'below' | 'between' | 'upper';
 
-/** Which component draws: images go under shapes within a layer (Plotly's order). */
+/** Which component draws: images go under shapes within a layer (Plotly's order). @internal */
 export type LayerKind = 'shapes' | 'images';
 
-/** A viewport and draw order an item is drawn with. */
+/** A viewport and draw order an item is drawn with. @internal */
 export interface LayerPlacement {
   /** Identity of (viewport, order): items with the same key can share primitives. */
   readonly key: string;
@@ -42,7 +45,7 @@ export interface LayerPlacement {
   readonly order: number;
 }
 
-/** What an item needs to be placed. */
+/** What an item needs to be placed. @internal */
 export interface LayerRequest {
   readonly stack: LayerStack;
   /** Data axes the item is clipped to. */
@@ -68,7 +71,10 @@ const VIEWPORT_ORDER = {
   shapes: { lower: -1, upper: 1e15 + 1 },
 } as const;
 
-/** Linear → container px of an axis as `c = l·m + b` (x from the left, y from the top). */
+/**
+ * Linear → container px of an axis as `c = l·m + b` (x from the left, y from the top).
+ * @internal
+ */
 export function axisAffine(axis: Pick<AxisInfo, 'letter' | 'scale' | 'start'>): {
   m: number;
   b: number;
@@ -81,6 +87,7 @@ export function axisAffine(axis: Pick<AxisInfo, 'letter' | 'scale' | 'start'>): 
  * Transform of geometry stored per dimension either in an axis' linear coordinates (`x` / `y`
  * given) or in container px, into a placement's world: the axis affine, then container → world.
  * Zoom and pan only change this transform.
+ * @internal
  */
 export function classTransform(
   x: Pick<AxisInfo, 'letter' | 'scale' | 'start'> | undefined,
@@ -99,7 +106,7 @@ export function classTransform(
   };
 }
 
-/** The rect an item is clipped to: its data axes' spans, the whole figure elsewhere. */
+/** The rect an item is clipped to: its data axes' spans, the whole figure elsewhere. @internal */
 export function clipRect(
   clipX: Pick<AxisInfo, 'start' | 'end'> | undefined,
   clipY: Pick<AxisInfo, 'start' | 'end'> | undefined,
@@ -128,6 +135,7 @@ function inside(inner: ViewportRect, outer: ViewportRect): boolean {
 /**
  * Resolves placements and owns the extra viewports of one component view. Call {@link begin}
  * before placing a frame's items and {@link end} after, which removes viewports nothing used.
+ * @internal
  */
 export class LayerHost {
   readonly #kind: LayerKind;

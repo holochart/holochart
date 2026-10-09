@@ -1,0 +1,233 @@
+{
+  "head": "3a01ba5",
+  "packages": [
+    {
+      "name": "@mk7s/holochart-components",
+      "dir": "packages/components",
+      "kind": "package",
+      "description": "Figure components: axes, legend, colorbar, annotations, shapes, hover labels, modebar.",
+      "modules": 66
+    },
+    {
+      "name": "@mk7s/holochart-core",
+      "dir": "packages/core",
+      "kind": "package",
+      "description": "Figure model, attribute schema system, validation, defaults, and update planning.",
+      "modules": 79
+    },
+    {
+      "name": "@mk7s/holochart-express",
+      "dir": "packages/express",
+      "kind": "package",
+      "description": "Plotly Express-style one-line charts from tabular data: grouping, facets, animation frames, ECDF, marginals.",
+      "modules": 33
+    },
+    {
+      "name": "@mk7s/holochart",
+      "dir": "packages/holochart",
+      "kind": "package",
+      "description": "Holochart: declarative, GPU-rendered charts built on three.js (full bundle).",
+      "modules": 19
+    },
+    {
+      "name": "@mk7s/holochart-locales",
+      "dir": "packages/locales",
+      "kind": "package",
+      "description": "Locale modules for Holochart (plotly.js's locales): UI strings, month and day names, number separators and date formats, one module per locale.",
+      "modules": 87
+    },
+    {
+      "name": "@mk7s/holochart-render",
+      "dir": "packages/render",
+      "kind": "package",
+      "description": "three.js rendering engine: renderer, viewports, GPU primitives, picking.",
+      "modules": 106
+    },
+    {
+      "name": "@mk7s/holochart-runtime",
+      "dir": "packages/runtime",
+      "kind": "package",
+      "description": "Chart runtime: createChart, pipeline orchestration, update API, events, and the trace-render / component contracts (ADR-019).",
+      "modules": 41
+    },
+    {
+      "name": "@mk7s/holochart-themes",
+      "dir": "packages/themes",
+      "kind": "package",
+      "description": "Built-in templates, palettes, and colorscales.",
+      "modules": 4
+    },
+    {
+      "name": "@mk7s/holochart-traces-3d",
+      "dir": "packages/traces-3d",
+      "kind": "package",
+      "description": "3D scene subplot and 3D trace types: scatter3d, surface, mesh3d, cone, streamtube, volume, isosurface, bar3d.",
+      "modules": 94
+    },
+    {
+      "name": "@mk7s/holochart-traces-basic",
+      "dir": "packages/traces-basic",
+      "kind": "package",
+      "description": "Basic trace types: scatter, bar, pie, table.",
+      "modules": 69
+    },
+    {
+      "name": "@mk7s/holochart-traces-finance",
+      "dir": "packages/traces-finance",
+      "kind": "package",
+      "description": "Financial trace types: ohlc, candlestick, waterfall, funnel, funnelarea, indicator.",
+      "modules": 58
+    },
+    {
+      "name": "@mk7s/holochart-traces-geo",
+      "dir": "packages/traces-geo",
+      "kind": "package",
+      "description": "Geographic trace types on map projections: the geo subplot, scattergeo.",
+      "modules": 72
+    },
+    {
+      "name": "@mk7s/holochart-traces-graph",
+      "dir": "packages/traces-graph",
+      "kind": "package",
+      "description": "Network graph trace types: node-link graphs with force, layered and tree layouts, chord diagrams.",
+      "modules": 103
+    },
+    {
+      "name": "@mk7s/holochart-traces-hier",
+      "dir": "packages/traces-hier",
+      "kind": "package",
+      "description": "Hierarchical and flow trace types: sunburst, treemap, icicle, sankey.",
+      "modules": 51
+    },
+    {
+      "name": "@mk7s/holochart-traces-sci",
+      "dir": "packages/traces-sci",
+      "kind": "package",
+      "description": "Scientific trace types: heatmap, contour, image, scatterpolar, barpolar.",
+      "modules": 56
+    },
+    {
+      "name": "@mk7s/holochart-traces-stats",
+      "dir": "packages/traces-stats",
+      "kind": "package",
+      "description": "Statistical trace types: histogram, histogram2d, histogram2dcontour, box, violin.",
+      "modules": 87
+    },
+    {
+      "name": "@mk7s/holochart-api-report",
+      "dir": "tools/api-report",
+      "kind": "tool",
+      "description": "API reports of the published packages (backlog S2.13): API Extractor over each built dist/index.d.ts, written to api-reports/.",
+      "modules": 0
+    },
+    {
+      "name": "@mk7s/holochart-geo-data",
+      "dir": "tools/geo-data",
+      "kind": "tool",
+      "description": "Builds the basemap TopoJSON of @mk7s/holochart-traces-geo from Natural Earth (ADR-024).",
+      "modules": 0
+    },
+    {
+      "name": "@mk7s/holochart-schema-gen",
+      "dir": "tools/schema-gen",
+      "kind": "tool",
+      "description": "Generates TS types, JSON schema, and attribute reference docs from the attribute schema (plan E1.2, E19.3).",
+      "modules": 0
+    },
+    {
+      "name": "@mk7s/holochart-docs",
+      "dir": "apps/docs",
+      "kind": "app",
+      "description": "Documentation site for mk7s.dev/holochart (plan E19).",
+      "modules": 0
+    },
+    {
+      "name": "@mk7s/holochart-sandbox",
+      "dir": "apps/sandbox",
+      "kind": "app",
+      "description": "Dev sandbox: hot-reloading example picker with GPU stats (plan E0.3).",
+      "modules": 0
+    },
+    {
+      "name": "@mk7s/holochart-examples",
+      "dir": "examples",
+      "kind": "app",
+      "description": "Canonical examples: docs embeds, gallery thumbnails, and visual regression tests (plan E19.2).",
+      "modules": 0
+    }
+  ],
+  "dependencies": [
+    [0, 1, "dependencies"],
+    [0, 5, "dependencies"],
+    [0, 6, "dependencies"],
+    [2, 1, "dependencies"],
+    [2, 6, "dependencies"],
+    [3, 0, "dependencies"],
+    [3, 1, "dependencies"],
+    [3, 2, "dependencies"],
+    [3, 5, "dependencies"],
+    [3, 6, "dependencies"],
+    [3, 7, "dependencies"],
+    [3, 8, "dependencies"],
+    [3, 9, "dependencies"],
+    [3, 10, "dependencies"],
+    [3, 11, "dependencies"],
+    [3, 12, "dependencies"],
+    [3, 13, "dependencies"],
+    [3, 14, "dependencies"],
+    [3, 15, "dependencies"],
+    [4, 1, "dependencies"],
+    [6, 1, "dependencies"],
+    [6, 5, "dependencies"],
+    [7, 1, "dependencies"],
+    [8, 1, "dependencies"],
+    [8, 5, "dependencies"],
+    [8, 6, "dependencies"],
+    [8, 9, "dependencies"],
+    [9, 1, "dependencies"],
+    [9, 5, "dependencies"],
+    [9, 6, "dependencies"],
+    [10, 1, "dependencies"],
+    [10, 5, "dependencies"],
+    [10, 6, "dependencies"],
+    [10, 9, "dependencies"],
+    [11, 1, "dependencies"],
+    [11, 5, "dependencies"],
+    [11, 6, "dependencies"],
+    [11, 9, "dependencies"],
+    [12, 1, "dependencies"],
+    [12, 5, "dependencies"],
+    [12, 6, "dependencies"],
+    [12, 8, "dependencies"],
+    [12, 9, "dependencies"],
+    [13, 1, "dependencies"],
+    [13, 5, "dependencies"],
+    [13, 6, "dependencies"],
+    [13, 9, "dependencies"],
+    [14, 1, "dependencies"],
+    [14, 5, "dependencies"],
+    [14, 6, "dependencies"],
+    [14, 9, "dependencies"],
+    [14, 15, "dependencies"],
+    [15, 1, "dependencies"],
+    [15, 5, "dependencies"],
+    [15, 6, "dependencies"],
+    [15, 9, "dependencies"],
+    [18, 1, "dependencies"],
+    [19, 3, "dependencies"],
+    [19, 1, "dependencies"],
+    [19, 21, "dependencies"],
+    [19, 2, "dependencies"],
+    [19, 4, "dependencies"],
+    [19, 5, "dependencies"],
+    [19, 6, "dependencies"],
+    [20, 1, "dependencies"],
+    [20, 21, "dependencies"],
+    [20, 5, "dependencies"],
+    [21, 3, "dependencies"],
+    [21, 1, "dependencies"],
+    [21, 2, "dependencies"],
+    [21, 4, "dependencies"],
+    [21, 5, "dependencies"]
+  ]
+}

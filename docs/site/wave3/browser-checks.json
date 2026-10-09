@@ -1,0 +1,116 @@
+{
+  "checkedAt": "2026-10-09T19:11:18.456Z",
+  "base": "http://127.0.0.1:5339/holochart/",
+  "homeHtmlSha256": "b687f6b1bca48b0241b1353b5fde9739ca35b7a5406c11d3e7f564369ad157ad",
+  "browser": "Chromium 153.0.8010.12 / SwiftShader",
+  "retries": 0,
+  "workers": 1,
+  "consoleGuard": "All twelve axe-template cases assert no console errors or page errors; simulated WebGL failures are separate expected negative checks.",
+  "renderReadiness": "Live-template axe cases scroll into view, wait for chart readiness and attached native data tables; detail also awaits loaded complete source.",
+  "additionalAssertions": "Unsupported-ARIA incomplete rules fail. Language facet counts TS786/JS53/Python24 remain full-pool when Python is selected;24 results.",
+  "stats": {
+    "startTime": "2026-10-09T19:09:09.549Z",
+    "duration": 116701.973,
+    "expected": 19,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "tests": [
+    {
+      "title": "home has no critical or serious automated accessibility violations",
+      "status": "passed",
+      "durationMs": 2509
+    },
+    {
+      "title": "directory has no critical or serious automated accessibility violations",
+      "status": "passed",
+      "durationMs": 3179
+    },
+    {
+      "title": "inventory has no critical or serious automated accessibility violations",
+      "status": "passed",
+      "durationMs": 3437
+    },
+    {
+      "title": "family has no critical or serious automated accessibility violations",
+      "status": "passed",
+      "durationMs": 3469
+    },
+    {
+      "title": "detail has no critical or serious automated accessibility violations",
+      "status": "passed",
+      "durationMs": 4445
+    },
+    {
+      "title": "chooser has no critical or serious automated accessibility violations",
+      "status": "passed",
+      "durationMs": 1010
+    },
+    {
+      "title": "JavaScript quick start has no critical or serious automated accessibility violations",
+      "status": "passed",
+      "durationMs": 9654
+    },
+    {
+      "title": "HTML quick start has no critical or serious automated accessibility violations",
+      "status": "passed",
+      "durationMs": 9900
+    },
+    {
+      "title": "notebook quick start has no critical or serious automated accessibility violations",
+      "status": "passed",
+      "durationMs": 1797
+    },
+    {
+      "title": "Python hub has no critical or serious automated accessibility violations",
+      "status": "passed",
+      "durationMs": 1407
+    },
+    {
+      "title": "notebook guide has no critical or serious automated accessibility violations",
+      "status": "passed",
+      "durationMs": 1141
+    },
+    {
+      "title": "chart guide has no critical or serious automated accessibility violations",
+      "status": "passed",
+      "durationMs": 6422
+    },
+    {
+      "title": "sidebar toggles with Space and Enter, without nested controls",
+      "status": "passed",
+      "durationMs": 928
+    },
+    {
+      "title": "gallery announces full-pool matches while incrementally showing cards",
+      "status": "passed",
+      "durationMs": 4228
+    },
+    {
+      "title": "catalogs reflow at 720px with visible focus and touch targets",
+      "status": "passed",
+      "durationMs": 5095
+    },
+    {
+      "title": "catalogs reflow at 390px with visible focus and touch targets",
+      "status": "passed",
+      "durationMs": 4585
+    },
+    {
+      "title": "static catalogs create no WebGL contexts and previews dispose each context before reuse",
+      "status": "passed",
+      "durationMs": 45513
+    },
+    {
+      "title": "WebGL-unavailable embeds retain static previews, source downloads and recovery help",
+      "status": "passed",
+      "durationMs": 5163
+    },
+    {
+      "title": "production without JavaScript exposes navigation, chart thumbnails and download links",
+      "status": "passed",
+      "durationMs": 1920
+    }
+  ]
+}

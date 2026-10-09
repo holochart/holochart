@@ -28,13 +28,13 @@ const FIT: Record<FullLayoutImage['sizing'], ImageFit> = {
   stretch: 'stretch',
 };
 
-/** The defaulted images of a layout. */
+/** The defaulted images of a layout. @internal */
 export function imagesOf(fullLayout: Record<string, unknown>): FullLayoutImage[] {
   const list = fullLayout['images'];
   return Array.isArray(list) ? (list as FullLayoutImage[]) : [];
 }
 
-/** One dimension of an image box: its class axis (undefined: container px) and extent. */
+/** One dimension of an image box: its class axis (undefined: container px) and extent. @internal */
 export interface ImageSpan {
   /** Data axis whose linear units `lo`/`hi` are in (`undefined`: container px). */
   readonly axis: ShapeAxis | undefined;
@@ -50,6 +50,7 @@ export interface ImageSpan {
  * The box of an image along one dimension (plotly.js `images/draw.js`): `pos` is the anchor side
  * of the box, `size` its extent in reference units (range units on data axes, so exponents on log
  * axes, as Plotly).
+ * @internal
  */
 export function imageSpan(
   ref: string,
@@ -74,7 +75,7 @@ export function imageSpan(
   return { ...base, lo: p + off * w, hi: p + (off + 1) * w };
 }
 
-/** Where an image sits in Plotly's layer stack. */
+/** Where an image sits in Plotly's layer stack. @internal */
 export function imageStack(
   im: Pick<FullLayoutImage, 'layer'>,
   x: ImageSpan,

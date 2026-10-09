@@ -30,9 +30,9 @@ import {
   streamTubeRadii,
   type StreamSet,
 } from './integrate.ts';
+import type { Vec3 } from '@mk7s/holochart-render';
 
-type Vec3 = [number, number, number];
-
+/** @experimental */
 export interface StreamtubeCalc extends SceneCalc {
   /** The field's grid in scaled units (null: no grid, nothing drawn). */
   readonly grid: StreamGrid | null;

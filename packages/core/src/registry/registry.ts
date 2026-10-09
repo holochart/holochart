@@ -10,7 +10,7 @@ import {
   commonTraceAttributes,
   domainTraceAttributes,
 } from './trace-attributes.ts';
-import type { ComponentModule, Registry, TraceModule } from './types.ts';
+import type { CoreComponentModule, Registry, CoreTraceModule } from './types.ts';
 
 /**
  * Create an empty registry. Trace packages register their modules into it; the full bundle
@@ -21,10 +21,11 @@ import type { ComponentModule, Registry, TraceModule } from './types.ts';
  * const registry = createRegistry().register(scatter, bar).registerTemplate('dark', dark);
  * const { fullData, fullLayout } = supplyDefaults(figure, registry);
  * ```
+ * @experimental
  */
 export function createRegistry(): Registry {
-  const modules = new Map<string, TraceModule>();
-  const components = new Map<string, ComponentModule>();
+  const modules = new Map<string, CoreTraceModule>();
+  const components = new Map<string, CoreComponentModule>();
   const templates = new Map<string, Template>();
   const traceSchemas = new Map<string, ObjectNode>();
   const warned = new Set<string>();

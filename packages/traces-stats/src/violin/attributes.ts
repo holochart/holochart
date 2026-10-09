@@ -15,7 +15,10 @@ import {
   textAttributes,
 } from '../box/attributes.ts';
 
-/** The violin schema. Common trace attributes (`name`, `opacity`, `hovertemplate`, …) come from core. */
+/**
+ * The violin schema. Common trace attributes (`name`, `opacity`, `hovertemplate`, …) come from core.
+ * @experimental
+ */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const violinAttributes = /* @__PURE__ */ (() =>
   attr.object(
@@ -140,7 +143,7 @@ export const violinAttributes = /* @__PURE__ */ (() =>
     },
   ))();
 
-/** Layout attributes owned by `violin` (coerced when a violin trace is present). */
+/** Layout attributes owned by `violin` (coerced when a violin trace is present). @internal */
 export const violinLayoutAttributes = /* @__PURE__ */ (() => {
   const { mode, gap, groupgap } = groupingLayoutAttributes('violin');
   return { violinmode: mode, violingap: gap, violingroupgap: groupgap };

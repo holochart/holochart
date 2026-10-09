@@ -7,6 +7,7 @@ import {
   acquireScene,
   attr,
   register,
+  sceneA11y,
   sceneCrossTraceLayout,
   sceneExtent,
   sceneIdAttribute,
@@ -129,6 +130,8 @@ export const scenePoints: TraceModule<PointsCalc> = {
   },
   subplotDomain: sceneSubplotDomain,
   crossTraceLayout: sceneCrossTraceLayout,
+  // Keyboard orbit, dolly and reset of the scene (Shift + arrows, + / -, 0).
+  a11y: sceneA11y,
   calc(trace, ctx) {
     const s = sceneScales(ctx.fullLayout, sceneOf(trace));
     const col = (k: string): ArrayLike<unknown> => (trace[k] as ArrayLike<unknown>) ?? [];

@@ -132,7 +132,7 @@ createChart(el, {
 
 `chart.addFrames(frames, indices?)` adds frames: a frame whose name exists replaces it, others are
 inserted at `indices` (appended by default). `chart.deleteFrames(indices?)` removes frames by
-index, or all of them. `chart.frames` lists the frames, and `toJSON` saves them with the figure.
+index, or all of them. `chart.frames` lists the frames, and `chartToJSON` saves them with the figure.
 `react` keeps the frames unless the new figure brings its own.
 
 ## Playing frames

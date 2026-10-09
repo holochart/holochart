@@ -6,9 +6,11 @@ import { FillPrimitive } from './fill.ts';
 import {
   createLazyFillPrimitive,
   fillPrimitiveLoaded,
+  loadFillTriangulation,
   preloadFillPrimitive,
   type LazyFillPrimitive,
 } from './fill-loader.ts';
+import { triangulateFills } from './fill-triangulate.ts';
 
 /**
  * Lazy fill primitive (plan E21.6). The tests run in order and share the loader's module state
@@ -94,6 +96,38 @@ describe('LazyFillPrimitive', () => {
   it('preloads', async () => {
     await expect(preloadFillPrimitive()).resolves.toBeUndefined();
     expect(fillPrimitiveLoaded()).toBe(true);
+  });
+
+  it('hands out the triangulation of the fill chunk', async () => {
+    const triangulate = await loadFillTriangulation();
+    expect(triangulate).toBe(triangulateFills);
+    const tri = triangulate({ x: SQUARE.x, y: SQUARE.y });
+    expect(tri.vertexCount).toBe(4);
+    expect(tri.indices).toHaveLength(6);
+  });
+});
+
+describe('loadFillTriangulation', () => {
+  it('loads the fill chunk when nothing has, and a failed load rejects and is tried again', async () => {
+    vi.resetModules();
+    let fail = true;
+    vi.doMock('./fill-lazy.ts', async (importOriginal) => {
+      if (fail) throw new Error('offline');
+      return importOriginal();
+    });
+    try {
+      const loader = await import('./fill-loader.ts');
+      expect(loader.fillPrimitiveLoaded()).toBe(false);
+      await expect(loader.loadFillTriangulation()).rejects.toThrow();
+      expect(loader.fillPrimitiveLoaded()).toBe(false);
+      fail = false;
+      const triangulate = await loader.loadFillTriangulation();
+      expect(loader.fillPrimitiveLoaded()).toBe(true);
+      expect(triangulate({ x: [0, 1, 0], y: [0, 0, 1] }).indices).toHaveLength(3);
+    } finally {
+      vi.doUnmock('./fill-lazy.ts');
+      vi.resetModules();
+    }
   });
 });
 

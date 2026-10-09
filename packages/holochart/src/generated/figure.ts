@@ -29,34 +29,38 @@ import type {
 } from '@mk7s/holochart-traces-3d';
 
 import type {
-  BarTrace as TracesBasicBarTrace,
+  BaseBarTrace,
+  BasePieTrace,
+  BaseScatterTrace,
   ColorbarTickfont,
   ColorbarTitle,
-  PieTrace as TracesBasicPieTrace,
-  ScatterTrace as TracesBasicScatterTrace,
   TableTrace,
 } from '@mk7s/holochart-traces-basic';
 
 import type {
+  BaseFunnelTrace,
+  BaseWaterfallTrace,
   CandlestickTrace,
-  FunnelTrace as TracesFinanceFunnelTrace,
   FunnelareaTrace,
   IndicatorTrace,
   OhlcTrace,
-  WaterfallTrace as TracesFinanceWaterfallTrace,
 } from '@mk7s/holochart-traces-finance';
 
+import type { ChoroplethTrace, ScattergeoTrace } from '@mk7s/holochart-traces-geo';
+
+import type { ChordTrace, Graph3dTrace, GraphTrace } from '@mk7s/holochart-traces-graph';
+
 import type {
-  IcicleTrace as TracesHierIcicleTrace,
+  BaseIcicleTrace,
+  BaseTreemapTrace,
   SankeyTrace,
   SunburstTrace,
-  TreemapTrace as TracesHierTreemapTrace,
 } from '@mk7s/holochart-traces-hier';
 
 import type {
   BarpolarTrace,
+  BaseHeatmapTrace,
   ContourTrace,
-  HeatmapTrace as TracesSciHeatmapTrace,
   ImageTrace,
   ScatterpolarTrace,
 } from '@mk7s/holochart-traces-sci';
@@ -75,12 +79,12 @@ import type {
 /**
  * Bar: rectangles from a base to a value, vertical or horizontal.
  */
-export type BarTrace = TracesBasicBarTrace & ExtrusionAttributes;
+export type BarTrace = BaseBarTrace & ExtrusionAttributes;
 
 /**
  * Pie or donut: slices of a circle proportional to their values.
  */
-export type PieTrace = TracesBasicPieTrace &
+export type PieTrace = BasePieTrace &
   ExtrusionAttributes & {
     /**
      * Tilt of the trace in 2.5D (Holochart extension), degrees: positive looks from above, 0 (default) is the flat view. With `depth`, slices and tiles show their sides.
@@ -103,7 +107,7 @@ export type PieTrace = TracesBasicPieTrace &
 /**
  * Scatter: markers, lines, text labels and filled or stacked areas at x/y positions.
  */
-export type ScatterTrace = TracesBasicScatterTrace &
+export type ScatterTrace = BaseScatterTrace &
   Omit<ExtrusionAttributes, 'depth'> & {
     /**
      * Fill extrusion (Holochart extension, 2.5D, with `fill`): the thickness in CSS px of the slab the fill becomes, or a percentage of the plot area's width; lines, markers and labels are drawn on its front face. Filled traces share the depth, so stacked areas form layers of one slab. 0 (default) draws the trace flat.
@@ -116,17 +120,17 @@ export type ScatterTrace = TracesBasicScatterTrace &
 /**
  * Funnel: stages of a process as bars centered on the value axis, with connector regions between them.
  */
-export type FunnelTrace = TracesFinanceFunnelTrace & ExtrusionAttributes;
+export type FunnelTrace = BaseFunnelTrace & ExtrusionAttributes;
 
 /**
  * Waterfall: bars showing how a running total is built from positive and negative changes, with sum bars and connector lines.
  */
-export type WaterfallTrace = TracesFinanceWaterfallTrace & ExtrusionAttributes;
+export type WaterfallTrace = BaseWaterfallTrace & ExtrusionAttributes;
 
 /**
  * Icicle: a hierarchy as rows (or columns) of cells, children next to their parents, with a path bar and drill-down.
  */
-export type IcicleTrace = TracesHierIcicleTrace &
+export type IcicleTrace = BaseIcicleTrace &
   ExtrusionAttributes & {
     /**
      * Tilt of the trace in 2.5D (Holochart extension), degrees: positive looks from above, 0 (default) is the flat view. With `depth`, slices and tiles show their sides.
@@ -149,7 +153,7 @@ export type IcicleTrace = TracesHierIcicleTrace &
 /**
  * Treemap: a hierarchy as nested rectangles sized by value, with a path bar and drill-down.
  */
-export type TreemapTrace = TracesHierTreemapTrace &
+export type TreemapTrace = BaseTreemapTrace &
   ExtrusionAttributes & {
     /**
      * Tilt of the trace in 2.5D (Holochart extension), degrees: positive looks from above, 0 (default) is the flat view. With `depth`, slices and tiles show their sides.
@@ -172,7 +176,7 @@ export type TreemapTrace = TracesHierTreemapTrace &
 /**
  * Heatmap: a grid of values drawn as colored cells (one GPU texture with a colorscale lookup), with optional cell labels.
  */
-export type HeatmapTrace = TracesSciHeatmapTrace &
+export type HeatmapTrace = BaseHeatmapTrace &
   Omit<ExtrusionAttributes, 'depth'> & {
     /**
      * Cells as columns (Holochart extension, 2.5D): the height in CSS px of a column at `zmax` (or a percentage of the mean cell width, `'300%'`); heights grow linearly from 0 (from `zmin` with negative values), colored like the cells. 0 (default) draws the heatmap flat.
@@ -213,6 +217,11 @@ export interface TraceTypes {
   indicator: IndicatorTrace;
   ohlc: OhlcTrace;
   waterfall: WaterfallTrace;
+  choropleth: ChoroplethTrace;
+  scattergeo: ScattergeoTrace;
+  chord: ChordTrace;
+  graph: GraphTrace;
+  graph3d: Graph3dTrace;
   icicle: IcicleTrace;
   sankey: SankeyTrace;
   sunburst: SunburstTrace;
@@ -611,6 +620,46 @@ export type Layout = {
    * @defaultValue `0`
    */
   waterfallgroupgap?: number;
+  /**
+   * A map-projection subplot. `geo2`, `geo3`, … declare more, referenced from geo traces' `geo` (`'geo2'`).
+   */
+  geo?: LayoutGeo;
+  /**
+   * Subplot `geo2`: the same attributes as `geo`.
+   */
+  geo2?: LayoutGeo;
+  /**
+   * Subplot `geo3`: the same attributes as `geo`.
+   */
+  geo3?: LayoutGeo;
+  /**
+   * Subplot `geo4`: the same attributes as `geo`.
+   */
+  geo4?: LayoutGeo;
+  /**
+   * Subplot `geo5`: the same attributes as `geo`.
+   */
+  geo5?: LayoutGeo;
+  /**
+   * Subplot `geo6`: the same attributes as `geo`.
+   */
+  geo6?: LayoutGeo;
+  /**
+   * Subplot `geo7`: the same attributes as `geo`.
+   */
+  geo7?: LayoutGeo;
+  /**
+   * Subplot `geo8`: the same attributes as `geo`.
+   */
+  geo8?: LayoutGeo;
+  /**
+   * Subplot `geo9`: the same attributes as `geo`.
+   */
+  geo9?: LayoutGeo;
+  /**
+   * Further `geo` containers (`geo10`, …): the same attributes as `geo`, not type-checked.
+   */
+  [key: `geo${number}`]: unknown;
   /**
    * Default colors of the first-level icicle nodes (deeper nodes take their parent's). Defaults to `layout.colorway`; extended with lighter and darker copies when `extendiciclecolors` is on.
    */
@@ -1378,6 +1427,500 @@ export interface LayoutColoraxisColorbar {
    * Colorbar title.
    */
   title?: ColorbarTitle;
+}
+
+/**
+ * A map-projection subplot. `geo2`, `geo3`, … declare more, referenced from geo traces' `geo` (`'geo2'`).
+ */
+export interface LayoutGeo {
+  /**
+   * Extent of the geo subplot as fractions of the plot area, or the `layout.grid` cell at `row` / `column`. A map keeps its shape, so at `projection.scale` 1 it fills the width or the height of its domain, rarely both. Subplots without a domain are stacked from the bottom.
+   */
+  domain?: LayoutGeoDomain;
+  /**
+   * Fit the view to the data of the subplot's traces: `locations` to the points and locations they show, `geojson` to the whole of their `geojson`, `false` to leave the view as set. The fit sets `center` and `projection.scale`; on a world map also `projection.rotation.lon`, and with a clipped projection (`orthographic`, …) `projection.rotation.lat` and both axis ranges. It is off when the figure sets any of the attributes it would set, and for the projections it cannot fit (`albers usa`, `craig`, `peirce quincuncial`, `satellite`).
+   *
+   * @defaultValue `"locations"`
+   */
+  fitbounds?: false | 'locations' | 'geojson';
+  /**
+   * Detail of the base layers, as the scale denominator of the map data in millions: 110 (1:110,000,000, coarse) or 50 (1:50,000,000).
+   *
+   * @defaultValue `110`
+   */
+  resolution?: 110 | 50;
+  /**
+   * The part of the world the base layers cover. A scope other than `world` also sets the default projection, ranges and rotation. `albers usa` maps are always `usa`.
+   *
+   * @defaultValue `"world"`
+   */
+  scope?:
+    | 'africa'
+    | 'antarctica'
+    | 'asia'
+    | 'europe'
+    | 'north america'
+    | 'oceania'
+    | 'south america'
+    | 'usa'
+    | 'world';
+  /**
+   * How the globe is projected onto the subplot.
+   */
+  projection?: LayoutGeoProjection;
+  /**
+   * The point of the map at the middle of the subplot (panning moves it).
+   */
+  center?: LayoutGeoCenter;
+  /**
+   * Default of the base layers and the graticule: `false` hides all of them (also those a template shows) unless the figure shows one itself.
+   *
+   * @defaultValue `true`
+   */
+  visible?: boolean;
+  /**
+   * Draw the coastlines. On by default on world maps.
+   */
+  showcoastlines?: boolean;
+  /**
+   * Color of the coastlines.
+   *
+   * @defaultValue `"#444"`
+   */
+  coastlinecolor?: string;
+  /**
+   * Line width of the coastlines, px.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `1`
+   */
+  coastlinewidth?: number;
+  /**
+   * Fill the land.
+   *
+   * @defaultValue `false`
+   */
+  showland?: boolean;
+  /**
+   * Fill color of the land.
+   *
+   * @defaultValue `"#F0DC82"`
+   */
+  landcolor?: string;
+  /**
+   * Fill the oceans.
+   *
+   * @defaultValue `false`
+   */
+  showocean?: boolean;
+  /**
+   * Fill color of the oceans.
+   *
+   * @defaultValue `"#3399FF"`
+   */
+  oceancolor?: string;
+  /**
+   * Fill the lakes.
+   *
+   * @defaultValue `false`
+   */
+  showlakes?: boolean;
+  /**
+   * Fill color of the lakes.
+   *
+   * @defaultValue `"#3399FF"`
+   */
+  lakecolor?: string;
+  /**
+   * Draw the rivers.
+   *
+   * @defaultValue `false`
+   */
+  showrivers?: boolean;
+  /**
+   * Color of the rivers.
+   *
+   * @defaultValue `"#3399FF"`
+   */
+  rivercolor?: string;
+  /**
+   * Line width of the rivers, px.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `1`
+   */
+  riverwidth?: number;
+  /**
+   * Draw the borders between countries. On by default on scoped maps other than `usa`.
+   */
+  showcountries?: boolean;
+  /**
+   * Color of the country borders.
+   *
+   * @defaultValue `"#444"`
+   */
+  countrycolor?: string;
+  /**
+   * Line width of the country borders, px.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `1`
+   */
+  countrywidth?: number;
+  /**
+   * Draw the borders inside countries (states, provinces). The map data has them for `usa`, and for `north america` at `resolution` 50; on by default there, never drawn elsewhere.
+   */
+  showsubunits?: boolean;
+  /**
+   * Color of the subunit borders.
+   *
+   * @defaultValue `"#444"`
+   */
+  subunitcolor?: string;
+  /**
+   * Line width of the subunit borders, px.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `1`
+   */
+  subunitwidth?: number;
+  /**
+   * Draw the outline of the projected globe. World maps only, where it is on by default.
+   */
+  showframe?: boolean;
+  /**
+   * Color of the frame.
+   *
+   * @defaultValue `"#444"`
+   */
+  framecolor?: string;
+  /**
+   * Line width of the frame, px.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `1`
+   */
+  framewidth?: number;
+  /**
+   * Background color of the map, inside its frame.
+   *
+   * @defaultValue `"#fff"`
+   */
+  bgcolor?: string;
+  /**
+   * The longitude axis of a geo subplot: its range and its graticule lines.
+   */
+  lonaxis?: LayoutGeoLonaxis;
+  /**
+   * The latitude axis of a geo subplot: its range and its graticule lines.
+   */
+  lataxis?: LayoutGeoLataxis;
+  /**
+   * Persistence of user-driven changes of the view (rotation, center and scale). Defaults to `layout.uirevision`.
+   */
+  uirevision?: unknown;
+}
+
+/**
+ * Extent of the geo subplot as fractions of the plot area, or the `layout.grid` cell at `row` / `column`. A map keeps its shape, so at `projection.scale` 1 it fills the width or the height of its domain, rarely both. Subplots without a domain are stacked from the bottom.
+ */
+export interface LayoutGeoDomain {
+  /**
+   * Horizontal extent `[start, end]` of this trace as fractions of the plot area. Defaults to the `layout.grid` column when `column` is set, else `[0, 1]`.
+   *
+   * @defaultValue `[0,1]`
+   */
+  x?: readonly number[];
+  /**
+   * Vertical extent `[start, end]` of this trace as fractions of the plot area (from the bottom). Defaults to the `layout.grid` row when `row` is set, else `[0, 1]`.
+   *
+   * @defaultValue `[0,1]`
+   */
+  y?: readonly number[];
+  /**
+   * Row of the `layout.grid` cell this trace is placed in (0 = first row in `roworder`). Only used with a grid.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `0`
+   */
+  row?: number;
+  /**
+   * Column of the `layout.grid` cell this trace is placed in (0 = leftmost). Only used with a grid.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `0`
+   */
+  column?: number;
+}
+
+/**
+ * How the globe is projected onto the subplot.
+ */
+export interface LayoutGeoProjection {
+  /**
+   * The map projection. Defaults to the scope's: `equirectangular` for the world, `albers usa` for `usa`, a conic or Mercator projection for the continents. The values are Plotly's, and `globe3d`, a Holochart extra: a 3D globe with the view of `orthographic`.
+   */
+  type?:
+    | 'airy'
+    | 'aitoff'
+    | 'albers'
+    | 'albers usa'
+    | 'august'
+    | 'azimuthal equal area'
+    | 'azimuthal equidistant'
+    | 'baker'
+    | 'bertin1953'
+    | 'boggs'
+    | 'bonne'
+    | 'bottomley'
+    | 'bromley'
+    | 'collignon'
+    | 'conic conformal'
+    | 'conic equal area'
+    | 'conic equidistant'
+    | 'craig'
+    | 'craster'
+    | 'cylindrical equal area'
+    | 'cylindrical stereographic'
+    | 'eckert1'
+    | 'eckert2'
+    | 'eckert3'
+    | 'eckert4'
+    | 'eckert5'
+    | 'eckert6'
+    | 'eisenlohr'
+    | 'equal earth'
+    | 'equirectangular'
+    | 'fahey'
+    | 'foucaut'
+    | 'foucaut sinusoidal'
+    | 'ginzburg4'
+    | 'ginzburg5'
+    | 'ginzburg6'
+    | 'ginzburg8'
+    | 'ginzburg9'
+    | 'globe3d'
+    | 'gnomonic'
+    | 'gringorten'
+    | 'gringorten quincuncial'
+    | 'guyou'
+    | 'hammer'
+    | 'hill'
+    | 'homolosine'
+    | 'hufnagel'
+    | 'hyperelliptical'
+    | 'kavrayskiy7'
+    | 'lagrange'
+    | 'larrivee'
+    | 'laskowski'
+    | 'loximuthal'
+    | 'mercator'
+    | 'miller'
+    | 'mollweide'
+    | 'mt flat polar parabolic'
+    | 'mt flat polar quartic'
+    | 'mt flat polar sinusoidal'
+    | 'natural earth'
+    | 'natural earth1'
+    | 'natural earth2'
+    | 'nell hammer'
+    | 'nicolosi'
+    | 'orthographic'
+    | 'patterson'
+    | 'peirce quincuncial'
+    | 'polyconic'
+    | 'rectangular polyconic'
+    | 'robinson'
+    | 'satellite'
+    | 'sinu mollweide'
+    | 'sinusoidal'
+    | 'stereographic'
+    | 'times'
+    | 'transverse mercator'
+    | 'van der grinten'
+    | 'van der grinten2'
+    | 'van der grinten3'
+    | 'van der grinten4'
+    | 'wagner4'
+    | 'wagner6'
+    | 'wiechel'
+    | 'winkel tripel'
+    | 'winkel3';
+  /**
+   * Rotation of the globe before it is projected. `albers usa` has none.
+   */
+  rotation?: LayoutGeoProjectionRotation;
+  /**
+   * `satellite` only: tilt of the view away from straight down, in degrees.
+   *
+   * @defaultValue `0`
+   */
+  tilt?: number;
+  /**
+   * `satellite` only: distance of the viewpoint from the globe's center, in globe radii (above 1: outside the surface).
+   *
+   * Minimum: 1.001
+   *
+   * @defaultValue `2`
+   */
+  distance?: number;
+  /**
+   * Conic projections only: the two standard parallels, in degrees, where the cone meets the globe. Defaults to the scope's, or `[0, 60]`.
+   */
+  parallels?: readonly number[];
+  /**
+   * Zoom factor. At 1 the `lonaxis` / `lataxis` ranges are fitted into the domain.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `1`
+   */
+  scale?: number;
+  /**
+   * Lower limit of zooming by hand, as a `projection.scale` value (0.5: out to half the fitted size). 0 sets no limit.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `0`
+   */
+  minscale?: number;
+  /**
+   * Upper limit of zooming by hand, as a `projection.scale` value (2: in to twice the fitted size). Unset sets no limit.
+   *
+   * Minimum: 0
+   */
+  maxscale?: number;
+}
+
+/**
+ * Rotation of the globe before it is projected. `albers usa` has none.
+ */
+export interface LayoutGeoProjectionRotation {
+  /**
+   * Longitude at the center of the projection, in degrees east: turns the globe about its axis. Defaults to the middle of `lonaxis.range`.
+   */
+  lon?: number;
+  /**
+   * Latitude at the center of the projection, in degrees north: tips the globe towards the viewer.
+   */
+  lat?: number;
+  /**
+   * Turn of the map about the line of sight, in degrees (180 draws it upside down).
+   */
+  roll?: number;
+}
+
+/**
+ * The point of the map at the middle of the subplot (panning moves it).
+ */
+export interface LayoutGeoCenter {
+  /**
+   * Longitude at the middle of the subplot, in degrees. Defaults to the middle of `lonaxis.range` on a scoped map and to `projection.rotation.lon` on a world map.
+   */
+  lon?: number;
+  /**
+   * Latitude at the middle of the subplot, in degrees. Defaults to the middle of `lataxis.range`.
+   */
+  lat?: number;
+}
+
+/**
+ * The longitude axis of a geo subplot: its range and its graticule lines.
+ */
+export interface LayoutGeoLonaxis {
+  /**
+   * The longitudes in view, `[start, end]` in degrees: the map is fitted to this range and clipped to it. Defaults to the scope's range, or to the widest span the projection can show around `projection.rotation.lon`.
+   */
+  range?: readonly number[];
+  /**
+   * Draw the meridians of the graticule.
+   *
+   * @defaultValue `false`
+   */
+  showgrid?: boolean;
+  /**
+   * A longitude one of the meridians passes through, in degrees.
+   *
+   * @defaultValue `0`
+   */
+  tick0?: number;
+  /**
+   * Step between the meridians, in degrees. Defaults to 30.
+   */
+  dtick?: number;
+  /**
+   * Color of the meridians.
+   *
+   * @defaultValue `"#eee"`
+   */
+  gridcolor?: string;
+  /**
+   * Line width of the meridians, px.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `1`
+   */
+  gridwidth?: number;
+  /**
+   * Dash style of the meridians: `solid`, `dot`, `dash`, `longdash`, `dashdot`, `longdashdot`, or a list of dash lengths in px (`5px,10px`).
+   *
+   * @defaultValue `"solid"`
+   */
+  griddash?: string;
+}
+
+/**
+ * The latitude axis of a geo subplot: its range and its graticule lines.
+ */
+export interface LayoutGeoLataxis {
+  /**
+   * The latitudes in view, `[start, end]` in degrees: the map is fitted to this range and clipped to it. Defaults to the scope's range, or to the widest span the projection can show around `projection.rotation.lat`.
+   */
+  range?: readonly number[];
+  /**
+   * Draw the parallels of the graticule.
+   *
+   * @defaultValue `false`
+   */
+  showgrid?: boolean;
+  /**
+   * A latitude one of the parallels passes through, in degrees.
+   *
+   * @defaultValue `0`
+   */
+  tick0?: number;
+  /**
+   * Step between the parallels, in degrees. Defaults to 10.
+   */
+  dtick?: number;
+  /**
+   * Color of the parallels.
+   *
+   * @defaultValue `"#eee"`
+   */
+  gridcolor?: string;
+  /**
+   * Line width of the parallels, px.
+   *
+   * Minimum: 0
+   *
+   * @defaultValue `1`
+   */
+  gridwidth?: number;
+  /**
+   * Dash style of the parallels: `solid`, `dot`, `dash`, `longdash`, `dashdot`, `longdashdot`, or a list of dash lengths in px (`5px,10px`).
+   *
+   * @defaultValue `"solid"`
+   */
+  griddash?: string;
 }
 
 /**

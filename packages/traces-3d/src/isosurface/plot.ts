@@ -16,6 +16,7 @@ import {
   createLazyMeshPrimitive,
   type LazyMeshPrimitive,
   type MeshInput,
+  type Vec3,
 } from '@mk7s/holochart-render';
 import type { TracePlotContext, TraceUpdatePlan, TraceView } from '@mk7s/holochart-runtime';
 import { opacityscaleTable } from '../surface/primitive.ts';
@@ -28,7 +29,6 @@ import { traceColorMapping } from '../mesh3d/colors.ts';
 import type { IsoCalc } from './calc.ts';
 import type { IsoMesh } from './extract.ts';
 
-type Vec3 = [number, number, number];
 type Ctx = TracePlotContext<IsoCalc>;
 
 /** Positions relative to the mesh's box center (the primitive's float64 origin). */

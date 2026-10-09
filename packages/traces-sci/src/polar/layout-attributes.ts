@@ -208,7 +208,7 @@ export const barpolarLayoutAttributes = {
   }),
 } as const;
 
-/** The `polar` subplot container family (`polar`, `polar2`, …). */
+/** The `polar` subplot container family (`polar`, `polar2`, …). @experimental */
 export const polarAttributes = /* @__PURE__ */ (() =>
   attr.subplotObject(
     'polar',

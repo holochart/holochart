@@ -19,10 +19,14 @@
   "type": "module",
   "sideEffects": [
     "./src/index.ts",
+    "./src/geo.ts",
+    "./src/graph.ts",
     "./src/bundle-2d.ts",
     "./src/iife.ts",
     "./src/iife-3d.ts",
     "./dist/index.js",
+    "./dist/geo.js",
+    "./dist/graph.js",
     "./dist/holochart.iife.min.js",
     "./dist/holochart-3d.iife.min.js"
   ],
@@ -41,6 +45,18 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./geo": {
+      "source": "./src/geo.ts",
+      "types": "./dist/geo.d.ts",
+      "import": "./dist/geo.js",
+      "default": "./dist/geo.js"
+    },
+    "./graph": {
+      "source": "./src/graph.ts",
+      "types": "./dist/graph.d.ts",
+      "import": "./dist/graph.js",
+      "default": "./dist/graph.js"
     },
     "./holochart.iife.min.js": "./dist/holochart.iife.min.js",
     "./holochart-3d.iife.min.js": "./dist/holochart-3d.iife.min.js",
@@ -73,6 +89,8 @@
     "@mk7s/holochart-traces-3d": "workspace:*",
     "@mk7s/holochart-traces-basic": "workspace:*",
     "@mk7s/holochart-traces-finance": "workspace:*",
+    "@mk7s/holochart-traces-geo": "workspace:*",
+    "@mk7s/holochart-traces-graph": "workspace:*",
     "@mk7s/holochart-traces-hier": "workspace:*",
     "@mk7s/holochart-traces-sci": "workspace:*",
     "@mk7s/holochart-traces-stats": "workspace:*"
@@ -100,6 +118,16 @@
         "types": "./dist/index.d.ts",
         "import": "./dist/index.js",
         "default": "./dist/index.js"
+      },
+      "./geo": {
+        "types": "./dist/geo.d.ts",
+        "import": "./dist/geo.js",
+        "default": "./dist/geo.js"
+      },
+      "./graph": {
+        "types": "./dist/graph.d.ts",
+        "import": "./dist/graph.js",
+        "default": "./dist/graph.js"
       },
       "./holochart.iife.min.js": "./dist/holochart.iife.min.js",
       "./holochart-3d.iife.min.js": "./dist/holochart-3d.iife.min.js",

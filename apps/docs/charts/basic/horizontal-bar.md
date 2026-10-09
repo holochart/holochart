@@ -7,6 +7,8 @@ chart: bar
 
 # Horizontal bar
 
+<ChartOverview />
+
 ## Overview
 
 A horizontal bar chart is a [bar chart](/charts/basic/bar) turned sideways: categories go down the
@@ -21,6 +23,9 @@ Pick a different chart when the categories have a natural left-to-right order su
 vertical [bars](/charts/basic/bar) or a [line](/charts/basic/line).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -56,12 +61,14 @@ adds value labels past the bar ends and highlights one bar with a per-bar color 
 
 ## Variations
 
+<ChartVariations />
+
 ### Log axis and colorscale
 
 On a log x axis, bars have no zero to start from, so they start below the visible range (Plotly
 semantics). Numeric `marker.color` maps through a colorscale.
 
-<Example id="bar/horizontal" />
+<ExampleLink id="bar/horizontal" />
 
 ### Population pyramid
 
@@ -69,14 +76,14 @@ Two traces back to back: negate one trace's values so it grows left, and use
 `barmode: 'relative'` so both share a row. `xaxis.tickvals` and `ticktext` label the axis with
 absolute values, and `customdata` carries the unsigned numbers for `hovertemplate`.
 
-<Example id="recipes/population-pyramid" />
+<ExampleLink id="recipes/population-pyramid" />
 
 ### 100% stacked bars
 
 `barmode: 'stack'` with `barnorm: 'percent'` scales each row to 100, which suits survey answers
 (Likert scales). A diverging palette orders the answers from negative to positive.
 
-<Example id="recipes/percent-stacked-bars" />
+<ExampleLink id="recipes/percent-stacked-bars" />
 
 ### Labels on horizontal bars
 
@@ -84,7 +91,7 @@ absolute values, and `customdata` carries the unsigned numbers for `hovertemplat
 right-hand subplot of this example shows category names inside horizontal bars, next to vertical
 bars with value labels.
 
-<Example id="bar/text" />
+<ExampleLink id="bar/text" />
 
 ### Dumbbell instead of grouped bars
 
@@ -92,7 +99,7 @@ When you compare two values per category, a dumbbell (two dots and a connector) 
 than two grouped horizontal bars. It is built from scatter traces; see the
 [scatter page](/charts/basic/scatter#dumbbell).
 
-<Example id="recipes/dumbbell" />
+<ExampleLink id="recipes/dumbbell" />
 
 ## Styling
 
@@ -123,7 +130,9 @@ rows than fit on screen is hard to read anyway; show the top N and put the rest 
   not built yet (planned for M2, see the [accessibility guide](/guides/accessibility)). Add a
   caption or `aria-label`, and for ranked lists consider a plain ordered list or table next to the
   chart.
-- **Keyboard:** there is no keyboard navigation yet.
+- **Keyboard:** Tab moves into the plot area; ↑ / ↓ then step through the bars and ← / → move
+  between traces, each stop showing its hover label. See [the
+  keys](/guides/accessibility#keys-in-the-plot-area).
 - **Color:** value labels at the bar ends carry the numbers without color. When you highlight one
   bar by color, say which one in the title or caption too.
 

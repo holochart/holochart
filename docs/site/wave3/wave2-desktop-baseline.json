@@ -1,0 +1,359 @@
+{
+  "checkedAt": "2026-10-09T19:28:04.718Z",
+  "runScope": "desktop only",
+  "base": "http://127.0.0.1:5344/holochart/",
+  "browser": "153.0.8010.12",
+  "host": {
+    "cpu": "Apple M1 Max",
+    "cores": 10,
+    "memoryGiB": 64,
+    "platform": "darwin",
+    "arch": "arm64",
+    "loadAverageAtStart": [17.177734375, 20.39013671875, 30.50927734375],
+    "loadAverageAtEnd": [19.57763671875, 20.80322265625, 30.53759765625]
+  },
+  "profile": {
+    "mobile": "not measured in this run"
+  },
+  "pages": [],
+  "filters": {
+    "inventorySize": 786,
+    "profile": "desktop1440x900, fresh normal headless Chromium browser, explicit CPU1, unthrottled network, initialnetworkidle/fontsready; input event to two animation frames",
+    "cpuSlowdown": 1,
+    "compositor": {
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "features": {
+        "2d_canvas": "unavailable_software",
+        "direct_rendering_display_compositor": "disabled_off_ok",
+        "gpu_compositing": "disabled_software",
+        "multiple_raster_threads": "enabled_on",
+        "opengl": "disabled_off",
+        "rasterization": "disabled_software",
+        "raw_draw": "disabled_off_ok",
+        "skia_graphite": "disabled_off",
+        "trees_in_viz": "disabled_off",
+        "video_decode": "disabled_software",
+        "video_encode": "disabled_software",
+        "webgl": "unavailable_software",
+        "webgpu": "unavailable_software",
+        "webnn": "unavailable_software"
+      }
+    },
+    "sampleCount": 60,
+    "p95Ms": 150.29999995231628,
+    "maxMs": 207.29999995231628,
+    "budgetMs": 100,
+    "samples": [
+      {
+        "query": "basic",
+        "ms": 42.90000009536743,
+        "result": "236 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 166.79999995231628,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "radar",
+        "ms": 43.59999990463257,
+        "result": "12 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 150.29999995231628,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "candles",
+        "ms": 49.59999990463257,
+        "result": "7 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 134,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "histogram",
+        "ms": 55.59999990463257,
+        "result": "41 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 186.09999990463257,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "nothing-matches-this-query",
+        "ms": 41.39999985694885,
+        "result": "0 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 207.29999995231628,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "error band",
+        "ms": 45.5,
+        "result": "6 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 113.09999990463257,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "line",
+        "ms": 35.09999990463257,
+        "result": "273 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 82.70000004768372,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "map",
+        "ms": 32.200000047683716,
+        "result": "107 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 100.59999990463257,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "bar",
+        "ms": 33.80000019073486,
+        "result": "236 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 99.5,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "surface",
+        "ms": 32.799999952316284,
+        "result": "32 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 117,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "basic",
+        "ms": 49.299999952316284,
+        "result": "236 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 100.89999985694885,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "radar",
+        "ms": 31.899999856948853,
+        "result": "12 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 101.20000004768372,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "candles",
+        "ms": 32.5,
+        "result": "7 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 100.5,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "histogram",
+        "ms": 32.89999985694885,
+        "result": "41 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 100,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "nothing-matches-this-query",
+        "ms": 49.90000009536743,
+        "result": "0 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 104.09999990463257,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "error band",
+        "ms": 29.90000009536743,
+        "result": "6 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 100.5,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "line",
+        "ms": 48.799999952316284,
+        "result": "273 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 83.70000004768372,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "map",
+        "ms": 32.700000047683716,
+        "result": "107 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 100.10000014305115,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "bar",
+        "ms": 32.89999985694885,
+        "result": "236 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 100.80000019073486,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "surface",
+        "ms": 32.89999985694885,
+        "result": "32 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 123.89999985694885,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "basic",
+        "ms": 45.90000009536743,
+        "result": "236 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 80.5,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "radar",
+        "ms": 32,
+        "result": "12 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 101.19999980926514,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "candles",
+        "ms": 32.200000047683716,
+        "result": "7 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 101.59999990463257,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "histogram",
+        "ms": 31.799999952316284,
+        "result": "41 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 108,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "nothing-matches-this-query",
+        "ms": 31.700000047683716,
+        "result": "0 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 97.20000004768372,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "error band",
+        "ms": 30.700000047683716,
+        "result": "6 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 99.5,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "line",
+        "ms": 49.5,
+        "result": "273 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 84.70000004768372,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "map",
+        "ms": 33.40000009536743,
+        "result": "107 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 104.5,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "bar",
+        "ms": 44.60000014305115,
+        "result": "236 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 83.09999990463257,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "surface",
+        "ms": 33.299999952316284,
+        "result": "32 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 100,
+        "result": "786 of 786 examples"
+      }
+    ]
+  },
+  "homeHtmlSha256": "fe7a29ba27631ea314df015f95b199438a0777ab848fb7505762ab6ade0a168e",
+  "budgets": {
+    "filtering": false,
+    "allPassed": false
+  },
+  "rollbackArtifact": {
+    "path": "apps/docs/.vitepress/rollback/wave2-2026-10-09.tar.gz",
+    "sha256": "dae4a3d426c6dabb97e36166791d5bfe9495871ac6698b97511c11ccdff09f76"
+  },
+  "measurementNote": "Historical desktop-only baseline. Same explicit CPU1/default-headless compositor as final desktop;100ms budget miss is retained honestly. Mobile was not measured in this run."
+}

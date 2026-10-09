@@ -95,6 +95,7 @@ function firstNumber(v: unknown): number | undefined {
 /**
  * The glyph of a trace: its module's `legendIcon`, else a marker (and a line for `lines` modes)
  * in the trace's color.
+ * @internal
  */
 export function legendGlyphOf(
   trace: FullTrace,
@@ -164,7 +165,7 @@ function faded(c: RGBA, hidden: boolean): RGBA {
   return hidden ? [c[0], c[1], c[2], c[3] * HIDDEN_ALPHA] : c;
 }
 
-/** Everything the legend draws, in container px (pure given `measure`). */
+/** Everything the legend draws, in container px (pure given `measure`). @internal */
 export interface LegendScene {
   /** Legend box in container px (hit region), or `undefined` when nothing is drawn. */
   box: { left: number; top: number; width: number; height: number } | undefined;
@@ -247,7 +248,7 @@ function legendBoxes(
   return layoutLegend(legend, entries, options);
 }
 
-/** Legend geometry for the current layout. */
+/** Legend geometry for the current layout. @internal */
 export function buildLegendScene(
   fullLayout: FullLayout,
   fullData: readonly FullTrace[],

@@ -8,12 +8,14 @@
 /**
  * A path parameter as written: a number, or a date token (Plotly writes
  * `2015-02-21_13:45:56.789`; returned with `_` replaced by a space: `'2015-02-21 13:45:56.789'`).
+ * @internal
  */
 export type PathValue = number | string;
 
 /**
  * A normalized absolute segment. M/L: 1 point; Q: control, end; C: control1, control2, end;
  * Z: none (closes the current subpath).
+ * @internal
  */
 export interface PathSegment {
   type: 'M' | 'L' | 'Q' | 'C' | 'Z';
@@ -21,14 +23,14 @@ export interface PathSegment {
   y: PathValue[];
 }
 
-/** Result of {@link parsePath}. */
+/** Result of {@link parsePath}. @internal */
 export interface ParsedPath {
   segments: PathSegment[];
   /** Set when the string is malformed: parsing stops there (SVG error handling: render up to the error). */
   error?: string;
 }
 
-/** One polyline per subpath, in class space. */
+/** One polyline per subpath, in class space. @internal */
 export interface FlatRing {
   x: number[];
   y: number[];
@@ -36,7 +38,7 @@ export interface FlatRing {
   closed: boolean;
 }
 
-/** How {@link flattenPath} maps coordinates and how finely it subdivides curves. */
+/** How {@link flattenPath} maps coordinates and how finely it subdivides curves. @internal */
 export interface FlattenOptions {
   /** Coordinate → class-space number (non-finite results drop that point). */
   mapX(v: PathValue): number;
@@ -70,6 +72,7 @@ const isNum = (v: PathValue | undefined): v is number => typeof v === 'number';
  * S/T become C/Q with reflected controls, arcs become ≤ 90° cubics. Date tokens are allowed only
  * where no arithmetic is needed (absolute M L H V C S Q T); anything else malformed stops parsing
  * with `error`, keeping the segments before it.
+ * @internal
  */
 export function parsePath(d: string): ParsedPath {
   const segments: PathSegment[] = [];
@@ -265,6 +268,7 @@ function bezier(p: readonly number[], t: number): number {
  * Flatten to polylines (one ring per subpath). Control points are mapped first, then curves are
  * subdivided in class space (like Plotly, which maps control points to pixels). Rings with fewer
  * than 2 points are dropped; on a closed ring a written-out copy of the first point is removed.
+ * @internal
  */
 export function flattenPath(segments: readonly PathSegment[], options: FlattenOptions): FlatRing[] {
   const { scaleX, scaleY, tolerance = 0.25 } = options;
@@ -337,6 +341,7 @@ export function flattenPath(segments: readonly PathSegment[], options: FlattenOp
  * Points of an axis-aligned ellipse (center, radii in class-space units), counter-clockwise, not
  * repeating the first point; segment count adaptive to the px radius (min 8, max 512) so that the
  * chord sagitta r·(1 − cos(π/n)) stays within `tolerance` px.
+ * @internal
  */
 export function ellipsePoints(
   cx: number,

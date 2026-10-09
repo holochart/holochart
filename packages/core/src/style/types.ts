@@ -85,7 +85,7 @@ export interface StylePoint {
  * A style function (plan E8.6, ADR-012) on a per-point (`arrayOk`) attribute, e.g.
  * `marker: { color: (p) => (p.y > 10 ? 'gold' : 'gray') }`. It is called once per point with the
  * point, its index and the input trace, and behaves exactly like the array of its results. Not
- * serializable: `toJSON()` stores the evaluated array (with a warning).
+ * serializable: `chartToJSON()` stores the evaluated array (with a warning).
  */
 export type StyleFunction<T = unknown> = (
   point: StylePoint,

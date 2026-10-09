@@ -1,5 +1,10 @@
+import { attr, supplyDefaults, type FullTrace } from '@mk7s/holochart-core';
+import { createChartRegistry, type TraceModule } from '@mk7s/holochart-runtime';
 import { describe, expect, it } from 'vitest';
-import { defaults } from './__testing__/points.ts';
+import { defaults, points3d } from './__testing__/points.ts';
+import { sceneComponent } from './component.ts';
+import { sceneIdAttribute } from './layout-attributes.ts';
+import { BARE_EYE } from './layout-defaults.ts';
 import { sceneModebarButtons } from './modebar.ts';
 
 type Container = Record<string, unknown>;
@@ -107,5 +112,100 @@ describe('scene layout defaults (plotly.js gl3d)', () => {
     });
     expect(axis(templated.fullLayout, 'x')['showbackground']).toBe(true);
     expect(axis(templated.fullLayout, 'x')['gridcolor']).toBe('rgb(18, 52, 86)');
+  });
+});
+
+describe('scene axis defaults a trace module asks for (axisHints)', () => {
+  /** A 3D trace that keeps its positions in a container, or has none that are a scale. */
+  const placed3d: TraceModule = {
+    type: 'placed3d',
+    categories: ['gl3d'],
+    schema: attr.object({
+      scene: sceneIdAttribute,
+      computed: attr.boolean({ dflt: false, editType: 'calc' }),
+      at: attr.object(
+        {
+          x: attr.dataArray({ editType: 'calc' }),
+          y: attr.dataArray({ editType: 'calc' }),
+          z: attr.dataArray({ editType: 'calc' }),
+        },
+        { editType: 'calc' },
+      ),
+    }),
+    meta: { description: 'Test 3D trace with axis hints.' },
+    supplyDefaults(_in, _out: FullTrace, ctx) {
+      for (const k of ['scene', 'computed', 'at.x', 'at.y', 'at.z']) ctx.coerce(k);
+    },
+    axisHints(trace) {
+      if (trace['computed'] === true) return { hide: true };
+      const at = (trace['at'] ?? {}) as Container;
+      return { x: at['x'], y: at['y'], z: at['z'] };
+    },
+  };
+  const registry = createChartRegistry().register(placed3d, points3d, sceneComponent);
+  const full = (data: Container[], layout: Container = {}): Container =>
+    supplyDefaults({ data, layout: { template: 'none', ...layout } }, registry.core).fullLayout;
+  const visible = (fl: Container): unknown[] =>
+    ['x', 'y', 'z'].map((letter) => axis(fl, letter)['visible']);
+
+  it('hides the axes of a scene whose traces all ask for it; the figure decides otherwise', () => {
+    const computed = { type: 'placed3d', computed: true };
+    expect(visible(full([computed]))).toEqual([false, false, false]);
+    expect(visible(full([computed, computed]))).toEqual([false, false, false]);
+    expect(visible(full([computed], { scene: { yaxis: { visible: true } } }))).toEqual([
+      false,
+      true,
+      false,
+    ]);
+    // A trace that is drawn on the axes shows them, and so does one without the hint.
+    const points = { type: 'points3d', x: [1], y: [1], z: [1] };
+    expect(visible(full([computed, points]))).toEqual([true, true, true]);
+    expect(visible(full([{ type: 'placed3d' }]))).toEqual([true, true, true]);
+    // Each scene is asked on its own.
+    const two = full([computed, { ...points, scene: 'scene2' }]);
+    expect(visible(two)).toEqual([false, false, false]);
+    expect(axis(two, 'x', 'scene2')['visible']).toBe(true);
+  });
+
+  it('starts closer to a scene whose axes are all hidden, unless the figure places the camera', () => {
+    const eye = (fl: Container, id = 'scene'): unknown =>
+      ((fl[id] as Container)['camera'] as Container)['eye'];
+    const computed = { type: 'placed3d', computed: true };
+    const points = { type: 'points3d', x: [1], y: [1], z: [1] };
+    expect(eye(full([computed]))).toEqual({ x: BARE_EYE, y: BARE_EYE, z: BARE_EYE });
+    expect(eye(full([computed, points]))).toEqual({ x: 1.25, y: 1.25, z: 1.25 });
+    expect(eye(full([points]))).toEqual({ x: 1.25, y: 1.25, z: 1.25 });
+    // The figure's camera wins, component by component; a template's too.
+    expect(eye(full([computed], { scene: { camera: { eye: { x: 2, y: 0.1, z: 1 } } } }))).toEqual({
+      x: 2,
+      y: 0.1,
+      z: 1,
+    });
+    expect(eye(full([computed], { scene: { camera: { eye: { z: 0.3 } } } }))).toEqual({
+      x: BARE_EYE,
+      y: BARE_EYE,
+      z: 0.3,
+    });
+    // Each scene is asked on its own, and the rest of the camera is as ever.
+    const two = full([computed, { ...points, scene: 'scene2' }]);
+    expect(eye(two)).toEqual({ x: BARE_EYE, y: BARE_EYE, z: BARE_EYE });
+    expect(eye(two, 'scene2')).toEqual({ x: 1.25, y: 1.25, z: 1.25 });
+    expect(((two['scene'] as Container)['camera'] as Container)['up']).toEqual({
+      x: 0,
+      y: 0,
+      z: 1,
+    });
+  });
+
+  it('types the axes from the data a trace names, and lists its categories', () => {
+    const fl = full([
+      { type: 'placed3d', at: { x: ['b', 'a'], y: ['2026-01-01', '2026-01-02'], z: [1, 2] } },
+    ]);
+    expect(['x', 'y', 'z'].map((letter) => axis(fl, letter)['type'])).toEqual([
+      'category',
+      'date',
+      'linear',
+    ]);
+    expect(axis(fl, 'x')['_categories']).toEqual(['b', 'a']);
   });
 });

@@ -23,7 +23,15 @@ const BASE = BASE_NAME ? `/${BASE_NAME}/` : '/';
 
 export default defineConfig({
   testDir: '.',
-  testMatch: 'render.spec.ts',
+  testMatch: [
+    'render.spec.ts',
+    'airline-infographic.spec.ts',
+    'foundation.spec.ts',
+    'wave2.spec.ts',
+    'wave3.spec.ts',
+    'wave3-content.spec.ts',
+    'wave4.spec.ts',
+  ],
   outputDir: '../../../../test-results/docs-render',
   // Per page; the spec extends it by the number of embeds.
   timeout: 60_000,
@@ -56,13 +64,13 @@ export default defineConfig({
   webServer: {
     command: PREVIEW
       ? `pnpm exec vitepress preview --port ${PORT}`
-      : `pnpm exec vitepress dev --host ${HOST}`,
+      : `pnpm run gen && node ../../tools/gallery-gen/src/smoke-sources.ts choropleth/basic && pnpm exec vitepress dev --host ${HOST}`,
     cwd: '../..',
     // The docs config reads the dev server's port from DOCS_PORT (`--port` can't override it).
     env: { DOCS_PORT: String(PORT) },
     url: `http://${HOST}:${PORT}${BASE}`,
     reuseExistingServer: !CI,
-    timeout: 180_000,
+    timeout: 240_000,
     stdout: 'ignore',
     stderr: 'pipe',
   },

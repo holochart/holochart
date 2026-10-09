@@ -14,3 +14,4 @@ export {
   type GpuPickableOptions,
 } from './gpu-picking.ts';
 export * from './picker.ts';
+export { loadPicker } from './picker-loader.ts';

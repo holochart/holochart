@@ -63,7 +63,7 @@ declare const rows: object[];
 const chart = await hx.histogram(el, rows, { x: 'total_bill', color: 'sex' });
 ```
 
-The figure is ordinary Holochart JSON: `createChart`, `react`, `chart.animate`, `toJSON` and the
+The figure is ordinary Holochart JSON: `createChart`, `react`, `chart.animate`, `chartToJSON` and the
 rest of the API work on it as on any figure.
 
 ## What to register
@@ -101,6 +101,17 @@ of traces-3d (`register(...traces3d)` from `@mk7s/holochart-traces-3d`; in the s
 load `holochart-3d.iife.min.js` after `holochart.iife.min.js`). Facet labels, legends, colorbars
 and animation controls are components.
 
+The maps are the exception to "the bundle registers everything": `scatterGeo`, `lineGeo` and
+`choropleth` use the `geo` subplot and traces of `@mk7s/holochart-traces-geo`, which the bundle
+leaves out so that apps without a map do not pay for it. Add `import '@mk7s/holochart/geo'` next
+to the bundle's import, or `register(...tracesGeo)` in a partial bundle
+([Maps](/express/mappings#maps)).
+
+Network graphs are left out the same way: `graph` and `chord` use the traces of
+`@mk7s/holochart-traces-graph`. Add `import '@mk7s/holochart/graph'`, or `register(...tracesGraph)`
+in a partial bundle ([Networks](/express/mappings#networks)). `adjacencyMatrix` is a `heatmap`
+of traces-sci and needs neither.
+
 ## Functions
 
 | Function                                                         | plotly.py                  | Traces                        |
@@ -129,13 +140,20 @@ and animation controls are components.
 | [`barPolar`](/express/mappings#polar-charts)                     | `px.bar_polar`             | `barpolar`                    |
 | [`scatter3d`](/express/mappings#3d-charts)                       | `px.scatter_3d`            | `scatter3d` (markers)         |
 | [`line3d`](/express/mappings#3d-charts)                          | `px.line_3d`               | `scatter3d` (lines)           |
+| [`scatterGeo`](/express/mappings#maps)                           | `px.scatter_geo`           | `scattergeo` (markers)        |
+| [`lineGeo`](/express/mappings#maps)                              | `px.line_geo`              | `scattergeo` (lines)          |
+| [`choropleth`](/express/mappings#maps)                           | `px.choropleth`            | `choropleth`                  |
+| [`graph`](/express/mappings#networks)                            | —                          | `graph`                       |
+| [`chord`](/express/mappings#chord-diagrams)                      | —                          | `chord`                       |
+| [`adjacencyMatrix`](/express/mappings#adjacency-matrices)        | —                          | `heatmap`                     |
 | [`sunburst`](/express/hierarchy)                                 | `px.sunburst`              | `sunburst`                    |
 | [`treemap`](/express/hierarchy)                                  | `px.treemap`               | `treemap`                     |
 | [`icicle`](/express/hierarchy)                                   | `px.icicle`                | `icicle`                      |
 | [`getTrendlineResults`](/express/statistics#fit-results)         | `px.get_trendline_results` | —                             |
 | [`data.fromCSV`](/express/data#csv)                              | `pd.read_csv`              | —                             |
 
-The rest of plotly.py's catalogue (ternary, geo) follows with its trace types (M7–M8).
+The rest of plotly.py's catalogue (ternary, the tile maps `scatter_map`, `choropleth_map` and
+`density_map`) follows with its trace types.
 
 ## Options every function shares
 
@@ -191,5 +209,13 @@ or the `template` option. Pass `template: 'plotly-classic'` (or call
   don't read it.
 - `scatter3d` and `line3d` fix the scene's axis ranges over every frame of an animated figure
   (px leaves that to `range_x` / `range_y` / `range_z`), as the 2D and polar functions do.
+- The maps (`scatterGeo`, `lineGeo`, `choropleth`) leave `geo.fitbounds` unset, so Holochart fits
+  the view to the data (px shows the whole scope), except with `animationFrame`, where they set
+  it to `false` so the view holds still. A `choropleth` colored by a column that is not numeric
+  keeps the usual `legendgroup` and one legend item per value (px gives every such trace its own
+  item), and `choropleth` takes no `lat` / `lon` (px accepts them, and the trace has neither).
+- `graph`, `chord` and `adjacencyMatrix` have no counterpart in px. They read two tables (edges
+  and nodes) where every px function reads one, make one trace per figure, and take no facets or
+  animation frames. `chord` and `adjacencyMatrix` also take a matrix, as `imshow` does.
 - Not yet: `marginal` on `line` / `bar`, `text_auto` (except on `imshow`), `render_mode`,
   `color_discrete_map` given as a Plotly `px.colors` object, `px.Constant`.

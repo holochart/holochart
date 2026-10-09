@@ -34,13 +34,16 @@ import type { AttrSpec, ItemsNode, ObjectNode, SchemaNode } from '../schema/type
 import { isPlainObject } from '../util/objects.ts';
 import { MAX_DEPTH, deepEqual, isArrayLike, own } from './equal.ts';
 
-/** A trace present in both figures: index `from` in the previous `data`, `to` in the next. */
+/**
+ * A trace present in both figures: index `from` in the previous `data`, `to` in the next.
+ * @experimental
+ */
 export interface TraceMatch {
   from: number;
   to: number;
 }
 
-/** How the traces of two figures correspond (see {@link matchTraces}). */
+/** How the traces of two figures correspond (see {@link matchTraces}). @experimental */
 export interface TraceMatching {
   /** Indices in the next `data` of traces with no previous counterpart (build new objects). */
   added: number[];
@@ -52,7 +55,7 @@ export interface TraceMatching {
   moved: TraceMatch[];
 }
 
-/** Result of {@link diffFigures}. */
+/** Result of {@link diffFigures}. @experimental */
 export interface FigureDiff {
   /**
    * Changed attributes, ready for `planUpdate`. Trace changes carry `traceIndex` = index in the
@@ -115,6 +118,7 @@ const byTo = (a: TraceMatch, b: TraceMatch): number => a.to - b.to;
  * deleting a uid'd trace does not shift the pairing of the rest. A pair whose effective `type`
  * differs is reported as removed + added, since a trace module's scene objects cannot be reused by
  * another module.
+ * @internal
  */
 export function matchTraces(
   prevData: readonly unknown[],
@@ -322,6 +326,7 @@ function diffUnknown(a: unknown, b: unknown, ctx: Ctx): void {
  *   // reuse scene objects for d.traces.matched, build d.traces.added, dispose d.traces.removed
  * }
  * ```
+ * @experimental
  */
 export function diffFigures(prev: AnyFigure, next: AnyFigure, registry: Registry): FigureDiff {
   const changes: Change[] = [];
@@ -402,6 +407,7 @@ export function diffFigures(prev: AnyFigure, next: AnyFigure, registry: Registry
  *
  * Like `planUpdate`, returns only the declared stages; pass the result to `expandStages` for the
  * downstream closure.
+ * @internal
  */
 export function planDiff(diff: FigureDiff, opts: PlanOptions): Set<Stage> {
   const stages = planUpdate(diff.changes, opts);

@@ -10,7 +10,7 @@
  * - `none`: lines in `line.color`, no colorbar.
  * - constraint contours: lines in `line.color`, the shaded region in `fillcolor`, no colorbar.
  */
-import { toRGBA, type FullLayout, type FullTrace, type RGBA } from '@mk7s/holochart-core';
+import { toRGBA, type FullLayout, type FullTrace, type RGBAColor } from '@mk7s/holochart-core';
 import { sampleColorscale } from '@mk7s/holochart-render';
 import type { ColorbarSpec, LegendGlyph, LegendIconContext } from '@mk7s/holochart-runtime';
 import { rgbaToCss } from '@mk7s/holochart-traces-basic';
@@ -19,13 +19,13 @@ import { recordedZExtent, zColorMapping, type ZColorMapping } from '../histogram
 import { bandValue, contourColorRange, type ContourLevels } from '../shared/contour.ts';
 import { levelsOf } from './field.ts';
 
-/** Whether a trace draws constraint contours. */
+/** Whether a trace draws constraint contours. @internal */
 export function isConstraint(trace: FullTrace): boolean {
   return (trace['contours'] as { type?: unknown } | undefined)?.type === 'constraint';
 }
 
 /** Color of `z` in a colorscale spanning `[lo, hi]` (clamped; `reversescale` honored). */
-export function colorIn(mapping: ZColorMapping, lo: number, hi: number, z: number): RGBA {
+export function colorIn(mapping: ZColorMapping, lo: number, hi: number, z: number): RGBAColor {
   let t = hi > lo ? (z - lo) / (hi - lo) : 0.5;
   t = Math.min(1, Math.max(0, t));
   if (mapping.reversescale) t = 1 - t;
@@ -49,7 +49,7 @@ export function levelLineColors(
   trace: FullTrace,
   levels: ContourLevels,
   mapping: ZColorMapping | undefined,
-): RGBA[] {
+): RGBAColor[] {
   const contours = (trace['contours'] ?? {}) as Record<string, unknown>;
   if (contours['coloring'] === 'lines' && mapping && !isConstraint(trace)) {
     const [lo, hi] = contourColorRange('lines', levels, mapping.zmin, mapping.zmax);
@@ -65,6 +65,7 @@ export function levelLineColors(
 /**
  * The colorscale of a contour trace: `undefined` for `coloring: 'none'` and constraint contours
  * (lines in `line.color` only). `extent` is the value extent.
+ * @internal
  */
 export function contourMapping(
   trace: FullTrace,
@@ -79,6 +80,7 @@ export function contourMapping(
 /**
  * The `colorbar` hook: bands for `fill` (hard steps at the levels, over the band colors' span
  * widened to the data), a continuous bar for `heatmap` and `lines`, nothing for `none`.
+ * @internal
  */
 export function contourColorbar(trace: FullTrace, fullLayout: FullLayout): ColorbarSpec | null {
   if (trace.visible !== true || isConstraint(trace)) return null;
@@ -144,6 +146,7 @@ function cssStops(mapping: ZColorMapping, a: number, b: number): [number, string
 /**
  * Legend glyph: the line for `coloring: 'none'`, the shaded region with its outline for
  * constraint contours, else a swatch of the colorscale.
+ * @internal
  */
 export function contourLegendIcon(trace: FullTrace, ctx?: LegendIconContext): LegendGlyph {
   const contours = (trace['contours'] ?? {}) as Record<string, unknown>;

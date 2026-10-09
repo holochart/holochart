@@ -3,6 +3,7 @@
  * 2016-2024 Plotly Technologies Inc.; see this package's THIRD_PARTY_NOTICES.md).
  */
 import type { LocaleModule } from '@mk7s/holochart-core';
+import { holochartKo } from '../holochart/ko.ts';
 
 /** Korean (`ko`). */
 export const ko: LocaleModule = {
@@ -64,6 +65,9 @@ export const ko: LocaleModule = {
     q3: 'q3',
     source: '소스',
     target: '타겟',
+    // Holochart's own strings (UI labels, keyboard announcements, chart summaries), not from
+    // plotly.js.
+    ...holochartKo,
   },
   format: {
     days: ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'],

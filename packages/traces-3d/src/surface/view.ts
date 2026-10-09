@@ -13,11 +13,12 @@
  *   primitive instead (positions on the CPU, lit by the scene's lights, shadows), without the
  *   in-shader lines (contours, highlights, wireframe); projections still draw.
  */
-import { isPlainObject, toRGBA, type RGBA } from '@mk7s/holochart-core';
+import { isPlainObject, toRGBA, type RGBAColor } from '@mk7s/holochart-core';
 import {
   createLazyMeshPrimitive,
   type LazyMeshPrimitive,
   type MeshInput,
+  type Vec3,
 } from '@mk7s/holochart-render';
 import type {
   ComponentPointerEvent,
@@ -47,11 +48,10 @@ import { gridNormals } from './normals.ts';
 import { opacityscaleTable, SurfacePrimitive, type SurfaceData } from './primitive.ts';
 import { farWalls, ProjectionLines, type ProjectionSpec } from './projections.ts';
 
-type Vec3 = [number, number, number];
 type Container = Record<string, unknown>;
 
 const LETTERS = ['x', 'y', 'z'] as const;
-const BLACK: RGBA = [0, 0, 0, 1];
+const BLACK: RGBAColor = [0, 0, 0, 1];
 
 /** Most levels projected per axis (each is a CPU pass over the grid). */
 const MAX_PROJECTED_LEVELS = 256;
@@ -60,7 +60,7 @@ function obj(v: unknown): Container {
   return isPlainObject(v) ? v : {};
 }
 
-function color(v: unknown): RGBA {
+function color(v: unknown): RGBAColor {
   return (typeof v === 'string' ? toRGBA(v) : null) ?? BLACK;
 }
 

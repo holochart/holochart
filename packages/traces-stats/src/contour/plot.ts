@@ -26,7 +26,7 @@ import {
   toRGBA,
   type FullTrace,
   type Locale,
-  type RGBA,
+  type RGBAColor,
 } from '@mk7s/holochart-core';
 import {
   createHeatmapPrimitive,
@@ -66,7 +66,10 @@ import {
 import type { ContourField } from './field.ts';
 import { bandColors, contourMapping, isConstraint, levelLineColors } from './style.ts';
 
-/** One direction of a contour grid: point coordinates and cell edges (linear coordinates). */
+/**
+ * One direction of a contour grid: point coordinates and cell edges (linear coordinates).
+ * @internal
+ */
 export interface ContourAxisGrid {
   /** The grid points (bin centers of histogram2dcontour). */
   readonly centers: ArrayLike<number>;
@@ -74,7 +77,7 @@ export interface ContourAxisGrid {
   readonly edges: ArrayLike<number>;
 }
 
-/** What the contour renderer needs of a calc: the grid and its {@link ContourField}. */
+/** What the contour renderer needs of a calc: the grid and its {@link ContourField}. @internal */
 export interface ContourCalc extends ContourField {
   readonly nx: number;
   readonly ny: number;
@@ -93,7 +96,7 @@ export interface ContourCalc extends ContourField {
   readonly mask?: ContourRegion | undefined;
 }
 
-/** Hooks of {@link createContourRenderer}. */
+/** Hooks of {@link createContourRenderer}. @internal */
 export interface ContourRendererOptions<C extends ContourCalc> {
   /** Cell labels of `coloring: 'heatmap'` (`texttemplate`), in data space. */
   cellTexts?(ctx: TracePlotContext<C>, mapping: ZColorMapping): CellText[];
@@ -237,6 +240,7 @@ export function fillData(calc: ContourCalc, mapping: ZColorMapping, opacity: num
 /**
  * Level labels' text: `contours.labelformat`, else Plotly's automatic precision, in `locale` (the
  * chart's, plan E17.6; default en-US).
+ * @internal
  */
 export function levelText(level: number, labelformat: unknown, locale?: Locale): string {
   const format = typeof labelformat === 'string' && labelformat !== '' ? labelformat : undefined;
@@ -265,7 +269,7 @@ function pieces(calc: ContourCalc): LinePiece[] {
 /** Concatenate pieces (closed ones re-closed) into line primitive input with per-point colors. */
 function lineGeometry(
   list: readonly LinePiece[],
-  colors: readonly RGBA[],
+  colors: readonly RGBAColor[],
   alpha: number,
 ): Pick<LineData, 'x' | 'y' | 'starts' | 'color'> {
   let n = 0;
@@ -310,7 +314,7 @@ export function labelLayout(
   trace: FullTrace,
   transform: Readonly<DataTransform>,
   rect: { width: number; height: number },
-  colors: readonly RGBA[],
+  colors: readonly RGBAColor[],
   font: TextFont,
   locale?: Locale,
 ): { labels: TextLabel[]; lines: LinePiece[] } {
@@ -588,7 +592,7 @@ function sameTransform(a: DataTransform | undefined, b: Readonly<DataTransform>)
   );
 }
 
-/** The `plot` part of a contour trace module. */
+/** The `plot` part of a contour trace module. @internal */
 export function createContourRenderer<C extends ContourCalc>(
   options: ContourRendererOptions<C> = {},
 ): TraceRenderer<C> {

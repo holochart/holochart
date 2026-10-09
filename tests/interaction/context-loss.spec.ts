@@ -10,6 +10,10 @@ import { expect, test, type Page } from '@playwright/test';
  *
  * The example: charts 0 (2D: heatmap, scatter, text) and 1 (3D: lit mesh with an environment,
  * shadows, markers) own a context each; 2 and 3 are the same two on the shared renderer.
+ *
+ * Maps are not in the full bundle, so they have their own page: geo.spec.ts ("context loss") loses
+ * and restores the context of geo figures (base layers at 110m and 50m, a choropleth, markers; on
+ * a context of their own and on the shared renderer) and then hovers, drags and wheels them.
  */
 const EXAMPLE = '_dev/interaction-context-loss';
 

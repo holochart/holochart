@@ -38,6 +38,7 @@ import {
   type PrimitiveContext,
   type RGBA,
   type ViewportSize,
+  type Vec3,
 } from '@mk7s/holochart-render';
 import {
   DoubleSide,
@@ -59,8 +60,6 @@ import {
   type Material,
   type WebGLRenderer,
 } from 'three';
-
-type Vec3 = [number, number, number];
 
 /** Instance sizes at least this large mark gaps (hidden bars). */
 const HIDDEN = 3.0e38;

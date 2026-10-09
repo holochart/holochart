@@ -9,7 +9,7 @@
 export type StripData = readonly object[] | Readonly<Record<string, ArrayLike<unknown>>>;
 
 /** Options of {@link strip}: the camelCase counterparts of `px.strip`'s parameters. */
-export interface StripOptions {
+export interface StripFigureOptions {
   /** The table: an array of row objects, or an object of equally long columns. */
   readonly data: StripData;
   /** Column of x values: categories for vertical strips, values for horizontal ones. */
@@ -145,7 +145,7 @@ function groupColors(
  * createChart(el, figure);
  * ```
  */
-export function strip(options: StripOptions): StripFigure {
+export function strip(options: StripFigureOptions): StripFigure {
   const { x, y, color, hoverName } = options;
   const labels = options.labels ?? {};
   const label = (column: string): string => labels[column] ?? column;

@@ -11,7 +11,7 @@ import { groupValue } from '../core/labels.ts';
 import { expressFunction } from '../core/render.ts';
 import { isMissing, type DataInput } from '../data/table.ts';
 import type {
-  AnimationOptions,
+  AnimationFrameOptions,
   ColumnRef,
   CommonOptions,
   ContinuousColorOptions,
@@ -22,11 +22,11 @@ import type {
   PatternOptions,
   SymbolOptions,
 } from '../options.ts';
-import { defined, opacityPatch, tailRoles } from './shared.ts';
+import { defined, opacityPatch, sizeref, tailRoles } from './shared.ts';
 
 /** Options every polar function takes. */
 export interface PolarOptions
-  extends CommonOptions, DiscreteColorOptions, HoverOptions, AnimationOptions {
+  extends CommonOptions, DiscreteColorOptions, HoverOptions, AnimationFrameOptions {
   /** Column of radii. */
   readonly r?: ColumnRef;
   /** Column of angles (degrees) or angular categories (`'N'`, `'NNE'`, …). */
@@ -78,12 +78,6 @@ export interface BarPolarOptions extends PolarOptions, ContinuousColorOptions, P
    * draws them over each other (`layout.polar.barmode`).
    */
   readonly barmode?: 'relative' | 'stack' | 'overlay';
-}
-
-function sizeref(values: readonly unknown[], sizeMax: number): number {
-  let max = 0;
-  for (const v of values) if (typeof v === 'number' && Number.isFinite(v) && v > max) max = v;
-  return (2 * max) / sizeMax ** 2;
 }
 
 /**

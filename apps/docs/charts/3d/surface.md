@@ -3,9 +3,12 @@ title: Surface
 description: Draw a grid of heights as a lit 3D surface, colored by height or by a second field, with contour lines, wall projections, opacity scales and a wireframe.
 status: complete
 chart: surface
+launch-featured: true
 ---
 
 # Surface
+
+<ChartOverview />
 
 ## Overview
 
@@ -34,6 +37,9 @@ Pick a different chart when:
 `holochart-3d.iife.min.js` after `holochart.iife.min.js`.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -93,31 +99,33 @@ createChart(document.getElementById('chart')!, {
 
 ## Variations
 
+<ChartVariations />
+
 ### x and y vectors
 
 One coordinate per column and per row, unevenly spaced here: the cells stretch with the data.
 
-<Example id="surface/vectors" />
+<ExampleLink id="surface/vectors" />
 
 ### A non-rectangular grid
 
 `x` and `y` as 2D arrays: a polar grid of rings and spokes makes a round ripple.
 
-<Example id="surface/matrices" />
+<ExampleLink id="surface/matrices" />
 
 ### Colored by another field
 
 `surfacecolor` colors a parametric sphere (x, y and z all 2D) by a temperature field; `cmin` and
 `cmax` fix the colorbar.
 
-<Example id="surface/surfacecolor" />
+<ExampleLink id="surface/surfacecolor" />
 
 ### Contour lines and a contour map
 
 `contours.z.show` draws lines of constant height (`start`, `end`, `size`; `usecolormap` colors them
 with the colorscale), and `project.z` draws them again on the floor of the axis box.
 
-<Example id="surface/contours" />
+<ExampleLink id="surface/contours" />
 
 ### Profiles on the walls
 
@@ -125,32 +133,32 @@ with the colorscale), and `project.z` draws them again on the floor of the axis 
 `end` and `size` are given); `project.x` / `project.y` put them on the walls, which follow the
 camera.
 
-<Example id="surface/contours-xy" />
+<ExampleLink id="surface/contours-xy" />
 
 ### Contour lines only
 
 `hidesurface: true` keeps the contour lines and hides the surface.
 
-<Example id="surface/hidesurface" />
+<ExampleLink id="surface/hidesurface" />
 
 ### Opacity by value
 
 `opacityscale` maps the normalized color value to an opacity, like a colorscale: here the values
 near zero fade.
 
-<Example id="surface/opacityscale" />
+<ExampleLink id="surface/opacityscale" />
 
 ### Several surfaces
 
 Surfaces share a scene like any 3D traces: bounds drawn translucent around an estimate.
 
-<Example id="surface/multiple" />
+<ExampleLink id="surface/multiple" />
 
 ### Gaps and connectgaps
 
 Missing values leave holes; `connectgaps` fills them.
 
-<Example id="surface/connectgaps" />
+<ExampleLink id="surface/connectgaps" />
 
 ## Styling
 
@@ -167,7 +175,7 @@ Missing values leave holes; `connectgaps` fills them.
   `width` (px), `usecolormap`, `project`, and the highlight lines' `highlight`, `highlightcolor`,
   `highlightwidth`.
 
-<Example id="surface/lighting" />
+<ExampleLink id="surface/lighting" />
 
 ## Interactivity
 
@@ -211,7 +219,7 @@ chart.on('click', (event) => {
   (`scene.lighting`), shadows and reflections. With three.js materials, contour and highlight lines
   and the wireframe are not drawn (projections are).
 
-<Example id="surface/wireframe" />
+<ExampleLink id="surface/wireframe" />
 
 ## Performance notes
 
@@ -232,8 +240,9 @@ chart.on('click', (event) => {
 
 - **Screen readers:** the chart is a `<canvas>`; the hidden description names each surface, its
   grid size, the range of `x`, `y` and `z` and where the highest point is.
-- **Keyboard:** there is no keyboard navigation between grid points or keyboard camera control
-  yet.
+- **Keyboard:** Shift + arrow keys orbit the camera, `+` / `-` move it in and out and `0` resets it.
+  There is no keyboard navigation between the trace's own points yet. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family).
 - **Color and depth:** a surface's shape can hide parts of it from any one camera. Keep the
   colorbar, use a lightness-monotonic colorscale, add contour lines (and their projections) so
   levels read without turning the scene, and set a useful initial `scene.camera`. Consider a 2D

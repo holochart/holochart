@@ -33,7 +33,7 @@ import {
   type ContourRegion,
 } from '../shared/contour.ts';
 
-/** The contoured area, from the first to the last grid point (linear coordinates). */
+/** The contoured area, from the first to the last grid point (linear coordinates). @experimental */
 export interface ContourBounds {
   readonly x0: number;
   readonly x1: number;
@@ -41,14 +41,14 @@ export interface ContourBounds {
   readonly y1: number;
 }
 
-/** A constraint contour's resolved operation and value. */
+/** A constraint contour's resolved operation and value. @experimental */
 export interface ContourConstraint {
   readonly operation: ConstraintOperation;
   /** A number, or `[lo, hi]` for intervals. */
   readonly value: number | readonly [number, number];
 }
 
-/** What contouring a grid gives (part of the contour traces' calcdata). */
+/** What contouring a grid gives (part of the contour traces' calcdata). @experimental */
 export interface ContourField {
   /** `contours.coloring` (`'none'` for constraint contours, which color with `line.color`). */
   readonly coloring: ContourColoring;
@@ -76,7 +76,10 @@ export interface ContourField {
   readonly mask?: ContourRegion | undefined;
 }
 
-/** A grid to contour: row-major `z[j·nx + i]` (gaps already filled) at points `xc[i]`, `yc[j]`. */
+/**
+ * A grid to contour: row-major `z[j·nx + i]` (gaps already filled) at points `xc[i]`, `yc[j]`.
+ * @internal
+ */
 export interface ContourFieldGrid {
   readonly z: Float64Array;
   readonly nx: number;
@@ -129,6 +132,7 @@ export function constraintOf(trace: FullTrace): ContourConstraint | undefined {
  * The trace's levels (Plotly `set_contours.js`): automatic levels span the data (or `zmin` /
  * `zmax` when `zauto` is off); manual ones come from `contours.start` / `end` / `size`. Constraint
  * contours have the constraint's one or two levels.
+ * @internal
  */
 export function levelsOf(trace: FullTrace, zExtent: readonly [number, number]): ContourLevels {
   const contours = (trace['contours'] ?? {}) as Record<string, unknown>;
@@ -156,7 +160,7 @@ export function levelsOf(trace: FullTrace, zExtent: readonly [number, number]): 
   });
 }
 
-/** An empty field (no grid). */
+/** An empty field (no grid). @internal */
 export function emptyContourField(z: Float64Array = new Float64Array(0)): ContourField {
   return {
     coloring: 'fill',
@@ -169,7 +173,7 @@ export function emptyContourField(z: Float64Array = new Float64Array(0)): Contou
   };
 }
 
-/** Contour a grid for a contour trace (levels or constraint). */
+/** Contour a grid for a contour trace (levels or constraint). @internal */
 export function contourField(grid: ContourFieldGrid, trace: FullTrace): ContourField {
   const contours = (trace['contours'] ?? {}) as Record<string, unknown>;
   const constraint = constraintOf(trace);

@@ -33,7 +33,10 @@ export function binAt(bins: Histogram2dAxisBins, l: number): number {
   return lo;
 }
 
-/** A linear coordinate formatted like the axis' hover labels (`hoverformat` overrides it). */
+/**
+ * A linear coordinate formatted like the axis' hover labels (`hoverformat` overrides it).
+ * @internal
+ */
 export function axisHoverText(axis: AxisInfo | undefined, l: number, hoverformat: unknown): string {
   if (!Number.isFinite(l)) return '';
   if (!axis) return formatNumber(l);
@@ -60,6 +63,7 @@ export function binRangeText(
 /**
  * A cell value's label (`zhoverformat`, else Plotly's hover precision) in `locale` (the chart's,
  * plan E17.6; default en-US). Empty cells give `''`.
+ * @internal
  */
 export function zText(z: number, zhoverformat: unknown, locale?: Locale): string {
   if (!Number.isFinite(z)) return '';
@@ -70,13 +74,13 @@ export function zText(z: number, zhoverformat: unknown, locale?: Locale): string
   });
 }
 
-/** The data value of a linear coordinate (dates as strings, categories by name). */
+/** The data value of a linear coordinate (dates as strings, categories by name). @internal */
 export function dataValue(axis: AxisInfo | undefined, l: number): unknown {
   if (!axis || !Number.isFinite(l)) return l;
   return axis.scale.l2d(l);
 }
 
-/** CSS color of a value under a mapping (for hover label borders). */
+/** CSS color of a value under a mapping (for hover label borders). @internal */
 export function cellColor(z: number, mapping: ZColorMapping): string | undefined {
   if (!Number.isFinite(z)) return undefined;
   const span = mapping.zmax - mapping.zmin;

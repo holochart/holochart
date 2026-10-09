@@ -49,7 +49,10 @@ const WHITE: RGBA = [1, 1, 1, 1];
 /** Draw order within the trace (added to its render order): bars, error bars, then labels on top. */
 const LAYER = { errorBars: 0.25, text: 0.5 } as const;
 
-/** Draws a bar trace with `depth` extruded (render's `extrudeRects`; see the module comment). */
+/**
+ * Draws a bar trace with `depth` extruded (render's `extrudeRects`; see the module comment).
+ * @experimental
+ */
 export type BarExtruder = typeof extrudeRects;
 
 let extruder: BarExtruder | undefined;
@@ -58,6 +61,7 @@ let extruder: BarExtruder | undefined;
  * Install (or remove) the extruder of bars with `depth` (plan E9.10). The full bundle
  * (`@mk7s/holochart`) installs render's `extrudeRects` and registers `bar` with the `depth`,
  * `bevel` and `material` attributes (core `withExtrusion`); partial bundles opt in the same way.
+ * @experimental
  */
 export function setBarExtruder(fn: BarExtruder | undefined): void {
   extruder = fn;

@@ -88,7 +88,7 @@ export interface BoxSamples {
   readonly suspected: Uint8Array;
 }
 
-/** Box calcdata (violin extends it). */
+/** Box calcdata (violin extends it). @experimental */
 export interface BoxCalc {
   readonly kind: BoxKind;
   readonly orientation: 'v' | 'h';

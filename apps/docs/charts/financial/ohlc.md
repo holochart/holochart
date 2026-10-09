@@ -7,6 +7,8 @@ chart: ohlc
 
 # OHLC
 
+<ChartOverview />
+
 ## Overview
 
 An OHLC chart shows four prices per period: a vertical line from the **low** to the **high**,
@@ -29,6 +31,9 @@ Pick a different chart when:
   [waterfall chart](/charts/financial/waterfall).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -76,13 +81,15 @@ under its x axis by default, as in Plotly: drag its window to pan, its ends to z
 
 ## Variations
 
+<ChartVariations />
+
 ### Colors, widths and ticks
 
 `increasing.line` and `decreasing.line` style each direction (`color`, `width`, `dash`);
 `line.width` and `line.dash` set both at once. `tickwidth` is the length of the open and close
 ticks as a fraction of the spacing between bars (default 0.3, at most 0.5):
 
-<Example id="ohlc/styled" />
+<ExampleLink id="ohlc/styled" />
 
 ### Monthly bars with period alignment
 
@@ -90,7 +97,7 @@ Bars that stand for a whole month, stamped with its first trading day, are cente
 month with `xperiod: 'M1'`, so they line up with monthly ticks. The tick length follows the
 shortest month:
 
-<Example id="ohlc/monthly" />
+<ExampleLink id="ohlc/monthly" />
 
 ### Range breaks and unified hover
 
@@ -98,7 +105,7 @@ shortest month:
 by side at an even spacing. With `hovermode: 'x unified'` one label lists the prices of every
 trace at the date under the pointer:
 
-<Example id="ohlc/range-breaks" />
+<ExampleLink id="ohlc/range-breaks" />
 
 ### Moving averages and bands
 
@@ -106,7 +113,7 @@ Indicators are ordinary [scatter](/charts/basic/scatter) traces on the same axes
 moving average and Bollinger bands filled with `fill: 'tonexty'`. Scatter traces draw over
 financial ones, as in Plotly:
 
-<Example id="ohlc/indicators" />
+<ExampleLink id="ohlc/indicators" />
 
 ## Styling
 
@@ -200,7 +207,9 @@ createChart(document.getElementById('chart')!, {
 - **Screen readers:** the hidden description (see the [accessibility guide](/guides/accessibility))
   gives the bar count and date span, the first and last close, the lowest low and highest high
   with their dates, and how many bars rose and fell; its table lists each bar's date and prices.
-- **Keyboard:** there is no keyboard navigation between bars yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then step through the bars and ↑ / ↓ move to the
+  trace above or below, each stop showing its hover label. See [the
+  keys](/guides/accessibility#keys-in-the-plot-area).
 - **Color:** the directions differ by color only, and green and red are hard to tell apart for
   many people. The open and close ticks still show the direction; for dashboards consider a
   second cue, such as dotted falling bars (`decreasing.line.dash`) or colors that differ in
@@ -234,4 +243,4 @@ default. The range slider is under
 - `%{change}` and `%{changepercent}` in `hovertemplate` are Holochart additions.
 - The default look uses the colorway's green and red at 1 px; `template: 'plotly-classic'` gives
   Plotly's colors.
-- Not supported yet: `xcalendar`, keyboard navigation between bars.
+- Not supported yet: `xcalendar`.

@@ -24,7 +24,7 @@ import {
   type FullTrace,
   type LayoutDefaultsContext,
   type ObjectNode,
-  type RGBA,
+  type RGBAColor,
   PLOTLYJS_COLORSCALES,
 } from '@mk7s/holochart-core';
 import {
@@ -61,13 +61,14 @@ const namedCache = new Map<string, Colorscale>();
 let namedCacheVersion = -1;
 
 function toStops(css: CssColorscale): Colorscale {
-  const black: RGBA = [0, 0, 0, 1];
+  const black: RGBAColor = [0, 0, 0, 1];
   return css.map(([p, c]) => [p, toRGBA(c) ?? black] as const);
 }
 
 /**
  * A defaulted `colorscale` value (a name, or `[position, css color]` stops as core's coercion
  * stores them) → render-layer stops (sRGB 0–1). Unknown names give `undefined`.
+ * @internal
  */
 export function resolveColorscale(value: unknown): Colorscale | undefined {
   if (typeof value === 'string') {
@@ -91,7 +92,7 @@ export function resolveColorscale(value: unknown): Colorscale | undefined {
   if (!Array.isArray(value) || value.length === 0) return undefined;
   const hit = resolvedCache.get(value);
   if (hit) return hit;
-  const stops: [number, RGBA][] = [];
+  const stops: [number, RGBAColor][] = [];
   for (const stop of value as unknown[]) {
     if (!Array.isArray(stop) || typeof stop[0] !== 'number' || typeof stop[1] !== 'string') {
       return undefined;
@@ -126,6 +127,7 @@ function tickAttr<S extends object>(spec: S, dflt?: unknown): S {
  * `layout.coloraxisN.colorbar`), following Plotly's colorbar attributes: size and placement,
  * outline, border and background, the axis tick API (the colorbar is a linear axis over
  * `[cmin, cmax]`) and a title.
+ * @experimental
  */
 export const colorbarAttributes = attr.object(
   {
@@ -267,6 +269,7 @@ function coerceLeaves(
  * Plotly's `colorbar/defaults.js` for the container at `prefix` (`'marker.'`, `'coloraxis.'`):
  * position, anchors, title side and label overflow depend on `orientation` and the refs. Fonts
  * stay unset where the user gave none; the colorbar component inherits them when drawing.
+ * @internal
  */
 export function supplyColorbarDefaults(coerce: Coerce, prefix: string): void {
   const p = `${prefix}colorbar.`;
@@ -295,6 +298,7 @@ function cssStops(scale: Colorscale, reverse: boolean): [number, string][] {
  * container's own bar when it has `showscale: true` and numeric colors, or, when it references a
  * color axis, that axis' bar (`layout.coloraxisN.showscale`, shared by every trace on the axis).
  * `null` when no bar is shown or the trace is not visible.
+ * @internal
  */
 export function markerColorbar(
   trace: FullTrace,
@@ -358,6 +362,7 @@ export type ColorscaleChildren<O extends ColorscaleAttributeOptions> = BaseColor
 /**
  * The colorscale attributes of a color container (Plotly `colorScaleAttrs`). Spread them next to
  * the container's `color` attribute. All edits are `style`: the mapping is uniforms and a LUT.
+ * @internal
  */
 export function colorscaleAttributes<const O extends ColorscaleAttributeOptions>(
   opts: O,
@@ -420,6 +425,7 @@ function numeric(v: unknown): v is number {
 /**
  * Plotly's `hasColorscale` on an input container: numeric colors, `showscale: true`, valid
  * `cmin` + `cmax`, a valid `colorscale`, or a `colorbar` object turn the colorscale attributes on.
+ * @internal
  */
 export function hasColorscale(container: unknown, colorKey = 'color'): boolean {
   if (container === null || typeof container !== 'object' || Array.isArray(container)) return false;
@@ -444,6 +450,7 @@ type Coerce = <T = unknown>(path: string, dflt?: unknown) => T;
  * Plotly's `colorScaleDefaults` for the container at `prefix` (`'marker.'`, `'marker.line.'`, or
  * `'coloraxis2.'` on the layout). `containerIn` is the user's container. A trace container that
  * references a color axis only gets `coloraxis`: the axis owns the rest.
+ * @internal
  */
 export function supplyColorscaleDefaults(
   containerIn: Readonly<Record<string, unknown>> | undefined,
@@ -478,7 +485,7 @@ export function supplyColorscaleDefaults(
 
 const extentCache = new WeakMap<object, { length: number; min: number; max: number }>();
 
-/** Finite min/max of a numeric array (cached per array identity and length). */
+/** Finite min/max of a numeric array (cached per array identity and length). @internal */
 export function numericExtent(values: ArrayLike<unknown>): [number, number] {
   const key = typeof values === 'object' ? (values as object) : undefined;
   const hit = key ? extentCache.get(key) : undefined;
@@ -552,7 +559,10 @@ export interface ColorMapping {
   readonly interpolation: ColorscaleInterpolation;
 }
 
-/** `layout.colorscaleInterpolation`, or `'rgb'` (Plotly's behavior) when unset or unknown. */
+/**
+ * `layout.colorscaleInterpolation`, or `'rgb'` (Plotly's behavior) when unset or unknown.
+ * @internal
+ */
 export function colorscaleInterpolation(
   fullLayout: FullLayout | undefined,
 ): ColorscaleInterpolation {
@@ -614,6 +624,7 @@ function axisContainer(
  * The colorscale mapping for a defaulted color container whose `color` is a numeric array, or
  * `undefined` when the colors are not numeric (plain CSS colors). A `coloraxis` reference takes
  * the axis' scale and its cross-trace domain (see {@link supplyColoraxisDefaults}).
+ * @internal
  */
 export function resolveColorMapping(
   container: Readonly<Record<string, unknown>> | undefined,
@@ -646,11 +657,11 @@ export function resolveColorMapping(
   };
 }
 
-/** Color of `value` under `mapping` (CPU mirror of the GPU LUT; NaN → `nanColor`). */
+/** Color of `value` under `mapping` (CPU mirror of the GPU LUT; NaN → `nanColor`). @internal */
 export function mapColor(
   value: number,
   mapping: ColorMapping,
-  nanColor: RGBA = [0.5, 0.5, 0.5, 1],
+  nanColor: RGBAColor = [0.5, 0.5, 0.5, 1],
 ): [number, number, number, number] {
   if (!Number.isFinite(value)) return [...nanColor];
   const span = mapping.cmax - mapping.cmin;
@@ -674,7 +685,7 @@ export function mapColors(values: ArrayLike<unknown>, mapping: ColorMapping): Fl
   return out;
 }
 
-/** sRGB 0–1 RGBA → CSS `rgb()`/`rgba()` (for hover and legend colors). */
+/** sRGB 0–1 RGBA → CSS `rgb()`/`rgba()` (for hover and legend colors). @internal */
 export function rgbaToCss(c: ArrayLike<number>): string {
   const r = Math.round((c[0] ?? 0) * 255);
   const g = Math.round((c[1] ?? 0) * 255);
@@ -691,6 +702,7 @@ export function rgbaToCss(c: ArrayLike<number>): string {
  * `layout.colorscaleInterpolation` (E8.2). Trace modules with colorscaled containers spread this
  * into their `layoutSchema` (the object is shared, so registering several such modules declares it
  * once).
+ * @internal
  */
 export const coloraxisLayoutSchema = {
   colorscale: attr.object(

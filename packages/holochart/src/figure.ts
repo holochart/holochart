@@ -6,7 +6,7 @@
  * bundles and plugin traces still compile; this bundle registers every built-in module, so here a
  * figure is checked against all of them.
  */
-import type { FigureInput, Frame as CoreFrame } from '@mk7s/holochart-core';
+import type { FigureInput, FrameInput as CoreFrame } from '@mk7s/holochart-core';
 import type { Data, Layout } from './generated/figure.ts';
 
 /**

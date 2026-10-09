@@ -139,6 +139,7 @@ export interface MarkerStyleOptions {
  * selection recolors points or CSS colors are mixed in (a style rule's `set` over a colorscaled
  * array, say), which resolve per point on the CPU; numeric `marker.line.color` is mapped on the
  * CPU.
+ * @internal
  */
 export function markerStyle(
   trace: FullTrace,

@@ -5,6 +5,11 @@ import path from 'node:path';
  * `tests/bundle/size/bundle.ts` (which builds one measurement bundle per entry) and
  * `.size-limit.ts` (which measures them). See docs/release/bundle-size.md.
  *
+ * **Changing a `limit` below?** Add a line to the ledger in `policy.ts` that names the cause (what
+ * grew, by how much, why it is not lazy or trimmed); `pnpm test` and `pnpm size` fail without it,
+ * and the full ESM bundle's budget may not pass its hard ceiling (plan R9, "Budget policy" in the
+ * doc above). The comments on the entries below are the history from before the policy.
+ *
  * Sizes are minified + gzipped, in decimal kB (1 kB = 1000 bytes, size-limit's unit). Every ESM
  * entry is bundled from the packages' built `dist/` with all dependencies included except `three`
  * (a peer dependency, ADR-003), so a number is what that import adds to an app that already has
@@ -74,7 +79,9 @@ export const FONT_PARTS = ['font-regular', 'font-bold', 'font-italic', 'font-bol
  * types and transparency sorting (E2.11, E8.7, E2.14: render's `dist/mesh-lazy-*.js`), the 3D
  * lines, sprites and spheres (E14.2: render's `dist/lines-markers-3d-*.js`), the 2.5D view and
  * extrusion primitive (E8.9: render's `dist/extrusion-lazy-*.js`), the 2.5D view component's view
- * (E8.9: the full bundle's `dist/view3d-*.js`) and the {@link FONT_PARTS}.
+ * (E8.9: the full bundle's `dist/view3d-*.js`), the trace packages' accessibility code (S2.14:
+ * `dist/a11y-*.js` of each trace package), the graph package's layout code (G7:
+ * `dist/layout-code-*.js`) and the {@link FONT_PARTS}.
  */
 export const LAZY_PARTS = [
   'fill',
@@ -92,6 +99,15 @@ export const LAZY_PARTS = [
   'lines-markers-3d',
   'extrusion',
   'view3d',
+  'trace-a11y',
+  'graph-layout-code',
+  'geo-projections',
+  'geo-globe',
+  'geo-country-names',
+  'geo-base-110m',
+  'geo-extras-110m',
+  'geo-base-50m',
+  'geo-extras-50m',
   ...FONT_PARTS,
 ] as const;
 
@@ -204,6 +220,40 @@ const EXTRUSION_MODULE =
 const VIEW3D_MODULE =
   /[\\/]holochart[\\/](?:dist[\\/]view3d-[\w-]+\.js|src[\\/]view3d[\\/]view\.ts)$/;
 
+/**
+ * The trace packages' lazily loaded accessibility code (S2.14: keyboard stops, the 3D scenes' view
+ * keys and the descriptions of 3D traces, loaded on a chart's first keyboard focus or after its
+ * first description): built (`dist/a11y-*.js`), or from sources.
+ */
+const TRACE_A11Y_MODULE = /[\\/]traces-[\w-]+[\\/](?:dist[\\/]a11y-[\w-]+\.js|src[\\/]a11y\.ts)$/;
+
+/**
+ * traces-graph's lazily loaded layout code (G7: the client of the layout worker with the handler
+ * it falls back to, and the bundling of links), loaded the first time a `graph` trace lays out
+ * off the main thread or bundles links: built (`dist/layout-code-*.js`), or from sources.
+ */
+const GRAPH_LAYOUT_CODE_MODULE =
+  /[\\/]traces-graph[\\/](?:dist[\\/]layout-code-[\w-]+\.js|src[\\/](?:graph[\\/]layout-code|worker[\\/](?:client|handler|layouts|protocol)|layout[\\/]bundle[\\/][\w-]+)\.ts)$/;
+
+/**
+ * traces-geo's lazily loaded extra projections (ADR-026: the 68 Plotly projection types `d3-geo`
+ * lacks), and d3-geo-projection, which only that chunk imports.
+ */
+const GEO_PROJECTIONS_MODULE =
+  /[\\/](?:traces-geo[\\/](?:dist[\\/]projections-extra-[\w-]+\.js|src[\\/]geo[\\/]projections-extra\.ts)|node_modules[\\/]d3-geo-projection[\\/].*)$/;
+/**
+ * traces-geo's lazily loaded globe geometry (GEO8, ADR-028: the sphere meshes, lines, arcs and
+ * prisms of `projection.type: 'globe3d'`): built (`dist/globe-*.js`), or from sources.
+ */
+const GEO_GLOBE_MODULE =
+  /[\\/]traces-geo[\\/](?:dist[\\/]globe-[\w-]+\.js|src[\\/]geo[\\/]globe[\\/][\w-]+\.ts)$/;
+/** traces-geo's country-name table (`locationmode: 'country names'`), loaded on first use. */
+const GEO_COUNTRY_NAMES_MODULE =
+  /[\\/]traces-geo[\\/](?:dist[\\/]country-names\.js|src[\\/]geo[\\/]country-names\.ts)$/;
+/** traces-geo's basemap data chunks (ADR-024): built (`dist/base-110m.js`, …), or from sources. */
+const GEO_DATA_MODULE =
+  /[\\/]traces-geo[\\/](?:dist|src[\\/]basemap[\\/]generated)[\\/](base|extras)-(110|50)m\.(?:js|ts)$/;
+
 /** The {@link LAZY_PARTS} entry a module belongs to, if any. */
 export function lazyPartOf(moduleId: string): string | undefined {
   if (FILL_MODULE.test(moduleId)) return 'fill';
@@ -221,6 +271,13 @@ export function lazyPartOf(moduleId: string): string | undefined {
   if (LINES_MARKERS_3D_MODULE.test(moduleId)) return 'lines-markers-3d';
   if (EXTRUSION_MODULE.test(moduleId)) return 'extrusion';
   if (VIEW3D_MODULE.test(moduleId)) return 'view3d';
+  if (GEO_PROJECTIONS_MODULE.test(moduleId)) return 'geo-projections';
+  if (GEO_GLOBE_MODULE.test(moduleId)) return 'geo-globe';
+  if (GEO_COUNTRY_NAMES_MODULE.test(moduleId)) return 'geo-country-names';
+  const geoData = GEO_DATA_MODULE.exec(moduleId);
+  if (geoData) return `geo-${geoData[1]}-${geoData[2]}m`;
+  if (TRACE_A11Y_MODULE.test(moduleId)) return 'trace-a11y';
+  if (GRAPH_LAYOUT_CODE_MODULE.test(moduleId)) return 'graph-layout-code';
   const face = FONT_MODULE.exec(moduleId)?.[1];
   return face ? `font-${face}` : undefined;
 }
@@ -257,6 +314,17 @@ const PACKAGES: readonly SizeEntry[] = [
   },
   // Report-only (M6 wave 0): the 3D scene and (from wave 1) the 3D traces, never in `basic`.
   { id: 'traces-3d', name: '@mk7s/holochart-traces-3d', imports: [{ pkg: 'traces-3d' }] },
+  // Report-only (GEO2): the geo subplot and its traces, with d3-geo and topojson-client; never in
+  // `basic` or the full bundle (ADR-026). Its basemap data and the d3-geo-projection projections
+  // are lazy chunks, reported with the entry's other lazy code until they get rows of their own.
+  { id: 'traces-geo', name: '@mk7s/holochart-traces-geo', imports: [{ pkg: 'traces-geo' }] },
+  // Report-only (G1): the graph trace and its layouts; never in `basic` or the full bundle
+  // (ADR-029). It has no lazy chunks of its own.
+  {
+    id: 'traces-graph',
+    name: '@mk7s/holochart-traces-graph',
+    imports: [{ pkg: 'traces-graph' }],
+  },
   { id: 'themes', name: '@mk7s/holochart-themes', imports: [{ pkg: 'themes' }] },
   { id: 'express', name: '@mk7s/holochart-express', imports: [{ pkg: 'express' }] },
   // Report-only (M5 wave 0): every locale module at once; never in `basic` or the full bundle.
@@ -415,7 +483,7 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     // ~10%.
     id: 'keyboard-lazy',
     name: 'keyboard navigation and legend keys (lazy chunks of basic)',
-    limit: '5.5 kB',
+    limit: '5.7 kB',
     lazyOf: 'partial-basic',
     lazyPart: 'keyboard',
   },
@@ -436,8 +504,8 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     // Raised from 450 kB to 475 kB for M5 by decision (M5 wave 1: treemap/icicle, Express hierarchy,
     // accessibility, sankey flow: ~451.6 kB on CI), and to 540 kB for M6 by decision (the 3D scene
     // and, from wave 1, the 3D traces are in the full bundle; their heavy render code is in the lazy
-    // rows below).
-    limit: '540 kB',
+    // rows below). CI calibration on 2026-10-09 adds 2 kB of headroom; see the budget ledger.
+    limit: '542 kB',
     imports: [{ pkg: 'holochart' }],
   },
   {
@@ -502,6 +570,184 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     lazyPart: 'view3d',
   },
   {
+    // Backlog S2.14: the trace packages' accessibility code — the keyboard stops of the hierarchy,
+    // flow, statistical, grid, polar, funnelarea and scatter3d traces, the 3D scenes' view keys
+    // (keyboard orbit) and the descriptions of the 3D traces — one chunk per trace package,
+    // loaded with a dynamic import() on a chart's first keyboard focus (the 3D chunk also after
+    // the first description of a 3D trace); summed here (a figure using every package). The
+    // chunks import nothing: their loaders hand them what they need, so they add no shared chunk
+    // to an app's bundle. Measured 4.13 kB when split out (2026-10-03); budget = measured + ~10%.
+    id: 'trace-a11y-lazy',
+    name: 'trace keyboard stops and 3D descriptions (lazy chunks of full)',
+    limit: '4.6 kB',
+    lazyOf: 'full',
+    lazyPart: 'trace-a11y',
+  },
+  {
+    // GEO2–GEO4 (ADR-026): maps are not in the full bundle, so they are measured on their own:
+    // `import { createChart, register } from '@mk7s/holochart-runtime'; import { tracesGeo } from
+    // '@mk7s/holochart-traces-geo'; register(...tracesGeo);` — the geo subplot, scattergeo and
+    // choropleth with d3-geo and topojson-client, on top of the runtime and scatter (which
+    // scattergeo draws through). Initial chunk only; what a map loads on demand is in the rows
+    // below. Measured 204.79 kB (2026-10-04, with the 3D globe's plumbing: its viewport, camera
+    // and matrix, and the loaders of its lazy code), 49.8 kB more than core + scatter; budgets
+    // here are the measured size + about 2 %.
+    id: 'partial-geo',
+    name: 'partial: core + geo',
+    limit: '209 kB',
+    imports: [
+      { pkg: 'runtime', names: ['createChart', 'register'] },
+      { pkg: 'traces-geo', names: ['tracesGeo'] },
+    ],
+  },
+  {
+    // ADR-026: the 68 projection types d3-geo lacks, with d3-geo-projection, loaded the first time
+    // a figure names one.
+    id: 'geo-projections-lazy',
+    name: 'extra map projections (lazy chunk of core + geo)',
+    limit: '13.3 kB',
+    lazyOf: 'partial-geo',
+    lazyPart: 'geo-projections',
+  },
+  {
+    // GEO8 (ADR-028): what draws a 3D globe (`projection.type: 'globe3d'`): the sphere geometry
+    // builders, the base layers as meshes and 3D lines, and the globe views of choropleth
+    // (regions, prisms, picking) and scattergeo (arcs), loaded the first time a figure has a
+    // globe. It draws with render's mesh, 3D-line and picker chunks, which are counted in their
+    // own rows or in the entry's other lazy code.
+    id: 'geo-globe-lazy',
+    name: '3D globe (lazy chunks of core + geo)',
+    limit: '11.9 kB',
+    lazyOf: 'partial-geo',
+    lazyPart: 'geo-globe',
+  },
+  {
+    // The table behind `locationmode: 'country names'`, loaded the first time a trace uses it.
+    id: 'geo-country-names-lazy',
+    name: 'country names (lazy chunk of core + geo)',
+    limit: '15.8 kB',
+    lazyOf: 'partial-geo',
+    lazyPart: 'geo-country-names',
+  },
+  {
+    // ADR-024: the basemap, Natural Earth as TopoJSON. A map loads the base chunk of its
+    // `resolution`, and the extras chunk when it shows lakes, rivers or subunits.
+    id: 'geo-base-110m-lazy',
+    name: 'basemap 1:110m, countries and land (lazy chunk of core + geo)',
+    limit: '32.1 kB',
+    lazyOf: 'partial-geo',
+    lazyPart: 'geo-base-110m',
+  },
+  {
+    id: 'geo-extras-110m-lazy',
+    name: 'basemap 1:110m, lakes, rivers, subunits (lazy chunk of core + geo)',
+    limit: '8.95 kB',
+    lazyOf: 'partial-geo',
+    lazyPart: 'geo-extras-110m',
+  },
+  {
+    id: 'geo-base-50m-lazy',
+    name: 'basemap 1:50m, countries and land (lazy chunk of core + geo)',
+    limit: '182.5 kB',
+    lazyOf: 'partial-geo',
+    lazyPart: 'geo-base-50m',
+  },
+  {
+    id: 'geo-extras-50m-lazy',
+    name: 'basemap 1:50m, lakes, rivers, subunits (lazy chunk of core + geo)',
+    limit: '107.5 kB',
+    lazyOf: 'partial-geo',
+    lazyPart: 'geo-extras-50m',
+  },
+  {
+    // Keyboard stops, view keys and descriptions of the geo traces, on first keyboard focus.
+    id: 'geo-a11y-lazy',
+    name: 'geo keyboard stops and view keys (lazy chunk of core + geo)',
+    limit: '0.9 kB',
+    lazyOf: 'partial-geo',
+    lazyPart: 'trace-a11y',
+  },
+  {
+    // G1 (ADR-029): network graphs are not in the full bundle, so they are measured on their own:
+    // `import { createChart, register } from '@mk7s/holochart-runtime'; import { tracesGraph }
+    // from '@mk7s/holochart-traces-graph'; register(...tracesGraph);` — the graph trace with its
+    // layouts, on top of the runtime and what it takes from traces-basic (scatter's symbols and
+    // attributes, the colorscale and per-item legend code). Initial chunk only: the package's
+    // one lazy chunk, its keyboard stops, is the row below. Measured 185.59 kB (2026-10-06): the graph trace with the preset,
+    // circular and grid layouts is 176.05 kB when registered alone, 21.0 kB more than core +
+    // scatter, and the chord trace (G8), which `tracesGraph` has too, adds 9.5 kB. With every
+    // arrangement running its layout (G2–G4, G8: force, layered, the three trees, arc, hive) and
+    // the trace side of them: 218.54 kB (2026-10-06), 32.95 kB more. With what the pointer does
+    // (G5: highlighting, node drags and pins, the path between two nodes) and the descriptions of
+    // G10: 226.91 kB (2026-10-06), 8.37 kB more. Budget = measured + about 2 %. With large graphs
+    // (G7: a calc that waits for its layout and the view that asks for it and draws it while it
+    // settles, level of detail, bundled routes, the link index of hover, patched link geometry
+    // while a node is dragged): 233.80 kB (2026-10-06), 6.89 kB more. The client of the layout
+    // worker and the bundling themselves are the lazy chunk two rows down. Budget = measured +
+    // about 1 %.
+    id: 'partial-graph',
+    name: 'partial: core + graph',
+    limit: '236 kB',
+    imports: [
+      { pkg: 'runtime', names: ['createChart', 'register'] },
+      { pkg: 'traces-graph', names: ['tracesGraph'] },
+    ],
+  },
+  {
+    // G10: keyboard stops of the graph package (`graph`, `graph3d` and `chord`: one chunk, which
+    // imports nothing), loaded on a chart's first keyboard focus: the links at each node, the
+    // order of a node's links around it, the tree and rank walks, and the sentences they
+    // announce. The descriptions stay in the initial chunk, as in the other 2D trace packages.
+    // Measured 3.24 kB (2026-10-06); budget = measured + about 10 %.
+    id: 'graph-a11y-lazy',
+    name: 'graph keyboard stops (lazy chunk of core + graph)',
+    limit: '3.8 kB',
+    lazyOf: 'partial-graph',
+    lazyPart: 'trace-a11y',
+  },
+  {
+    // G7: what a `graph` trace loads the first time one of its layouts runs off the main thread
+    // (`worker`) or its links are bundled (`link.bundle`): the client of the layout worker, the
+    // handler and the protocol it runs on the main thread when no worker can be started, and
+    // hierarchical and force-directed bundling. One chunk, `dist/layout-code-*.js`, which shares
+    // the layouts with the initial chunk. A chart that neither bundles nor uses the worker (the
+    // defaults) never loads it. Measured 8.24 kB (2026-10-06); budget = measured + about 5 %.
+    id: 'graph-layout-code-lazy',
+    name: 'graph layout worker client and link bundling (lazy chunk of core + graph)',
+    limit: '8.7 kB',
+    lazyOf: 'partial-graph',
+    lazyPart: 'graph-layout-code',
+  },
+  {
+    // G6 (ADR-029): `graph3d` is in the graph package's index but not in `tracesGraph`, so that
+    // the row above does not carry the 3D package. It is measured on its own: `import {
+    // createChart, register } from '@mk7s/holochart-runtime'; import { tracesGraph3d } from
+    // '@mk7s/holochart-traces-graph'; register(...tracesGraph3d);` — the trace with the 3D scene
+    // it is drawn in (the scene component: camera, controls, axes, picking, camera motion), the
+    // force and layered layouts, and what it shares with the 2D trace (model, styles, hover
+    // text, legend). Initial chunk only; render's 3D line, marker and mesh code and the scene's
+    // view keys stay lazy chunks, as for every 3D trace. Measured 230.57 kB (2026-10-06), 75.4 kB
+    // more than core + scatter. Budget = measured + about 2 %.
+    id: 'partial-graph3d',
+    name: 'partial: core + graph3d',
+    limit: '224 kB',
+    imports: [
+      { pkg: 'runtime', names: ['createChart', 'register'] },
+      { pkg: 'traces-graph', names: ['tracesGraph3d'] },
+    ],
+  },
+  {
+    // G7: the graph layout worker, `dist/layout-worker.js` of the graph package: the built-in
+    // layouts and edge bundling behind the worker's message handler, one file with no imports,
+    // which a page loads only when it lays a graph out off the main thread (`layoutInWorker`).
+    // It is a build of its own, not a chunk of any entry above, so it is measured as the file it
+    // is. Measured 29.52 kB (2026-10-06); budget = measured + about 3 %.
+    id: 'graph-layout-worker',
+    name: 'graph layout worker (dist/layout-worker.js)',
+    limit: '30.5 kB',
+    file: 'packages/traces-graph/dist/layout-worker.js',
+  },
+  {
     // Self-contained script-tag build: the full bundle plus three.js (~170-190 kB min+gz on its
     // own). Budget = full + a three.js allowance of ~200 kB: 650 kB, raised to 690 kB for M5 by
     // decision (M5 wave 1: ~666.8 kB on CI; the IIFE inlines every lazy chunk, so a11y summaries and
@@ -510,7 +756,7 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     // ~681.5 kB locally, with the few three.js classes the add-on shares).
     id: 'iife',
     name: '@mk7s/holochart IIFE, 2D (includes three)',
-    limit: '690 kB',
+    limit: '693 kB',
     file: 'packages/holochart/dist/holochart.iife.min.js',
   },
   {

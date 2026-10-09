@@ -17,7 +17,7 @@ import {
   uniformTextSize,
   type FullLayout,
   type FullTrace,
-  type RGBA,
+  type RGBAColor,
   type UniformText,
   type UniformTextItem,
 } from '@mk7s/holochart-core';
@@ -65,14 +65,14 @@ function toFont(fonts: readonly FontContainer[], i: number): TextFont {
   };
 }
 
-const WHITE: RGBA = [1, 1, 1, 1];
-const DARK: RGBA = toRGBA(DEFAULT_LINE)!;
+const WHITE: RGBAColor = [1, 1, 1, 1];
+const DARK: RGBAColor = toRGBA(DEFAULT_LINE)!;
 
 /**
  * Plotly's `Color.contrast` without amounts: white on dark colors, `#444` on light ones
  * (tinycolor's `isDark`: perceived brightness below 128), translucent colors over white first.
  */
-export function contrastColor(color: string): RGBA {
+export function contrastColor(color: string): RGBAColor {
   const c = toRGBA(color) ?? DARK;
   const a = c[3];
   const mix = (v: number): number => v * a + (1 - a);
@@ -83,7 +83,7 @@ export function contrastColor(color: string): RGBA {
 /** A resolved label font and color. */
 export interface LabelFont {
   readonly font: TextFont;
-  readonly color: RGBA;
+  readonly color: RGBAColor;
 }
 
 /**

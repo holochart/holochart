@@ -35,10 +35,10 @@ import type {
 import { Object3D } from 'three';
 import { findChart } from './host.ts';
 
-/** Creates the real view (what the lazily loaded module provides). */
+/** Creates the real view (what the lazily loaded module provides). @internal */
 export type ComponentViewFactory = (ctx: ComponentDrawContext) => ComponentView;
 
-/** What {@link lazyRenderer} needs to know about a component. */
+/** What {@link lazyRenderer} needs to know about a component. @internal */
 export interface LazyViewOptions {
   /** Component name, for the error message of a failed load. */
   readonly name: string;
@@ -52,7 +52,7 @@ export interface LazyViewOptions {
   load(): Promise<ComponentViewFactory>;
 }
 
-/** A {@link ComponentRenderer} whose view code loads on first use. */
+/** A {@link ComponentRenderer} whose view code loads on first use. @internal */
 export interface LazyComponentRenderer extends ComponentRenderer {
   /** Whether the view code has loaded (for tests and diagnostics). */
   readonly loaded: boolean;
@@ -96,6 +96,7 @@ export class PendingViewPrimitive implements Primitive<never> {
  *   load: () => import('./view.ts').then((m) => (ctx) => m.createUpdatemenusView(…)),
  * }),
  * ```
+ * @internal
  */
 export function lazyRenderer(options: LazyViewOptions): LazyComponentRenderer {
   let factory: ComponentViewFactory | null = null;

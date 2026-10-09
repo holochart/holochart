@@ -5,10 +5,13 @@
  *
  * The types follow the packages, so a partial bundle imports only the types of what it registers:
  *
- * - `packages/core/src/generated/`: the base `Layout` and `Config`, and the attribute groups every
- *   trace shares (`CommonTraceAttributes`, `CartesianTraceAttributes`, …).
+ * - `packages/core/src/generated/`: `BaseLayout` (the layout attributes every bundle has) and
+ *   `Config`, and the attribute groups every trace shares (`CommonTraceAttributes`,
+ *   `CartesianTraceAttributes`, …).
  * - `packages/<traces-*>/src/generated/traces.ts`: one type per trace module of the package
- *   (`ScatterTrace`, with a literal `type`) and their union (`TracesBasic`), built on core's groups.
+ *   (`TableTrace`, with a literal `type`) and their union (`TracesBasic`), built on core's groups.
+ *   A trace module the full bundle extends is named `Base<Type>Trace` here (`BaseBarTrace`): the
+ *   plain name is the full bundle's type, which has more attributes.
  * - `packages/holochart/src/generated/figure.ts`: what the full bundle registers: `Data`, the union
  *   of every trace type (the trace modules it extends, such as `bar` with 2.5D `depth`, get types
  *   of their own), and `Layout`, with the layout attributes of every trace and component.
@@ -32,10 +35,11 @@ import {
   type Children,
   type ObjectNode,
   type SchemaNode,
-  type TraceModule,
+  type CoreTraceModule,
 } from '@mk7s/holochart-core';
 import {
   createTypeFile,
+  traceTypeName,
   type KnownType,
   type TypeBase,
   type TypeFile,
@@ -90,7 +94,13 @@ function coreFiles(known: Map<SchemaNode, KnownType>): {
   bases: TypeBase[];
 } {
   const layout = createTypeFile();
-  layout.object(layoutSchema, 'Layout', { alias: true });
+  // The names `Layout` and `LayoutTitle` are the full bundle's, which declares more attributes
+  // (those of its traces and components): the base types get names of their own, and their
+  // containers, which the full bundle reuses, keep the `Layout` prefix (`LayoutFont`, …).
+  layout.object(layoutSchema.children.title as ObjectNode, 'BaseLayoutTitle', {
+    prefix: 'LayoutTitle',
+  });
+  layout.object(layoutSchema, 'BaseLayout', { alias: true, prefix: 'Layout' });
   const config = createTypeFile();
   config.object(configSchema, 'Config', { alias: true });
 
@@ -144,7 +154,7 @@ function coreFiles(known: Map<SchemaNode, KnownType>): {
 
 /** A generated trace type, for the full bundle to reuse or extend. */
 interface TraceType {
-  readonly module: TraceModule;
+  readonly module: CoreTraceModule;
   readonly type: KnownType;
   /** The trace's full schema in its package (common attributes included). */
   readonly schema: ObjectNode;
@@ -174,6 +184,8 @@ export async function generateAll(): Promise<Record<string, string>> {
   knownBy.set(CORE, coreKnown);
   const raw: Record<string, string> = { ...core.files };
 
+  // Trace types the full bundle registers a module of its own for (`bar` with 2.5D `depth`, …).
+  const extended = new Set(fullBundle.traces.map((module) => module.type));
   const traceTypes = new Map<string, TraceType>();
   for (const pkg of packages) {
     if (pkg.traces.length === 0) continue;
@@ -190,7 +202,14 @@ export async function generateAll(): Promise<Record<string, string>> {
     const names: string[] = [];
     for (const module of pkg.traces) {
       const schema = registry.getTraceSchema(module.type)!;
-      const name = file.trace({ type: module.type, schema, bases: core.bases });
+      const plain = traceTypeName(module.type);
+      const name = file.trace({
+        type: module.type,
+        schema,
+        bases: core.bases,
+        // The plain name is the full bundle's type; nested containers keep it as their prefix.
+        ...(extended.has(module.type) && { name: `Base${plain}`, prefix: plain }),
+      });
       names.push(name);
       traceTypes.set(module.type, { module, type: { name, from: pkg.name }, schema });
     }
@@ -255,7 +274,6 @@ function fullBundleFile(
     const name = file.trace({
       type,
       schema: registry.getTraceSchema(type)!,
-      name: base.type.name,
       bases: [{ type: base.type, children: base.schema.children, discriminated: true }, ...bases],
     });
     members.push([type, name]);

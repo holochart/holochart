@@ -16,7 +16,7 @@ import {
   hierarchyTextAttributes,
 } from '../hierarchy/attributes.ts';
 
-/** The sunburst schema. */
+/** The sunburst schema. @experimental */
 // A pure IIFE, so bundles without this trace drop the whole schema: a package ships as one file,
 // where top-level `attr.*()` calls would otherwise look side-effectful (E21.6).
 export const sunburstAttributes = /* @__PURE__ */ (() =>
@@ -46,7 +46,7 @@ export const sunburstAttributes = /* @__PURE__ */ (() =>
     },
   ))();
 
-/** Layout attributes owned by `sunburst` (coerced when a sunburst trace is present). */
+/** Layout attributes owned by `sunburst` (coerced when a sunburst trace is present). @internal */
 // Pure IIFE: see above.
 export const sunburstLayoutAttributes = /* @__PURE__ */ (() =>
   hierarchyLayoutAttributes('sunburst'))();

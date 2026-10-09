@@ -246,6 +246,8 @@ export function supplyDefaults(
   }
   fullLayout._locale = locale;
   fullLayout._reducedMotion = fullConfig.a11y.reducedMotion;
+  fullLayout._staticPlot = fullConfig.staticPlot === true;
+  fullLayout._worker = fullConfig.worker;
   supplySelectionDefaults(fullLayout);
   // Grid cells first: domain traces are placed in them (`domain.row` / `domain.column`).
   supplyGridSizing(layoutIn, fullLayout, tLayout, schema);

@@ -11,7 +11,7 @@
 import { attr, getIn, toRGBA, type TraceDefaultsContext } from '@mk7s/holochart-core';
 import { PATTERN_SHAPES, type PatternAttributes, type PatternFill } from '@mk7s/holochart-render';
 
-/** The pattern attributes (`marker.pattern`, `fillpattern`) of fills of `what`. */
+/** The pattern attributes (`marker.pattern`, `fillpattern`) of fills of `what`. @internal */
 export function patternAttributes(what: string, arrayOk = true) {
   return attr.object(
     {
@@ -74,6 +74,7 @@ export function patternAttributes(what: string, arrayOk = true) {
  * has one: the rest of it only with a `shape`. The colors and `fgopacity` that Plotly derives from
  * the fill color and `fillmode` are left unset: they are resolved per item when drawing (render's
  * `PatternFill`).
+ * @internal
  */
 export function supplyPatternDefaults(
   traceIn: unknown,
@@ -88,6 +89,7 @@ export function supplyPatternDefaults(
  * The render layer's pattern fill for items of `color` (4 floats per item, before `opacity`) over
  * `background` (a CSS color), or `null` without a `pattern.shape` (then primitives keep their
  * plain shaders).
+ * @internal
  */
 export function patternFill(
   pattern: unknown,

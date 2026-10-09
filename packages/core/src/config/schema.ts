@@ -5,7 +5,7 @@
  */
 import { attr } from '../schema/attr.ts';
 
-/** The config schema. */
+/** The config schema. @experimental */
 export const configSchema = attr.object(
   {
     responsive: attr.boolean({
@@ -41,6 +41,13 @@ export const configSchema = attr.object(
       dflt: 'scene+geo+map',
       description:
         'Which subplot kinds zoom on mouse wheel. `true`/`false` enable/disable all of them.',
+    }),
+    topojsonURL: attr.string({
+      dflt: '',
+      description:
+        'Where the geo package fetches basemap files from (`<url>/world_110m.json`, …), in ' +
+        "Plotly's topojson layout. Empty (the default) uses the data bundled with the package " +
+        'and fetches nothing; Plotly itself defaults to its CDN.',
     }),
     doubleClick: attr.enumerated({
       values: [false, 'reset', 'autosize', 'reset+autosize'],

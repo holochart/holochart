@@ -12,6 +12,7 @@
 import type { FullTrace } from '@mk7s/holochart-core';
 import type { TraceModule } from '@mk7s/holochart-runtime';
 import { coloraxisLayoutSchema } from '@mk7s/holochart-traces-basic';
+import { sceneA11y } from '../a11y-loader.ts';
 import { sceneCrossTraceLayout, sceneSubplotDomain } from '../scene/layout.ts';
 import { mesh3dAttributes } from './attributes.ts';
 import { calcMesh3d, type Mesh3dCalc } from './calc.ts';
@@ -45,6 +46,7 @@ export const mesh3d: TraceModule<Mesh3dCalc, typeof mesh3dAttributes.children> =
   crossTraceLayout: sceneCrossTraceLayout,
   calc: calcMesh3d,
   plot: { create: (ctx) => new Mesh3dView(ctx) },
+  a11y: sceneA11y,
   hoverPoints: mesh3dHoverPoints,
   colorbar: (trace, ctx) => traceColorbar(trace, ctx.fullLayout, intensityOf(trace)),
 };

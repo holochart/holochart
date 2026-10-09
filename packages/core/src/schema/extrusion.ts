@@ -22,7 +22,10 @@
 import { attr } from './attr.ts';
 import type { ObjectNode } from './types.ts';
 
-/** `material.type` values (E8.7): Plotly's lighting model, unlit, or a three.js material. */
+/**
+ * `material.type` values (E8.7): Plotly's lighting model, unlit, or a three.js material.
+ * @internal
+ */
 export const LIT_MATERIAL_TYPES = [
   'plotly',
   'flat',
@@ -44,6 +47,7 @@ const colorParam = (description: string) => attr.color({ editType: 'calc', descr
  * The `material` attribute (Holochart extension, E8.7): shared by the 3D traces
  * (`sceneMaterialAttributes`) and extruded 2D traces ({@link extrusionAttributes}). `description`
  * describes the container. Unset parameters keep the three.js material's defaults.
+ * @experimental
  */
 export function litMaterialAttributes(description: string) {
   return attr.object(
@@ -114,6 +118,7 @@ export function litMaterialAttributes(description: string) {
 /**
  * `depth`, `bevel` and `material` of extrudable 2D traces (plan E8.9; see the module comment).
  * Spread into a trace schema; call {@link supplyExtrusionDefaults} from its `supplyDefaults`.
+ * @experimental
  */
 export const extrusionAttributes = /* @__PURE__ */ (() => ({
   depth: attr.any({
@@ -151,7 +156,7 @@ interface ExtrusionDefaultsContext {
   coerceContainer(path: string): void;
 }
 
-/** Coerce `depth`, and `bevel` / `material` when the trace is extruded. */
+/** Coerce `depth`, and `bevel` / `material` when the trace is extruded. @internal */
 export function supplyExtrusionDefaults(ctx: ExtrusionDefaultsContext): void {
   const depth = ctx.coerce('depth');
   if (depth === 0 || depth === '0' || depth === '0%') return;
@@ -170,6 +175,7 @@ interface ExtrudableModule {
  * `module` with {@link extrusionAttributes} added to its schema and coerced after its own
  * defaults: the full bundle registers `withExtrusion(bar)` (plan E9.10); the trace's view draws
  * `depth` (bar: `setBarExtruder`).
+ * @experimental
  */
 export function withExtrusion<M extends ExtrudableModule>(module: M): M {
   const { children, ...meta } = module.schema;

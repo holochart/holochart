@@ -8,13 +8,14 @@
  *   the build if any 3D module ends up in the script.
  * - `holochart-3d.iife.min.js` (`packages/holochart/src/iife-3d.ts`): the 3D package and render's
  *   3D chunks, and nothing else. {@link iife3DAddonPlugin} maps what it shares with the main script
- *   to that script's instances ({@link ADDON_GLOBALS}): `three`, core, the runtime, traces-basic
- *   and render (the package, and render's own modules the 3D chunks import by relative path), so a
- *   page has one three.js, one registry and one copy of render's module state. It checks at build
- *   time that every name the add-on imports from them exists on the main script's side, and fails
- *   the build if the add-on bundles any other module.
+ *   to that script's instances ({@link ADDON_GLOBALS}): `three`, core, the runtime, traces-basic,
+ *   components and render (the package, and render's own modules the 3D chunks import by relative
+ *   path), so a page has one three.js, one registry and one copy of render's module state. It
+ *   checks at build time that every name the add-on imports from them exists on the main script's
+ *   side (for the packages read from `Holochart` itself: in the public export list or in
+ *   `iife/addon-shared.ts`), and fails the build if the add-on bundles any other module.
  */
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { AstNode } from './strip-descriptions.ts';
@@ -42,15 +43,18 @@ const TRACES_3D_MODULE = /[\\/]packages[\\/]traces-3d[\\/]src[\\/]/;
  */
 const VIEW3D_VIEW_MODULE = /[\\/]packages[\\/]holochart[\\/]src[\\/]view3d[\\/]view\.ts$/;
 
+/** The full bundle's list of the 3D package's public exports, which the add-on puts on the global. */
+const EXPORTS_3D_MODULE = /[\\/]packages[\\/]holochart[\\/]src[\\/]exports-3d\.ts$/;
+
 /** The virtual module of the add-on entry that bundles render's 3D chunks (`iife/build.d.ts`). */
 const RENDER_3D_CHUNKS = 'holochart-iife:render-3d';
 const RENDER_3D_CHUNKS_ID = `\0${RENDER_3D_CHUNKS}`;
 
 /**
  * Where the add-on finds each shared package: expressions on the main script's global (rolldown
- * `output.globals`; the modules are external). `Holochart.__iife` is `iife/host.ts`; the main
- * script re-exports core, the runtime and traces-basic whole and unchanged (checked by
- * `packages/holochart/src/iife.test.ts`), so they are `Holochart` itself.
+ * `output.globals`; the modules are external). `Holochart.__iife` is `iife/host.ts`; of core, the
+ * runtime, traces-basic and components the main script has the public exports and the `@internal`
+ * ones the add-on needs (`iife/addon-shared.ts`) as properties of `Holochart` itself.
  */
 export const ADDON_GLOBALS: Readonly<Record<string, string>> = {
   three: 'Holochart.__iife.three',
@@ -197,12 +201,40 @@ async function mainScriptExports(pkg: string, threeModule: string): Promise<Set<
   return new Set(Object.keys(await import(pathToFileURL(dist).href)));
 }
 
+/** The value names a module exports by name (`export { a } from`, `export const a`, `export * as a`). */
+function exportedNames(program: AstNode): string[] {
+  const names: string[] = [];
+  const nameOf = (node: AstNode): string => (node['name'] ?? node['value']) as string;
+  for (const node of program['body'] as AstNode[]) {
+    if (node['exportKind'] === 'type') continue;
+    if (node.type === 'ExportAllDeclaration') {
+      if (node['exported'] != null) names.push(nameOf(node['exported'] as AstNode));
+    } else if (node.type === 'ExportNamedDeclaration') {
+      for (const spec of (node['specifiers'] as AstNode[] | undefined) ?? []) {
+        if (spec['exportKind'] !== 'type') names.push(nameOf(spec['exported'] as AstNode));
+      }
+      const declaration = node['declaration'] as AstNode | null | undefined;
+      for (const d of (declaration?.['declarations'] as AstNode[] | undefined) ?? []) {
+        names.push(nameOf(d['id'] as AstNode));
+      }
+      if (declaration?.['id'] != null) names.push(nameOf(declaration['id'] as AstNode));
+    }
+  }
+  return names;
+}
+
 /**
  * rolldown plugin of the 3D add-on (see the module comment). `threeModule`: absolute path of
  * `packages/holochart/src/iife/three.ts` (the three.js names the main script shares); `entry`:
- * absolute path of the add-on entry.
+ * absolute path of the add-on entry; `globalModules`: absolute paths of the modules whose named
+ * exports are the properties of `window.Holochart` (the public list, `exports.ts`, and the
+ * `@internal` names shared with the add-on, `iife/addon-shared.ts`, which is the last one).
  */
-export function iife3DAddonPlugin(options: { threeModule: string; entry: string }) {
+export function iife3DAddonPlugin(options: {
+  threeModule: string;
+  entry: string;
+  globalModules: readonly string[];
+}) {
   const imports: SharedImport[] = [];
   return {
     name: 'holochart:iife-3d',
@@ -236,14 +268,24 @@ export function iife3DAddonPlugin(options: { threeModule: string; entry: string 
     async buildEnd(this: PluginContext, error?: Error) {
       if (error) return;
       const exports = new Map<string, Set<string>>();
+      // The properties of `window.Holochart`: the named exports of the main script's lists.
+      const onGlobal = new Set(
+        options.globalModules.flatMap((file) =>
+          exportedNames(this.parse(readFileSync(file, 'utf8'), { lang: 'ts' })),
+        ),
+      );
+      const shared = options.globalModules[options.globalModules.length - 1]!;
       const missing: string[] = [];
       for (const { pkg, name, importer } of imports) {
         if (!exports.has(pkg)) exports.set(pkg, await mainScriptExports(pkg, options.threeModule));
-        if (exports.get(pkg)!.has(name)) continue;
+        const exported = exports.get(pkg)!.has(name);
+        if (exported && (ADDON_GLOBALS[pkg] !== 'Holochart' || onGlobal.has(name))) continue;
         const fix =
           pkg === 'three'
             ? `add it to ${relative(options.threeModule)}`
-            : `export it from ${pkg}'s index`;
+            : exported
+              ? `add it to ${relative(shared)}`
+              : `export it from ${pkg}'s index`;
         missing.push(`${relative(importer)}: '${name}' from ${pkg} (${fix})`);
       }
       if (missing.length > 0) {
@@ -259,6 +301,7 @@ export function iife3DAddonPlugin(options: { threeModule: string; entry: string 
         TRACES_3D_MODULE.test(id) ||
         RENDER_3D_MODULE.test(id) ||
         VIEW3D_VIEW_MODULE.test(id) ||
+        EXPORTS_3D_MODULE.test(id) ||
         RENDER_COPIED_MODULE.test(id);
       const extra = Object.values(bundle)
         .flatMap((chunk) => chunk.moduleIds ?? [])

@@ -7,7 +7,8 @@ import {
   supplySceneAutorotate,
   AUTOROTATE_SPEED,
 } from './camera-animation.ts';
-import { dot, norm, normalize, sub, type SceneCamera, type Vec3 } from './camera.ts';
+import { dot, norm, normalize, sub, type SceneCamera } from './camera.ts';
+import type { Vec3 } from '@mk7s/holochart-render';
 
 const cam = (eye: Vec3, center: Vec3 = [0, 0, 0], up: Vec3 = [0, 0, 1]): SceneCamera => ({
   eye,

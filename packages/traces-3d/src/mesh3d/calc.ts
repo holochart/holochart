@@ -13,6 +13,7 @@ import type { SceneCalc } from '../scene/layout.ts';
 import { sceneOf } from '../scene/layout-defaults.ts';
 import { alphaShape, convexHull, delaunay2D } from './triangulate.ts';
 
+/** @experimental */
 export interface Mesh3dCalc extends SceneCalc {
   /** Vertices, linear coordinates. */
   readonly x: Float64Array;

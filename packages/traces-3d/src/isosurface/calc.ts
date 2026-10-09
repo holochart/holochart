@@ -16,10 +16,11 @@ import { sceneOf } from '../scene/layout-defaults.ts';
 import { numbersOf } from '../mesh3d/colors.ts';
 import { extractIsoMesh, type IsoMesh, type IsoMeshOptions } from './extract.ts';
 import { emptyIsoGrid, processIsoGrid, type IsoGrid } from './grid.ts';
+import type { Vec3 } from '@mk7s/holochart-render';
 
-type Vec3 = [number, number, number];
 type Container = Record<string, unknown>;
 
+/** @experimental */
 export interface IsoCalc extends SceneCalc {
   readonly grid: IsoGrid;
   /** The value range drawn (Plotly's `_vMin` / `_vMax`); NaN without values. */

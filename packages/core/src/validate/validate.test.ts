@@ -116,10 +116,49 @@ describe('validate', () => {
       "unknown trace type 'sankey': `sankey` is in @mk7s/holochart-traces-hier; import it from there and call `register(sankey)` (the trace is hidden)",
     );
     expect(issue?.suggestion).toBeUndefined();
+    // A package the full bundle leaves out (ADR-026): also the import that adds it there.
+    const [geo] = validate([{ type: 'scattergeo' }], {}, registry);
+    expect(geo?.message).toBe(
+      "unknown trace type 'scattergeo': `scattergeo` is in @mk7s/holochart-traces-geo; import it from there and call `register(scattergeo)`, or with the full bundle add `import '@mk7s/holochart/geo'` (the trace is hidden)",
+    );
+    expect(geo?.suggestion).toBeUndefined();
+    // The graph package is left out the same way (ADR-029).
+    const [graph] = validate([{ type: 'graph' }], {}, registry);
+    expect(graph?.message).toBe(
+      "unknown trace type 'graph': `graph` is in @mk7s/holochart-traces-graph; import it from there and call `register(graph)`, or with the full bundle add `import '@mk7s/holochart/graph'` (the trace is hidden)",
+    );
+    expect(graph?.suggestion).toBeUndefined();
     // Not a built-in: the nearest registered type, as before.
     expect(validate([{ type: 'scater' }], {}, registry)[0]?.message).toBe(
       "unknown trace type 'scater'; did you mean 'scatter'? (the trace is hidden)",
     );
+  });
+
+  it('names the package of a layout container that is not registered', () => {
+    // `layout.geo` belongs to the geo package, which the full bundle leaves out (ADR-026).
+    const issues = validate([], { geo: { scope: 'usa' }, geo2: {}, geology: 1 }, registry);
+    expect(issues.map((i) => [i.path, i.code, i.severity])).toEqual([
+      ['layout.geo', 'unknown-attribute', 'warning'],
+      ['layout.geo2', 'unknown-attribute', 'warning'],
+      ['layout.geology', 'unknown-attribute', 'warning'],
+    ]);
+    expect(issues[0]?.message).toBe(
+      "'geo' is defined by @mk7s/holochart-traces-geo, which is not registered; import it and call `register(...)` with its modules, or with the full bundle add `import '@mk7s/holochart/geo'` (the attribute is ignored)",
+    );
+    // Not a subplot container of any package: the usual message.
+    expect(issues[2]?.message).toMatch(/^unknown attribute 'geology'/);
+  });
+
+  it('accepts a template block for a subplot whose package is not registered', () => {
+    // A template is written for every kind of figure; the default look has a `geo` block.
+    const template = {
+      layout: { geo: { bgcolor: '#000' }, geo2: {}, nope: 1 },
+      data: { scattergeo: [{ marker: { size: 4 } }], graph: [{ node: { size: 8 } }], scater: [] },
+    };
+    expect(validate([], { template }, registry).map((i) => i.path)).toEqual([
+      'layout.template.layout.nope',
+      'layout.template.data.scater',
+    ]);
   });
 
   it('flags deprecated attributes, clamped values and item arrays', () => {

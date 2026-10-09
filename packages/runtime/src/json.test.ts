@@ -141,7 +141,7 @@ describe('real charts', () => {
     expect(chartToJSON(copy, { registry: t.registry })).toEqual(json);
   });
 
-  it('chart.toJSON() uses the chart registry, includes frames and datasets, and serves JSON.stringify', async () => {
+  it('chartToJSON(chart) uses the chart registry and includes frames and datasets; JSON.stringify(chart) throws', async () => {
     const figure = {
       data: [{ type: 'dots', x: [1, 2], y: Float64Array.of(3, 4) }],
       layout: {},
@@ -153,13 +153,12 @@ describe('real charts', () => {
     await chart.ready;
     expect(chart.frames).toEqual(figure.frames);
     expect(chart.datasets).toEqual(figure.datasets);
-    const json = chart.toJSON();
+    expect(chart.registry).toBe(t.registry);
+    const json = chartToJSON(chart);
     expect(json).toEqual(chartToJSON(chart, { registry: t.registry }));
     expect(json).toMatchObject({ frames: figure.frames, datasets: figure.datasets });
-    // JSON.stringify calls toJSON(key); the key must not be read as options.
-    expect(JSON.parse(JSON.stringify(chart))).toEqual(JSON.parse(JSON.stringify(json)));
-    expect(JSON.parse(JSON.stringify({ c: chart }))).toEqual({
-      c: JSON.parse(JSON.stringify(json)),
-    });
+    // A chart is not JSON data: the stub points at chartToJSON instead of writing `{}`.
+    expect(() => JSON.stringify(chart)).toThrow(/chartToJSON\(chart\)/);
+    expect(() => JSON.stringify({ c: chart })).toThrow(TypeError);
   });
 });

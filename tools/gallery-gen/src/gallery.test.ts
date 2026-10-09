@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { checkGallery, staticMeta } from './check.ts';
+import { classifyExample } from '../../../examples/_lib/catalog.ts';
 import {
   isExcluded,
+  isInternalExample,
   isThreeD,
   mergeRecords,
   thumbnailPath,
@@ -20,6 +22,7 @@ function entry(id: string, over: Partial<GalleryEntry> = {}): GalleryEntry {
     threeD: false,
     thumbnail: thumbnailPath(id),
     thumbnailSize: { width: 640, height: 400 },
+    ...classifyExample({ id, tags: ['a'], traceTypes: ['scatter'], thumbnail: thumbnailPath(id) }),
     ...over,
   };
 }
@@ -27,7 +30,7 @@ function entry(id: string, over: Partial<GalleryEntry> = {}): GalleryEntry {
 describe('mergeRecords', () => {
   it('replaces rendered entries, drops skipped and deleted ones, keeps the rest, sorts by id', () => {
     const previous = {
-      version: 1 as const,
+      version: 2 as const,
       look: 'holochart' as const,
       examples: [entry('b/kept'), entry('a/old', { title: 'Old' }), entry('c/gone'), entry('d/x')],
     };
@@ -43,6 +46,55 @@ describe('mergeRecords', () => {
       ['a/old', 'New'],
       ['b/kept', 'Title b/kept'],
     ]);
+  });
+});
+
+describe('isInternalExample', () => {
+  it('is true for ids whose first segment starts with an underscore', () => {
+    expect(isInternalExample('_dev/hello-cube')).toBe(true);
+    expect(isInternalExample('_spikes/a-markers')).toBe(true);
+    expect(isInternalExample('_dev/nested/deep')).toBe(true);
+  });
+
+  it('is false for public ids, including underscores elsewhere in the id', () => {
+    expect(isInternalExample('scatter/basic')).toBe(false);
+    expect(isInternalExample('demos/_draft')).toBe(false);
+    expect(isInternalExample('layout/grid_2x2')).toBe(false);
+  });
+});
+
+describe('mergeRecords with internal examples', () => {
+  const previous = {
+    version: 2 as const,
+    look: 'holochart' as const,
+    examples: [entry('_dev/old'), entry('_spikes/old'), entry('a/kept'), entry('b/kept')],
+  };
+  const existing = new Set(['_dev/old', '_dev/new', '_spikes/old', 'a/kept', 'b/kept']);
+
+  it('drops previous internal entries even when the run did not touch them (a -g subset)', () => {
+    const merged = mergeRecords(previous, [{ id: 'a/kept', entry: entry('a/kept') }], existing);
+    expect(merged.examples.map((e) => e.id)).toEqual(['a/kept', 'b/kept']);
+  });
+
+  it('ignores a rendered record of an internal example', () => {
+    const merged = mergeRecords(previous, [{ id: '_dev/new', entry: entry('_dev/new') }], existing);
+    expect(merged.examples.map((e) => e.id)).toEqual(['a/kept', 'b/kept']);
+  });
+
+  it('removes excluded entries in partial runs and rejects records of deleted examples', () => {
+    const manifest = {
+      ...previous,
+      examples: [...previous.examples, entry('a/perf', { tags: ['perf'] })],
+    };
+    const merged = mergeRecords(
+      manifest,
+      [
+        { id: 'a/deleted', entry: entry('a/deleted') },
+        { id: 'b/kept', entry: entry('b/kept', { tags: ['no-visual-test'] }) },
+      ],
+      new Set([...existing, 'a/perf']),
+    );
+    expect(merged.examples.map((e) => e.id)).toEqual(['a/kept']);
   });
 });
 
@@ -91,6 +143,8 @@ describe('staticMeta', () => {
 describe('checkGallery', () => {
   it('passes when manifest, thumbnails and examples agree', () => {
     const examples = new Map([
+      ['_dev/fixture', { title: 'Fixture', tags: ['dev'], sizeKnown: true }],
+      ['_spikes/a', { tags: ['spike', 'no-visual-test'], sizeKnown: true }],
       ['a/one', { title: 'Title a/one', tags: ['a'], sizeKnown: true }],
       ['a/perf', { tags: ['perf'], sizeKnown: true }],
       ['themes/x', undefined],
@@ -128,5 +182,30 @@ describe('checkGallery', () => {
       'a/resized: thumbnail gallery/thumbs/a/resized.webp is missing.',
       'gallery/thumbs/orphan.webp: thumbnail is not referenced by the manifest.',
     ]);
+  });
+
+  it('reports internal examples in the manifest, and their thumbnails', () => {
+    const examples = new Map([
+      ['_dev/fixture', { title: 'Title _dev/fixture', tags: ['a'], sizeKnown: true }],
+      ['_dev/computed', undefined],
+      ['a/one', { sizeKnown: true }],
+    ]);
+    const entries = [entry('_dev/fixture'), entry('_dev/computed'), entry('a/one')];
+    expect(
+      checkGallery(
+        entries,
+        examples,
+        entries.map((e) => e.thumbnail),
+      ),
+    ).toEqual([
+      '_dev/fixture: internal example in the gallery manifest.',
+      '_dev/computed: internal example in the gallery manifest.',
+    ]);
+    expect(
+      checkGallery([entry('a/one')], examples, [
+        thumbnailPath('a/one'),
+        thumbnailPath('_dev/fixture'),
+      ]),
+    ).toEqual(['gallery/thumbs/_dev/fixture.webp: thumbnail is not referenced by the manifest.']);
   });
 });

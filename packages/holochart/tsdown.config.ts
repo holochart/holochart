@@ -9,6 +9,7 @@ import {
 } from '../../scripts/build/iife-split.ts';
 import {
   DTS_OPTIONS,
+  dtsWithoutInternalMembers,
   dtsWithoutMapComment,
   productionPlugins,
 } from '../../scripts/build/tsdown-preset.ts';
@@ -38,6 +39,29 @@ function scriptFontFilesPlugin() {
   };
 }
 
+/** The 2D trace packages' loaders of their accessibility chunks (`src/a11y-loader.ts`, S2.14). */
+const TRACE_A11Y_LOADER = /[\\/]traces-(?!3d[\\/])[\w-]+[\\/]src[\\/]a11y-loader\.ts$/;
+
+/**
+ * 2D script only: leave out the trace packages' lazily loaded accessibility chunks (the keyboard
+ * stops of the hierarchy, flow, statistical, grid, polar and funnelarea traces, backlog S2.14).
+ * A single-file script would inline them (about 2.9 kB min+gz), which its size budget has no room
+ * for (docs/release/bundle-size.md); their loaders become no-ops, so those traces have no
+ * `a11y` and keyboard navigation skips them, as before S2.14. The ESM build loads the chunks on a
+ * chart's first keyboard focus, and the 3D add-on carries the 3D package's chunk. Remove this
+ * plugin from the 2D script's build to ship them in it.
+ */
+function scriptWithoutTraceA11yPlugin() {
+  return {
+    name: 'holochart:script-without-trace-a11y',
+    load: {
+      filter: { id: TRACE_A11Y_LOADER },
+      handler: () =>
+        'export const lazyA11y = () => undefined;\nexport const gridA11y = undefined;\n',
+    },
+  };
+}
+
 /** The 2.5D view's lazily loaded view (`src/view3d/view.ts`, plan E8.9). */
 const VIEW3D_VIEW = /[\\/]src[\\/]view3d[\\/]view\.ts$/;
 
@@ -63,7 +87,11 @@ const VERSION_DEFINE = { __HOLOCHART_VERSION__: JSON.stringify(pkg.version) };
  *
  * - `dist/index.js` + `dist/index.d.ts`: ESM for bundler users, the full bundle (3D included; its
  *   heavy code is in render's lazy chunks). Holochart packages and `three` (peer dependency,
- *   ADR-003) stay external.
+ *   ADR-003) stay external. The same build has a second entry, `dist/geo.js` + `dist/geo.d.ts`
+ *   (`@mk7s/holochart/geo`, ADR-026): it registers the geo package, which `dist/index.js` never
+ *   imports (`tests/bundle/esm-no-geo.spec.ts`). A third, `dist/graph.js` + `dist/graph.d.ts`
+ *   (`@mk7s/holochart/graph`, ADR-029), does the same for the graph package
+ *   (`tests/bundle/esm-no-graph.spec.ts`).
  * - `dist/holochart.iife.min.js`: self-contained, minified IIFE for `<script>` / CDN use, exposing
  *   `window.Holochart`: the 2D bundle (`src/iife.ts`, everything but the 3D package). Everything is
  *   bundled, including `three` (which no longer ships a UMD or global build). Workspace packages
@@ -81,14 +109,14 @@ const VERSION_DEFINE = { __HOLOCHART_VERSION__: JSON.stringify(pkg.version) };
  */
 export default defineConfig([
   {
-    entry: ['src/index.ts'],
+    entry: ['src/index.ts', 'src/geo.ts', 'src/graph.ts'],
     format: 'esm',
     platform: 'neutral',
     target: 'es2022',
     sourcemap: true,
     dts: DTS_OPTIONS,
     clean: true,
-    plugins: [...productionPlugins(), dtsWithoutMapComment()],
+    plugins: [...productionPlugins(), dtsWithoutInternalMembers(), dtsWithoutMapComment()],
     outputOptions: { chunkFileNames },
   },
   {
@@ -107,6 +135,7 @@ export default defineConfig([
     plugins: [
       ...productionPlugins(),
       scriptFontFilesPlugin(),
+      scriptWithoutTraceA11yPlugin(),
       iife2DPlugin(source('./src/iife/host.ts')),
     ],
     inputOptions: SOURCE_CONDITIONS,
@@ -135,6 +164,7 @@ export default defineConfig([
       iife3DAddonPlugin({
         threeModule: source('./src/iife/three.ts'),
         entry: source('./src/iife-3d.ts'),
+        globalModules: [source('./src/exports.ts'), source('./src/iife/addon-shared.ts')],
       }),
     ],
     inputOptions: SOURCE_CONDITIONS,

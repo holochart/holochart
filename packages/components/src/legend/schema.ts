@@ -25,7 +25,7 @@ import { inheritFont, type FullFont } from '../shared/text.ts';
 
 const LEGEND_EDIT = ['legend', 'layout'] as const;
 
-/** The `layout.legend` container family (`legend`, `legend2`, …). */
+/** The `layout.legend` container family (`legend`, `legend2`, …). @internal */
 export const legendAttributes = attr.subplotObject(
   'legend',
   {
@@ -143,7 +143,7 @@ export const legendAttributes = attr.subplotObject(
   },
 );
 
-/** The defaulted legend. */
+/** The defaulted legend. @internal */
 export interface FullLegend {
   /** The legend's id: `'legend'`, `'legend2'`, … (its `fullLayout` key). */
   _id: string;
@@ -200,6 +200,7 @@ const PLACEMENT = new Set(['x', 'y', 'xanchor', 'yanchor', 'xref', 'yref', 'orie
 /**
  * Coerce every legend (`legend` and the `legendN` the traces use, see the module comment) and
  * fill its orientation-dependent and inherited defaults ({@link fillLegendDefaults}).
+ * @internal
  */
 export function supplyLegendDefaults(
   layoutIn: Readonly<Record<string, unknown>>,

@@ -23,7 +23,7 @@ import type {
   Children,
   ItemsNode,
   ObjectNode,
-  Primitive,
+  PrimitiveValue,
   SchemaNode,
 } from '@mk7s/holochart-core';
 
@@ -81,6 +81,8 @@ export interface TraceTypeSource {
   readonly schema: ObjectNode;
   /** Type name. Default `<PascalType>Trace`, e.g. `ScatterTrace`. */
   readonly name?: string;
+  /** Prefix of nested container names. Default: the type name. */
+  readonly prefix?: string;
   /** Types the trace type builds on (see {@link TypeBase}). */
   readonly bases?: readonly TypeBase[];
 }
@@ -167,6 +169,11 @@ interface PropOverride {
 
 const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
 
+/** Default name of a trace type: `scatter` → `ScatterTrace`. */
+export function traceTypeName(type: string): string {
+  return `${pascal(type)}Trace`;
+}
+
 function pascal(key: string): string {
   return key
     .split(/[^A-Za-z0-9]+/)
@@ -188,7 +195,7 @@ function propName(key: string): string {
   return IDENTIFIER.test(key) ? key : quote(key);
 }
 
-function literal(v: Primitive): string {
+function literal(v: PrimitiveValue): string {
   if (typeof v === 'string') return quote(v);
   // `Infinity`/`NaN` have no literal type; `number` is the closest sound widening.
   if (typeof v === 'number' && !Number.isFinite(v)) return 'number';
@@ -576,7 +583,7 @@ export function createTypeFile(options: GenerateTypesOptions = {}): TypeFile {
       declare(node.children, name, opts, node);
     },
 
-    trace({ type, schema, name = `${pascal(type)}Trace`, bases }) {
+    trace({ type, schema, name = traceTypeName(type), prefix, bases }) {
       const optional = type === DEFAULT_TRACE_TYPE;
       const discriminant: PropOverride = {
         type: quote(type),
@@ -585,7 +592,12 @@ export function createTypeFile(options: GenerateTypesOptions = {}): TypeFile {
           `Trace type${optional ? ' (the default: a trace without `type` is a scatter trace)' : ''}.`,
         ],
       };
-      const opts: ObjectTypeOptions = { alias: true, perPoint: true, ...(bases && { bases }) };
+      const opts: ObjectTypeOptions = {
+        alias: true,
+        perPoint: true,
+        ...(bases && { bases }),
+        ...(prefix !== undefined && { prefix }),
+      };
       declare(schema.children, name, opts, schema, { type: discriminant });
       return name;
     },

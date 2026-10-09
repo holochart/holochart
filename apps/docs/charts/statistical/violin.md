@@ -7,6 +7,8 @@ chart: violin
 
 # Violin plot
 
+<ChartOverview />
+
 ## Overview
 
 A violin plot draws each sample's distribution as a smooth density curve — a kernel density
@@ -26,6 +28,9 @@ Pick a different chart when:
   [histogram](/charts/statistical/histogram) with explicit bins may read better.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -66,13 +71,15 @@ The density:
 
 ## Variations
 
+<ChartVariations />
+
 ### Split violins
 
 Two traces at the same positions, one with `side: 'negative'` and one with `side: 'positive'`,
 compare two distributions back to back. A shared `scalegroup` puts both halves on one scale so
 their widths compare; `violingap: 0` widens the violins.
 
-<Example id="violin/split" />
+<ExampleLink id="violin/split" />
 
 ### Inner box, mean line and points
 
@@ -81,14 +88,14 @@ the violin's; `box.fillcolor` and `box.line` style it). `meanline.visible` draws
 the mean: across the inner box when it is shown, else across the violin. `points: 'all'`,
 `pointpos` and `jitter` place every sample beside it, like box points.
 
-<Example id="violin/box-meanline" />
+<ExampleLink id="violin/box-meanline" />
 
 ### Grouped violins
 
 `layout.violinmode: 'group'` sets the violins of several traces side by side in each category;
 `violingap` and `violingroupgap` set the gaps (default 0.3 each).
 
-<Example id="violin/grouped" />
+<ExampleLink id="violin/grouped" />
 
 ### Horizontal violins, hard span
 
@@ -96,7 +103,7 @@ Samples in `x` give horizontal violins. `spanmode: 'hard'` cuts each density at 
 samples — right for bounded values like ages or percentages — and a fixed `bandwidth` smooths all
 traces alike.
 
-<Example id="violin/horizontal" />
+<ExampleLink id="violin/horizontal" />
 
 ### Scale groups and count scaling
 
@@ -105,7 +112,7 @@ widest violin fills the slot. Traces with the same `scalegroup` share a scale:
 `scalemode: 'width'` compares densities, `'count'` also makes widths proportional to the number of
 samples. On the right, the 30-sample violin is much thinner than the 300-sample one.
 
-<Example id="violin/scalegroup" />
+<ExampleLink id="violin/scalegroup" />
 
 ## Styling
 
@@ -143,7 +150,10 @@ samples. On the right, the 30-sample violin is much thinner than the 300-sample 
 - **Screen readers:** each violin trace is described like a box trace — violin count, sample
   count, the range of the medians — with a hidden table of every violin's statistics. The density
   itself is not described. See the [accessibility guide](/guides/accessibility).
-- **Keyboard:** there is no keyboard navigation between violins yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then step through the violins, each stop showing
+  every statistic of its violin, and ↑ / ↓ move to the trace above or below. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Color:** split violins differ by side as well as color; keep the legend to name the halves.
 
 ## Attribute reference

@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "holochart-py"
+version = "0.0.0"
+description = "GPU charts in Python notebooks, using Holochart and anywidget."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md", "GUST-FONT-LICENSE.txt"]
+dependencies = ["anywidget>=0.9,<1", "traitlets>=5"]
+
+[project.optional-dependencies]
+plotly = ["plotly>=5,<8", "nbformat>=4.2"]
+dev = ["plotly>=5,<8", "nbformat>=4.2", "numpy>=1.24", "pytest>=8", "build>=1"]
+
+[project.urls]
+Homepage = "https://mk7s.dev/holochart"
+Repository = "https://github.com/holochart/holochart"
+
+[tool.hatch.build.hooks.custom]
+path = "hatch_build.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/holochart"]
+artifacts = ["src/holochart/static/widget.js"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "frontend", "tests", "build_assets.py", "hatch_build.py", "pyproject.toml", "README.md", "LICENSE", "THIRD_PARTY_NOTICES.md", "GUST-FONT-LICENSE.txt"]
+artifacts = ["src/holochart/static/widget.js", "LICENSE", "THIRD_PARTY_NOTICES.md", "GUST-FONT-LICENSE.txt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

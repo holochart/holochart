@@ -25,10 +25,10 @@ All accessibility options live in [`config.a11y`](/reference/config):
 | `a11y.reducedMotion` | `'auto'`   | [Reduced motion](#reduced-motion): `'auto'`, `true` or `false`.      |
 | `a11y.keyboard`      | `true`     | [Keyboard access](#keyboard-access) to the data and the legend.      |
 
-<Example id="_dev/a11y-description" :height="400" />
+<Example id="accessibility/description" :height="400" />
 
-The chart above draws nothing extra. Open your browser's accessibility inspector on it, or run
-`__interaction.chart.description` in the console of the sandbox, to see what a screen reader gets.
+The chart above draws nothing extra. Open your browser's accessibility inspector on it, or read
+[`chart.description`](#the-hidden-description) from code, to see what a screen reader gets.
 
 ## What the chart element gets
 
@@ -124,7 +124,7 @@ Nothing is rewritten when the text did not change.
 The description starts with the gist of the chart, written from its data: which way each series
 goes, from what to what, and the extremes worth knowing.
 
-<Example id="_dev/a11y-summary" :height="460" />
+<Example id="accessibility/summary" :height="460" />
 
 > USD by Month. Revenue rises from 1.2M (Jan 1, 2024) to 3.4M (Dec 1, 2024). It peaks at 3.6M
 > (Nov 1, 2024). Costs stays flat at about 2.0M.
@@ -143,6 +143,7 @@ categories, the locale's separators). What each trace type says:
 | heatmap, contour, 2D histogram                    | the value range, where the highest and lowest values are, the hottest row and column                                           |
 | candlestick, OHLC                                 | the change from the first open to the last close, the highest high and lowest low                                              |
 | indicator                                         | the value and its change from the reference                                                                                    |
+| choropleth                                        | the regions where the value is highest and lowest, by name                                                                     |
 
 The rules are simple and deterministic, so a summary never claims more than the data shows:
 
@@ -170,8 +171,9 @@ stays.
 
 Every sentence comes from an English template with `{placeholders}`, and that template is also
 the key a locale's `dictionary` translates, like Plotly's UI strings. `@mk7s/holochart-locales`
-translates the summaries for `de`, `fr` and `es` (and their regional variants); for another
-language, add the sentences to the locale you register:
+translates the summaries in ten locales — `de`, `es`, `fr`, `it`, `ja`, `ko`, `pt-BR`, `ru`, `tr`
+and `zh-CN` — and [Languages](#languages) says what else they translate and how far to trust
+them. For another language, add the sentences to the locale you register:
 
 ```ts
 import { createChart, register } from '@mk7s/holochart';
@@ -189,8 +191,10 @@ register({
 createChart(el, { data, layout, config: { locale: 'nl' } });
 ```
 
-A translation keeps every placeholder and may reorder them. Sentences without a translation stay
-English. The templates, grouped by what they describe:
+A translation keeps every placeholder and may reorder them, or reword the sentence around them:
+the Russian, Turkish and Korean ones lead with the trace name and a colon, because a placeholder
+can't take a case ending or a particle that depends on its value. Sentences without a translation
+stay English. The templates, grouped by what they describe:
 
 - **Axes and totals**: `{y} by {x}.`, `{count} more traces are not summarized.`,
   `{name} has no values.`, `{name} has a single value, {value} ({x}).`
@@ -282,23 +286,114 @@ The first arrow key starts at the first point of the first trace. Details:
   inside the x range, so after zooming in the cursor stays in view. For horizontal traces
   (`orientation: 'h'`) the roles turn with the chart: ↑ / ↓ step through the points along y, and
   ← / → move between traces.
-- **Pie slices** are visited in drawing order (← / ↑ previous, → / ↓ next). Scatter, line, bar,
-  waterfall, funnel, OHLC and candlestick traces are navigated; histograms, box and violin plots,
-  2D maps (heatmap, contour, histogram2d), polar, 3D and hierarchy traces are not yet.
+- **Other chart families** have stops of their own, each showing the hover label of what it is
+  on; see [Keys by chart family](#keys-by-chart-family).
 - **Events**: moving emits `hover` (like `chart.hover()`, without a DOM event), Escape `unhover`,
   Enter `click` with the same Plotly-shaped point as a mouse click and the `KeyboardEvent` as
   `event`. Zoom, pan and reset emit one `relayout` with the keys a drag emits
   (`'xaxis.range[0]'`, …) and respect `fixedrange` and `minallowed` / `maxallowed`.
 - **Announcements** go to a polite live region inside the plot area's focus target, with the text
-  of the hover label; zoom, pan and reset are announced too. They are localized like the modebar:
-  the English sentence is the locale dictionary key (`'{name}: {text}, point {n} of {count}.'`,
-  `'Zoomed in.'`, …).
+  of the hover label, its lines read as a list ("Share: Alpha, 40, 40%, point 1 of 5."); zoom, pan,
+  rotation and reset are announced too. They are localized like the modebar: the English sentence
+  is the locale dictionary key, translated in [ten locales](#languages); see
+  [Announcement sentences](#announcement-sentences).
 - Keys with Ctrl, Alt or Meta are left to the browser, and keys pressed while a control inside the
   chart has focus stay with that control.
 
 The plot area's focus target is `role="application"`, so screen readers in browse mode hand it
 the arrow keys; the rest of the figure stays browsable. Its code loads the first time the chart
-gets focus.
+gets focus, and so do the stops of the chart families below (one small chunk per trace package);
+keys pressed meanwhile are kept and replayed.
+
+### Keys by chart family
+
+Every stop shows the hover label(s) a pointer would get there and announces what they say, with
+the stop's place in the chart. Page Up / Page Down, Enter, Escape and the view keys work as above.
+
+| Traces                                              | Stops                                                                                    | ← / →                                                               | ↑ / ↓                                                                     | Home / End                                     |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------- |
+| scatter, line, bar, waterfall, funnel, OHLC, candle | data points, along x                                                                     | previous / next point                                               | the trace next above / below at this x                                    | first / last point                             |
+| histogram                                           | bins: the range and the bar's value                                                      | previous / next bin                                                 | the trace next above / below at this bin                                  | first / last bin                               |
+| box, violin                                         | one per box: every statistic at once (max … min)                                         | previous / next box                                                 | the trace next above / below at this position                             | first / last box                               |
+| heatmap, contour, histogram2d, histogram2dcontour   | cells in view, rows from the top                                                         | along the row                                                       | along the column                                                          | ends of the row                                |
+| pie, funnelarea                                     | slices, stages, in drawing order                                                         | previous / next                                                     | previous / next                                                           | first / last                                   |
+| sunburst, treemap, icicle                           | drawn nodes of the current level                                                         | previous / next sibling                                             | ↑ the parent, ↓ the first child                                           | first / last sibling                           |
+| sankey                                              | nodes by column, and links                                                               | previous / next node (on a link: links of that node)                | ↓ downstream (first outgoing link, a link's target), ↑ upstream           | first / last node (or link)                    |
+| parcats                                             | categories                                                                               | the category beside it in the previous / next dimension             | previous / next category of the dimension                                 | first / last category                          |
+| parcoords                                           | each line on each axis (a label on the axis)                                             | the same line on the previous / next axis                           | the previous / next line on this axis                                     | first / last axis                              |
+| scatterpolar, barpolar                              | points inside the subplot, bars, in data order                                           | previous / next                                                     | previous / next                                                           | first / last                                   |
+| scatter3d                                           | points, in data order                                                                    | previous / next                                                     | previous / next                                                           | first / last                                   |
+| scattergeo, choropleth                              | points on the map and in view, in data order; drawn regions, in the order of `locations` | previous / next                                                     | previous / next                                                           | first / last                                   |
+| graph, graph3d (a network)                          | drawn nodes, and the links of each node                                                  | previous / next node (on a link: the links of that node, around it) | ↓ a node's first link, a link's other end; ↑ from a link back to its node | most-connected / last node (first / last link) |
+| graph (tree, radial, dendrogram)                    | drawn nodes                                                                              | previous / next sibling                                             | ↑ the parent, ↓ the first child                                           | first / last sibling                           |
+| graph, graph3d (layered)                            | drawn nodes                                                                              | previous / next node of the rank                                    | ↓ / ↑ the linked node in the next / previous rank                         | first / last of the rank                       |
+| chord                                               | node arcs around the ring, and ribbons                                                   | around the ring (on a ribbon: the ribbons of its source)            | ↓ a node's first ribbon, a ribbon's target; ↑ a ribbon's source           | first / last                                   |
+
+- **Hierarchies**: Enter drills into the node like a click (out of the entry, like a click on the
+  center), and the cursor stays on its node through the transition.
+- **Grids** build their cells on demand, so the cursor costs the same on a 4096 × 4096 heatmap. A
+  gap with `hoverongaps: false` is still a stop, announced with its position.
+- **Box and violin** stops need box hover: a trace with `hoveron: 'points'` (a strip plot) has
+  none.
+- **3D scenes**: on a chart with a scene, Shift + arrows **orbit the camera** in steps of 15° (← / →
+  around the scene, ↑ / ↓ over it; a turntable, or a free orbit with `dragmode: 'orbit'`), `+` /
+  `-` move it in and out, and `0` resets it to the first drawn view. Each key is one GUI
+  `relayout` of `scene.camera`, as a drag is. With the cursor on a 3D point, its scene gets the
+  keys; without a cursor, every scene does. Surface, mesh3d, cone, streamtube, isosurface, volume
+  and bar3d have no stops yet (their scenes take the view keys).
+- **Maps**: on a chart with a [geo subplot](/fundamentals/maps#keyboard), Shift + arrows move the
+  view by a tenth of the subplot (a scoped map pans, a world map turns in longitude and moves up
+  and down, a globe turns in longitude and latitude), `+` / `-` zoom about the middle, and `0`
+  resets it to the first drawn view. Each key is one GUI `relayout` with the keys a drag writes
+  (`geo.projection.rotation.lon`, `geo.center.lat`, `geo.projection.scale`, …), and the new view
+  is announced. With the cursor on a point or a region, its subplot gets the keys; without a
+  cursor, every geo subplot does. A point or a region that the projection hides, or that is out
+  of view, is not a stop: move the map to reach it.
+- **Graphs**: in every arrangement ↓ goes along a link, ↑ comes back and ← / → move among the
+  stops beside the cursor. In a network the stops are the nodes and, below each node, its links:
+  ↓ from a node goes to its first link, ← / → then turn through that node's links (clockwise as
+  drawn, and around again), ↓ follows the link to the node at its other end and ↑ returns to the
+  node. Home on a node jumps to the most-connected one. A tree arrangement is walked like a
+  sunburst (siblings, parent, first child); a layered one rank by rank, with ↑ / ↓ along the
+  links to the rank before and after. Each stop announces its place and where ↑ and ↓ lead
+  ("net: A → D, Value: 2, link 1 of 2 of A. Down: D."). Nodes that are not drawn (a folded
+  subtree, a group hidden through the legend) are not stops. In a tree arrangement Enter on a
+  node that has children folds its subtree away and Enter again unfolds it, as a click does
+  (unless `tree.collapsible` is `false`); a folded node says "Folded." after its place, and the
+  cursor stays on it. When the node under the cursor stops being drawn, the cursor moves to
+  what is left nearby: to the node a subtree folded into, or to the nearest node still drawn. `graph3d` adds the scene's view
+  keys. Stops are built on demand, so a graph of 100,000 nodes costs about 10 ms on the first
+  key.
+- **Not navigated yet**: `image`, `splom`, `table` cells and `indicator`.
+- **The script-tag build** (`holochart.iife.min.js`) leaves the 2D families' stops out for now
+  (histogram, box, violin, the grids, funnelarea, the hierarchies, sankey, parcats, parcoords and
+  polar): its size budget has no room for the chunks it would inline. Cartesian points, pie and,
+  with the 3D add-on, scatter3d and the scenes' view keys work there. The ESM build has them all.
+
+### Announcement sentences
+
+The sentences below are the locale dictionary keys; a translation keeps the `{placeholders}`, in
+any order. `{name}` is the trace name and `{text}` what the hover label(s) say.
+`@mk7s/holochart-locales` translates them in the same [ten locales](#languages) as the summaries;
+elsewhere they are English, and you can add them to a locale the way
+[summaries](#summaries-in-other-languages) are added.
+
+| Sentence                                                                   | Said for                                                              |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `{name}: {text}, point {n} of {count}.`                                    | data points, slices, stages, polar and 3D points                      |
+| `{name}: {text}, {n} of {count}.`                                          | histogram bins, sankey nodes and links, a lone box                    |
+| `{name}: {position}, {text}, {n} of {count}.`                              | a box or violin at `{position}` of its trace                          |
+| `{name}: {text}, row {row} of {rows}, column {column} of {columns}.`       | grid cells; parcoords lines (rows) on axes                            |
+| `{name}: {text}, level {level}, {n} of {count}, children: {children}.`     | sunburst, treemap and icicle nodes; graph nodes in a tree arrangement |
+| `{name}: {text}, node {n} of {count}.`                                     | graph and chord nodes                                                 |
+| `{name}: {text}, link {n} of {count} of {node}.`                           | a graph node's links, a chord's ribbons                               |
+| `{name}: {text}, rank {rank} of {ranks}, {n} of {count}.`                  | graph nodes in a layered arrangement                                  |
+| `Up: {up}.` / `Down: {down}.`                                              | after a graph stop's sentence: where ↑ / ↓ lead                       |
+| `Folded.`                                                                  | after the sentence of a graph tree node whose subtree is folded away  |
+| `{name}: {dimension}, {category}, {text}, {n} of {count}.`                 | parcats categories                                                    |
+| `Dimension {n}`                                                            | in `{text}`: a parcoords dimension without a label                    |
+| `No data points to explore.`                                               | a chart without stops                                                 |
+| `Zoomed in.` / `Zoomed out.` / `Panned.` / `View rotated.` / `View reset.` | the view keys                                                         |
 
 ### The controls
 
@@ -395,7 +490,9 @@ Shapes are handed out in order — `/`, `.`, `\`, `x`, `-`, `+`, `|` — one per
 traces that take a pattern) and one per slice for pies, by the slice's position in the data.
 A trace or template that sets its own `marker.pattern.shape` (even `''`, no pattern) keeps it.
 Hierarchies (sunburst) and sankey keep their colors only: one pattern per trace wouldn't tell their
-sectors apart. For lines, vary `line.dash` and marker symbols yourself.
+sectors apart. For lines, vary `line.dash` and marker symbols yourself. Choropleth regions have no
+patterns either: write the values on the map instead, as
+[the choropleth page](/charts/maps/choropleth#values-as-labels) shows.
 
 ### Reduced motion
 
@@ -410,6 +507,62 @@ follows the user.
 ```ts
 createChart(el, { data, layout, config: { a11y: { reducedMotion: true } } });
 ```
+
+## Languages
+
+A chart speaks the language of its [locale](/fundamentals/locales) where a translation exists, and
+English where none does. `@mk7s/holochart-locales` translates Holochart's own accessibility strings
+in ten of its locales: **`de`, `es`, `fr`, `it`, `ja`, `ko`, `pt-BR`, `ru`, `tr` and `zh-CN`**.
+Regional locales that fall back to one of them (`de-CH`, `es-AR`, `es-PE`, `fr-CH`) get its
+strings when both are registered. `pt-PT`, `zh-TW` and `zh-HK` have no translations of their own:
+registered alone they speak English, and registered next to `pt-BR` or `zh-CN` they fall back to
+it through the shared language, so a `zh-TW` chart then announces in Simplified Chinese and a
+`pt-PT` chart in Brazilian Portuguese. Register only the locale you use if you prefer English
+there.
+
+| What a screen reader hears                                                            | In the ten locales | Elsewhere                |
+| ------------------------------------------------------------------------------------- | ------------------ | ------------------------ |
+| [Generated summaries](#generated-summaries) (the overview)                            | translated         | English                  |
+| [Keyboard announcements](#announcement-sentences) of points and view changes          | translated         | English                  |
+| The plot area's keyboard hint and the legend toolbar's name                           | translated         | English                  |
+| Modebar button names, hover label words (`open:`, `median:`, …), default trace names  | translated         | where Plotly's locale is |
+| The chart type sentence, the axis and trace lines, "Axes:" and "Traces:"              | English            | English                  |
+| Data table captions ("first 100 of 5,000 rows")                                       | English            | English                  |
+| The modebar's toolbar name, fallback names of menus and sliders, range selector names | English            | English                  |
+
+The values inside summaries and announcements are formatted like the chart shows them (the
+locale's separators and month names), whatever language the sentence around them is in.
+
+**These are machine translations.** No native speaker has reviewed them. A test checks that each
+one keeps the placeholders of its English sentence, which says nothing about how it reads: expect
+wording a native speaker would improve. If a sentence reads wrong in your language, override it
+in the locale you register (the English sentence is the key, as in
+[Summaries in other languages](#summaries-in-other-languages)) and please open an issue.
+
+What stays English, and why:
+
+- **The rest of the hidden description** — the chart type sentence ("Line and bar chart with 2
+  traces."), the axis lines, the line each trace type writes about itself (the 3D traces' included)
+  and the table captions — is assembled in code from English fragments and English plurals, not
+  from templates, so a dictionary cannot translate it yet. The mirror therefore mixes languages on
+  a localized chart: a translated overview, then English lines. Set
+  [`config.ariaLabel`](#the-accessible-name) and name your traces and axes in your language to
+  carry the essentials.
+- **A few control names**: the modebar's toolbar is named "Chart toolbar", an update menu or
+  slider without a `name` is "Menu 1" or "Slider 1", and range selectors are "Range selector".
+  Give menus and sliders a `name` in your language.
+- **Sentence shapes that fit a language poorly.** A count of one reads like the English ("1 more
+  traces are not summarized") in German, French and Spanish. A trace name that is a plural noun
+  meets a singular verb in the Germanic and Romance translations, as it does in English ("Sales
+  rises"). French does not elide before a name ("de Août"). The Italian and Spanish price
+  sentences put an article before the change, which suits the percentage it almost always is.
+  Turkish writes the percent sign after the number, where it belongs before it: that is the
+  number format's doing, not the sentence's.
+- **Right-to-left languages.** No locale translates these strings into Arabic or Hebrew, and
+  plotly.js's `ar` and `he` have no UI strings either: such a chart has your right-to-left
+  titles and labels next to English controls and announcements. See
+  [Right-to-left scripts](/fundamentals/locales#right-to-left-scripts) for what the text layout
+  does and does not do.
 
 ## Make your charts easier to understand
 
@@ -467,6 +620,11 @@ export const myTrace: TraceModule<MyCalc> = {
 };
 ```
 
+A module can also ship its accessibility code in a chunk of its own that loads on first use, as the
+built-in 3D traces do: `a11y: () => import('./a11y.js').then((m) => m.parts)` resolves to
+`{ [traceType]: { describe, keyboardPoints, keyboardView } }`. The trace shows the generic line
+until the chunk is there, then the chart describes itself again; `chart.describe()` waits for it.
+
 Build at most `maxRows` rows and report the full count as `total`; `row(i)` formats any row, so a
 visible table can show all of them. The `insight` hands the summary code facts, not sentences: a
 `series` (values along x), `shares` (parts of a whole), `boxes`, `bins`, a `grid`, `prices` or a
@@ -474,11 +632,34 @@ single `value`, with the formatters to show them — the calc's own arrays, neve
 `describe()` that throws is logged and replaced by the generic line, so it can never break the
 chart.
 
+## Keyboard stops for a custom trace type
+
+A trace module lists its stops with `keyboardPoints(calc, trace, ctx)`: the hover points of what
+it draws, in reading order. A cartesian trace whose stops are its data points needs none. Stops
+may say where the arrows lead (`nav`: the indices ←, →, ↑, ↓, Home and End go to), show more
+labels (`more`) and bring their own sentence (`say`: an English template and its values):
+
+<!-- docs-gates: no-typecheck -->
+
+```ts
+keyboardPoints(calc, trace, ctx) {
+  return calc.cells.map((cell, k) => ({
+    ...hoverPointOf(cell, trace, ctx), // what hoverPoints returns on the cell
+    nav: [cell.left ?? k, cell.right ?? k, cell.up ?? k, cell.down ?? k],
+    say: ['{name}: {text}, ring {ring}.', { ring: String(cell.ring) }],
+  }));
+},
+```
+
+Return an array, or anything with a `length` and `at(i)` that builds stop `i` on demand. A trace
+drawn in a 3D scene gets the scene's view keys with `a11y: sceneA11y`.
+
 ## What's next
 
-Keyboard navigation of histograms, box plots, 2D maps, polar charts and hierarchies (with Enter
-drilling down), and keys for the range slider's handles and for editing selections, come later.
-[Locales](/fundamentals/locales) (E17.6) translate the modebar, format numbers and dates, and
-translate the generated summaries and keyboard announcements; the rest of the description (axes,
-trace lines, table captions) is English for now. Summaries don't announce changes as they happen (no live
-region) and don't detect seasonality.
+Stops for the remaining 3D traces, `image` and `table`, the 2D families in the script-tag build,
+and keys for the range slider's handles and for editing selections, come later.
+[Locales](/fundamentals/locales) (E17.6) translate the modebar, format numbers and dates, and in
+[ten of them](#languages) translate the generated summaries and keyboard announcements; the rest
+of the description (the chart type sentence, axis and trace lines, table captions) and a few
+control names are English for now, and the translations await review by native speakers.
+Summaries don't announce changes as they happen (no live region) and don't detect seasonality.

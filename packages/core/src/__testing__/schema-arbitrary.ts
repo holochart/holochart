@@ -31,7 +31,7 @@ import type {
   AttrSpec,
   ItemsNode,
   ObjectNode,
-  Primitive,
+  PrimitiveValue,
   SchemaNode,
   ValType,
 } from '../schema/types.ts';
@@ -960,7 +960,7 @@ function scalarSpecArb(): fc.Arbitrary<AttrSpec> {
         ...bounds,
         arrayOk: a,
         clamp,
-        ...(extras ? { extras: ['auto'] as Primitive[] } : {}),
+        ...(extras ? { extras: ['auto'] as PrimitiveValue[] } : {}),
       }));
   const byType: { [K in ValType]: fc.Arbitrary<AttrSpec> } = {
     number: numeric(false).map((o) => attr.number(o)),
@@ -973,7 +973,7 @@ function scalarSpecArb(): fc.Arbitrary<AttrSpec> {
     enumerated: fc
       .tuple(
         metaArb,
-        fc.subarray<Primitive>(['a', 'b', 1, 2, true, false], { minLength: 1 }),
+        fc.subarray<PrimitiveValue>(['a', 'b', 1, 2, true, false], { minLength: 1 }),
         arrayOk,
       )
       .map(([meta, values, a]) => attr.enumerated({ ...meta, values, arrayOk: a })),
@@ -981,7 +981,7 @@ function scalarSpecArb(): fc.Arbitrary<AttrSpec> {
       .tuple(
         metaArb,
         fc.subarray(['p', 'q', 'r'], { minLength: 1 }),
-        fc.subarray<Primitive>(['none', true, false]),
+        fc.subarray<PrimitiveValue>(['none', true, false]),
         arrayOk,
       )
       .map(([meta, flags, extras, a]) => attr.flaglist({ ...meta, flags, extras, arrayOk: a })),
@@ -992,7 +992,7 @@ function scalarSpecArb(): fc.Arbitrary<AttrSpec> {
       .tuple(
         metaArb,
         fc.constantFrom('x', 'scene', 'polar'),
-        fc.subarray<Primitive>(['free', 'paper']),
+        fc.subarray<PrimitiveValue>(['free', 'paper']),
       )
       .map(([meta, dflt, extras]) => attr.subplotId({ ...meta, dflt, extras })),
     data_array: metaArb.map((meta) => attr.dataArray(meta)),

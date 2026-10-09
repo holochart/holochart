@@ -32,7 +32,7 @@ export type { ParcatsCalc } from './parcats/index.ts';
 export { splom, splomAttributes } from './splom/index.ts';
 export type { SplomCalc } from './splom/index.ts';
 export { strip } from './strip/strip.ts';
-export type { StripData, StripFigure, StripOptions } from './strip/strip.ts';
+export type { StripData, StripFigure, StripFigureOptions } from './strip/strip.ts';
 
 // Grid helpers shared with the `heatmap` and `image` traces of @mk7s/holochart-traces-sci (M4):
 // the `z` colorscale, cell labels, cell hover text and gap filling.
@@ -56,6 +56,8 @@ export { autoCellFontSize, cellLabels } from './histogram2d/text.ts';
 export type { CellText, CellTextGrid } from './histogram2d/text.ts';
 export { axisHoverText, cellColor, dataValue, zText } from './histogram2d/hover.ts';
 export { fillGaps } from './shared/contour-gaps.ts';
+// The keyboard cell cursor of grid traces, loaded on first use (backlog S2.14).
+export { gridA11y } from './a11y-loader.ts';
 
 // The contouring shared by `histogram2dcontour` and the `contour` trace of
 // @mk7s/holochart-traces-sci (M4, E11.2): attributes, defaults, contouring (levels, constraints,

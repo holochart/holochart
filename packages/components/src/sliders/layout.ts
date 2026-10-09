@@ -20,7 +20,7 @@ import {
 import { resolveXAnchor, resolveYAnchor } from '../updatemenus/layout.ts';
 import type { FullSlider, FullSliderStep } from './schema.ts';
 
-/** Geometry constants at 12 px text (`sliders/constants.js`). */
+/** Geometry constants at 12 px text (`sliders/constants.js`). @internal */
 export const SLIDER_METRICS = {
   /** Inset of the first and last step from the ends of the input area. */
   stepInset: 10,
@@ -35,7 +35,7 @@ export const SLIDER_METRICS = {
   labelPadding: 8,
 } as const;
 
-/** One tick (every visible step has one; labeled steps get a long one). */
+/** One tick (every visible step has one; labeled steps get a long one). @internal */
 export interface SliderTick {
   /** Position among the visible steps. */
   readonly position: number;
@@ -47,7 +47,7 @@ export interface SliderTick {
   readonly label?: string;
 }
 
-/** A laid-out slider; x/y are relative to the slider's box (container px otherwise). */
+/** A laid-out slider; x/y are relative to the slider's box (container px otherwise). @internal */
 export interface SliderLayout {
   readonly scale: number;
   /** Box size (Plotly's `outerLength` × `height`). */
@@ -79,18 +79,21 @@ export interface SliderLayout {
   readonly inputLength: number;
 }
 
-/** The current-value text of a step: `prefix + label + suffix` (Plotly `drawCurrentValue`). */
+/**
+ * The current-value text of a step: `prefix + label + suffix` (Plotly `drawCurrentValue`).
+ * @internal
+ */
 export function currentValueText(slider: FullSlider, step: FullSliderStep | undefined): string {
   const cv = slider.currentvalue;
   return `${cv.prefix ?? ''}${step ? plainText(step.label) : ''}${cv.suffix ?? ''}`;
 }
 
-/** The slider's length in px (`len` in `lenmode` units; `plotWidth` for fractions). */
+/** The slider's length in px (`len` in `lenmode` units; `plotWidth` for fractions). @internal */
 export function sliderLength(slider: FullSlider, plotWidth: number): number {
   return Math.ceil(slider.lenmode === 'fraction' ? Math.round(plotWidth * slider.len) : slider.len);
 }
 
-/** Lay out a (visible) slider whose `len` is resolved against `plotWidth`. */
+/** Lay out a (visible) slider whose `len` is resolved against `plotWidth`. @internal */
 export function layoutSlider(
   slider: FullSlider,
   measure: MeasureLine,
@@ -210,7 +213,7 @@ function sliderAnchor(slider: FullSlider, layout: SliderLayout, xref: AnchoredBo
   };
 }
 
-/** Top-left corner of the slider's box, container px. */
+/** Top-left corner of the slider's box, container px. @internal */
 export function placeSlider(
   slider: FullSlider,
   layout: SliderLayout,
@@ -224,6 +227,7 @@ export function placeSlider(
 /**
  * Margin a slider needs (Plotly's `autoMargin`): vertically its full height; horizontally only in
  * `pixels` mode (a `fraction` slider scales with the plot area, so it pushes nothing sideways).
+ * @internal
  */
 export function sliderBoxMarginPush(
   slider: FullSlider,
@@ -235,7 +239,7 @@ export function sliderBoxMarginPush(
   return anchoredMarginPush(sliderAnchor(slider, layout, xref), size, margin, layout);
 }
 
-/** The visible-step position nearest to `x` (box px), Plotly `handleInput`. */
+/** The visible-step position nearest to `x` (box px), Plotly `handleInput`. @internal */
 export function stepPositionAt(layout: SliderLayout, x: number): number {
   const n = layout.steps.length;
   if (n <= 1) return 0;
@@ -245,7 +249,7 @@ export function stepPositionAt(layout: SliderLayout, x: number): number {
   return Math.round(Math.min(1, Math.max(0, v)) * (n - 1));
 }
 
-/** Visible sliders of a layout. */
+/** Visible sliders of a layout. @internal */
 export function visibleSliders(sliders: unknown): FullSlider[] {
   if (!Array.isArray(sliders)) return [];
   return (sliders as FullSlider[]).filter(
@@ -256,6 +260,7 @@ export function visibleSliders(sliders: unknown): FullSlider[] {
 /**
  * The step `delta` visible steps away from `active` (keyboard: ±1, PageUp/PageDown: ±10% of the
  * steps, at least 1), clamped to the ends. Returns an index into `steps`.
+ * @internal
  */
 export function stepBy(layout: SliderLayout, active: number, delta: number): number {
   const n = layout.steps.length;
@@ -266,7 +271,7 @@ export function stepBy(layout: SliderLayout, active: number, delta: number): num
   return layout.steps[to] as number;
 }
 
-/** PageUp / PageDown jump: a tenth of the steps, at least one. */
+/** PageUp / PageDown jump: a tenth of the steps, at least one. @internal */
 export function pageSize(layout: SliderLayout): number {
   return Math.max(1, Math.round(layout.steps.length / 10));
 }

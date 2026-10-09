@@ -12,7 +12,7 @@ import {
 
 type Axis = Pick<AxisInfo, 'type' | 'scale' | 'letter' | 'start'>;
 
-/** One selection's outline: a closed polygon in linear coordinates of its axes. */
+/** One selection's outline: a closed polygon in linear coordinates of its axes. @internal */
 export interface SelectionOutline {
   /** `_index` of the selection in `layout.selections` (-1 for template items). */
   readonly index: number;
@@ -64,7 +64,7 @@ export function fromContainer(axis: Axis, c: number): number {
   return axis.scale.p2l(axis.letter === 'x' ? c - axis.start : axis.start - c);
 }
 
-/** What dragging a selection does: move it, or resize a box along the named edges. */
+/** What dragging a selection does: move it, or resize a box along the named edges. @internal */
 export type SelectionDragMode = 'move' | `resize-${string}`;
 
 /** How close to an edge (px) a press must be to resize. */

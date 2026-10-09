@@ -13,7 +13,7 @@ import {
 } from '@mk7s/holochart';
 import { de } from '@mk7s/holochart-locales';
 import { createChart as createPartialChart, register } from '@mk7s/holochart-runtime';
-import { bar, scatter, type BarTrace, type TracesBasic } from '@mk7s/holochart-traces-basic';
+import { bar, scatter, type BaseBarTrace, type TracesBasic } from '@mk7s/holochart-traces-basic';
 import * as THREE from 'three';
 
 export async function fullBundle(el: HTMLElement): Promise<Chart> {
@@ -51,7 +51,7 @@ export function partialBundle(el: HTMLElement): Chart {
   register(scatter, bar, de);
   registerFull();
   // The partial bundle's traces, typed with its packages' types.
-  const traces: BarTrace[] = [{ type: 'bar', x: ['a', 'b'], y: [1, 2], orientation: 'v' }];
+  const traces: BaseBarTrace[] = [{ type: 'bar', x: ['a', 'b'], y: [1, 2], orientation: 'v' }];
   const figure: FigureInput<TracesBasic> = { data: traces };
   // The runtime alone takes any trace (plugins, untyped data).
   createPartialChart(el, { data: [{ type: 'my-plugin', anything: true }] }).destroy();

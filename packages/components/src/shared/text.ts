@@ -25,6 +25,7 @@ export const LINE_HEIGHT = 1.3;
  * plainText('10<sup>−3</sup>'); // '10−3'
  * plainText('Jan 5<br>2026');   // 'Jan 5\n2026'
  * ```
+ * @internal
  */
 export function plainText(text: string): string {
   return richTextToPlain(text);

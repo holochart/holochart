@@ -15,6 +15,7 @@
 import { Mesh } from 'three';
 import type { DataTransform, Primitive, PrimitiveContext, ViewportSize } from '../types.ts';
 import type { FillData, FillPrimitive } from './fill.ts';
+import type { triangulateFills } from './fill-triangulate.ts';
 
 /** The lazily loaded fill module (`fill-lazy.ts`). */
 type FillModule = typeof import('./fill-lazy.ts');
@@ -47,6 +48,18 @@ export function fillPrimitiveLoaded(): boolean {
  */
 export function preloadFillPrimitive(): Promise<void> {
   return loadFillModule().then(() => undefined);
+}
+
+/**
+ * The fill chunk's `triangulateFills`, for code that triangulates polygons without drawing a fill
+ * (GEO8: the globe's sphere meshes, in another package's lazy chunk). `triangulateFills` is also a
+ * synchronous export of the package, but importing that from lazy code makes a bundler keep
+ * earcut and the fill-rule code in the app's initial chunk (7 kB gzipped). Through here they stay
+ * in the one fill chunk, which is loaded once, as for a fill. Rejects when the chunk cannot be
+ * loaded; the next call tries again.
+ */
+export function loadFillTriangulation(): Promise<typeof triangulateFills> {
+  return loadFillModule().then((mod) => mod.triangulateFills);
 }
 
 let errorReported = false;

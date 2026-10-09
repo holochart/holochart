@@ -41,10 +41,10 @@ const DEG = Math.PI / 180;
 export { ARROWHEADS, arrowGeometry, boxCorners, exitDistance, inBox, rotate };
 export type { ArrowGeometry, ArrowOptions, Point, RotatedBox };
 
-/** The axis parts reference conversions need. */
+/** The axis parts reference conversions need. @internal */
 export type AxisRef = Pick<AxisInfo, 'letter' | 'scale' | 'full' | 'start' | 'end' | 'l2c'>;
 
-/** Where annotations are placed: figure size, plot area and the laid-out axes. */
+/** Where annotations are placed: figure size, plot area and the laid-out axes. @internal */
 export interface AnnotationEnv {
   size: { width: number; height: number };
   plotArea: { x: number; y: number; width: number; height: number };
@@ -52,11 +52,11 @@ export interface AnnotationEnv {
   measure: MeasureLine;
 }
 
-/** A parsed reference: paper, pixel, or an axis in data or domain units. */
+/** A parsed reference: paper, pixel, or an axis in data or domain units. @internal */
 export type ParsedRef =
   { kind: 'paper' } | { kind: 'pixel' } | { kind: 'data' | 'domain'; axis: string };
 
-/** Parse `'paper'`, `'pixel'`, `'x2'`, `'y domain'`, … (`'x1'` means `'x'`). */
+/** Parse `'paper'`, `'pixel'`, `'x2'`, `'y domain'`, … (`'x1'` means `'x'`). @internal */
 export function parseRef(ref: string): ParsedRef | undefined {
   if (ref === 'paper') return { kind: 'paper' };
   if (ref === 'pixel') return { kind: 'pixel' };
@@ -84,6 +84,7 @@ export function refCenter(ref: string, letter: 'x' | 'y', env: AnnotationEnv): u
 /**
  * A position in `ref` units → container px along `letter` (x: from the left, y: from the top).
  * `undefined` for pixel refs, unknown axes and non-finite values.
+ * @internal
  */
 export function refToPx(
   ref: string,
@@ -112,7 +113,10 @@ export function refToPx(
   return Number.isFinite(p) ? p : undefined;
 }
 
-/** Container px along `letter` → a position in `ref` units (inverse of {@link refToPx}). */
+/**
+ * Container px along `letter` → a position in `ref` units (inverse of {@link refToPx}).
+ * @internal
+ */
 export function pxToRef(ref: string, px: number, letter: 'x' | 'y', env: AnnotationEnv): unknown {
   const r = parseRef(ref);
   if (!r || r.kind === 'pixel') return undefined;
@@ -143,6 +147,7 @@ function onAxis(ref: string, px: number, env: AnnotationEnv): boolean {
 /**
  * Resolve `auto` anchors (Plotly): `center`/`middle` with an arrow or a data reference, otherwise
  * by thirds of the paper / domain position.
+ * @internal
  */
 export function resolveAnchors(
   a: Pick<FullAnnotation, 'xanchor' | 'yanchor' | 'xref' | 'yref' | 'x' | 'y'>,
@@ -168,7 +173,7 @@ export function resolveAnchors(
   return { x, y };
 }
 
-/** Everything one annotation draws, container px. */
+/** Everything one annotation draws, container px. @internal */
 export interface AnnotationGeometry {
   /** `_index` of the annotation (its position in `layout.annotations`). */
   index: number;
@@ -188,7 +193,7 @@ export interface AnnotationGeometry {
   arrowwidth: number;
 }
 
-/** Offsets (px) applied while dragging: to the anchor (`head`) or to the tail only. */
+/** Offsets (px) applied while dragging: to the anchor (`head`) or to the tail only. @internal */
 export interface DragOffset {
   head?: Point;
   tail?: Point;
@@ -201,6 +206,7 @@ function faded(c: RGBA, opacity: number): RGBA {
 /**
  * The geometry of one annotation, or `undefined` when it is hidden, its references don't resolve,
  * or its data-referenced anchor is outside the visible axis range (Plotly hides those).
+ * @internal
  */
 export function annotationGeometry(
   a: FullAnnotation,
@@ -320,7 +326,10 @@ export function annotationGeometry(
   };
 }
 
-/** What a container point hits: the text box, the arrow head (drag handle), or nothing. */
+/**
+ * What a container point hits: the text box, the arrow head (drag handle), or nothing.
+ * @internal
+ */
 export function hitAnnotation(
   g: AnnotationGeometry,
   x: number,

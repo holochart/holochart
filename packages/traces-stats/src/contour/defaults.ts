@@ -67,7 +67,7 @@ function supplyLabelDefaults(ctx: TraceDefaultsContext, lineColor: string): void
   ctx.coerce('contours.labelformat');
 }
 
-/** Options of {@link supplyContourStyleDefaults} and {@link supplyContourDefaults}. */
+/** Options of {@link supplyContourStyleDefaults} and {@link supplyContourDefaults}. @internal */
 export interface ContourStyleOptions {
   /**
    * Default of `autocolorscale`: true for `histogram2dcontour` (Plotly's `colorscaleDefaults`
@@ -147,6 +147,7 @@ export function supplyConstraintDefaults(
 /**
  * Every contour attribute: `contours.type`, then the levels and their style, or the constraint.
  * Returns the type.
+ * @internal
  */
 export function supplyContourDefaults(
   traceIn: Readonly<Record<string, unknown>>,

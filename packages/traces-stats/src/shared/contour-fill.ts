@@ -13,7 +13,10 @@
  */
 import type { ContourGrid, ContourPath } from './contour-march.ts';
 
-/** Rings of one level region: ring r spans vertices `rings[r]` up to `rings[r + 1]` (or the end). */
+/**
+ * Rings of one level region: ring r spans vertices `rings[r]` up to `rings[r + 1]` (or the end).
+ * @experimental
+ */
 export interface ContourRegion {
   x: Float64Array;
   y: Float64Array;

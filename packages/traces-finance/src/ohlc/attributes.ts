@@ -29,7 +29,10 @@ function direction(d: 'increasing' | 'decreasing') {
   );
 }
 
-/** The ohlc schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core. */
+/**
+ * The ohlc schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core.
+ * @experimental
+ */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const ohlcAttributes = /* @__PURE__ */ (() =>
   attr.object(

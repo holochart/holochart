@@ -1,0 +1,1195 @@
+{
+  "guideCount": 47,
+  "featuredCount": 15,
+  "matrix": [
+    {
+      "file": "charts/3d/bar3d.md",
+      "title": "3D bars",
+      "trace": "bar3d",
+      "featured": false,
+      "minimal": "bar3d/matrix",
+      "variationCount": 4,
+      "examples": [
+        "bar3d/matrix",
+        "bar3d/numeric-grid",
+        "bar3d/stacked",
+        "bar3d/colorscale",
+        "bar3d/materials"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/3d/cone.md",
+      "title": "Cone plot",
+      "trace": "cone",
+      "featured": false,
+      "minimal": "cone/basic",
+      "variationCount": 4,
+      "examples": [
+        "cone/basic",
+        "cone/sizemode",
+        "cone/anchor",
+        "cone/colorscale",
+        "cone/abc-flow"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/3d/isosurface.md",
+      "title": "Isosurface",
+      "trace": "isosurface",
+      "featured": false,
+      "minimal": "isosurface/basic",
+      "variationCount": 4,
+      "examples": [
+        "isosurface/basic",
+        "isosurface/surface-options",
+        "isosurface/caps",
+        "isosurface/slices",
+        "isosurface/spaceframe"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/3d/mesh3d.md",
+      "title": "3D mesh",
+      "trace": "mesh3d",
+      "featured": false,
+      "minimal": "mesh3d/basic",
+      "variationCount": 8,
+      "examples": [
+        "mesh3d/basic",
+        "mesh3d/delaunay",
+        "mesh3d/convex-hull",
+        "mesh3d/alpha-shape",
+        "mesh3d/intensity",
+        "mesh3d/colors",
+        "mesh3d/flatshading",
+        "mesh3d/lighting",
+        "mesh3d/contour"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/3d/scatter3d.md",
+      "title": "Scatter3D",
+      "trace": "scatter3d",
+      "featured": true,
+      "minimal": "scatter3d/basic",
+      "variationCount": 11,
+      "examples": [
+        "scatter3d/basic",
+        "scatter3d/helix",
+        "scatter3d/tube",
+        "scatter3d/ribbons",
+        "scatter3d/symbols",
+        "scatter3d/spheres",
+        "scatter3d/text",
+        "scatter3d/error-bars",
+        "scatter3d/projections",
+        "scatter3d/surfaceaxis",
+        "scatter3d/multiple-traces",
+        "scatter3d/axis-types"
+      ],
+      "pythonExamples": ["scatter3d/basic"],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/3d/streamtube.md",
+      "title": "Stream tubes",
+      "trace": "streamtube",
+      "featured": false,
+      "minimal": "streamtube/basic",
+      "variationCount": 4,
+      "examples": [
+        "streamtube/basic",
+        "streamtube/starts",
+        "streamtube/sizeref",
+        "streamtube/maxdisplayed",
+        "streamtube/colorscale"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/3d/surface.md",
+      "title": "Surface",
+      "trace": "surface",
+      "featured": true,
+      "minimal": "surface/basic",
+      "variationCount": 9,
+      "examples": [
+        "surface/basic",
+        "surface/vectors",
+        "surface/matrices",
+        "surface/surfacecolor",
+        "surface/contours",
+        "surface/contours-xy",
+        "surface/hidesurface",
+        "surface/opacityscale",
+        "surface/multiple",
+        "surface/connectgaps"
+      ],
+      "pythonExamples": ["surface/basic"],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/3d/volume.md",
+      "title": "Volume",
+      "trace": "volume",
+      "featured": false,
+      "minimal": "volume/basic",
+      "variationCount": 4,
+      "examples": [
+        "volume/basic",
+        "volume/opacityscale",
+        "volume/modes",
+        "volume/raymarch",
+        "volume/clipped"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/basic/area.md",
+      "title": "Area",
+      "trace": "scatter",
+      "featured": false,
+      "minimal": "area/basic",
+      "variationCount": 9,
+      "examples": [
+        "area/basic",
+        "area/stacked",
+        "area/percent",
+        "area/band",
+        "area/streamgraph",
+        "area/gradient",
+        "area/pattern",
+        "area/toself",
+        "area/stacked-horizontal",
+        "area/stackgaps"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/basic/bar.md",
+      "title": "Bar",
+      "trace": "bar",
+      "featured": true,
+      "minimal": "bar/basic",
+      "variationCount": 10,
+      "examples": [
+        "bar/basic",
+        "bar/grouped",
+        "bar/stacked",
+        "bar/relative",
+        "bar/text",
+        "recipes/stacked-totals",
+        "bar/sorted",
+        "bar/horizontal",
+        "bar/period",
+        "bar/patterns",
+        "bar/depth"
+      ],
+      "pythonExamples": ["bar/basic", "bar/stacked", "bar/relative", "bar/text", "bar/horizontal"],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/basic/bubble.md",
+      "title": "Bubble",
+      "trace": "scatter",
+      "featured": false,
+      "minimal": "bubble/basic",
+      "variationCount": 5,
+      "examples": [
+        "bubble/basic",
+        "bubble/colorscale",
+        "bubble/sizeref",
+        "bubble/sizemode",
+        "bubble/labels",
+        "scatter/colorscale"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/basic/gantt.md",
+      "title": "Gantt",
+      "trace": "bar",
+      "featured": false,
+      "minimal": "gantt/timeline",
+      "variationCount": 4,
+      "examples": [
+        "gantt/timeline",
+        "gantt/resources",
+        "gantt/milestones",
+        "gantt/dependencies",
+        "gantt/today-line"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/basic/horizontal-bar.md",
+      "title": "Horizontal bar",
+      "trace": "bar",
+      "featured": false,
+      "minimal": "recipes/ranked-bars",
+      "variationCount": 5,
+      "examples": [
+        "recipes/ranked-bars",
+        "bar/horizontal",
+        "recipes/population-pyramid",
+        "recipes/percent-stacked-bars",
+        "bar/text",
+        "recipes/dumbbell"
+      ],
+      "pythonExamples": ["bar/horizontal", "bar/text"],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/basic/line.md",
+      "title": "Line",
+      "trace": "scatter",
+      "featured": true,
+      "minimal": "line/basic",
+      "variationCount": 7,
+      "examples": [
+        "line/basic",
+        "line/step",
+        "line/spline",
+        "line/gaps",
+        "line/dashes",
+        "line/many-series",
+        "recipes/error-bands",
+        "scatter/lines-shapes"
+      ],
+      "pythonExamples": ["line/step", "line/gaps", "line/dashes"],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/basic/pie.md",
+      "title": "Pie",
+      "trace": "pie",
+      "featured": true,
+      "minimal": "pie/basic",
+      "variationCount": 6,
+      "examples": [
+        "pie/basic",
+        "pie/donut",
+        "pie/pulled",
+        "pie/many-slices",
+        "pie/text-orientation",
+        "pie/grid-scalegroup",
+        "pie/patterns"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/basic/scatter.md",
+      "title": "Scatter",
+      "trace": "scatter",
+      "featured": true,
+      "minimal": "scatter/clusters",
+      "variationCount": 7,
+      "examples": [
+        "scatter/clusters",
+        "scatter/basic",
+        "scatter/colorscale",
+        "scatter/text-labels",
+        "scatter/error-bars",
+        "recipes/dot-plot",
+        "recipes/dumbbell",
+        "recipes/lollipop"
+      ],
+      "pythonExamples": ["scatter/text-labels", "scatter/error-bars"],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/basic/table.md",
+      "title": "Table",
+      "trace": "table",
+      "featured": false,
+      "minimal": "table/basic",
+      "variationCount": 4,
+      "examples": [
+        "table/basic",
+        "table/styled",
+        "table/wide",
+        "table/rich-text",
+        "table/with-chart"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/financial/candlestick.md",
+      "title": "Candlestick",
+      "trace": "candlestick",
+      "featured": true,
+      "minimal": "candlestick/basic",
+      "variationCount": 5,
+      "examples": [
+        "candlestick/basic",
+        "candlestick/range-breaks",
+        "candlestick/styled",
+        "candlestick/intraday",
+        "recipes/candlestick-volume",
+        "demos/index-funds/candles"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/financial/funnel.md",
+      "title": "Funnel",
+      "trace": "funnel",
+      "featured": false,
+      "minimal": "funnel/basic",
+      "variationCount": 4,
+      "examples": [
+        "funnel/basic",
+        "funnel/stacked",
+        "funnel/textinfo",
+        "funnel/grouped",
+        "funnel/colorscale"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/financial/funnelarea.md",
+      "title": "Funnel area",
+      "trace": "funnelarea",
+      "featured": false,
+      "minimal": "funnelarea/basic",
+      "variationCount": 6,
+      "examples": [
+        "funnelarea/basic",
+        "funnelarea/domains",
+        "funnelarea/ratios",
+        "funnelarea/texttemplate",
+        "funnelarea/colors",
+        "funnelarea/patterns",
+        "funnelarea/uniformtext"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/financial/indicator.md",
+      "title": "Indicator",
+      "trace": "indicator",
+      "featured": false,
+      "minimal": "indicator/number",
+      "variationCount": 5,
+      "examples": [
+        "indicator/number",
+        "indicator/delta",
+        "indicator/gauge",
+        "indicator/bullet",
+        "indicator/dashboard",
+        "indicator/count-up"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/financial/ohlc.md",
+      "title": "OHLC",
+      "trace": "ohlc",
+      "featured": false,
+      "minimal": "ohlc/basic",
+      "variationCount": 4,
+      "examples": [
+        "ohlc/basic",
+        "ohlc/styled",
+        "ohlc/monthly",
+        "ohlc/range-breaks",
+        "ohlc/indicators"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/financial/waterfall.md",
+      "title": "Waterfall",
+      "trace": "waterfall",
+      "featured": false,
+      "minimal": "waterfall/pnl",
+      "variationCount": 4,
+      "examples": [
+        "waterfall/pnl",
+        "waterfall/horizontal",
+        "waterfall/grouped",
+        "waterfall/connector-modes",
+        "reports/budget-bridge"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/graphs/chord.md",
+      "title": "Chord diagram",
+      "trace": "chord",
+      "featured": false,
+      "minimal": "chord/basic",
+      "variationCount": 8,
+      "examples": [
+        "chord/basic",
+        "chord/links",
+        "chord/directed",
+        "chord/light",
+        "chord/dark",
+        "chord/groups",
+        "chord/large",
+        "chord/side-by-side",
+        "express/chord"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/graphs/graph.md",
+      "title": "Network graph",
+      "trace": "graph",
+      "featured": true,
+      "minimal": "graph/force",
+      "variationCount": 33,
+      "examples": [
+        "graph/force",
+        "graph/basic",
+        "graph/force-atlas2",
+        "graph/les-miserables",
+        "graph/force-simulate",
+        "graph/force-pinned",
+        "graph/timeline",
+        "graph/layered",
+        "graph/layered-orthogonal",
+        "graph/layered-cycle",
+        "graph/dependencies",
+        "graph/tree",
+        "graph/radial-tree",
+        "graph/dendrogram",
+        "graph/collapsible-tree",
+        "graph/circular",
+        "graph/grid",
+        "graph/arc",
+        "graph/hive",
+        "graph/custom-layout",
+        "graph/size-by-degree",
+        "graph/groups",
+        "graph/colorscale",
+        "graph/boxes",
+        "graph/large",
+        "graph/directed",
+        "graph/weighted-links",
+        "graph/bundle-circular",
+        "graph/bundle-force",
+        "graph/highlight",
+        "graph/drag",
+        "graph/path",
+        "graph/over-scatter",
+        "graph/side-by-side"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/graphs/graph3d.md",
+      "title": "3D network graph",
+      "trace": "graph3d",
+      "featured": false,
+      "minimal": "graph3d/basic",
+      "variationCount": 6,
+      "examples": [
+        "graph3d/basic",
+        "graph3d/force",
+        "graph3d/layered",
+        "graph3d/preset",
+        "graph3d/sprites",
+        "graph3d/links",
+        "graph3d/large"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/hierarchical/icicle.md",
+      "title": "Icicle",
+      "trace": "icicle",
+      "featured": false,
+      "minimal": "icicle/basic",
+      "variationCount": 5,
+      "examples": [
+        "icicle/basic",
+        "icicle/vertical",
+        "icicle/flip",
+        "icicle/levels",
+        "icicle/colorscale",
+        "icicle/uniformtext"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/hierarchical/sankey.md",
+      "title": "Sankey",
+      "trace": "sankey",
+      "featured": true,
+      "minimal": "sankey/basic",
+      "variationCount": 7,
+      "examples": [
+        "sankey/basic",
+        "sankey/vertical",
+        "sankey/fixed-positions",
+        "sankey/circular",
+        "sankey/groups",
+        "sankey/colorscales",
+        "sankey/arrows",
+        "sankey/flow"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/hierarchical/sunburst.md",
+      "title": "Sunburst",
+      "trace": "sunburst",
+      "featured": false,
+      "minimal": "sunburst/basic",
+      "variationCount": 7,
+      "examples": [
+        "sunburst/basic",
+        "sunburst/branchvalues",
+        "sunburst/ids",
+        "sunburst/colorscale",
+        "sunburst/levels",
+        "sunburst/text-orientation",
+        "sunburst/uniformtext",
+        "sunburst/patterns"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/hierarchical/treemap.md",
+      "title": "Treemap",
+      "trace": "treemap",
+      "featured": false,
+      "minimal": "treemap/basic",
+      "variationCount": 9,
+      "examples": [
+        "treemap/basic",
+        "treemap/branchvalues",
+        "treemap/tilings",
+        "treemap/padding",
+        "treemap/depthfade",
+        "treemap/levels",
+        "treemap/pathbar",
+        "treemap/text-position",
+        "treemap/uniformtext",
+        "treemap/patterns"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/maps/choropleth.md",
+      "title": "Choropleth maps",
+      "trace": "choropleth",
+      "featured": true,
+      "minimal": "choropleth/basic",
+      "variationCount": 7,
+      "examples": [
+        "choropleth/basic",
+        "choropleth/usa-states",
+        "choropleth/diverging",
+        "choropleth/country-names",
+        "choropleth/geojson",
+        "choropleth/coloraxis",
+        "choropleth/labels",
+        "choropleth/selection"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/maps/scattergeo.md",
+      "title": "Scatter & lines on maps",
+      "trace": "scattergeo",
+      "featured": true,
+      "minimal": "scattergeo/basic",
+      "variationCount": 7,
+      "examples": [
+        "scattergeo/basic",
+        "scattergeo/great-circles",
+        "scattergeo/routes",
+        "scattergeo/bubbles",
+        "scattergeo/europe",
+        "scattergeo/usa",
+        "scattergeo/locations",
+        "scattergeo/fill"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/scientific/barpolar.md",
+      "title": "Polar bars & wind rose",
+      "trace": "barpolar",
+      "featured": false,
+      "minimal": "polar/barpolar",
+      "variationCount": 4,
+      "examples": [
+        "polar/barpolar",
+        "polar/wind-rose",
+        "polar/barpolar-overlay",
+        "polar/barpolar-base",
+        "polar/barpolar-polygon"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/scientific/contour.md",
+      "title": "Contour plot",
+      "trace": "contour",
+      "featured": false,
+      "minimal": "contour/basic",
+      "variationCount": 8,
+      "examples": [
+        "contour/basic",
+        "contour/lines-labels",
+        "contour/heatmap",
+        "contour/constraint",
+        "contour/constraint-interval",
+        "contour/uneven-grid",
+        "contour/smoothing",
+        "contour/period",
+        "contour/gaps"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/scientific/heatmap.md",
+      "title": "Heatmap",
+      "trace": "heatmap",
+      "featured": true,
+      "minimal": "heatmap/basic",
+      "variationCount": 7,
+      "examples": [
+        "heatmap/basic",
+        "heatmap/annotated",
+        "heatmap/uneven",
+        "heatmap/smooth",
+        "heatmap/dates",
+        "heatmap/period",
+        "heatmap/rangebreaks",
+        "heatmap/columns"
+      ],
+      "pythonExamples": ["heatmap/basic", "heatmap/uneven"],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/scientific/image.md",
+      "title": "Image",
+      "trace": "image",
+      "featured": false,
+      "minimal": "image/rgb",
+      "variationCount": 6,
+      "examples": [
+        "image/rgb",
+        "image/float-range",
+        "image/dates",
+        "image/hsl",
+        "image/source",
+        "express/imshow-rgb",
+        "express/imshow"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/scientific/log-plots.md",
+      "title": "Log plots",
+      "trace": "scatter",
+      "featured": false,
+      "minimal": "log/semilog-y",
+      "variationCount": 5,
+      "examples": [
+        "log/semilog-y",
+        "log/log-log",
+        "log/minor-grid",
+        "log/colorbar",
+        "axes/noise-spectrum",
+        "axes/hr-diagram"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/scientific/polar.md",
+      "title": "Polar & radar",
+      "trace": "scatterpolar",
+      "featured": true,
+      "minimal": "polar/basic",
+      "variationCount": 5,
+      "examples": [
+        "polar/basic",
+        "polar/radar",
+        "polar/gridshape",
+        "polar/spline",
+        "polar/sector-hole",
+        "polar/subplots"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/statistical/box.md",
+      "title": "Box plot",
+      "trace": "box",
+      "featured": true,
+      "minimal": "box/basic",
+      "variationCount": 6,
+      "examples": [
+        "box/basic",
+        "box/grouped",
+        "box/notched",
+        "box/points",
+        "box/horizontal",
+        "box/precomputed",
+        "box/dates"
+      ],
+      "pythonExamples": ["box/horizontal", "box/precomputed"],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/statistical/histogram.md",
+      "title": "Histogram",
+      "trace": "histogram",
+      "featured": true,
+      "minimal": "histogram/notebook-starter",
+      "variationCount": 7,
+      "examples": [
+        "histogram/notebook-starter",
+        "histogram/normalized",
+        "histogram/cumulative",
+        "histogram/overlay",
+        "histogram/stacked-bars",
+        "histogram/date-months",
+        "histogram/horizontal",
+        "histogram/histfunc"
+      ],
+      "pythonExamples": ["histogram/notebook-starter", "histogram/cumulative"],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/statistical/histogram2d-contour.md",
+      "title": "2D density contour",
+      "trace": "histogram2dcontour",
+      "featured": false,
+      "minimal": "histogram2dcontour/filled",
+      "variationCount": 5,
+      "examples": [
+        "histogram2dcontour/filled",
+        "histogram2dcontour/lines-labels",
+        "histogram2dcontour/over-scatter",
+        "histogram2dcontour/heatmap",
+        "histogram2dcontour/bands",
+        "histogram2dcontour/constraint"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/statistical/histogram2d.md",
+      "title": "2D histogram",
+      "trace": "histogram2d",
+      "featured": false,
+      "minimal": "histogram2d/basic",
+      "variationCount": 4,
+      "examples": [
+        "histogram2d/basic",
+        "histogram2d/texttemplate",
+        "histogram2d/gaps",
+        "histogram2d/smooth",
+        "histogram2d/density"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/statistical/parallel-categories.md",
+      "title": "Parallel categories",
+      "trace": "parcats",
+      "featured": false,
+      "minimal": "parcats/basic",
+      "variationCount": 4,
+      "examples": [
+        "parcats/basic",
+        "parcats/counts",
+        "parcats/hspline",
+        "parcats/colored",
+        "parcats/freeform"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/statistical/parallel-coordinates.md",
+      "title": "Parallel coordinates",
+      "trace": "parcoords",
+      "featured": false,
+      "minimal": "parcoords/basic",
+      "variationCount": 3,
+      "examples": [
+        "parcoords/basic",
+        "parcoords/colorscale",
+        "parcoords/constraints",
+        "parcoords/ticktext"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/statistical/splom.md",
+      "title": "Scatter plot matrix",
+      "trace": "splom",
+      "featured": false,
+      "minimal": "splom/iris",
+      "variationCount": 4,
+      "examples": [
+        "splom/iris",
+        "splom/lower-half",
+        "splom/colorscale",
+        "splom/axis-types",
+        "splom/dense"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/statistical/strip.md",
+      "title": "Strip plot",
+      "trace": "box",
+      "featured": false,
+      "minimal": "strip/basic",
+      "variationCount": 5,
+      "examples": [
+        "strip/basic",
+        "strip/grouped",
+        "strip/horizontal",
+        "strip/overlay",
+        "strip/with-box",
+        "box/points"
+      ],
+      "pythonExamples": [],
+      "variationGap": 0
+    },
+    {
+      "file": "charts/statistical/violin.md",
+      "title": "Violin plot",
+      "trace": "violin",
+      "featured": false,
+      "minimal": "violin/basic",
+      "variationCount": 5,
+      "examples": [
+        "violin/basic",
+        "violin/split",
+        "violin/box-meanline",
+        "violin/grouped",
+        "violin/horizontal",
+        "violin/scalegroup"
+      ],
+      "pythonExamples": ["violin/basic"],
+      "variationGap": 0
+    }
+  ],
+  "starterCoverage": [
+    {
+      "family": "basic",
+      "label": "Basic & comparison",
+      "starters": [
+        {
+          "id": "bar/basic",
+          "task": "Compare category totals"
+        },
+        {
+          "id": "bar/text",
+          "task": "Label values directly"
+        },
+        {
+          "id": "bar/stacked",
+          "task": "Show components of a total"
+        }
+      ],
+      "gap": 0,
+      "reason": "Three explicitly reviewed beginner tasks available."
+    },
+    {
+      "family": "time-series",
+      "label": "Lines & time series",
+      "starters": [
+        {
+          "id": "line/basic",
+          "task": "Draw a trend"
+        },
+        {
+          "id": "line/gaps",
+          "task": "Expose missing observations"
+        },
+        {
+          "id": "line/step",
+          "task": "Show discrete state changes"
+        }
+      ],
+      "gap": 0,
+      "reason": "Three explicitly reviewed beginner tasks available."
+    },
+    {
+      "family": "relationships",
+      "label": "Scatter & relationships",
+      "starters": [
+        {
+          "id": "scatter/basic",
+          "task": "Compare two measurements"
+        },
+        {
+          "id": "bubble/basic",
+          "task": "Encode a third value by size"
+        },
+        {
+          "id": "scatter/text-labels",
+          "task": "Identify observations with labels"
+        }
+      ],
+      "gap": 0,
+      "reason": "Three explicitly reviewed beginner tasks available."
+    },
+    {
+      "family": "statistical",
+      "label": "Distributions & statistics",
+      "starters": [
+        {
+          "id": "histogram/notebook-starter",
+          "task": "Bin a small sample"
+        },
+        {
+          "id": "box/basic",
+          "task": "Summarize sample spread"
+        },
+        {
+          "id": "violin/basic",
+          "task": "Compare distribution shapes"
+        }
+      ],
+      "gap": 0,
+      "reason": "Three explicitly reviewed beginner tasks available."
+    },
+    {
+      "family": "scientific",
+      "label": "Heatmaps & scientific",
+      "starters": [
+        {
+          "id": "heatmap/basic",
+          "task": "Display a numeric matrix"
+        },
+        {
+          "id": "heatmap/uneven",
+          "task": "Represent uneven coordinate spacing"
+        },
+        {
+          "id": "contour/basic",
+          "task": "Draw levels of a field"
+        }
+      ],
+      "gap": 0,
+      "reason": "Three explicitly reviewed beginner tasks available."
+    },
+    {
+      "family": "hierarchical",
+      "label": "Part-to-whole & hierarchy",
+      "starters": [
+        {
+          "id": "pie/basic",
+          "task": "Show a part of a whole"
+        },
+        {
+          "id": "treemap/basic",
+          "task": "Compare nested amounts"
+        },
+        {
+          "id": "sunburst/basic",
+          "task": "Explore levels of a hierarchy"
+        }
+      ],
+      "gap": 0,
+      "reason": "Three explicitly reviewed beginner tasks available."
+    },
+    {
+      "family": "financial",
+      "label": "Financial & business",
+      "starters": [
+        {
+          "id": "funnel/basic",
+          "task": "Show stage conversion"
+        },
+        {
+          "id": "funnel/grouped",
+          "task": "Compare conversion between two cohorts"
+        },
+        {
+          "id": "indicator/number",
+          "task": "Present a formatted revenue metric"
+        }
+      ],
+      "gap": 0,
+      "reason": "Three explicitly reviewed beginner tasks available."
+    },
+    {
+      "family": "polar",
+      "label": "Polar & radial",
+      "starters": [
+        {
+          "id": "polar/basic",
+          "task": "Plot angular measurements"
+        },
+        {
+          "id": "polar/radar",
+          "task": "Compare category profiles"
+        },
+        {
+          "id": "polar/barpolar",
+          "task": "Stack values on a circular category axis"
+        }
+      ],
+      "gap": 0,
+      "reason": "Three explicitly reviewed beginner tasks available."
+    },
+    {
+      "family": "maps",
+      "label": "Maps & geography",
+      "starters": [
+        {
+          "id": "scattergeo/basic",
+          "task": "Place measured cities on a world map"
+        },
+        {
+          "id": "scattergeo/europe",
+          "task": "Label capitals in a scoped map"
+        },
+        {
+          "id": "scattergeo/usa",
+          "task": "Display state-level locations"
+        }
+      ],
+      "gap": 0,
+      "reason": "Three explicitly reviewed beginner tasks available."
+    },
+    {
+      "family": "networks",
+      "label": "Networks & flows",
+      "starters": [
+        {
+          "id": "sankey/basic",
+          "task": "Show energy flows"
+        },
+        {
+          "id": "sankey/vertical",
+          "task": "Explain a household budget"
+        },
+        {
+          "id": "parcats/basic",
+          "task": "Trace samples across categorical dimensions"
+        }
+      ],
+      "gap": 0,
+      "reason": "Three explicitly reviewed beginner tasks available."
+    },
+    {
+      "family": "3d",
+      "label": "3D charts & fields",
+      "starters": [
+        {
+          "id": "scatter3d/basic",
+          "task": "Compare spatial observations"
+        },
+        {
+          "id": "surface/basic",
+          "task": "Draw a grid height field"
+        },
+        {
+          "id": "bar3d/matrix",
+          "task": "Compare revenue across products and regions"
+        }
+      ],
+      "gap": 0,
+      "reason": "Three explicitly reviewed beginner tasks available."
+    }
+  ],
+  "priorities": [
+    {
+      "task": "Date handling",
+      "ids": ["bar/period", "heatmap/dates", "histogram/date-months", "scatter3d/axis-types"],
+      "gap": "Publish exact Python date-period counterparts; existing browser variations remain available.",
+      "existing": ["bar/period", "heatmap/dates", "histogram/date-months", "scatter3d/axis-types"]
+    },
+    {
+      "task": "Missing data",
+      "ids": ["line/gaps", "surface/connectgaps", "contour/gaps"],
+      "gap": "Python gap source verified separately; remaining field-gap notebooks need exact counterparts.",
+      "existing": ["line/gaps", "surface/connectgaps", "contour/gaps"]
+    },
+    {
+      "task": "Ordering and ranking",
+      "ids": ["bar/sorted", "recipes/ranked-bars"],
+      "gap": "Reviewed raw-category Python ordering tutorial remains a proposed addition.",
+      "existing": ["bar/sorted", "recipes/ranked-bars"]
+    },
+    {
+      "task": "Annotations and labels",
+      "ids": ["bar/text", "scatter/text-labels", "heatmap/annotated"],
+      "gap": "Label variants exist; annotation-specific notebook proof remains a gap.",
+      "existing": ["bar/text", "scatter/text-labels", "heatmap/annotated"]
+    },
+    {
+      "task": "Error bands and errors",
+      "ids": ["area/band", "recipes/error-bands", "scatter/error-bars"],
+      "gap": "Point errors have a counterpart; interval-band Python recipe is not yet claimed.",
+      "existing": ["area/band", "recipes/error-bands", "scatter/error-bars"]
+    },
+    {
+      "task": "Normalization",
+      "ids": ["area/percent", "histogram/normalized", "histogram/cumulative"],
+      "gap": "Cumulative tutorial exists; normalized area/probability notebook proofs remain proposed.",
+      "existing": ["area/percent", "histogram/normalized", "histogram/cumulative"]
+    },
+    {
+      "task": "Subplots",
+      "ids": ["layout/grid-independent", "layout/grid-coupled"],
+      "gap": "Actual source variants included; host verification governs availability.",
+      "existing": ["layout/grid-independent", "layout/grid-coupled"]
+    },
+    {
+      "task": "Accessible colors",
+      "ids": ["themes/high-contrast", "bar/patterns", "polar/barpolar-patterns"],
+      "gap": "High-contrast counterpart exists; pattern-specific Python verification remains proposed.",
+      "existing": ["themes/high-contrast", "bar/patterns", "polar/barpolar-patterns"]
+    },
+    {
+      "task": "Responsive sizing",
+      "ids": ["bar/basic", "layout/grid-independent"],
+      "gap": "Browser responsive config is explicit. Notebook height and rerun cleanup are separately verified; responsive host resizing needs a focused tutorial.",
+      "existing": ["bar/basic", "layout/grid-independent"]
+    }
+  ]
+}

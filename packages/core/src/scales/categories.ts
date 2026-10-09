@@ -10,13 +10,14 @@ import { sortCategoriesByValue } from './category-values.ts';
 import { isTwoLevel } from './scale.ts';
 import type { Scale, ScaleOptions, Tick } from './types.ts';
 
-/** A `categoryorder` value. */
+/** A `categoryorder` value. @internal */
 export type CategoryOrder = (typeof CATEGORY_ORDERS)[number];
 
 /**
  * Per-category trace values for the aggregate orders (`total`/`min`/`max`/`sum`/`mean`/`median`),
  * keyed by category name. What counts as "the value" is up to each trace type (bar length,
  * histogram count, heatmap `z`, …), as in Plotly, so the caller collects it.
+ * @internal
  */
 export type CategoryValues = ReadonlyMap<string, readonly number[]>;
 
@@ -27,6 +28,7 @@ function isValidCategory(v: unknown): boolean {
 /**
  * Categories in order of first appearance across `columns` (one data array per trace, in trace
  * order). `null`, `undefined` and `''` are not categories.
+ * @internal
  */
 export function collectCategories(columns: Iterable<ArrayLike<unknown> | undefined>): string[] {
   const seen = new Set<string>();
@@ -50,6 +52,7 @@ export function collectCategories(columns: Iterable<ArrayLike<unknown> | undefin
  * `[group, item]` categories from two-row columns (`[[groups], [items]]`), in Plotly's order:
  * groups by first appearance, then items within a group by the first appearance of the item
  * anywhere. Columns that are not two-row arrays are ignored.
+ * @internal
  */
 export function collectMulticategories(columns: Iterable<unknown>): [string, string][] {
   const groupRank = new Map<string, number>();
@@ -81,6 +84,7 @@ export function collectMulticategories(columns: Iterable<unknown>): [string, str
 /**
  * Compare category names like Plotly's `d3.ascending` on the original values: numerically when
  * both are numbers, otherwise as strings.
+ * @internal
  */
 export function compareCategories(a: string, b: string): number {
   const na = a.trim() === '' ? NaN : Number(a);
@@ -97,7 +101,7 @@ function median(values: readonly number[]): number {
     : ((s[mid - 1] as number) + (s[mid] as number)) / 2;
 }
 
-/** Options for {@link orderCategories}. */
+/** Options for {@link orderCategories}. @internal */
 export interface OrderCategoriesOptions {
   /** Explicit order for `categoryorder: 'array'`. */
   categoryarray?: ArrayLike<unknown>;
@@ -116,6 +120,7 @@ export interface OrderCategoriesOptions {
  *   {@link sortCategoriesByValue} (stable in both directions, so ties keep trace order; categories
  *   without values count as 0 for `total`/`sum` and sort last otherwise). `categoryarray` is
  *   ignored, as in Plotly.
+ * @internal
  */
 export function orderCategories(
   categories: readonly string[],
@@ -137,7 +142,7 @@ export function orderCategories(
   return sortCategoriesByValue(categories, order, options.values);
 }
 
-/** The axis attributes {@link axisCategories} reads. */
+/** The axis attributes {@link axisCategories} reads. @internal */
 export interface CategoryAxisLike {
   type: string;
   categoryorder?: CategoryOrder | undefined;
@@ -154,6 +159,7 @@ export interface CategoryAxisLike {
  *
  * Multicategory axes support `trace` and `category ascending|descending` (by group, then item);
  * other orders keep trace order.
+ * @internal
  */
 export function axisCategories(
   axis: CategoryAxisLike,
@@ -184,7 +190,10 @@ export function axisCategories(
   return { categories: orderCategories(collectCategories(cols), order, opts) };
 }
 
-/** Group labels and divider lines of a multicategory axis (see {@link multicategoryLevels}). */
+/**
+ * Group labels and divider lines of a multicategory axis (see {@link multicategoryLevels}).
+ * @internal
+ */
 export interface MulticategoryLevels {
   /** One label per visible group: `text` is the group, `l` the median of its ticks. */
   groups: Tick[];
@@ -197,6 +206,7 @@ export interface MulticategoryLevels {
  * group in `text2`), following Plotly's `getSecondaryLabelVals` and `getDividerVals`: each group
  * label sits at the median of its ticks; dividers sit half a category (or half a tick step) outside
  * the first and last tick of each run of a group, and only those inside the visible range count.
+ * @internal
  */
 export function multicategoryLevels(scale: Scale, ticks: readonly Tick[]): MulticategoryLevels {
   const major = ticks.filter((t) => t.minor !== true && t.noTick !== true);

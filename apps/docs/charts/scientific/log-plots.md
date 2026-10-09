@@ -7,6 +7,8 @@ chart: scatter
 
 # Log plots
 
+<ChartOverview />
+
 ## Overview
 
 A log axis spaces values by their ratio instead of their difference: 1, 10, 100 and 1,000 are
@@ -26,6 +28,9 @@ values can be zero or negative (a log axis cannot show them) or when the audienc
 differences.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -53,12 +58,14 @@ savings on a log y axis, where a constant growth rate is a straight line:
 
 ## Variations
 
+<ChartVariations />
+
 ### Log–log
 
 Both axes log: a power law `y = a·xᵏ` is a straight line of slope `k`. Here, city populations
 against their rank follow Zipf's law, with a fitted power law on top:
 
-<Example id="log/log-log" />
+<ExampleLink id="log/log-log" />
 
 ### Minor grid
 
@@ -66,7 +73,7 @@ Decades alone make a sparse grid. `minor: { showgrid: true }` adds grid lines at
 each decade, and `dtick: 1` keeps major ticks on whole decades. Here a signal decays over five
 orders of magnitude on a log y axis:
 
-<Example id="log/minor-grid" />
+<ExampleLink id="log/minor-grid" />
 
 ### Log colorbars
 
@@ -74,7 +81,7 @@ A colorscale is linear in its values. To color by a quantity that spans decades,
 `log10` and label the colorbar with the original values: `colorbar.tickvals` at the exponents and
 `ticktext` for the labels (1, 10, 100, 1k …):
 
-<Example id="log/colorbar" />
+<ExampleLink id="log/colorbar" />
 
 ### Exponent formats and a minor log grid on both axes
 
@@ -82,14 +89,14 @@ A colorscale is linear in its values. To color by a quantity that spans decades,
 `e` notation; the log grid can be dotted and the autorange pinned. A noise spectrum on log–log
 axes:
 
-<Example id="axes/noise-spectrum" :height="460" />
+<ExampleLink id="axes/noise-spectrum" />
 
 ### Reversed log axis
 
 `autorange: 'reversed'` runs a log axis backwards, and `minor.tickvals` can place minor ticks at
 meaningful values instead of digits. A Hertzsprung–Russell diagram:
 
-<Example id="axes/hr-diagram" :height="520" />
+<ExampleLink id="axes/hr-diagram" />
 
 ## Styling
 

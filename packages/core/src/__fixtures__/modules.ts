@@ -5,7 +5,7 @@
  */
 import { attr } from '../schema/attr.ts';
 import { fontSchema } from '../layout/schema.ts';
-import type { ComponentModule, TraceModule } from '../registry/types.ts';
+import type { CoreComponentModule, CoreTraceModule } from '../registry/types.ts';
 import { createRegistry } from '../registry/registry.ts';
 import type { Registry } from '../registry/types.ts';
 
@@ -55,7 +55,7 @@ export const scatterSchema = attr.object({
   legacy: attr.number({ deprecated: 'use `marker.size` instead', editType: 'calc' }),
 });
 
-export const scatter: TraceModule<typeof scatterSchema.children> = {
+export const scatter: CoreTraceModule<typeof scatterSchema.children> = {
   type: 'scatter',
   categories: ['cartesian', 'symbols', 'showLegend'],
   schema: scatterSchema,
@@ -106,7 +106,7 @@ export const barSchema = attr.object({
   ),
 });
 
-export const bar: TraceModule<typeof barSchema.children> = {
+export const bar: CoreTraceModule<typeof barSchema.children> = {
   type: 'bar',
   categories: ['cartesian', 'showLegend'],
   schema: barSchema,
@@ -129,7 +129,7 @@ export const bar: TraceModule<typeof barSchema.children> = {
 };
 
 /** Mini non-cartesian trace (no axes, no legend). */
-export const gauge: TraceModule = {
+export const gauge: CoreTraceModule = {
   type: 'gauge',
   categories: [],
   schema: attr.object({ value: attr.number({ dflt: 0, editType: 'calc' }) }),
@@ -140,7 +140,7 @@ export const gauge: TraceModule = {
 };
 
 /** Mini annotations component, exercising item arrays and `templateitemname`. */
-export const annotations: ComponentModule = {
+export const annotations: CoreComponentModule = {
   name: 'annotations',
   layoutSchema: {
     annotations: attr.items(

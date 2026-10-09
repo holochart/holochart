@@ -5,7 +5,7 @@
  * their extremes, and by the scene component for scenes whose traces are all hidden.
  */
 import type { FullLayout, FullTrace, Scale } from '@mk7s/holochart-core';
-import type { DataTransform, ViewportRect } from '@mk7s/holochart-render';
+import type { DataTransform, ViewportRect, Vec3 } from '@mk7s/holochart-render';
 import {
   domainRect,
   type DomainLayoutContext,
@@ -20,23 +20,20 @@ import {
   type AspectMode,
   type SceneExtremes,
 } from './axes.ts';
-import type { Vec3 } from './camera.ts';
 import { SCENE_LETTERS, sceneOf, type SceneLetter } from './layout-defaults.ts';
 
-type Container = Record<string, unknown>;
-
-/** One axis of a laid-out scene. */
+/** One axis of a laid-out scene. @experimental */
 export interface SceneAxis {
   readonly letter: SceneLetter;
   /** The defaulted axis container (`fullLayout.scene.xaxis`, …). */
-  readonly full: Readonly<Container>;
+  readonly full: Readonly<Record<string, unknown>>;
   /** Data ↔ linear mapping; its range is the axis range (linear coordinates). */
   readonly scale: Scale;
   /** Range in linear coordinates (`range[0] > range[1]` when reversed). */
   readonly range: readonly [number, number];
 }
 
-/** A scene laid out for one pass. */
+/** A scene laid out for one pass. @experimental */
 export interface SceneLayout {
   readonly id: string;
   /** The scene's rect (its `domain` on the plot area), container px, top-left origin. */
@@ -51,6 +48,7 @@ export interface SceneLayout {
 /**
  * What every 3D trace's calc carries (the contract of {@link sceneCrossTraceLayout}): its
  * autorange contribution, set by `calc`, and the laid-out scene, set before `plot`.
+ * @experimental
  */
 export interface SceneCalc {
   readonly sceneExtremes: SceneExtremes;
@@ -64,7 +62,7 @@ export interface SceneCalc {
   readonly sceneCrossTrace?: SceneCrossTrace;
 }
 
-/** See {@link SceneCalc.sceneCrossTrace}. */
+/** See {@link SceneCalc.sceneCrossTrace}. @experimental */
 export type SceneCrossTrace = (
   entries: readonly DomainTraceEntry<SceneCalc>[],
   fullLayout: FullLayout,
@@ -77,7 +75,10 @@ function extent(v: unknown): [number, number] | undefined {
     : undefined;
 }
 
-/** The scene domain of a 3D trace: the runtime's `subplotDomain` hook (placed like polar). */
+/**
+ * The scene domain of a 3D trace: the runtime's `subplotDomain` hook (placed like polar).
+ * @experimental
+ */
 export function sceneSubplotDomain(
   trace: FullTrace,
   fullLayout: FullLayout,
@@ -94,6 +95,7 @@ export function sceneSubplotDomain(
  * ({@link sceneRange}), the aspect ratio (`aspectmode`, from the data spans) and the transform.
  * Writes the aspect ratio in use and the axis ranges (range values) into the full layout, as
  * Plotly does.
+ * @internal
  */
 export function buildSceneLayout(
   fullLayout: FullLayout,
@@ -101,13 +103,13 @@ export function buildSceneLayout(
   plotArea: Readonly<ViewportRect>,
   extremes: readonly SceneExtremes[],
 ): SceneLayout | undefined {
-  const scene = fullLayout[id] as Container | undefined;
+  const scene = fullLayout[id] as Record<string, unknown> | undefined;
   if (!scene) return undefined;
-  const d = (scene['domain'] ?? {}) as Container;
+  const d = (scene['domain'] ?? {}) as Record<string, unknown>;
   const rect = domainRect(plotArea, extent(d['x']) ?? [0, 1], extent(d['y']) ?? [0, 1]);
   const spans: Vec3 = [0, 0, 0];
   const axes = SCENE_LETTERS.map((letter, i): SceneAxis => {
-    const full = (scene[`${letter}axis`] ?? {}) as Container;
+    const full = (scene[`${letter}axis`] ?? {}) as Record<string, unknown>;
     const scale = sceneScale(full);
     const data = unionExtent(extremes.map((e) => e[letter]));
     spans[i] = data ? data[1] - data[0] : 0;
@@ -116,7 +118,7 @@ export function buildSceneLayout(
     full['range'] = [scale.l2r(range[0]), scale.l2r(range[1])];
     return { letter, full, scale, range };
   }) as [SceneAxis, SceneAxis, SceneAxis];
-  const r = (scene['aspectratio'] ?? {}) as Container;
+  const r = (scene['aspectratio'] ?? {}) as Record<string, unknown>;
   const manual: Vec3 = [Number(r['x']) || 1, Number(r['y']) || 1, Number(r['z']) || 1];
   const aspect = sceneAspect(
     (scene['aspectmode'] ?? 'auto') as AspectMode,
@@ -150,6 +152,7 @@ export function laidOutScene(fullLayout: FullLayout, id: string): SceneLayout | 
  * `crossTraceLayout`, with `subplotDomain: sceneSubplotDomain`): once per layout pass, with every
  * visible 3D trace, it lays out each scene from its traces' `sceneExtremes` and hands the result to
  * each of them (`calc.scene`) and to the scene component.
+ * @experimental
  */
 export function sceneCrossTraceLayout(
   entries: readonly DomainTraceEntry<SceneCalc>[],

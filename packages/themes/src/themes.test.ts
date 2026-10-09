@@ -12,7 +12,7 @@ import {
   type FigureInput,
   type Registry,
   type Template,
-  type TraceModule,
+  type CoreTraceModule,
 } from '@mk7s/holochart-core';
 import { builtinThemes, defineTheme, THEME_NAMES, THEMES, type ThemeName } from './index.ts';
 
@@ -28,7 +28,7 @@ const schema = attr.object({
   line: attr.object({ color: attr.color(), width: attr.number({ min: 0, dflt: 2 }) }),
 });
 
-const scatter: TraceModule<typeof schema.children> = {
+const scatter: CoreTraceModule<typeof schema.children> = {
   type: 'scatter',
   categories: ['cartesian', 'showLegend'],
   schema,

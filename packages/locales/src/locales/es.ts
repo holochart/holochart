@@ -3,7 +3,7 @@
  * 2016-2024 Plotly Technologies Inc.; see this package's THIRD_PARTY_NOTICES.md).
  */
 import type { LocaleModule } from '@mk7s/holochart-core';
-import { summariesEs } from '../summaries.ts';
+import { holochartEs } from '../holochart/es.ts';
 
 /** Spanish (`es`). */
 export const es: LocaleModule = {
@@ -75,8 +75,9 @@ export const es: LocaleModule = {
     'target:': 'destino:',
     trace: 'traza',
     'upper fence:': 'límite superior:',
-    // Holochart's generated chart summaries (plan E17.2), not from plotly.js.
-    ...summariesEs,
+    // Holochart's own strings (UI labels, keyboard announcements, chart summaries), not from
+    // plotly.js.
+    ...holochartEs,
   },
   format: {
     days: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],

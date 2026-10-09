@@ -13,11 +13,14 @@
  * - Per-point arrays (`arrayOk`) and data arrays are kept by reference — validating or copying
  *   millions of points here would defeat zero-copy ingestion; the calc stage handles bad points.
  */
-import type { AttrSpec, Primitive } from '../schema/types.ts';
+import type { AttrSpec, PrimitiveValue } from '../schema/types.ts';
 import { getColorway } from '../colors/registry.ts';
 import { canonicalColor } from './color.ts';
 
-/** Outcome of coercing one value. `note` explains a lossy but accepted coercion (clamping). */
+/**
+ * Outcome of coercing one value. `note` explains a lossy but accepted coercion (clamping).
+ * @internal
+ */
 export type CoerceResult = { ok: true; value: unknown; note?: string } | { ok: false };
 
 const INVALID: CoerceResult = Object.freeze({ ok: false });
@@ -26,12 +29,12 @@ function valid(value: unknown, note?: string): CoerceResult {
   return note === undefined ? { ok: true, value } : { ok: true, value, note };
 }
 
-/** True for plain arrays and typed arrays (not `DataView`). */
+/** True for plain arrays and typed arrays (not `DataView`). @internal */
 export function isArrayLike(v: unknown): v is ArrayLike<unknown> {
   return Array.isArray(v) || (ArrayBuffer.isView(v) && !(v instanceof DataView));
 }
 
-/** Parse a finite number from a number or numeric string. */
+/** Parse a finite number from a number or numeric string. @internal */
 export function toNumber(v: unknown): number | undefined {
   if (typeof v === 'number') return Number.isFinite(v) ? v : undefined;
   if (typeof v === 'string') {
@@ -44,7 +47,7 @@ export function toNumber(v: unknown): number | undefined {
 }
 
 function hasExtra(spec: AttrSpec, v: unknown): boolean {
-  return spec.extras !== undefined && spec.extras.includes(v as Primitive);
+  return spec.extras !== undefined && spec.extras.includes(v as PrimitiveValue);
 }
 
 function coerceNumeric(spec: AttrSpec, v: unknown, integer: boolean): CoerceResult {
@@ -147,6 +150,7 @@ function coerceInfoArray(spec: AttrSpec, v: unknown): CoerceResult {
 /**
  * Coerce `v` (which must not be `undefined`/`null`) to a valid value for `spec`.
  * Returns `{ ok: false }` when the value cannot be used; callers then fall back to a default.
+ * @internal
  */
 export function coerceValue(spec: AttrSpec, v: unknown): CoerceResult {
   switch (spec.valType) {
@@ -173,7 +177,7 @@ export function coerceValue(spec: AttrSpec, v: unknown): CoerceResult {
     case 'enumerated': {
       if (spec.arrayOk === true && isArrayLike(v)) return valid(v);
       const values = spec.values ?? [];
-      if (values.includes(v as Primitive) || spec.accepts?.(v) === true) return valid(v);
+      if (values.includes(v as PrimitiveValue) || spec.accepts?.(v) === true) return valid(v);
       // '1' for a numeric enum: same leniency as numeric attributes.
       const n = typeof v === 'string' ? toNumber(v) : undefined;
       return n !== undefined && values.includes(n) ? valid(n) : INVALID;
@@ -217,6 +221,7 @@ export function coerceValue(spec: AttrSpec, v: unknown): CoerceResult {
  * The value to store for an attribute: the coerced user value when valid, else the coerced
  * default. `null` and `undefined` both mean "unset". Returns `undefined` when there is no valid
  * value and no default.
+ * @internal
  */
 export function resolveAttr(spec: AttrSpec, value: unknown, dflt: unknown = spec.dflt): unknown {
   if (value !== undefined && value !== null) {
@@ -230,6 +235,7 @@ export function resolveAttr(spec: AttrSpec, value: unknown, dflt: unknown = spec
  * Canonical form of a default value (e.g. `'#444'` → `'rgb(68, 68, 68)'`). Defaults are run
  * through coercion too, so full output is canonical regardless of where a value came from — this
  * is what makes supply-defaults idempotent.
+ * @internal
  */
 export function canonicalDefault(spec: AttrSpec, dflt: unknown): unknown {
   if (dflt === undefined || dflt === null) return undefined;
@@ -237,7 +243,7 @@ export function canonicalDefault(spec: AttrSpec, dflt: unknown): unknown {
   return r.ok ? r.value : dflt;
 }
 
-function quote(v: Primitive): string {
+function quote(v: PrimitiveValue): string {
   return typeof v === 'string' ? `'${v}'` : String(v);
 }
 
@@ -249,7 +255,7 @@ function range(spec: AttrSpec): string {
   return '';
 }
 
-/** Human-readable description of what `spec` accepts, used in validation issues. */
+/** Human-readable description of what `spec` accepts, used in validation issues. @internal */
 export function describeExpected(spec: AttrSpec): string {
   const extras =
     spec.extras !== undefined && spec.extras.length > 0

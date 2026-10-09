@@ -21,13 +21,17 @@ import type {
   AnimationOptions,
   CameraAnimationOptions,
   CameraTarget,
-  Frame,
+  FrameInput,
 } from './anim/types.ts';
 import type { DownloadImageOptions, ToImageOptions } from './export/types.ts';
 import { removeFallback } from './fallback.ts';
-import type { AttributeUpdate, LayoutUpdate, MaxPoints, StreamUpdate } from './plan.ts';
-
-type TraceIndices = number | readonly number[];
+import type {
+  AttributeUpdate,
+  LayoutUpdate,
+  MaxPoints,
+  StreamUpdate,
+  TraceIndices,
+} from './plan.ts';
 
 /**
  * Accept both Plotly call styles: `(el, data, layout?, config?)` and `(el, { data, layout,
@@ -160,7 +164,7 @@ export function prependTraces(
 /** Plotly `addFrames`: see {@link Chart.addFrames}. */
 export function addFrames(
   el: HTMLElement,
-  frames: readonly Frame[] | null | undefined,
+  frames: readonly FrameInput[] | null | undefined,
   indices?: number | readonly (number | null | undefined)[],
 ): Promise<Chart> {
   return call(() => chartIn(el, 'addFrames').addFrames(frames, indices));

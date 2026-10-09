@@ -35,6 +35,8 @@ import {
  *   sandbox `&dpr=1|2` toggle; `window.__spikeCapture()` returns the canvas as a PNG data URL.
  * - `?mode=perf`: 10 series × 100k points each: build time (construct + first GPU-synced frame)
  *   and pan cost (GPU-synced throughput fps, CPU and GPU time per frame), solid and dashed.
+ *   `&only=LinePrimitive` (or `Line2`, `dash`, …) keeps the implementations whose name contains
+ *   it; `&colors=vertex` gives `LinePrimitive` per-point colors instead of one color per series.
  */
 export const meta: ExampleMeta = {
   title: 'Spike B: lines vs Line2',
@@ -250,17 +252,32 @@ const PALETTE: RGBA[] = [
   [0.09, 0.75, 0.81, 1],
 ];
 
-function ours(root: RenderRoot, data: ReturnType<typeof walks>, dash: LineDash): Impl {
+/** Per-point colors: the series color fading to half its alpha along the line. */
+function vertexColors(color: RGBA): Float32Array {
+  const out = new Float32Array(POINTS * 4);
+  for (let i = 0; i < POINTS; i++) {
+    out.set(color, i * 4);
+    out[i * 4 + 3] = 1 - (0.5 * i) / POINTS;
+  }
+  return out;
+}
+
+function ours(
+  root: RenderRoot,
+  data: ReturnType<typeof walks>,
+  dash: LineDash,
+  perVertex: boolean,
+): Impl {
   let lines: LinePrimitive[] = [];
   return {
-    name: `LinePrimitive (${dash})`,
+    name: `LinePrimitive (${dash}${perVertex ? ', vertex colors' : ''})`,
     build() {
       lines = data.ys.map(
         (y, s) =>
           new LinePrimitive(root.context, {
             x: data.x,
             y,
-            color: PALETTE[s]!,
+            color: perVertex ? vertexColors(PALETTE[s]!) : PALETTE[s]!,
             width: 1.5,
             dash,
           }),
@@ -322,12 +339,17 @@ function line2(data: ReturnType<typeof walks>, dashed: boolean): Impl {
   };
 }
 
-async function perf(page: SpikePage, reps: number): Promise<void> {
+async function perf(
+  page: SpikePage,
+  reps: number,
+  only: string,
+  perVertex: boolean,
+): Promise<void> {
   const data = walks();
   const factories: ((root: RenderRoot) => Impl)[] = [
-    (root) => ours(root, data, 'solid'),
+    (root) => ours(root, data, 'solid', perVertex),
     () => line2(data, false),
-    (root) => ours(root, data, 'dash'),
+    (root) => ours(root, data, 'dash', perVertex),
     () => line2(data, true),
   ];
   for (const factory of factories) {
@@ -351,6 +373,11 @@ async function perf(page: SpikePage, reps: number): Promise<void> {
       // Warm the shader program so build time measures data work, not compilation.
       const impl = factory(root);
       name = impl.name;
+      if (!name.includes(only)) {
+        root.destroy();
+        div.remove();
+        break;
+      }
       await yieldTask();
       const t0 = performance.now();
       for (const o of impl.build()) vp.scene.add(o);
@@ -377,6 +404,7 @@ async function perf(page: SpikePage, reps: number): Promise<void> {
       div.remove();
       await sleep(150);
     }
+    if (build.length === 0) continue;
     const result = {
       build: summarize(build),
       firstBuild: round(build[0]!),
@@ -402,7 +430,12 @@ async function main(page: SpikePage, disposers: (() => void)[]): Promise<void> {
   const mode = q.get('mode') ?? 'quality';
   if (mode === 'perf') {
     await sleep(300);
-    await perf(page, Math.max(2, Number(q.get('reps')) || 3));
+    await perf(
+      page,
+      Math.max(2, Number(q.get('reps')) || 3),
+      q.get('only') ?? '',
+      q.get('colors') === 'vertex',
+    );
     return;
   }
   const root = createRenderRoot(page.host, { background: [1, 1, 1, 1], overlay: false });

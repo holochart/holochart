@@ -11,7 +11,7 @@ import {
   type Change,
   type FullLayout,
   type FullTrace,
-  type Layout,
+  type BaseLayout,
   type PathSegment,
   type Registry,
   type Stage,
@@ -32,7 +32,7 @@ export type AttributeUpdate = Readonly<Record<string, unknown>>;
  *
  * @typeParam L - The layout type: the base layout by default, the full bundle's `Layout` there.
  */
-export type LayoutUpdate<L extends object = Layout> = {
+export type LayoutUpdate<L extends object = BaseLayout> = {
   readonly [K in keyof L]?: L[K] | null;
 } & AttributeUpdate;
 
@@ -250,6 +250,9 @@ export function tracePlan(
  */
 export type MaxPoints =
   number | Readonly<Record<string, readonly number[]>> | { readonly maxPoints: number };
+
+/** Which traces an update applies to: one trace index, or several. */
+export type TraceIndices = number | readonly number[];
 
 /** Streaming updates: per attribute string, one array of new values per listed trace. */
 export type StreamUpdate = Readonly<Record<string, readonly ArrayLike<unknown>[]>>;

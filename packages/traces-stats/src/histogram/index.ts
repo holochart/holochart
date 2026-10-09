@@ -9,6 +9,7 @@ import { histogramAttributes } from './attributes.ts';
 import { calcHistogram, type HistogramCalc } from './calc.ts';
 import { supplyHistogramDefaults, supplyHistogramLayoutDefaults } from './defaults.ts';
 import { describeHistogram } from './describe.ts';
+import { lazyA11y } from '../a11y-loader.ts';
 import { histogramHoverPoints, histogramSelectPoints } from './hover.ts';
 import { histogramRenderer } from './plot.ts';
 
@@ -41,6 +42,7 @@ export const histogram: TraceModule<HistogramCalc, typeof histogramAttributes.ch
   categoryValues: barModule.categoryValues,
   plot: histogramRenderer,
   hoverPoints: histogramHoverPoints,
+  a11y: lazyA11y('histogram', histogramHoverPoints),
   selectPoints: histogramSelectPoints,
   legendIcon: barModule.legendIcon,
   colorbar: barModule.colorbar,

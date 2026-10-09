@@ -7,6 +7,8 @@ chart: volume
 
 # Volume
 
+<ChartOverview />
+
 ## Overview
 
 A `volume` trace draws a scalar field defined on a 3D grid (a density, a concentration, a
@@ -36,6 +38,9 @@ Pick a different chart when:
 `holochart-3d.iife.min.js` after `holochart.iife.min.js`.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -79,34 +84,36 @@ isosurfaces from 0.1 to 0.8 at `opacity: 0.1`:
 
 ## Variations
 
+<ChartVariations />
+
 ### Opacity scales
 
 `opacityscale` maps values to opacities like a colorscale: `'min'` keeps the low values opaque,
 `'max'` the high ones, `'extremes'` both ends, and a list of `[position, opacity]` stops anything
 else (positions 0–1 of the color domain). It multiplies `opacity`.
 
-<Example id="volume/opacityscale" />
+<ExampleLink id="volume/opacityscale" />
 
 ### Stacked isosurfaces and ray marching
 
 The same field drawn both ways: Plotly's stacked isosurfaces, and ray marching
 (`render: 'raymarch'`), which draws every value in range, not just `surface.count` levels.
 
-<Example id="volume/modes" />
+<ExampleLink id="volume/modes" />
 
 ### Ray marching
 
 Ray-marched volumes take the colorscale for color and `opacity` · `opacityscale` for the opacity of
 one grid cell of material; `raymarch.shading` shades by the value gradient (right).
 
-<Example id="volume/raymarch" />
+<ExampleLink id="volume/raymarch" />
 
 ### A cutaway
 
 Rays stop at the scene's axis ranges: a range smaller than the data cuts the volume open.
 `isomin` / `isomax` keep a band of values (here the walls of a gyroid lattice).
 
-<Example id="volume/clipped" />
+<ExampleLink id="volume/clipped" />
 
 ## Styling
 
@@ -178,7 +185,9 @@ chart.on('hover', (event) => console.log(event.points[0]?.pointNumber));
 
 - **Screen readers:** the chart is a `<canvas>`; the hidden description (see the
   [accessibility guide](/guides/accessibility)) names the trace.
-- **Keyboard:** there is no keyboard navigation of 3D traces yet.
+- **Keyboard:** Shift + arrow keys orbit the camera, `+` / `-` move it in and out and `0` resets it.
+  There is no keyboard navigation between the trace's own points yet. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family).
 - **Color and depth:** translucent layers blend colors, which can mislead. Keep the colorbar,
   prefer lightness-monotonic colorscales, use `opacityscale` to bring out the values that matter,
   and consider [isosurfaces](/charts/3d/isosurface) or slices for exact levels.

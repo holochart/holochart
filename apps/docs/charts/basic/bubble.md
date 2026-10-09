@@ -7,6 +7,8 @@ chart: scatter
 
 # Bubble
 
+<ChartOverview />
+
 ## Overview
 
 A bubble chart is a scatter plot whose marker sizes encode a third variable. Use it to compare
@@ -23,6 +25,9 @@ Pick a different chart when:
 - the x values are ordered and the trend matters: use a [line chart](/charts/basic/line).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { bubbleSizeref, createChart } from '@mk7s/holochart';
@@ -66,13 +71,15 @@ sharing one scale:
 
 ## Variations
 
+<ChartVariations />
+
 ### Color by value
 
 A numeric `marker.color` maps through `marker.colorscale`, so one bubble shows two values: size and
 color. `marker.showscale: true` draws a colorbar; `marker.colorbar` takes a title and the axis tick
 API (`ticksuffix`, `dtick`, `tickformat`, …).
 
-<Example id="bubble/colorscale" />
+<ExampleLink id="bubble/colorscale" />
 
 ### Scaling large values with `bubbleSizeref`
 
@@ -82,7 +89,7 @@ documented `2 · max(size) / maxPx²`; pass `{ sizemode: 'diameter' }` for diame
 ignores non-numeric and non-positive sizes. Import it from `@mk7s/holochart` (or
 `@mk7s/holochart-traces-basic`).
 
-<Example id="bubble/sizeref" />
+<ExampleLink id="bubble/sizeref" />
 
 ### Area vs diameter
 
@@ -90,7 +97,7 @@ With `sizemode: 'diameter'`, a value twice as large draws a bubble twice as wide
 times the area, so large values look far larger than they are. Use `'area'` for data. The default
 stays `'diameter'` for Plotly compatibility.
 
-<Example id="bubble/sizemode" />
+<ExampleLink id="bubble/sizemode" />
 
 ### Labels inside bubbles
 
@@ -98,14 +105,14 @@ stays `'diameter'` for Plotly compatibility.
 bubble. Choose `sizeref` and `sizemin` so the smallest bubble fits its label, and a `textfont.color`
 that contrasts with the fill.
 
-<Example id="bubble/labels" />
+<ExampleLink id="bubble/labels" />
 
 ### Bubbles with a diverging scale
 
 Bubbles combine with everything else a scatter trace does. This example pairs area-scaled bubbles
 with a second trace colored on a diverging scale around `cmid: 0`.
 
-<Example id="scatter/colorscale" />
+<ExampleLink id="scatter/colorscale" />
 
 ## Styling
 
@@ -148,7 +155,9 @@ with a second trace colored on a diverging scale around `cmid: 0`.
   assistive technology is not built yet (planned for M2, see the
   [accessibility guide](/guides/accessibility)). Add a caption or `aria-label`, and a table with
   the size values: they are the hardest part of a bubble chart to read.
-- **Keyboard:** there is no keyboard navigation between points yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then step through the points and ↑ / ↓ move to
+  the trace above or below, each stop showing its hover label. See [the
+  keys](/guides/accessibility#keys-in-the-plot-area).
 - **Color and size:** don't encode the key message in bubble size alone. Label the important
   bubbles, state the size scale in a caption, and pick a colorscale that reads in grayscale (such as
   `'Viridis'`).

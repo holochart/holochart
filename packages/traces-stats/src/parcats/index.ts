@@ -9,12 +9,15 @@
  * Like Plotly, parcats has no legend entry. Deferred: the drag transitions, raising hovered bands,
  * the band and path strokes.
  */
-import type { TraceModule } from '@mk7s/holochart-runtime';
+import { accessibleText, type TraceModule } from '@mk7s/holochart-runtime';
 import { lineColorbar } from '../parcoords/common.ts';
 import { parcatsAttributes } from './attributes.ts';
 import { calcParcats, type ParcatsCalc } from './calc.ts';
 import { supplyParcatsDefaults } from './defaults.ts';
 import { describeParcats } from './describe.ts';
+import { lazyA11y } from '../a11y-loader.ts';
+import { traceRect } from '../parcoords/common.ts';
+import { DIM_WIDTH, layoutFor } from './layout.ts';
 import { parcatsHoverPoints } from './hover.ts';
 import { parcatsRenderer } from './plot.ts';
 
@@ -34,6 +37,7 @@ export const parcats: TraceModule<ParcatsCalc, typeof parcatsAttributes.children
   calc: calcParcats,
   plot: parcatsRenderer,
   hoverPoints: parcatsHoverPoints,
+  a11y: lazyA11y('parcats', parcatsHoverPoints, layoutFor, traceRect, accessibleText, DIM_WIDTH),
   colorbar: (trace, ctx) => lineColorbar(trace, ctx.fullLayout),
   describe: describeParcats,
 };

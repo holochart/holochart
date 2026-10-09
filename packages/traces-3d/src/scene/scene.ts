@@ -6,7 +6,7 @@
  * coordinates. See the module comment of `index.ts` for the contract 3D traces build on.
  */
 import { isPlainObject, toRGBA, type FullLayout } from '@mk7s/holochart-core';
-import type { DataTransform, Viewport, ViewportRect } from '@mk7s/holochart-render';
+import type { DataTransform, Viewport, ViewportRect, Vec3 } from '@mk7s/holochart-render';
 import { domainRect, type SubplotViewportOptions } from '@mk7s/holochart-runtime';
 import { Vector3 } from 'three';
 import {
@@ -16,22 +16,25 @@ import {
   sameCamera,
   type SceneProjection,
   type SceneCamera,
-  type Vec3,
 } from './camera.ts';
 import { buildSceneLayout, laidOutScene, type SceneLayout } from './layout.ts';
 import { sceneOf } from './layout-defaults.ts';
 import { SceneLighting, type LightRigUser } from './scene-lighting.ts';
 
-type Container = Record<string, unknown>;
-
-/** What {@link acquireScene} needs: a trace's plot context or a component's draw context. */
+/**
+ * What {@link acquireScene} needs: a trace's plot context or a component's draw context.
+ * @experimental
+ */
 export interface SceneContext {
   readonly fullLayout: FullLayout;
   readonly plotArea?: Readonly<ViewportRect> | undefined;
   subplotViewport?(key: string, options: SubplotViewportOptions): Viewport;
 }
 
-/** A point on screen: container px (top-left origin) and NDC depth (−1 near … 1 far). */
+/**
+ * A point on screen: container px (top-left origin) and NDC depth (−1 near … 1 far).
+ * @experimental
+ */
 export interface ScreenPoint {
   x: number;
   y: number;
@@ -40,7 +43,7 @@ export interface ScreenPoint {
 
 const tmp = new Vector3();
 
-/** The live scene (see the module comment). Get it with {@link acquireScene}. */
+/** The live scene (see the module comment). Get it with {@link acquireScene}. @experimental */
 export class Scene3D {
   readonly id: string;
   readonly viewport: Viewport;
@@ -67,7 +70,7 @@ export class Scene3D {
   /** The scene's lights (`layout.sceneN.lighting`, E8.7; see `scene-lighting.ts`). */
   readonly lighting: SceneLighting = new SceneLighting(this);
 
-  constructor(id: string, viewport: Viewport, layout: SceneLayout, full: Container) {
+  constructor(id: string, viewport: Viewport, layout: SceneLayout, full: Record<string, unknown>) {
     this.id = id;
     this.viewport = viewport;
     this.layout = layout;
@@ -92,7 +95,7 @@ export class Scene3D {
   apply(fullLayout: FullLayout, layout: SceneLayout | undefined): void {
     if (fullLayout === this.#fullLayout && (!layout || layout === this.layout)) return;
     this.#fullLayout = fullLayout;
-    const full = fullLayout[this.id] as Container;
+    const full = fullLayout[this.id] as Record<string, unknown>;
     if (layout && layout !== this.layout) {
       this.layout = layout;
       if (this.#committedZoom !== 1) {
@@ -103,9 +106,9 @@ export class Scene3D {
     // The ratio in use and the ranges belong in every full layout (Plotly writes them back).
     const a = this.layout.aspect;
     full['aspectratio'] = { x: a[0], y: a[1], z: a[2] };
-    const camera = (full['camera'] ?? {}) as Container;
+    const camera = (full['camera'] ?? {}) as Record<string, unknown>;
     const projection: SceneProjection =
-      (camera['projection'] as Container | undefined)?.['type'] === 'orthographic'
+      (camera['projection'] as Record<string, unknown> | undefined)?.['type'] === 'orthographic'
         ? 'orthographic'
         : 'perspective';
     if (projection !== this.projection) {
@@ -214,6 +217,7 @@ const BY_LAYOUT = new WeakMap<FullLayout, Map<string, Scene3D>>();
  * (a trace passes its `calc.scene`; else the pass's laid-out scene, or the previous layout, or one
  * laid out without data). `undefined` when the scene isn't in the layout or the context has no
  * `subplotViewport` (hand-built contexts).
+ * @experimental
  */
 export function acquireScene(
   ctx: SceneContext,
@@ -224,13 +228,13 @@ export function acquireScene(
   if (!isPlainObject(full) || !ctx.subplotViewport) return undefined;
   const area = ctx.plotArea ?? { x: 0, y: 0, width: 1, height: 1 };
   let laid = layout ?? laidOutScene(ctx.fullLayout, id);
-  const camera = (full['camera'] ?? {}) as Container;
+  const camera = (full['camera'] ?? {}) as Record<string, unknown>;
   const projection =
-    (camera['projection'] as Container | undefined)?.['type'] === 'orthographic'
+    (camera['projection'] as Record<string, unknown> | undefined)?.['type'] === 'orthographic'
       ? 'orthographic'
       : 'perspective';
   const bg = toRGBA(String(full['bgcolor']));
-  const d = (full['domain'] ?? {}) as Container;
+  const d = (full['domain'] ?? {}) as Record<string, unknown>;
   const extent = (v: unknown): [number, number] =>
     Array.isArray(v) && typeof v[0] === 'number' && typeof v[1] === 'number'
       ? [v[0], v[1]]
@@ -258,6 +262,7 @@ export function acquireScene(
 /**
  * The live scene of a 3D trace in the pass of `fullLayout` (hover and picking: `hoverPoints`
  * gets the full layout of the pass), once the trace's view or the component acquired it.
+ * @experimental
  */
 export function sceneFor(
   fullLayout: FullLayout,

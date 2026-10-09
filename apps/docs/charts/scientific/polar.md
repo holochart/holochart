@@ -3,9 +3,12 @@ title: Polar & radar
 description: Markers, lines and filled shapes at polar coordinates (r, θ), for directional and cyclic data and radar charts.
 status: complete
 chart: scatterpolar
+launch-featured: true
 ---
 
 # Polar & radar
+
+<ChartOverview />
 
 ## Overview
 
@@ -34,6 +37,9 @@ Pick a different chart when:
   scales better. The order of the measures also changes the shape, and so what readers see.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -96,13 +102,15 @@ createChart(document.getElementById('chart')!, {
 
 ## Variations
 
+<ChartVariations />
+
 ### Radar charts
 
 `fill: 'toself'` closes each trace into a filled shape. With category angles, that is a radar
 chart; setting `radialaxis.range` gives every item the same scale, which radar charts need to be
 compared:
 
-<Example id="polar/radar" />
+<ExampleLink id="polar/radar" />
 
 ### Polygon grid
 
@@ -111,7 +119,7 @@ category angles, the classic radar look (category angular axes only). The radial
 the nearest vertex, and fills follow straight edges between the axes. Here with a clockwise
 angular axis and a fixed `range` and `dtick`:
 
-<Example id="polar/gridshape" />
+<ExampleLink id="polar/gridshape" />
 
 ### Splines and radians
 
@@ -120,7 +128,7 @@ tuned by `line.smoothing`, as in Plotly); `'linear'`, the default, draws straigh
 traces here give `theta` in radians (`thetaunit: 'radians'`), and `angularaxis.thetaunit` labels
 the axis in radians too:
 
-<Example id="polar/spline" />
+<ExampleLink id="polar/spline" />
 
 ### Sectors and holes
 
@@ -128,7 +136,7 @@ the axis in radians too:
 its domain; `polar.hole` cuts out the middle as a fraction of the radius. The radial range starts
 at the hole's edge. Lines are clipped where they leave the range or the sector:
 
-<Example id="polar/sector-hole" />
+<ExampleLink id="polar/sector-hole" />
 
 ### Several subplots and a log radial axis
 
@@ -136,7 +144,7 @@ Each trace picks its subplot with `subplot: 'polar2'`, and each `layout.polarN` 
 `domain`, axes and background. Without a `domain`, subplots sit side by side. On the left, a log
 radial axis turns exponential growth into an even spiral:
 
-<Example id="polar/subplots" />
+<ExampleLink id="polar/subplots" />
 
 ## Styling
 
@@ -268,7 +276,10 @@ createChart(document.getElementById('chart')!, {
   traces, polar line or polar scatter) with its point count and where `r` is lowest and highest
   (with the angle, formatted like the hover labels). Its data table lists the points' `r` and `θ`
   (and `text` when given per point).
-- **Keyboard:** there is no keyboard navigation between points yet.
+- **Keyboard:** Tab moves into the plot area; the arrow keys then step through the points, each
+  showing its hover label. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Reading the chart:** radar shapes are easy to misjudge: area grows with the square of the
   radius, and the order of the measures changes the shape. Keep the radial range fixed and
   starting at zero, and label the measures with their names.

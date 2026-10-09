@@ -23,6 +23,7 @@ import {
   type Line3D,
   type MeshInput,
   type RGBA,
+  type Vec3,
 } from '@mk7s/holochart-render';
 import type {
   ComponentPointerEvent,
@@ -44,7 +45,6 @@ import {
   type MeshHit,
 } from './hover.ts';
 
-type Vec3 = [number, number, number];
 type Ctx = TracePlotContext<Mesh3dCalc>;
 
 const HIDDEN = 3.0e38;

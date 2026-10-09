@@ -24,7 +24,7 @@ test('3D add-on bundles only 3D code', () => {
   const sources = mapSources(BUNDLE_3D);
   const shared = sources.filter(
     (s) =>
-      !/(?:traces-3d\/src\/|render\/src\/primitives\/|render\/src\/precision\.ts$|^\.\.\/src\/iife-3d\.ts$|^\.\.\/src\/view3d\/view\.ts$)/.test(
+      !/(?:traces-3d\/src\/|render\/src\/primitives\/|render\/src\/precision\.ts$|^\.\.\/src\/(?:iife|exports)-3d\.ts$|^\.\.\/src\/view3d\/view\.ts$)/.test(
         s,
       ),
   );
@@ -63,8 +63,10 @@ test('3D add-on draws a scene with the main script’s three.js and render', asy
         'sceneOf',
         'sceneScales',
         'sceneExtent',
-        'buildSceneLayout',
+        'sceneCrossTraceLayout',
       ].filter((name) => typeof hc[name] !== 'function'),
+      // The package's `@internal` exports are not names of the global (only its public list is).
+      internal: ['buildSceneLayout', 'scenePicks'].filter((name) => name in hc),
     };
 
     // A minimal 3D trace on the scene contract (like examples/_lib/scene-points.ts): a flat red
@@ -146,7 +148,7 @@ test('3D add-on draws a scene with the main script’s three.js and render', asy
   });
 
   expect(result).toEqual({
-    exports: { traces3d: true, scene: true, functions: [] },
+    exports: { traces3d: true, scene: true, functions: [], internal: [] },
     allObject3D: true,
     walls: true,
     lines: true,
@@ -275,4 +277,44 @@ test('3D pies without the 3D add-on draw flat, with one warning', async ({ page 
   expect(await drawPie25D(page)).toEqual({ extruded: false, flatSlices: true });
   expect(errors).toEqual([]);
   expect(warnings).toEqual([expect.stringContaining('holochart-3d.iife.min.js')]);
+});
+
+test('script build: 3D keyboard access comes with the add-on, 2D families are left out', async ({
+  page,
+}) => {
+  const { errors } = await servePage(page, [BUNDLE, BUNDLE_3D]);
+  await page.goto(`${ORIGIN}/`);
+  const draw = (data: object[]) =>
+    page.evaluate(async (traces) => {
+      /* eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped globals */
+      const w = window as any;
+      w.chart?.destroy();
+      w.chart = w.Holochart.createChart(document.getElementById('root')!, {
+        data: traces,
+        layout: { width: 320, height: 320 },
+      });
+      await w.chart.ready;
+      return ((await w.chart.describe())?.traces ?? []) as string[];
+    }, data);
+  const live = page.locator('.holochart-live');
+
+  // The 3D chunk is inlined in the add-on: descriptions, point stops and the scene's view keys.
+  const [described] = await draw([
+    { type: 'scatter3d', name: 'P', x: [1, 2], y: [3, 4], z: [5, 6] },
+  ]);
+  // (The test page declares no charset, so the dashes between the range ends are not compared.)
+  expect(described).toMatch(/^3D scatter 'P': 2 points; x 1.+2; y 3.+4; z 5.+6\.$/);
+  await page.locator('.holochart-focus').focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(live).toHaveText(/^P: x: 1, y: 3, z: 5, point 1 of 2\./);
+  await page.keyboard.press('Shift+ArrowRight');
+  await expect(live).toHaveText(/^View rotated\./);
+
+  // The 2D script leaves the 2D packages' accessibility chunks out (its size budget, S2.14): a
+  // sunburst has no stops there yet, and navigation says so.
+  await draw([{ type: 'sunburst', labels: ['A', 'B'], parents: ['', 'A'], values: [2, 1] }]);
+  await page.locator('.holochart-focus').focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(live).toHaveText(/^No data points to explore\./);
+  expect(errors).toEqual([]);
 });

@@ -5,6 +5,11 @@
 import { formatValue } from '@mk7s/holochart-core';
 import type { AxisInfo } from '../contracts.ts';
 
+/** Keeps content in the accessibility tree while drawing nothing and taking no layout space. */
+export const VISUALLY_HIDDEN =
+  'position:absolute;left:0;top:0;width:1px;height:1px;margin:-1px;padding:0;border:0;' +
+  'overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;pointer-events:none;';
+
 const ENTITIES: Readonly<Record<string, string>> = {
   amp: '&',
   lt: '<',
@@ -22,6 +27,7 @@ const ENTITIES: Readonly<Record<string, string>> = {
  * ```ts
  * accessibleText('Revenue<br><i>(USD)</i> &amp; costs'); // 'Revenue (USD) & costs'
  * ```
+ * @experimental
  */
 export function accessibleText(value: unknown): string {
   if (value === undefined || value === null) return '';
@@ -43,6 +49,7 @@ export function accessibleText(value: unknown): string {
 /**
  * A linear coordinate of `axis` as its hover label shows it (`hoverformat`, dates, categories,
  * prefix / suffix), or a plain number without an axis. Non-finite values give `''`.
+ * @experimental
  */
 export function formatAxisValue(axis: AxisInfo | undefined, l: number): string {
   if (!Number.isFinite(l)) return '';
@@ -54,25 +61,28 @@ export function formatAxisValue(axis: AxisInfo | undefined, l: number): string {
   }
 }
 
-/** A number with up to 6 significant digits, without trailing zeros (`1234.5`, `0.000123`). */
+/**
+ * A number with up to 6 significant digits, without trailing zeros (`1234.5`, `0.000123`).
+ * @experimental
+ */
 export function formatPlainNumber(v: number): string {
   if (!Number.isFinite(v)) return String(v);
   if (Number.isInteger(v) && Math.abs(v) < 1e15) return String(v);
   return String(Number(v.toPrecision(6)));
 }
 
-/** `a`, `a and b`, `a, b and c`. */
+/** `a`, `a and b`, `a, b and c`. @experimental */
 export function listText(items: readonly string[]): string {
   if (items.length <= 1) return items[0] ?? '';
   return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
 }
 
-/** `1 point`, `3 points`. */
+/** `1 point`, `3 points`. @experimental */
 export function countText(n: number, noun: string, plural = `${noun}s`): string {
   return `${n.toLocaleString('en-US')} ${n === 1 ? noun : plural}`;
 }
 
-/** The trace's name as plain text, or Plotly's default `trace <index>`. */
+/** The trace's name as plain text, or Plotly's default `trace <index>`. @experimental */
 export function traceNameText(name: unknown, index: number): string {
   const text = accessibleText(name);
   return text === '' ? `trace ${index}` : text;

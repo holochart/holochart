@@ -20,8 +20,10 @@ import { describeHierarchy } from '../hierarchy/describe.ts';
 import { hierarchyColorbar } from '../hierarchy/colors.ts';
 import { sunburstAttributes, sunburstLayoutAttributes } from './attributes.ts';
 import { supplySunburstDefaults, supplySunburstLayoutDefaults } from './defaults.ts';
-import { calcSunburst, type SunburstCalc } from './geometry.ts';
-import { sunburstHoverPoints } from './hover.ts';
+import { calcSunburst, sunburstGeometry, type SunburstCalc } from './geometry.ts';
+import { lazyA11y } from '../a11y-loader.ts';
+import { nodeContext } from '../hierarchy/format.ts';
+import { sectorHoverPoint, sunburstHoverPoints } from './hover.ts';
 import { crossTraceLayoutSunburst } from './layout.ts';
 import { sunburstRenderer } from './plot.ts';
 
@@ -46,6 +48,7 @@ export const sunburst: TraceModule<SunburstCalc, typeof sunburstAttributes.child
   crossTraceLayout: crossTraceLayoutSunburst,
   plot: sunburstRenderer,
   hoverPoints: sunburstHoverPoints,
+  a11y: lazyA11y('sunburst', sunburstGeometry, sectorHoverPoint, nodeContext),
   colorbar: (trace, ctx) => hierarchyColorbar(trace, ctx.fullLayout),
   describe: (ctx) => describeHierarchy(ctx, 'Sunburst'),
 };

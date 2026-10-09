@@ -28,7 +28,10 @@
  */
 import { isArrayLike } from '@mk7s/holochart-core';
 
-/** One node of a hierarchy: Plotly's calcdata item (`cdi`) and its d3 node in one object. */
+/**
+ * One node of a hierarchy: Plotly's calcdata item (`cdi`) and its d3 node in one object.
+ * @experimental
+ */
 export interface HierNode {
   /** Node id: `ids[i]`, else `labels[i]` (stringified); a generated root's id. */
   readonly id: string;
@@ -58,7 +61,7 @@ export interface HierNode {
   color: string;
 }
 
-/** A built hierarchy. */
+/** A built hierarchy. @experimental */
 export interface Hierarchy {
   readonly root: HierNode;
   /** Every node, breadth first (d3 `each`): the root, its children, their children, … */
@@ -69,7 +72,7 @@ export interface Hierarchy {
   readonly hasImpliedRoot: boolean;
 }
 
-/** What {@link buildHierarchy} reads (a defaulted trace's attributes). */
+/** What {@link buildHierarchy} reads (a defaulted trace's attributes). @experimental */
 export interface HierarchyInput {
   readonly labels: unknown;
   readonly parents: unknown;
@@ -85,7 +88,7 @@ export interface HierarchyInput {
   readonly name: string;
 }
 
-/** A hierarchy, or Plotly's warning when the rows do not make one. */
+/** A hierarchy, or Plotly's warning when the rows do not make one. @experimental */
 export type HierarchyResult =
   | { readonly hierarchy: Hierarchy; readonly warnings: readonly string[] }
   | { readonly hierarchy: undefined; readonly warnings: readonly string[] };
@@ -309,6 +312,7 @@ function sortByValue(nodes: readonly HierNode[]): void {
 /**
  * Build the hierarchy of a trace's rows (see the module comment). `warnings` holds Plotly's
  * messages, also when a tree was built (none today: every warning is fatal, as in Plotly).
+ * @experimental
  */
 export function buildHierarchy(input: HierarchyInput): HierarchyResult {
   const { rows, warning } = collectRows(input);

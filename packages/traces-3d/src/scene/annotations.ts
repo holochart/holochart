@@ -23,7 +23,7 @@ import {
   richTextLabel,
   toRGBA,
   type FullLayout,
-  type RGBA,
+  type RGBAColor,
 } from '@mk7s/holochart-core';
 import {
   arrowGeometry,
@@ -206,16 +206,20 @@ export interface SceneAnnotationGeometry {
   readonly index: number;
   readonly head: ScreenPoint2D;
   readonly box: RotatedBox;
-  readonly bgcolor: RGBA;
-  readonly bordercolor: RGBA;
+  readonly bgcolor: RGBAColor;
+  readonly bordercolor: RGBAColor;
   readonly borderwidth: number;
   readonly label: TextLabel | undefined;
   readonly arrow: ArrowGeometry | undefined;
-  readonly arrowcolor: RGBA;
+  readonly arrowcolor: RGBAColor;
   readonly arrowwidth: number;
 }
 
-function faded(c: RGBA | null, opacity: number, fallback: RGBA = [0, 0, 0, 0]): RGBA {
+function faded(
+  c: RGBAColor | null,
+  opacity: number,
+  fallback: RGBAColor = [0, 0, 0, 0],
+): RGBAColor {
   const v = c ?? fallback;
   return [v[0], v[1], v[2], v[3] * opacity];
 }
@@ -426,7 +430,7 @@ export class SceneAnnotations {
       width: [] as number[],
     };
     const labels: TextLabel[] = [];
-    const polygon = (rings: readonly ScreenPoint2D[][], color: RGBA): void => {
+    const polygon = (rings: readonly ScreenPoint2D[][], color: RGBAColor): void => {
       fill.polygons.push(fill.rings.length);
       for (const ring of rings) {
         fill.rings.push(fill.x.length);

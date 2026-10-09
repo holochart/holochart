@@ -25,7 +25,7 @@ import {
   toRGBA,
   type FullLayout,
   type FullTrace,
-  type RGBA,
+  type RGBAColor,
 } from '@mk7s/holochart-core';
 import {
   createLazyMeshPrimitive,
@@ -101,7 +101,7 @@ function opacityOf(trace: FullTrace): number {
   return typeof trace['opacity'] === 'number' ? trace['opacity'] : 1;
 }
 
-function rgba(css: unknown, fallback: RGBA): RGBA {
+function rgba(css: unknown, fallback: RGBAColor): RGBAColor {
   return (typeof css === 'string' ? toRGBA(css) : null) ?? fallback;
 }
 
@@ -145,7 +145,7 @@ export function lineColors(
   trace: FullTrace,
   length: number,
   fullLayout: FullLayout | undefined,
-): RGBA | Float32Array {
+): RGBAColor | Float32Array {
   const line = (trace['line'] ?? {}) as Container;
   const mapping = resolveColorMapping(line, fullLayout);
   const c = line['color'];
@@ -159,7 +159,7 @@ export function lineColors(
           ? rgba(v, [0, 0, 0, 1])
           : mapping
             ? mapColor(typeof v === 'number' ? v : NaN, mapping)
-            : ([0.5, 0.5, 0.5, 1] as RGBA);
+            : ([0.5, 0.5, 0.5, 1] as RGBAColor);
       out.set(color, i * 4);
     }
     return out;
@@ -265,7 +265,7 @@ export function errorSegments(
     let style = (trace[`error_${bars.letter}`] ?? {}) as Container;
     if (style['copy_zstyle'] === true) style = (trace['error_z'] ?? {}) as Container;
     const c = rgba(style['color'], [0.27, 0.27, 0.27, 1]);
-    const rgbaOut: RGBA = [c[0], c[1], c[2], c[3] * opacity];
+    const rgbaOut: RGBAColor = [c[0], c[1], c[2], c[3] * opacity];
     const w = typeof style['thickness'] === 'number' ? style['thickness'] : 2;
     const d = bars.letter === 'x' ? 0 : bars.letter === 'y' ? 1 : 2;
     for (let i = 0; i < calc.length; i++) {

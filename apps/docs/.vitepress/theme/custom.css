@@ -1112,3 +1112,245 @@ html.dark {
 .hc-demo-narrow {
   max-width: 640px;
 }
+
+/* Reference galleries (scripts/gen-galleries.ts): a colorscale as a bar, a palette as blocks. */
+.vp-doc .hc-colorscale {
+  display: inline-block;
+  width: 320px;
+  height: 18px;
+  vertical-align: middle;
+  border: 1px solid var(--hc-axis);
+  border-radius: 3px;
+}
+
+.vp-doc .hc-palette {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  vertical-align: middle;
+}
+
+.vp-doc .hc-palette > i {
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--hc-axis);
+  border-radius: 2px;
+}
+
+.vp-doc .hc-symbol {
+  display: block;
+  color: var(--hc-title);
+}
+
+/* SITE-04 shared compact layout primitives. Prose retains the default readable width;
+   catalog landing pages and the gallery use the wider shell. */
+:root {
+  --hc-catalog-width: 1488px;
+  --hc-grid-gap: 12px;
+  --hc-section-gap: 24px;
+  --hc-control-size: 40px;
+}
+
+.hc-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--hc-grid-gap);
+}
+.hc-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--hc-grid);
+  border-radius: 4px;
+  background: var(--hc-surface-1);
+}
+.vp-doc .hc-card h2 {
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+  font-size: 17px;
+  line-height: 24px;
+}
+.vp-doc .hc-card p {
+  margin: 8px 0;
+  font-size: 15px;
+}
+.hc-card-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.vp-doc .hc-card-links {
+  list-style: none;
+  margin: 12px 0;
+  padding: 0;
+}
+.vp-doc .hc-card-links li {
+  margin: 0;
+}
+.hc-card-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hc-control-size);
+}
+.hc-breadcrumbs {
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--vp-c-text-2);
+}
+.hc-breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.hc-breadcrumbs li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+.hc-breadcrumbs li + li::before {
+  content: '/';
+  color: var(--vp-c-text-3);
+}
+.hc-breadcrumbs a:hover {
+  color: var(--vp-c-brand-1);
+  text-decoration: underline;
+}
+.hc-breadcrumbs [aria-current='page'] {
+  color: var(--vp-c-text-1);
+}
+.hc-catalog .VPDoc .content-container {
+  max-width: none !important;
+}
+.hc-catalog .VPDoc .content {
+  max-width: none !important;
+}
+.hc-catalog .VPDoc .container {
+  max-width: var(--hc-catalog-width) !important;
+}
+.hc-catalog .vp-doc > div > p {
+  max-width: 75ch;
+}
+.hc-catalog .VPDoc {
+  padding-top: 24px;
+}
+.hc-example--split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.hc-example--split .hc-example-bar,
+.hc-example--split .hc-example-caption {
+  grid-column: 1 / -1;
+}
+.hc-example--split .hc-example-source {
+  min-width: 0;
+  border-left: 1px solid var(--hc-grid);
+}
+.hc-example--split .hc-example-source div[class*='language-'] {
+  max-height: 100%;
+  height: 100%;
+}
+.hc-example-view-label {
+  padding: 6px 8px;
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+  color: var(--vp-c-text-2);
+}
+.hc-example-tab,
+.hc-example-action {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+}
+.hc-state,
+.hc-example-status {
+  padding: 16px;
+  color: var(--vp-c-text-2);
+  font-size: 14px;
+}
+.hc-state[data-status='error'],
+.hc-example-status[data-status='error'] {
+  color: var(--vp-c-danger-1);
+}
+.hc-state[data-status='empty'],
+.hc-state[data-status='unavailable'] {
+  border: 1px dashed var(--hc-axis);
+  border-radius: 4px;
+}
+.hc-state[data-status='loading'],
+.hc-example-status[data-status='loading'] {
+  background: var(--hc-surface-1);
+}
+.hc-state[data-status='skeleton'] {
+  min-height: 120px;
+  border-radius: 4px;
+  background: linear-gradient(
+    100deg,
+    var(--hc-surface-1),
+    var(--hc-surface-3),
+    var(--hc-surface-1)
+  );
+}
+:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 3px;
+}
+.vp-doc :is(h1, h2, h3, h4),
+.hc-card,
+.hc-gallery-filters {
+  scroll-margin-top: calc(var(--vp-nav-height) + 48px);
+}
+@media (max-width: 1279px) {
+  .hc-card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 959px) {
+  .hc-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 599px) {
+  .hc-card-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hc-example-actions {
+    flex-wrap: wrap;
+  }
+  .hc-example-tab,
+  .hc-example-action {
+    min-height: var(--hc-control-size);
+  }
+}
+/* The expanded primary navigation needs the mobile menu below 1100px, including at zoom. */
+@media (min-width: 768px) and (max-width: 1099px) {
+  .VPNavBar .VPNavBarMenu,
+  .VPNavBar .VPNavBarExtra,
+  .VPNavBar .VPNavBarSocialLinks {
+    display: none !important;
+  }
+  .VPNavBar .VPNavBarHamburger {
+    display: flex !important;
+  }
+  .VPNavScreen {
+    display: block !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hc-gallery-card-link,
+  .hc-gallery-chip,
+  .hc-example-tab,
+  .hc-example-action {
+    transition: none;
+  }
+}
+
+/* Preserve native semantics in the renderer's clipped screen-reader data mirror.
+   Prose tables may scroll, but these native tables must not inherit a scroll region. */
+.hc-example-stage .holochart-a11y table {
+  display: table;
+  overflow: visible;
+}

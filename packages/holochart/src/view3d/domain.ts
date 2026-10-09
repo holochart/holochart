@@ -115,8 +115,21 @@ export function withDomainExtrusion(module: TraceModule, items?: Items): TraceMo
   const m = withExtrusion(module);
   const { children, ...meta } = m.schema;
   const hover = module.hoverPoints!;
-  const keys = module.keyboardPoints;
   const plot = module.plot!;
+  // Keyboard stops (a list of them) with their anchors where the tilted trace draws them.
+  type Keys = NonNullable<TraceModule['keyboardPoints']>;
+  const tilted =
+    (keys: Keys): Keys =>
+    (c, t, h) => {
+      const stops = keys(c, t, h);
+      return (
+        (Array.isArray(stops) && extrusionModuleLoaded()?.domainKeyboard(() => stops, c, t, h)) ||
+        stops
+      );
+    };
+  const keys = module.keyboardPoints;
+  const load = module.a11y;
+  const type = module.type;
   return {
     ...m,
     schema: attr.object({ ...children, ...domainViewAttributes }, meta),
@@ -129,9 +142,15 @@ export function withDomainExtrusion(module: TraceModule, items?: Items): TraceMo
     plot: { create: (ctx) => new DomainView(plot, ctx, items) },
     hoverPoints: (c, t, q, h) =>
       extrusionModuleLoaded()?.domainHover(hover, c, t, q, h) ?? hover(c, t, q, h),
-    ...(keys && {
-      keyboardPoints: (c, t, h) =>
-        extrusionModuleLoaded()?.domainKeyboard(keys, c, t, h) ?? keys(c, t, h),
+    ...(keys && { keyboardPoints: tilted(keys) }),
+    // Stops that load on first use (treemap, icicle) are tilted when they arrive.
+    ...(load && {
+      a11y: () =>
+        load().then((parts) => {
+          const own = parts[type];
+          const lazy = own?.keyboardPoints as Keys | undefined;
+          return lazy ? { ...parts, [type]: { ...own, keyboardPoints: tilted(lazy) } } : parts;
+        }),
     }),
   };
 }

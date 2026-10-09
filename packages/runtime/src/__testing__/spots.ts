@@ -1,8 +1,8 @@
 /** Test trace for conditional styling (E8.5, E8.6); not exported from the package. */
-import { attr, type TraceModule } from '@mk7s/holochart-core';
+import { attr, type CoreTraceModule } from '@mk7s/holochart-core';
 
 /** A trace type with per-point attributes of every kind rules and functions target. */
-export const spots: TraceModule = {
+export const spots: CoreTraceModule = {
   type: 'spots',
   categories: ['cartesian'],
   schema: attr.object({

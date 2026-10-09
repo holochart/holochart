@@ -3,11 +3,13 @@ import { expect, test, type Page } from '@playwright/test';
 import { TEST_CONTAINER_ID } from '../../../apps/sandbox/src/test-protocol.ts';
 import { listExampleIds } from '../../../tests/visual/examples.ts';
 import { openExample, parkPointer, screenshotExample } from '../../../tests/visual/harness.ts';
+import { classificationFor } from './classification.ts';
 import {
   EXAMPLES_DIR,
   PUBLIC_DIR,
   THUMBNAIL,
   isExcluded,
+  isInternalExample,
   isThreeD,
   recordFile,
   thumbnailPath,
@@ -22,8 +24,11 @@ import {
  * Instead of comparing with a baseline, the PNG is re-encoded as WebP in the page (canvas, no
  * image dependency) and written to `apps/docs/public/gallery/thumbs/<id>.webp`, and a record with
  * the example's meta and rendered trace types goes to the output folder for `teardown.ts`.
+ *
+ * Internal examples (`_dev/…`, `_spikes/…`) are not rendered at all: they are not published, and
+ * the teardown's merge drops any entry and thumbnail an older manifest still has for them.
  */
-const exampleIds = listExampleIds(EXAMPLES_DIR);
+const exampleIds = listExampleIds(EXAMPLES_DIR).filter((id) => !isInternalExample(id));
 
 function writeRecord(outputDir: string, record: GalleryRecord): void {
   writeBinary(recordFile(outputDir, record.id), Buffer.from(JSON.stringify(record)));
@@ -124,6 +129,7 @@ for (const id of exampleIds) {
       threeD: isThreeD(traceTypes, meta.tags),
       thumbnail,
       thumbnailSize: { width: webp.width, height: webp.height },
+      ...classificationFor({ id, tags: meta.tags, traceTypes, thumbnail }, EXAMPLES_DIR),
     };
     writeRecord(outputDir, { id, entry });
   });

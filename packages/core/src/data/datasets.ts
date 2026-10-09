@@ -27,7 +27,7 @@ import { isPlainObject } from '../util/objects.ts';
 import type { Issue } from '../validate/issues.ts';
 import { suggest } from '../validate/suggest.ts';
 
-/** Result of {@link resolveDataRefs}. */
+/** Result of {@link resolveDataRefs}. @internal */
 export interface ResolvedTrace {
   /** The input trace when nothing needed resolving; otherwise a structurally shared copy. */
   readonly trace: Readonly<Record<string, unknown>>;
@@ -46,6 +46,7 @@ export interface ResolvedTrace {
  * isColumnRef('@region', attr.color({ arrayOk: true })); // true
  * isColumnRef('@handle', attr.string({ arrayOk: true })); // false: a valid string
  * ```
+ * @internal
  */
 export function isColumnRef(v: unknown, spec: AttrSpec): v is `@${string}` {
   if (typeof v !== 'string' || v.charCodeAt(0) !== 64) return false;
@@ -217,6 +218,7 @@ function resolveItems(
  * );
  * trace.x === date; // true
  * ```
+ * @internal
  */
 export function resolveDataRefs(
   trace: Readonly<Record<string, unknown>>,

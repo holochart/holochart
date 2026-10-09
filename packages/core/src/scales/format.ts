@@ -36,29 +36,31 @@ import {
 } from './date-math.ts';
 import type { AxisType, Scale } from './types.ts';
 
-/** The true minus sign (U+2212) Plotly writes in place of the ASCII hyphen. */
+/** The true minus sign (U+2212) Plotly writes in place of the ASCII hyphen. @internal */
 export const MINUS_SIGN = '−';
 
-/** Which labels a `showtickprefix` / `showticksuffix` / `showexponent` applies to. */
+/** Which labels a `showtickprefix` / `showticksuffix` / `showexponent` applies to. @internal */
 export type ShowMode = 'all' | 'first' | 'last' | 'none';
-/** How large and small numbers are written (`exponentformat`). */
+/** How large and small numbers are written (`exponentformat`). @internal */
 export type ExponentFormat = 'none' | 'e' | 'E' | 'power' | 'SI' | 'B';
-/** Resolved `tickmode` (`sync` behaves as `auto`). */
+/** Resolved `tickmode` (`sync` behaves as `auto`). @internal */
 export type TickMode = 'auto' | 'linear' | 'array';
 /**
  * A tick step: a number (linear units, decades on log axes, ms on date axes) or one of the string
  * forms `M<n>` (date: `n` months), `L<f>` (log: linear steps of `f`), `D1` / `D2` (log: every
  * digit / 1, 2 and 5 of each decade).
+ * @internal
  */
 export type Dtick = number | string;
 /**
  * Plotly's `_tickround`: digits after the decimal point for numbers; for dates the smallest field
  * shown (`y`ear, `m`onth, `d`ay, `M`inute, `S`econd) or a number of fractional-second digits;
  * `null` when unused (categories, `D1`/`D2` log steps).
+ * @internal
  */
 export type TickRound = number | 'y' | 'm' | 'd' | 'M' | 'S' | null;
 
-/** One usable `tickformatstops` entry. */
+/** One usable `tickformatstops` entry. @internal */
 export interface TickFormatStop {
   dtickrange: readonly [unknown, unknown];
   value: string;
@@ -68,6 +70,7 @@ export interface TickFormatStop {
  * The tick and label attributes of an axis, validated. Full axes from supply-defaults always have
  * every field; hand-built axes (tests, components) may omit any of them, so each one falls back to
  * its schema default here.
+ * @internal
  */
 export interface TickOptions {
   /** `'x'` or `'y'`, from the axis `_id`. */
@@ -117,6 +120,7 @@ export interface TickOptions {
 /**
  * Where and how often ticks go, and how precisely they are labelled (Plotly's `prepTicks` state:
  * `dtick`, `tick0`, `_tickround`, `_tickexponent`, `_definedDelta`).
+ * @internal
  */
 export interface TickSpec {
   mode: TickMode;
@@ -138,7 +142,7 @@ export interface TickSpec {
   definedDelta?: number;
 }
 
-/** A formatted label. */
+/** A formatted label. @internal */
 export interface TickLabel {
   text: string;
   /** Multicategory group label. */
@@ -147,7 +151,7 @@ export interface TickLabel {
   fontScale?: number;
 }
 
-/** Values of `minorloglabels`. */
+/** Values of `minorloglabels`. @internal */
 export type MinorLogLabels = 'small digits' | 'complete' | 'none';
 
 const SHOW_MODES: readonly ShowMode[] = ['all', 'first', 'last', 'none'];
@@ -155,18 +159,21 @@ const MINOR_LOG_LABELS: readonly MinorLogLabels[] = ['small digits', 'complete',
 const EXPONENT_FORMATS: readonly ExponentFormat[] = ['none', 'e', 'E', 'power', 'SI', 'B'];
 const SI_PREFIXES = ['f', 'p', 'n', 'μ', 'm', '', 'k', 'M', 'G', 'T'];
 
-/** Plotly's rounding sets: auto steps are a power of ten times one of these. */
+/** Plotly's rounding sets: auto steps are a power of ten times one of these. @internal */
 export const ROUND_BASE_10: readonly number[] = [2, 5, 10];
 const ROUND_BASE_24: readonly number[] = [1, 2, 3, 6, 12];
 const ROUND_BASE_60: readonly number[] = [1, 2, 5, 10, 15, 30];
 const ROUND_DAYS: readonly number[] = [1, 2, 3, 7, 14];
 /** Day steps with `day of week` range breaks (a 3-day step would wander through the week). */
 const ROUND_DAYS_DOW_BREAKS: readonly number[] = [1, 2, 7, 14];
-/** log10 of 0.9 (a hair below, for reversed axes), 1 … 10: the `D1` tick positions in a decade. */
+/**
+ * log10 of 0.9 (a hair below, for reversed axes), 1 … 10: the `D1` tick positions in a decade.
+ * @internal
+ */
 export const ROUND_LOG_1: readonly number[] = [
   -0.046, 0, 0.301, 0.477, 0.602, 0.699, 0.778, 0.845, 0.903, 0.954, 1,
 ];
-/** log10 of 0.5, 1, 2, 5, 10: the `D2` tick positions in a decade. */
+/** log10 of 0.5, 1, 2, 5, 10: the `D2` tick positions in a decade. @internal */
 export const ROUND_LOG_2: readonly number[] = [-0.301, 0, 0.301, 0.699, 1];
 
 /** Largest seconds value shown per number of fractional digits (never round up to `:60`). */
@@ -200,6 +207,7 @@ function isArrayLike(v: unknown): v is ArrayLike<unknown> {
 /**
  * Read the tick and label attributes of `axis`, falling back to schema defaults for anything
  * missing or invalid (see {@link TickOptions}).
+ * @internal
  */
 export function tickOptions(axis: FullAxis): TickOptions {
   const a = axis as unknown as Loose;
@@ -255,6 +263,7 @@ export function tickOptions(axis: FullAxis): TickOptions {
 /**
  * Validate a `dtick` for an axis type (Plotly's `cleanTicks.dtick`), or `undefined` when it is
  * missing or invalid — the caller then falls back to automatic ticks.
+ * @internal
  */
 export function parseDtick(dtick: unknown, type: AxisType): Dtick | undefined {
   const isDate = type === 'date';
@@ -283,6 +292,7 @@ export function parseDtick(dtick: unknown, type: AxisType): Dtick | undefined {
  * The effective tick mode: `sync` behaves as `auto`, and `linear` without a valid `dtick` falls
  * back to `auto`. Without an explicit mode (hand-built axes), `tickvals` imply `array` and a
  * valid `dtick` implies `linear`, as in Plotly's defaults.
+ * @internal
  */
 export function resolveTickMode(
   tickmode: string | undefined,
@@ -302,6 +312,7 @@ export function resolveTickMode(
 /**
  * Plotly's `Lib.roundUp`: the first element of the sorted `set` greater than `v` (the last one if
  * none is); with `reverse`, the last element less than `v` (the first if none is).
+ * @internal
  */
 export function roundUp(v: number, set: readonly number[], reverse = false): number {
   let low = 0;
@@ -326,7 +337,7 @@ function base10(v: number): number {
   return Math.pow(10, Math.floor(Math.log(v) / Math.LN10));
 }
 
-/** Options for {@link autoTicks}. */
+/** Options for {@link autoTicks}. @internal */
 export interface AutoTicksOptions {
   /** Linear range; log axes use it to choose between `L`, `D` and decade steps. */
   range?: readonly [number, number];
@@ -338,7 +349,7 @@ export interface AutoTicksOptions {
   dayOfWeekBreaks?: boolean;
 }
 
-/** Result of {@link autoTicks}. */
+/** Result of {@link autoTicks}. @internal */
 export interface AutoTicksResult {
   dtick: Dtick;
   /** Linear-space anchor. */
@@ -351,6 +362,7 @@ export interface AutoTicksResult {
  * Plotly's `autoTicks`: round a rough step (linear units per tick) to a "nice" one for the axis
  * type — 1/2/5×10ⁿ for numbers; years, months, days, hours, minutes, seconds for dates; decades,
  * `D1`/`D2` or `L<f>` for log axes; whole categories.
+ * @internal
  */
 export function autoTicks(
   type: AxisType,
@@ -416,7 +428,7 @@ export function autoTicks(
   return dayOfWeek ? { dtick, tick0, dayOfWeek } : { dtick, tick0 };
 }
 
-/** The numeric part of a step (`M3` → 3, `L0.5` → 0.5, 2 → 2). */
+/** The numeric part of a step (`M3` → 3, `L0.5` → 0.5, 2 → 2). @internal */
 export function dtickValue(dtick: Dtick): number {
   return typeof dtick === 'number' ? dtick : Number(dtick.slice(1));
 }
@@ -536,6 +548,7 @@ function isOpenEnd(v: unknown): boolean {
  * `tickformatstops` entry whose `dtickrange` contains `dtick`, else `tickformat`. Date steps
  * compare in ms (`M<n>` as n average months); log steps order `L<f>` before `D1`/`D2` before
  * decade numbers.
+ * @internal
  */
 export function getTickFormat(o: TickOptions, type: AxisType, dtick: Dtick | undefined): string {
   if (o.tickformatstops.length > 0) {
@@ -588,7 +601,7 @@ function adjustPeriodDelta(
   return { dtick: out, definedDelta };
 }
 
-/** Options for {@link tickSpec}. */
+/** Options for {@link tickSpec}. @internal */
 export interface TickSpecOptions {
   /** Compute the spec of the minor ticks (`minor.*` attributes) instead of the major ones. */
   minor?: boolean;
@@ -614,6 +627,7 @@ export interface TickSpecOptions {
  *
  * With range breaks, the spec is that of the raw scale (`rawScale`; `options.range` is converted
  * to raw too), so `tick0` and steps are raw values, as in Plotly.
+ * @internal
  */
 export function tickSpec(scale: Scale, axis: FullAxis, options: TickSpecOptions = {}): TickSpec {
   const breaks = scale.breaks;
@@ -715,6 +729,7 @@ function parseTick0(scale: Scale, tick0: unknown, dtick: Dtick): number | undefi
  * Plotly's `numSeparate`: write the decimal separator (first of `separators`) and thousands
  * separators (second) when the number has more than four integer digits (so years stay `2024`), a
  * decimal part, or `separatethousands`.
+ * @internal
  */
 export function numSeparate(value: string, separators = '.,', separatethousands = false): string {
   const thousandsRe = /(\d+)(\d{3})/;
@@ -728,7 +743,7 @@ export function numSeparate(value: string, separators = '.,', separatethousands 
   return x1 + x2;
 }
 
-/** Options for {@link formatNumber}. */
+/** Options for {@link formatNumber}. @internal */
 export interface NumberFormatOptions {
   /** A d3-format specifier; when set, it alone decides the output. */
   tickformat?: string;
@@ -761,6 +776,7 @@ export interface NumberFormatOptions {
  * formatNumber(2e9);                              // '2B'
  * formatNumber(0.25, { tickformat: '.1%' });      // '25.0%'
  * ```
+ * @internal
  */
 export function formatNumber(v: number, options: NumberFormatOptions = {}): string {
   const locale = options.locale ?? DEFAULT_LOCALE;
@@ -872,6 +888,7 @@ function formatTime(x: number, tr: TickRound): string {
  * `12:30:05\n…` (`S`), `12:30:05.25\n…` (digits). The part after `\n` is the "head" that
  * multi-level tick labels show on a second line. Names and default formats come from `locale`
  * (its `year`, `month`, `dayMonth` and `dayMonthYear` formats).
+ * @internal
  */
 export function formatDateLabel(
   ms: number,
@@ -899,6 +916,7 @@ const NEXT_ROUND: Record<string, TickRound> = { y: 'm', m: 'd', d: 'M', M: 'S', 
  * Labels values of one axis (Plotly's `tickText`). Stateful across a tick pass: multi-level date
  * labels repeat their head (year, or full date under times) only when it changes, which needs the
  * previous head.
+ * @internal
  */
 export interface TickFormatter {
   /**
@@ -920,6 +938,7 @@ export interface TickFormatter {
  * Create the label formatter of an axis for a tick spec (default: the axis' current auto spec).
  * On rangebreaks axes it formats on the raw scale and takes linear (compressed) values, so hover
  * and tick callers need no conversion.
+ * @internal
  */
 export function createTickFormatter(
   scale: Scale,
@@ -1154,6 +1173,7 @@ function rawTickFormatter(scale: Scale, axis: FullAxis, spec: TickSpec): TickFor
  *
  * `spec` defaults to the axis' current tick spec; pass the one from a tick pass to skip
  * recomputing it.
+ * @internal
  */
 export function formatValue(
   scale: Scale,

@@ -5,6 +5,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { linearExtremes } from '../axes.ts';
 import { addFrames, animate, animateCamera, deleteFrames } from '../api.ts';
 import { createChart, type Chart } from '../chart.ts';
+import { chartToJSON } from '../json.ts';
 import type { ComponentModule, TraceModule } from '../contracts.ts';
 import { setup, type TestSetup } from '../__testing__/fakes.ts';
 import { easing } from './easing.ts';
@@ -487,13 +488,13 @@ describe('frames and animate (E7.4)', () => {
     expect(c.data[1]).toMatchObject({ y: [4, 4], marker: { size: 12 } });
   });
 
-  it('addFrames / deleteFrames edit chart.frames (and toJSON)', async () => {
+  it('addFrames / deleteFrames edit chart.frames (and chartToJSON)', async () => {
     const c = await make({ data: [{ type: 'blobs', x: [0], y: [0] }] });
     await c.addFrames([{ name: 'x', data: [{ y: [1] }] }, { data: [{ y: [2] }] }]);
     expect((c.frames as { name: string }[]).map((f) => f.name)).toEqual(['x', 'frame 0']);
     await addFrames(t.container, [{ name: 'x', data: [{ y: [5] }] }, { name: 7 }], [null, 0]);
     expect((c.frames as { name: string }[]).map((f) => f.name)).toEqual(['7', 'x', 'frame 0']);
-    expect(c.toJSON().frames).toHaveLength(3);
+    expect(chartToJSON(c).frames).toHaveLength(3);
     await deleteFrames(t.container, [0]);
     expect((c.frames as { name: string }[]).map((f) => f.name)).toEqual(['x', 'frame 0']);
     await expect(c.deleteFrames([5])).rejects.toThrow(RangeError);

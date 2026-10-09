@@ -10,7 +10,7 @@ import { expressFunction } from '../core/render.ts';
 import { trendlineConfig, type TrendlineArgs } from '../core/trendline.ts';
 import type { DataInput } from '../data/table.ts';
 import type {
-  AnimationOptions,
+  AnimationFrameOptions,
   AxisOptions,
   ColumnRef,
   CommonOptions,
@@ -29,7 +29,7 @@ interface DensityOptions
     CommonOptions,
     HoverOptions,
     FacetOptions,
-    AnimationOptions,
+    AnimationFrameOptions,
     AxisOptions,
     MarginalOptions {
   /** Column of x values. */

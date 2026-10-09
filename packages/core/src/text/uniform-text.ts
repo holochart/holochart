@@ -16,17 +16,20 @@
  * Pure: the traces measure and place their labels; this module only does the size negotiation.
  */
 
-/** `layout.uniformtext.mode`. */
+/** `layout.uniformtext.mode`. @internal */
 export type UniformTextMode = false | 'hide' | 'show';
 
-/** Defaulted `layout.uniformtext`. */
+/** Defaulted `layout.uniformtext`. @internal */
 export interface UniformText {
   readonly mode: UniformTextMode;
   /** Minimum size in px (0: none). */
   readonly minsize: number;
 }
 
-/** A label's size before negotiation: its font size and the scale its placement gave it. */
+/**
+ * A label's size before negotiation: its font size and the scale its placement gave it.
+ * @internal
+ */
 export interface UniformTextItem {
   readonly fontSize: number;
   readonly scale: number;
@@ -34,7 +37,7 @@ export interface UniformTextItem {
 
 const OFF: UniformText = { mode: false, minsize: 0 };
 
-/** The defaulted `layout.uniformtext` of a full layout (off when absent or invalid). */
+/** The defaulted `layout.uniformtext` of a full layout (off when absent or invalid). @internal */
 export function uniformTextOf(fullLayout: Readonly<Record<string, unknown>>): UniformText {
   const u = fullLayout['uniformtext'] as { mode?: unknown; minsize?: unknown } | undefined;
   const mode = u?.mode === 'hide' || u?.mode === 'show' ? u.mode : false;
@@ -43,12 +46,18 @@ export function uniformTextOf(fullLayout: Readonly<Record<string, unknown>>): Un
   return { mode, minsize };
 }
 
-/** Plotly's `ensureUniformFontSize`: a label font is never smaller than `minsize` (mode on). */
+/**
+ * Plotly's `ensureUniformFontSize`: a label font is never smaller than `minsize` (mode on).
+ * @internal
+ */
 export function uniformFontSize(size: number, u: UniformText): number {
   return u.mode ? Math.max(size, u.minsize) : size;
 }
 
-/** Whether a label is a hidden candidate: drawn smaller than `minsize` (`recordMinTextSize`). */
+/**
+ * Whether a label is a hidden candidate: drawn smaller than `minsize` (`recordMinTextSize`).
+ * @internal
+ */
 export function isUniformTextHidden(item: UniformTextItem, u: UniformText): boolean {
   return u.mode !== false && item.scale * item.fontSize < u.minsize;
 }
@@ -57,6 +66,7 @@ export function isUniformTextHidden(item: UniformTextItem, u: UniformText): bool
  * The uniform size of a trace type (`_barText_minsize`): the smallest `max(size, minsize)` over
  * the labels that aren't hidden candidates; `undefined` when the mode is off, and `Infinity` when
  * every label is a hidden candidate.
+ * @internal
  */
 export function uniformTextSize(
   items: Iterable<UniformTextItem>,
@@ -77,6 +87,7 @@ export function uniformTextSize(
  * `uniform / fontSize`. Unchanged when the mode is off or the uniform size is 0 or unset (as in
  * Plotly, a label squeezed to nothing with `minsize: 0` disables the negotiation). When every
  * label was a hidden candidate, `show` draws them at `minsize`.
+ * @internal
  */
 export function uniformTextScale(
   item: UniformTextItem,

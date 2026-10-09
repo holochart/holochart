@@ -119,8 +119,10 @@ createChart(el, figure);
 ```
 
 A trace package's types describe its traces as that package registers them. The full bundle
-extends some of them (2.5D `depth` on bars, pies, treemaps, …), so its `BarTrace` has attributes
-`@mk7s/holochart-traces-basic`'s `BarTrace` has not.
+extends some of them (2.5D `depth` on bars, pies, treemaps, …), and the plain names are its types:
+`BarTrace` is the full bundle's bar trace, and the package's own type is `BaseBarTrace`
+(`BaseScatterTrace`, `BasePieTrace`, `BaseHeatmapTrace`, …). In the same way the runtime's layout
+type is `BaseLayout`, the layout attributes every bundle has, and `Layout` is the full bundle's.
 
 A plugin that registers a trace type with the full bundle adds it to `TraceTypes`, the map behind
 `Data`, so figures with it type-check:

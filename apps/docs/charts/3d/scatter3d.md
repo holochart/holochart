@@ -3,9 +3,12 @@ title: Scatter3D
 description: Plot points, lines and labels at x/y/z in a 3D scene, with colorscales, sprite or lit-sphere markers, error bars, wall projections and hover with spikes.
 status: complete
 chart: scatter3d
+launch-featured: true
 ---
 
 # Scatter3D
+
+<ChartOverview />
 
 ## Overview
 
@@ -37,6 +40,9 @@ Pick a different chart when:
 `holochart-3d.iife.min.js` after `holochart.iife.min.js`.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -94,13 +100,15 @@ createChart(document.getElementById('chart')!, {
 
 ## Variations
 
+<ChartVariations />
+
 ### Lines colored along their length
 
 `mode: 'lines'` joins the points with a screen-space line: `line.width` is in CSS px at every
 depth. Numbers in `line.color` go through `line.colorscale` and are interpolated along each
 segment. Here a helix is colored by its parameter, with diamond markers on every tenth point:
 
-<Example id="scatter3d/helix" />
+<ExampleLink id="scatter3d/helix" />
 
 ### Tubes
 
@@ -110,7 +118,7 @@ tubes stay round whatever the axis scales and grow and shrink with the view like
 helix tube is colored along its length through a colorscale, and a thinner tube with a metallic
 `line.material` winds around it:
 
-<Example id="scatter3d/tube" />
+<ExampleLink id="scatter3d/tube" />
 
 ### Ribbons
 
@@ -119,7 +127,7 @@ helix tube is colored along its length through a colorscale, and a thinner tube 
 twentieth of the axis range). Here twelve spectra, one trace per moment on the time (y) axis, form
 a spectrogram-style waterfall, each ribbon 0.6 s wide and colored by amplitude:
 
-<Example id="scatter3d/ribbons" />
+<ExampleLink id="scatter3d/ribbons" />
 
 ### Marker symbols
 
@@ -127,7 +135,7 @@ a spectrogram-style waterfall, each ribbon 0.6 s wide and colored by amplitude:
 `diamond-open`, `square`, `square-open` and `x`, one for the whole trace or one per point. Each
 trace shows its glyph in the legend; click an entry to hide the trace:
 
-<Example id="scatter3d/symbols" />
+<ExampleLink id="scatter3d/symbols" />
 
 ### Lit sphere markers
 
@@ -135,7 +143,7 @@ trace shows its glyph in the legend; click an entry to hide the trace:
 on the GPU, with exact silhouettes and intersections. Spheres keep the px size of sprite markers,
 so bubble sizing (`sizeref`, `sizemin`, `sizemode`) works the same:
 
-<Example id="scatter3d/spheres" />
+<ExampleLink id="scatter3d/spheres" />
 
 ### Text labels
 
@@ -143,7 +151,7 @@ so bubble sizing (`sizeref`, `sizemin`, `sizemode`) works the same:
 (default `'top center'`, one per point allowed). Labels face the camera, keep their px size and
 are hidden behind nearer data (depth-tested):
 
-<Example id="scatter3d/text" />
+<ExampleLink id="scatter3d/text" />
 
 ### Error bars
 
@@ -153,7 +161,7 @@ and `thickness`. Each bar is a segment through its point along its axis, without
 Plotly. `copy_zstyle` on `error_x` / `error_y` copies the style of `error_z`. The scene's
 autorange includes the bars' ends:
 
-<Example id="scatter3d/error-bars" />
+<ExampleLink id="scatter3d/error-bars" />
 
 ### Projections on the walls
 
@@ -161,7 +169,7 @@ autorange includes the bars' ends:
 axis, at `projection.x.scale` of the marker size (default 2/3) and `opacity` (default 1). The
 shadows go on the far walls, the ones behind the data, and move when the camera turns:
 
-<Example id="scatter3d/projections" />
+<ExampleLink id="scatter3d/projections" />
 
 ### A surface through the points
 
@@ -169,21 +177,21 @@ shadows go on the far walls, the ones behind the data, and move when the camera 
 plane perpendicular to the x, y or z axis; `-1` (the default) draws none. `surfacecolor` defaults
 to the line or marker color. Here two closed loops are filled with `surfaceaxis: 2`:
 
-<Example id="scatter3d/surfaceaxis" />
+<ExampleLink id="scatter3d/surfaceaxis" />
 
 ### Several traces
 
 Traces share the scene and its axes, each with its own style and legend entry. Here three
 clusters with different symbols and a dashed trajectory (`line.dash: 'dash'`):
 
-<Example id="scatter3d/multiple-traces" />
+<ExampleLink id="scatter3d/multiple-traces" />
 
 ### Date, category and log axes
 
 One trace per region, with weekly dates on x, the region names on a category y axis, and a log
 z axis:
 
-<Example id="scatter3d/axis-types" />
+<ExampleLink id="scatter3d/axis-types" />
 
 ## Styling
 
@@ -326,7 +334,9 @@ createChart(document.getElementById('chart')!, {
 - **Screen readers:** the chart is a `<canvas>`; the hidden description (see the
   [accessibility guide](/guides/accessibility)) names each 3D scatter trace, its number of points
   and the range of each of `x`, `y` and `z`, formatted like the axes.
-- **Keyboard:** there is no keyboard navigation between points or keyboard camera control yet.
+- **Keyboard:** Tab moves into the plot area; the arrow keys then step through the points in data
+  order, each showing its hover label. Shift + arrow keys orbit the camera, `+` / `-` move it in and
+  out and `0` resets it. See [the keys by chart family](/guides/accessibility#keys-by-chart-family).
 - **Color and depth:** a 3D view hides depth on a flat screen. Give each trace a distinct symbol
   as well as a color, color by a value with a lightness-monotonic scale (the default, Viridis) and
   keep the colorbar, and consider sphere markers or projections so position reads without

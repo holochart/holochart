@@ -14,7 +14,7 @@ import { isArrayLike, type FullTrace } from '@mk7s/holochart-core';
 import type { CalcContext } from '@mk7s/holochart-runtime';
 import { castOption, isNumeric, rgbaString } from './helpers.ts';
 
-/** One slice: every data point with the same label (Plotly's calcdata point). */
+/** One slice: every data point with the same label (Plotly's calcdata point). @experimental */
 export interface PieSlice {
   /** The label (string). */
   readonly label: string;
@@ -51,7 +51,10 @@ export interface PieSlice {
   readonly rInscribed: number;
 }
 
-/** Placement of a pie in container px (top-left origin), set by `crossTraceLayout`. */
+/**
+ * Placement of a pie in container px (top-left origin), set by `crossTraceLayout`.
+ * @experimental
+ */
 export interface PieLayout {
   /** Center and outer radius (before pulls). */
   readonly cx: number;
@@ -69,7 +72,7 @@ export interface PieLayout {
   };
 }
 
-/** Calcdata of a pie trace. */
+/** Calcdata of a pie trace. @experimental */
 export interface PieCalc {
   /** Slices in draw order (sorted by value when `sort`). */
   readonly slices: PieSlice[];
@@ -118,6 +121,7 @@ interface Point {
  * without `values`, label points `label0 + i·dlabel` without `labels` (index when a label is
  * empty), merge duplicate labels (sum values, keep all indices, first valid color wins), drop
  * merged slices whose total is negative, sort descending by value when `sort`.
+ * @internal
  */
 export function aggregateSlices(trace: FullTrace, hiddenlabels: unknown): Point[] {
   const hidden = hiddenSet(hiddenlabels);

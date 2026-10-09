@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { InstancedInterleavedBuffer, InterleavedBufferAttribute } from 'three';
+import type { InstancedInterleavedBuffer, InterleavedBufferAttribute, Vector4 } from 'three';
 import { createResourceManager } from '../resources.ts';
 import type { PrimitiveContext } from '../types.ts';
 import { LinePrimitive } from './line.ts';
@@ -34,16 +34,61 @@ describe('LinePrimitive (no GPU)', () => {
   });
 
   it('style-only updates touch only the affected buffer', () => {
-    const line = new LinePrimitive(context(), series(10));
+    const colors = (n: number) => new Float32Array(n * 4).fill(0.5);
+    const line = new LinePrimitive(context(), { ...series(10), color: colors(10) });
     const v = (n: string) => buffer(line, n).version;
     const before = { p: v('aA'), c: v('aColorA'), w: v('aWidth') };
-    line.update({ color: [1, 0, 0, 1] });
+    line.update({ color: colors(10).fill(1) });
     expect(v('aA')).toBe(before.p);
     expect(v('aColorA')).toBe(before.c + 1);
     expect(v('aWidth')).toBe(before.w);
     line.update({ join: 'round', opacity: 0.5 });
     expect(v('aColorA')).toBe(before.c + 1);
     expect(line.object.material).toBeDefined();
+    line.dispose();
+  });
+
+  it('keeps one color in a uniform, without a color buffer (E16.9)', () => {
+    const line = new LinePrimitive(context(), { ...series(10), color: [0.12, 0.47, 0.71, 0.5] });
+    const { geometry, material } = line.object;
+    const uColor = () => (material.uniforms.uColor!.value as Vector4).toArray();
+    expect(material.defines).toHaveProperty('LINE_UNIFORM_COLOR');
+    expect(geometry.getAttribute('aColorA')).toBeUndefined();
+    expect(geometry.getAttribute('aColorB')).toBeUndefined();
+    expect(uColor()).toEqual([0.12, 0.47, 0.71, 0.5]);
+    // A new color is a uniform update: no buffer is touched, no program compiled.
+    const versions = () => ['aA', 'aWidth'].map((n) => buffer(line, n).version);
+    const [before, program] = [versions(), material.version];
+    line.update({ color: [1, 0, 0, 1] });
+    expect(uColor()).toEqual([1, 0, 0, 1]);
+    expect(versions()).toEqual(before);
+    expect(material.version).toBe(program);
+    expect(line.object.geometry).toBe(geometry);
+    line.dispose();
+  });
+
+  it('switches to per-point colors and back: color buffer, program and stream follow', () => {
+    const line = new LinePrimitive(context(), series(4));
+    const { material } = line.object;
+    const version = material.version;
+    const perPoint = Float32Array.from([1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0.5]);
+    line.update({ color: perPoint });
+    expect(material.defines).not.toHaveProperty('LINE_UNIFORM_COLOR');
+    expect(material.version).toBe(version + 1);
+    // Stream [S, p0, p1, p2, p3, S]: sentinels get zeros, vertices their point's color.
+    const colors = buffer(line, 'aColorA').array as Float32Array;
+    expect(Array.from(colors.subarray(0, 8))).toEqual([0, 0, 0, 0, 1, 0, 0, 1]);
+    expect(Array.from(colors.subarray(16, 24))).toEqual([1, 1, 0, 0.5, 0, 0, 0, 0]);
+    // aColorA reads the stream from vertex 1 (A), aColorB from vertex 2 (B).
+    const offset = (n: string) =>
+      (line.object.geometry.getAttribute(n) as InterleavedBufferAttribute).offset;
+    expect([offset('aColorA'), offset('aColorB')]).toEqual([4, 8]);
+    expect(line.instanceCount).toBe(3);
+    line.update({ color: [0, 0, 0, 1] });
+    expect(material.defines).toHaveProperty('LINE_UNIFORM_COLOR');
+    expect(material.version).toBe(version + 2);
+    expect(line.object.geometry.getAttribute('aColorA')).toBeUndefined();
+    expect(line.instanceCount).toBe(3);
     line.dispose();
   });
 
@@ -86,6 +131,40 @@ describe('LinePrimitive (no GPU)', () => {
     line.dispose();
   });
 
+  it('keeps the dash phase through a pan: no recompute, no upload (E16.9)', () => {
+    let now = 0;
+    const pending: (() => void)[] = [];
+    const clock = {
+      now: () => now,
+      setTimeout: (fn: () => void) => pending.push(fn),
+      clearTimeout: () => {},
+    };
+    const line = new LinePrimitive(
+      context(),
+      { x: Float64Array.from([0, 1, 2]), y: Float64Array.from([0, 0, 0]), dash: [4, 4] },
+      { clock },
+    );
+    const version = () => buffer(line, 'aDist').version;
+    line.setTransform({ scaleX: 3, scaleY: 2, offsetX: 0, offsetY: 0 });
+    const uploaded = version();
+    // Offsets only, long after the throttle interval: screen lengths are what they were.
+    for (let i = 1; i <= 5; i++) {
+      now += 100;
+      line.setTransform({ scaleX: 3, scaleY: 2, offsetX: 10 * i, offsetY: -7 * i });
+    }
+    expect(version()).toBe(uploaded);
+    expect(pending).toHaveLength(0);
+    // A zoom (either scale) recomputes.
+    now += 100;
+    line.setTransform({ scaleX: 3, scaleY: 4, offsetX: 50, offsetY: -35 });
+    expect(version()).toBe(uploaded + 1);
+    now += 100;
+    line.setTransform({ scaleX: 6, scaleY: 4, offsetX: 50, offsetY: -35 });
+    expect(version()).toBe(uploaded + 2);
+    expect((buffer(line, 'aDist').array as Float32Array)[4]).toBe(6);
+    line.dispose();
+  });
+
   it('sizes buffers from the exact vertex count (E16.9)', () => {
     const line = new LinePrimitive(context(), series(100_000));
     // [S, 100k points, S]: no power-of-two or gap-per-point over-allocation.
@@ -106,25 +185,26 @@ function rng(seed: number): () => number {
   };
 }
 
-/** The drawn stream in data space: `[x, y, valid, width]` per live vertex. */
+/**
+ * The drawn stream in data space: `[x, y, valid, width, red]` per live vertex (red from the color
+ * buffer of a line with per-point colors, else from the one color).
+ */
 function drawn(line: LinePrimitive): number[][] {
   const { head, vertexCount, origin } = line.stream;
   const points = buffer(line, 'aA').array as Float32Array;
   const widths = buffer(line, 'aWidth').array as Float32Array;
-  const colors = buffer(line, 'aColorA').array as Float32Array;
+  const colors = line.object.geometry.getAttribute('aColorA')
+    ? (buffer(line, 'aColorA').array as Float32Array)
+    : undefined;
+  const uniform = (line.object.material.uniforms.uColor!.value as Vector4).x;
+  const red = (v: number, valid: number): number => (colors ? colors[v * 4]! : valid ? uniform : 0);
   const out: number[][] = [];
   for (let v = head; v < head + vertexCount; v++) {
     const valid = points[v * 4 + 3]!;
     out.push(
       valid
-        ? [
-            points[v * 4]! + origin[0],
-            points[v * 4 + 1]! + origin[1],
-            1,
-            widths[v]!,
-            colors[v * 4]!,
-          ]
-        : [0, 0, 0, widths[v]!, colors[v * 4]!],
+        ? [points[v * 4]! + origin[0], points[v * 4 + 1]! + origin[1], 1, widths[v]!, red(v, 1)]
+        : [0, 0, 0, widths[v]!, red(v, 0)],
     );
   }
   return out;

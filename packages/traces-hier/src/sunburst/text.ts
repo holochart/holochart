@@ -11,7 +11,7 @@
  * `geometry.ts`); text sizes come from the render layer's synchronous metrics, so placement is unit
  * tested without a GPU. Labels may be Plotly pseudo-HTML (E2.10): mixed styles become styled runs.
  */
-import type { FullLayout, FullTrace, RGBA, UniformTextItem } from '@mk7s/holochart-core';
+import type { FullLayout, FullTrace, RGBAColor, UniformTextItem } from '@mk7s/holochart-core';
 import { scaleTextRuns, type TextFont, type TextRunLines } from '@mk7s/holochart-render';
 import {
   labelContent,
@@ -67,7 +67,7 @@ export interface SectorLabel {
   readonly font: TextFont;
   /** Styled runs at the fitted size (E2.10), when the label mixes styles. */
   readonly runs?: TextRunLines;
-  readonly color: RGBA;
+  readonly color: RGBAColor;
   /** Index of the sector in `geometry.sectors`. */
   readonly sector: number;
 }
@@ -97,7 +97,7 @@ export function layoutSunburstText(
   const placed: {
     content: ReturnType<typeof labelContent>;
     t: ReturnType<typeof transformInsideText>;
-    color: RGBA;
+    color: RGBAColor;
     index: number;
   }[] = [];
   const fits: UniformTextItem[] = [];

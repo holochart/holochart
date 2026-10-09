@@ -26,6 +26,7 @@ import { sceneOf } from '../scene/layout-defaults.ts';
 /** Share of the smallest position spacing a default bar footprint covers. */
 export const BAR3D_FILL = 0.8;
 
+/** @experimental */
 export interface Bar3dCalc extends SceneCalc {
   /** Number of bars: the shortest of `x`, `y`, `z`. */
   readonly count: number;

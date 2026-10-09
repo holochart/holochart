@@ -29,36 +29,36 @@
  * text primitive has always done; Plotly turns them into spaces (`newlines: 'space'`). `<br/>` is
  * a line break too (Plotly shows `<br/>` literally). The `popup` link attribute is ignored.
  */
-import { toRGBA, type RGBA } from '../coerce/color.ts';
+import { toRGBA, type RGBAColor } from '../coerce/color.ts';
 
-/** Formatting tags (every known tag except `<br>`). */
+/** Formatting tags (every known tag except `<br>`). @internal */
 export type RichTextTag = 'b' | 'strong' | 'i' | 'em' | 'u' | 's' | 'sup' | 'sub' | 'span' | 'a';
 
-/** A validated `style` declaration: a lowercase property and its trimmed value. */
+/** A validated `style` declaration: a lowercase property and its trimmed value. @internal */
 export interface RichTextDeclaration {
   readonly property:
     'color' | 'font-size' | 'font-family' | 'font-weight' | 'font-style' | 'text-decoration';
   readonly value: string;
 }
 
-/** A link: a sanitized `href` and its `target` (default `_blank`). */
+/** A link: a sanitized `href` and its `target` (default `_blank`). @internal */
 export interface RichTextLink {
   readonly href: string;
   readonly target: string;
 }
 
-/** A text node: decoded text (entities resolved, no tags). */
+/** A text node: decoded text (entities resolved, no tags). @internal */
 export interface RichTextString {
   readonly kind: 'text';
   readonly text: string;
 }
 
-/** A line break (`<br>`, or a raw newline with `newlines: 'break'`). */
+/** A line break (`<br>`, or a raw newline with `newlines: 'break'`). @internal */
 export interface RichTextBreak {
   readonly kind: 'br';
 }
 
-/** A formatting element and its children. */
+/** A formatting element and its children. @internal */
 export interface RichTextElement {
   readonly kind: 'element';
   readonly tag: RichTextTag;
@@ -69,10 +69,10 @@ export interface RichTextElement {
   readonly children: readonly RichTextNode[];
 }
 
-/** A node of a parsed rich text. */
+/** A node of a parsed rich text. @internal */
 export type RichTextNode = RichTextString | RichTextBreak | RichTextElement;
 
-/** Options for {@link parseRichText} and {@link richTextLines}. */
+/** Options for {@link parseRichText} and {@link richTextLines}. @internal */
 export interface RichTextParseOptions {
   /**
    * Raw newlines: `'break'` (default) starts a new line, `'space'` becomes a space (Plotly's SVG
@@ -81,7 +81,7 @@ export interface RichTextParseOptions {
   newlines?: 'break' | 'space';
 }
 
-/** Font overrides of a run, relative to the text's base font (unset fields inherit). */
+/** Font overrides of a run, relative to the text's base font (unset fields inherit). @internal */
 export interface RichTextRunFont {
   family?: string;
   /** Absolute size in px (set when it differs from the base size). */
@@ -92,34 +92,34 @@ export interface RichTextRunFont {
   lineposition?: string;
 }
 
-/** A run of text drawn with one style. */
+/** A run of text drawn with one style. @internal */
 export interface RichTextRun {
   /** Decoded text, never containing a newline. */
   text: string;
   /** Overrides of the base font; absent when the run uses the base font. */
   font?: RichTextRunFont;
   /** sRGB 0–1 RGBA from a `color` style; absent for the base color. */
-  color?: RGBA;
+  color?: RGBAColor;
   /** Baseline shift in px, positive up (`<sup>`), negative down (`<sub>`). */
   shift?: number;
   /** The enclosing link, if any. */
   link?: RichTextLink;
 }
 
-/** One line of runs (possibly empty). */
+/** One line of runs (possibly empty). @internal */
 export type RichTextLine = readonly RichTextRun[];
 
-/** Options for {@link richTextLines}. */
+/** Options for {@link richTextLines}. @internal */
 export interface RichTextLinesOptions extends RichTextParseOptions {
   /** Base font size in px: sizes and baseline shifts are resolved against it. */
   size: number;
 }
 
-/** Size factor of `<sup>` / `<sub>` (Plotly's `font-size:70%`). */
+/** Size factor of `<sup>` / `<sub>` (Plotly's `font-size:70%`). @internal */
 export const SCRIPT_SIZE = 0.7;
-/** `<sup>` baseline raise, in em of the superscript's own size (Plotly `dy: -0.6em`). */
+/** `<sup>` baseline raise, in em of the superscript's own size (Plotly `dy: -0.6em`). @internal */
 export const SUP_SHIFT = 0.6;
-/** `<sub>` baseline drop, in em of the subscript's own size (Plotly `dy: 0.3em`). */
+/** `<sub>` baseline drop, in em of the subscript's own size (Plotly `dy: 0.3em`). @internal */
 export const SUB_SHIFT = 0.3;
 
 const NAMED_ENTITIES: Readonly<Record<string, string>> = {
@@ -140,6 +140,7 @@ const ENTITY = /&(#\d+|#x[\da-f]+|[a-z]+);/gi;
 /**
  * Decode the HTML entities Plotly labels use (see the module notes). Unknown names, `&#0;` and
  * code points past U+10FFFF stay literal.
+ * @internal
  */
 export function decodeEntities(text: string): string {
   if (!text.includes('&')) return text;
@@ -169,6 +170,7 @@ function protocolOf(url: string): string {
  * Plotly's `sanitizeHref`: the URL (percent-decoded, then re-encoded) when both it and the raw
  * input use a safe protocol (`http:`, `https:`, `mailto:` or none, i.e. relative), else `null`.
  * Malformed percent-encoding is rejected.
+ * @internal
  */
 export function sanitizeHref(href: string): string | null {
   if (href === '') return null;
@@ -242,7 +244,10 @@ function declaration(property: string, value: string): RichTextDeclaration | und
   }
 }
 
-/** Parse a `style` attribute into validated declarations (unknown or unsafe ones dropped). */
+/**
+ * Parse a `style` attribute into validated declarations (unknown or unsafe ones dropped).
+ * @internal
+ */
 export function parseRichTextStyle(style: string): RichTextDeclaration[] {
   const out: RichTextDeclaration[] = [];
   for (const decl of style.split(';')) {
@@ -272,6 +277,7 @@ const NEWLINES = /\r\n?|\n/g;
  * parseRichText('a<b>b</b>');
  * // [{ kind: 'text', text: 'a' }, { kind: 'element', tag: 'b', style: [], children: [{ kind: 'text', text: 'b' }] }]
  * ```
+ * @internal
  */
 export function parseRichText(text: string, options: RichTextParseOptions = {}): RichTextNode[] {
   const root: RichTextNode[] = [];
@@ -352,7 +358,10 @@ function freeze(el: OpenElement): RichTextElement {
   };
 }
 
-/** Whether `text` may contain markup or entities (cheap pre-check for a plain-text fast path). */
+/**
+ * Whether `text` may contain markup or entities (cheap pre-check for a plain-text fast path).
+ * @internal
+ */
 export function mayContainRichText(text: string): boolean {
   return /[<&]/.test(text);
 }
@@ -360,6 +369,7 @@ export function mayContainRichText(text: string): boolean {
 /**
  * Plain text of a rich text: tags removed, entities decoded, line breaks as `\n` (raw newlines
  * per `options.newlines`). Unknown tags stay, as they are drawn literally.
+ * @internal
  */
 export function richTextToPlain(
   input: string | readonly RichTextNode[],
@@ -389,7 +399,7 @@ interface RunState {
   weight: RichTextRunFont['weight'];
   style: RichTextRunFont['style'];
   family: string | undefined;
-  color: RGBA | undefined;
+  color: RGBAColor | undefined;
   under: boolean;
   over: boolean;
   through: boolean;
@@ -525,7 +535,7 @@ function sameRunStyle(a: RichTextRun, b: RichTextRun): boolean {
     (a.color === b.color ||
       (a.color !== undefined &&
         b.color !== undefined &&
-        a.color.every((c, k) => c === (b.color as RGBA)[k]))) &&
+        a.color.every((c, k) => c === (b.color as RGBAColor)[k]))) &&
     fa?.family === fb?.family &&
     fa?.size === fb?.size &&
     fa?.weight === fb?.weight &&
@@ -544,6 +554,7 @@ function sameRunStyle(a: RichTextRun, b: RichTextRun): boolean {
  * richTextLines('x<sup>2</sup>', { size: 10 });
  * // [[{ text: 'x' }, { text: '2', font: { size: 7 }, shift: 4.2 }]]
  * ```
+ * @internal
  */
 export function richTextLines(
   input: string | readonly RichTextNode[],
@@ -589,7 +600,10 @@ export function richTextLines(
   return lines;
 }
 
-/** Whether any run of `lines` is styled (font, color, shift or link), i.e. not plain text. */
+/**
+ * Whether any run of `lines` is styled (font, color, shift or link), i.e. not plain text.
+ * @internal
+ */
 export function isStyledRichText(lines: readonly RichTextLine[]): boolean {
   return lines.some((line) =>
     line.some(
@@ -606,6 +620,7 @@ export function isStyledRichText(lines: readonly RichTextLine[]): boolean {
  * The style shared by every run of `lines`, when they all have the same one (e.g. a title wrapped
  * in `<b>…</b>`), so the text can be drawn as one plain label with that font and color; `null`
  * when runs differ or carry a baseline shift or a link.
+ * @internal
  */
 export function uniformRichTextStyle(
   lines: readonly RichTextLine[],
@@ -625,7 +640,7 @@ export function uniformRichTextStyle(
   };
 }
 
-/** A label resolved by {@link richTextLabel}. */
+/** A label resolved by {@link richTextLabel}. @internal */
 export interface RichTextLabel<F> {
   /** Plain equivalent: tags removed, entities decoded, one `\n` per line break. */
   readonly text: string;
@@ -644,6 +659,7 @@ const LINE_FLAGS = ['under', 'over', 'through'] as const;
  * `<b>…</b>`, or markup that is only `<br>` and entities) as plain text with that style merged
  * into `font`; anything else with its runs. A label-wide color stays in runs (the label color
  * may carry opacity, contrast or selection styling).
+ * @internal
  */
 export function richTextLabel<
   F extends { size: number; lineposition?: string | undefined } & Omit<

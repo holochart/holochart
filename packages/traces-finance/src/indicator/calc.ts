@@ -1,7 +1,7 @@
 /** `indicator` calc (plan E12.7), following plotly.js `traces/indicator/calc.js`. */
 import type { FullTrace } from '@mk7s/holochart-core';
 
-/** The value of an indicator and its difference to the delta reference. */
+/** The value of an indicator and its difference to the delta reference. @experimental */
 export interface IndicatorCalc {
   /** `value`, or `undefined` when unset. */
   readonly value: number | undefined;

@@ -84,7 +84,7 @@ const SHARED = [
   'zerolinewidth',
 ] as const;
 
-/** `scene.xaxis`, `scene.yaxis`, `scene.zaxis`. */
+/** `scene.xaxis`, `scene.yaxis`, `scene.zaxis`. @internal */
 export const sceneAxisAttributes = /* @__PURE__ */ (() =>
   attr.object(
     {
@@ -168,7 +168,7 @@ const sceneDomain = /* @__PURE__ */ (() =>
       'Extent of the scene as fractions of the plot area, or the `layout.grid` cell at `row` / `column`. Scenes without one sit side by side.',
   }))();
 
-/** The `scene` subplot container family (`scene`, `scene2`, …). */
+/** The `scene` subplot container family (`scene`, `scene2`, …). @experimental */
 export const sceneAttributes = /* @__PURE__ */ (() =>
   attr.subplotObject(
     'scene',
@@ -279,7 +279,7 @@ export const sceneAttributes = /* @__PURE__ */ (() =>
 /** What the scene component declares as its `layoutSchema`. */
 export const sceneLayoutSchema = /* @__PURE__ */ (() => ({ scene: sceneAttributes }))();
 
-/** The `scene` trace attribute of 3D traces (spread into their schemas). */
+/** The `scene` trace attribute of 3D traces (spread into their schemas). @experimental */
 export const sceneIdAttribute = /* @__PURE__ */ (() =>
   attr.subplotId({
     dflt: 'scene',

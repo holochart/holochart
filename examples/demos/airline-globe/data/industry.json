@@ -1,0 +1,14 @@
+{
+  "year": 2025,
+  "published": "2026-01-29",
+  "source": "https://www.iata.org/en/pressroom/2026-releases/2026-01-29-02/",
+  "total": { "demand": 5.3, "capacity": 5.2, "load": 83.6 },
+  "regions": [
+    { "name": "Asia Pacific", "share": 34.5, "demand": 7.8, "capacity": 6.5, "load": 84.2 },
+    { "name": "Europe", "share": 26.6, "demand": 5.3, "capacity": 5.2, "load": 84.8 },
+    { "name": "North America", "share": 21.8, "demand": 0.4, "capacity": 2.0, "load": 82.9 },
+    { "name": "Middle East", "share": 9.5, "demand": 6.8, "capacity": 5.9, "load": 81.5 },
+    { "name": "Latin America", "share": 5.4, "demand": 7.0, "capacity": 7.4, "load": 83.4 },
+    { "name": "Africa", "share": 2.2, "demand": 9.4, "capacity": 8.3, "load": 75.3 }
+  ]
+}

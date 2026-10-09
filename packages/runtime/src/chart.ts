@@ -34,7 +34,6 @@
  * Without pending text this is the same frame the update drew.
  */
 import {
-  type EncodedFigure,
   applyUirevision,
   axisTypeChangeEdits,
   coerceContainer,
@@ -169,8 +168,8 @@ import {
   type LayoutUpdate,
   type MaxPoints,
   type StreamUpdate,
+  type TraceIndices,
 } from './plan.ts';
-import { chartToJSON, type ChartToJSONOptions } from './json.ts';
 import { describeChart, type ChartDescription, type OverviewInput } from './a11y/describe.ts';
 import { A11yMirror, type A11yChange } from './a11y/mirror.ts';
 import { removeFallback, showFallback, WebGLUnavailableError } from './fallback.ts';
@@ -182,7 +181,7 @@ import type {
   AnimationOptions,
   CameraAnimationOptions,
   CameraTarget,
-  Frame,
+  FrameInput,
 } from './anim/types.ts';
 import { registry as defaultRegistry, type ChartRegistry } from './registry.ts';
 import {
@@ -219,25 +218,28 @@ export interface FigurePatch {
   config?: Readonly<Record<string, unknown>>;
 }
 
-/** Escape hatches into three.js (plan §7.2, E8.13). */
+/**
+ * Escape hatches into three.js (plan §7.2, E8.13). `renderer` and `scene` are three.js objects;
+ * the members typed by the render package (`root`, `overlay`, `viewports`, `subplot`) are
+ * experimental like that package.
+ */
 export interface ChartThree {
   /**
    * The renderer that draws this chart. With `config.sharedRenderer` it also draws other charts,
    * and its `domElement` is not this chart's canvas: use `root.canvas`.
    */
   readonly renderer: WebGLRenderer;
-  /** The render root: render loop, viewports, resources. */
+  /** The render root: render loop, viewports, resources. @experimental */
   readonly root: RenderRoot;
   /** The overlay viewport's scene (paper-space, drawn last): add custom objects here. */
   readonly scene: Scene;
+  /** The overlay viewport. @experimental */
   readonly overlay: Viewport;
-  /** Every viewport, in draw order. */
+  /** Every viewport, in draw order. @experimental */
   readonly viewports: readonly Viewport[];
-  /** The viewport of a cartesian subplot (`'xy'`, `'x2y2'`). */
+  /** The viewport of a cartesian subplot (`'xy'`, `'x2y2'`). @experimental */
   subplot(id: string): Viewport | undefined;
 }
-
-type TraceIndices = number | readonly number[];
 
 interface Figure {
   data: unknown[];
@@ -352,6 +354,7 @@ const EMPTY_ENTRIES: readonly HoverEntry[] = [];
  * Trace categories that share cross-trace calc across trace types (see
  * `TraceModule.crossTraceCalc`): every trace whose module lists one of them stacks / groups with
  * the others on its subplot.
+ * @experimental
  */
 export const STACK_GROUPS: ReadonlySet<string> = new Set(['bar-like']);
 /** A zoom or pan preview: new transforms only (plan E6.2). */
@@ -627,6 +630,8 @@ export class Chart {
   /** Generated summaries (E17.2): their code loads after the first description needs it. */
   #summarize: ((input: OverviewInput) => string) | null | undefined;
   #summaryLoad: Promise<void> | undefined;
+  /** The loads of trace modules' lazy `describe` (`TraceModule.a11y`) the description waits for. */
+  #partsLoad: Promise<unknown> | undefined;
   /** Frames and transitions (E7.3, E7.4): their code loads on first use. */
   #animation: Promise<Animation> | undefined;
   /** Style rules and functions (E8.5, E8.6): their code loads when a trace first uses them. */
@@ -651,7 +656,7 @@ export class Chart {
     plotArea: () => this.#plotArea,
   });
 
-  /** Prefer {@link createChart}. A chart already in `el` is destroyed first. */
+  /** @internal Use {@link createChart}. A chart already in `el` is destroyed first. */
   constructor(el: HTMLElement, figure: FigureInput = {}, options: ChartOptions = {}) {
     this.element = el;
     this.#registry = options.registry ?? defaultRegistry;
@@ -740,14 +745,24 @@ export class Chart {
   }
 
   /**
-   * The current figure (`data`, `layout`, `config`, `frames`, `datasets`) as JSON-safe data
-   * (E18.3): typed arrays become Plotly's `{ dtype, bdata, shape }`, per-point style functions are
-   * evaluated, other functions dropped with a warning. `JSON.stringify(chart)` calls this too.
+   * The registry this chart resolves trace types and components from. `chartToJSON(chart)` reads
+   * it to decide which style functions become per-point arrays.
+   *
+   * @experimental
    */
-  toJSON(options?: ChartToJSONOptions | string): EncodedFigure {
-    // JSON.stringify passes the property key as the argument.
-    const opts = typeof options === 'object' ? options : {};
-    return chartToJSON(this, { registry: this.#registry, ...opts });
+  get registry(): ChartRegistry {
+    return this.#registry;
+  }
+
+  /**
+   * Not supported: a chart is not JSON data. Call `chartToJSON(chart)`, which keeps the serializer
+   * out of bundles that never save a figure. This stub makes `JSON.stringify(chart)` fail loudly
+   * instead of writing the chart object's own fields.
+   *
+   * @deprecated Use `chartToJSON(chart)`.
+   */
+  toJSON(): never {
+    throw new TypeError('holochart: chart.toJSON() is not available; use chartToJSON(chart)');
   }
 
   // ---- export (E18.1) --------------------------------------------------------------------------
@@ -823,9 +838,10 @@ export class Chart {
    */
   async describe(): Promise<ChartDescription | undefined> {
     const first = this.#describe();
-    if (this.#summaryLoad) await this.#summaryLoad;
+    await this.#summaryLoad;
+    await this.#partsLoad;
     await this.#a11y?.tablesReady;
-    return this.#summaryLoad ? this.#describe() : first;
+    return this.#summaryLoad || this.#partsLoad ? this.#describe() : first;
   }
 
   #describe(): ChartDescription | undefined {
@@ -844,6 +860,12 @@ export class Chart {
       },
       summarize: a11y.summaries ? this.#summarize : null,
       onPending: () => this.#loadSummary(),
+      // A trace's `describe` is still loading: describe the chart again when it is there.
+      onParts: (load) => {
+        this.#partsLoad = Promise.all([this.#partsLoad, load]).then(
+          () => this.#destroyed || this.#a11y?.update(),
+        );
+      },
       tables: a11y.dataTable !== false,
     });
   }
@@ -876,7 +898,7 @@ export class Chart {
     return this.#full?.fullConfig;
   }
 
-  /** Calcdata of trace `index`, as produced by its module's `calc`. */
+  /** Calcdata of trace `index`, as produced by its module's `calc`. @experimental */
   getCalcdata(index: number): unknown {
     return this.#traces[index]?.calc;
   }
@@ -890,11 +912,15 @@ export class Chart {
     return this.#size;
   }
 
-  /** The solved layout: axes and subplots (read-only snapshots of runtime state). */
+  /**
+   * The solved layout: axes and subplots (read-only snapshots of runtime state).
+   * @experimental
+   */
   get axes(): ReadonlyMap<string, AxisInfo> {
     return this.#axes;
   }
 
+  /** The solved subplots, by id (see {@link Chart.axes}). @experimental */
   get subplots(): ReadonlyMap<string, SubplotInfo> {
     return this.#subplots;
   }
@@ -939,6 +965,7 @@ export class Chart {
   /**
    * Emit an event to this chart's listeners (components use it for `legendclick`, …). Returns
    * `false` when a listener returned `false`, i.e. the default action should be skipped.
+   * @experimental
    */
   emit<K extends ChartEventName>(type: K, payload: ChartEvents[K]): boolean {
     return this.#events.emit(type, payload);
@@ -946,7 +973,10 @@ export class Chart {
 
   // ---- interaction (E6) -------------------------------------------------------------------------
 
-  /** The interaction settings in effect (`hovermode`, `dragmode`, `clickmode`, …). */
+  /**
+   * The interaction settings in effect (`hovermode`, `dragmode`, `clickmode`, …).
+   * @experimental
+   */
   get interaction(): FxSettings {
     return resolveFxSettings(this.#full?.fullLayout, this.#full?.fullConfig, this.#figure.layout);
   }
@@ -972,6 +1002,7 @@ export class Chart {
    * Hover again where the pointer is, on the next frame (M6: for hover sources that answer
    * asynchronously, such as a 3D scene's GPU picking, or whose points moved without a redraw,
    * such as an orbiting camera). No-op when the pointer is away or a gesture is in progress.
+   * @experimental
    */
   refreshHover(): void {
     this.#fx?.rehover();
@@ -1029,6 +1060,7 @@ export class Chart {
    * their ticks, linked axes (`matches`, `scaleanchor`) follow, and `relayouting` is emitted; the
    * input layout is untouched. Finish with {@link commitRanges}, or undo by previewing the ranges
    * shown before.
+   * @experimental
    */
   previewRanges(ranges: Readonly<Record<string, readonly [number, number]>>): void {
     if (this.#destroyed || !this.#full) return;
@@ -1050,6 +1082,7 @@ export class Chart {
    * Set axis ranges as a user interaction (M3 wave 2, E5.9): linear coordinates keyed by axis
    * id, committed with one GUI `relayout` (kept across `uirevision`) whose event carries Plotly's
    * `'xaxis.range[0]'` / `'xaxis.range[1]'` keys, like the end of a zoom drag.
+   * @experimental
    */
   commitRanges(ranges: Readonly<Record<string, readonly [number, number]>>): Promise<Chart> {
     const map = new Map<string, LinearRange>();
@@ -1357,7 +1390,7 @@ export class Chart {
    * `'frame <n>'`. See {@link animate}.
    */
   addFrames(
-    frames: readonly Frame[] | null | undefined,
+    frames: readonly FrameInput[] | null | undefined,
     indices?: number | readonly (number | null | undefined)[],
   ): Promise<Chart> {
     return this.#animate((a) => {
@@ -1799,6 +1832,7 @@ export class Chart {
           hover: (found) => fx.hoverFound(found),
           unhover: () => fx.unhover(),
           clickTrace: (index, x, y, event) => this.#clickTrace(index, x, y, event),
+          relayout: (update) => void this.relayout(update, { gui: true }).catch(() => undefined),
         });
       }
     }
@@ -2165,7 +2199,9 @@ export class Chart {
         const columns: unknown[] = [];
         for (const trace of fullData) {
           if (trace.visible !== false && trace[`${letter}axis`] === id) {
-            columns.push(trace[letter]);
+            // A trace that keeps its positions elsewhere names them (core's `axisHints`).
+            const hinted = trace._module?.axisHints?.(trace)?.[letter as 'x' | 'y'];
+            columns.push(hinted ?? trace[letter]);
           } else {
             const data = axisDataOf(trace, id);
             if (data !== undefined) columns.push(data);
@@ -2631,6 +2667,7 @@ export class Chart {
         width: size.width,
         height: size.height,
         plotArea: this.#plotArea,
+        chart: this,
       });
       for (const e of group.entries) {
         const tp = plans[e.index] as TraceUpdatePlan;
@@ -2700,29 +2737,32 @@ export class Chart {
         });
       },
       invalidate: () => root.invalidate(),
+      recalc: () => {
+        if (this.#destroyed) return;
+        this.#schedule((plan) => addStages(plan, index, ['calc'])).catch(() => undefined);
+      },
       subplotViewport: (key, options) => this.#subplotViewport(key, options),
       selectedPoints: this.#selectionOf(index),
     };
   }
 
-  /** See `TracePlotContext.subplotViewport`: one 3D viewport per key, kept while asked for. */
+  /** See `TracePlotContext.subplotViewport`: one viewport per key, kept while asked for. */
   #subplotViewport(key: string, options: SubplotViewportOptions): Viewport {
     let entry = this.#keyed.get(key);
     if (!entry) {
-      const viewport = this.#requireRoot().addViewport({
-        kind: '3d',
-        rect: options.rect,
-        projection: options.projection ?? 'perspective',
-        // After every cartesian subplot and mirror (1e6 + …), before the overlay.
-        order: 2e6,
-        name: `subplot-${key}`,
-      });
+      // After every cartesian subplot and mirror (1e6 + …), before the overlay.
+      const placed = { rect: options.rect, order: 2e6, name: `subplot-${key}` };
+      const viewport = this.#requireRoot().addViewport(
+        options.kind === '2d'
+          ? { kind: '2d', clip: true, ...placed }
+          : { kind: '3d', projection: options.projection ?? 'perspective', ...placed },
+      );
       this.#keyed.set(key, (entry = { viewport, used: true }));
     }
     const vp = entry.viewport;
     entry.used = true;
     vp.setRect(options.rect);
-    vp.setProjection(options.projection ?? 'perspective');
+    if (vp.kind === '3d') vp.setProjection(options.projection ?? 'perspective');
     vp.background = options.background ?? null;
     return vp;
   }
@@ -2820,7 +2860,10 @@ export class Chart {
       subplots: () => this.#subplotList,
       entries: (sp) =>
         this.#areas.has(sp)
-          ? this.#domainEntries().entries.filter((e) => e.trace['subplot'] === sp.id)
+          ? this.#domainEntries().entries.filter(
+              // Polar traces name their subplot in `subplot`, geo traces in `geo`.
+              (e) => e.trace['subplot'] === sp.id || e.trace['geo'] === sp.id,
+            )
           : this.#entries(sp.id),
       domainEntries: () => this.#domainEntries(),
       selectArea: (x, y) => {
@@ -2943,7 +2986,9 @@ export class Chart {
       full?.fullData.forEach((trace, index) => {
         const slot = this.#traces[index];
         const module = slot?.module;
-        if (!slot?.hasCalc || !module?.hoverPoints || trace.visible !== true) return;
+        // Traces without hover whose keyboard stops load on first use are entries too (parcoords).
+        if (!slot?.hasCalc || !(module?.hoverPoints || module?.a11y) || trace.visible !== true)
+          return;
         const domain = this.#domainOf(trace);
         if (!domain) return;
         const input = this.#figure.data[index];
@@ -2961,6 +3006,7 @@ export class Chart {
             yaxis: undefined,
             transform: IDENTITY_TRANSFORM,
             domain,
+            height: rect.height,
           },
           skip: traceAttr(trace, input, 'hoverinfo') === 'skip',
         });

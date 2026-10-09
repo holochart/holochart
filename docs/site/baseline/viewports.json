@@ -1,0 +1,146 @@
+[
+  {
+    "slug": "home",
+    "route": "",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "title": "Holochart",
+    "scrollWidth": 1440,
+    "viewportWidth": 1440,
+    "chartPreviews": 1
+  },
+  {
+    "slug": "gallery",
+    "route": "gallery/",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "title": "Gallery | Holochart",
+    "scrollWidth": 1440,
+    "viewportWidth": 1440,
+    "chartPreviews": 0
+  },
+  {
+    "slug": "chart",
+    "route": "charts/basic/scatter",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "title": "Scatter | Holochart",
+    "scrollWidth": 1440,
+    "viewportWidth": 1440,
+    "chartPreviews": 0
+  },
+  {
+    "slug": "notebooks",
+    "route": "guides/notebooks",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "title": "Python notebooks | Holochart",
+    "scrollWidth": 1440,
+    "viewportWidth": 1440,
+    "chartPreviews": 0
+  },
+  {
+    "slug": "home",
+    "route": "",
+    "viewport": {
+      "width": 820,
+      "height": 1180
+    },
+    "title": "Holochart",
+    "scrollWidth": 921,
+    "viewportWidth": 820,
+    "chartPreviews": 1
+  },
+  {
+    "slug": "gallery",
+    "route": "gallery/",
+    "viewport": {
+      "width": 820,
+      "height": 1180
+    },
+    "title": "Gallery | Holochart",
+    "scrollWidth": 921,
+    "viewportWidth": 820,
+    "chartPreviews": 0
+  },
+  {
+    "slug": "chart",
+    "route": "charts/basic/scatter",
+    "viewport": {
+      "width": 820,
+      "height": 1180
+    },
+    "title": "Scatter | Holochart",
+    "scrollWidth": 921,
+    "viewportWidth": 820,
+    "chartPreviews": 0
+  },
+  {
+    "slug": "notebooks",
+    "route": "guides/notebooks",
+    "viewport": {
+      "width": 820,
+      "height": 1180
+    },
+    "title": "Python notebooks | Holochart",
+    "scrollWidth": 921,
+    "viewportWidth": 820,
+    "chartPreviews": 0
+  },
+  {
+    "slug": "home",
+    "route": "",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "title": "Holochart",
+    "scrollWidth": 390,
+    "viewportWidth": 390,
+    "chartPreviews": 1
+  },
+  {
+    "slug": "gallery",
+    "route": "gallery/",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "title": "Gallery | Holochart",
+    "scrollWidth": 390,
+    "viewportWidth": 390,
+    "chartPreviews": 0
+  },
+  {
+    "slug": "chart",
+    "route": "charts/basic/scatter",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "title": "Scatter | Holochart",
+    "scrollWidth": 390,
+    "viewportWidth": 390,
+    "chartPreviews": 0
+  },
+  {
+    "slug": "notebooks",
+    "route": "guides/notebooks",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "title": "Python notebooks | Holochart",
+    "scrollWidth": 390,
+    "viewportWidth": 390,
+    "chartPreviews": 0
+  }
+]

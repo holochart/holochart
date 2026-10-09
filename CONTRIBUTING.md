@@ -52,6 +52,8 @@ Run everything from the repository root.
 | `pnpm test:visual:report`  | Summarize the last visual run: pixelmatch vs exact diffs       |
 | `pnpm test:bundle`         | Build `@mk7s/holochart` and smoke-test its IIFE in Chromium    |
 | `pnpm size`                | Build packages and check bundle-size budgets (size-limit)      |
+| `pnpm api:report`          | Build packages and regenerate the API reports (`api-reports/`) |
+| `pnpm api:check`           | Build packages and fail if an API report is out of date        |
 | `pnpm changeset`           | Add a changeset for a user-facing change                       |
 | `pnpm lint`                | Run ESLint                                                     |
 | `pnpm format`              | Format the repo with Prettier                                  |
@@ -87,6 +89,7 @@ tools/           Internal tooling (schema-gen, ...)
 deploy/          Docs proxy for mk7s.dev (Cloudflare)
 docs/adr/        Architecture Decision Records
 docs/release/    Versioning policy, bundle size, release process, docs hosting
+api-reports/     Exports and stability tags of every package, generated (pnpm api:report)
 plan.md          The project plan
 ```
 
@@ -172,9 +175,10 @@ plain regression test next to the property (see "regressions found by the E20.2 
 deterministic output) and compares it with `tests/visual/__baselines__/<id>.png`. Two limits
 apply: the fraction of differing pixels over the whole image (`meta.testTolerance`, default
 0.1%), and the differing pixels in every 32 px window (`meta.testTileTolerance`, default 16 of
-1,024), so a moved title or label fails although it changes few pixels overall. DOM-drawn parts
-(hover labels, menus, sliders) are exempt from the window limit: their text is rasterized by the
-OS, whose fonts differ between macOS and CI. On failure, look at:
+1,024), so a moved title or label fails although it changes few pixels overall. Both are
+fractions: write `testTileTolerance: 96 / 1024` to allow 96 px in a window, not `96`. DOM-drawn
+parts (hover labels, menus, sliders) are exempt from the window limit: their text is rasterized
+by the OS, whose fonts differ between macOS and CI. On failure, look at:
 
 - `tests/visual/__actual__/`: what was rendered
 - `tests/visual/__diff__/`: pixel diffs
@@ -183,13 +187,38 @@ OS, whose fonts differ between macOS and CI. On failure, look at:
 Tests gate on the pixelmatch count only. Each compared example also records the **exact diff**:
 pixels whose RGBA differs at all and the largest channel delta (plan E20.9). You'll find it in
 the `diff` annotation in the HTML report, in `pnpm test:visual:report`, and in the CI job
-summary. A non-zero exact diff inside tolerance means the baseline is no longer bit-exact. Small
-exact diffs are expected after changes to quad geometry: they shift SwiftShader's fixed-point
-interpolation (PR #5 finding).
+summary. A non-zero exact diff inside tolerance means the baseline is no longer bit-exact.
+
+**Exact diffs after geometry changes.** SwiftShader rasterizes in fixed point. Moving the corners
+of a quad (a tighter margin around a marker, another join offset on a line) shifts the
+coordinates the fragment shader interpolates by less than one fixed-point step, even where the
+shape on screen is the same, and anti-aliased edges and translucent overlaps then round to a
+neighboring 8-bit level. So a change to quad geometry gives an exact diff while the pixelmatch
+count stays at 0 or far inside the tolerance:
+
+- markers: 1 to 3 levels on edge pixels, up to about 30 where many translucent markers overlap
+  (`docs/spikes/a-markers.md`, "Pixels");
+- lines: many edge pixels, some by a lot (the `gl_FragCoord` and join-offset changes of PR #4
+  moved 13,000 to 18,000 pixels by up to 242 levels in `_dev/lines-*` and `_dev/viewports-grid`).
+
+Treat it as noise when it stays on the edges of the primitive you changed and does not grow with
+the size of your change (in the marker spike a 0.75 px margin changed 1,805 pixels, 0.95 px
+changed 34,067, and 1.0 px none). A diff inside a fill, one that grows with the change, or one
+that raises the pixelmatch count is a rendering change: look at the diff image. Either way,
+refresh the baselines of the examples concerned in the same PR, so the next change is compared
+with a bit-exact baseline.
 
 When a rendering change is intentional, update baselines with `pnpm test:visual:update` (or
 `pnpm test:visual -u -g <id>` for one example) and commit the new PNGs. Baseline changes are
-reviewed in the PR like code.
+reviewed in the PR like code. An update rewrites a baseline only when its pixelmatch count is
+above 0, so that unrelated PNGs stay as they are. To make a baseline bit-exact again after an
+exact-only diff, delete the PNG first; the update then writes it anew.
+
+If an example differs between macOS and CI where room is kept for text (the end of a bar with an
+outside label, for instance), check which font the layout measured with. Until the built-in font
+has loaded, the canvas measures with the OS fallback of the font's family list, and what a trace
+measured at its first calc is not measured again when the font arrives. That is how
+`demos/openrouter/categories` differs (see its `meta`).
 
 CI runs visual tests in the pinned container `mcr.microsoft.com/playwright:v1.63.0-noble`. If your
 local baselines differ from CI (different OS or CPU architecture), take the CI rendering instead:
@@ -202,6 +231,10 @@ binaries):
 docker run --rm -v "$PWD":/work -w /work mcr.microsoft.com/playwright:v1.63.0-noble \
   bash -lc "corepack enable && pnpm install --frozen-lockfile && pnpm test:visual:update"
 ```
+
+For some examples only, append a pattern that matches their ids, for instance
+`pnpm test:visual:update -g '_dev/(lines-|viewports-grid)'`, after deleting their PNGs if the
+diff is exact-only.
 
 ## Code conventions
 
@@ -217,7 +250,32 @@ docker run --rm -v "$PWD":/work -w /work mcr.microsoft.com/playwright:v1.63.0-no
   `/* glsl */`, so no loader is needed anywhere. See
   [ADR-014](docs/adr/014-glsl-as-typescript-template-modules.md).
 - Attributes are declared once in the schema; types, validation, defaults, and docs derive from it.
+- Attribute names: an attribute that exists in Plotly.js keeps Plotly's name verbatim
+  (`showticklabels`, `paper_bgcolor`), with no camelCase alias. Attributes and options that exist
+  only in Holochart are camelCase (`styleRules`, `sharedRenderer`, Express options). The
+  exception is the 3D material, lighting and scene attributes (`castshadow`, `sheencolor`,
+  `autorotate`), which are lower case like the Plotly attributes they sit beside.
   Do not hand-write parallel types for schema attributes.
+
+### Public API and stability tags
+
+Everything a package exports from `src/index.ts` is public API, and stable unless its TSDoc says
+otherwise ([docs/release/versioning.md](docs/release/versioning.md#stability-tags)):
+
+- `@experimental`: plugin-facing or provisional exports that may still change in a minor release.
+- `@internal`: not API. On an export, it marks plumbing that is only there for another Holochart
+  package: it stays exported from its package, is not exported by `@mk7s/holochart` and is hidden
+  from the API reference. On a member of a class or an interface, it is left out of the published
+  declarations.
+
+`@mk7s/holochart` lists its exports by name (`packages/holochart/src/exports.ts`,
+`exports-3d.ts`). A new stable or experimental export of core, the runtime, components or a trace
+package has to be added there; `pnpm api:check` fails until it is.
+
+The exports of every package and their tags are recorded in `api-reports/`. If your change adds,
+removes or changes an export, run `pnpm api:report` and commit the updated reports with it; CI
+fails when they are out of date. Read the diff first: it is the list of what you are about to
+make public. See [api-reports/README.md](api-reports/README.md).
 
 ### GPU-native primitives
 
@@ -326,6 +384,8 @@ Authors should self-review against this list; reviewers check it too.
       listeners.
 - [ ] The schema is the source of truth for any new or changed attribute.
 - [ ] Docs updated; architectural changes come with a new or updated ADR in `docs/adr/`.
-- [ ] Bundle size considered (new dependencies justified, tree-shakeable, `three` stays a peer).
+- [ ] Bundle size considered (new dependencies justified, tree-shakeable, `three` stays a peer). A
+      changed budget has a ledger line naming its cause, and the full ESM bundle stays under its
+      ceiling ([budget policy](docs/release/bundle-size.md#budget-policy)).
 - [ ] Accessibility considered (DOM mirror, keyboard, contrast) where the change is user-facing.
 - [ ] Changeset added for user-facing changes to published packages.

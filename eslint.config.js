@@ -123,11 +123,13 @@ export const holochartPlugin = {
 
 export default defineConfig(
   globalIgnores([
+    '.claude/worktrees/**',
     '**/dist/**',
     '**/coverage/**',
     '**/.turbo/**',
     '**/generated/**',
     '**/*.generated.*',
+    'packages/holochart-py/src/holochart/static/**',
     'playwright-report/**',
     'test-results/**',
     'tests/visual/__baselines__/**',
@@ -135,6 +137,8 @@ export default defineConfig(
     'tests/visual/__diff__/**',
     'apps/docs/.vitepress/dist/**',
     'apps/docs/.vitepress/cache/**',
+    'apps/docs/public/gallery/sources/**',
+    'apps/docs/public/gallery/artifacts/**',
     'apps/bench/results/**',
   ]),
   js.configs.recommended,

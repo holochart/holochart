@@ -36,7 +36,7 @@ function hoverformat(letter: string, what: string) {
   });
 }
 
-/** The cone schema. */
+/** The cone schema. @experimental */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const coneAttributes = /* @__PURE__ */ (() =>
   attr.object(

@@ -10,7 +10,7 @@ import { buildFigure } from '../core/engine.ts';
 import { expressFunction } from '../core/render.ts';
 import { isMissing, type DataInput } from '../data/table.ts';
 import type {
-  AnimationOptions,
+  AnimationFrameOptions,
   AxisOptions,
   ColumnRef,
   CommonOptions,
@@ -42,7 +42,7 @@ export interface EcdfOptions
     DiscreteColorOptions,
     HoverOptions,
     FacetOptions,
-    AnimationOptions,
+    AnimationFrameOptions,
     AxisOptions,
     SymbolOptions,
     LineDashOptions {

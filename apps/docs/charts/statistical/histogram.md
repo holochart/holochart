@@ -3,9 +3,12 @@ title: Histogram
 description: Bin one variable's samples into bars that count them (or sum, average, min or max another value) to show its distribution.
 status: complete
 chart: histogram
+launch-featured: true
 ---
 
 # Histogram
+
+<ChartOverview />
 
 ## Overview
 
@@ -32,6 +35,9 @@ Pick a different chart when:
 
 ## Minimal example
 
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
+
 ```ts
 import { createChart } from '@mk7s/holochart';
 
@@ -42,9 +48,14 @@ const chart = createChart(document.getElementById('chart')!, {
 
 Without bin settings, the bin size is a round number (1, 2 or 5 × 10ⁿ) picked from the spread
 and the number of samples, and the bars touch (`bargap` defaults to 0 for histograms). The live
-example bins 800 response times into 5 ms bins; hover a bar to see its bin range and count:
+example uses seven observations and five explicit bins, matching its downloadable Python notebook.
+Hover a bar to see its bin range and count:
 
-<Example id="histogram/basic" />
+<Example id="histogram/notebook-starter" />
+
+The original browser starter uses automatic bin selection:
+
+<ExampleLink id="histogram/basic" />
 
 ## Data format
 
@@ -132,13 +143,15 @@ different widths (month bins) or when you compare histograms with different bin 
 
 ## Variations
 
+<ChartVariations />
+
 ### Probability density
 
 `histnorm: 'probability density'` makes the bar areas sum to 1, so the histogram can sit on the
 same axes as a density curve, here the normal distribution the samples came from. `nbinsx: 40`
 asks for at most 40 bins.
 
-<Example id="histogram/normalized" />
+<ExampleLink id="histogram/normalized" />
 
 ### Cumulative distribution
 
@@ -146,7 +159,7 @@ asks for at most 40 bins.
 second trace accumulates `'decreasing'` (sessions at least this long), and both count half of
 the current bin (`currentbin: 'half'`). Explicit `xbins` give one-minute bins.
 
-<Example id="histogram/cumulative" />
+<ExampleLink id="histogram/cumulative" />
 
 ### Overlaid distributions
 
@@ -154,7 +167,7 @@ the current bin (`currentbin: 'half'`). Explicit `xbins` give one-minute bins.
 Overlaid histograms bin independently, so the two traces share a `bingroup` to get the same bins
 and bars that line up.
 
-<Example id="histogram/overlay" />
+<ExampleLink id="histogram/overlay" />
 
 ### Stacked with bars
 
@@ -162,7 +175,7 @@ Histograms and bars share one stack group per subplot, as in Plotly. Two histogr
 order times into hourly bins, and a `bar` trace of pre-counted phone orders at the same hours
 stacks on top of them. Under `barmode: 'stack'` the two histograms share their bins.
 
-<Example id="histogram/stacked-bars" />
+<ExampleLink id="histogram/stacked-bars" />
 
 ### Dates by month
 
@@ -170,7 +183,7 @@ On a date axis, `xbins.size: 'M1'` bins by calendar month (`'M3'` by quarter, `'
 so every bin is one month even though months differ in length. All bars take the width of the
 narrowest bin (February), as in Plotly.
 
-<Example id="histogram/date-months" />
+<ExampleLink id="histogram/date-months" />
 
 ### Horizontal
 
@@ -178,7 +191,7 @@ With only `y`, the orientation is `'h'` and the bars grow to the right. `ybins.s
 5-year bins; their start stays automatic, so integer ages get bins from 19.5, 24.5, … and hover
 reads `20 - 24`, `25 - 29`.
 
-<Example id="histogram/horizontal" />
+<ExampleLink id="histogram/horizontal" />
 
 ### Sum and average per bin
 
@@ -186,7 +199,7 @@ With both `x` and `y`, `histfunc` aggregates `y` over each `x` bin: the top pane
 per hour, the bottom one averages the basket, labelled with `texttemplate` (`%{y}` is the bar
 value).
 
-<Example id="histogram/histfunc" />
+<ExampleLink id="histogram/histfunc" />
 
 ## Styling
 
@@ -270,7 +283,10 @@ Holochart extension (M6) that histograms will share with bars.
   [accessibility guide](/guides/accessibility)) says how many samples were binned into how many
   bins, the range the bins cover, and the largest bin with its value and range. Its data table
   lists each bin's range and value (the first 100 rows).
-- **Keyboard:** there is no keyboard navigation between bars yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then step through the bins, each showing its
+  range and value, and ↑ / ↓ move to the trace above or below at that bin. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Color:** a histogram reads by bar length, not color. When overlaying distributions, pick
   colors that differ in lightness and keep `opacity` around 0.6 so both stay visible where they
   overlap; for more than two distributions, small multiples (one subplot each, with a shared

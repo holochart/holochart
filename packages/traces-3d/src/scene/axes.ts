@@ -13,13 +13,13 @@ import {
   type Scale,
   type Tick,
 } from '@mk7s/holochart-core';
-import type { DataTransform } from '@mk7s/holochart-render';
-import type { Vec3 } from './camera.ts';
+import type { DataTransform, Vec3 } from '@mk7s/holochart-render';
 
 /**
  * What a 3D trace contributes to its scene's autorange: the `[min, max]` of its finite linear
  * coordinates on each axis (`undefined` when it has none on that axis). Plotly pads the union by
  * 1/32 of its span on each side.
+ * @experimental
  */
 export interface SceneExtremes {
   readonly x?: readonly [number, number] | undefined;
@@ -27,7 +27,7 @@ export interface SceneExtremes {
   readonly z?: readonly [number, number] | undefined;
 }
 
-/** `[min, max]` of the finite values of `values`, or `undefined` for none. */
+/** `[min, max]` of the finite values of `values`, or `undefined` for none. @experimental */
 export function sceneExtent(values: ArrayLike<number>): [number, number] | undefined {
   let lo = Infinity;
   let hi = -Infinity;
@@ -185,6 +185,7 @@ const SCALES = new WeakMap<object, Map<string, { x: Scale; y: Scale; z: Scale }>
 /**
  * The data ↔ linear scales of scene `id`'s axes for calc (`d2l`, `d2lArray`), from the scene
  * defaults (type, categories); cached per full layout. Their ranges are not the axis ranges.
+ * @experimental
  */
 export function sceneScales(
   fullLayout: Readonly<Record<string, unknown>>,

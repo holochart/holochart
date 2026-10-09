@@ -20,7 +20,7 @@ import {
   uniformTextSize,
   type FullTrace,
   type Locale,
-  type RGBA,
+  type RGBAColor,
   type UniformText,
   type UniformTextItem,
 } from '@mk7s/holochart-core';
@@ -108,6 +108,7 @@ const dirSign = (from: number, to: number): number => (to >= from ? 1 : -1);
  * Decide where one bar's label goes (Plotly's `appendBarText`). `auto` puts the label inside when
  * it fits (as is, rotated, or shrunk to the bar's width) and outside otherwise; only outermost
  * bars may have outside labels. Returns `null` for `none` or an empty label.
+ * @internal
  */
 export function placeBarText(box: BarBox, o: TextPlacementOptions): PlacedText | null {
   let position = o.position;
@@ -221,7 +222,7 @@ export function textPositionAt(trace: FullTrace, i: number): TextPosition {
 }
 
 /** The font of bar `i` (per-bar `size`/`color` resolved). */
-export function fontAt(font: unknown, i: number): { font: TextFont; color: RGBA | null } {
+export function fontAt(font: unknown, i: number): { font: TextFont; color: RGBAColor | null } {
   const f = (font ?? {}) as FullFont;
   const color = valueAt(f.color, i);
   const weight = f.weight;
@@ -238,7 +239,10 @@ export function fontAt(font: unknown, i: number): { font: TextFont; color: RGBA 
   };
 }
 
-/** Axis formatters for label and hover values (hover precision), or `undefined` without axes. */
+/**
+ * Axis formatters for label and hover values (hover precision), or `undefined` without axes.
+ * @internal
+ */
 export interface ValueFormatters {
   readonly position?: (l: number) => string;
   readonly size?: (l: number) => string;
@@ -246,7 +250,7 @@ export interface ValueFormatters {
   readonly locale?: Locale;
 }
 
-/** Hover-precision formatters of the bar's position and size axes. */
+/** Hover-precision formatters of the bar's position and size axes. @internal */
 export function valueFormatters(
   calc: BarCalc,
   xaxis: AxisInfo | undefined,
@@ -380,7 +384,7 @@ export interface BarTextContext {
   readonly yRange: readonly [number, number] | undefined;
   /** Bar fills before opacity (4 per bar), for contrasting inside text. */
   readonly fill: Float32Array;
-  readonly background: RGBA;
+  readonly background: RGBAColor;
   readonly formatters: ValueFormatters;
   /** Linear coordinate the size axis starts from for bars below a log axis. */
   readonly floor: number;
@@ -400,7 +404,7 @@ function clip(v: number, range: readonly [number, number] | undefined): number {
   return v < lo ? lo : v > hi ? hi : v;
 }
 
-function selectionTextColor(trace: FullTrace, selected: boolean): RGBA | null {
+function selectionTextColor(trace: FullTrace, selected: boolean): RGBAColor | null {
   const style = trace[selected ? 'selected' : 'unselected'] as
     { textfont?: { color?: unknown } } | undefined;
   const c = style?.textfont?.color;
@@ -413,7 +417,7 @@ interface PlannedLabel {
   readonly options: TextPlacementOptions;
   readonly placed: PlacedText;
   readonly content: RichLabel;
-  readonly color: RGBA;
+  readonly color: RGBAColor;
   /** Explicit run colors are multiplied by this (selection dimming). */
   readonly fade: number;
 }

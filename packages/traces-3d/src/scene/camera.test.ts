@@ -17,8 +17,8 @@ import {
   turntable,
   unitsPerPx,
   type SceneCamera,
-  type Vec3,
 } from './camera.ts';
+import type { Vec3 } from '@mk7s/holochart-render';
 
 const coord = fc.double({ min: -4, max: 4, noNaN: true });
 const vec = fc.tuple(coord, coord, coord);

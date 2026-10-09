@@ -63,8 +63,8 @@ created.
 - Shared charts must agree on `config.antialias` and `config.powerPreference` to use the same
   context. Each distinct combination gets a shared renderer of its own.
 - `chart.three.renderer` is the shared `WebGLRenderer`. Its `domElement` is not the chart's
-  canvas; use `chart.three.root.canvas`. Renderer-wide settings you change through it apply to
-  every chart on that renderer.
+  canvas; use `chart.element.querySelector('canvas')` (a chart owns exactly one). Renderer-wide
+  settings you change through it apply to every chart on that renderer.
 - If the shared context is lost (a GPU reset), every chart on it emits `webglcontextlost`, and
   each redraws when it is restored.
 

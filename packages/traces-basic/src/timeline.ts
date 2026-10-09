@@ -11,7 +11,7 @@ export type TimelineData =
   readonly Readonly<Record<string, unknown>>[] | Readonly<Record<string, ArrayLike<unknown>>>;
 
 /** Options of {@link timeline}: the camelCase counterparts of `px.timeline`'s parameters. */
-export interface TimelineOptions {
+export interface TimelineFigureOptions {
   /** The table: an array of row objects, or an object of equally long columns. */
   readonly data: TimelineData;
   /** Column of start dates (date strings, `Date`s or ms since the epoch). */
@@ -142,7 +142,7 @@ function groupColors(
  * createChart(el, figure);
  * ```
  */
-export function timeline(options: TimelineOptions): TimelineFigure {
+export function timeline(options: TimelineFigureOptions): TimelineFigure {
   const { xStart, xEnd, y, color, text, hoverName } = options;
   const labels = options.labels ?? {};
   const label = (column: string): string => labels[column] ?? column;

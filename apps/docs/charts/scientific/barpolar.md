@@ -7,6 +7,8 @@ chart: barpolar
 
 # Polar bars & wind rose
 
+<ChartOverview />
+
 ## Overview
 
 A polar bar chart draws one bar per angle: an annular sector that starts at the center (or at a
@@ -27,6 +29,9 @@ Pick a different chart when:
 - you want the share of each part of a whole: use a [pie](/charts/basic/pie).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -81,13 +86,15 @@ createChart(document.getElementById('chart')!, {
 
 ## Variations
 
+<ChartVariations />
+
 ### Wind rose
 
 One trace per wind speed bin, stacked outwards over 16 compass directions, with one color per bin
 (`marker.color`), a percent radial axis (`ticksuffix`) and a slightly narrower `bargap`. The
 `hovertemplate` reads `%{theta}` and `%{r}`:
 
-<Example id="polar/wind-rose" />
+<ExampleLink id="polar/wind-rose" />
 
 ### Overlaid bars
 
@@ -96,7 +103,7 @@ translucent markers (`marker.opacity`) keep both visible. The angular axis here 
 (degrees, 30° apart), so bars are as wide as the smallest angle between them, less
 `polar.bargap` (0.25):
 
-<Example id="polar/barpolar-overlay" />
+<ExampleLink id="polar/barpolar-overlay" />
 
 ### Floating bars: base, width and offset
 
@@ -105,7 +112,7 @@ range per month, from the low to the high. `width` sets the angular width (in ca
 this category axis) and `offset` shifts each bar's leading edge off its angle, so two series sit
 side by side. Traces with a `base` are not stacked, even in `stack` mode:
 
-<Example id="polar/barpolar-base" />
+<ExampleLink id="polar/barpolar-base" />
 
 ### Bars on a polygon grid
 
@@ -113,7 +120,7 @@ With `polar.gridshape: 'linear'` (category angular axes), the grid is a polygon 
 category angles, and stacked bars follow the polygon's straight edges instead of arcs. `hole`
 leaves the middle free:
 
-<Example id="polar/barpolar-polygon" />
+<ExampleLink id="polar/barpolar-polygon" />
 
 ## Styling
 
@@ -172,7 +179,10 @@ leaves the middle free:
   [accessibility guide](/guides/accessibility)) reads each trace as a "polar bar" with its bar
   count and the lowest and highest bar (`r` with its angle, formatted like the hover labels), and
   its data table lists the bars' `r` and `θ` (and `text` when given per bar).
-- **Keyboard:** there is no keyboard navigation between bars yet.
+- **Keyboard:** Tab moves into the plot area; the arrow keys then step through the bars, each
+  showing its hover label. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Reading the chart:** a bar's area grows with the square of its length, so outer segments of
   a wind rose look bigger than they are. Say what the radial axis measures (a `ticksuffix` or
   axis title), and keep the number of stacked bins small.

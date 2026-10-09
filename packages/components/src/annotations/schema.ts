@@ -19,14 +19,14 @@ const ANN_EDIT = ['plot'] as const;
 /** One annotation (declared in core, where the 3D add-on can reuse it). */
 export { annotationItemAttributes };
 
-/** `layout.annotations`. */
+/** `layout.annotations`. @internal */
 export const annotationsAttributes = attr.items(annotationItemAttributes, {
   itemName: 'annotation',
   editType: ANN_EDIT,
   description: 'Text annotations with optional arrows (plan E5.4).',
 });
 
-/** A defaulted annotation. */
+/** A defaulted annotation. @internal */
 export interface FullAnnotation {
   _index: number;
   visible: boolean;
@@ -77,6 +77,7 @@ export interface FullAnnotation {
  * twice the visible border width (or 2), pixel tails default to (−10, −30) and `captureevents`
  * follows `hovertext`. Subplot titles from `makeSubplots` (named `SUBPLOT_TITLE_NAME`) without a
  * font size get 4/3 of the layout font size (plotly.py's 16 px over 12 px). Idempotent.
+ * @internal
  */
 export function supplyAnnotationDefaults(
   layoutOut: FullLayout,

@@ -30,8 +30,11 @@ createChart(el, {
 <Example id="locales/german-time-series" />
 
 In the example, the date axis reads `Mär 2024` and `Nov 2024`, the y axis `1,09`, the hover label
-`Dienstag, 5. März 2024`, and the modebar's buttons are titled in German. Import only the locales you use: each is a few hundred bytes, all of them
-together about 31 kB (gzipped). The default, `en-US`, needs nothing registered.
+`Dienstag, 5. März 2024`, and the modebar's buttons are titled in German. Import only the locales
+you use: a locale is about 0.5 kB with formats only, 1 to 1.5 kB with Plotly's UI strings and 3 to
+4 kB with [Holochart's own strings](#holochart-s-own-strings), and all of them together are about
+40 kB (gzipped). The default, `en-US`, needs
+nothing registered.
 
 ## What a locale changes
 
@@ -45,6 +48,9 @@ together about 31 kB (gzipped). The default, `en-US`, needs nothing registered.
 - **UI strings**: modebar button titles, default trace names (`trace 0` becomes `Datenspur 0`),
   and the labels of OHLC and candlestick (`open:`, `close:`), box (`median:`, `q1:`, …) and violin
   (`kde:`) hover labels.
+- **Accessibility strings**, in [ten locales](#holochart-s-own-strings): the generated chart
+  summaries, the keyboard announcements, the legend toolbar's name and the plot area's keyboard
+  hint.
 
 Your own text (titles, trace names, `ticktext`, category names) is drawn as you wrote it.
 
@@ -123,15 +129,66 @@ register(pirate);
 The dictionary keys are Plotly's (`'Zoom'`, `'Download plot as a PNG'`, `'trace'`, `'open:'`, …),
 so translations written for Plotly apply here.
 
+## Holochart's own strings
+
+plotly.js has no screen-reader text, so its locales have none to translate. Holochart's is looked
+up the same way, the English text being the dictionary key:
+
+- the sentences of the [generated summaries](/guides/accessibility#summaries-in-other-languages)
+  (`'{name} rises from {start} ({startX}) to {end} ({endX}).'`, …);
+- the [keyboard announcements](/guides/accessibility#announcement-sentences)
+  (`'{name}: {text}, point {n} of {count}.'`, `'Zoomed in.'`, `'View rotated.'`, …);
+- two labels: `'Legend'`, the name of the legend's keyboard toolbar, and
+  `'Chart data: arrow keys move between points, + and - zoom'`, the plot area's keyboard hint.
+
+`@mk7s/holochart-locales` translates all of them in ten locales: **`de`, `es`, `fr`, `it`, `ja`,
+`ko`, `pt-BR`, `ru`, `tr` and `zh-CN`**, the most widely used of the locales that already had
+Plotly's UI strings. In the same ten it fills the gaps Plotly's files leave among the strings a
+chart looks up: the titles of the drawing buttons (`'Draw line'`, `'Erase active shape'`, …), and
+in `ko` and `pt-BR` the hover labels and (`ko`) the default trace name, which plotly.js has under
+keys without the colon the lookup uses. Every other locale falls back to English for these,
+string by string, after its language (see [How a locale is found](#how-a-locale-is-found)): with
+`zh-CN` registered too, `zh-TW` and `zh-HK` take its Simplified Chinese sentences, and `pt-PT`
+takes `pt-BR`'s.
+
+These translations are **machine translations that no native speaker has reviewed**. The other UI
+strings are plotly.js's, written by its contributors, and are kept as they are, including where
+they could be better. To correct or add a translation, register the locale with your entries (a
+translation keeps every `{placeholder}` of its key, in any order):
+
+```ts
+import { register } from '@mk7s/holochart';
+import { ja } from '@mk7s/holochart-locales';
+
+register({
+  ...ja,
+  dictionary: { ...ja.dictionary, 'View rotated.': 'ビューを回転しました。' },
+});
+```
+
+Not translated in any locale: the rest of the hidden description (chart type sentence, axis and
+trace lines, table captions) and a few control names; see
+[Languages](/guides/accessibility#languages) in the accessibility guide.
+
 ## Script tag
+
+<InstallStatus ecosystem="javascript" />
+
+First follow the [local browser bundle setup](/getting-started/installation#browser-bundles-from-source).
+After `pnpm build:packages`, also copy the locale scripts into that same preview directory.
+Run this in a terminal from the repository root:
+
+```sh
+cp -R packages/locales/dist/scripts preview/
+```
 
 The `<script>` build does not include locales. `@mk7s/holochart-locales` ships one script per
 locale in `dist/scripts/`, like plotly.js's `plotly-locale-de.js`: load it after
 `holochart.iife.min.js` and it registers itself.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart/dist/holochart.iife.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart-locales/dist/scripts/holochart-locale-de.js"></script>
+<script src="./holochart.iife.min.js"></script>
+<script src="./scripts/holochart-locale-de.js"></script>
 <script>
   Holochart.createChart(document.getElementById('chart'), {
     data: [{ y: [1.5, 2.25, 1.75] }],
@@ -176,6 +233,33 @@ the joining forms and ligatures Arabic needs but skips some contextual lookups a
 positioning, so fonts that rely on those for diacritics may place them less precisely than a
 browser.
 
+### What right-to-left support does not do
+
+Only the text inside a label is laid out right to left. The chart around it is not:
+
+- **Nothing is mirrored.** A legend keeps its symbols on the left of its text and its items in
+  left-to-right order (a horizontal legend fills from the left); dropdown menus, button menus,
+  sliders, the range selector and the modebar are laid out as in English, and so are the axes: the
+  y axis is on the left and x grows to the right unless you set `side`, `autorange: 'reversed'`
+  and the legend's `x` / `xanchor` yourself. The chart does not read the page's `dir`.
+- **Measuring without a browser has no bidi and no shaping.** Layout measures text before it is
+  drawn. In a browser it asks the canvas, which shapes Arabic and measures it correctly. Where
+  there is no canvas (Node, server-side layout, unit tests), a fallback table is used instead: it
+  counts every Arabic or Hebrew code point as one average-width glyph (0.556 em) and adds them up
+  in the order they are stored. Joined Arabic letters are narrower than that in a font, and vowel
+  marks (harakat, niqqud), which take no width in a font, are counted as letters, so vowelled
+  text measures too wide. Margins, legend widths and ellipsis cut-offs computed there are
+  estimates for these scripts. Wrapping still breaks between words, and an ellipsis cuts between
+  whole letters, never between a letter and its marks (where the runtime has `Intl.Segmenter`).
+- **The built-in UI is not translated into Arabic or Hebrew.** plotly.js's `ar` and `he` locales
+  carry month and day names and date formats but no UI strings, and Holochart's own strings are
+  not translated into them either: modebar titles, hover label words and keyboard announcements
+  stay English.
+- **Tested without glyphs.** The unit tests check that Arabic and Hebrew labels measure, wrap,
+  truncate and go through a whole figure without an error, and that the text engine receives them
+  untouched in logical order. No visual test covers the drawn glyphs: the example above needs
+  fonts fetched at run time.
+
 ## Chinese, Japanese and Korean
 
 CJK text works the same way: the default font has no CJK glyphs, so they come from the fallback
@@ -189,7 +273,9 @@ so pick one that also covers Latin letters and digits (CJK fonts do).
 `@mk7s/holochart-locales` exports each locale under its name in camel case (`pt-BR` → `ptBR`), and
 `allLocales` with all of them. Locales without a dictionary change only formats: their UI strings
 stay English, or come from the language when it is registered (_via_). The separators are the
-defaults of `layout.separators` (decimal, then thousands).
+defaults of `layout.separators` (decimal, then thousands). Ten locales also translate
+[Holochart's own strings](#holochart-s-own-strings): `de`, `es`, `fr`, `it`, `ja`, `ko`, `pt-BR`,
+`ru`, `tr` and `zh-CN`.
 
 | Locale  | Language               | Export | UI strings | Separators |
 | ------- | ---------------------- | ------ | ---------- | ---------- |
@@ -281,4 +367,6 @@ The data is plotly.js's `lib/locales` (MIT License), with one fix: the Arabic na
 - Table cells and parallel coordinates ticks are written in US English, as in Plotly.
 - Holochart has no text editing, notifier or Chart Studio link, so those dictionary entries
   (`'Click to enter Plot title'`, `'Snapshot succeeded'`, …) are unused.
-- Accessibility descriptions (the screen-reader summary and data table) are English.
+- Plotly has no accessibility text. Holochart's generated summaries and keyboard announcements are
+  translated in [ten locales](#holochart-s-own-strings); the rest of the screen-reader
+  description (chart type, axis and trace lines, table captions) is English.

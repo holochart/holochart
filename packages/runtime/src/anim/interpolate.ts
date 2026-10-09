@@ -17,7 +17,7 @@ import {
   toRGBA,
   type FullTrace,
   type ObjectNode,
-  type RGBA,
+  type RGBAColor,
 } from '@mk7s/holochart-core';
 import { mixColors } from '@mk7s/holochart-render';
 
@@ -50,7 +50,7 @@ export function isArrayLike(v: unknown): v is ArrayLike<unknown> {
   return Array.isArray(v) || (ArrayBuffer.isView(v) && !(v instanceof DataView));
 }
 
-function colorOf(v: unknown): RGBA | null {
+function colorOf(v: unknown): RGBAColor | null {
   return typeof v === 'string' ? toRGBA(v) : null;
 }
 
@@ -61,7 +61,7 @@ function formatColor(c: readonly number[]): string {
 }
 
 /** Mix two colors in OKLab at `e` (clamped: colors don't overshoot). */
-function mix(a: RGBA, b: RGBA, e: number, out: [number, number, number, number]): string {
+function mix(a: RGBAColor, b: RGBAColor, e: number, out: [number, number, number, number]): string {
   return formatColor(mixColors(a, b, Math.min(1, Math.max(0, e)), 'oklab', out));
 }
 
@@ -205,13 +205,13 @@ export function pointTween(
     };
   }
   if (moving && colors) {
-    const s = start.map((v) => colorOf(v) as RGBA);
-    const t = end.map((v) => colorOf(v) as RGBA);
+    const s = start.map((v) => colorOf(v) as RGBAColor);
+    const t = end.map((v) => colorOf(v) as RGBAColor);
     const tmp: [number, number, number, number] = [0, 0, 0, 0];
     return {
       tween: (e) => {
         const out: string[] = new Array(n);
-        for (let k = 0; k < n; k++) out[k] = mix(s[k] as RGBA, t[k] as RGBA, e, tmp);
+        for (let k = 0; k < n; k++) out[k] = mix(s[k] as RGBAColor, t[k] as RGBAColor, e, tmp);
         return out;
       },
       constant: false,

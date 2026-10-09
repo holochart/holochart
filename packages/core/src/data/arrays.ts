@@ -12,6 +12,7 @@ import { isDateString, isValidDate, parseDate, type CalendarSystem } from './dat
 /**
  * True for the typed arrays a data array may be ({@link TypedArray}). `DataView` and the BigInt
  * arrays are excluded: charts deal in doubles.
+ * @internal
  */
 export function isTypedArray(v: unknown): v is TypedArray {
   return (
@@ -31,6 +32,7 @@ export function isTypedArray(v: unknown): v is TypedArray {
  * - `date` — `Date` instances and/or ISO date strings.
  * - `string` — strings, not all of them dates (numeric strings included).
  * - `mixed` — anything else, e.g. numbers mixed with strings, booleans or objects.
+ * @internal
  */
 export type DataArrayKind = 'empty' | 'typed' | 'number' | 'date' | 'string' | 'mixed';
 
@@ -48,6 +50,7 @@ const SAMPLE = 1000;
  * dataArrayKind(['2024-01-01', new Date()]);   // 'date'
  * dataArrayKind([1, 'a']);                     // 'mixed'
  * ```
+ * @internal
  */
 export function dataArrayKind(arr: ArrayLike<unknown>): DataArrayKind {
   if (isTypedArray(arr)) return 'typed';
@@ -74,7 +77,7 @@ export function dataArrayKind(arr: ArrayLike<unknown>): DataArrayKind {
   return strs === 0 ? 'date' : 'string';
 }
 
-/** Options for {@link toFloat64Array} and {@link toFloat32Array}. */
+/** Options for {@link toFloat64Array} and {@link toFloat32Array}. @internal */
 export interface ToNumericOptions {
   /**
    * Convert `Date`s and ISO date strings to milliseconds since the epoch (for date axes).
@@ -125,6 +128,7 @@ function fillNumeric(
  * toFloat64Array(f) === f;                                   // true
  * toFloat64Array(['1', '2024-01-01', null], { dates: true }); // [1, 1704067200000, NaN]
  * ```
+ * @internal
  */
 export function toFloat64Array(arr: ArrayLike<unknown>, opts: ToNumericOptions = {}): Float64Array {
   if (arr instanceof Float64Array) return arr;
@@ -136,7 +140,7 @@ export function toFloat64Array(arr: ArrayLike<unknown>, opts: ToNumericOptions =
   return out;
 }
 
-/** Options for {@link toFloat32Array}. */
+/** Options for {@link toFloat32Array}. @internal */
 export interface ToFloat32Options extends ToNumericOptions {
   /**
    * Subtracted from every value in double precision before narrowing to float32
@@ -152,6 +156,7 @@ export interface ToFloat32Options extends ToNumericOptions {
  *
  * A `Float32Array` input is returned as-is (zero-copy, treat it as read-only) unless a non-zero
  * `origin` must be subtracted. Other inputs are always copied.
+ * @internal
  */
 export function toFloat32Array(arr: ArrayLike<unknown>, opts: ToFloat32Options = {}): Float32Array {
   const origin = opts.origin ?? 0;

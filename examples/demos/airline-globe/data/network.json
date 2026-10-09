@@ -1,0 +1,1097 @@
+{
+  "hubs": [
+    {
+      "code": "JFK",
+      "city": "New York",
+      "country": "United States",
+      "lat": 40.6398,
+      "lon": -73.7789,
+      "airline": "American Airlines",
+      "region": "North America"
+    },
+    {
+      "code": "ATL",
+      "city": "Atlanta",
+      "country": "United States",
+      "lat": 33.6367,
+      "lon": -84.4281,
+      "airline": "Delta Air Lines",
+      "region": "North America"
+    },
+    {
+      "code": "YYZ",
+      "city": "Toronto",
+      "country": "Canada",
+      "lat": 43.6772,
+      "lon": -79.6306,
+      "airline": "Air Canada",
+      "region": "North America"
+    },
+    {
+      "code": "PTY",
+      "city": "Panama City",
+      "country": "Panama",
+      "lat": 9.0714,
+      "lon": -79.3835,
+      "airline": "Copa Airlines",
+      "region": "North America"
+    },
+    {
+      "code": "GRU",
+      "city": "Sao Paulo",
+      "country": "Brazil",
+      "lat": -23.4356,
+      "lon": -46.4731,
+      "airline": "TAM Airlines",
+      "region": "South America"
+    },
+    {
+      "code": "EZE",
+      "city": "Buenos Aires",
+      "country": "Argentina",
+      "lat": -34.8222,
+      "lon": -58.5358,
+      "airline": "Aerolíneas Argentinas",
+      "region": "South America"
+    },
+    {
+      "code": "LHR",
+      "city": "London",
+      "country": "United Kingdom",
+      "lat": 51.4706,
+      "lon": -0.4619,
+      "airline": "British Airways",
+      "region": "Europe"
+    },
+    {
+      "code": "CDG",
+      "city": "Paris",
+      "country": "France",
+      "lat": 49.0128,
+      "lon": 2.55,
+      "airline": "Air France",
+      "region": "Europe"
+    },
+    {
+      "code": "FRA",
+      "city": "Frankfurt",
+      "country": "Germany",
+      "lat": 50.0333,
+      "lon": 8.5706,
+      "airline": "Lufthansa",
+      "region": "Europe"
+    },
+    {
+      "code": "AMS",
+      "city": "Amsterdam",
+      "country": "Netherlands",
+      "lat": 52.3086,
+      "lon": 4.7639,
+      "airline": "KLM",
+      "region": "Europe"
+    },
+    {
+      "code": "IST",
+      "city": "Istanbul",
+      "country": "Turkey",
+      "lat": 41.2753,
+      "lon": 28.7519,
+      "airline": "Turkish Airlines",
+      "region": "Europe"
+    },
+    {
+      "code": "DXB",
+      "city": "Dubai",
+      "country": "United Arab Emirates",
+      "lat": 25.2528,
+      "lon": 55.3644,
+      "airline": "Emirates",
+      "region": "Middle East"
+    },
+    {
+      "code": "DOH",
+      "city": "Doha",
+      "country": "Qatar",
+      "lat": 25.2731,
+      "lon": 51.6081,
+      "airline": "Qatar Airways",
+      "region": "Middle East"
+    },
+    {
+      "code": "ADD",
+      "city": "Addis Ababa",
+      "country": "Ethiopia",
+      "lat": 8.9779,
+      "lon": 38.7993,
+      "airline": "Ethiopian Airlines",
+      "region": "Africa"
+    },
+    {
+      "code": "NBO",
+      "city": "Nairobi",
+      "country": "Kenya",
+      "lat": -1.3192,
+      "lon": 36.9278,
+      "airline": "Kenya Airways",
+      "region": "Africa"
+    },
+    {
+      "code": "JNB",
+      "city": "Johannesburg",
+      "country": "South Africa",
+      "lat": -26.1392,
+      "lon": 28.246,
+      "airline": "South African Airways",
+      "region": "Africa"
+    },
+    {
+      "code": "CAI",
+      "city": "Cairo",
+      "country": "Egypt",
+      "lat": 30.1219,
+      "lon": 31.4056,
+      "airline": "Egyptair",
+      "region": "Africa"
+    },
+    {
+      "code": "DEL",
+      "city": "Delhi",
+      "country": "India",
+      "lat": 28.5665,
+      "lon": 77.1031,
+      "airline": "Air India",
+      "region": "Asia"
+    },
+    {
+      "code": "SIN",
+      "city": "Singapore",
+      "country": "Singapore",
+      "lat": 1.3502,
+      "lon": 103.994,
+      "airline": "Singapore Airlines",
+      "region": "Asia"
+    },
+    {
+      "code": "HKG",
+      "city": "Hong Kong",
+      "country": "Hong Kong",
+      "lat": 22.3089,
+      "lon": 113.915,
+      "airline": "Cathay Pacific",
+      "region": "Asia"
+    },
+    {
+      "code": "NRT",
+      "city": "Tokyo",
+      "country": "Japan",
+      "lat": 35.7647,
+      "lon": 140.386,
+      "airline": "All Nippon Airways",
+      "region": "Asia"
+    },
+    {
+      "code": "ICN",
+      "city": "Seoul",
+      "country": "South Korea",
+      "lat": 37.4691,
+      "lon": 126.451,
+      "airline": "Korean Air",
+      "region": "Asia"
+    },
+    {
+      "code": "SYD",
+      "city": "Sydney",
+      "country": "Australia",
+      "lat": -33.9461,
+      "lon": 151.177,
+      "airline": "Qantas",
+      "region": "Oceania"
+    },
+    {
+      "code": "AKL",
+      "city": "Auckland",
+      "country": "New Zealand",
+      "lat": -37.0081,
+      "lon": 174.792,
+      "airline": "Air New Zealand",
+      "region": "Oceania"
+    }
+  ],
+  "links": [
+    {
+      "source": 0,
+      "target": 1,
+      "airlines": ["Delta Air Lines", "Korean Air"]
+    },
+    {
+      "source": 0,
+      "target": 2,
+      "airlines": ["Delta Air Lines"]
+    },
+    {
+      "source": 0,
+      "target": 3,
+      "airlines": ["Copa Airlines"]
+    },
+    {
+      "source": 0,
+      "target": 4,
+      "airlines": ["American Airlines", "Delta Air Lines", "TAM Airlines"]
+    },
+    {
+      "source": 0,
+      "target": 5,
+      "airlines": ["Aerolíneas Argentinas", "American Airlines"]
+    },
+    {
+      "source": 0,
+      "target": 6,
+      "airlines": ["American Airlines", "British Airways", "Delta Air Lines"]
+    },
+    {
+      "source": 0,
+      "target": 7,
+      "airlines": ["Air France", "American Airlines", "Delta Air Lines"]
+    },
+    {
+      "source": 0,
+      "target": 8,
+      "airlines": ["Delta Air Lines", "Lufthansa", "Singapore Airlines"]
+    },
+    {
+      "source": 0,
+      "target": 9,
+      "airlines": ["Delta Air Lines", "KLM"]
+    },
+    {
+      "source": 0,
+      "target": 10,
+      "airlines": ["Turkish Airlines"]
+    },
+    {
+      "source": 0,
+      "target": 11,
+      "airlines": ["Emirates"]
+    },
+    {
+      "source": 0,
+      "target": 12,
+      "airlines": ["American Airlines", "Qatar Airways"]
+    },
+    {
+      "source": 0,
+      "target": 15,
+      "airlines": ["South African Airways"]
+    },
+    {
+      "source": 0,
+      "target": 16,
+      "airlines": ["Egyptair"]
+    },
+    {
+      "source": 0,
+      "target": 17,
+      "airlines": ["Air India"]
+    },
+    {
+      "source": 0,
+      "target": 19,
+      "airlines": ["Cathay Pacific"]
+    },
+    {
+      "source": 0,
+      "target": 20,
+      "airlines": ["All Nippon Airways", "American Airlines", "Delta Air Lines"]
+    },
+    {
+      "source": 0,
+      "target": 21,
+      "airlines": ["Delta Air Lines", "Korean Air"]
+    },
+    {
+      "source": 1,
+      "target": 2,
+      "airlines": ["Delta Air Lines"]
+    },
+    {
+      "source": 1,
+      "target": 3,
+      "airlines": ["Delta Air Lines"]
+    },
+    {
+      "source": 1,
+      "target": 4,
+      "airlines": ["Delta Air Lines"]
+    },
+    {
+      "source": 1,
+      "target": 5,
+      "airlines": ["Delta Air Lines"]
+    },
+    {
+      "source": 1,
+      "target": 6,
+      "airlines": ["British Airways", "Delta Air Lines"]
+    },
+    {
+      "source": 1,
+      "target": 7,
+      "airlines": ["Air France", "Delta Air Lines"]
+    },
+    {
+      "source": 1,
+      "target": 8,
+      "airlines": ["British Airways", "Delta Air Lines", "Lufthansa"]
+    },
+    {
+      "source": 1,
+      "target": 9,
+      "airlines": ["Delta Air Lines", "KLM"]
+    },
+    {
+      "source": 1,
+      "target": 11,
+      "airlines": ["Delta Air Lines"]
+    },
+    {
+      "source": 1,
+      "target": 15,
+      "airlines": ["Delta Air Lines"]
+    },
+    {
+      "source": 1,
+      "target": 20,
+      "airlines": ["Delta Air Lines"]
+    },
+    {
+      "source": 1,
+      "target": 21,
+      "airlines": ["Korean Air"]
+    },
+    {
+      "source": 2,
+      "target": 3,
+      "airlines": ["Copa Airlines"]
+    },
+    {
+      "source": 2,
+      "target": 4,
+      "airlines": ["Air Canada"]
+    },
+    {
+      "source": 2,
+      "target": 6,
+      "airlines": ["Air Canada", "British Airways", "Ethiopian Airlines"]
+    },
+    {
+      "source": 2,
+      "target": 7,
+      "airlines": ["Air Canada", "Air France"]
+    },
+    {
+      "source": 2,
+      "target": 8,
+      "airlines": ["Air Canada", "Lufthansa"]
+    },
+    {
+      "source": 2,
+      "target": 9,
+      "airlines": ["KLM"]
+    },
+    {
+      "source": 2,
+      "target": 10,
+      "airlines": ["Air Canada", "Turkish Airlines"]
+    },
+    {
+      "source": 2,
+      "target": 11,
+      "airlines": ["Emirates"]
+    },
+    {
+      "source": 2,
+      "target": 13,
+      "airlines": ["Ethiopian Airlines"]
+    },
+    {
+      "source": 2,
+      "target": 16,
+      "airlines": ["Egyptair"]
+    },
+    {
+      "source": 2,
+      "target": 19,
+      "airlines": ["Air Canada", "Cathay Pacific"]
+    },
+    {
+      "source": 2,
+      "target": 20,
+      "airlines": ["Air Canada"]
+    },
+    {
+      "source": 2,
+      "target": 21,
+      "airlines": ["Korean Air"]
+    },
+    {
+      "source": 3,
+      "target": 4,
+      "airlines": ["Copa Airlines"]
+    },
+    {
+      "source": 3,
+      "target": 5,
+      "airlines": ["Copa Airlines"]
+    },
+    {
+      "source": 3,
+      "target": 7,
+      "airlines": ["Air France"]
+    },
+    {
+      "source": 3,
+      "target": 9,
+      "airlines": ["KLM"]
+    },
+    {
+      "source": 4,
+      "target": 5,
+      "airlines": ["Qatar Airways", "TAM Airlines", "Turkish Airlines"]
+    },
+    {
+      "source": 4,
+      "target": 6,
+      "airlines": ["British Airways", "TAM Airlines"]
+    },
+    {
+      "source": 4,
+      "target": 7,
+      "airlines": ["Air France", "TAM Airlines"]
+    },
+    {
+      "source": 4,
+      "target": 8,
+      "airlines": ["Lufthansa", "TAM Airlines"]
+    },
+    {
+      "source": 4,
+      "target": 9,
+      "airlines": ["KLM"]
+    },
+    {
+      "source": 4,
+      "target": 10,
+      "airlines": ["Turkish Airlines"]
+    },
+    {
+      "source": 4,
+      "target": 11,
+      "airlines": ["Emirates"]
+    },
+    {
+      "source": 4,
+      "target": 12,
+      "airlines": ["Qatar Airways"]
+    },
+    {
+      "source": 4,
+      "target": 15,
+      "airlines": ["South African Airways", "TAM Airlines"]
+    },
+    {
+      "source": 5,
+      "target": 6,
+      "airlines": ["British Airways"]
+    },
+    {
+      "source": 5,
+      "target": 7,
+      "airlines": ["Air France"]
+    },
+    {
+      "source": 5,
+      "target": 8,
+      "airlines": ["Lufthansa"]
+    },
+    {
+      "source": 5,
+      "target": 9,
+      "airlines": ["KLM"]
+    },
+    {
+      "source": 6,
+      "target": 7,
+      "airlines": ["Air France", "British Airways"]
+    },
+    {
+      "source": 6,
+      "target": 8,
+      "airlines": ["British Airways", "Lufthansa"]
+    },
+    {
+      "source": 6,
+      "target": 9,
+      "airlines": ["British Airways", "KLM"]
+    },
+    {
+      "source": 6,
+      "target": 10,
+      "airlines": ["British Airways", "Turkish Airlines"]
+    },
+    {
+      "source": 6,
+      "target": 11,
+      "airlines": ["British Airways", "Emirates", "Qantas"]
+    },
+    {
+      "source": 6,
+      "target": 12,
+      "airlines": ["Qatar Airways"]
+    },
+    {
+      "source": 6,
+      "target": 13,
+      "airlines": ["Ethiopian Airlines"]
+    },
+    {
+      "source": 6,
+      "target": 14,
+      "airlines": ["British Airways", "Kenya Airways"]
+    },
+    {
+      "source": 6,
+      "target": 15,
+      "airlines": ["British Airways", "South African Airways"]
+    },
+    {
+      "source": 6,
+      "target": 16,
+      "airlines": ["British Airways", "Egyptair"]
+    },
+    {
+      "source": 6,
+      "target": 17,
+      "airlines": ["Air India", "British Airways"]
+    },
+    {
+      "source": 6,
+      "target": 18,
+      "airlines": ["British Airways", "Singapore Airlines"]
+    },
+    {
+      "source": 6,
+      "target": 19,
+      "airlines": ["British Airways", "Cathay Pacific"]
+    },
+    {
+      "source": 6,
+      "target": 20,
+      "airlines": ["All Nippon Airways", "British Airways"]
+    },
+    {
+      "source": 6,
+      "target": 21,
+      "airlines": ["British Airways", "Korean Air"]
+    },
+    {
+      "source": 7,
+      "target": 8,
+      "airlines": ["Air France", "Lufthansa"]
+    },
+    {
+      "source": 7,
+      "target": 9,
+      "airlines": ["Air France", "KLM"]
+    },
+    {
+      "source": 7,
+      "target": 10,
+      "airlines": ["Air France", "Turkish Airlines"]
+    },
+    {
+      "source": 7,
+      "target": 11,
+      "airlines": ["Air France", "Emirates"]
+    },
+    {
+      "source": 7,
+      "target": 12,
+      "airlines": ["Qatar Airways"]
+    },
+    {
+      "source": 7,
+      "target": 13,
+      "airlines": ["Ethiopian Airlines"]
+    },
+    {
+      "source": 7,
+      "target": 14,
+      "airlines": ["Kenya Airways"]
+    },
+    {
+      "source": 7,
+      "target": 15,
+      "airlines": ["Air France"]
+    },
+    {
+      "source": 7,
+      "target": 16,
+      "airlines": ["Air France", "Egyptair"]
+    },
+    {
+      "source": 7,
+      "target": 17,
+      "airlines": ["Air France", "Air India"]
+    },
+    {
+      "source": 7,
+      "target": 18,
+      "airlines": ["Air France", "Singapore Airlines"]
+    },
+    {
+      "source": 7,
+      "target": 19,
+      "airlines": ["Air France", "Cathay Pacific"]
+    },
+    {
+      "source": 7,
+      "target": 20,
+      "airlines": ["Air France", "All Nippon Airways"]
+    },
+    {
+      "source": 7,
+      "target": 21,
+      "airlines": ["Air France", "Korean Air"]
+    },
+    {
+      "source": 8,
+      "target": 9,
+      "airlines": ["Lufthansa"]
+    },
+    {
+      "source": 8,
+      "target": 10,
+      "airlines": ["Lufthansa", "Turkish Airlines"]
+    },
+    {
+      "source": 8,
+      "target": 11,
+      "airlines": ["Emirates", "Lufthansa"]
+    },
+    {
+      "source": 8,
+      "target": 12,
+      "airlines": ["Lufthansa", "Qatar Airways"]
+    },
+    {
+      "source": 8,
+      "target": 13,
+      "airlines": ["Ethiopian Airlines"]
+    },
+    {
+      "source": 8,
+      "target": 15,
+      "airlines": ["Lufthansa", "South African Airways"]
+    },
+    {
+      "source": 8,
+      "target": 16,
+      "airlines": ["Egyptair", "Lufthansa"]
+    },
+    {
+      "source": 8,
+      "target": 17,
+      "airlines": ["Air India", "Lufthansa"]
+    },
+    {
+      "source": 8,
+      "target": 18,
+      "airlines": ["Lufthansa", "Singapore Airlines"]
+    },
+    {
+      "source": 8,
+      "target": 19,
+      "airlines": ["Cathay Pacific", "Lufthansa"]
+    },
+    {
+      "source": 8,
+      "target": 21,
+      "airlines": ["Korean Air", "Lufthansa"]
+    },
+    {
+      "source": 9,
+      "target": 10,
+      "airlines": ["KLM", "Turkish Airlines"]
+    },
+    {
+      "source": 9,
+      "target": 11,
+      "airlines": ["Emirates", "KLM"]
+    },
+    {
+      "source": 9,
+      "target": 12,
+      "airlines": ["KLM"]
+    },
+    {
+      "source": 9,
+      "target": 14,
+      "airlines": ["KLM", "Kenya Airways"]
+    },
+    {
+      "source": 9,
+      "target": 15,
+      "airlines": ["KLM"]
+    },
+    {
+      "source": 9,
+      "target": 16,
+      "airlines": ["Egyptair", "KLM"]
+    },
+    {
+      "source": 9,
+      "target": 17,
+      "airlines": ["KLM"]
+    },
+    {
+      "source": 9,
+      "target": 18,
+      "airlines": ["KLM", "Singapore Airlines"]
+    },
+    {
+      "source": 9,
+      "target": 19,
+      "airlines": ["Cathay Pacific", "KLM"]
+    },
+    {
+      "source": 9,
+      "target": 20,
+      "airlines": ["KLM"]
+    },
+    {
+      "source": 9,
+      "target": 21,
+      "airlines": ["KLM", "Korean Air"]
+    },
+    {
+      "source": 10,
+      "target": 11,
+      "airlines": ["Emirates", "Turkish Airlines"]
+    },
+    {
+      "source": 10,
+      "target": 12,
+      "airlines": ["Qatar Airways", "Turkish Airlines"]
+    },
+    {
+      "source": 10,
+      "target": 13,
+      "airlines": ["Turkish Airlines"]
+    },
+    {
+      "source": 10,
+      "target": 14,
+      "airlines": ["Turkish Airlines"]
+    },
+    {
+      "source": 10,
+      "target": 15,
+      "airlines": ["Turkish Airlines"]
+    },
+    {
+      "source": 10,
+      "target": 16,
+      "airlines": ["Egyptair", "Turkish Airlines"]
+    },
+    {
+      "source": 10,
+      "target": 17,
+      "airlines": ["Turkish Airlines"]
+    },
+    {
+      "source": 10,
+      "target": 18,
+      "airlines": ["Singapore Airlines", "Turkish Airlines"]
+    },
+    {
+      "source": 10,
+      "target": 19,
+      "airlines": ["Turkish Airlines"]
+    },
+    {
+      "source": 10,
+      "target": 20,
+      "airlines": ["Turkish Airlines"]
+    },
+    {
+      "source": 10,
+      "target": 21,
+      "airlines": ["Korean Air", "Turkish Airlines"]
+    },
+    {
+      "source": 11,
+      "target": 12,
+      "airlines": ["Emirates", "Qatar Airways"]
+    },
+    {
+      "source": 11,
+      "target": 13,
+      "airlines": ["Emirates", "Ethiopian Airlines"]
+    },
+    {
+      "source": 11,
+      "target": 14,
+      "airlines": ["Emirates", "Kenya Airways"]
+    },
+    {
+      "source": 11,
+      "target": 15,
+      "airlines": ["Emirates"]
+    },
+    {
+      "source": 11,
+      "target": 16,
+      "airlines": ["Egyptair", "Emirates", "Singapore Airlines"]
+    },
+    {
+      "source": 11,
+      "target": 17,
+      "airlines": ["Air India", "Emirates"]
+    },
+    {
+      "source": 11,
+      "target": 18,
+      "airlines": ["Emirates", "Singapore Airlines"]
+    },
+    {
+      "source": 11,
+      "target": 19,
+      "airlines": ["Cathay Pacific", "Emirates"]
+    },
+    {
+      "source": 11,
+      "target": 20,
+      "airlines": ["Emirates"]
+    },
+    {
+      "source": 11,
+      "target": 21,
+      "airlines": ["Emirates", "Korean Air"]
+    },
+    {
+      "source": 11,
+      "target": 22,
+      "airlines": ["Emirates", "Qantas"]
+    },
+    {
+      "source": 12,
+      "target": 13,
+      "airlines": ["Qatar Airways"]
+    },
+    {
+      "source": 12,
+      "target": 14,
+      "airlines": ["Qatar Airways"]
+    },
+    {
+      "source": 12,
+      "target": 15,
+      "airlines": ["Qatar Airways"]
+    },
+    {
+      "source": 12,
+      "target": 16,
+      "airlines": ["Egyptair", "Qatar Airways"]
+    },
+    {
+      "source": 12,
+      "target": 17,
+      "airlines": ["Qatar Airways"]
+    },
+    {
+      "source": 12,
+      "target": 18,
+      "airlines": ["Qatar Airways"]
+    },
+    {
+      "source": 12,
+      "target": 19,
+      "airlines": ["Cathay Pacific", "Qatar Airways"]
+    },
+    {
+      "source": 12,
+      "target": 20,
+      "airlines": ["Qatar Airways"]
+    },
+    {
+      "source": 12,
+      "target": 21,
+      "airlines": ["Qatar Airways"]
+    },
+    {
+      "source": 13,
+      "target": 14,
+      "airlines": ["Ethiopian Airlines", "Kenya Airways"]
+    },
+    {
+      "source": 13,
+      "target": 15,
+      "airlines": ["Ethiopian Airlines"]
+    },
+    {
+      "source": 13,
+      "target": 16,
+      "airlines": ["Egyptair", "Ethiopian Airlines"]
+    },
+    {
+      "source": 13,
+      "target": 17,
+      "airlines": ["Ethiopian Airlines"]
+    },
+    {
+      "source": 13,
+      "target": 19,
+      "airlines": ["Ethiopian Airlines"]
+    },
+    {
+      "source": 14,
+      "target": 15,
+      "airlines": ["Kenya Airways", "South African Airways"]
+    },
+    {
+      "source": 14,
+      "target": 16,
+      "airlines": ["Egyptair"]
+    },
+    {
+      "source": 14,
+      "target": 17,
+      "airlines": ["Kenya Airways"]
+    },
+    {
+      "source": 14,
+      "target": 21,
+      "airlines": ["Korean Air"]
+    },
+    {
+      "source": 15,
+      "target": 16,
+      "airlines": ["Egyptair"]
+    },
+    {
+      "source": 15,
+      "target": 18,
+      "airlines": ["Singapore Airlines"]
+    },
+    {
+      "source": 15,
+      "target": 19,
+      "airlines": ["Cathay Pacific", "South African Airways"]
+    },
+    {
+      "source": 15,
+      "target": 22,
+      "airlines": ["Qantas"]
+    },
+    {
+      "source": 17,
+      "target": 18,
+      "airlines": ["Air India", "Singapore Airlines"]
+    },
+    {
+      "source": 17,
+      "target": 19,
+      "airlines": ["Air India", "Cathay Pacific"]
+    },
+    {
+      "source": 17,
+      "target": 20,
+      "airlines": ["Air India", "All Nippon Airways"]
+    },
+    {
+      "source": 17,
+      "target": 22,
+      "airlines": ["Air India"]
+    },
+    {
+      "source": 18,
+      "target": 19,
+      "airlines": ["Cathay Pacific", "Singapore Airlines"]
+    },
+    {
+      "source": 18,
+      "target": 20,
+      "airlines": [
+        "All Nippon Airways",
+        "American Airlines",
+        "Delta Air Lines",
+        "Singapore Airlines"
+      ]
+    },
+    {
+      "source": 18,
+      "target": 21,
+      "airlines": ["Korean Air", "Singapore Airlines"]
+    },
+    {
+      "source": 18,
+      "target": 22,
+      "airlines": ["British Airways", "Ethiopian Airlines", "Qantas", "Singapore Airlines"]
+    },
+    {
+      "source": 18,
+      "target": 23,
+      "airlines": ["Ethiopian Airlines", "Singapore Airlines"]
+    },
+    {
+      "source": 19,
+      "target": 20,
+      "airlines": ["American Airlines", "Cathay Pacific", "Delta Air Lines"]
+    },
+    {
+      "source": 19,
+      "target": 21,
+      "airlines": ["Air India", "Cathay Pacific", "Ethiopian Airlines", "Korean Air"]
+    },
+    {
+      "source": 19,
+      "target": 22,
+      "airlines": ["Cathay Pacific", "Qantas"]
+    },
+    {
+      "source": 19,
+      "target": 23,
+      "airlines": ["Air New Zealand", "Cathay Pacific"]
+    },
+    {
+      "source": 20,
+      "target": 21,
+      "airlines": ["American Airlines", "Korean Air"]
+    },
+    {
+      "source": 20,
+      "target": 22,
+      "airlines": ["Qantas"]
+    },
+    {
+      "source": 20,
+      "target": 23,
+      "airlines": ["Air New Zealand"]
+    },
+    {
+      "source": 21,
+      "target": 22,
+      "airlines": ["Korean Air"]
+    },
+    {
+      "source": 21,
+      "target": 23,
+      "airlines": ["Korean Air"]
+    },
+    {
+      "source": 22,
+      "target": 23,
+      "airlines": ["Air New Zealand", "Emirates", "Qantas"]
+    }
+  ]
+}

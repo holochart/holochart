@@ -27,10 +27,10 @@
 import { reportUserError } from '../core/report.ts';
 import { DEFAULT_FONT_FILES } from '../fonts/default-font-files.ts';
 
-/** CSS font weight: a number in 1–1000, or the `normal` (400) / `bold` (700) keywords. */
+/** CSS font weight: a number in 1–1000, or the `normal` (400) / `bold` (700) keywords. @public */
 export type TextFontWeight = number | 'normal' | 'bold';
 
-/** CSS font style. `oblique` is treated as `italic`. */
+/** CSS font style. `oblique` is treated as `italic`. @public */
 export type TextFontStyle = 'normal' | 'italic';
 
 /**
@@ -75,7 +75,7 @@ export interface TextFont {
   shadow?: string;
 }
 
-/** One registered font file (one face of a family). */
+/** One registered font file (one face of a family). @public */
 export interface RegisteredFontFace {
   /** Family name as referenced from CSS family lists (matched case-insensitively). */
   family: string;
@@ -87,6 +87,7 @@ export interface RegisteredFontFace {
   style?: TextFontStyle;
 }
 
+/** @public */
 export interface RegisterFontOptions {
   /**
    * Also register the file as a CSS `FontFace` (browsers only) so the canvas-based font metrics
@@ -104,7 +105,7 @@ interface Face {
   style: TextFontStyle;
 }
 
-/** A registered face chosen for a font request (see {@link resolveFontFace}). */
+/** A registered face chosen for a font request (see {@link resolveFontFace}). @public */
 export interface ResolvedFontFace {
   /** Registered family name. */
   family: string;
@@ -215,6 +216,7 @@ export function fontWeightRank(target: number, weight: number): number {
 /**
  * Register a font file for a family/weight/style. Registering the same family/weight/style again
  * replaces the URL. Returns a function that unregisters the face.
+ * @public
  */
 export function registerFont(
   face: RegisteredFontFace,
@@ -248,7 +250,7 @@ export function registerFont(
 /** A URL, or per-style URLs, for one weight in {@link FontFamilyFaces.weights}. */
 export type FontWeightFaces = string | { normal?: string; italic?: string };
 
-/** Font files of one family for {@link registerFontFamily}. Every field is optional. */
+/** Font files of one family for {@link registerFontFamily}. Every field is optional. @public */
 export interface FontFamilyFaces {
   /** Upright 400. */
   regular?: string;
@@ -270,6 +272,7 @@ export interface FontFamilyFaces {
  * bold, italic })`). Each face goes through {@link registerFont}, so troika resolution and the
  * metrics oracle's CSS `FontFace` registration both apply. Returns a function that unregisters
  * every face registered by this call (faces replaced by a later registration are left alone).
+ * @public
  */
 export function registerFontFamily(
   family: string,
@@ -306,7 +309,7 @@ function forEachFamilyFace(
   }
 }
 
-/** Names of the registered families (as first registered), in registration order. */
+/** Names of the registered families (as first registered), in registration order. @public */
 export function registeredFontFamilies(): string[] {
   const out: string[] = [];
   for (const faces of registry.values()) {
@@ -316,7 +319,7 @@ export function registeredFontFamilies(): string[] {
   return out;
 }
 
-/** Remove every registered font (tests, hot reload). */
+/** Remove every registered font (tests, hot reload). @public */
 export function clearFontRegistry(): void {
   registry.clear();
   notifyFontChange();
@@ -327,6 +330,7 @@ export function clearFontRegistry(): void {
  * then the best face by style (exact, else the other style) and weight ({@link fontWeightRank}).
  * Returns `undefined` when no family is registered, meaning "use the default font" (see
  * {@link resolveDrawnFontURL}).
+ * @public
  */
 export function resolveFontFace(
   family: string,
@@ -810,6 +814,7 @@ function loadCSSFontFace(face: RegisteredFontFace, entry: Face): void {
  * fonts.register('Inter', { regular: '/fonts/Inter.woff', bold: '/fonts/Inter-Bold.woff' });
  * fonts.resolve('"Brand", Inter, sans-serif', 'bold')?.url; // '/fonts/Inter-Bold.woff'
  * ```
+ * @public
  */
 export const fonts = {
   register: registerFontFamily,

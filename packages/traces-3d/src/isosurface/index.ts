@@ -22,6 +22,7 @@
  */
 import type { TraceModule } from '@mk7s/holochart-runtime';
 import { coloraxisLayoutSchema } from '@mk7s/holochart-traces-basic';
+import { sceneA11y } from '../a11y-loader.ts';
 import { sceneCrossTraceLayout, sceneSubplotDomain } from '../scene/layout.ts';
 import { supplyTraceColoraxisDefaults, traceColorbar } from '../mesh3d/colors.ts';
 import { isosurfaceAttributes } from './attributes.ts';
@@ -49,6 +50,7 @@ export const isosurface: TraceModule<IsoCalc, typeof isosurfaceAttributes.childr
   crossTraceLayout: sceneCrossTraceLayout,
   calc: (trace, ctx) => calcIso(trace, ctx),
   plot: { create: (ctx) => new IsoMeshView(ctx) },
+  a11y: sceneA11y,
   hoverPoints: isoHoverPoints,
   eventData: (calc, _trace, i) => ({ value: calc.grid.value[i] }),
   colorbar: (trace, ctx) => traceColorbar(trace, ctx.fullLayout, isoColorValues(trace)),

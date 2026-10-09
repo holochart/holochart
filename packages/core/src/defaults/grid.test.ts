@@ -2,7 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { fixtureRegistry, scatter } from '../__fixtures__/modules.ts';
 import { createRegistry } from '../registry/registry.ts';
-import type { TraceModule } from '../registry/types.ts';
+import type { CoreTraceModule } from '../registry/types.ts';
 import { attr } from '../schema/attr.ts';
 import { stripInternal } from '../util/objects.ts';
 import { validate } from '../validate/validate.ts';
@@ -13,7 +13,7 @@ import type { AnyFigure, FullAxis, FullLayout } from './types.ts';
 const quiet = { onIssue: () => {} };
 
 /** A tiny domain trace (pie-like): placed by `domain`, no axes. */
-const donut: TraceModule = {
+const donut: CoreTraceModule = {
   type: 'donut',
   categories: ['domain'],
   schema: attr.object({ values: attr.dataArray({ editType: 'calc' }) }),

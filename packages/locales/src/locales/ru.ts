@@ -3,6 +3,7 @@
  * 2016-2024 Plotly Technologies Inc.; see this package's THIRD_PARTY_NOTICES.md).
  */
 import type { LocaleModule } from '@mk7s/holochart-core';
+import { holochartRu } from '../holochart/ru.ts';
 
 /** Russian (`ru`). */
 export const ru: LocaleModule = {
@@ -74,6 +75,9 @@ export const ru: LocaleModule = {
     'target:': 'Цель:',
     trace: 'Ряд',
     'upper fence:': 'Верхняя граница:',
+    // Holochart's own strings (UI labels, keyboard announcements, chart summaries), not from
+    // plotly.js.
+    ...holochartRu,
   },
   format: {
     days: ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'],

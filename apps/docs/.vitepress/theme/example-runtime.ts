@@ -5,4 +5,3 @@
  */
 export { loadExample } from '@mk7s/holochart-examples/index.ts';
 export type { ExampleHandle, ExampleModule } from '@mk7s/holochart-examples/_lib/types.ts';
-export { sources } from 'virtual:holochart-example-sources';

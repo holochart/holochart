@@ -16,6 +16,7 @@ import {
   rgbaToCss,
   scatter,
 } from '@mk7s/holochart-traces-basic';
+import { sceneA11y } from '../a11y-loader.ts';
 import { sceneCrossTraceLayout, sceneSubplotDomain } from '../scene/layout.ts';
 import { bar3dAttributes } from './attributes.ts';
 import { calcBar3d, type Bar3dCalc } from './calc.ts';
@@ -64,6 +65,7 @@ export const bar3d: TraceModule<Bar3dCalc, typeof bar3dAttributes.children> = {
   crossTraceLayout: sceneCrossTraceLayout,
   calc: calcBar3d,
   plot: { create: (ctx) => new Bar3dView(ctx) },
+  a11y: sceneA11y,
   hoverPoints: bar3dHoverPoints,
   legendIcon: (trace, ctx) => bar3dLegendIcon(trace, ctx?.fullLayout),
   eventData: (calc, _trace, i) => ({ base: calc.bottom[i], top: calc.top[i] }),

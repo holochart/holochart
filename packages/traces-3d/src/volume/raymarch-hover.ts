@@ -16,8 +16,7 @@ import type { IsoCalc } from '../isosurface/calc.ts';
 import { gridIndex, type IsoGrid } from '../isosurface/grid.ts';
 import { isoGridHoverPoint } from '../isosurface/hover.ts';
 import { transferAt, type TransferSpec } from './transfer.ts';
-
-type Vec3 = [number, number, number];
+import type { Vec3 } from '@mk7s/holochart-render';
 
 /** Accumulated opacity at which the hover ray stops. */
 export const HOVER_OPACITY = 0.1;

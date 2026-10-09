@@ -5,7 +5,7 @@ import {
   limitRange,
   MINDRAG,
   panBy,
-  pointInPolygon,
+  polygonContains,
   selectBoxAxes,
   selectionContains,
   zoomAround,
@@ -141,11 +141,11 @@ describe('pointInPolygon / selectionContains', () => {
   ];
 
   it('tests points against a concave polygon', () => {
-    expect(pointInPolygon(lShape, 2, 2)).toBe(true);
-    expect(pointInPolygon(lShape, 2, 8)).toBe(true);
-    expect(pointInPolygon(lShape, 8, 8)).toBe(false);
-    expect(pointInPolygon(lShape, -1, 2)).toBe(false);
-    expect(pointInPolygon([], 0, 0)).toBe(false);
+    expect(polygonContains(lShape, 2, 2)).toBe(true);
+    expect(polygonContains(lShape, 2, 8)).toBe(true);
+    expect(polygonContains(lShape, 8, 8)).toBe(false);
+    expect(polygonContains(lShape, -1, 2)).toBe(false);
+    expect(polygonContains([], 0, 0)).toBe(false);
   });
 
   it('uses the box for rect queries and the polygon for lasso ones', () => {

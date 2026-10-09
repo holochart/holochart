@@ -6,7 +6,7 @@
  * frame (e.g. `'xaxis.range'` during a drag).
  */
 
-/** One step of a parsed path: an object key or an array index. */
+/** One step of a parsed path: an object key or an array index. @internal */
 export type PathSegment = string | number;
 
 const FORBIDDEN = new Set(['__proto__', 'prototype', 'constructor']);
@@ -27,6 +27,7 @@ function pathError(path: string, why: string): Error {
  * ```
  * @throws If the path is empty or malformed, or names `__proto__`/`prototype`/`constructor`
  * (which would let a figure spec pollute prototypes through `setIn`).
+ * @internal
  */
 export function parsePath(path: string): readonly PathSegment[] {
   const hit = cache.get(path);
@@ -69,7 +70,7 @@ export function parsePath(path: string): readonly PathSegment[] {
   return frozen;
 }
 
-/** Format segments back into an attribute string (inverse of {@link parsePath}). */
+/** Format segments back into an attribute string (inverse of {@link parsePath}). @internal */
 export function stringifyPath(segments: readonly PathSegment[]): string {
   let s = '';
   for (const seg of segments) {
@@ -90,6 +91,7 @@ function isContainer(value: unknown): value is Record<PathSegment, unknown> {
 /**
  * Read the value at `path`, or `undefined` if any step is missing.
  * Only own properties are followed, so `getIn({}, 'toString')` is `undefined`.
+ * @internal
  */
 export function getIn(obj: unknown, path: string | readonly PathSegment[]): unknown {
   let cur: unknown = obj;
@@ -107,6 +109,7 @@ export function getIn(obj: unknown, path: string | readonly PathSegment[]): unkn
  *
  * @throws If an intermediate step exists but is not an object/array (e.g. setting
  * `'marker.color'` when `marker` is a string), since silently replacing it would lose data.
+ * @internal
  */
 export function setIn<T extends object>(
   obj: T,

@@ -34,7 +34,7 @@ export function padSchema(description: string, dflt: { t?: number } = {}) {
   );
 }
 
-/** One button of an update menu. */
+/** One button of an update menu. @internal */
 export const updatemenuButtonAttributes = {
   visible: attr.boolean({
     description:
@@ -63,7 +63,7 @@ export const updatemenuButtonAttributes = {
   }),
 } as const;
 
-/** `layout.updatemenus`. */
+/** `layout.updatemenus`. @internal */
 export const updatemenusAttributes = attr.items(
   {
     visible: attr.boolean({
@@ -183,7 +183,7 @@ export interface FullUpdatemenu {
   _hovercolor: string;
 }
 
-/** Plotly's update-menu colors on light papers (`updatemenus/constants.js`). */
+/** Plotly's update-menu colors on light papers (`updatemenus/constants.js`). @internal */
 export const UPDATEMENU_LIGHT = {
   bordercolor: '#BEC8D9',
   activecolor: '#F4FAFF',
@@ -194,6 +194,7 @@ export const UPDATEMENU_LIGHT = {
  * Plotly's defaults that depend on other values: a button without `args` (and not `skip`) is
  * hidden, a menu without visible buttons is hidden, the font inherits `layout.font`, and colors
  * follow the paper (see `shared/dom-colors.ts`). Fills unset values only (idempotent).
+ * @internal
  */
 export function supplyUpdatemenuDefaults(
   _layoutIn: Readonly<Record<string, unknown>>,

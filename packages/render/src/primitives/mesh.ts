@@ -198,6 +198,14 @@ export interface MeshData {
   /** Only three.js material types receive shadows. */
   receiveShadow: boolean;
   hooks: MeshShaderHooks | null;
+  /**
+   * Test against the depth buffer. Default true. False for a layer that lies on a surface already
+   * drawn (land on a globe's sphere) and is ordered by `renderOrder` instead, which avoids the
+   * z-fighting of two meshes at one depth.
+   */
+  depthTest: boolean;
+  /** Write depth: `'auto'` (default) for opaque meshes only, as a translucent one must not. */
+  depthWrite: boolean | 'auto';
 }
 
 /** Required fields of {@link MeshData}; the rest have defaults. */
@@ -241,6 +249,8 @@ function defaults(input: MeshInput): MeshData {
     castShadow: false,
     receiveShadow: false,
     hooks: null,
+    depthTest: true,
+    depthWrite: 'auto',
     ...input,
   };
 }
@@ -767,7 +777,8 @@ export class MeshPrimitive implements Primitive<MeshData>, PickablePrimitive {
     this.#translucent = translucent;
     const material = this.material;
     material.transparent = translucent;
-    material.depthWrite = !translucent;
+    material.depthTest = d.depthTest;
+    material.depthWrite = d.depthWrite === 'auto' ? !translucent : d.depthWrite;
     material.side = SIDES[d.side] ?? DoubleSide;
     if (three) {
       const m = material as MeshStandardMaterial;

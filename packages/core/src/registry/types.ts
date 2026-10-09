@@ -15,6 +15,7 @@ import type { Issue } from '../validate/issues.ts';
  * take part in axis discovery; `domain` traces get `domain.{x, y, row, column}` and are placed by
  * a fraction of the plot area or a `layout.grid` cell (E4.5); `showLegend` traces count towards
  * the legend default.
+ * @experimental
  */
 export type TraceCategory =
   | 'cartesian'
@@ -28,7 +29,7 @@ export type TraceCategory =
   | 'geo'
   | (string & {});
 
-/** Docs metadata for a trace module. */
+/** Docs metadata for a trace module. @experimental */
 export interface TraceModuleMeta {
   /** Markdown description. */
   description: string;
@@ -38,7 +39,7 @@ export interface TraceModuleMeta {
   plotlyEquivalent?: string;
 }
 
-/** Helpers passed to a trace module's `supplyDefaults`. */
+/** Helpers passed to a trace module's `supplyDefaults`. @experimental */
 export interface TraceDefaultsContext {
   /**
    * Coerce the attribute at `path` into the full trace and return its value. Precedence: user
@@ -61,7 +62,7 @@ export interface TraceDefaultsContext {
   readonly index: number;
 }
 
-/** Helpers passed to layout-level `supplyLayoutDefaults` hooks. */
+/** Helpers passed to layout-level `supplyLayoutDefaults` hooks. @experimental */
 export interface LayoutDefaultsContext {
   /** Coerce a layout attribute (by path) with the same precedence as trace `coerce`. */
   coerce<T = unknown>(path: string, dflt?: unknown): T;
@@ -72,11 +73,47 @@ export interface LayoutDefaultsContext {
 }
 
 /**
+ * What a cartesian trace asks of its axes, beyond holding its data (see
+ * {@link CoreTraceModule.axisHints}). Every field is a default: what the figure sets on an axis
+ * wins, and so does another trace that shows the axis. A trace in a 3D scene asks the same of its
+ * scene's three axes (`hide: true`, and `x` / `y` / `z`; a scene has its own `aspectmode`).
+ * @experimental
+ */
+export interface TraceAxisHints {
+  /**
+   * The axes carry no readable scale for this trace (positions a layout computed): each defaults
+   * to `visible: false`, unless a trace without this hint is on it. `'x'` or `'y'` hides that axis
+   * only (the other one is a real scale: a dendrogram's heights, the dates of a timeline).
+   */
+  readonly hide?: boolean | 'x' | 'y';
+  /**
+   * One unit is as long on y as on x (shapes keep their proportions): the y axis defaults to
+   * `scaleanchor` = the trace's x axis.
+   */
+  readonly equal?: boolean;
+  /**
+   * That axis runs the other way (larger values to the left, or at the bottom): it defaults to
+   * `autorange: 'reversed'`, unless a trace without this hint is on it or a `range` is given.
+   */
+  readonly reverse?: 'x' | 'y';
+  /**
+   * The data the trace puts on its x and y axis when that is not its `x` / `y` attribute
+   * (positions inside a container): the axis type is detected from it, and a category axis lists
+   * its values. Unset: `x` / `y` are read as for every trace. `z`: the same for the z axis of a 3D
+   * scene.
+   */
+  readonly x?: unknown;
+  readonly y?: unknown;
+  readonly z?: unknown;
+}
+
+/**
  * A trace type (plan §4.4). `schema` is the single source of truth for the trace's own
  * attributes; common attributes (`visible`, `name`, `opacity`, …, and `xaxis`/`yaxis` for
  * cartesian traces) are added by the registry.
+ * @experimental
  */
-export interface TraceModule<C extends Children = Children> {
+export interface CoreTraceModule<C extends Children = Children> {
   readonly type: string;
   readonly categories: readonly TraceCategory[];
   readonly schema: ObjectNode<C>;
@@ -98,6 +135,13 @@ export interface TraceModule<C extends Children = Children> {
     ctx: LayoutDefaultsContext,
   ): void;
   readonly meta: TraceModuleMeta;
+  /**
+   * Axis defaults a cartesian trace asks for (ADR-029), called with the defaulted trace while the
+   * axes are defaulted: hidden axes, equal scales, and where its positions are when they are not
+   * in `x` / `y`. Return `undefined` (or leave the method out) for a trace that is drawn on its
+   * axes like any other. The 3D scenes ask it of their traces too, for their three axes.
+   */
+  axisHints?(trace: FullTrace): TraceAxisHints | undefined;
   /** Attribute paths that support transitions (E7.3). */
   readonly animatable?: readonly string[];
   // Render-side contract (E2/E22). Typed loosely until those stages exist.
@@ -113,8 +157,9 @@ export interface TraceModule<C extends Children = Children> {
 /**
  * A layout component (legend, annotations, shapes, …) contributing layout attributes. Components
  * are always active, unlike trace-module layout attributes.
+ * @experimental
  */
-export interface ComponentModule {
+export interface CoreComponentModule {
   readonly name: string;
   readonly layoutSchema?: Children;
   supplyLayoutDefaults?(
@@ -128,16 +173,17 @@ export interface ComponentModule {
  * Holds trace modules, components and named templates for a set of charts. Keeping this an
  * explicit object (rather than module-level state) keeps core pure and lets tests and apps run
  * isolated registries side by side.
+ * @experimental
  */
 export interface Registry extends TemplateSource {
   /** Register trace modules. Re-registering a type replaces it. Returns the registry. */
-  register(...modules: TraceModule[]): Registry;
+  register(...modules: CoreTraceModule[]): Registry;
   /** Register layout components. Re-registering a name replaces it. Returns the registry. */
-  registerComponent(...components: ComponentModule[]): Registry;
-  getModule(type: string): TraceModule | undefined;
+  registerComponent(...components: CoreComponentModule[]): Registry;
+  getModule(type: string): CoreTraceModule | undefined;
   /** Registered trace types in registration order. */
   traceTypes(): string[];
-  components(): readonly ComponentModule[];
+  components(): readonly CoreComponentModule[];
   /** Full schema for a trace type: common attributes merged with the module's schema. */
   getTraceSchema(type: string): ObjectNode | undefined;
   /** Base layout schema merged with every module's and component's layout attributes. */

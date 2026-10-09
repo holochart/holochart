@@ -1,5 +1,5 @@
 /**
- * The points style functions (E8.6) are called with, shared by the chart runtime and `toJSON`
+ * The points style functions (E8.6) are called with, shared by the chart runtime and `chartToJSON`
  * (`encodeFigure`), so a function gives the same values when drawn and when saved.
  */
 import { isArrayLike } from '../coerce/coerce.ts';
@@ -7,7 +7,7 @@ import type { ObjectNode } from '../schema/types.ts';
 import { isAttr } from '../schema/walk.ts';
 import type { StylePoint } from './types.ts';
 
-/** Per-point view of a trace's data arrays. */
+/** Per-point view of a trace's data arrays. @internal */
 export interface PointSource {
   /** The point count. */
   readonly length: number;
@@ -21,6 +21,7 @@ export interface PointSource {
  * `hovertext`, …). Pass the trace with `'@column'` references resolved. The point count is
  * `length` when given, else the shorter of `x` and `y` when either is present (what gets drawn),
  * else the length of the first data array; `null` when there is no count.
+ * @internal
  */
 export function pointSource(
   trace: Readonly<Record<string, unknown>>,

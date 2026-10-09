@@ -19,8 +19,7 @@ import type { SurfaceCalc } from './calc.ts';
 import { surfaceColorMapping } from './colors.ts';
 import { gridX, gridY, type SurfaceGrid } from './grid.ts';
 import { SurfacePicker, type Ray, type SurfaceHit } from './pick.ts';
-
-type Vec3 = [number, number, number];
+import type { Vec3 } from '@mk7s/holochart-render';
 
 const near = new Vector3();
 const far = new Vector3();

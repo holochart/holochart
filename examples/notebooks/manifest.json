@@ -1,0 +1,1086 @@
+{
+  "version": 1,
+  "notebooks": [
+    {
+      "slug": "first-chart",
+      "title": "First notebook chart",
+      "description": "Five observations, a Plotly renderer, styling and a replacement update.",
+      "guide": "/getting-started/python-jupyter",
+      "source": "examples/notebooks/first-chart.py",
+      "notebook": "examples/notebooks/first-chart.ipynb",
+      "dependencies": ["holochart-py[plotly]"],
+      "families": ["relationships", "time-series"],
+      "galleryExamples": [],
+      "environments": [
+        "JupyterLab 4.6.4 / Python 3.14.8 / Chromium 153.0.8010.12 with SwiftShader / macOS 26.6.2 arm64",
+        "Jupyter Notebook 7.6.3 / same kernel/browser/OS; independently reproduced host startup schema warning"
+      ],
+      "verification": {
+        "state": "rendered",
+        "browserVerified": true,
+        "sourceSha256": "fd751cf2341bf7a3129e2f4de74c96c8ddb97d9da9cba5ca03c07feea378a9f3",
+        "date": "2026-10-09",
+        "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+        "artifact": "docs/site/wave3/notebooks/README.md"
+      },
+      "expectedWidgetOutputs": 3,
+      "tutorialMinutes": 10,
+      "goal": "Five observations, a Plotly renderer, styling and a replacement update.",
+      "prerequisites": [
+        "Completed development-checkout bridge setup",
+        "Selected installed notebook kernel",
+        "Active ipywidgets manager",
+        "Browser WebGL2"
+      ],
+      "dataProvenance": "Local synthetic demonstration data from this repository; MIT-licensed example source. No remote datasets, API keys or credentials. Frozen gallery arrays preserve the original browser seed/formula values; typed arrays become lists and nonfinite observations become None.",
+      "chartGuides": []
+    },
+    {
+      "slug": "plotly-express",
+      "title": "Plotly Express workflows",
+      "description": "DataFrames, dates, missing values, NumPy and five supported chart forms.",
+      "guide": "/python/plotly",
+      "source": "examples/notebooks/plotly-express.py",
+      "notebook": "examples/notebooks/plotly-express.ipynb",
+      "dependencies": ["holochart-py[plotly]", "pandas", "numpy"],
+      "families": ["relationships", "basic", "time-series", "statistical", "scientific"],
+      "galleryExamples": [],
+      "environments": [
+        "JupyterLab 4.6.4 / Python 3.14.8 / Chromium 153.0.8010.12 with SwiftShader / macOS 26.6.2 arm64",
+        "Jupyter Notebook 7.6.3 / same kernel/browser/OS; independently reproduced host startup schema warning"
+      ],
+      "verification": {
+        "state": "rendered",
+        "browserVerified": true,
+        "sourceSha256": "3584f06db15417ec7fd086fbc642afbfb2583cb2514088c2c6761c2d02156574",
+        "date": "2026-10-09",
+        "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+        "artifact": "docs/site/wave3/notebooks/README.md"
+      },
+      "expectedWidgetOutputs": 5,
+      "tutorialMinutes": 15,
+      "goal": "DataFrames, dates, missing values, NumPy and five supported chart forms.",
+      "prerequisites": [
+        "Completed development-checkout bridge setup",
+        "Selected installed notebook kernel",
+        "Active ipywidgets manager",
+        "Browser WebGL2"
+      ],
+      "dataProvenance": "Local synthetic demonstration data from this repository; MIT-licensed example source. No remote datasets, API keys or credentials. Frozen gallery arrays preserve the original browser seed/formula values; typed arrays become lists and nonfinite observations become None.",
+      "chartGuides": []
+    },
+    {
+      "slug": "graph-objects",
+      "title": "Mixed traces with graph_objects",
+      "description": "Build the exact gallery line/with-bars figure and compare renderer defaults.",
+      "guide": "/python/plotly",
+      "source": "examples/notebooks/graph-objects.py",
+      "notebook": "examples/notebooks/graph-objects.ipynb",
+      "dependencies": ["holochart-py[plotly]"],
+      "families": ["time-series", "basic"],
+      "galleryExamples": ["line/with-bars"],
+      "environments": [
+        "JupyterLab 4.6.4 / Python 3.14.8 / Chromium 153.0.8010.12 with SwiftShader / macOS 26.6.2 arm64",
+        "Jupyter Notebook 7.6.3 / same kernel/browser/OS; independently reproduced host startup schema warning"
+      ],
+      "verification": {
+        "state": "rendered",
+        "browserVerified": true,
+        "sourceSha256": "979d553d65da905f6ca0b281c517d9662b2499e1b0c233e6047f75a0f5b5a0a7",
+        "date": "2026-10-09",
+        "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+        "artifact": "docs/site/wave3/notebooks/README.md"
+      },
+      "expectedWidgetOutputs": 2,
+      "galleryVariants": [
+        {
+          "id": "line/with-bars",
+          "variable": "gallery_figure_line_with_bars",
+          "source": "examples/notebooks/variants/line-with-bars.py",
+          "download": "/notebooks/variants/line-with-bars.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure line/with-bars", "Display line/with-bars"],
+          "browserSourceHashes": {
+            "examples/line/with-bars.ts": "593348f0a1d7c38b7ba7aca1024cef5cd2b526874a8cdb395f18753c4953bde5"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "6e926cd4b2b13321d3e72f58c511275adc1ffca2d5a7722ea5bb40e964148201",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "6e926cd4b2b13321d3e72f58c511275adc1ffca2d5a7722ea5bb40e964148201",
+          "figureSha256": "0e28c60171cb691d907e3f0fd9d372a9cdbc5b1f79da2a0f1bd9babd6f635a4a",
+          "dependencies": ["holochart-py"]
+        }
+      ],
+      "tutorialMinutes": 10,
+      "goal": "Build the exact gallery line/with-bars figure and compare renderer defaults.",
+      "prerequisites": [
+        "Completed development-checkout bridge setup",
+        "Selected installed notebook kernel",
+        "Active ipywidgets manager",
+        "Browser WebGL2"
+      ],
+      "dataProvenance": "Local synthetic demonstration data from this repository; MIT-licensed example source. No remote datasets, API keys or credentials. Frozen gallery arrays preserve the original browser seed/formula values; typed arrays become lists and nonfinite observations become None.",
+      "chartGuides": []
+    },
+    {
+      "slug": "widgets",
+      "title": "Direct widgets and updates",
+      "description": "Dictionary, JSON string and Plotly Figure inputs with replacement state.",
+      "guide": "/python/widgets",
+      "source": "examples/notebooks/widgets.py",
+      "notebook": "examples/notebooks/widgets.ipynb",
+      "dependencies": ["holochart-py[plotly]"],
+      "families": ["basic", "relationships"],
+      "galleryExamples": ["bar/basic"],
+      "environments": [
+        "JupyterLab 4.6.4 / Python 3.14.8 / Chromium 153.0.8010.12 with SwiftShader / macOS 26.6.2 arm64",
+        "Jupyter Notebook 7.6.3 / same kernel/browser/OS; independently reproduced host startup schema warning"
+      ],
+      "verification": {
+        "state": "rendered",
+        "browserVerified": true,
+        "sourceSha256": "591b8787781e87fe7c41c3e412ec33b2a817f7bcc96ccf0605d744cfa4ef8ef6",
+        "date": "2026-10-09",
+        "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+        "artifact": "docs/site/wave3/notebooks/README.md"
+      },
+      "expectedWidgetOutputs": 3,
+      "galleryVariants": [
+        {
+          "id": "bar/basic",
+          "variable": "gallery_figure_bar_basic",
+          "source": "examples/notebooks/variants/bar-basic.py",
+          "download": "/notebooks/variants/bar-basic.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure bar/basic", "Display bar/basic"],
+          "browserSourceHashes": {
+            "examples/bar/basic.ts": "56fb0d4edd189ac7742a21c298e7154b4955c641e98d8ebfc36a43dfdc20902a"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "5286ec7c09b33e6754a2d7cbfac479062347373d2c2b6b0f7325fa0f917b905f",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "5286ec7c09b33e6754a2d7cbfac479062347373d2c2b6b0f7325fa0f917b905f",
+          "figureSha256": "342afb91c99cf46bc013ac31df666767a51ee5243ee8fbd7fb102d6717db0bc8",
+          "dependencies": ["holochart-py"]
+        }
+      ],
+      "tutorialMinutes": 10,
+      "goal": "Dictionary, JSON string and Plotly Figure inputs with replacement state.",
+      "prerequisites": [
+        "Completed development-checkout bridge setup",
+        "Selected installed notebook kernel",
+        "Active ipywidgets manager",
+        "Browser WebGL2"
+      ],
+      "dataProvenance": "Local synthetic demonstration data from this repository; MIT-licensed example source. No remote datasets, API keys or credentials. Frozen gallery arrays preserve the original browser seed/formula values; typed arrays become lists and nonfinite observations become None.",
+      "chartGuides": []
+    },
+    {
+      "slug": "widget-controls",
+      "title": "Python-driven slider",
+      "description": "A Multiplier slider assigns replacement data to one chart.",
+      "guide": "/python/widgets",
+      "source": "examples/notebooks/widget-controls.py",
+      "notebook": "examples/notebooks/widget-controls.ipynb",
+      "dependencies": ["holochart-py", "ipywidgets"],
+      "families": ["basic"],
+      "galleryExamples": [],
+      "environments": [
+        "JupyterLab 4.6.4 / Python 3.14.8 / Chromium 153.0.8010.12 with SwiftShader / macOS 26.6.2 arm64",
+        "Jupyter Notebook 7.6.3 / same kernel/browser/OS; independently reproduced host startup schema warning"
+      ],
+      "verification": {
+        "state": "rendered",
+        "browserVerified": true,
+        "sourceSha256": "c9cd11bb8b544f1373eb75c737ccb24bd7212e22f7461fa71913718c2fffcdd5",
+        "date": "2026-10-09",
+        "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+        "artifact": "docs/site/wave3/notebooks/README.md"
+      },
+      "expectedWidgetOutputs": 1,
+      "tutorialMinutes": 10,
+      "goal": "A Multiplier slider assigns replacement data to one chart.",
+      "prerequisites": [
+        "Completed development-checkout bridge setup",
+        "Selected installed notebook kernel",
+        "Active ipywidgets manager",
+        "Browser WebGL2"
+      ],
+      "dataProvenance": "Local synthetic demonstration data from this repository; MIT-licensed example source. No remote datasets, API keys or credentials. Frozen gallery arrays preserve the original browser seed/formula values; typed arrays become lists and nonfinite observations become None.",
+      "chartGuides": []
+    },
+    {
+      "slug": "heatmap-field",
+      "title": "NumPy field heatmap",
+      "description": "The gallery heatmap/basic field reproduced with an explicit NumPy formula.",
+      "guide": "/python/notebooks/",
+      "source": "examples/notebooks/heatmap-field.py",
+      "notebook": "examples/notebooks/heatmap-field.ipynb",
+      "dependencies": ["holochart-py[plotly]", "numpy"],
+      "families": ["scientific"],
+      "galleryExamples": ["heatmap/basic"],
+      "environments": [
+        "JupyterLab 4.6.4 / Python 3.14.8 / Chromium 153.0.8010.12 with SwiftShader / macOS 26.6.2 arm64",
+        "Jupyter Notebook 7.6.3 / same kernel/browser/OS; independently reproduced host startup schema warning"
+      ],
+      "verification": {
+        "state": "rendered",
+        "browserVerified": true,
+        "sourceSha256": "665fade124f089af3ec7244dc0a4080883310f3194f5d9f26247a733c647bee2",
+        "date": "2026-10-09",
+        "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+        "artifact": "docs/site/wave3/notebooks/README.md"
+      },
+      "expectedWidgetOutputs": 1,
+      "galleryVariants": [
+        {
+          "id": "heatmap/basic",
+          "variable": "gallery_figure_heatmap_basic",
+          "source": "examples/notebooks/variants/heatmap-basic.py",
+          "download": "/notebooks/variants/heatmap-basic.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure heatmap/basic", "Display heatmap/basic"],
+          "browserSourceHashes": {
+            "examples/heatmap/basic.ts": "2b0d4ce31d863c7f3dd267491e66a2e6f8697ab24634ad8a344511afd973c04f"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "4c4f8ba870bbb0c12f71dc7293e3b5e640a24b1f0965ae4642c27047591195a0",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "4c4f8ba870bbb0c12f71dc7293e3b5e640a24b1f0965ae4642c27047591195a0",
+          "figureSha256": "d9b901d1a320086beb6f4d35409a6f150a88f336cb791e3c34d095a913909074",
+          "dependencies": ["holochart-py"]
+        }
+      ],
+      "tutorialMinutes": 10,
+      "goal": "The gallery heatmap/basic field reproduced with an explicit NumPy formula.",
+      "prerequisites": [
+        "Completed development-checkout bridge setup",
+        "Selected installed notebook kernel",
+        "Active ipywidgets manager",
+        "Browser WebGL2"
+      ],
+      "dataProvenance": "Local synthetic demonstration data from this repository; MIT-licensed example source. No remote datasets, API keys or credentials. Frozen gallery arrays preserve the original browser seed/formula values; typed arrays become lists and nonfinite observations become None.",
+      "chartGuides": ["/charts/scientific/heatmap"]
+    },
+    {
+      "slug": "histogram",
+      "title": "Small sample histogram",
+      "description": "Seven observations and five explicit bins, matching the statistical gallery example.",
+      "guide": "/charts/statistical/histogram",
+      "source": "examples/notebooks/histogram.py",
+      "notebook": "examples/notebooks/histogram.ipynb",
+      "dependencies": ["holochart-py"],
+      "families": ["statistical"],
+      "galleryExamples": ["histogram/notebook-starter"],
+      "expectedWidgetOutputs": 1,
+      "environments": [
+        "JupyterLab 4.6.4 / Python 3.14.8 / Chromium 153.0.8010.12 with SwiftShader / macOS 26.6.2 arm64",
+        "Jupyter Notebook 7.6.3 / same kernel/browser/OS; independently reproduced host startup schema warning"
+      ],
+      "verification": {
+        "state": "rendered",
+        "browserVerified": true,
+        "sourceSha256": "0f93d10a4a6e9814e3145a33a918807678d9758518fc1786c181276171424937",
+        "date": "2026-10-09",
+        "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+        "artifact": "docs/site/wave3/notebooks/README.md"
+      },
+      "galleryVariants": [
+        {
+          "id": "histogram/notebook-starter",
+          "variable": "gallery_figure_histogram_notebook_starter",
+          "source": "examples/notebooks/variants/histogram-notebook-starter.py",
+          "download": "/notebooks/variants/histogram-notebook-starter.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": [
+            "Imports",
+            "Figure histogram/notebook-starter",
+            "Display histogram/notebook-starter"
+          ],
+          "browserSourceHashes": {
+            "examples/histogram/notebook-starter.ts": "cf33a76cbc12f71738cd16d01d02d0ec6dbffbc0c5f5a44d0f2f1083b336d923"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "c563b819c39ae4e7e6755f44566e974b71b7904dcb633a70f7c9bd49b037f68c",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "c563b819c39ae4e7e6755f44566e974b71b7904dcb633a70f7c9bd49b037f68c",
+          "figureSha256": "c652662beff7a4463667668431e8f8cfb554bdacbaf5ad6fcd0f350c2dc220ea",
+          "dependencies": ["holochart-py"]
+        }
+      ],
+      "tutorialMinutes": 10,
+      "goal": "Seven observations and five explicit bins, matching the statistical gallery example.",
+      "prerequisites": [
+        "Completed development-checkout bridge setup",
+        "Selected installed notebook kernel",
+        "Active ipywidgets manager",
+        "Browser WebGL2"
+      ],
+      "dataProvenance": "Local synthetic demonstration data from this repository; MIT-licensed example source. No remote datasets, API keys or credentials. Frozen gallery arrays preserve the original browser seed/formula values; typed arrays become lists and nonfinite observations become None.",
+      "chartGuides": []
+    },
+    {
+      "slug": "comparison-bars",
+      "title": "Compare categorical values",
+      "description": "Read horizontal axes, stacking, signed contributions and visible labels.",
+      "guide": "/python/notebooks/",
+      "source": "examples/notebooks/comparison-bars.py",
+      "notebook": "examples/notebooks/comparison-bars.ipynb",
+      "dependencies": ["holochart-py"],
+      "families": ["basic"],
+      "galleryExamples": ["bar/horizontal", "bar/stacked", "bar/relative", "bar/text"],
+      "galleryVariants": [
+        {
+          "id": "bar/horizontal",
+          "variable": "figure_bar_horizontal",
+          "source": "examples/notebooks/variants/bar-horizontal.py",
+          "download": "/notebooks/variants/bar-horizontal.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure bar/horizontal", "Display bar/horizontal"],
+          "browserSourceHashes": {
+            "examples/bar/horizontal.ts": "d94ee32d09b7997a72a0308cdcb0215554f5da33ec18dc469216e3c955896806"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "a64356c3c9a6cb37ea57af401c7328153417cb6d0df9d3818b240f996c830b30",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "a64356c3c9a6cb37ea57af401c7328153417cb6d0df9d3818b240f996c830b30",
+          "figureSha256": "bfa93fbf0a0acd1313a29f33799f23b67c06ea1fb63a453c5bb67a20651739b8",
+          "dependencies": ["holochart-py"]
+        },
+        {
+          "id": "bar/stacked",
+          "variable": "figure_bar_stacked",
+          "source": "examples/notebooks/variants/bar-stacked.py",
+          "download": "/notebooks/variants/bar-stacked.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure bar/stacked", "Display bar/stacked"],
+          "browserSourceHashes": {
+            "examples/bar/stacked.ts": "4f79b31cf7d98677a0bd6341cf2907700bdfa5bc97ed366f481a2457a623279b"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "c1eeaefd0422d7bd6a5de237d59d788af8f08cf74d645ec59712ca8b2827e22c",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "c1eeaefd0422d7bd6a5de237d59d788af8f08cf74d645ec59712ca8b2827e22c",
+          "figureSha256": "1b46c3ac3514ffa65f45ca3d082ea79e4dd08faa6450f115e2636ecf30b62795",
+          "dependencies": ["holochart-py"]
+        },
+        {
+          "id": "bar/relative",
+          "variable": "figure_bar_relative",
+          "source": "examples/notebooks/variants/bar-relative.py",
+          "download": "/notebooks/variants/bar-relative.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure bar/relative", "Display bar/relative"],
+          "browserSourceHashes": {
+            "examples/bar/relative.ts": "6b48e8c6881ff1bb11efe32d32cf0b58873dc2a7aace99c1e6d62e4f436c199b"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "e959ad72c6c9292c466dcc304414f97f2f18ccc85f92cf2836ebd842612e7097",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "e959ad72c6c9292c466dcc304414f97f2f18ccc85f92cf2836ebd842612e7097",
+          "figureSha256": "c4c666abd9eae2c565707710f616db58b0dea11b129d26a1f35a58b6e46abfd2",
+          "dependencies": ["holochart-py"]
+        },
+        {
+          "id": "bar/text",
+          "variable": "figure_bar_text",
+          "source": "examples/notebooks/variants/bar-text.py",
+          "download": "/notebooks/variants/bar-text.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure bar/text", "Display bar/text"],
+          "browserSourceHashes": {
+            "examples/bar/text.ts": "aa02285382a054676da3b08d2cb637ab542030803ef07a1477e0ae47afd6045c"
+          },
+          "height": 440,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "d6edd0ea9581a57561d082eb17abbec851378e17e5b47339f48b2ad3aecfc042",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "d6edd0ea9581a57561d082eb17abbec851378e17e5b47339f48b2ad3aecfc042",
+          "figureSha256": "fd6e5a5b007f5df94254940b86abfca8688571d8b3fe9b21b26200e15507cee0",
+          "dependencies": ["holochart-py"]
+        }
+      ],
+      "expectedWidgetOutputs": 4,
+      "environments": [
+        "JupyterLab 4.6.4 / Python 3.14.8 / Chromium 153.0.8010.12 with SwiftShader / macOS 26.6.2 arm64",
+        "Jupyter Notebook 7.6.3 / same kernel/browser/OS; independently reproduced host startup schema warning"
+      ],
+      "verification": {
+        "state": "rendered",
+        "browserVerified": true,
+        "sourceSha256": "7ce6a1ccf55858ca51c6a7b2e3c2d976625d9647cc2f8a793efc67186daffa94",
+        "date": "2026-10-09",
+        "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+        "artifact": "docs/site/wave3/notebooks/README.md"
+      },
+      "tutorialMinutes": 10,
+      "goal": "Read horizontal axes, stacking, signed contributions and visible labels.",
+      "prerequisites": [
+        "Completed development-checkout bridge setup",
+        "Selected installed notebook kernel",
+        "Active ipywidgets manager",
+        "Browser WebGL2"
+      ],
+      "dataProvenance": "Local synthetic demonstration data from this repository; MIT-licensed example source. No remote datasets, API keys or credentials. Frozen gallery arrays preserve the original browser seed/formula values; typed arrays become lists and nonfinite observations become None.",
+      "chartGuides": ["/charts/basic/bar"]
+    },
+    {
+      "slug": "time-series-gaps",
+      "title": "Time series and missing observations",
+      "description": "Compare missing readings, interpolation shapes and line dashes.",
+      "guide": "/python/notebooks/",
+      "source": "examples/notebooks/time-series-gaps.py",
+      "notebook": "examples/notebooks/time-series-gaps.ipynb",
+      "dependencies": ["holochart-py"],
+      "families": ["time-series"],
+      "galleryExamples": ["line/gaps", "line/step", "line/dashes"],
+      "galleryVariants": [
+        {
+          "id": "line/gaps",
+          "variable": "figure_line_gaps",
+          "source": "examples/notebooks/variants/line-gaps.py",
+          "download": "/notebooks/variants/line-gaps.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure line/gaps", "Display line/gaps"],
+          "browserSourceHashes": {
+            "examples/line/gaps.ts": "51a9133a218c534e442485677ccc8e41393994b3d8428854b759289fc670dbee",
+            "examples/_lib/rng.ts": "225aee40a8944abe674beafa98afb4c075acd272aac267e9fe6b0123eef11da7"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "9fe73eb7b7fb660c970e9e4d3d10cfa1541c39c0793e66ed00c9312c76dd0449",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "9fe73eb7b7fb660c970e9e4d3d10cfa1541c39c0793e66ed00c9312c76dd0449",
+          "figureSha256": "e5b41243158adfba76fd1ad68096c01e9f1b473da9edfe379f86448e0b6e9e9c",
+          "dependencies": ["holochart-py"]
+        },
+        {
+          "id": "line/step",
+          "variable": "figure_line_step",
+          "source": "examples/notebooks/variants/line-step.py",
+          "download": "/notebooks/variants/line-step.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure line/step", "Display line/step"],
+          "browserSourceHashes": {
+            "examples/line/step.ts": "b781d644f104c4c406ca922a3a78a1f60497d9b564a7aba50dc49545fe6782f0"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "604ea13c77334d5c85e3df806fb809b59526bd4a91ef3796e282255d20264806",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "604ea13c77334d5c85e3df806fb809b59526bd4a91ef3796e282255d20264806",
+          "figureSha256": "e27e50d003c602faf990a9f38ccf9924d16f04df2bc3cd9c6b4a5980ccfe2742",
+          "dependencies": ["holochart-py"]
+        },
+        {
+          "id": "line/dashes",
+          "variable": "figure_line_dashes",
+          "source": "examples/notebooks/variants/line-dashes.py",
+          "download": "/notebooks/variants/line-dashes.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure line/dashes", "Display line/dashes"],
+          "browserSourceHashes": {
+            "examples/line/dashes.ts": "a49adbe11b47326450e098304e5d161d38eee83cca47b016997ee31347e4c191",
+            "examples/_lib/rng.ts": "225aee40a8944abe674beafa98afb4c075acd272aac267e9fe6b0123eef11da7"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "a0c9636b9416b5d748c335e76d911f167ab3bbddd0e902a15f5104d8087ecf80",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "a0c9636b9416b5d748c335e76d911f167ab3bbddd0e902a15f5104d8087ecf80",
+          "figureSha256": "afe634803329526cb20b72e37b6e555e9dd1d79408f33af8fb870c4e596d6ed9",
+          "dependencies": ["holochart-py"]
+        }
+      ],
+      "expectedWidgetOutputs": 4,
+      "environments": [
+        "JupyterLab 4.6.4 / Python 3.14.8 / Chromium 153.0.8010.12 with SwiftShader / macOS 26.6.2 arm64",
+        "Jupyter Notebook 7.6.3 / same kernel/browser/OS; independently reproduced host startup schema warning"
+      ],
+      "verification": {
+        "state": "rendered",
+        "browserVerified": true,
+        "sourceSha256": "6675b55ae4b5983dccbc658ed458f902bb9263dce5c5db05fd0df7c5c45f2451",
+        "date": "2026-10-09",
+        "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+        "artifact": "docs/site/wave3/notebooks/README.md"
+      },
+      "tutorialMinutes": 10,
+      "goal": "Compare missing readings, interpolation shapes and line dashes.",
+      "prerequisites": [
+        "Completed development-checkout bridge setup",
+        "Selected installed notebook kernel",
+        "Active ipywidgets manager",
+        "Browser WebGL2"
+      ],
+      "dataProvenance": "Local synthetic demonstration data from this repository; MIT-licensed example source. No remote datasets, API keys or credentials. Frozen gallery arrays preserve the original browser seed/formula values; typed arrays become lists and nonfinite observations become None.",
+      "chartGuides": ["/charts/basic/scatter"]
+    },
+    {
+      "slug": "distribution-starters",
+      "title": "Distribution starters",
+      "description": "Compare precomputed summaries, horizontal boxes, violins and cumulative histograms.",
+      "guide": "/python/notebooks/",
+      "source": "examples/notebooks/distribution-starters.py",
+      "notebook": "examples/notebooks/distribution-starters.ipynb",
+      "dependencies": ["holochart-py"],
+      "families": ["statistical"],
+      "galleryExamples": [
+        "box/precomputed",
+        "box/horizontal",
+        "violin/basic",
+        "histogram/cumulative"
+      ],
+      "galleryVariants": [
+        {
+          "id": "box/precomputed",
+          "variable": "figure_box_precomputed",
+          "source": "examples/notebooks/variants/box-precomputed.py",
+          "download": "/notebooks/variants/box-precomputed.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure box/precomputed", "Display box/precomputed"],
+          "browserSourceHashes": {
+            "examples/box/precomputed.ts": "2e00a0ec8a21f1062ae8e625f29a40db1b61cfa881963d41e875adcb1f707529"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "dda843a0cfc8a292335b47816a8b70d7257c150ed85b9074c5acbec850aee1af",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "dda843a0cfc8a292335b47816a8b70d7257c150ed85b9074c5acbec850aee1af",
+          "figureSha256": "7a583cab858cba93307cf3195e92a7a49db97c37912606829bebbb2620a76d68",
+          "dependencies": ["holochart-py"]
+        },
+        {
+          "id": "box/horizontal",
+          "variable": "figure_box_horizontal",
+          "source": "examples/notebooks/variants/box-horizontal.py",
+          "download": "/notebooks/variants/box-horizontal.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure box/horizontal", "Display box/horizontal"],
+          "browserSourceHashes": {
+            "examples/box/horizontal.ts": "1b7004b2d1b0862fa4971c9a5294e824d8e2aafcfe361119b22a22212b5cc363",
+            "examples/_lib/rng.ts": "225aee40a8944abe674beafa98afb4c075acd272aac267e9fe6b0123eef11da7"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "2016c70a0a2ea584d9db580f9f74bcda559b38f9baba1fca0421ab1ede58338e",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "2016c70a0a2ea584d9db580f9f74bcda559b38f9baba1fca0421ab1ede58338e",
+          "figureSha256": "f52c923b840d8acbb98664ba228daf15ca1ab5693924c587fc21e9eefd18514a",
+          "dependencies": ["holochart-py"]
+        },
+        {
+          "id": "violin/basic",
+          "variable": "figure_violin_basic",
+          "source": "examples/notebooks/variants/violin-basic.py",
+          "download": "/notebooks/variants/violin-basic.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure violin/basic", "Display violin/basic"],
+          "browserSourceHashes": {
+            "examples/violin/basic.ts": "c341793d8d3bdf51d4e114f1f9d6cc736ea07075ccea8a2adc278c13293e55a1",
+            "examples/_lib/rng.ts": "225aee40a8944abe674beafa98afb4c075acd272aac267e9fe6b0123eef11da7"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "d82a30e46101f5eef336aca36a0b64f0ef0465d2748381783fb80d6c3917820c",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "d82a30e46101f5eef336aca36a0b64f0ef0465d2748381783fb80d6c3917820c",
+          "figureSha256": "74a2a0610cd3a2c95cd6bd76f9e0439b22b700887959dac4e4ba90d020fd70f9",
+          "dependencies": ["holochart-py"]
+        },
+        {
+          "id": "histogram/cumulative",
+          "variable": "figure_histogram_cumulative",
+          "source": "examples/notebooks/variants/histogram-cumulative.py",
+          "download": "/notebooks/variants/histogram-cumulative.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure histogram/cumulative", "Display histogram/cumulative"],
+          "browserSourceHashes": {
+            "examples/histogram/cumulative.ts": "5ea88bbfe4527530aa20e49523e1a27d21ea35fa1493e487978604bcaf9afdc3",
+            "examples/_lib/rng.ts": "225aee40a8944abe674beafa98afb4c075acd272aac267e9fe6b0123eef11da7"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "ee8fc58f8c5008f227385e60de9b2351e4d07c6f7ff2dea61381e7dbcc611cef",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "ee8fc58f8c5008f227385e60de9b2351e4d07c6f7ff2dea61381e7dbcc611cef",
+          "figureSha256": "1954233522b5025439d36e591139c6b17f9929dbddba1301eebbbedc014dcfa3",
+          "dependencies": ["holochart-py"]
+        }
+      ],
+      "expectedWidgetOutputs": 4,
+      "environments": [
+        "JupyterLab 4.6.4 / Python 3.14.8 / Chromium 153.0.8010.12 with SwiftShader / macOS 26.6.2 arm64",
+        "Jupyter Notebook 7.6.3 / same kernel/browser/OS; independently reproduced host startup schema warning"
+      ],
+      "verification": {
+        "state": "rendered",
+        "browserVerified": true,
+        "sourceSha256": "6168d6116871f777ca11e19da71135e3232c53ba0d63fb155306620e91e5c275",
+        "date": "2026-10-09",
+        "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+        "artifact": "docs/site/wave3/notebooks/README.md"
+      },
+      "tutorialMinutes": 10,
+      "goal": "Compare precomputed summaries, horizontal boxes, violins and cumulative histograms.",
+      "prerequisites": [
+        "Completed development-checkout bridge setup",
+        "Selected installed notebook kernel",
+        "Active ipywidgets manager",
+        "Browser WebGL2"
+      ],
+      "dataProvenance": "Local synthetic demonstration data from this repository; MIT-licensed example source. No remote datasets, API keys or credentials. Frozen gallery arrays preserve the original browser seed/formula values; typed arrays become lists and nonfinite observations become None.",
+      "chartGuides": [
+        "/charts/statistical/histogram",
+        "/charts/statistical/box",
+        "/charts/statistical/violin"
+      ]
+    },
+    {
+      "slug": "subplot-layouts",
+      "title": "Independent and coupled subplots",
+      "description": "Assign traces to axis pairs and compare independent with shared axes.",
+      "guide": "/python/notebooks/",
+      "source": "examples/notebooks/subplot-layouts.py",
+      "notebook": "examples/notebooks/subplot-layouts.ipynb",
+      "dependencies": ["holochart-py"],
+      "families": ["relationships"],
+      "galleryExamples": ["layout/grid-independent", "layout/grid-coupled"],
+      "galleryVariants": [
+        {
+          "id": "layout/grid-independent",
+          "variable": "figure_layout_grid_independent",
+          "source": "examples/notebooks/variants/layout-grid-independent.py",
+          "download": "/notebooks/variants/layout-grid-independent.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": [
+            "Imports",
+            "Figure layout/grid-independent",
+            "Display layout/grid-independent"
+          ],
+          "browserSourceHashes": {
+            "examples/layout/grid-independent.ts": "cbc369c5fd2d4fec95f895b62bd38fda1218bfec7d2f135b57b350ec6e324d31",
+            "examples/_lib/rng.ts": "225aee40a8944abe674beafa98afb4c075acd272aac267e9fe6b0123eef11da7"
+          },
+          "height": 480,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "7654ee878d3b59f6761f1f79ad9a7f6b1037fa937657b2eaa047e06012436a0b",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "7654ee878d3b59f6761f1f79ad9a7f6b1037fa937657b2eaa047e06012436a0b",
+          "figureSha256": "f29664664e8d959ff5e465549a3ffa1bb4eb692250ce6ace66ca983d83783e6c",
+          "dependencies": ["holochart-py"]
+        },
+        {
+          "id": "layout/grid-coupled",
+          "variable": "figure_layout_grid_coupled",
+          "source": "examples/notebooks/variants/layout-grid-coupled.py",
+          "download": "/notebooks/variants/layout-grid-coupled.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure layout/grid-coupled", "Display layout/grid-coupled"],
+          "browserSourceHashes": {
+            "examples/layout/grid-coupled.ts": "04f1b833fbd6b67b97c3527ea5c6df8044a886cfa974994a8e66254b26446abb",
+            "examples/_lib/rng.ts": "225aee40a8944abe674beafa98afb4c075acd272aac267e9fe6b0123eef11da7"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "9ae83e27d92eb2053cb79e23cc3799ce13bfec1515febf864053f6fa1b140259",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "9ae83e27d92eb2053cb79e23cc3799ce13bfec1515febf864053f6fa1b140259",
+          "figureSha256": "5f3a31b69afb32c7ec50cc60ca9b66cdf28cc0e5d3198a52ebe46044a65bf083",
+          "dependencies": ["holochart-py"]
+        }
+      ],
+      "expectedWidgetOutputs": 2,
+      "environments": [
+        "JupyterLab 4.6.4 / Python 3.14.8 / Chromium 153.0.8010.12 with SwiftShader / macOS 26.6.2 arm64",
+        "Jupyter Notebook 7.6.3 / same kernel/browser/OS; independently reproduced host startup schema warning"
+      ],
+      "verification": {
+        "state": "rendered",
+        "browserVerified": true,
+        "sourceSha256": "58a44478bd1dc96d4eba7c63f23cf031cc95e2df52e4bb8d6d1f41ca00020efc",
+        "date": "2026-10-09",
+        "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+        "artifact": "docs/site/wave3/notebooks/README.md"
+      },
+      "tutorialMinutes": 10,
+      "goal": "Assign traces to axis pairs and compare independent with shared axes.",
+      "prerequisites": [
+        "Completed development-checkout bridge setup",
+        "Selected installed notebook kernel",
+        "Active ipywidgets manager",
+        "Browser WebGL2"
+      ],
+      "dataProvenance": "Local synthetic demonstration data from this repository; MIT-licensed example source. No remote datasets, API keys or credentials. Frozen gallery arrays preserve the original browser seed/formula values; typed arrays become lists and nonfinite observations become None.",
+      "chartGuides": []
+    },
+    {
+      "slug": "themes-labels",
+      "title": "Themes and readable labels",
+      "description": "Select public templates and attach text labels without changing the dataset.",
+      "guide": "/python/notebooks/",
+      "source": "examples/notebooks/themes-labels.py",
+      "notebook": "examples/notebooks/themes-labels.ipynb",
+      "dependencies": ["holochart-py"],
+      "families": ["basic"],
+      "galleryExamples": ["themes/plotly_white", "themes/high-contrast", "scatter/text-labels"],
+      "galleryVariants": [
+        {
+          "id": "themes/plotly_white",
+          "variable": "figure_themes_plotly_white",
+          "source": "examples/notebooks/variants/themes-plotly_white.py",
+          "download": "/notebooks/variants/themes-plotly_white.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure themes/plotly_white", "Display themes/plotly_white"],
+          "browserSourceHashes": {
+            "examples/themes/plotly_white.ts": "a3582836c01c02c4ae13dd077e1f1ff6864d1e22c58a334adddca0dd29a09f86",
+            "examples/_lib/theme-sampler.ts": "761fe78448cb00a2e437d95c18fe296f5c8c7695b86024a48ad2b027af5fce8f",
+            "examples/_lib/rng.ts": "225aee40a8944abe674beafa98afb4c075acd272aac267e9fe6b0123eef11da7"
+          },
+          "height": 440,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "f235bc511c8da784e06f3dc757e42572cddc8c4ede6f8266022cd99a895bba45",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "f235bc511c8da784e06f3dc757e42572cddc8c4ede6f8266022cd99a895bba45",
+          "figureSha256": "1d573c11b919b49823fbbac9d78499e60ceab5e91e7a3e9cfe885508990d4167",
+          "dependencies": ["holochart-py"]
+        },
+        {
+          "id": "themes/high-contrast",
+          "variable": "figure_themes_high_contrast",
+          "source": "examples/notebooks/variants/themes-high-contrast.py",
+          "download": "/notebooks/variants/themes-high-contrast.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure themes/high-contrast", "Display themes/high-contrast"],
+          "browserSourceHashes": {
+            "examples/themes/high-contrast.ts": "b53c60b47ace68dedb257bf45ad1d2483c10e2ba283bff3d1b047de9147f78ff",
+            "examples/_lib/theme-sampler.ts": "761fe78448cb00a2e437d95c18fe296f5c8c7695b86024a48ad2b027af5fce8f",
+            "examples/_lib/rng.ts": "225aee40a8944abe674beafa98afb4c075acd272aac267e9fe6b0123eef11da7"
+          },
+          "height": 440,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "bc8e443142902d945fd52dbe878326213928ba6404936eb4de64e3e454ec9af1",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "bc8e443142902d945fd52dbe878326213928ba6404936eb4de64e3e454ec9af1",
+          "figureSha256": "4abded8205125a9cc46289bd22d81bf75ea511e4797adcb317420dc4071441f7",
+          "dependencies": ["holochart-py"]
+        },
+        {
+          "id": "scatter/text-labels",
+          "variable": "figure_scatter_text_labels",
+          "source": "examples/notebooks/variants/scatter-text-labels.py",
+          "download": "/notebooks/variants/scatter-text-labels.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure scatter/text-labels", "Display scatter/text-labels"],
+          "browserSourceHashes": {
+            "examples/scatter/text-labels.ts": "d16b4a5a5eed34bbcea8bb8b9352b5995aab83eccd81a8b10a936bf7734fb4fd"
+          },
+          "height": 440,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "f06183af0801b890fa5d2e673c5d679739548f7dabc947f8b4e3153198e70bc2",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "f06183af0801b890fa5d2e673c5d679739548f7dabc947f8b4e3153198e70bc2",
+          "figureSha256": "cdddac0de40f704badcafce86826d87ede3197bab7c85b094734d62552341f8d",
+          "dependencies": ["holochart-py"]
+        }
+      ],
+      "expectedWidgetOutputs": 3,
+      "environments": [
+        "JupyterLab 4.6.4 / Python 3.14.8 / Chromium 153.0.8010.12 with SwiftShader / macOS 26.6.2 arm64",
+        "Jupyter Notebook 7.6.3 / same kernel/browser/OS; independently reproduced host startup schema warning"
+      ],
+      "verification": {
+        "state": "rendered",
+        "browserVerified": true,
+        "sourceSha256": "4f9ce1c2efaca4c48293f65fec39816d33a195577f47e66ae73f017ce5001af0",
+        "date": "2026-10-09",
+        "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+        "artifact": "docs/site/wave3/notebooks/README.md"
+      },
+      "tutorialMinutes": 10,
+      "goal": "Select public templates and attach text labels without changing the dataset.",
+      "prerequisites": [
+        "Completed development-checkout bridge setup",
+        "Selected installed notebook kernel",
+        "Active ipywidgets manager",
+        "Browser WebGL2"
+      ],
+      "dataProvenance": "Local synthetic demonstration data from this repository; MIT-licensed example source. No remote datasets, API keys or credentials. Frozen gallery arrays preserve the original browser seed/formula values; typed arrays become lists and nonfinite observations become None.",
+      "chartGuides": []
+    },
+    {
+      "slug": "spatial-starters",
+      "title": "3D points and surfaces",
+      "description": "Display a reproducible point cloud and a sampled height field with explicit cameras.",
+      "guide": "/python/notebooks/",
+      "source": "examples/notebooks/spatial-starters.py",
+      "notebook": "examples/notebooks/spatial-starters.ipynb",
+      "dependencies": ["holochart-py"],
+      "families": ["3d"],
+      "galleryExamples": ["scatter3d/basic", "surface/basic"],
+      "galleryVariants": [
+        {
+          "id": "scatter3d/basic",
+          "variable": "figure_scatter3d_basic",
+          "source": "examples/notebooks/variants/scatter3d-basic.py",
+          "download": "/notebooks/variants/scatter3d-basic.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure scatter3d/basic", "Display scatter3d/basic"],
+          "browserSourceHashes": {
+            "examples/scatter3d/basic.ts": "9fc2b4b4f24da968f78accf19ba36ceb4e7ee96910ef2a2e2b99b9646aad4072",
+            "examples/_lib/rng.ts": "225aee40a8944abe674beafa98afb4c075acd272aac267e9fe6b0123eef11da7"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "8212747942c3e2fd5f667b4ac7453e7bbaac381c9efaa608e87234e27b2126df",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "8212747942c3e2fd5f667b4ac7453e7bbaac381c9efaa608e87234e27b2126df",
+          "figureSha256": "616e17c7a232b9a235eb85537c8f45f44169e2ec68d57468a0341708f5d6ede6",
+          "dependencies": ["holochart-py"]
+        },
+        {
+          "id": "surface/basic",
+          "variable": "figure_surface_basic",
+          "source": "examples/notebooks/variants/surface-basic.py",
+          "download": "/notebooks/variants/surface-basic.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure surface/basic", "Display surface/basic"],
+          "browserSourceHashes": {
+            "examples/surface/basic.ts": "0fbdbe5ce7fa5ed8c9a1b59e628025fa3765c5c178d4ff369f680b5f43eda1dd",
+            "examples/_lib/surface-data.ts": "39123e7801cc16783589560a2dad737f13ae064b32c2a625e0658a4172f0a1ec"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "b415806e92d69d5bb1a24755cd129fba01a822d384d059b4cf72b2a415747761",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "b415806e92d69d5bb1a24755cd129fba01a822d384d059b4cf72b2a415747761",
+          "figureSha256": "5c40d3c1f33024232d358b600c848c8e4dacff443100bb01d8d226a176566dd0",
+          "dependencies": ["holochart-py"]
+        }
+      ],
+      "expectedWidgetOutputs": 2,
+      "environments": [
+        "JupyterLab 4.6.4 / Python 3.14.8 / Chromium 153.0.8010.12 with SwiftShader / macOS 26.6.2 arm64",
+        "Jupyter Notebook 7.6.3 / same kernel/browser/OS; independently reproduced host startup schema warning"
+      ],
+      "verification": {
+        "state": "rendered",
+        "browserVerified": true,
+        "sourceSha256": "7a06f1147314fbe1bb7e534fe9d5f8fc013d5bc6026d5ae5e768791d51cd4ac1",
+        "date": "2026-10-09",
+        "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+        "artifact": "docs/site/wave3/notebooks/README.md"
+      },
+      "tutorialMinutes": 10,
+      "goal": "Display a reproducible point cloud and a sampled height field with explicit cameras.",
+      "prerequisites": [
+        "Completed development-checkout bridge setup",
+        "Selected installed notebook kernel",
+        "Active ipywidgets manager",
+        "Browser WebGL2"
+      ],
+      "dataProvenance": "Local synthetic demonstration data from this repository; MIT-licensed example source. No remote datasets, API keys or credentials. Frozen gallery arrays preserve the original browser seed/formula values; typed arrays become lists and nonfinite observations become None.",
+      "chartGuides": ["/charts/3d/scatter3d", "/charts/3d/surface"]
+    },
+    {
+      "slug": "data-troubleshooting",
+      "title": "Data shape and missing cells",
+      "description": "Check irregular heatmap edges, missing cells, and scatter error arrays.",
+      "guide": "/python/notebooks/",
+      "source": "examples/notebooks/data-troubleshooting.py",
+      "notebook": "examples/notebooks/data-troubleshooting.ipynb",
+      "dependencies": ["holochart-py"],
+      "families": ["scientific"],
+      "galleryExamples": ["heatmap/uneven", "scatter/error-bars"],
+      "galleryVariants": [
+        {
+          "id": "heatmap/uneven",
+          "variable": "figure_heatmap_uneven",
+          "source": "examples/notebooks/variants/heatmap-uneven.py",
+          "download": "/notebooks/variants/heatmap-uneven.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure heatmap/uneven", "Display heatmap/uneven"],
+          "browserSourceHashes": {
+            "examples/heatmap/uneven.ts": "276a592f2f50161a2960f70f126885aae04b920f24ba04e508f3c7bf184ddf0d"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "caab8e85e6db6f7fefc7a8e1a5fb4c8844fbaabdc1309189ee3bdc23bcc791ae",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "caab8e85e6db6f7fefc7a8e1a5fb4c8844fbaabdc1309189ee3bdc23bcc791ae",
+          "figureSha256": "0ba7c43ba21d942dfad919e356d375bf3e45d972da36d05fa2ea60c24a3e2edd",
+          "dependencies": ["holochart-py"]
+        },
+        {
+          "id": "scatter/error-bars",
+          "variable": "figure_scatter_error_bars",
+          "source": "examples/notebooks/variants/scatter-error-bars.py",
+          "download": "/notebooks/variants/scatter-error-bars.py",
+          "expectedWidgetOutputs": 1,
+          "cellNames": ["Imports", "Figure scatter/error-bars", "Display scatter/error-bars"],
+          "browserSourceHashes": {
+            "examples/scatter/error-bars.ts": "718d8320149bf8dfbf338330f004f61791385b811995bc7e1e86872142b80920",
+            "examples/_lib/rng.ts": "225aee40a8944abe674beafa98afb4c075acd272aac267e9fe6b0123eef11da7"
+          },
+          "height": 450,
+          "verification": {
+            "state": "rendered",
+            "browserVerified": true,
+            "sourceSha256": "69a8c9888f47232326637fb72476525bc68d957d94063f848383a6daab8890d3",
+            "date": "2026-10-09",
+            "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+            "artifact": "docs/site/wave3/notebooks/README.md"
+          },
+          "sourceSha256": "69a8c9888f47232326637fb72476525bc68d957d94063f848383a6daab8890d3",
+          "figureSha256": "c3007265d4578a57734a095693ae906b6a9d755b619ff0774df2be573226a499",
+          "dependencies": ["holochart-py"]
+        }
+      ],
+      "expectedWidgetOutputs": 2,
+      "environments": [
+        "JupyterLab 4.6.4 / Python 3.14.8 / Chromium 153.0.8010.12 with SwiftShader / macOS 26.6.2 arm64",
+        "Jupyter Notebook 7.6.3 / same kernel/browser/OS; independently reproduced host startup schema warning"
+      ],
+      "verification": {
+        "state": "rendered",
+        "browserVerified": true,
+        "sourceSha256": "02077d9e1bf81558eedd66991c38e398e27015b774b120d08f8755102b1f9301",
+        "date": "2026-10-09",
+        "method": "Fresh kernels in actual JupyterLab 4.6.4 and Notebook 7.6.3 widget managers; exact output counts, source and executable-cell hashes match distributed artifacts. Notebook startup schema warning is separately recorded; no bridge errors. Slider retains canvas during update and rerun removes the old view.",
+        "artifact": "docs/site/wave3/notebooks/README.md"
+      },
+      "tutorialMinutes": 10,
+      "goal": "Check irregular heatmap edges, missing cells, and scatter error arrays.",
+      "prerequisites": [
+        "Completed development-checkout bridge setup",
+        "Selected installed notebook kernel",
+        "Active ipywidgets manager",
+        "Browser WebGL2"
+      ],
+      "dataProvenance": "Local synthetic demonstration data from this repository; MIT-licensed example source. No remote datasets, API keys or credentials. Frozen gallery arrays preserve the original browser seed/formula values; typed arrays become lists and nonfinite observations become None.",
+      "chartGuides": ["/charts/scientific/heatmap"]
+    }
+  ]
+}

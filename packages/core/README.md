@@ -26,8 +26,12 @@ No peer dependencies. ESM-only; Node 22 and newer can also `require()` it.
 - **Subplots:** `makeSubplots`
 - **Colors:** `colors`, `getColorscale`, `getColorway`, `registerColorscale`,
   `registerBuiltinColors` (opts a partial bundle in to every named palette and colorscale)
-- **Updates and data:** `planUpdate`, `planRestyle`, `planRelayout`, `diffFigures`, `parseDate`,
-  `encodeFigure` / `decodeFigure`
+- **Updates and data:** `planUpdate`, `planRestyle`, `planRelayout`, `diffFigures`, `parseDate`
+  (experimental), `encodeFigure` / `decodeFigure`
+
+`attr`, the schema objects and `createRegistry` are **experimental** until the plugin API
+stabilises. The package also exports helpers for the other Holochart packages (scales, coercion,
+rich text), tagged `@internal`: they are not API.
 
 ## Usage
 

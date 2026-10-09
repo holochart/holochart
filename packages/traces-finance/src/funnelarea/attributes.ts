@@ -16,7 +16,7 @@ import {
   pieLayoutAttributes,
 } from '@mk7s/holochart-traces-basic';
 
-/** The funnelarea schema. */
+/** The funnelarea schema. @experimental */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const funnelareaAttributes = /* @__PURE__ */ (() => {
   const P = pieAttributes.children;
@@ -128,7 +128,10 @@ export const funnelareaAttributes = /* @__PURE__ */ (() => {
   );
 })();
 
-/** Layout attributes owned by `funnelarea` (coerced when a funnelarea trace is present). */
+/**
+ * Layout attributes owned by `funnelarea` (coerced when a funnelarea trace is present).
+ * @internal
+ */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const funnelareaLayoutAttributes = /* @__PURE__ */ (() =>
   ({

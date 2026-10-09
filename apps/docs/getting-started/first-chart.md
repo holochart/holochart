@@ -7,13 +7,14 @@ status: complete
 # Your first chart
 
 This tutorial builds a small chart with a line trace and a bar trace, then updates it and listens
-for clicks. It takes about five minutes.
+for clicks. It takes about five minutes **after your environment is set up**.
+Source cloning, dependency installation and the browser build take additional time.
 
-::: info Status
-Holochart is pre-alpha. Everything on this page runs today; see
-[Installation](/getting-started/installation) for how to use it from source until the first alpha
-is published.
-:::
+<InstallStatus ecosystem="javascript" />
+
+Complete the [source workspace setup](/getting-started/installation#try-it-from-the-monorepo)
+first. This tutorial explains the browser API; the
+[Python notebook guide](/guides/notebooks) covers the notebook bridge.
 
 ## 1. Add a container
 

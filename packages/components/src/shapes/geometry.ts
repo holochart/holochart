@@ -25,19 +25,22 @@ import type { FullShape } from './schema.ts';
 
 const DEG = Math.PI / 180;
 
-/** The axis parts shapes need. */
+/** The axis parts shapes need. @internal */
 export type ShapeAxis = Pick<
   AxisInfo,
   'id' | 'letter' | 'type' | 'scale' | 'full' | 'start' | 'end'
 >;
 
-/** Where shapes are placed. */
+/** Where shapes are placed. @internal */
 export interface ShapeEnv {
   readonly plotArea: { x: number; y: number; width: number; height: number };
   readonly axes: ReadonlyMap<string, ShapeAxis>;
 }
 
-/** How one dimension (x or y) of a shape maps between its reference, its class space and px. */
+/**
+ * How one dimension (x or y) of a shape maps between its reference, its class space and px.
+ * @internal
+ */
 export interface ShapeDim {
   /** The data axis whose linear coordinates the geometry uses; `undefined`: container px. */
   readonly axis: ShapeAxis | undefined;
@@ -77,6 +80,7 @@ function fromLinear(axis: ShapeAxis, l: number): unknown {
 /**
  * A shape dimension for `ref` along `letter`, or `undefined` when the reference is invalid or its
  * axis doesn't exist.
+ * @internal
  */
 export function shapeDim(
   ref: string,
@@ -149,19 +153,22 @@ export function shapeDim(
   };
 }
 
-/** Round a px-per-unit scale up to a power of two, so flattening changes only every 2× zoom. */
+/**
+ * Round a px-per-unit scale up to a power of two, so flattening changes only every 2× zoom.
+ * @internal
+ */
 export function quantizeScale(s: number): number {
   return s > 0 && Number.isFinite(s) ? 2 ** Math.ceil(Math.log2(s)) : 1;
 }
 
-/** A ring or polyline in class coordinates. */
+/** A ring or polyline in class coordinates. @internal */
 export interface Ring {
   x: number[];
   y: number[];
   closed: boolean;
 }
 
-/** Everything drawn for one shape. */
+/** Everything drawn for one shape. @internal */
 export interface ShapeGeometry {
   /** `_index` of the shape. */
   readonly index: number;
@@ -184,7 +191,7 @@ export interface ShapeGeometry {
 
 const pathCache = new Map<string, ParsedPath>();
 
-/** Parse a shape path once (paths are re-used across zoom, pan and redraws). */
+/** Parse a shape path once (paths are re-used across zoom, pan and redraws). @internal */
 export function cachedPath(d: string): ParsedPath {
   let p = pathCache.get(d);
   if (!p) {
@@ -198,6 +205,7 @@ export function cachedPath(d: string): ParsedPath {
 /**
  * One shape's geometry in class coordinates, or `undefined` when it draws nothing (hidden, invalid
  * reference, empty path). `override` replaces positions during a drag preview.
+ * @internal
  */
 export function shapeGeometry(
   s: FullShape,
@@ -355,6 +363,7 @@ function shapeLabel(
  * Label anchor point, horizontal anchor and angle (plotly.js `shapes/display_labels.js`,
  * `calcTextPosition`): lines place it at the start, middle or end, padded perpendicular to the line
  * when the angle follows it; other shapes at one of 9 positions of their box, padded inwards.
+ * @internal
  */
 export function labelPosition(
   type: FullShape['type'],

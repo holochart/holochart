@@ -20,7 +20,7 @@ import {
   richTextToPlain,
   toRGBA,
   type FullTrace,
-  type RGBA,
+  type RGBAColor,
 } from '@mk7s/holochart-core';
 import {
   measureText,
@@ -41,7 +41,7 @@ export const LINE_SPACING = 1.3;
 export const EMPTY_HEADER_HEIGHT = 16;
 /** Plotly's `latexCheck`: such values are shown as given, without prefix, suffix or format. */
 const LATEX = /^\$.*\$$/;
-const TRANSPARENT: RGBA = [0, 0, 0, 0];
+const TRANSPARENT: RGBAColor = [0, 0, 0, 0];
 
 /** Which block a cell belongs to. */
 export type TableBlock = 'header' | 'cells';
@@ -132,14 +132,14 @@ export function cellText(
 /** Resolved style of one cell. */
 export interface CellStyle {
   readonly font: TextFont;
-  readonly color: RGBA;
+  readonly color: RGBAColor;
   readonly align: 'left' | 'center' | 'right';
-  readonly fill: RGBA;
-  readonly lineColor: RGBA;
+  readonly fill: RGBAColor;
+  readonly lineColor: RGBAColor;
   readonly lineWidth: number;
 }
 
-function color(v: unknown, fallback: RGBA): RGBA {
+function color(v: unknown, fallback: RGBAColor): RGBAColor {
   return typeof v === 'string' ? (toRGBA(v) ?? fallback) : fallback;
 }
 

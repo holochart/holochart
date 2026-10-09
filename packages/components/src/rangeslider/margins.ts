@@ -9,9 +9,9 @@ import type { MarginPush } from '@mk7s/holochart-runtime';
 import { axisGeometry, axisTicks, cloneScale, type AxisLike } from '../axes/geometry.ts';
 import type { MeasureLine } from '../shared/text.ts';
 
-/** Gap between the axis (tick labels, title) and the slider, px (Plotly's `extraPad`). */
+/** Gap between the axis (tick labels, title) and the slider, px (Plotly's `extraPad`). @internal */
 export const RANGESLIDER_PAD = 15;
-/** A defaulted `xaxis.rangeslider` (see core's `rangesliderSchema`). */
+/** A defaulted `xaxis.rangeslider` (see core's `rangesliderSchema`). @internal */
 export interface FullRangeslider {
   readonly visible: boolean;
   readonly thickness: number;
@@ -24,7 +24,7 @@ export interface FullRangeslider {
   readonly [yaxis: string]: unknown;
 }
 
-/** The visible range slider of an axis, if any. */
+/** The visible range slider of an axis, if any. @internal */
 export function rangesliderOf(full: unknown): FullRangeslider | undefined {
   const rs = (full as { rangeslider?: FullRangeslider } | undefined)?.rangeslider;
   return rs?.visible === true ? rs : undefined;
@@ -33,6 +33,7 @@ export function rangesliderOf(full: unknown): FullRangeslider | undefined {
 /**
  * Slider height, px (Plotly's `_height`): `thickness` of the figure height minus the layout's own
  * top and bottom margins (before any component grows them, so it does not change as they grow).
+ * @internal
  */
 export function sliderHeight(
   figureHeight: number,
@@ -46,6 +47,7 @@ export function sliderHeight(
  * How far an axis reaches below (or beyond) its plot edge: `margin.pad`, ticks, tick labels and
  * title (the axes component's outward extent). A scale not laid out yet is measured at
  * `lengthHint` px on a copy.
+ * @internal
  */
 export function axisDepth(
   axis: AxisLike,
@@ -82,6 +84,7 @@ export function axisDepth(
  * the gap, the slider and its border, then the layout's `margin.b` again below it. `bottom` is
  * the paper fraction of the lowest subplot edge on the axis (0 at the plot-area bottom); room the
  * plot area already has below it counts, solved like Plotly for the plot height the margin leaves.
+ * @internal
  */
 export function sliderMarginPush(opts: {
   readonly height: number;

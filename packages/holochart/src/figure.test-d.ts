@@ -3,7 +3,10 @@
  * typecheck`): `expectTypeOf` assertions and `@ts-expect-error` cases. Nothing here runs.
  */
 import type { FigureInput, TraceInput } from '@mk7s/holochart-core';
-import type { ScatterTrace as BasicScatterTrace, TracesBasic } from '@mk7s/holochart-traces-basic';
+import type {
+  BaseScatterTrace as BasicScatterTrace,
+  TracesBasic,
+} from '@mk7s/holochart-traces-basic';
 import { describe, expectTypeOf, it } from 'vitest';
 import {
   addTraces,

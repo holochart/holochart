@@ -21,8 +21,10 @@
 import type { FullAxis } from '../defaults/types.ts';
 import type { BreakMap } from './breaks.ts';
 
+/** @experimental */
 export type AxisType = 'linear' | 'log' | 'date' | 'category' | 'multicategory';
 
+/** @internal */
 export interface ScaleOptions {
   type: AxisType;
   /** Initial range in linear space. Default [0, 1]. */
@@ -48,6 +50,7 @@ export interface ScaleOptions {
   breaks?: BreakMap;
 }
 
+/** @experimental */
 export interface Scale {
   readonly type: AxisType;
   /** Data value → linear coordinate; NaN when not representable (≤ 0 on log, unknown category). */
@@ -91,7 +94,10 @@ export interface Scale {
   readonly breaks: BreakMap | undefined;
 }
 
-/** A data extreme a trace contributes to autorange, with the pixel padding it needs (marker size). */
+/**
+ * A data extreme a trace contributes to autorange, with the pixel padding it needs (marker size).
+ * @experimental
+ */
 export interface ExtremePoint {
   /** Linear coordinate. */
   l: number;
@@ -105,7 +111,7 @@ export interface ExtremePoint {
   extrapad?: boolean;
 }
 
-/** What one trace contributes to one axis' autorange. */
+/** What one trace contributes to one axis' autorange. @experimental */
 export interface AxisExtremes {
   min: ExtremePoint[];
   max: ExtremePoint[];
@@ -113,7 +119,7 @@ export interface AxisExtremes {
   tozero?: boolean;
 }
 
-/** One tick mark (plan E3.3). */
+/** One tick mark (plan E3.3). @experimental */
 export interface Tick {
   /** Linear coordinate. */
   l: number;
@@ -138,11 +144,13 @@ export interface Tick {
   fontScale?: number;
 }
 
-/** Signatures the scales workstream implements (see `index.ts`). */
+/** Signatures the scales workstream implements (see `index.ts`). @internal */
 export type CreateScale = (options: ScaleOptions) => Scale;
+/** @internal */
 export type Autorange = (
   extremes: readonly AxisExtremes[],
   scale: Scale,
   axis: FullAxis,
 ) => [number, number];
+/** @internal */
 export type ComputeTicks = (scale: Scale, axis: FullAxis) => Tick[];

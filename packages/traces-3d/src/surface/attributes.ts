@@ -102,7 +102,10 @@ function textArray(description: string, editType: 'calc' | 'style') {
   return attr.dataArray({ editType, description });
 }
 
-/** The surface schema. Common trace attributes (`name`, `opacity`, `hoverinfo`, …) come from core. */
+/**
+ * The surface schema. Common trace attributes (`name`, `opacity`, `hoverinfo`, …) come from core.
+ * @experimental
+ */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const surfaceAttributes = /* @__PURE__ */ (() =>
   attr.object(

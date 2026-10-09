@@ -4,9 +4,128 @@
 import type { DataArray } from '../schema/types.ts';
 
 /**
+ * Figure title.
+ */
+export interface BaseLayoutTitle {
+  /**
+   * Title text (supports rich-text tags, E2.10).
+   *
+   * @defaultValue `""`
+   */
+  text?: string;
+  /**
+   * Title font. Defaults to `layout.font` with 1.4× size.
+   */
+  font?: LayoutTitleFont;
+  /**
+   * Horizontal position in `xref` coordinates.
+   *
+   * Range: 0 – 1
+   *
+   * @defaultValue `0.5`
+   */
+  x?: number;
+  /**
+   * Vertical position in `yref` coordinates. `auto` places it in the top margin.
+   *
+   * Range: 0 – 1
+   *
+   * @defaultValue `"auto"`
+   */
+  y?: number | 'auto';
+  /**
+   * `container` spans the whole figure; `paper` spans the plot area.
+   *
+   * @defaultValue `"container"`
+   */
+  xref?: 'container' | 'paper';
+  /**
+   * `container` spans the whole figure; `paper` spans the plot area.
+   *
+   * @defaultValue `"container"`
+   */
+  yref?: 'container' | 'paper';
+  /**
+   * Horizontal alignment of the title box relative to `x`.
+   *
+   * @defaultValue `"auto"`
+   */
+  xanchor?: 'auto' | 'left' | 'center' | 'right';
+  /**
+   * Vertical alignment of the title box relative to `y`.
+   *
+   * @defaultValue `"auto"`
+   */
+  yanchor?: 'auto' | 'top' | 'middle' | 'bottom';
+}
+
+/**
+ * Title font. Defaults to `layout.font` with 1.4× size.
+ */
+export interface LayoutTitleFont {
+  /**
+   * CSS font-family list. The renderer uses the first family it can load and falls back through the list.
+   */
+  family?: string;
+  /**
+   * Font size in CSS pixels.
+   *
+   * Minimum: 1
+   */
+  size?: number;
+  /**
+   * Text color.
+   */
+  color?: string;
+  /**
+   * Font weight: a CSS numeric weight (1–1000), `normal` or `bold`.
+   *
+   * Range: 1 – 1000
+   */
+  weight?: number | 'normal' | 'bold';
+  /**
+   * Font style.
+   */
+  style?: 'normal' | 'italic';
+  /**
+   * Capitals variant (CSS `font-variant-caps`). The SDF text renderer approximates small and petite caps with uppercase letters at a reduced size.
+   */
+  variant?:
+    'normal' | 'small-caps' | 'all-small-caps' | 'all-petite-caps' | 'petite-caps' | 'unicase';
+  /**
+   * Letter case transform: `upper`, `lower`, `word caps` (first letter of each word), or `normal`.
+   */
+  textcase?: 'normal' | 'word caps' | 'upper' | 'lower';
+  /**
+   * Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.
+   */
+  lineposition?:
+    | 'under'
+    | 'over'
+    | 'through'
+    | 'under+over'
+    | 'under+through'
+    | 'over+under'
+    | 'over+through'
+    | 'through+under'
+    | 'through+over'
+    | 'under+over+through'
+    | 'under+through+over'
+    | 'over+under+through'
+    | 'over+through+under'
+    | 'through+under+over'
+    | 'through+over+under'
+    | 'none';
+  /**
+   * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
+   */
+  shadow?: string;
+}
+
+/**
  * Figure layout.
  */
-export type Layout = {
+export type BaseLayout = {
   /**
    * Figure width in CSS pixels. Ignored when `autosize` fills the container.
    *
@@ -62,7 +181,7 @@ export type Layout = {
   /**
    * Figure title.
    */
-  title?: LayoutTitle;
+  title?: BaseLayoutTitle;
   /**
    * Show the legend. Defaults to `true` when more than one trace has a legend entry.
    */
@@ -342,125 +461,6 @@ export interface LayoutFont {
    * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
    *
    * @defaultValue `"none"`
-   */
-  shadow?: string;
-}
-
-/**
- * Figure title.
- */
-export interface LayoutTitle {
-  /**
-   * Title text (supports rich-text tags, E2.10).
-   *
-   * @defaultValue `""`
-   */
-  text?: string;
-  /**
-   * Title font. Defaults to `layout.font` with 1.4× size.
-   */
-  font?: LayoutTitleFont;
-  /**
-   * Horizontal position in `xref` coordinates.
-   *
-   * Range: 0 – 1
-   *
-   * @defaultValue `0.5`
-   */
-  x?: number;
-  /**
-   * Vertical position in `yref` coordinates. `auto` places it in the top margin.
-   *
-   * Range: 0 – 1
-   *
-   * @defaultValue `"auto"`
-   */
-  y?: number | 'auto';
-  /**
-   * `container` spans the whole figure; `paper` spans the plot area.
-   *
-   * @defaultValue `"container"`
-   */
-  xref?: 'container' | 'paper';
-  /**
-   * `container` spans the whole figure; `paper` spans the plot area.
-   *
-   * @defaultValue `"container"`
-   */
-  yref?: 'container' | 'paper';
-  /**
-   * Horizontal alignment of the title box relative to `x`.
-   *
-   * @defaultValue `"auto"`
-   */
-  xanchor?: 'auto' | 'left' | 'center' | 'right';
-  /**
-   * Vertical alignment of the title box relative to `y`.
-   *
-   * @defaultValue `"auto"`
-   */
-  yanchor?: 'auto' | 'top' | 'middle' | 'bottom';
-}
-
-/**
- * Title font. Defaults to `layout.font` with 1.4× size.
- */
-export interface LayoutTitleFont {
-  /**
-   * CSS font-family list. The renderer uses the first family it can load and falls back through the list.
-   */
-  family?: string;
-  /**
-   * Font size in CSS pixels.
-   *
-   * Minimum: 1
-   */
-  size?: number;
-  /**
-   * Text color.
-   */
-  color?: string;
-  /**
-   * Font weight: a CSS numeric weight (1–1000), `normal` or `bold`.
-   *
-   * Range: 1 – 1000
-   */
-  weight?: number | 'normal' | 'bold';
-  /**
-   * Font style.
-   */
-  style?: 'normal' | 'italic';
-  /**
-   * Capitals variant (CSS `font-variant-caps`). The SDF text renderer approximates small and petite caps with uppercase letters at a reduced size.
-   */
-  variant?:
-    'normal' | 'small-caps' | 'all-small-caps' | 'all-petite-caps' | 'petite-caps' | 'unicase';
-  /**
-   * Letter case transform: `upper`, `lower`, `word caps` (first letter of each word), or `normal`.
-   */
-  textcase?: 'normal' | 'word caps' | 'upper' | 'lower';
-  /**
-   * Text decoration: `under`, `over` and/or `through` joined with `+` (e.g. `under+over`), or `none`.
-   */
-  lineposition?:
-    | 'under'
-    | 'over'
-    | 'through'
-    | 'under+over'
-    | 'under+through'
-    | 'over+under'
-    | 'over+through'
-    | 'through+under'
-    | 'through+over'
-    | 'under+over+through'
-    | 'under+through+over'
-    | 'over+under+through'
-    | 'over+through+under'
-    | 'through+under+over'
-    | 'through+over+under'
-    | 'none';
-  /**
-   * CSS `text-shadow` behind the text (`2px 2px 3px black`; only the first shadow is drawn), `none`, or `auto` for a thin halo in the contrast color of the text.
    */
   shadow?: string;
 }

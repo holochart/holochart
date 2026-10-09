@@ -1,0 +1,533 @@
+{
+  "checkedAt": "2026-10-09T16:21:23.690Z",
+  "base": "http://127.0.0.1:5339/holochart/",
+  "browser": "153.0.8010.12",
+  "host": {
+    "cpu": "Apple M1 Max",
+    "cores": 10,
+    "memoryGiB": 64,
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "profile": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "deviceScaleFactor": 1,
+    "cpuSlowdown": 4,
+    "latencyMs": 150,
+    "downloadBytesPerSecond": 200000,
+    "uploadBytesPerSecond": 93750,
+    "cache": "disabled, new context per run",
+    "serviceWorkers": "blocked",
+    "settle": "network idle + fonts ready; metrics frozen before any input"
+  },
+  "pages": [
+    {
+      "route": "",
+      "runs": [
+        {
+          "lcp": 2268,
+          "cls": 0.0007804360474659322,
+          "webglContexts": 0,
+          "domContentLoaded": 2484.2999999523163,
+          "load": 2833.5,
+          "canvases": 0,
+          "images": 10,
+          "wireBytes": 516761,
+          "requests": 28,
+          "jsBytes": 163495,
+          "imageBytes": 54446
+        },
+        {
+          "lcp": 956,
+          "cls": 0.0005720580119854128,
+          "webglContexts": 0,
+          "domContentLoaded": 1731.7000000476837,
+          "load": 3018.600000143051,
+          "canvases": 0,
+          "images": 10,
+          "wireBytes": 516761,
+          "requests": 28,
+          "jsBytes": 163495,
+          "imageBytes": 54446
+        },
+        {
+          "lcp": 1184,
+          "cls": 0.0005720580119854128,
+          "webglContexts": 0,
+          "domContentLoaded": 1906.5999999046326,
+          "load": 3098.0999999046326,
+          "canvases": 0,
+          "images": 10,
+          "wireBytes": 516761,
+          "requests": 28,
+          "jsBytes": 163495,
+          "imageBytes": 54446
+        }
+      ],
+      "p75LcpMs": 2268,
+      "maxCls": 0.0007804360474659322,
+      "medianWireBytes": 516761,
+      "lcpBudgetMs": 2500,
+      "clsBudget": 0.1
+    },
+    {
+      "route": "gallery/",
+      "runs": [
+        {
+          "lcp": 1924,
+          "cls": 0.14550739371264726,
+          "webglContexts": 0,
+          "domContentLoaded": 2006.2000000476837,
+          "load": 2748.600000143051,
+          "canvases": 0,
+          "images": 5,
+          "wireBytes": 576354,
+          "requests": 23,
+          "jsBytes": 248407,
+          "imageBytes": 26048
+        },
+        {
+          "lcp": 1220,
+          "cls": 0.14550739371264726,
+          "webglContexts": 0,
+          "domContentLoaded": 1646.7000000476837,
+          "load": 2706,
+          "canvases": 0,
+          "images": 5,
+          "wireBytes": 576354,
+          "requests": 23,
+          "jsBytes": 248407,
+          "imageBytes": 26048
+        },
+        {
+          "lcp": 1144,
+          "cls": 0.14550739371264726,
+          "webglContexts": 0,
+          "domContentLoaded": 1676.6000001430511,
+          "load": 2766.600000143051,
+          "canvases": 0,
+          "images": 5,
+          "wireBytes": 576354,
+          "requests": 23,
+          "jsBytes": 248407,
+          "imageBytes": 26048
+        }
+      ],
+      "p75LcpMs": 1924,
+      "maxCls": 0.14550739371264726,
+      "medianWireBytes": 576354,
+      "lcpBudgetMs": 2500,
+      "clsBudget": 0.1
+    },
+    {
+      "route": "gallery/all/",
+      "runs": [
+        {
+          "lcp": 2828,
+          "cls": 0.0002744815324833743,
+          "webglContexts": 0,
+          "domContentLoaded": 2850.5,
+          "load": 4228.099999904633,
+          "canvases": 0,
+          "images": 5,
+          "wireBytes": 632106,
+          "requests": 18,
+          "jsBytes": 237820,
+          "imageBytes": 35404
+        },
+        {
+          "lcp": 3212,
+          "cls": 0.0002744815324833743,
+          "webglContexts": 0,
+          "domContentLoaded": 3673,
+          "load": 4657.199999809265,
+          "canvases": 0,
+          "images": 5,
+          "wireBytes": 632106,
+          "requests": 18,
+          "jsBytes": 237820,
+          "imageBytes": 35404
+        },
+        {
+          "lcp": 3032,
+          "cls": 0.0002744815324833743,
+          "webglContexts": 0,
+          "domContentLoaded": 3335.7999999523163,
+          "load": 4514.600000143051,
+          "canvases": 0,
+          "images": 5,
+          "wireBytes": 632106,
+          "requests": 18,
+          "jsBytes": 237820,
+          "imageBytes": 35404
+        }
+      ],
+      "p75LcpMs": 3212,
+      "maxCls": 0.0002744815324833743,
+      "medianWireBytes": 632106,
+      "lcpBudgetMs": 2500,
+      "clsBudget": 0.1
+    },
+    {
+      "route": "gallery/basic/",
+      "runs": [
+        {
+          "lcp": 1224,
+          "cls": 0.0002783474695606049,
+          "webglContexts": 0,
+          "domContentLoaded": 1823.2000000476837,
+          "load": 2807.7000000476837,
+          "canvases": 0,
+          "images": 5,
+          "wireBytes": 580454,
+          "requests": 21,
+          "jsBytes": 247982,
+          "imageBytes": 18474
+        },
+        {
+          "lcp": 1236,
+          "cls": 0.0002783474695606049,
+          "webglContexts": 0,
+          "domContentLoaded": 1736.2999999523163,
+          "load": 2835.0999999046326,
+          "canvases": 0,
+          "images": 5,
+          "wireBytes": 580454,
+          "requests": 21,
+          "jsBytes": 247982,
+          "imageBytes": 18474
+        },
+        {
+          "lcp": 1136,
+          "cls": 0.0002783474695606049,
+          "webglContexts": 0,
+          "domContentLoaded": 1707.2000000476837,
+          "load": 2784,
+          "canvases": 0,
+          "images": 5,
+          "wireBytes": 580454,
+          "requests": 21,
+          "jsBytes": 247982,
+          "imageBytes": 18474
+        }
+      ],
+      "p75LcpMs": 1236,
+      "maxCls": 0.0002783474695606049,
+      "medianWireBytes": 580454,
+      "lcpBudgetMs": 2500,
+      "clsBudget": 0.1
+    }
+  ],
+  "filters": {
+    "profile": "desktop1440x900, unthrottled CPU/network, warm module cache; input event to two animation frames",
+    "sampleCount": 60,
+    "p95Ms": 382.40000009536743,
+    "maxMs": 941,
+    "budgetMs": 100,
+    "samples": [
+      {
+        "query": "basic",
+        "ms": 44.700000047683716,
+        "result": "236 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 162.20000004768372,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "radar",
+        "ms": 382.40000009536743,
+        "result": "12 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 941,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "candles",
+        "ms": 259,
+        "result": "7 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 752.9000000953674,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "histogram",
+        "ms": 63.69999980926514,
+        "result": "41 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 366.60000014305115,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "nothing-matches-this-query",
+        "ms": 333.39999985694885,
+        "result": "0 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 200,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "error band",
+        "ms": 400,
+        "result": "6 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 377.5,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "line",
+        "ms": 38.90000009536743,
+        "result": "273 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 149.90000009536743,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "map",
+        "ms": 150.29999995231628,
+        "result": "107 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 253.09999990463257,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "bar",
+        "ms": 46.5,
+        "result": "236 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 100.09999990463257,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "surface",
+        "ms": 83.20000004768372,
+        "result": "32 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 116.79999995231628,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "basic",
+        "ms": 99.90000009536743,
+        "result": "236 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 99.90000009536743,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "radar",
+        "ms": 133.39999985694885,
+        "result": "12 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 184.80000019073486,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "candles",
+        "ms": 31.899999856948853,
+        "result": "7 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 133.29999995231628,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "histogram",
+        "ms": 83.40000009536743,
+        "result": "41 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 116.09999990463257,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "nothing-matches-this-query",
+        "ms": 99.89999985694885,
+        "result": "0 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 121.30000019073486,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "error band",
+        "ms": 129.29999995231628,
+        "result": "6 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 116.5,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "line",
+        "ms": 100.09999990463257,
+        "result": "273 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 99.90000009536743,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "map",
+        "ms": 99.90000009536743,
+        "result": "107 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 133.29999995231628,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "bar",
+        "ms": 116.70000004768372,
+        "result": "236 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 149.90000009536743,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "surface",
+        "ms": 116,
+        "result": "32 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 167.29999995231628,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "basic",
+        "ms": 132.89999985694885,
+        "result": "236 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 116.90000009536743,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "radar",
+        "ms": 124.70000004768372,
+        "result": "12 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 142,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "candles",
+        "ms": 100,
+        "result": "7 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 117.10000014305115,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "histogram",
+        "ms": 82.70000004768372,
+        "result": "41 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 116.70000004768372,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "nothing-matches-this-query",
+        "ms": 66.59999990463257,
+        "result": "0 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 116.70000004768372,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "error band",
+        "ms": 82.70000004768372,
+        "result": "6 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 116.70000004768372,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "line",
+        "ms": 49.90000009536743,
+        "result": "273 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 150,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "map",
+        "ms": 99.90000009536743,
+        "result": "107 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 116.70000004768372,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "bar",
+        "ms": 100,
+        "result": "236 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 100,
+        "result": "786 of 786 examples"
+      },
+      {
+        "query": "surface",
+        "ms": 100,
+        "result": "32 of 786 examples"
+      },
+      {
+        "query": "",
+        "ms": 249.29999995231628,
+        "result": "786 of 786 examples"
+      }
+    ]
+  }
+}

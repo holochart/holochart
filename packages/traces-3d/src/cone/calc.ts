@@ -40,6 +40,7 @@ export const CONE_SPAN: Readonly<Record<ConeAnchor, number>> = {
   center: 0.5,
 };
 
+/** @experimental */
 export interface ConeCalc extends SceneCalc {
   /** Number of cones: the shortest of `x`, `y`, `z`, `u`, `v`, `w`. */
   readonly count: number;

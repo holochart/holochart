@@ -35,7 +35,7 @@ import {
 } from './layout.ts';
 import type { FullSlider, FullSliderStep } from './schema.ts';
 
-/** The parts of a `Chart` the sliders use. */
+/** The parts of a `Chart` the sliders use. @internal */
 export interface SlidersChartLike extends CommandChart {
   readonly element: HTMLElement;
   relayout(update: Readonly<Record<string, unknown>>, options?: { gui?: boolean }): unknown;
@@ -44,11 +44,13 @@ export interface SlidersChartLike extends CommandChart {
   emit(type: 'sliderend', payload: SliderEndEvent): unknown;
 }
 
+/** @internal */
 export type SlidersViewContext = Pick<
   ComponentDrawContext,
   'fullLayout' | 'fullData' | 'plotArea' | 'width' | 'height'
 >;
 
+/** @internal */
 export interface SlidersViewOptions<Ctx extends SlidersViewContext> {
   readonly locate?: (ctx: Ctx) => SlidersChartLike | undefined;
   readonly warn?: (message: string) => void;
@@ -57,6 +59,7 @@ export interface SlidersViewOptions<Ctx extends SlidersViewContext> {
   readonly schedule?: (callback: () => void) => () => void;
 }
 
+/** @internal */
 export interface SlidersView<Ctx extends SlidersViewContext> {
   update(ctx: Ctx, plan?: ComponentUpdatePlan): void;
   dispose(): void;

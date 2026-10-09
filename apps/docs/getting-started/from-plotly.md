@@ -11,6 +11,11 @@ Plotly's attribute names, `hovertemplate` syntax and templates. Its functional A
 function names and argument order. For most charts, moving over is a change of import and of a
 few lines around the chart; this page lists those lines.
 
+Attribute names are Plotly's, letter for letter (`showticklabels`, `paper_bgcolor`), and
+Holochart has no camelCase spellings of them. What Holochart adds is named in camelCase
+(`styleRules`, `sharedRenderer`), except its 3D material and lighting attributes; see
+[Attribute names](/fundamentals/traces#attribute-names).
+
 It describes plotly.js 4. The [compatibility table](/reference/plotly-compat) has the attribute
 by attribute detail.
 
@@ -118,7 +123,8 @@ Differences:
   Holochart trace is drawn on the GPU, so there is no separate WebGL trace type. A trace with an
   unknown type is hidden, with a warning in the console that names the nearest type.
 - **`Date` objects**: Holochart shows a `Date` at its UTC time; Plotly shows it at the browser's
-  local time. Date strings are read the same way in both, without a time zone. If your data are
+  local time. Date strings without a UTC offset are read the same way in both, without a time
+  zone; Holochart converts a string with an offset (`Z`, `+01:00`) to UTC. If your data are
   `Date` objects and you want local times on the axis, pass date strings instead.
 - **Fonts**: text is drawn from font files, not from the fonts installed on the computer. A
   `font.family` that isn't registered is drawn with the built-in font. See
@@ -128,12 +134,37 @@ An attribute or value that Holochart doesn't have is ignored with a console warn
 chart still draws. Set `config.strict: true` while migrating to turn those warnings into
 [errors](/reference/errors).
 
+### Maps
+
+`scattergeo`, `choropleth` and `layout.geo` work as in Plotly, with every projection, but the
+full bundle does not include them: maps are a package of their own, so that pages without a map
+do not download map code. Add one import next to the bundle's (or register `tracesGeo` in a
+partial bundle):
+
+```ts
+import * as Holochart from '@mk7s/holochart';
+import '@mk7s/holochart/geo';
+```
+
+Without it a map trace is hidden, and the console warning names this import. Two more things
+differ from Plotly:
+
+- The base map is bundled (Natural Earth) and nothing is fetched: `config.topojsonURL` is empty
+  by default, where Plotly's default is its CDN. Coastlines and borders therefore differ slightly
+  from Plotly's, and maps work offline.
+- `geo.fitbounds` defaults to `'locations'`, as in plotly.js 4: the view is fitted to the data
+  unless the figure sets the view or `fitbounds: false`.
+
+[Maps](/fundamentals/maps#plotly-compatibility) lists the rest, and the chart pages of
+[scattergeo](/charts/maps/scattergeo#plotly-migration-notes) and
+[choropleth](/charts/maps/choropleth#plotly-migration-notes) what differs per trace.
+
 ## What is missing
 
 Not available in Holochart:
 
-- **Maps and geographic charts**: `scattergeo`, `choropleth`, `scattermap`, `choroplethmap`,
-  `densitymap`, and the `layout.geo` and `layout.map` subplots.
+- **Tile maps**: `scattermap`, `choroplethmap`, `densitymap` and the `layout.map` subplot.
+  Projected maps are available: see [Maps](#maps) above.
 - **Ternary, Smith and carpet plots**: `scatterternary`, `scattersmith`, `carpet`,
   `scattercarpet`, `contourcarpet`.
 - **`quiver`** traces.
@@ -193,5 +224,8 @@ Plotly ignores these, so a figure that uses them still loads there, without them
 - [Style rules and style functions](/fundamentals/conditional-styling) for conditional styling.
 - [Custom marker symbols and image markers](/customization/custom-markers).
 - The [`bar3d`](/charts/3d/bar3d) trace.
+- [Network graphs](/fundamentals/graphs): the [`graph`](/charts/graphs/graph),
+  [`chord`](/charts/graphs/chord) and [`graph3d`](/charts/graphs/graph3d) traces, with layouts
+  built in. They need one more import, `@mk7s/holochart/graph`.
 - [Accessibility](/guides/accessibility): a screen-reader description, data tables and keyboard
   navigation on every chart.

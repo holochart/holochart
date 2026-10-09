@@ -7,6 +7,7 @@
 export { attr } from './schema/attr.ts';
 export type {
   AnyOptions,
+  AttrBuilders,
   BooleanOptions,
   ColorOptions,
   ColorlistOptions,
@@ -45,7 +46,7 @@ export type {
   PerPointColor,
   PerPointNumber,
   PointStyleFunction,
-  Primitive,
+  PrimitiveValue,
   SchemaNode,
   TypedArray,
   ValType,
@@ -86,7 +87,7 @@ export {
 } from './coerce/coerce.ts';
 export type { CoerceResult } from './coerce/coerce.ts';
 export { canonicalColor, isValidColor, toRGBA, toRGBAArray } from './coerce/color.ts';
-export type { RGBA } from './coerce/color.ts';
+export type { RGBAColor } from './coerce/color.ts';
 export { validate } from './validate/validate.ts';
 export type { ValidateOptions } from './validate/validate.ts';
 export { formatIssue, ValidationError } from './validate/issues.ts';
@@ -126,12 +127,13 @@ export {
   domainTraceAttributes,
 } from './registry/trace-attributes.ts';
 export type {
-  ComponentModule,
+  CoreComponentModule,
   LayoutDefaultsContext,
   Registry,
+  TraceAxisHints,
   TraceCategory,
   TraceDefaultsContext,
-  TraceModule,
+  CoreTraceModule,
   TraceModuleMeta,
 } from './registry/types.ts';
 
@@ -165,7 +167,7 @@ export type { GridFallback, SplomAxisStash, SplomStash } from './defaults/splom-
 export type {
   AnyFigure,
   FigureInput,
-  Frame,
+  FrameInput,
   LayoutInput,
   TraceInput,
   FullAxis,

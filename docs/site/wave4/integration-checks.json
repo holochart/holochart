@@ -1,0 +1,590 @@
+{
+  "checkedAt": "2026-10-09T21:07:20.959Z",
+  "base": "http://127.0.0.1:5339/holochart/",
+  "homeHtmlSha256": "547adf24dc9dc5c6fdf071291bc693b39d85a049627ab154c1cf0b1466925ff5",
+  "browser": "Chromium 153.0.8010.12 / SwiftShader",
+  "workers": 1,
+  "retries": 0,
+  "finalResults": {
+    "passed": 58,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "scope": {
+    "foundation": 8,
+    "wave2Interactions": 8,
+    "wave3Content": 5,
+    "wave3AccessibilityLifecycleFallback": 19,
+    "wave4Expansion": 18
+  },
+  "runs": {
+    "initial": {
+      "startTime": "2026-10-09T20:50:46.567Z",
+      "duration": 463229.37999999995,
+      "expected": 57,
+      "skipped": 0,
+      "unexpected": 1,
+      "flaky": 0
+    },
+    "focusedRecheck": {
+      "startTime": "2026-10-09T20:58:55.577Z",
+      "duration": 8341.657,
+      "expected": 1,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "correction": "The navigation test clicked server-rendered links before gallery hydration completed. It now waits for explicit gallery and recipe readiness before interaction. The unchanged production build passed the focused recheck; the other 57 checks retain their initial passing results."
+  },
+  "build": {
+    "vitepressSeconds": 717.44,
+    "maxOldSpaceSizeMiB": 8192,
+    "includesGeneration": false,
+    "generation": "Full docs prebuild generation completed before the final VitePress build; a failed initial build exposed raw notebook asset Markdown links. Those were replaced with the existing NotebookLinks component without relaxing dead-link checks."
+  },
+  "contentChecks": {
+    "unitTests": 30,
+    "handwrittenPages": 177,
+    "chartGuides": 47,
+    "pageLintWarnings": 0,
+    "pageLintErrors": 0,
+    "typescriptSnippets": 433,
+    "intentionalSnippetOptOuts": 7,
+    "internalLinks": 2117,
+    "deadLinks": 0,
+    "notebookArtifacts": 120,
+    "notebooks": 14,
+    "exactPythonVariants": 24,
+    "supportedPythonFamilies": 6,
+    "sourceMatchedHostChecks": 76,
+    "sourceExports": 786,
+    "renderedCopiedExports": 58,
+    "compiledOnlyExports": 728,
+    "cookbookRecipes": 10,
+    "verifiedPythonRecipes": 5,
+    "demoDestinations": 11,
+    "editorialDiscoveryTasks": 33,
+    "expectedStarterFirst": 33,
+    "pythonSupportLeaks": 0
+  },
+  "typechecks": ["docs", "root tooling, tests, gallery generator, bench"],
+  "routes": {
+    "report": "route-continuity.json",
+    "retainedRoutes": 4746,
+    "retainedChartAnchors": 374,
+    "missingRoutes": 0,
+    "missingAnchors": 0
+  },
+  "viewports": {
+    "report": "viewports.json",
+    "count": 24,
+    "sizes": [
+      {
+        "width": 1440,
+        "height": 900
+      },
+      {
+        "width": 820,
+        "height": 1180
+      },
+      {
+        "width": 390,
+        "height": 844
+      }
+    ],
+    "surfaces": [
+      "home",
+      "directory",
+      "inventory",
+      "cookbook",
+      "demos",
+      "recipe-small-multiples",
+      "recipe-linked-views",
+      "environments"
+    ],
+    "overflow": 0,
+    "pageOrAssetErrors": 0,
+    "visualReview": ["cookbook desktop/mobile", "demos desktop/mobile"]
+  },
+  "performance": {
+    "report": "performance.json",
+    "mobileColdSamples": 30,
+    "pages": [
+      {
+        "route": "home",
+        "p75LcpMs": 2064,
+        "maxCls": 0.0007804360474659322
+      },
+      {
+        "route": "gallery/",
+        "p75LcpMs": 3592,
+        "maxCls": 0.0002344291285184347
+      },
+      {
+        "route": "gallery/all/",
+        "p75LcpMs": 2300,
+        "maxCls": 0.0002744815324833743
+      },
+      {
+        "route": "gallery/basic/",
+        "p75LcpMs": 1560,
+        "maxCls": 0.0002783474695606049
+      },
+      {
+        "route": "cookbook/",
+        "p75LcpMs": 1516,
+        "maxCls": 0.00032981298187429847
+      },
+      {
+        "route": "demos/",
+        "p75LcpMs": 1384,
+        "maxCls": 0.0008494059262367687
+      }
+    ],
+    "desktopFilterSamples": 60,
+    "desktopFilterP95Ms": 35,
+    "budgets": {
+      "mobileLcp": false,
+      "mobileCls": true,
+      "staticCatalogContexts": true,
+      "filtering": true,
+      "allPassed": false
+    },
+    "method": "Same documented Wave 3 profiles; new cookbook and demo directories added to the four existing catalog routes. Measured alone after browser checks and captures.",
+    "focusedRecheck": {
+      "report": "performance-directory-recheck.json",
+      "mobileColdSamples": 5,
+      "p75LcpMs": 4012,
+      "desktopFilterSamples": 60,
+      "desktopFilterP95Ms": 35.299999952316284,
+      "budgets": {
+        "mobileLcp": false,
+        "mobileCls": true,
+        "staticCatalogContexts": true,
+        "filtering": true,
+        "allPassed": false
+      }
+    },
+    "launchGate": "Open: gallery-directory mobile LCP misses the target in both recorded runs. Host load was higher than Wave 3; the cause is unresolved. Preserve both failures and repeat a controlled paired baseline/current comparison before launch."
+  },
+  "limitations": {
+    "deployed": false,
+    "packagesPublished": false,
+    "remoteCIExecuted": false,
+    "humanLaunchReviewCompleted": false,
+    "observedVisitorStudyCompleted": false,
+    "hostedNotebookLaunchersVerified": false,
+    "liveDemoProvidersExercised": false
+  },
+  "tests": [
+    {
+      "title": "foundation landing pages expose primary navigation and working next steps",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 10427,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "gallery keeps legacy query/hash links and restores filters on browser history",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 12689,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "gallery responsive grid 1440px has 4 columns and no page overflow",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 6088,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "gallery responsive grid 1200px has 3 columns and no page overflow",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 5811,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "gallery responsive grid 820px has 2 columns and no page overflow",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 6605,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "gallery responsive grid 720px has 2 columns and no page overflow",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 6884,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "gallery responsive grid 390px has 1 columns and no page overflow",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 6105,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "dense example detail splits chart and complete source, then stacks on mobile",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 2495,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "home exposes six complete first-screen previews, families and three working entry paths",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 9747,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "homepage at 820px keeps previews and content within the viewport",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 2049,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "homepage at 390px keeps previews and content within the viewport",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 1855,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "gallery defaults to eleven linked family sections and offers inventory separately",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 6728,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "family subtype history and combined facets survive sharing and reset",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 8621,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "verified language filters expose the actual notebook histogram and browser choropleth",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 6866,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "deep example source supports keyboard tabs, copying, downloads and language preference fallback",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 4109,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "detail returns to filtered results and quick previews keep legacy hash history",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 22805,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "detail source tab keeps its labelled panel through loading and failure",
+      "file": "wave3-content.spec.ts",
+      "status": "expected",
+      "durationMs": 2407,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "inline source tab keeps its labelled panel through loading and failure",
+      "file": "wave3-content.spec.ts",
+      "status": "expected",
+      "durationMs": 4053,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "production chart blocks hydrate without repairing server markup",
+      "file": "wave3-content.spec.ts",
+      "status": "expected",
+      "durationMs": 6002,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "production canonical URLs ignore gallery filters and use the configured base",
+      "file": "wave3-content.spec.ts",
+      "status": "expected",
+      "durationMs": 1290,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "all notebook and exact Python downloads match their canonical sources",
+      "file": "wave3-content.spec.ts",
+      "status": "expected",
+      "durationMs": 4843,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "home has no critical or serious automated accessibility violations",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 2624,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "directory has no critical or serious automated accessibility violations",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 6259,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "inventory has no critical or serious automated accessibility violations",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 6547,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "family has no critical or serious automated accessibility violations",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 6586,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "detail has no critical or serious automated accessibility violations",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 9459,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "chooser has no critical or serious automated accessibility violations",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 4445,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "JavaScript quick start has no critical or serious automated accessibility violations",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 14328,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "HTML quick start has no critical or serious automated accessibility violations",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 13217,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "notebook quick start has no critical or serious automated accessibility violations",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 3600,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "Python hub has no critical or serious automated accessibility violations",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 2500,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "notebook guide has no critical or serious automated accessibility violations",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 2829,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "chart guide has no critical or serious automated accessibility violations",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 11532,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "sidebar toggles with Space and Enter, without nested controls",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 4264,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "gallery announces full-pool matches while incrementally showing cards",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 10220,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "catalogs reflow at 720px with visible focus and touch targets",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 8385,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "catalogs reflow at 390px with visible focus and touch targets",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 7082,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "static catalogs create no WebGL contexts and previews dispose each context before reuse",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 61681,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "WebGL-unavailable embeds retain static previews, source downloads and recovery help",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 12314,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "production without JavaScript exposes navigation, chart thumbnails and download links",
+      "file": "wave3.spec.ts",
+      "status": "expected",
+      "durationMs": 4519,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "recipe small-multiples renders its exact chart and downloads complete source",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 8635,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "recipe mixed-line-bar renders its exact chart and downloads complete source",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 9974,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "recipe confidence-bands renders its exact chart and downloads complete source",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 10802,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "recipe sorting-ranking renders its exact chart and downloads complete source",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 7120,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "recipe missing-data renders its exact chart and downloads complete source",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 9258,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "recipe date-axes renders its exact chart and downloads complete source",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 18799,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "recipe custom-hover renders its exact chart and downloads complete source",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 12279,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "recipe linked-views renders its exact chart and downloads complete source",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 8787,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "recipe themes renders its exact chart and downloads complete source",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 9212,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "recipe dashboard-sizing renders its exact chart and downloads complete source",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 8006,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "cookbook/ static directory is accessible and reflows at 1440px",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 2312,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "demos/ static directory is accessible and reflows at 1440px",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 2536,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "cookbook/ static directory is accessible and reflows at 390px",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 1741,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "demos/ static directory is accessible and reflows at 390px",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 1903,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "analytical task search works with history and verified-language boundaries",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 7310,
+      "attemptResults": ["passed"],
+      "initialStatus": "unexpected",
+      "initialAttemptResults": ["failed"]
+    },
+    {
+      "title": "notebook environment evaluation is accessible at 1440px and keeps unverified launchers unavailable",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 6036,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "notebook environment evaluation is accessible at 390px and keeps unverified launchers unavailable",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 1918,
+      "attemptResults": ["passed"]
+    },
+    {
+      "title": "new directories remain ordinary links and thumbnails without JavaScript",
+      "file": "wave4.spec.ts",
+      "status": "expected",
+      "durationMs": 1630,
+      "attemptResults": ["passed"]
+    }
+  ]
+}

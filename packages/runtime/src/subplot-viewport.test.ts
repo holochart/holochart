@@ -51,6 +51,7 @@ const sceneComponent: ComponentModule = {
             rect: { x: 10, y: 20, width: 100, height: 50 },
             projection: name === 'ortho' ? 'orthographic' : 'perspective',
             background: [1, 0, 0, 1],
+            ...(name === 'flat' && { kind: '2d' as const }),
           });
           if (vp) componentViewports.push(vp);
         }
@@ -100,6 +101,18 @@ describe('subplotViewport', () => {
     const list = c.three.viewports;
     expect(list.indexOf(vp as Viewport)).toBe(list.length - 2);
     expect(list[list.length - 1]).toBe(c.three.overlay);
+  });
+
+  it("makes a pixel-space 2D viewport for `kind: '2d'`, clipped to its rect", async () => {
+    const c = await chart([], { meta: ['flat'] });
+    const vp = named(c, 'subplot-flat');
+    expect(vp?.kind).toBe('2d');
+    expect(vp?.clip).toBe(true);
+    expect(vp?.camera.type).toBe('OrthographicCamera');
+    expect(vp?.rect).toEqual({ x: 10, y: 20, width: 100, height: 50 });
+    // A second pass asks again and keeps the viewport.
+    await c.relayout({ title: { text: 'again' } });
+    expect(named(c, 'subplot-flat')).toBe(vp);
   });
 
   it('switches the projection in place and removes viewports nobody asks for', async () => {

@@ -39,6 +39,7 @@ import { isColumnZ } from '../heatmap/defaults.ts';
 /**
  * contour calcdata: the grid of a heatmap plus its contours. `z` holds the hover values:
  * `zFilled`, except NaN at gaps drawn as holes (`connectgaps: false`).
+ * @experimental
  */
 export type ContourTraceCalc = HeatmapCalc & ContourCalc;
 

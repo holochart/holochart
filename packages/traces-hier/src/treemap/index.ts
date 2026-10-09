@@ -23,7 +23,7 @@ import { describeHierarchy } from '../hierarchy/describe.ts';
 import { treemapAttributes, treemapLayoutAttributes } from './attributes.ts';
 import { supplyTreemapDefaults, supplyTreemapLayoutDefaults } from './defaults.ts';
 import { calcRects, treemapCells, type RectCalc } from './geometry.ts';
-import { rectHoverPoints } from './hover.ts';
+import { rectA11y, rectHoverPoints } from './hover.ts';
 import { rectCrossTraceLayout } from './layout.ts';
 import { rectRenderer } from './plot.ts';
 
@@ -48,6 +48,7 @@ export const treemap: TraceModule<RectCalc, typeof treemapAttributes.children> =
   crossTraceLayout: /* @__PURE__ */ rectCrossTraceLayout('treemap'),
   plot: rectRenderer,
   hoverPoints: rectHoverPoints,
+  a11y: rectA11y,
   colorbar: (trace, ctx) => hierarchyColorbar(trace, ctx.fullLayout),
   describe: (ctx) => describeHierarchy(ctx, 'Treemap'),
 };

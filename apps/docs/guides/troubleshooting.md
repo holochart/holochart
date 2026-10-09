@@ -115,12 +115,18 @@ chart.on('webglcontextrestored', () => console.info('chart is back'));
 [holochart] data[0].type: unknown trace type 'scattergl'; did you mean 'scatter'? (the trace is hidden)
 ```
 
-The chart draws without that trace. The cause is one of three:
+The chart draws without that trace. The cause is one of these:
 
 - **A typo.** The warning suggests the nearest registered type.
 - **A Plotly trace type that Holochart doesn't have.** `scattergl` and `scatterpolargl` are
-  `scatter` and `scatterpolar` here. Maps, ternary, Smith and carpet traces are not available;
-  the [compatibility table](/reference/plotly-compat#trace-types) lists every type.
+  `scatter` and `scatterpolar` here. Tile maps, ternary, Smith and carpet traces are not
+  available; the [compatibility table](/reference/plotly-compat#trace-types) lists every type.
+- **A map without the map package.** `scattergeo`, `choropleth` and `layout.geo` are in a
+  package the full bundle leaves out. Add `import '@mk7s/holochart/geo'`: see
+  [Maps](/fundamentals/maps#adding-the-package).
+- **A network without the graph package.** `graph`, `chord` and `graph3d` are in a package the
+  full bundle leaves out too. Add `import '@mk7s/holochart/graph'`: see
+  [Network graphs](/fundamentals/graphs#adding-the-package).
 - **A trace type that isn't registered.** `@mk7s/holochart` registers every type. With a
   [partial bundle](/getting-started/installation#smaller-bundles-with-partial-packages) you
   register the ones you use, and the warning names the package of a built-in type that is

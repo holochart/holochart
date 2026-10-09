@@ -9,7 +9,7 @@ import { buildFigure } from '../core/engine.ts';
 import { expressFunction } from '../core/render.ts';
 import type { DataInput } from '../data/table.ts';
 import type {
-  AnimationOptions,
+  AnimationFrameOptions,
   AxisOptions,
   ColumnRef,
   CommonOptions,
@@ -29,7 +29,7 @@ export interface FunnelOptions
     DiscreteColorOptions,
     HoverOptions,
     FacetOptions,
-    AnimationOptions,
+    AnimationFrameOptions,
     AxisOptions {
   /** Column of text drawn on the bars (next to the value, `textinfo: 'text+value'`). */
   readonly text?: ColumnRef;

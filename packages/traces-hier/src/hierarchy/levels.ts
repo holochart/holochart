@@ -25,6 +25,7 @@ function postOrder(root: HierNode): HierNode[] {
 /**
  * The entry for `level` (Plotly's `findEntryWithLevel`): the node whose id is `level` — the last
  * one bottom-up when ids repeat — else the root (unset, `''` or unknown levels).
+ * @internal
  */
 export function findEntry(hierarchy: Hierarchy, level: unknown): HierNode {
   if (!level) return hierarchy.root;
@@ -67,6 +68,7 @@ export function parentOf(n: HierNode): HierNode {
  * when the entry itself (the center) is clicked, else the node's own level. `undefined` when the
  * click does not drill: on the hierarchy root, and on leaves unless `leaves` (sunburst stops
  * there; treemap and icicle zoom into leaves too).
+ * @internal
  */
 export function drillEntry(
   hierarchy: Hierarchy,
@@ -87,6 +89,7 @@ export function relativeDepth(node: HierNode, entry: HierNode): number {
  * Which levels of the entry's subtree a chart draws (Plotly's `maxdepth` handling in the plot
  * functions): the generated root of several roots is skipped when it is the entry, and at most
  * `maxdepth` levels are drawn.
+ * @internal
  */
 export interface LevelWindow {
   /** The entry is the generated root of several roots: not drawn. */
@@ -99,7 +102,10 @@ export interface LevelWindow {
   readonly cutoff: number;
 }
 
-/** The {@link LevelWindow} of `entry` with `maxdepth` (Plotly's `maxHeight`, `yOffset`, `cutoff`). */
+/**
+ * The {@link LevelWindow} of `entry` with `maxdepth` (Plotly's `maxHeight`, `yOffset`, `cutoff`).
+ * @internal
+ */
 export function levelWindow(hierarchy: Hierarchy, entry: HierNode, maxdepth: unknown): LevelWindow {
   const maxDepth = maxDepthOf(maxdepth);
   const skipEntry = hierarchy.hasMultipleRoots && entry === hierarchy.root;
@@ -112,7 +118,10 @@ export function levelWindow(hierarchy: Hierarchy, entry: HierNode, maxdepth: unk
   };
 }
 
-/** A node placed by {@link partition}: `x` along the partitioned axis, `y` across levels. */
+/**
+ * A node placed by {@link partition}: `x` along the partitioned axis, `y` across levels.
+ * @experimental
+ */
 export interface PartitionCell {
   readonly node: HierNode;
   /** Depth below the entry. */
@@ -130,6 +139,7 @@ export interface PartitionCell {
  * come breadth first (d3 `descendants`), so parents precede their children. With `padding` (icicle's
  * `tiling.pad`), every cell then gives up `padding` px at its far `x` and `y` ends, and the entry
  * starts `padding` px in, as in d3.
+ * @experimental
  */
 export function partition(entry: HierNode, dx: number, dy: number, padding = 0): PartitionCell[] {
   const n = entry.height + 1;

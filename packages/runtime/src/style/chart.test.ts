@@ -4,6 +4,7 @@ import type { FullTrace } from '@mk7s/holochart-core';
 import { linearExtremes } from '../axes.ts';
 import { createChart, type Chart } from '../chart.ts';
 import type { TraceModule, TraceUpdatePlan } from '../contracts.ts';
+import { chartToJSON } from '../json.ts';
 import { usesStyles } from '../plan.ts';
 import { styleRulePaths } from './styles.ts';
 import { setup, type TestSetup } from '../__testing__/fakes.ts';
@@ -133,7 +134,7 @@ describe('charts with style rules (E8.5)', () => {
   it('round-trips as JSON', async () => {
     const rules = [rule(4, { 'marker.color': 'gold', 'marker.size': 14 })];
     const c = await make({ data: [trace({ styleRules: rules })] });
-    const json = JSON.parse(JSON.stringify(c.toJSON())) as { data: Record<string, unknown>[] };
+    const json = JSON.parse(JSON.stringify(chartToJSON(c))) as { data: Record<string, unknown>[] };
     expect(json.data[0]?.['styleRules']).toEqual(rules);
     chart = undefined;
     c.destroy();
@@ -183,10 +184,10 @@ describe('charts with style functions (E8.6)', () => {
     expect(plans).toEqual([{ calc: false, plot: false, style: true, transform: false }]);
   });
 
-  it('toJSON evaluates functions into arrays and warns once per attribute', async () => {
+  it('chartToJSON evaluates functions into arrays and warns once per attribute', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const c = await make({ data: [trace({ marker: { color } })] });
-    const json = c.toJSON() as { data: Record<string, unknown>[] };
+    const json = chartToJSON(c) as { data: Record<string, unknown>[] };
     expect(json.data[0]?.['marker']).toEqual({ color: ['gray', 'gold', 'gold'] });
     expect(warn).toHaveBeenCalledTimes(1);
     expect(String(warn.mock.calls[0]?.[0])).toMatch(/data\[0\]\.marker\.color: style function/);

@@ -1,0 +1,86 @@
+{
+  "name": "@mk7s/holochart-traces-graph",
+  "version": "0.0.0",
+  "description": "Network graph trace types: node-link graphs with force, layered and tree layouts, chord diagrams.",
+  "keywords": [
+    "charts",
+    "webgl",
+    "three",
+    "data-visualization",
+    "graph",
+    "network",
+    "force-directed",
+    "dag",
+    "tree",
+    "chord"
+  ],
+  "license": "MIT",
+  "author": "sanjee",
+  "type": "module",
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/holochart/holochart.git",
+    "directory": "packages/traces-graph"
+  },
+  "homepage": "https://mk7s.dev/holochart",
+  "bugs": {
+    "url": "https://github.com/holochart/holochart/issues"
+  },
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "development": "./dist/index.development.js",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./layout-worker.js": {
+      "types": "./dist/layout-worker.d.ts",
+      "default": "./dist/layout-worker.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@mk7s/holochart-core": "workspace:*",
+    "@mk7s/holochart-render": "workspace:*",
+    "@mk7s/holochart-runtime": "workspace:*",
+    "@mk7s/holochart-traces-3d": "workspace:*",
+    "@mk7s/holochart-traces-basic": "workspace:*"
+  },
+  "peerDependencies": {
+    "three": ">=0.180.0 <0.187.0"
+  },
+  "devDependencies": {
+    "@types/three": "catalog:",
+    "three": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "development": "./dist/index.development.js",
+        "import": "./dist/index.js",
+        "default": "./dist/index.js"
+      },
+      "./layout-worker.js": {
+        "types": "./dist/layout-worker.d.ts",
+        "default": "./dist/layout-worker.js"
+      },
+      "./package.json": "./package.json"
+    }
+  }
+}

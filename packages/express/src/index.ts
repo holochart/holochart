@@ -6,7 +6,8 @@
  * heatmaps, RGB / RGBA arrays and `ImageData` as images. M5 adds trendlines (OLS, LOWESS, rolling,
  * EWM, expanding) with `getTrendlineResults`, `agg` on bars and lines, funnels, polar charts, and
  * `sunburst` / `treemap` / `icicle` with the `path` helper; M6 adds `scatter3d` and `line3d` on a 3D
- * `scene`.
+ * `scene`; backlog GEO7 adds the maps `scatterGeo`, `lineGeo` and `choropleth`; backlog G8 and G9
+ * add the networks `graph`, `chord` and `adjacencyMatrix`, from an edge table.
  *
  * ```ts
  * import hx from '@mk7s/holochart-express';
@@ -18,7 +19,11 @@
  * `createChart`, or renders it with `newPlot` when given an element first. Rendering needs the
  * figure's trace types and components registered: use the `@mk7s/holochart` bundle, or register
  * the modules (`register(...basicTraces, ...statsTraces, ...builtinComponents)`; `scatter3d` and
- * `line3d` need `...traces3d` from `@mk7s/holochart-traces-3d`).
+ * `line3d` need `...traces3d` from `@mk7s/holochart-traces-3d`). The maps are in neither
+ * (ADR-026): add `import '@mk7s/holochart/geo'` to the bundle, or register `...tracesGeo` from
+ * `@mk7s/holochart-traces-geo`. So are `graph` and `chord` (ADR-029): add
+ * `import '@mk7s/holochart/graph'`, or register `...tracesGraph` from
+ * `@mk7s/holochart-traces-graph`.
  */
 import { area, line, scatter } from './charts/scatter.ts';
 import { bar, timeline } from './charts/bar.ts';
@@ -26,6 +31,8 @@ import { box, histogram, strip, violin } from './charts/distribution.ts';
 import { densityContour, densityHeatmap } from './charts/density.ts';
 import { ecdf } from './charts/ecdf.ts';
 import { funnel, funnelArea } from './charts/funnel.ts';
+import { choropleth, lineGeo, scatterGeo } from './charts/geo.ts';
+import { adjacencyMatrix, chord, graph } from './charts/graph.ts';
 import { icicle, sunburst, treemap } from './charts/hierarchy.ts';
 import { imshow } from './charts/imshow.ts';
 import { parallelCategories, parallelCoordinates, scatterMatrix } from './charts/multidim.ts';
@@ -38,27 +45,33 @@ import { columnTypes, inferColumnType, Table, toTable } from './data/table.ts';
 import { distplot } from './ff/distplot.ts';
 
 export {
+  adjacencyMatrix,
   area,
   bar,
   barPolar,
   box,
+  chord,
+  choropleth,
   densityContour,
   densityHeatmap,
   ecdf,
   funnel,
   funnelArea,
   getTrendlineResults,
+  graph,
   histogram,
   icicle,
   imshow,
   line,
   line3d,
+  lineGeo,
   linePolar,
   parallelCategories,
   parallelCoordinates,
   pie,
   scatter,
   scatter3d,
+  scatterGeo,
   scatterMatrix,
   scatterPolar,
   strip,
@@ -129,6 +142,22 @@ export type {
 } from './charts/polar.ts';
 export type { Line3dOptions, Chart3dOptions, Scatter3dOptions } from './charts/scatter3d.ts';
 export type {
+  ChoroplethOptions,
+  GeoOptions,
+  LineGeoOptions,
+  ScatterGeoOptions,
+} from './charts/geo.ts';
+export type {
+  AdjacencyMatrixOptions,
+  ChordOptions,
+  GraphDataOptions,
+  GraphFunction,
+  GraphInput,
+  GraphMatrix,
+  GraphOptions,
+  NodeLinkInput,
+} from './charts/graph.ts';
+export type {
   ImageDataLike,
   ImshowArray,
   ImshowFunction,
@@ -173,6 +202,12 @@ const hx = {
   barPolar,
   scatter3d,
   line3d,
+  scatterGeo,
+  lineGeo,
+  choropleth,
+  graph,
+  chord,
+  adjacencyMatrix,
   getTrendlineResults,
   data,
   ff,

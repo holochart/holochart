@@ -16,7 +16,7 @@ import type { Colorbar } from '@mk7s/holochart-traces-basic';
 /**
  * Icicle: a hierarchy as rows (or columns) of cells, children next to their parents, with a path bar and drill-down.
  */
-export type IcicleTrace = Omit<CommonTraceAttributes, 'hoverinfo'> &
+export type BaseIcicleTrace = Omit<CommonTraceAttributes, 'hoverinfo'> &
   DomainTraceAttributes & {
     /**
      * Trace type.
@@ -1208,7 +1208,7 @@ export interface SunburstTraceOutsidetextfont {
 /**
  * Treemap: a hierarchy as nested rectangles sized by value, with a path bar and drill-down.
  */
-export type TreemapTrace = Omit<CommonTraceAttributes, 'hoverinfo'> &
+export type BaseTreemapTrace = Omit<CommonTraceAttributes, 'hoverinfo'> &
   DomainTraceAttributes & {
     /**
      * Trace type.
@@ -1720,4 +1720,4 @@ export interface TreemapTraceOutsidetextfont {
 /**
  * Any trace of `@mk7s/holochart-traces-hier`, discriminated on `type`. Type a partial bundle's figures with it: `FigureInput<TracesHier>`.
  */
-export type TracesHier = IcicleTrace | SankeyTrace | SunburstTrace | TreemapTrace;
+export type TracesHier = BaseIcicleTrace | SankeyTrace | SunburstTrace | BaseTreemapTrace;

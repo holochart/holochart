@@ -18,7 +18,7 @@ import {
 } from '../shared/text.ts';
 import type { FullUpdatemenu } from './schema.ts';
 
-/** Geometry constants at 12 px text (`updatemenus/constants.js`). */
+/** Geometry constants at 12 px text (`updatemenus/constants.js`). @internal */
 export const UPDATEMENU_METRICS = {
   minWidth: 30,
   /** Horizontal text padding (both sides together). */
@@ -31,18 +31,22 @@ export const UPDATEMENU_METRICS = {
   gapButton: 2,
 } as const;
 
-/** Resolve `auto` anchors from the position (Plotly `Lib.isRightAnchor`, …). */
+/** Resolve `auto` anchors from the position (Plotly `Lib.isRightAnchor`, …). @internal */
 export function resolveXAnchor(xanchor: string, x: number): 'left' | 'center' | 'right' {
   if (xanchor === 'left' || xanchor === 'center' || xanchor === 'right') return xanchor;
   return x >= 2 / 3 ? 'right' : x > 1 / 3 ? 'center' : 'left';
 }
 
+/** @internal */
 export function resolveYAnchor(yanchor: string, y: number): 'top' | 'middle' | 'bottom' {
   if (yanchor === 'top' || yanchor === 'middle' || yanchor === 'bottom') return yanchor;
   return y >= 2 / 3 ? 'top' : y > 1 / 3 ? 'middle' : 'bottom';
 }
 
-/** One laid-out button: its index in `buttons` and its box relative to the item origin. */
+/**
+ * One laid-out button: its index in `buttons` and its box relative to the item origin.
+ * @internal
+ */
 export interface MenuItemBox {
   readonly index: number;
   readonly label: string;
@@ -52,7 +56,7 @@ export interface MenuItemBox {
   readonly height: number;
 }
 
-/** A laid-out menu (container px, top-left origin). */
+/** A laid-out menu (container px, top-left origin). @internal */
 export interface MenuLayout {
   readonly vertical: boolean;
   /** The padded box that pushes margins: every button, or the dropdown's header. */
@@ -71,7 +75,10 @@ export interface MenuLayout {
   readonly scale: number;
 }
 
-/** Size one (visible) menu and lay out its buttons (see {@link placeUpdatemenu} for its position). */
+/**
+ * Size one (visible) menu and lay out its buttons (see {@link placeUpdatemenu} for its position).
+ * @internal
+ */
 export function layoutUpdatemenu(menu: FullUpdatemenu, measure: MeasureLine): MenuLayout {
   const s = menu.font.size / 12;
   const M = UPDATEMENU_METRICS;
@@ -147,7 +154,10 @@ export function layoutUpdatemenu(menu: FullUpdatemenu, measure: MeasureLine): Me
   };
 }
 
-/** Top-left corner of a menu's padded box, container px (`plotArea` in container px too). */
+/**
+ * Top-left corner of a menu's padded box, container px (`plotArea` in container px too).
+ * @internal
+ */
 export function placeUpdatemenu(
   menu: FullUpdatemenu,
   layout: MenuLayout,
@@ -172,6 +182,7 @@ function menuAnchor(
 /**
  * Margin a menu needs to stay inside the figure (Plotly pushes `autoMargin` with the padded box;
  * for dropdowns only the header counts, the open list overlaps the chart).
+ * @internal
  */
 export function updatemenuMarginPush(
   menu: FullUpdatemenu,
@@ -185,7 +196,7 @@ export function updatemenuMarginPush(
   });
 }
 
-/** Visible menus of a layout, in order. */
+/** Visible menus of a layout, in order. @internal */
 export function visibleUpdatemenus(menus: unknown): FullUpdatemenu[] {
   if (!Array.isArray(menus)) return [];
   return (menus as FullUpdatemenu[]).filter((m) => m.visible && m.buttons.some((b) => b.visible));

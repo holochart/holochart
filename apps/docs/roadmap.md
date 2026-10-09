@@ -33,6 +33,21 @@ isosurfaces and ray-marched) and Holochart's `bar3d`, with camera animation,
 Express `scatter3d` / `line3d`. Its last wave adds extrusion (2.5D bars and pies) and the exit
 review.
 
+Projected maps were moved ahead of 1.0 and are built: the [geo subplot](/fundamentals/maps) with
+every Plotly projection, [`scattergeo`](/charts/maps/scattergeo) and
+[`choropleth`](/charts/maps/choropleth), in a package of their own that the full bundle leaves
+out. A 3D globe and tile maps are still planned.
+
+[Network graphs](/fundamentals/graphs) are built too, ahead of 1.0 and outside Plotly's set of
+traces: [`graph`](/charts/graphs/graph) with force-directed, layered, tree, circular, arc and
+hive arrangements, [`chord`](/charts/graphs/chord) and [`graph3d`](/charts/graphs/graph3d), with
+adapters for common graph formats, in a package of their own that the full bundle leaves out.
+
+The [Python notebook bridge](/guides/notebooks), originally in M8, is implemented ahead of
+1.0 as `holochart-py`: an anywidget plus a Plotly renderer that lets existing `fig.show()` calls
+draw with Holochart. Its wheel embeds the browser bundles and fonts. It is not on PyPI yet;
+publishing can follow the first npm release without waiting for the remaining M8 work.
+
 Nothing is published to npm yet: the packages build and pass their bundle tests, and the first
 release waits on the npm publishing setup. All packages share one version, so the first release
 will be `0.1.0` or a pre-release rather than the milestone numbers above; the

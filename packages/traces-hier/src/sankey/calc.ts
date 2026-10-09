@@ -51,7 +51,7 @@ export interface SankeyCalcLink {
   readonly labelConcentration: number;
 }
 
-/** Calcdata of a sankey trace. */
+/** Calcdata of a sankey trace. @experimental */
 export interface SankeyCalc {
   readonly nodes: readonly SankeyCalcNode[];
   readonly links: readonly SankeyCalcLink[];

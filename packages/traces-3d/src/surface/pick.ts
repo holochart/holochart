@@ -8,8 +8,7 @@
  * snaps to the nearest grid point (Plotly's `snapToData`: hover shows the point's own values).
  */
 import { gridX, gridY, type SurfaceGrid } from './grid.ts';
-
-type Vec3 = [number, number, number];
+import type { Vec3 } from '@mk7s/holochart-render';
 
 /** A ray in linear coordinates: `origin + t · dir`, `t ≥ 0`. */
 export interface Ray {

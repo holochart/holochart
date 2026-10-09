@@ -21,12 +21,12 @@ const ISO_PARTS =
 
 const MS_PER_DAY = 86_400_000;
 
-/** True if `v` is an ISO-8601-style date string. */
+/** True if `v` is an ISO-8601-style date string. @experimental */
 export function isDateString(v: unknown): v is string {
   return typeof v === 'string' && ISO_DATE.test(v);
 }
 
-/** True for valid `Date` instances. */
+/** True for valid `Date` instances. @experimental */
 export function isValidDate(v: unknown): v is Date {
   return v instanceof Date && !Number.isNaN(v.getTime());
 }
@@ -37,6 +37,7 @@ export function isValidDate(v: unknown): v is Date {
  *
  * Only the year/month/day → day-number mapping differs between calendars; time of day and UTC
  * offsets are handled by {@link parseDate} itself, so an implementation stays tiny.
+ * @experimental
  */
 export interface CalendarSystem {
   /**
@@ -137,6 +138,7 @@ function parseDateString(s: string, cal: CalendarSystem): number | undefined {
  * parseDate('2024-03-01 12:30+01:00'); // 1709292600000 (11:30 UTC)
  * parseDate(new Date(0));              // 0
  * ```
+ * @experimental
  */
 export function parseDate(v: unknown, calendar?: string | CalendarSystem): number | undefined {
   if (typeof v === 'string') {
@@ -163,6 +165,7 @@ function pad(n: number, width: number): string {
  * @param ms - Milliseconds since the epoch; rounded to a whole millisecond.
  * @returns The formatted date, or `undefined` for non-finite values and years outside
  * -9999…9999 (which ISO strings here cannot express).
+ * @experimental
  */
 export function formatDate(ms: number): string | undefined {
   if (!Number.isFinite(ms)) return undefined;

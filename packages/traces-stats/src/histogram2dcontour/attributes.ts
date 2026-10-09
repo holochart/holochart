@@ -12,7 +12,7 @@ import { contourAttributes } from '../contour/attributes.ts';
 import { cellTextFont, histogram2dSampleAttributes } from '../histogram2d/attributes.ts';
 import { zColorscaleAttributes } from '../histogram2d/colorscale.ts';
 
-/** The histogram2dcontour schema. Common trace attributes come from core. */
+/** The histogram2dcontour schema. Common trace attributes come from core. @experimental */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const histogram2dcontourAttributes = /* @__PURE__ */ (() =>
   attr.object(

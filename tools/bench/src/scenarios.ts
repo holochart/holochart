@@ -114,6 +114,36 @@ export const SCENARIOS: readonly Scenario[] = [
       },
     ],
   })),
+  // G7 (large graphs): a force layout of 10,000 nodes and 50,000 links computed in the layout
+  // worker and drawn while it settles (the first draw ends when the layout has arrived and the
+  // picture has glided to it), then panned and zoomed at its level of detail.
+  {
+    example: 'graph/large-10k',
+    label: 'Graph, 10k nodes and 50k links (force layout in the worker)',
+    drive: { kind: 'ranges' },
+    // A quarter of the graph across it; the whole graph down to a fortieth and back, through
+    // every threshold of the level of detail.
+    pan: { axes: ['x', 'y'], window: 1 / 4 },
+    zoom: { axes: ['x', 'y'], min: 1 / 40 },
+    perfGlobal: '__graphPerf',
+    targets: [
+      { story: 'G7', goal: 'laid out in under 2 s', metric: 'firstDraw', value: 2000 },
+      { story: 'G7', goal: 'pan at 60 fps', metric: 'panFps', value: 60 },
+    ],
+  },
+  // G7: 100,000 nodes and 150,000 links at given positions.
+  {
+    example: '_dev/graph-100k',
+    label: 'Graph, 100k nodes and 150k links (given positions)',
+    drive: { kind: 'ranges' },
+    pan: { axes: ['x', 'y'], window: 1 / 4 },
+    zoom: { axes: ['x', 'y'], min: 1 / 100 },
+    perfGlobal: '__graphPerf',
+    targets: [
+      { story: 'G7', goal: '100k nodes drawn at 60 fps (pan)', metric: 'panFps', value: 60 },
+      { story: 'G7', goal: '100k nodes drawn at 60 fps (zoom)', metric: 'zoomFps', value: 60 },
+    ],
+  },
   // E14.3 (M6 wave 1): a 1024² surface built on the GPU from a height texture, orbiting.
   {
     example: 'surface/perf-1024',

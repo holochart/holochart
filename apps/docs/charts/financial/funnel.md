@@ -7,6 +7,8 @@ chart: funnel
 
 # Funnel
 
+<ChartOverview />
+
 ## Overview
 
 A funnel chart shows the stages of a process, one bar per stage, each as long as the number of
@@ -31,6 +33,9 @@ Pick a different chart when:
   [waterfall chart](/charts/financial/waterfall).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -72,13 +77,15 @@ six sales stages with their value and their share of the first stage
 
 ## Variations
 
+<ChartVariations />
+
 ### Stacked funnels
 
 Funnel traces that share their stages stack per stage (`layout.funnelmode: 'stack'`, the
 default), and the whole stack is centered on the value axis. Each trace keeps its own connector
 regions, labels and percentages; the legend toggles each trace and the stacks re-center:
 
-<Example id="funnel/stacked" />
+<ExampleLink id="funnel/stacked" />
 
 ### Labels, percentages and vertical funnels
 
@@ -87,7 +94,7 @@ percentages, each says which it is (`of initial`, `of previous`, `of total`). On
 per-stage colors and outlined, tinted connectors; on the right a vertical funnel
 (`orientation: 'v'`) with labels outside the bars:
 
-<Example id="funnel/textinfo" />
+<ExampleLink id="funnel/textinfo" />
 
 ### Grouped and overlaid funnels
 
@@ -109,7 +116,7 @@ createChart(document.getElementById('chart')!, {
 });
 ```
 
-<Example id="funnel/grouped" />
+<ExampleLink id="funnel/grouped" />
 
 ### Colors from a colorscale
 
@@ -134,7 +141,7 @@ createChart(document.getElementById('chart')!, {
 });
 ```
 
-<Example id="funnel/colorscale" />
+<ExampleLink id="funnel/colorscale" />
 
 ## Styling
 
@@ -206,7 +213,7 @@ Holochart extensions (full bundle), see [Extrusion & 2.5D](/customization/extrus
 The connector regions and their outlines lie on the plane of the stages' front faces, so the
 stages read as one continuous funnel; labels sit on the front faces.
 
-<Example id="funnel/depth" />
+<ExampleLink id="funnel/depth" />
 
 ## Performance notes
 
@@ -223,7 +230,9 @@ stages read as one continuous funnel; labels sit on the front faces.
 - **Screen readers:** the hidden description (see the [accessibility guide](/guides/accessibility))
   reads `Funnel "name": N bars.`; its table lists each stage with its value and its percentage of
   the first stage.
-- **Keyboard:** there is no keyboard navigation between stages yet.
+- **Keyboard:** Tab moves into the plot area; the arrow keys along the stage axis then step through
+  the stages (↑ / ↓ in the usual horizontal funnel) and the other two move between traces, each stop
+  showing its hover label. See [the keys](/guides/accessibility#keys-in-the-plot-area).
 - **Color:** stages are told apart by position and label, not color, so a single color per trace
   works well. Label the percentages (`textinfo: 'value+percent initial'`) so readers don't have to
   compare bar lengths across the gaps.
@@ -257,4 +266,4 @@ and [`funnelgroupgap`](/reference/layout#funnelgroupgap) are in the layout refer
 - `%{percentTotal}` in `texttemplate` is formatted as a percentage like the other two (Plotly's
   shows the raw ratio).
 - Not supported yet: `xhoverformat` / `yhoverformat` (bar has none either),
-  `texttemplatefallback` / `hovertemplatefallback`, keyboard navigation between stages.
+  `texttemplatefallback` / `hovertemplatefallback`.

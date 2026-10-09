@@ -25,6 +25,7 @@ const YEAR_ONLY = /^\s*(-?\d{4})\s*$/;
 /**
  * Plotly's `cleanNumber`: a finite number from a number or a numeric string (ignoring currency
  * and thousands junk such as `'$1,200'`), else NaN.
+ * @internal
  */
 export function cleanNumber(v: unknown): number {
   if (typeof v === 'number') return Number.isFinite(v) ? v : NaN;
@@ -35,7 +36,10 @@ export function cleanNumber(v: unknown): number {
   return Number.isFinite(n) ? n : NaN;
 }
 
-/** A date value (ms, `Date`, ISO string, bare year, numeric string) → ms since epoch, or NaN. */
+/**
+ * A date value (ms, `Date`, ISO string, bare year, numeric string) → ms since epoch, or NaN.
+ * @internal
+ */
 export function dateToMs(v: unknown): number {
   if (typeof v === 'number') return Number.isFinite(v) ? v : NaN;
   if (isValidDate(v)) return v.getTime();
@@ -69,7 +73,7 @@ function isArrayLikeValue(v: unknown): v is ArrayLike<unknown> {
   return Array.isArray(v) || (ArrayBuffer.isView(v) && !(v instanceof DataView));
 }
 
-/** True for multicategory data given as two rows `[[groups], [items]]`. */
+/** True for multicategory data given as two rows `[[groups], [items]]`. @internal */
 export function isTwoLevel(
   values: unknown,
 ): values is readonly [ArrayLike<unknown>, ArrayLike<unknown>] {
@@ -92,6 +96,7 @@ type Converter = (v: unknown) => number;
  * s.d2l(100);  // 2
  * s.d2p(100);  // 200
  * ```
+ * @internal
  */
 export function createScale(options: ScaleOptions): Scale {
   const type: AxisType = options.type;

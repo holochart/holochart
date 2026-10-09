@@ -5,6 +5,7 @@
  * the most common typo, swapped letters (`drak` → `dark`), costs 1 instead of 2. Abandons early
  * once the distance must exceed `max` (returning `max + 1`): suggestion lookups compare one key
  * against every sibling, so bailing early matters.
+ * @internal
  */
 export function editDistance(a: string, b: string, max = Infinity): number {
   if (a === b) return 0;
@@ -43,6 +44,7 @@ export function editDistance(a: string, b: string, max = Infinity): number {
  * The closest candidate to `word`, or `undefined` if none is close enough. Case differences are
  * free (`Marker` → `marker`); otherwise the allowed distance scales with word length (1 for short
  * names, up to a third of the length).
+ * @internal
  */
 export function suggest(word: string, candidates: Iterable<string>): string | undefined {
   const lower = word.toLowerCase();

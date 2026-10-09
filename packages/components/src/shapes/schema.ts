@@ -35,7 +35,7 @@ const LABEL_POSITIONS = [
   'end',
 ] as const;
 
-/** One shape. */
+/** One shape. @internal */
 export const shapeItemAttributes = {
   visible: attr.enumerated({
     values: [true, false, 'legendonly'],
@@ -134,17 +134,17 @@ export const shapeItemAttributes = {
   ),
 } as const;
 
-/** `layout.shapes`. */
+/** `layout.shapes`. @internal */
 export const shapesAttributes = attr.items(shapeItemAttributes, {
   itemName: 'shape',
   editType: SHAPE_EDIT,
   description: 'Lines, rectangles, ellipses and paths in data or paper coordinates (plan E5.5).',
 });
 
-/** Label placement values. */
+/** Label placement values. @internal */
 export type ShapeLabelPosition = (typeof LABEL_POSITIONS)[number];
 
-/** A defaulted shape. */
+/** A defaulted shape. @internal */
 export interface FullShape {
   _index: number;
   visible: boolean | 'legendonly';
@@ -185,6 +185,7 @@ export interface FullShape {
  * dimensions default to 0–10 px, label fonts inherit `layout.font`, and the label's `textposition`
  * and `yanchor` depend on the type. Positions of scaled dimensions stay unset here and resolve to
  * 25% / 75% of the reference when drawn (axis ranges are only known after autorange). Idempotent.
+ * @internal
  */
 export function supplyShapeDefaults(layoutOut: FullLayout): void {
   const list = layoutOut['shapes'];

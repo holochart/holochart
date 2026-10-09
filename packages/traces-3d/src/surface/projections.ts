@@ -14,11 +14,10 @@ import {
   type Primitive,
   type PrimitiveContext,
   type ViewportSize,
+  type Vec3,
 } from '@mk7s/holochart-render';
 import { Group } from 'three';
 import type { ContourPolylines } from './contours.ts';
-
-type Vec3 = [number, number, number];
 
 /** One projected set of lines. */
 export interface ProjectionSpec {

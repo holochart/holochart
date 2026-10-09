@@ -16,6 +16,8 @@ import { defineConfig, type MarkdownOptions } from 'vitepress';
 import { holochartCodeTheme } from './code-theme.ts';
 import { exampleSourcesPlugin } from './plugins/example-sources.ts';
 import { buildSidebar, nav } from './sidebar.ts';
+import { canonicalUrl } from './site-seo.ts';
+import { sidebarAccessibilityPlugin } from './plugins/sidebar-accessibility.ts';
 
 const DOCS_ROOT = fileURLToPath(new URL('..', import.meta.url));
 const REPO_ROOT = path.resolve(DOCS_ROOT, '../..');
@@ -82,6 +84,25 @@ export default defineConfig({
     ['meta', { name: 'color-scheme', content: 'dark' }],
   ],
   markdown,
+  transformHead({ pageData }) {
+    if (pageData.isNotFound) return [['meta', { name: 'robots', content: 'noindex' }]];
+    return [
+      [
+        'link',
+        {
+          rel: 'canonical',
+          href: canonicalUrl(pageData.relativePath, base, 'https://mk7s.dev'),
+        },
+      ],
+    ];
+  },
+  transformPageData(pageData) {
+    const entry = pageData.params?.['entry'] as
+      { title?: string; description?: string } | undefined;
+    if (!entry) return;
+    if (typeof entry.title === 'string') pageData.title = entry.title;
+    if (typeof entry.description === 'string') pageData.description = entry.description;
+  },
   themeConfig: {
     logo: '/logo.svg',
     nav,
@@ -103,6 +124,7 @@ export default defineConfig({
   },
   vite: {
     plugins: [
+      sidebarAccessibilityPlugin(),
       exampleSourcesPlugin({
         examplesDir: path.join(REPO_ROOT, 'examples'),
         srcDir: DOCS_ROOT,
@@ -132,7 +154,19 @@ export default defineConfig({
       // Examples live outside the docs app.
       fs: { allow: [REPO_ROOT] },
       // A build writing `.vitepress/dist` while the dev server runs must not reload its pages.
-      watch: { ignored: ['**/.vitepress/dist/**', '**/.vitepress/cache/**'] },
+      watch: {
+        ignored: [
+          '**/.vitepress/dist/**',
+          '**/.vitepress/cache/**',
+          '**/.vitepress/.temp/**',
+          '**/public/gallery/sources/**',
+          '**/public/gallery/artifacts/**',
+          '**/.vitepress/rollback/**',
+          // Regeneration recreates thousands of files; each event otherwise reloads all dynamic routes.
+          '**/reference/api/**',
+          '**/reference/attributes/**',
+        ],
+      },
     },
     build: {
       target: 'es2022',

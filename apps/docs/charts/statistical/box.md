@@ -3,9 +3,12 @@ title: Box plot
 description: Summarize distributions by their quartiles, median, whiskers and outliers, and compare them across groups.
 status: complete
 chart: box
+launch-featured: true
 ---
 
 # Box plot
+
+<ChartOverview />
 
 ## Overview
 
@@ -28,6 +31,9 @@ Pick a different chart when:
 - you want counts per value range: use a [histogram](/charts/statistical/histogram).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -86,6 +92,8 @@ samples to statistics:
 
 ## Variations
 
+<ChartVariations />
+
 ### Grouped boxes
 
 Two traces over the same categories, with `layout.boxmode: 'group'`, sit side by side in each
@@ -93,7 +101,7 @@ category. `boxgap` sets the gap between categories and `boxgroupgap` between the
 category (both 0.3 of the slot). `offsetgroup` puts traces in the same slot; `alignmentgroup`
 lets traces on one axis lay out independently.
 
-<Example id="box/grouped" />
+<ExampleLink id="box/grouped" />
 
 ### Notches, mean and standard deviation
 
@@ -103,7 +111,7 @@ they cut. `boxmean: true` adds the mean as a dashed line; `boxmean: 'sd'` also d
 diamond spanning ± `sdmultiple` standard deviations. `sizemode: 'sd'` draws the box itself from
 mean − sd to mean + sd, with a line at the mean and no whiskers.
 
-<Example id="box/notched" />
+<ExampleLink id="box/notched" />
 
 ### All points, with jitter
 
@@ -114,20 +122,20 @@ the same data always gives the same picture. `boxpoints: 'suspectedoutliers'` dr
 outliers and styles the suspected ones with `marker.outliercolor`,
 `marker.line.outliercolor` and `marker.line.outlierwidth`.
 
-<Example id="box/points" />
+<ExampleLink id="box/points" />
 
 ### Horizontal boxes
 
 Samples in `x` make horizontal boxes, which leave room for long category names.
 
-<Example id="box/horizontal" />
+<ExampleLink id="box/horizontal" />
 
 ### Precomputed statistics
 
 When only summaries are stored, give `q1`, `median`, `q3` and optionally the fences, mean, sd and
 notch spans. The same styling, grouping and hover apply.
 
-<Example id="box/precomputed" />
+<ExampleLink id="box/precomputed" />
 
 ### Category and date axes
 
@@ -135,7 +143,7 @@ Positions and values can be dates. On the left, samples whose `x` are the first 
 make one box per month; box widths follow the spacing of the dates. On the right, horizontal boxes
 of date values (ship dates) sit at category positions.
 
-<Example id="box/dates" />
+<ExampleLink id="box/dates" />
 
 ## Styling
 
@@ -179,7 +187,11 @@ of date values (ship dates) sit at category positions.
 - **Screen readers:** each box trace is described with its box count, sample count and the range
   of its medians, and a hidden table lists every box's position, count, min, quartiles, median, max
   and mean. See the [accessibility guide](/guides/accessibility).
-- **Keyboard:** there is no keyboard navigation between boxes yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then step through the boxes, each stop showing
+  every statistic of its box, and ↑ / ↓ move to the trace above or below. A trace with `hoveron:
+'points'` has no stops. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Color:** boxes are identified by position and trace name; with grouped boxes keep the legend
   visible, and prefer distinct fills and outlines over hue alone.
 

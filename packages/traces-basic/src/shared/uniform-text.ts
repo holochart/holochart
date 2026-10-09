@@ -75,6 +75,7 @@ function settle(group: Group): void {
  * @param view - The recording view (identity key).
  * @param items - `{ fontSize, scale }` of each of its labels, hidden candidates included.
  * @param refresh - Redraws the view with a given `uniformtext` (see {@link UniformTextRefresh}).
+ * @internal
  */
 export function negotiateUniformText(
   scope: object,
@@ -113,6 +114,7 @@ export function negotiateUniformText(
  * Remove a view from its type's negotiation (its text was removed, `uniformtext` turned off, or it
  * is disposed). With `settle`, the remaining views are refreshed if the type's size changed; pass
  * `false` from `dispose`, when the other views may be going away too.
+ * @internal
  */
 export function releaseUniformText(
   scope: object,

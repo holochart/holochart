@@ -23,7 +23,10 @@ import {
 const S = scatterAttributes.children;
 const M = S.marker.children;
 
-/** Plotly's 3D marker symbols (`gl3d/markers.js`), drawn with the 2D symbols of the same names. */
+/**
+ * Plotly's 3D marker symbols (`gl3d/markers.js`), drawn with the 2D symbols of the same names.
+ * @internal
+ */
 export const SCATTER3D_SYMBOLS = [
   'circle',
   'circle-open',
@@ -35,7 +38,10 @@ export const SCATTER3D_SYMBOLS = [
   'x',
 ] as const;
 
-/** Plotly's 3D dash names (`gl3d_dashes.js`), drawn like the 2D dashes of the same names. */
+/**
+ * Plotly's 3D dash names (`gl3d_dashes.js`), drawn like the 2D dashes of the same names.
+ * @internal
+ */
 export const SCATTER3D_DASHES = [
   'dash',
   'dashdot',
@@ -132,7 +138,7 @@ function errorBars(letter: 'x' | 'y' | 'z') {
   });
 }
 
-/** `scatter3d`. */
+/** `scatter3d`. @experimental */
 export const scatter3dAttributes = /* @__PURE__ */ (() =>
   attr.object(
     {

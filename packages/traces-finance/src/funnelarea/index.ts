@@ -21,6 +21,7 @@ import { formatPiePercent, formatPieValue } from '@mk7s/holochart-traces-basic';
 import { funnelareaAttributes, funnelareaLayoutAttributes } from './attributes.ts';
 import { calcFunnelarea, crossTraceLayoutFunnelarea, type FunnelareaCalc } from './calc.ts';
 import { supplyFunnelareaDefaults, supplyFunnelareaLayoutDefaults } from './defaults.ts';
+import { lazyA11y } from '../a11y-loader.ts';
 import { funnelareaHoverPoints } from './hover.ts';
 import { funnelareaLegendIcon, funnelareaLegendItems } from './legend.ts';
 import { funnelareaRenderer } from './plot.ts';
@@ -82,6 +83,7 @@ export const funnelarea: TraceModule<FunnelareaCalc, typeof funnelareaAttributes
   crossTraceLayout: crossTraceLayoutFunnelarea,
   plot: funnelareaRenderer,
   hoverPoints: funnelareaHoverPoints,
+  a11y: lazyA11y('funnelarea', funnelareaHoverPoints),
   legendIcon: funnelareaLegendIcon,
   legendItems: funnelareaLegendItems,
   describe: describeFunnelarea,

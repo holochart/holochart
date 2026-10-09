@@ -354,6 +354,7 @@ export function resolveSymbol(symbol: number | string): number {
  * validated before the name existed has already fallen back to `circle`. Registering a name again
  * replaces its shape in every chart. The path is turned into a signed distance field
  * asynchronously (by lazily loaded code); charts wait for it before `ready` resolves.
+ * @public
  */
 export const symbols = {
   /**

@@ -1,3 +1,6 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import * as prettier from 'prettier';
 import { describe, expect, it } from 'vitest';
 import {
@@ -5,7 +8,7 @@ import {
   createRegistry,
   plotSchema,
   type PlotSchema,
-  type TraceModule,
+  type CoreTraceModule,
 } from '@mk7s/holochart-core';
 import { collectModules, isComponentModule, isTraceModule } from './discover.ts';
 import { DEFAULT_DOCS_PATHS, renderDocsFiles } from './generate-docs.ts';
@@ -16,9 +19,9 @@ import {
   renderReference,
   sanitizeMarkdown,
 } from './render.ts';
-import { chartFromFrontmatter, traceTypesInSource } from './scan.ts';
+import { chartFromFrontmatter, examplesByTrace, traceTypesInSource } from './scan.ts';
 
-const widget: TraceModule = {
+const widget: CoreTraceModule = {
   type: 'widget',
   categories: ['cartesian', 'showLegend'],
   meta: { description: 'A test trace with `<angle>` brackets.', plotlyEquivalent: 'scatter' },
@@ -196,6 +199,20 @@ describe('scans', () => {
   it('finds trace types in example sources', () => {
     const src = `data: [{ type: 'scatter', x }, { type: "bar" }], layout: { xaxis: { type: 'log' } }`;
     expect([...traceTypesInSource(src)].sort()).toEqual(['bar', 'log', 'scatter']);
+  });
+
+  it('lists public examples per trace type, never internal ones', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'schema-gen-scan-'));
+    try {
+      const example = `export function run() { return { data: [{ type: 'bar' }] }; }`;
+      for (const file of ['bar/basic.ts', '_dev/rects-bars.ts', '_spikes/bars.ts', '_lib/x.ts']) {
+        await mkdir(path.join(dir, path.dirname(file)), { recursive: true });
+        await writeFile(path.join(dir, file), example);
+      }
+      expect(await examplesByTrace(dir, ['bar', 'scatter'])).toEqual({ bar: ['bar/basic'] });
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 
   it('reads chart frontmatter', () => {

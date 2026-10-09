@@ -16,9 +16,9 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import {
   createRegistry,
-  type ComponentModule,
+  type CoreComponentModule,
   type Registry,
-  type TraceModule,
+  type CoreTraceModule,
 } from '@mk7s/holochart-core';
 
 /**
@@ -29,8 +29,8 @@ const PACKAGE_NAME = /^@mk7s\/holochart-(traces-[\w-]+|components|runtime)$/;
 /** The full bundle, scanned last for the modules only it has (see the module comment). */
 const FULL_BUNDLE = '@mk7s/holochart';
 
-/** True for objects shaped like a {@link TraceModule}. */
-export function isTraceModule(v: unknown): v is TraceModule {
+/** True for objects shaped like a {@link CoreTraceModule}. */
+export function isTraceModule(v: unknown): v is CoreTraceModule {
   if (typeof v !== 'object' || v === null) return false;
   const m = v as Record<string, unknown>;
   const schema = m['schema'] as { kind?: unknown } | undefined;
@@ -45,8 +45,8 @@ export function isTraceModule(v: unknown): v is TraceModule {
   );
 }
 
-/** True for objects shaped like a {@link ComponentModule} that contribute layout attributes. */
-export function isComponentModule(v: unknown): v is ComponentModule {
+/** True for objects shaped like a {@link CoreComponentModule} that contribute layout attributes. */
+export function isComponentModule(v: unknown): v is CoreComponentModule {
   if (typeof v !== 'object' || v === null) return false;
   const m = v as Record<string, unknown>;
   return (
@@ -58,11 +58,11 @@ export function isComponentModule(v: unknown): v is ComponentModule {
 
 /** Collect trace modules and components from a module namespace (also looks inside arrays). */
 export function collectModules(exports: Record<string, unknown>): {
-  traces: TraceModule[];
-  components: ComponentModule[];
+  traces: CoreTraceModule[];
+  components: CoreComponentModule[];
 } {
-  const traces = new Set<TraceModule>();
-  const components = new Set<ComponentModule>();
+  const traces = new Set<CoreTraceModule>();
+  const components = new Set<CoreComponentModule>();
   const visit = (v: unknown): void => {
     if (isTraceModule(v)) traces.add(v);
     else if (isComponentModule(v)) components.add(v);
@@ -92,9 +92,9 @@ export interface DiscoveredPackage {
   /** Workspace (`@mk7s/*`) packages it depends on. */
   dependencies: string[];
   /** Trace modules it exports that no package scanned before it exports. */
-  traces: TraceModule[];
+  traces: CoreTraceModule[];
   /** Components it exports that no package scanned before it exports. */
-  components: ComponentModule[];
+  components: CoreComponentModule[];
   /** The package's exports (its TypeScript sources'). */
   exports: Record<string, unknown>;
 }
@@ -202,8 +202,8 @@ export async function discoverPackages(repoRoot: string): Promise<PackageDiscove
   }
 
   const packages = dependencyOrder(found);
-  const traces = new Set<TraceModule>();
-  const components = new Set<ComponentModule>();
+  const traces = new Set<CoreTraceModule>();
+  const components = new Set<CoreComponentModule>();
   for (const p of packages) {
     const modules = collectModules(p.exports);
     // Modules re-exported from a dependency belong to that dependency.

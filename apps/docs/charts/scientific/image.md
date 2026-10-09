@@ -7,6 +7,8 @@ chart: image
 
 # Image
 
+<ChartOverview />
+
 ## Overview
 
 An `image` trace draws a grid of pixels whose values are colors: `[r, g, b]` components per
@@ -25,6 +27,9 @@ Pick a different chart when:
   [`hx.imshow`](/express/imshow) draws color arrays as images and 2D arrays as heatmaps.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -124,6 +129,8 @@ Axes that hold an image get Plotly's image defaults, which you can override on t
 
 ## Variations
 
+<ChartVariations />
+
 ### Float values with per-channel ranges
 
 `zmin` and `zmax` give each component its own range. Here three simulated bands with values from
@@ -131,7 +138,7 @@ Axes that hold an image get Plotly's image defaults, which you can override on t
 and the red band is stretched from 0.2–0.8 for contrast. `hovertemplate` formats the components
 with `%{z[0]:.2f}`:
 
-<Example id="image/float-range" />
+<ExampleLink id="image/float-range" />
 
 ### Pixels over time on a date axis
 
@@ -139,7 +146,7 @@ One pixel column per hour: `x0` is a date (here in ms) and `dx` one hour in mill
 axis is a date axis and the y axis is linear, so no `scaleanchor` links them and the image fills
 the plot. A line trace on a second y axis (`overlaying: 'y'`) follows the daily cycle:
 
-<Example id="image/dates" />
+<ExampleLink id="image/dates" />
 
 ### HSL colors, smoothed
 
@@ -148,7 +155,7 @@ the pixels in hue and lightness units, and `zsmooth: 'fast'` interpolates biline
 pixels. The y axis is overridden to run upwards (`autorange: true`), and `scaleanchor: false`
 lets it stretch:
 
-<Example id="image/hsl" />
+<ExampleLink id="image/hsl" />
 
 ### A picture from a data URI, with a marker on top
 
@@ -156,7 +163,7 @@ lets it stretch:
 and hover shows its decoded pixels as 8-bit RGBA. A scatter trace marks a point in pixel
 coordinates; because it shares the y axis, `autorange: 'reversed'` is set explicitly:
 
-<Example id="image/source" />
+<ExampleLink id="image/source" />
 
 ### Color arrays with Express
 
@@ -164,14 +171,14 @@ coordinates; because it shares the y axis, `autorange: 'reversed'` is set explic
 as a PNG and draws it as an `image` trace from `source`, with `x` and `y` turned into `x0` / `dx`
 and `y0` / `dy`:
 
-<Example id="express/imshow-rgb" :height="440" />
+<ExampleLink id="express/imshow-rgb" />
 
 ### One value per pixel: a heatmap instead
 
 A 2D array holds values, not colors. `hx.imshow` draws it as a [heatmap](/charts/scientific/heatmap)
 with the image conventions (row 0 at the top, square cells) and a colorscale:
 
-<Example id="express/imshow" :height="400" />
+<ExampleLink id="express/imshow" />
 
 ## Styling
 

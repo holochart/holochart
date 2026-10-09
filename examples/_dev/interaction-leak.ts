@@ -6,6 +6,7 @@ import {
   type Chart,
   type Figure,
 } from '@mk7s/holochart';
+import '@mk7s/holochart/geo';
 import { BufferGeometry, Material, Object3D, Texture, WebGLRenderTarget } from 'three';
 import { STORE } from '../_lib/hierarchy.ts';
 import { placed, uvSphere } from '../_lib/mesh3d-data.ts';
@@ -17,9 +18,10 @@ import { cubeGrid, sinc3 } from '../_lib/volume-data.ts';
  * Leak test page (backlog S2.6, plan E20.6): one figure per chart family, each in two variants, so
  * tests/interaction/leak.spec.ts can create a chart, update it and destroy it over and over and
  * check that what it took (GPU resources, WebGL contexts, DOM nodes, listeners, observers, heap)
- * comes back. Between them the families use every built-in trace type and the components that
- * add DOM or listeners (legend, colorbar, modebar, annotations, shapes, range slider, sliders,
- * update menus, hover labels).
+ * comes back. Between them the families use every built-in trace type, the geo traces (which the
+ * full bundle does not have: `@mk7s/holochart/geo` adds them here) and the components that add
+ * DOM or listeners (legend, colorbar, modebar, annotations, shapes, range slider, sliders, update
+ * menus, hover labels).
  *
  * `window.__leak` exposes the family names and `cycle()`, which does one create → update →
  * destroy round. With `anchor()` a small chart stays alive on the shared renderer, so the shared
@@ -514,7 +516,168 @@ const FAMILIES: Record<string, Family> = {
       view3d: { enabled: true, tilt: 25, rotation: -30 },
     },
   }),
+  // Maps (backlog GEO6). A choropleth by ISO-3 codes with great-circle lines, markers and text on
+  // a globe of `resolution: 50`, whose layers and regions are swapped for the 110m ones while it
+  // turns; and markers given by country names on a projection whose code is a lazy chunk. The
+  // round also drags and wheels the globe (`GESTURES`).
+  geo: (v) => ({
+    data: [
+      {
+        type: 'choropleth',
+        locations: ['FRA', 'BRA', 'NGA', 'USA', 'IND'].slice(0, 4 + v),
+        z: [1, 3, 2 + v, 5, 4].slice(0, 4 + v),
+        colorbar: { len: 0.6 },
+      },
+      {
+        type: 'scattergeo',
+        mode: 'lines+markers+text',
+        lon: seq(4 + 2 * v, (i) => -40 + 18 * i),
+        lat: seq(4 + 2 * v, (i) => 30 * Math.sin(i + v)),
+        text: seq(4 + 2 * v, (i) => i).map((i) => `p${i}`),
+        textposition: 'top center',
+        marker: { size: 8 },
+      },
+      {
+        type: 'scattergeo',
+        geo: 'geo2',
+        mode: 'markers',
+        locationmode: 'country names',
+        locations: ['France', 'Brazil', 'Japan', 'Kenya'].slice(0, 3 + v),
+        marker: { size: 10 },
+      },
+    ],
+    layout: {
+      margin: SMALL_MARGIN,
+      showlegend: false,
+      // (Several geo subplots share the height by default, as in Plotly: each gets all of it.)
+      geo: {
+        domain: { x: [0, 0.5], y: [0, 1] },
+        resolution: 50,
+        fitbounds: false,
+        projection: { type: 'orthographic', rotation: { lon: 10 * v } },
+        // One layer of the 50m basemap (the coastlines), the ocean and a graticule: enough for
+        // the swap, and a round stays short on software GL (the land is on the other map).
+        showland: false,
+        showocean: true,
+        lataxis: { showgrid: true },
+      },
+      geo2: {
+        domain: { x: [0.56, 1], y: [0, 1] },
+        fitbounds: false,
+        projection: { type: 'robinson' },
+        showland: true,
+      },
+    },
+  }),
+  // The 3D globe (backlog GEO8): sphere meshes and 3D lines in a 3D viewport of the subplot's
+  // own, under its 2D one. The update switches both subplots' projection type, one from the
+  // globe to the flat orthographic map and the other the opposite way, so a round disposes the
+  // primitives of both drawing paths and a globe's viewport, and tears a globe down. At 110m,
+  // so a round stays short. The round also drags and wheels the left map (`GESTURES`).
+  globe: (v) => ({
+    data: [
+      {
+        type: 'scattergeo',
+        mode: 'markers',
+        lon: seq(4 + v, (i) => -30 + 20 * i),
+        lat: seq(4 + v, (i) => 20 * Math.sin(i + v)),
+        marker: { size: 8 },
+      },
+      {
+        type: 'scattergeo',
+        geo: 'geo2',
+        mode: 'markers',
+        lon: [0, 30, 60],
+        lat: [10, 20 + 5 * v, 30],
+        marker: { size: 8 },
+      },
+    ],
+    layout: {
+      margin: SMALL_MARGIN,
+      showlegend: false,
+      // The one text of the family: it keeps its length, so no text batch is resized (L2).
+      title: { text: 'Globe' },
+      geo: {
+        domain: { x: [0, 0.5], y: [0, 1] },
+        fitbounds: false,
+        projection: { type: v ? 'orthographic' : 'globe3d', rotation: { lon: 10 * v } },
+        // Every kind of layer a globe has: the body, opaque and blended meshes, lines, the frame.
+        showland: true,
+        showocean: true,
+        showlakes: true,
+        showcountries: true,
+        showframe: true,
+        lataxis: { showgrid: true },
+        lonaxis: { showgrid: true },
+      },
+      geo2: {
+        domain: { x: [0.56, 1], y: [0, 1] },
+        fitbounds: false,
+        projection: { type: v ? 'globe3d' : 'orthographic' },
+        showland: true,
+        showocean: true,
+      },
+    },
+  }),
 };
+
+/**
+ * What a round does to a family's chart besides the hover every family gets: pointer gestures
+ * whose state lives past the event (timers, frames of a staged redraw, listeners on the canvas).
+ * Called once between the first draw and the update, and once more right before the teardown,
+ * which then happens with the gesture's timers still pending.
+ */
+const GESTURES: Record<string, (chart: Chart) => Promise<void>> = {
+  // A drag that turns the globe (the 110m swap and its return), then a wheel step whose zoom is
+  // committed only when the wheel has rested.
+  geo: (chart) => turnAndWheel(chart),
+  // The same on the left map of the `globe` family: the 3D globe, then the flat map it becomes.
+  globe: (chart) => turnAndWheel(chart),
+};
+
+/** Drag the map in the left half of the plot area, then turn the wheel one notch over it. */
+async function turnAndWheel(chart: Chart): Promise<void> {
+  const canvas = chart.three.root.canvas;
+  const box = canvas.getBoundingClientRect();
+  // On the globe, which fills the left half of the plot area.
+  const x = box.left + box.width * 0.29;
+  const y = box.top + box.height / 2;
+  let steps = 0;
+  const off = chart.on('relayouting', () => void steps++);
+  const pointer = (type: string, dx: number, buttons: number): void => {
+    canvas.dispatchEvent(
+      new PointerEvent(type, {
+        clientX: x + dx,
+        clientY: y,
+        button: 0,
+        buttons,
+        pointerId: 1,
+        isPrimary: true,
+        pointerType: 'mouse',
+        bubbles: true,
+      }),
+    );
+  };
+  pointer('pointerdown', 0, 1);
+  pointer('pointermove', 8, 1);
+  await frame();
+  pointer('pointermove', 20, 1);
+  await frame();
+  pointer('pointerup', 20, 0);
+  canvas.dispatchEvent(
+    new WheelEvent('wheel', {
+      clientX: x,
+      clientY: y,
+      deltaY: -100,
+      bubbles: true,
+      cancelable: true,
+    }),
+  );
+  await frame();
+  off();
+  // Two moves of the drag and the wheel step: a round that misses the map measures nothing.
+  if (steps < 3) throw new Error(`the geo gestures moved the map ${steps} times, not 3`);
+}
 
 /** What the example exposes to the leak test. */
 export interface LeakHook {
@@ -522,9 +685,9 @@ export interface LeakHook {
   /** Registered trace types that draw and that no family uses (none, or the test is incomplete). */
   uncovered: string[];
   /**
-   * Create `family` in a new container, hover it, update it (`react` with the second variant,
-   * then a `relayout`) and tear it down: `destroy()` on even rounds, `purge(el)` on odd ones.
-   * Returns the chart's renderer as it is after the teardown.
+   * Create `family` in a new container, hover it (and run its gestures, if it has any), update it
+   * (`react` with the second variant, then a `relayout`) and tear it down: `destroy()` on even
+   * rounds, `purge(el)` on odd ones. Returns the chart's renderer as it is after the teardown.
    */
   cycle(family: string, shared: boolean, round: number): Promise<Chart['three']['renderer']>;
   /**
@@ -603,10 +766,14 @@ export function run(el: HTMLElement): ExampleHandle {
       );
       canvas.dispatchEvent(new MouseEvent('mousemove', { ...at, bubbles: true }));
       await frame();
+      const gesture = GESTURES[family];
+      await gesture?.(chart);
       await chart.react(figure(1));
       await settle(chart);
       await chart.relayout({ width: WIDTH - 40, height: HEIGHT - 20 });
       await settle(chart);
+      // Torn down in the middle of what the gesture left pending.
+      await gesture?.(chart);
       const renderer = chart.three.renderer;
       if (round % 2) purge(cell);
       else chart.destroy();

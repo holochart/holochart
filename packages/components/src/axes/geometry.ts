@@ -43,7 +43,10 @@ import {
   type MeasureLine,
 } from '../shared/text.ts';
 
-/** The parts of the runtime's `AxisInfo` the geometry needs (tests pass plain objects). */
+/**
+ * The parts of the runtime's `AxisInfo` the geometry needs (tests pass plain objects).
+ * @internal
+ */
 export interface AxisLike {
   readonly id: string;
   readonly letter: 'x' | 'y';
@@ -56,7 +59,7 @@ export interface AxisLike {
   l2c(l: number): number;
 }
 
-/** An axis-aligned rect in container px. */
+/** An axis-aligned rect in container px. @internal */
 export interface RectItem {
   x0: number;
   y0: number;
@@ -76,7 +79,7 @@ export interface RectItem {
   };
 }
 
-/** A dashed line segment in container px (center line). */
+/** A dashed line segment in container px (center line). @internal */
 export interface DashItem {
   x0: number;
   y0: number;
@@ -87,7 +90,7 @@ export interface DashItem {
   dash: string;
 }
 
-/** A text label in container px. */
+/** A text label in container px. @internal */
 export interface LabelItem {
   text: string;
   x: number;
@@ -104,7 +107,7 @@ export interface LabelItem {
   runs?: TextRunLines;
 }
 
-/** Where an axis (or a mirror of it) is drawn. */
+/** Where an axis (or a mirror of it) is drawn. @internal */
 export interface AxisFrame {
   /** Cross-axis container px of the edge the axis is drawn on (already pushed out by `pad`). */
   cross: number;
@@ -112,12 +115,12 @@ export interface AxisFrame {
   sgn: 1 | -1;
 }
 
-/** A mirrored axis line (and ticks with `mirror: 'ticks' | 'allticks'`). */
+/** A mirrored axis line (and ticks with `mirror: 'ticks' | 'allticks'`). @internal */
 export interface MirrorFrame extends AxisFrame {
   ticks: boolean;
 }
 
-/** Everything drawn for one axis except its grid (see {@link gridGeometry}). */
+/** Everything drawn for one axis except its grid (see {@link gridGeometry}). @internal */
 export interface AxisGeometry {
   /** Axis lines, tick marks and dividers. */
   rects: RectItem[];
@@ -149,6 +152,7 @@ export interface LabelBounds {
 /**
  * Bounds of a `w × h` text box anchored at the origin by `anchorX`/`anchorY`, rotated clockwise
  * by `angle` degrees about the anchor (the text primitive's convention).
+ * @internal
  */
 export function labelBounds(
   w: number,
@@ -195,6 +199,7 @@ function normAngle(a: number): number {
  * Plotly: unrotated x labels hang centered under the tick; rotated x labels start (or end) at the
  * tick; y labels are right/left aligned; other rotations are centered on the tick. Returns the
  * anchors and the extra outward shift that keeps the rotated box off the label line.
+ * @internal
  */
 export function tickLabelAnchor(
   letter: 'x' | 'y',
@@ -226,6 +231,7 @@ export function tickLabelAnchor(
  * The ticks of an axis (core `computeTicks`). Works around the runtime building multicategory
  * scales from joined `'group/item'` category strings (no `multicategories`): the group is then
  * split off the label so the second label row and dividers still work.
+ * @internal
  */
 export function axisTicks(axis: Pick<AxisLike, 'type' | 'scale' | 'full'>): Tick[] {
   const ticks = computeTicks(axis.scale, axis.full);
@@ -265,7 +271,7 @@ function inRange(axis: AxisLike, p: number): boolean {
   return p >= lo - 0.5 && p <= hi + 0.5;
 }
 
-/** Options for {@link axisGeometry}. */
+/** Options for {@link axisGeometry}. @internal */
 export interface AxisGeometryOptions {
   measure: MeasureLine;
   /** Figure size (for `ticklabeloverflow: 'hide past div'`). */
@@ -314,6 +320,7 @@ function alongSpan(p: PlacedLabel, letter: 'x' | 'y'): [number, number] {
 /**
  * Lines, ticks, labels and title of one axis (everything but the grid), plus the outward extent
  * automargin needs. `ticks` are the axis' ticks (see {@link axisTicks}).
+ * @internal
  */
 export function axisGeometry(
   axis: AxisLike,
@@ -558,7 +565,7 @@ export function axisGeometry(
   return { rects, labels, extent: Math.max(0, extent), angle };
 }
 
-/** Grid lines, minor grid lines and the zero line of an axis across one subplot. */
+/** Grid lines, minor grid lines and the zero line of an axis across one subplot. @internal */
 export interface GridGeometry {
   /** Solid minor, then major grid lines. */
   rects: RectItem[];
@@ -572,6 +579,7 @@ export interface GridGeometry {
  * Grid geometry of `axis` across the cross-axis span `[c0, c1]` (container px) of one subplot.
  * `edges` are cross positions along the axis (container px) where an axis line sits: grid lines
  * within 1 px of them are skipped, as is a grid line under the zero line.
+ * @internal
  */
 export function gridGeometry(
   axis: AxisLike,

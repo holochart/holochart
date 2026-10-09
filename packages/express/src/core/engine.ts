@@ -201,6 +201,13 @@ function traceKwargs(
         if (header === '') header = '<b>%{hovertext}</b><br><br>';
         break;
       case 'color': {
+        if (config.continuousColor === 'z') {
+          // A choropleth's values (px writes them to `z`, on the color axis).
+          patch['z'] = values;
+          patch['coloraxis'] = 'coloraxis';
+          mappingLabels.set(label, '%{z}');
+          break;
+        }
         if (config.continuousColor === 'pie' || config.continuousColor === 'sectors') {
           const marker = (patch['marker'] ??= {}) as Record<string, unknown>;
           if (config.continuousColor === 'pie' && args.table.type(column) === 'numeric') {
@@ -275,6 +282,10 @@ function traceKwargs(
       case 'text':
         patch['text'] = values;
         mappingLabels.set(label, '%{text}');
+        break;
+      case 'locations':
+        patch['locations'] = values;
+        mappingLabels.set(label, '%{location}');
         break;
       default:
         patch[role] = values;

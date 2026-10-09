@@ -40,13 +40,16 @@ createChart(el, {
 Accepted date values, per point:
 
 - **ISO strings**: `'2025-03-01'`, `'2025-03-01 14:30'`, `'2025-03-01T14:30:05.250'`. Plotly's
-  date strings, read as UTC.
-- **`Date` objects**: their instant (`getTime()`), shown in UTC.
+  date strings, read as UTC. A string that ends in `Z` or a UTC offset (`'2025-03-01T14:30+01:00'`)
+  is converted to UTC, so that one is shown at 13:30.
+- **`Date` objects**: their instant (`getTime()`), shown in UTC. Plotly shows a `Date` at the
+  browser's local time instead.
 - **Numbers** on a date axis: milliseconds since 1970-01-01 UTC (`Date.UTC(…)`, `Date.now()`). A
   `Float64Array` of milliseconds is the fastest input for long series: nothing is parsed.
 
-Dates have no time zone: an axis shows the UTC wall time of each value, as Plotly does
-(`layout.timezone` is not supported). To show local times, shift the values before plotting.
+Dates have no time zone: an axis shows the UTC wall time of each value, the same for every
+viewer (`layout.timezone` is not supported). To show local times, pass date strings that spell
+out the local time, or shift the values before plotting.
 
 Evenly spaced series can skip `x` entirely: `x0: '2025-01-01', dx: 86_400_000` puts point `i` at
 `x0 + i·dx` (in milliseconds on a date axis).
@@ -213,8 +216,9 @@ series, so a decade of one-minute bars (2.6 million points) pans smoothly.
 What to know:
 
 - **It is automatic.** It applies to `mode: 'lines'` (and the line of `'lines+markers'`) when x
-  increases along the data, with `line.shape` `'linear'` or one of the steps (`'hv'`, `'vh'`,
-  `'hvh'`, `'vhv'`), on any axis type. Set [`line.simplify: false`](/reference/scatter#line.simplify)
+  increases along the data, with `line.shape: 'linear'`, on any axis type. Step shapes (`'hv'`,
+  `'vh'`, `'hvh'`, `'vhv'`) are decimated only from 100,000 points, through the pyramid; shorter
+  step lines are drawn whole. Set [`line.simplify: false`](/reference/scatter#line.simplify)
   to draw every vertex (Plotly's attribute: it simplifies SVG paths there, and is on by default in
   both).
 - **Only drawing is decimated.** Hover, click, selection, `fill` and markers use every point.
@@ -226,7 +230,7 @@ What to know:
 - **Streaming works.** [`extendTraces`](/fundamentals/updating-charts) and `prependTraces` rebuild
   only the pyramid chunks at the edited ends.
 - **Pass typed arrays.** A `Float64Array` of millisecond timestamps and one of values skip date
-  parsing and copying.
+  parsing: they are copied with one native call instead of being read value by value.
 - **Cost.** Building the pyramid of 2.6 million points takes about 50 ms, once per data set; a
   zoom step then costs 1–5 ms and a pan usually nothing (the drawn window is re-read only after
   panning a view width).
@@ -237,6 +241,8 @@ See the [performance guide](/guides/performance) for other large-data techniques
 
 ## Plotly differences
 
-- `layout.timezone` is not supported (as in Plotly.js, dates are shown in UTC).
+- A `Date` object is shown at its UTC time. Plotly shows it at the browser's local time. Date
+  strings without a UTC offset are read alike in both.
+- There is no `layout.timezone`: dates are always shown in UTC.
 - Plotly's `line.simplify` removes nearly collinear SVG path points; Holochart uses it to switch
   min/max decimation, with the same default (`true`).

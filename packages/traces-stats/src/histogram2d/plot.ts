@@ -31,6 +31,7 @@ import { autoCellFontSize, cellLabels, cellTexts, type CellText } from './text.t
  * three.js `renderOrder` of heatmap-like traces, as traces-basic orders every trace (plan E2.14):
  * `zorder`, then Plotly's layer of the type (heatmaps and contours under bars and scatter), then
  * trace order. Ranks and steps match `traces-basic/src/shared/render-order.ts`.
+ * @internal
  */
 export function heatmapRenderOrder(trace: FullTrace, index: number): number {
   const rank = trace.type === 'histogram2dcontour' || trace.type === 'contour' ? 3 : 1;

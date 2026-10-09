@@ -6,8 +6,7 @@
  * lighting is right whatever the axes' aspect ratio.
  */
 import { gridX, gridY, type SurfaceGrid } from './grid.ts';
-
-type Vec3 = [number, number, number];
+import type { Vec3 } from '@mk7s/holochart-render';
 
 /**
  * World-space unit normals, 3 per grid point (zero at gaps and where the neighbours are

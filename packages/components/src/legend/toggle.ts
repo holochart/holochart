@@ -37,6 +37,7 @@ export type VisibilityChanges = Map<number, true | 'legendonly'>;
  *   (`legend2`, …) this happens within the clicked item's legend; other legends are untouched.
  *
  * Traces with `visible: false` are never touched.
+ * @internal
  */
 export function legendToggle(
   traces: readonly ToggleTrace[],

@@ -232,7 +232,7 @@ export interface CandlestickTraceDecreasingLine {
 /**
  * Funnel: stages of a process as bars centered on the value axis, with connector regions between them.
  */
-export type FunnelTrace = Omit<CommonTraceAttributes, 'hoverinfo'> &
+export type BaseFunnelTrace = Omit<CommonTraceAttributes, 'hoverinfo'> &
   CartesianTraceAttributes & {
     /**
      * Trace type.
@@ -1655,7 +1655,7 @@ export interface OhlcTraceDecreasingLine {
 /**
  * Waterfall: bars showing how a running total is built from positive and negative changes, with sum bars and connector lines.
  */
-export type WaterfallTrace = Omit<CommonTraceAttributes, 'hoverinfo'> &
+export type BaseWaterfallTrace = Omit<CommonTraceAttributes, 'hoverinfo'> &
   CartesianTraceAttributes & {
     /**
      * Trace type.
@@ -2044,4 +2044,9 @@ export interface WaterfallTraceConnectorLine {
  * Any trace of `@mk7s/holochart-traces-finance`, discriminated on `type`. Type a partial bundle's figures with it: `FigureInput<TracesFinance>`.
  */
 export type TracesFinance =
-  CandlestickTrace | FunnelTrace | FunnelareaTrace | IndicatorTrace | OhlcTrace | WaterfallTrace;
+  | CandlestickTrace
+  | BaseFunnelTrace
+  | FunnelareaTrace
+  | IndicatorTrace
+  | OhlcTrace
+  | BaseWaterfallTrace;

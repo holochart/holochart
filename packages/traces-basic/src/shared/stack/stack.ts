@@ -31,7 +31,7 @@ export type BarMode = 'group' | 'stack' | 'relative' | 'overlay';
 /** `layout.barnorm`. */
 export type BarNorm = '' | 'fraction' | 'percent';
 
-/** Layout options for {@link layoutBars}. */
+/** Layout options for {@link layoutBars}. @internal */
 export interface StackOptions {
   readonly mode: BarMode;
   /** `bargap`: fraction of the position slot left empty between neighboring positions. */
@@ -52,7 +52,7 @@ export interface StackOptions {
   readonly offsetGroups?: (alignmentgroup: string) => readonly string[] | undefined;
 }
 
-/** One trace's bars, as the stacking helper reads them. Arrays are index-aligned. */
+/** One trace's bars, as the stacking helper reads them. Arrays are index-aligned. @internal */
 export interface StackInput {
   readonly length: number;
   /** Position of each bar (linear coordinates). Non-finite: the bar is skipped. */
@@ -78,7 +78,10 @@ export interface StackInput {
   readonly minSpacing?: number;
 }
 
-/** What {@link layoutBars} computes for one input. Arrays are index-aligned with the input. */
+/**
+ * What {@link layoutBars} computes for one input. Arrays are index-aligned with the input.
+ * @experimental
+ */
 export interface StackOutput {
   /** Bar center on the position axis (linear). NaN for skipped bars. */
   readonly center: Float64Array;
@@ -257,6 +260,7 @@ function offsetSlots(
  * const [a, b] = layoutBars([inputA, inputB], { mode: 'stack', gap: 0.2, groupgap: 0, norm: '' });
  * // b.base[i] === a.top[i] where both traces have a bar at the same position
  * ```
+ * @internal
  */
 export function layoutBars(inputs: readonly StackInput[], options: StackOptions): StackOutput[] {
   const outputs = inputs.map((input) => allocate(input.length));

@@ -24,12 +24,12 @@
  */
 import type { CategoryValues } from './categories.ts';
 
-/** The aggregates of the value-based `categoryorder`s. */
+/** The aggregates of the value-based `categoryorder`s. @internal */
 export type CategoryAggregate = 'total' | 'sum' | 'min' | 'max' | 'mean' | 'median';
 
 const AGGREGATES: ReadonlySet<string> = new Set(['total', 'sum', 'min', 'max', 'mean', 'median']);
 
-/** A value-based `categoryorder`, split into its aggregate and direction. */
+/** A value-based `categoryorder`, split into its aggregate and direction. @internal */
 export interface ValueCategoryOrder {
   readonly aggregate: CategoryAggregate;
   readonly descending: boolean;
@@ -38,6 +38,7 @@ export interface ValueCategoryOrder {
 /**
  * Parse a value-based `categoryorder` (`'total descending'`, `'median ascending'`, …); `undefined`
  * for every other order (`trace`, `array`, `category …`) or a missing one.
+ * @internal
  */
 export function valueCategoryOrder(order: string | undefined): ValueCategoryOrder | undefined {
   if (order === undefined) return undefined;
@@ -54,6 +55,7 @@ export function valueCategoryOrder(order: string | undefined): ValueCategoryOrde
  * axis' category list and the value to aggregate (index-aligned). Points whose index is not a
  * valid category (NaN, negative, fractional or past the end) or whose value is not finite are
  * skipped.
+ * @internal
  */
 export interface CategorySamples {
   readonly index: ArrayLike<number>;
@@ -67,6 +69,7 @@ export interface CategorySamples {
  * @param categories - The axis' category list the sample indices refer to (the list calc ran
  * with).
  * @returns Values per category name; every category is present, possibly with no values.
+ * @internal
  */
 export function collectCategoryValues(
   categories: readonly string[],
@@ -103,6 +106,7 @@ function numericMedian(values: readonly number[]): number {
 /**
  * Aggregate one category's values. Non-finite values are ignored; with no values left, `total` and
  * `sum` give 0 and the other aggregates `NaN` (see the module notes).
+ * @internal
  */
 export function aggregateCategoryValues(
   aggregate: CategoryAggregate,
@@ -142,6 +146,7 @@ export function aggregateCategoryValues(
  * @param categories - Categories in trace order (first appearance): the tie order.
  * @param values - Values per category name, e.g. from {@link collectCategoryValues}. Categories
  * missing from the map have no values.
+ * @internal
  */
 export function sortCategoriesByValue(
   categories: readonly string[],

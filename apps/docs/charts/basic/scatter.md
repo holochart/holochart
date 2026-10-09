@@ -3,9 +3,12 @@ title: Scatter
 description: Plot x/y points as markers to show the relationship between two variables.
 status: complete
 chart: scatter
+launch-featured: true
 ---
 
 # Scatter
+
+<ChartOverview />
 
 ## Overview
 
@@ -27,6 +30,9 @@ Pick a different chart when:
 
 ## Minimal example
 
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
+
 ```ts
 import { createChart } from '@mk7s/holochart';
 
@@ -38,7 +44,7 @@ const chart = createChart(document.getElementById('chart')!, {
 The chart fills its container, so give the element a size. Each trace takes the next color of the
 colorway. The live example below has three traces with different symbols, sizes, and colors:
 
-<Example id="_dev/chart-scatter-basic" />
+<Example id="scatter/clusters" />
 
 ## Data format
 
@@ -57,13 +63,15 @@ See [Data formats](/fundamentals/data-formats) and
 
 ## Variations
 
+<ChartVariations />
+
 ### Modes and symbols
 
 When you don't set `mode`, Holochart uses Plotly's rule: `'lines+markers'` for fewer than 20
 points, `'lines'` otherwise. Set `mode: 'markers'` for a pure scatter plot. `marker.symbol` takes
 one symbol or one per point, and `zorder` raises a trace above the others.
 
-<Example id="scatter/basic" />
+<ExampleLink id="scatter/basic" />
 
 ### Colorscales and bubbles
 
@@ -74,42 +82,42 @@ colorbar; `marker.colorbar` takes the full axis tick API (`dtick`, `ticksuffix`,
 plus `title`, `orientation`, `thickness` and `len`. Traces that set the same `marker.coloraxis`
 share one scale and one colorbar.
 
-<Example id="scatter/colorscale" />
+<ExampleLink id="scatter/colorscale" />
 
 ### Text labels
 
 Add `'text'` to `mode` to label points. `textposition` places each label around its marker (one
 value or one per point), and `texttemplate` formats it with the same syntax as `hovertemplate`.
 
-<Example id="scatter/text-labels" />
+<ExampleLink id="scatter/text-labels" />
 
 ### Error bars
 
 `error_y` and `error_x` draw uncertainty per point: from data arrays (symmetric or asymmetric),
 as a percentage, a constant, or the square root of the value.
 
-<Example id="scatter/error-bars" />
+<ExampleLink id="scatter/error-bars" />
 
 ### Dot plot
 
 A Cleveland dot plot is two or more marker traces over categories. Put the categories on the y
 axis so long labels stay readable.
 
-<Example id="recipes/dot-plot" />
+<ExampleLink id="recipes/dot-plot" />
 
 ### Dumbbell
 
 A dumbbell chart joins each pair of dots. All connectors are one `mode: 'lines'` trace whose
 points go `[start, end, null]` per category; the `null` breaks the line between categories.
 
-<Example id="recipes/dumbbell" />
+<ExampleLink id="recipes/dumbbell" />
 
 ### Lollipop
 
 A lollipop is a marker on a stem from zero. The stem is a capless, one-sided error bar:
 `error_y: { symmetric: false, array: zeros, arrayminus: values, width: 0 }`.
 
-<Example id="recipes/lollipop" />
+<ExampleLink id="recipes/lollipop" />
 
 ## Styling
 
@@ -133,7 +141,7 @@ Hover, zoom, pan, and selection work on every scatter trace. Try them here: hove
 zoom, double-click to reset, and use the modebar (top right, on hover) to switch to pan, box
 select, or lasso.
 
-<Example id="_dev/interaction-scatter" />
+<ExampleLink id="scatter/interactive" />
 
 - **Hover.** `layout.hovermode` is `'closest'` by default. `'x'` and `'y'` show every trace at the
   hovered position, and `'x unified'` / `'y unified'` put them in one label. Change the label text
@@ -169,7 +177,9 @@ selection still exact.
   markers drew their first frame in about 25 ms, and 1,000,000 markers of 3 px panned at over
   100 fps ([spike A](https://github.com/holochart/holochart/blob/main/docs/spikes/a-markers.md)).
   Larger markers cost more fill time (about half that frame rate at 8 px).
-- Pass typed arrays (`Float64Array`) for large data. They are read without conversion.
+- Pass typed arrays (`Float64Array`) for large data. On linear and date axes they are copied
+  with one native call, where a plain array is read and checked value by value. See
+  [Performance](/guides/performance#pass-typed-arrays).
 - Style updates are cheap. `chart.restyle({ 'marker.color': 'crimson' })` only rewrites a color
   buffer; changing `x` or `y` recomputes the trace. See
   [Updating charts](/fundamentals/updating-charts).
@@ -185,7 +195,9 @@ selection still exact.
   points to assistive technology is not built yet (planned for M2, see the
   [accessibility guide](/guides/accessibility)). Until then, add your own text alternative: an
   `aria-label` or visible caption on the container, and a data table for the key numbers.
-- **Keyboard:** there is no keyboard navigation between points yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then step through the points and ↑ / ↓ move to
+  the trace above or below, each stop showing its hover label. See [the
+  keys](/guides/accessibility#keys-in-the-plot-area).
 - **Color:** don't rely on color alone. Vary `marker.symbol` between traces, and pick a colorscale
   that is readable in grayscale (such as `'Viridis'`) for numeric colors.
 

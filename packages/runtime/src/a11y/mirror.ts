@@ -37,6 +37,7 @@
 import type { FullLayout } from '@mk7s/holochart-core';
 import type { ChartDescription, DescribedTable } from './describe.ts';
 import type { DataTableView } from './table-view.ts';
+import { VISUALLY_HIDDEN } from './text.ts';
 
 /** What changed, as far as the description is concerned. */
 export type A11yChange = 'content' | 'range' | 'stream' | 'none';
@@ -45,11 +46,6 @@ export type A11yChange = 'content' | 'range' | 'stream' | 'none';
 export const RANGE_DEBOUNCE_MS = 300;
 /** Longest a streaming chart's description lags behind the data. */
 export const STREAM_THROTTLE_MS = 500;
-
-/** Keeps content in the accessibility tree while drawing nothing and taking no layout space. */
-const VISUALLY_HIDDEN =
-  'position:absolute;left:0;top:0;width:1px;height:1px;margin:-1px;padding:0;border:0;' +
-  'overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;pointer-events:none;';
 
 type Managed = 'role' | 'aria-label' | 'aria-describedby';
 

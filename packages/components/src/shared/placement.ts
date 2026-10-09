@@ -5,7 +5,7 @@
 import type { ViewportRect } from '@mk7s/holochart-render';
 import type { MarginPush } from '@mk7s/holochart-runtime';
 
-/** A box anchored at `x`/`y` (fractions of the container or of the plot area). */
+/** A box anchored at `x`/`y` (fractions of the container or of the plot area). @internal */
 export interface AnchoredBox {
   readonly x: number;
   readonly y: number;
@@ -16,7 +16,7 @@ export interface AnchoredBox {
   readonly yanchor: 'top' | 'middle' | 'bottom';
 }
 
-/** Fraction of the box on the far side of the anchor point, per anchor. */
+/** Fraction of the box on the far side of the anchor point, per anchor. @internal */
 export function anchorFraction(anchor: string): number {
   return anchor === 'right' || anchor === 'bottom'
     ? 1
@@ -25,7 +25,7 @@ export function anchorFraction(anchor: string): number {
       : 0;
 }
 
-/** The anchor point in container px. */
+/** The anchor point in container px. @internal */
 export function anchorPoint(
   a: Pick<AnchoredBox, 'x' | 'y' | 'xref' | 'yref'>,
   size: { width: number; height: number },
@@ -37,7 +37,7 @@ export function anchorPoint(
   };
 }
 
-/** Top-left corner of a `box`-sized box anchored as `a`, container px. */
+/** Top-left corner of a `box`-sized box anchored as `a`, container px. @internal */
 export function anchoredOrigin(
   a: AnchoredBox,
   size: { width: number; height: number },
@@ -56,6 +56,7 @@ export function anchoredOrigin(
  * size the pushed margin leaves: e.g. a box at `x = 1.02` anchored left needs
  * `r = (0.02·(W − l) + w) / 1.02`. `margin` holds the figure's base margins. Container-referenced
  * directions push nothing.
+ * @internal
  */
 export function anchoredMarginPush(
   a: AnchoredBox,

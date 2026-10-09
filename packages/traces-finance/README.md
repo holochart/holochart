@@ -22,7 +22,7 @@ newer can also `require()` it.
 
 - **`financeTraces`:** every trace module below, to register at once
 - **Trace modules:** `ohlc`, `candlestick`, `waterfall`, `funnel`, `funnelarea`, `indicator`
-- **Attribute schemas:** `ohlcAttributes`, `candlestickAttributes`, `waterfallAttributes`,
+- **Attribute schemas** (experimental): `ohlcAttributes`, `candlestickAttributes`, `waterfallAttributes`,
   `funnelAttributes`, `funnelareaAttributes`, `indicatorAttributes`
 
 ## Usage

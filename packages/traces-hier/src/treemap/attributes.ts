@@ -77,7 +77,7 @@ export function tileTextposition() {
   });
 }
 
-/** The treemap schema. */
+/** The treemap schema. @experimental */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const treemapAttributes = /* @__PURE__ */ (() => {
   const marker = hierarchyMarkerAttributes('tile', 1);
@@ -158,7 +158,7 @@ export const treemapAttributes = /* @__PURE__ */ (() => {
   );
 })();
 
-/** Layout attributes owned by `treemap` (coerced when a treemap trace is present). */
+/** Layout attributes owned by `treemap` (coerced when a treemap trace is present). @internal */
 // Pure IIFE: see above.
 export const treemapLayoutAttributes = /* @__PURE__ */ (() =>
   hierarchyLayoutAttributes('treemap'))();

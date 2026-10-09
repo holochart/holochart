@@ -81,6 +81,7 @@ export interface MakeSubplotsOptions {
  * `name` of the subplot title annotations {@link makeSubplots} adds. They carry no font size: the
  * annotations component draws them at {@link SUBPLOT_TITLE_FONT_SCALE} × `layout.font.size`
  * unless a size is set (on the annotation or by the template's `annotationdefaults`).
+ * @internal
  */
 export const SUBPLOT_TITLE_NAME = 'subplot title';
 
@@ -94,6 +95,7 @@ export const FACET_LABEL_NAME = 'facet label';
 /**
  * Subplot title size relative to `layout.font.size`: plotly.py's 16 px over its 12 px base font,
  * so Plotly's look keeps 16 px and a 9 px base (Holochart's default look) gets 12 px.
+ * @internal
  */
 export const SUBPLOT_TITLE_FONT_SCALE = 4 / 3;
 

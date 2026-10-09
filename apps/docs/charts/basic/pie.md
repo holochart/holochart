@@ -3,9 +3,12 @@ title: Pie
 description: Show how a whole splits into a few parts, as a pie or a donut.
 status: complete
 chart: pie
+launch-featured: true
 ---
 
 # Pie
+
+<ChartOverview />
 
 ## Overview
 
@@ -25,6 +28,9 @@ Pick a different chart when:
   [treemap](/charts/hierarchical/treemap).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -61,13 +67,15 @@ labeled with its percent. The legend lists one item per label:
 
 ## Variations
 
+<ChartVariations />
+
 ### Donut with a centered title
 
 `hole` (0 to 1) is the fraction of the radius cut out of the middle. With a hole,
 `title.position: 'middle center'` puts the trace title inside it, a good place for the total.
 Title text accepts `<b>`, `<i>`, and `<br>`.
 
-<Example id="pie/donut" />
+<ExampleLink id="pie/donut" />
 
 ### Pulled slices and outside labels
 
@@ -78,7 +86,7 @@ still fits. `textposition: 'outside'` puts labels around the pie with leader lin
 fits and outside when it doesn't. `rotation` (degrees) turns the start angle, and
 `direction: 'clockwise'` reverses the order.
 
-<Example id="pie/pulled" />
+<ExampleLink id="pie/pulled" />
 
 ### Many slices and collision avoidance
 
@@ -86,7 +94,7 @@ With many small slices, outside labels would overlap. Holochart spreads them apa
 each side of the pie, like Plotly, and draws a leader line from each label to its slice. Give
 outside labels room with `layout.margin`: pie labels don't push the margins yet.
 
-<Example id="pie/many-slices" />
+<ExampleLink id="pie/many-slices" />
 
 More than a dozen slices is usually a sign to group the tail into an "Other" slice or to switch to
 a sorted bar chart.
@@ -104,7 +112,7 @@ the circle, and `'auto'` (the default) picks whichever fits the label largest, p
 come from `textfont`, overridden by `insidetextfont` and `outsidetextfont`; inside labels switch
 between dark and light text to contrast with the slice color unless you set a color.
 
-<Example id="pie/text-orientation" :height="640" />
+<ExampleLink id="pie/text-orientation" />
 
 ### Multiple pies in a grid with scalegroup
 
@@ -116,7 +124,7 @@ By default every pie fills its cell, so a pie of 400 looks as big as a pie of 90
 the same `scalegroup` to make their areas proportional to their totals. The legend shows each
 label once, and a legend click hides that label in every pie.
 
-<Example id="pie/grid-scalegroup" :height="420" />
+<ExampleLink id="pie/grid-scalegroup" />
 
 ### Pattern fills
 
@@ -124,7 +132,7 @@ label once, and a legend click hides that label in every pie.
 color (see [Patterns & textures](/customization/markers-patterns)). The legend shows the patterns
 too.
 
-<Example id="pie/patterns" />
+<ExampleLink id="pie/patterns" />
 
 ## Styling
 
@@ -192,15 +200,15 @@ Holochart extensions (full bundle), see
   between the slices. Labels (inside and outside, with leader lines) sit on the slices' tops; hover,
   click and legend clicks work on the tilted pie, and `tilt` animates with `animate` and `react`.
 
-<Example id="pie/depth" />
+<ExampleLink id="pie/depth" />
 
-<Example id="pie/depth-donut" />
+<ExampleLink id="pie/depth-donut" />
 
-<Example id="pie/depth-height" />
+<ExampleLink id="pie/depth-height" />
 
-<Example id="pie/depth-exploded" />
+<ExampleLink id="pie/depth-exploded" />
 
-<Example id="pie/depth-tilt" />
+<ExampleLink id="pie/depth-tilt" />
 
 ::: warning Reading a 3D pie
 A 3D pie is harder to read than a flat one, which is already harder to read than a bar chart:
@@ -229,7 +237,9 @@ the parts. Heights in a height-encoded pie are foreshortened too: label them, an
 - **Screen readers:** the chart is a `<canvas>`. The DOM mirror that describes slices to assistive
   technology is not built yet (planned for M2, see the [accessibility guide](/guides/accessibility)).
   Add a caption or `aria-label` that states the main split, and a table of the values.
-- **Keyboard:** there is no keyboard navigation between slices yet.
+- **Keyboard:** Tab moves into the plot area; the arrow keys then step through the slices, each
+  showing its hover label. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family).
 - **Color:** label slices directly (`textinfo: 'label+percent'`) so readers don't have to match
   legend colors, keep the number of slices small, and separate slices with outlines in the
   background color. Pattern fills (`marker.pattern`) tell slices apart in print and for

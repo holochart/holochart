@@ -10,7 +10,10 @@ import { oracleMeasure } from '../shared/text.ts';
 import { layoutSlider, sliderBoxMarginPush, visibleSliders } from './layout.ts';
 import { slidersAttributes, supplySliderDefaults } from './schema.ts';
 
-/** Margins the visible sliders need (one push per slider, like Plotly's per-slider `autoMargin`). */
+/**
+ * Margins the visible sliders need (one push per slider, like Plotly's per-slider `autoMargin`).
+ * @internal
+ */
 export function slidersMarginPushes(ctx: ComponentLayoutContext): MarginPush[] {
   const out: MarginPush[] = [];
   const margin = ctx.fullLayout.margin;

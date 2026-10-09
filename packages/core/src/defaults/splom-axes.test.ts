@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { fixtureRegistry } from '../__fixtures__/modules.ts';
-import type { TraceModule } from '../registry/types.ts';
+import type { CoreTraceModule } from '../registry/types.ts';
 import { attr } from '../schema/attr.ts';
 import { stripInternal } from '../util/objects.ts';
 import {
@@ -19,7 +19,7 @@ const quiet = { onIssue: () => {} };
  * A tiny matrix trace: every pair of its `columns` as a cell (`x`, `x2`, … by `y`, `y2`, …), with
  * optional per-column `types` / `matches` and edge sides — what `splom` records.
  */
-const matrix: TraceModule = {
+const matrix: CoreTraceModule = {
   type: 'matrix',
   categories: [],
   schema: attr.object({

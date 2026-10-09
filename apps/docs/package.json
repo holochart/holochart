@@ -4,9 +4,14 @@
   "type": "module",
   "description": "Documentation site for mk7s.dev/holochart (plan E19).",
   "scripts": {
-    "gen": "pnpm run gen:reference && pnpm run gen:compat && pnpm run gen:api",
+    "gen": "pnpm run gen:notebooks && pnpm run gen:quickstarts && pnpm run gen:reference && pnpm run gen:compat && pnpm run gen:galleries && pnpm run gen:changelog && pnpm run gen:api && pnpm run gen:sources",
     "gen:reference": "node --conditions=source ../../tools/schema-gen/src/docs/cli.ts",
     "gen:compat": "node scripts/gen-plotly-compat.ts",
+    "gen:galleries": "node --conditions=source scripts/gen-galleries.ts",
+    "gen:sources": "node ../../tools/gallery-gen/src/export-sources.ts",
+    "gen:notebooks": "python3 ../../examples/notebooks/generate.py",
+    "gen:quickstarts": "node scripts/gen-quickstarts.ts",
+    "gen:changelog": "node scripts/gen-changelog.ts",
     "gen:api": "node --conditions=source scripts/gen-api.ts",
     "predev": "pnpm run gen",
     "dev": "vitepress dev",
@@ -15,8 +20,11 @@
     "preview": "vitepress preview",
     "lint:pages": "node scripts/lint-pages.ts",
     "quality": "node --conditions=source scripts/quality.ts",
+    "audit:site": "node scripts/site-audit.ts",
     "check:render": "playwright test -c scripts/render-check/playwright.config.ts",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "check:site": "python3 ../../examples/notebooks/generate.py --check && node ../../tools/gallery-gen/src/export-sources.ts --check && node scripts/site-check.ts && pnpm run check:discovery",
+    "check:discovery": "node scripts/discovery-check.ts"
   },
   "dependencies": {
     "@mk7s/holochart": "workspace:*",

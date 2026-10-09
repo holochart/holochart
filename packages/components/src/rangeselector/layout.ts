@@ -19,14 +19,17 @@ import {
 } from '../shared/text.ts';
 import type { RangeselectorButton } from './step.ts';
 
-/** Button text (Plotly): `label`, else `all`, else `count` + the step's initial (`6m`, `1y`). */
+/**
+ * Button text (Plotly): `label`, else `all`, else `count` + the step's initial (`6m`, `1y`).
+ * @internal
+ */
 export function buttonLabel(button: Pick<RangeselectorButton, 'label' | 'step' | 'count'>): string {
   if (typeof button.label === 'string' && button.label !== '') return button.label;
   if (button.step === 'all') return 'all';
   return `${button.count}${button.step.charAt(0)}`;
 }
 
-/** A defaulted, visible `xaxis.rangeselector` (see core `defaults/rangeslider.ts`). */
+/** A defaulted, visible `xaxis.rangeselector` (see core `defaults/rangeslider.ts`). @internal */
 export interface FullRangeselector {
   readonly visible: true;
   readonly buttons: readonly RangeselectorButton[];
@@ -59,6 +62,7 @@ const STEPS: ReadonlySet<unknown> = new Set([
 /**
  * The visible range selector of a defaulted axis (`axis.rangeselector`), or `undefined`.
  * Defensive: fields missing from a hand-built layout get the schema defaults.
+ * @internal
  */
 export function readRangeselector(axis: unknown): FullRangeselector | undefined {
   const sel = (axis as { rangeselector?: unknown } | null | undefined)?.rangeselector;
@@ -97,7 +101,7 @@ export function readRangeselector(axis: unknown): FullRangeselector | undefined 
   };
 }
 
-/** A button's box relative to the selector's top-left corner, px. */
+/** A button's box relative to the selector's top-left corner, px. @internal */
 export interface RangeselectorButtonBox {
   readonly button: RangeselectorButton;
   /** Plain-text label (pseudo-HTML tags removed). */
@@ -108,20 +112,20 @@ export interface RangeselectorButtonBox {
   readonly height: number;
 }
 
-/** Button boxes and the unrounded size of the row. */
+/** Button boxes and the unrounded size of the row. @internal */
 export interface RangeselectorSize {
   readonly buttons: readonly RangeselectorButtonBox[];
   readonly width: number;
   readonly height: number;
 }
 
-/** The anchors in use (Plotly's `isRightAnchor`, `isCenterAnchor`, …). */
+/** The anchors in use (Plotly's `isRightAnchor`, `isCenterAnchor`, …). @internal */
 export interface RangeselectorAnchors {
   readonly xanchor: 'left' | 'center' | 'right';
   readonly yanchor: 'top' | 'middle' | 'bottom';
 }
 
-/** The placed selector: boxes, rounded size and top-left corner in container px. */
+/** The placed selector: boxes, rounded size and top-left corner in container px. @internal */
 export interface RangeselectorLayout extends RangeselectorAnchors {
   readonly buttons: readonly RangeselectorButtonBox[];
   /** `Math.ceil` of the row size. */
@@ -132,15 +136,16 @@ export interface RangeselectorLayout extends RangeselectorAnchors {
   readonly top: number;
 }
 
-/** Minimum button width, px (Plotly's `minButtonWidth`). */
+/** Minimum button width, px (Plotly's `minButtonWidth`). @internal */
 export const RANGESELECTOR_MIN_BUTTON_WIDTH = 30;
-/** Gap between buttons, px. */
+/** Gap between buttons, px. @internal */
 export const RANGESELECTOR_GAP = 5;
 
 /**
  * Size the visible buttons (Plotly's `reposition`): height `max(lines · size · 1.3, 16) + 3` (the
  * tallest label), widths `max(text + 10, 30)`; button `i` at `borderwidth + Σ(w + 5)`. The row is
  * `Σ(w + 5)` wide (Plotly counts the trailing gap too).
+ * @internal
  */
 export function measureRangeselector(
   selector: FullRangeselector,
@@ -167,7 +172,7 @@ export function measureRangeselector(
   return { buttons, width, height };
 }
 
-/** Resolve `auto` anchors from the position (Plotly: thirds of the plot area). */
+/** Resolve `auto` anchors from the position (Plotly: thirds of the plot area). @internal */
 export function resolveRangeselectorAnchors(
   selector: Pick<FullRangeselector, 'x' | 'y' | 'xanchor' | 'yanchor'>,
 ): RangeselectorAnchors {
@@ -191,6 +196,7 @@ export function resolveRangeselectorAnchors(
 /**
  * Place the selector against `plotArea` (container px): the anchor point is `x`, `y` in paper
  * fractions, moved by the row size per anchor; then the size is ceiled and the corner rounded.
+ * @internal
  */
 export function layoutRangeselector(
   selector: FullRangeselector,
@@ -218,6 +224,7 @@ export function layoutRangeselector(
 /**
  * Margin the selector needs to stay inside the figure (Plotly's `autoMargin` of
  * `<axis>-range-selector`), for a figure of `size` with base margins `margin`.
+ * @internal
  */
 export function rangeselectorMarginPush(
   selector: FullRangeselector,

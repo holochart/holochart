@@ -85,6 +85,20 @@ export function resolveInternal(docsRoot: string, fromPage: string, target: stri
   for (const c of candidates) {
     if (existsSync(path.join(docsRoot, c))) return { kind: 'ok', file: c.slice(1) };
   }
+  // Detail routes are generated from known example IDs, including slash-separated IDs.
+  const detail = /^\/gallery\/example\/(.+?)\/?$/.exec(p);
+  if (detail) {
+    const manifest = path.join(docsRoot, 'public/gallery/manifest.json');
+    const template = 'gallery/example/[id].md';
+    if (existsSync(manifest) && existsSync(path.join(docsRoot, template))) {
+      const entries = JSON.parse(readFileSync(manifest, 'utf8')) as {
+        examples: { id: string }[];
+      };
+      if (entries.examples.some((entry) => entry.id === detail[1])) {
+        return { kind: 'ok', file: template };
+      }
+    }
+  }
   // Static files served from public/.
   if (/\.[a-z0-9]+$/i.test(p) && existsSync(path.join(docsRoot, 'public', p))) {
     return { kind: 'ok', file: '' };

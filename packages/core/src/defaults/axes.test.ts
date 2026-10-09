@@ -2,7 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { fixtureRegistry } from '../__fixtures__/modules.ts';
 import { createRegistry } from '../registry/registry.ts';
-import type { TraceModule } from '../registry/types.ts';
+import type { CoreTraceModule } from '../registry/types.ts';
 import { attr } from '../schema/attr.ts';
 import { stripInternal } from '../util/objects.ts';
 import { autoType, cleanDtick, cleanTick0 } from './axes.ts';
@@ -292,7 +292,7 @@ describe('supplyDefaults: axis defaults (E3)', () => {
   });
 
   it('types from x0 and keeps histogram count axes linear', () => {
-    const line0: TraceModule = {
+    const line0: CoreTraceModule = {
       type: 'line0',
       categories: ['cartesian'],
       schema: attr.object({
@@ -307,7 +307,7 @@ describe('supplyDefaults: axis defaults (E3)', () => {
         ctx.coerce('orientation');
       },
     };
-    const histogram: TraceModule = { ...line0, type: 'histogram' };
+    const histogram: CoreTraceModule = { ...line0, type: 'histogram' };
     const registry = createRegistry().register(line0, histogram);
     const fl = (figure: AnyFigure) => supplyDefaults(figure, registry, quiet).fullLayout;
     expect(fl({ data: [{ type: 'line0', y: [1], x0: '2024-01-01' }] }).xaxis?.type).toBe('date');
@@ -480,5 +480,157 @@ describe('free axis defaults (Plotly position_defaults)', () => {
     expect(axes('yaxis3').anchor).toBe('free');
     expect(axes('yaxis4').anchor).toBe('x');
     expect(axes('xaxis2').anchor).toBe('y');
+  });
+});
+
+describe('axis hints of a trace module (ADR-029)', () => {
+  /** A cartesian trace with its positions in a container, as a module with `axisHints` has. */
+  const net: CoreTraceModule = {
+    type: 'net',
+    categories: ['cartesian'],
+    schema: attr.object({
+      node: attr.object(
+        { x: attr.dataArray({ editType: 'calc' }), y: attr.dataArray({ editType: 'calc' }) },
+        { editType: 'calc' },
+      ),
+      placed: attr.boolean({ dflt: false, editType: 'calc' }),
+      scale: attr.enumerated({ values: ['x', 'y'], editType: 'calc' }),
+      flip: attr.boolean({ dflt: false, editType: 'calc' }),
+    }),
+    meta: { description: 'Test trace with axis hints.' },
+    supplyDefaults(_in, _out, ctx) {
+      ctx.coerce('node.x');
+      ctx.coerce('node.y');
+      ctx.coerce('placed');
+      ctx.coerce('scale');
+      ctx.coerce('flip');
+    },
+    axisHints(trace) {
+      const node = (trace['node'] ?? {}) as { x?: unknown; y?: unknown };
+      // One axis is a real scale (a dendrogram's heights): only the other one is hidden.
+      const scale = trace['scale'];
+      if (scale === 'x' || scale === 'y') {
+        return {
+          hide: scale === 'x' ? 'y' : 'x',
+          [scale]: node[scale],
+          ...(trace['flip'] === true ? { reverse: scale } : {}),
+        };
+      }
+      // Positions that are data go on the axes as they are; computed ones hide the axes.
+      return trace['placed'] === true ? { x: node.x, y: node.y } : { hide: true, equal: true };
+    },
+  };
+  const registry = () => fixtureRegistry().register(net);
+  const layoutOf = (figure: AnyFigure) => {
+    const first = supplyDefaults(figure, registry(), quiet).fullLayout;
+    const again = supplyDefaults(
+      { ...figure, layout: stripInternal(first) },
+      registry(),
+      quiet,
+    ).fullLayout;
+    expect(stripInternal(again)).toEqual(stripInternal(first));
+    return (key: string) => first[key] as FullAxis & Record<string, unknown>;
+  };
+
+  it('hides the axes and locks y to x when the trace asks for it', () => {
+    const axes = layoutOf({ data: [{ type: 'net' }] });
+    expect(axes('xaxis').visible).toBe(false);
+    expect(axes('yaxis').visible).toBe(false);
+    expect(axes('yaxis').scaleanchor).toBe('x');
+    expect(axes('xaxis').scaleanchor).toBeUndefined();
+  });
+
+  it('lets the figure and another trace on the axis show it', () => {
+    const user = layoutOf({ data: [{ type: 'net' }], layout: { xaxis: { visible: true } } });
+    expect(user('xaxis').visible).toBe(true);
+    expect(user('yaxis').visible).toBe(false);
+    // `scaleanchor: false` opts out, as for an image's y axis (the full axis then has no key).
+    const free = supplyDefaults(
+      { data: [{ type: 'net' }], layout: { yaxis: { scaleanchor: false } } },
+      registry(),
+      quiet,
+    ).fullLayout;
+    expect((free['yaxis'] as FullAxis).scaleanchor).toBeUndefined();
+
+    const shared = layoutOf({ data: [{ type: 'net' }, { type: 'scatter', y: [1, 2] }] });
+    expect(shared('xaxis').visible).toBe(true);
+    expect(shared('yaxis').visible).toBe(true);
+    // Equal scales are asked for whatever else is on the axes.
+    expect(shared('yaxis').scaleanchor).toBe('x');
+  });
+
+  it('hides only the axes of the trace that asks', () => {
+    const axes = layoutOf({
+      data: [
+        { type: 'net', xaxis: 'x2', yaxis: 'y2' },
+        { type: 'scatter', y: [1, 2] },
+      ],
+    });
+    expect(axes('xaxis').visible).toBe(true);
+    expect(axes('xaxis2').visible).toBe(false);
+    expect(axes('yaxis2').visible).toBe(false);
+    expect(axes('yaxis2').scaleanchor).toBe('x2');
+    expect(axes('yaxis').scaleanchor).toBeUndefined();
+  });
+
+  it('types the axes from the data the trace names', () => {
+    const axes = layoutOf({
+      data: [
+        {
+          type: 'net',
+          placed: true,
+          node: { x: ['2024-01-01', '2024-02-01'], y: ['a', 'b'] },
+        },
+      ],
+    });
+    expect(axes('xaxis').type).toBe('date');
+    expect(axes('yaxis').type).toBe('category');
+    expect(axes('xaxis').visible).toBe(true);
+    expect(axes('yaxis').scaleanchor).toBeUndefined();
+  });
+
+  it('hides one axis and types the other from the data when the trace names one', () => {
+    const axes = layoutOf({
+      data: [{ type: 'net', scale: 'x', node: { x: ['2024-01-01', '2024-02-01'] } }],
+    });
+    expect(axes('xaxis').visible).toBe(true);
+    expect(axes('xaxis').type).toBe('date');
+    expect(axes('yaxis').visible).toBe(false);
+    expect(axes('yaxis').scaleanchor).toBeUndefined();
+    const other = layoutOf({ data: [{ type: 'net', scale: 'y', node: { y: [1, 2] } }] });
+    expect(other('xaxis').visible).toBe(false);
+    expect(other('yaxis').visible).toBe(true);
+    expect(other('yaxis').autorange).toBe(true);
+  });
+
+  it('reverses the axis a trace asks to, unless a range or another trace says otherwise', () => {
+    const y = layoutOf({ data: [{ type: 'net', scale: 'y', flip: true, node: { y: [1, 2] } }] });
+    expect(y('yaxis').autorange).toBe('reversed');
+    expect(y('xaxis').autorange).toBe(true);
+    const x = layoutOf({ data: [{ type: 'net', scale: 'x', flip: true, node: { x: [1, 2] } }] });
+    expect(x('xaxis').autorange).toBe('reversed');
+    expect(x('yaxis').autorange).toBe(true);
+
+    const ranged = layoutOf({
+      data: [{ type: 'net', scale: 'y', flip: true, node: { y: [1, 2] } }],
+      layout: { yaxis: { range: [0, 3] } },
+    });
+    expect(ranged('yaxis').autorange).toBe(false);
+    expect(ranged('yaxis').range).toEqual([0, 3]);
+    const shared = layoutOf({
+      data: [
+        { type: 'net', scale: 'y', flip: true, node: { y: [1, 2] } },
+        { type: 'scatter', y: [1, 2] },
+      ],
+    });
+    expect(shared('yaxis').autorange).toBe(true);
+  });
+
+  it('ignores a hidden trace and a trace without positions', () => {
+    const hidden = layoutOf({ data: [{ type: 'net', visible: false }] });
+    expect(hidden('xaxis').visible).toBe(true);
+    expect(hidden('yaxis').scaleanchor).toBeUndefined();
+    const empty = layoutOf({ data: [{ type: 'net', placed: true }, { y: ['a', 'b'] }] });
+    expect(empty('yaxis').type).toBe('category');
   });
 });

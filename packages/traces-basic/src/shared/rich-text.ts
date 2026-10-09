@@ -51,6 +51,7 @@ export function richLabel(
 /**
  * A label for `text` in `font`: its rich form, or the plain text with the font unchanged. Raw
  * newlines break lines.
+ * @internal
  */
 export function labelContent(text: string, font: TextFont): RichLabel {
   return richLabel(text, font) ?? { text, font, lineCount: 1 };
@@ -59,6 +60,7 @@ export function labelContent(text: string, font: TextFont): RichLabel {
 /**
  * Unrotated block size of a label in px at `lineHeight`: plain labels through `measureText` (as
  * before rich text), rich ones laid out run by run like the primitive draws them.
+ * @internal
  */
 export function measureLabel(
   label: Pick<RichLabel, 'text' | 'font' | 'runs'>,

@@ -72,7 +72,7 @@ function dimension() {
   );
 }
 
-/** The parcoords schema. */
+/** The parcoords schema. @experimental */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const parcoordsAttributes = /* @__PURE__ */ (() =>
   attr.object(

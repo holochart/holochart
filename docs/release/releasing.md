@@ -75,7 +75,7 @@ pushes to `main` don't show a failing run in the meantime.
      publishing, with an expiry you'll track. Store it as the `npm` environment secret
      `NPM_TOKEN` (step 3).
    - **Trusted publishing** (OIDC, no long-lived token, recommended once the packages exist). On
-     npmjs.com, for each of the 14 packages: Settings → Trusted publishing → GitHub Actions, with
+     npmjs.com, for each of the 16 packages: Settings → Trusted publishing → GitHub Actions, with
      organization/user `holochart`, repository `holochart`, workflow `release.yml` and environment
      `npm`. Then set the repository variable `NPM_TRUSTED_PUBLISHING` = `true`. The workflow then
      writes no `.npmrc`, and pnpm exchanges the job's OIDC token (`id-token: write`) for a
@@ -103,8 +103,10 @@ pushes to `main` don't show a failing run in the meantime.
 ## First release (0.1.0-alpha.0)
 
 The repository is already in pre mode (`.changeset/pre.json`: `{ "mode": "pre", "tag": "alpha" }`)
-with one squashed `minor` changeset for all 14 packages (`.changeset/initial-release.md`), so
-`pnpm changeset status` shows every package going `0.0.0 → 0.1.0-alpha.0`. In order:
+with one squashed `minor` changeset for the 14 packages of the first alpha
+(`.changeset/initial-release.md`); the geo and graph packages, the 15th and 16th, each have a
+changeset of their own and are in the same fixed group. So `pnpm changeset status` shows every
+package going `0.0.0 → 0.1.0-alpha.0`. In order:
 
 **Owner, before anything reaches npm**
 
@@ -126,7 +128,7 @@ with one squashed `minor` changeset for all 14 packages (`.changeset/initial-rel
    `packages/holochart/CHANGELOG.md`, which becomes the GitHub release notes. Its
    `## 0.1.0-alpha.0` section should have the summary under "Minor Changes". Edit the CHANGELOG in
    the PR if needed, and make sure CI is green.
-7. Merge it. The `pack` job's summary should list 14 packages at `0.1.0-alpha.0` with the tag
+7. Merge it. The `pack` job's summary should list 16 packages at `0.1.0-alpha.0` with the tag
    `alpha`, and the tarball checks should pass.
 8. Approve the `publish to npm` deployment.
 9. Verify on npm. `npm view @mk7s/holochart dist-tags` should show `alpha: 0.1.0-alpha.0`. Each
@@ -200,11 +202,11 @@ for pnpm users.
 ## Docs changelog page
 
 `apps/docs/changelog.md` is a stub until the first version. After the version PR, generate it from
-`packages/holochart/CHANGELOG.md`. Every package carries the same text, because the initial
-release names all 14. Keep the page's front matter and replace the body with that file minus its
-`# @mk7s/holochart` heading. Strip the `- <hash>: ` prefix from list items, and drop the
-"Updated dependencies" lists. Do this by hand per release, or with a small script in the docs
-build if releases become frequent.
+`packages/holochart/CHANGELOG.md`. Every package but `traces-geo` and `traces-graph` carries the
+same text, because the initial release names those 14. Keep the page's front matter and replace
+the body with that file minus its `# @mk7s/holochart` heading. Strip the `- <hash>: ` prefix from
+list items, and drop the "Updated dependencies" lists. Do this by hand per release, or with a
+small script in the docs build if releases become frequent.
 
 ## When something goes wrong
 

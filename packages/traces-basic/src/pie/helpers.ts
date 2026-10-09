@@ -8,7 +8,7 @@ import {
   isValidColor,
   richTextToPlain,
   toRGBA,
-  type RGBA,
+  type RGBAColor,
 } from '@mk7s/holochart-core';
 
 // ---- Formatting ---------------------------------------------------------------------------------
@@ -44,6 +44,7 @@ export function numSeparate(value: string, separators = '.,'): string {
  * formatPiePercent(1 / 3); // '33.3%'
  * formatPiePercent(0.5); // '50%'
  * ```
+ * @internal
  */
 export function formatPiePercent(v: number, separators?: string): string {
   return `${numSeparate(trimZeros((v * 100).toPrecision(3)), separators)}%`;
@@ -52,6 +53,7 @@ export function formatPiePercent(v: number, separators?: string): string {
 /**
  * A slice value with 10 significant digits, trailing zeros dropped (Plotly's `formatPieValue`),
  * written with `separators` (`layout.separators`, default `'.,'`).
+ * @internal
  */
 export function formatPieValue(v: number, separators?: string): string {
   return numSeparate(trimZeros(v.toPrecision(10)), separators);
@@ -75,6 +77,7 @@ export function getFirstFilled(array: unknown, indices: readonly number[]): unkn
 /**
  * A scalar-or-array attribute for an aggregated slice (Plotly's `castOption`): the first filled
  * array entry among the slice's data indices, or the scalar when truthy.
+ * @internal
  */
 export function castOption(item: unknown, indices: readonly number[]): unknown {
   if (isArrayLike(item)) return getFirstFilled(item, indices);
@@ -85,6 +88,7 @@ export function castOption(item: unknown, indices: readonly number[]): unknown {
  * A slice's `marker.pattern` (render's `PatternAttributes`): array attributes cast to the slice's
  * value (Plotly's `castOption`), and the background defaulting to `paper` (Plotly) unless the
  * pattern overlays the slice color. `undefined` without a shape.
+ * @internal
  */
 export function slicePattern(
   pattern: unknown,
@@ -134,13 +138,13 @@ export function rgbaString(color: unknown): string | null {
 }
 
 /** sRGB 0–1 RGBA → `rgb()` / `rgba()`. */
-export function rgbaCss(c: RGBA): string {
+export function rgbaCss(c: RGBAColor): string {
   return c[3] >= 1
     ? `rgb(${byte(c[0])}, ${byte(c[1])}, ${byte(c[2])})`
     : `rgba(${byte(c[0])}, ${byte(c[1])}, ${byte(c[2])}, ${+c[3].toFixed(3)})`;
 }
 
-function hex(c: RGBA): string {
+function hex(c: RGBAColor): string {
   const h = (v: number): string => byte(v).toString(16).padStart(2, '0');
   return `#${h(c[0])}${h(c[1])}${h(c[2])}`.toUpperCase();
 }
@@ -192,6 +196,7 @@ const cache = new Map<string, readonly string[]>();
 /**
  * A colorway followed by every color 20% lighter, then every color 20% darker (Plotly's
  * `generateExtendedColors`, `extendpiecolors`). Cached per colorway.
+ * @internal
  */
 export function extendColors(colors: readonly string[]): readonly string[] {
   const key = JSON.stringify(colors);
@@ -208,28 +213,28 @@ export function extendColors(colors: readonly string[]): readonly string[] {
   return out;
 }
 
-function luminance(c: RGBA): number {
+function luminance(c: RGBAColor): number {
   const lin = (v: number): number => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
   return 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
 }
 
-function wcag(a: RGBA, b: RGBA): number {
+function wcag(a: RGBAColor, b: RGBAColor): number {
   const la = luminance(a);
   const lb = luminance(b);
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 }
 
-const WHITE: RGBA = [1, 1, 1, 1];
+const WHITE: RGBAColor = [1, 1, 1, 1];
 /** Plotly's `Color.defaultLine` (`#444`). */
-export const DEFAULT_LINE: RGBA = [68 / 255, 68 / 255, 68 / 255, 1];
+export const DEFAULT_LINE: RGBAColor = [68 / 255, 68 / 255, 68 / 255, 1];
 
 /**
  * Plotly's `Color.contrast` without amounts: white on dark colors, `#444` on light ones (WCAG
  * contrast), translucent colors composited over white first.
  */
-export function contrastColor(color: RGBA): RGBA {
+export function contrastColor(color: RGBAColor): RGBAColor {
   const a = color[3];
-  const c: RGBA =
+  const c: RGBAColor =
     a >= 1 ? color : [color[0] * a + (1 - a), color[1] * a + (1 - a), color[2] * a + (1 - a), 1];
   return wcag(c, WHITE) > wcag(c, DEFAULT_LINE) ? WHITE : DEFAULT_LINE;
 }

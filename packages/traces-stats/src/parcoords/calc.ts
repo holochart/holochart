@@ -9,7 +9,7 @@ import type { CalcContext } from '@mk7s/holochart-runtime';
 import { finiteExtent, isNumericColorArray } from './common.ts';
 import { numericTicks } from './ranges.ts';
 
-/** One visible dimension (axis), in draw order. */
+/** One visible dimension (axis), in draw order. @experimental */
 export interface ParcoordsDimension {
   /** Index in `dimensions` (hidden ones included): what restyle paths use. */
   readonly index: number;
@@ -24,7 +24,7 @@ export interface ParcoordsDimension {
   readonly tickvals: readonly number[] | undefined;
 }
 
-/** Calcdata of a parcoords trace. */
+/** Calcdata of a parcoords trace. @experimental */
 export interface ParcoordsCalc {
   readonly dimensions: readonly ParcoordsDimension[];
   /** Number of lines (`_length`). */

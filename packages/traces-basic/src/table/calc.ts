@@ -7,7 +7,7 @@
  */
 import { isArrayLike, type FullTrace } from '@mk7s/holochart-core';
 
-/** One column, in data order. */
+/** One column, in data order. @experimental */
 export interface TableColumn {
   /** Data index (Plotly's `specIndex`): what per-column style arrays are indexed by. */
   readonly index: number;
@@ -21,7 +21,7 @@ export interface TableColumn {
   readonly cells: ArrayLike<unknown>;
 }
 
-/** Calcdata of a table. */
+/** Calcdata of a table. @experimental */
 export interface TableCalc {
   /** Columns in data order. */
   readonly columns: readonly TableColumn[];

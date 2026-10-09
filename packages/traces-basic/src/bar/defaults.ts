@@ -96,6 +96,7 @@ export function supplyBarDefaults(
  * Bar labels, marker, error bars and selection styles (the part of bar defaults shared with
  * `histogram`, plotly.js' `handleText` + `handleStyleDefaults` + error bars). The trace's schema
  * must declare bar's text, marker, `error_x` / `error_y` and `selected` / `unselected` attributes.
+ * @internal
  */
 export function supplyBarStyleDefaults(
   traceIn: Readonly<Record<string, unknown>>,

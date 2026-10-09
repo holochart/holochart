@@ -31,8 +31,7 @@
  *   sizeref · 0.5 · minDistance` everywhere, as in gl-streamtube3d.
  */
 import { sampleStreamGrid, type StreamGrid } from './grid.ts';
-
-type Vec3 = [number, number, number];
+import type { Vec3 } from '@mk7s/holochart-render';
 
 /** Plotly's default starts: the x–z plane at the grid's lowest y (3 floats per start). */
 export function defaultStreamStarts(grid: StreamGrid): Float64Array {
@@ -112,7 +111,7 @@ export function minStartSeparation(starts: Float64Array): number {
   return Number.isFinite(min) ? min : 1;
 }
 
-/** Integrated streamlines: samples of every tube, one after another. */
+/** Integrated streamlines: samples of every tube, one after another. @experimental */
 export interface StreamSet {
   /** Tube `t` holds samples `offsets[t]` to `offsets[t + 1] − 1` (one entry per start, + 1). */
   readonly offsets: Uint32Array;
@@ -203,7 +202,7 @@ function rk4(
   ];
 }
 
-/** Integrate a streamline from every start (3 floats each). See the module comment. */
+/** Integrate a streamline from every start (3 floats each). See the module comment. @internal */
 export function integrateStreams(
   grid: StreamGrid,
   starts: Float64Array,

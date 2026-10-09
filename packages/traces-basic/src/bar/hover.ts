@@ -47,7 +47,7 @@ function span(a: number, b: number, min: number): [number, number] {
   return [mid - min / 2, mid + min / 2];
 }
 
-/** Hover points of a bar trace (see the module comment for the modes). */
+/** Hover points of a bar trace (see the module comment for the modes). @internal */
 export function barHoverPoints(
   calc: BarCalc,
   trace: FullTrace,
@@ -134,6 +134,7 @@ export function barHoverPoints(
 /**
  * Indices of the bars whose center lies inside a box or lasso selection (Plotly: a bar is
  * selected when its center is). Bars below a log axis are centered on their visible part.
+ * @internal
  */
 export function barSelectPoints(
   calc: BarCalc,

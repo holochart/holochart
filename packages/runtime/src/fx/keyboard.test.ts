@@ -10,7 +10,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { FigureInput } from '@mk7s/holochart-core';
 import { createChart, type Chart } from '../chart.ts';
 import type { ChartEventName } from '../events.ts';
-import { setup, type TestSetup } from '../__testing__/fakes.ts';
+import { a11yParts } from '../a11y/lazy.ts';
+import type { HoverPoint, KeyboardPoint, TraceA11yParts, TraceModule } from '../contracts.ts';
+import { createDotsModule, createLog, setup, type TestSetup } from '../__testing__/fakes.ts';
 import {
   announce,
   directions,
@@ -413,5 +415,204 @@ describe('actions', () => {
     await c.relayout({});
     expect(log[0]?.payload).toMatchObject({ 'xaxis.range': [0, 10] });
     expect(said(c)).toBe('View reset.');
+  });
+});
+
+// ---- stops of trace modules (backlog S2.14) -------------------------------------------------------
+
+/** A hover point anchored at container `(x, y)` of the 640×400 figure, labelled `text`. */
+function stop(i: number, x: number, y: number, text: string): HoverPoint {
+  return { pointIndex: i, distance: 0, px: x, py: 400 - y, hoverText: text, showName: false };
+}
+
+/**
+ * A domain-like trace type whose accessibility parts load on first use: a root with two children,
+ * linked along the tree, announced with its own template; its view keys relayout the title.
+ */
+function treeModule(load: () => Promise<TraceA11yParts>): TraceModule {
+  return {
+    ...(createDotsModule(createLog()) as TraceModule),
+    type: 'tree',
+    categories: [],
+    hoverPoints: () => [],
+    subplotDomain: () => ({ x: [0, 1], y: [0, 1] }),
+    a11y: load,
+  };
+}
+
+const TREE: TraceA11yParts = {
+  tree: {
+    keyboardPoints: (): KeyboardPoint[] => [
+      { ...stop(0, 320, 200, 'root<br>10'), nav: [0, 0, 0, 1, 0, 0], extra: 'all' },
+      {
+        ...stop(1, 100, 100, 'left'),
+        nav: [1, 2, 0, 1, 1, 2],
+        say: [
+          '{name}: {text}, {n} of {count} below {parent}.',
+          { n: '1', count: '2', parent: 'root' },
+        ],
+      },
+      { ...stop(2, 500, 100, 'right'), nav: [1, 2, 0, 2, 1, 2], more: [stop(2, 500, 300, 'more')] },
+    ],
+    keyboardView: (_trace, _ctx, action) =>
+      action === 'reset' ? undefined : { 'title.text': action },
+  },
+};
+
+describe('stops of a trace module', () => {
+  it('waits for accessibility parts that load on first use, then follows nav', async () => {
+    let resolve!: (parts: TraceA11yParts) => void;
+    const load = vi.fn(() => new Promise<TraceA11yParts>((r) => (resolve = r)));
+    t.registry.register(treeModule(load));
+    const c = await chart([{ type: 'tree', name: 'T', x: [1], y: [1] }]);
+    const log = record(c, 'hover');
+    await focus(c);
+    press(c, 'ArrowRight');
+    press(c, 'ArrowDown');
+    // The keys wait for the stops (nothing is skipped or announced as empty).
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(said(c)).toBe('');
+    resolve(TREE);
+    await vi.waitFor(() => expect(log).toHaveLength(2));
+    expect(load).toHaveBeenCalledTimes(1);
+    // The stop's own sentence, in the chart language's template mechanism.
+    expect(said(c)).toBe('T: left, 1 of 2 below root.');
+    press(c, 'ArrowRight');
+    // Every label of the stop is shown and read; the default sentence counts the stops.
+    expect((log[2]?.payload as { points: unknown[] }).points).toHaveLength(2);
+    expect(said(c)).toBe('T: right, more, point 3 of 3.');
+    press(c, 'ArrowRight'); // nav says: stay
+    expect(said(c)).toBe('T: right, more, point 3 of 3.');
+    press(c, 'ArrowUp');
+    // The lines of a label are read as a list, with the secondary box the trace filled.
+    expect(said(c)).toBe('T: root, 10, all, point 1 of 3.');
+    press(c, 'End');
+    expect(said(c)).toBe('T: root, 10, all, point 1 of 3.');
+  });
+
+  it('gives view keys to a trace that handles them, as a GUI relayout', async () => {
+    t.registry.register(treeModule(() => Promise.resolve(TREE)));
+    const c = await chart([{ type: 'tree', name: 'T', x: [1], y: [1] }]);
+    const log = record(c, 'relayout');
+    await focus(c);
+    press(c, 'ArrowRight', { shiftKey: true });
+    await vi.waitFor(() => expect(log).toHaveLength(1));
+    expect(log[0]?.payload).toEqual({ 'title.text': 'panRight' });
+    expect(said(c)).toBe('View rotated.');
+    press(c, '+');
+    await vi.waitFor(() => expect(log).toHaveLength(2));
+    expect(log[1]?.payload).toEqual({ 'title.text': 'zoomIn' });
+    expect(said(c)).toBe('Zoomed in.');
+    // A key the trace does not take falls through to the cartesian view (none here).
+    press(c, '0');
+    expect(said(c)).toBe('Zoomed in.');
+  });
+
+  it('keeps the cursor on its stop when the list is rebuilt', async () => {
+    let order = [0, 1, 2];
+    const points = TREE['tree']!.keyboardPoints!(undefined as never, {} as never, {} as never);
+    const parts: TraceA11yParts = {
+      tree: {
+        keyboardPoints: () =>
+          order.map((i) => ({ ...(points!.at(i) as KeyboardPoint), nav: undefined })),
+      },
+    };
+    t.registry.register(treeModule(() => Promise.resolve(parts)));
+    const c = await chart([{ type: 'tree', name: 'T', x: [1], y: [1] }]);
+    await focus(c);
+    press(c, 'ArrowRight');
+    await vi.waitFor(() => expect(said(c)).toMatch(/^T: root/));
+    press(c, 'ArrowRight');
+    expect(said(c)).toMatch(/^T: left/);
+    // The stops come back in another order (a drill-down): the cursor follows its point.
+    order = [1, 2, 0];
+    await c.relayout({ 'title.text': 'again' });
+    press(c, 'ArrowRight');
+    expect(said(c)).toMatch(/^T: right, more, point 2 of 3\.$/);
+  });
+
+  it("visits a cartesian module's own stops along the position axis, and skips it without", async () => {
+    const dots = createDotsModule(createLog()) as TraceModule;
+    // Aggregating traces are navigated through their stops only: here two "bins", given right to left.
+    t.registry.register({
+      ...dots,
+      type: 'bins',
+      categories: ['cartesian', 'histogram'],
+      // Anchored at x = 8 and x = 2, wherever the axis puts them now.
+      keyboardPoints: (_calc, _trace, ctx): KeyboardPoint[] => [
+        { pointIndex: 0, distance: 0, px: ctx.xaxis!.scale.l2p(8), py: 160, hoverText: 'high' },
+        {
+          pointIndex: 1,
+          distance: 0,
+          px: ctx.xaxis!.scale.l2p(2),
+          py: 80,
+          hoverText: 'low',
+          say: ['{name}: {text}, bin {n} of {count}.'],
+        },
+      ],
+    });
+    t.registry.register({ ...dots, type: 'nobins', categories: ['cartesian', 'histogram'] });
+    const c = await chart([
+      { type: 'nobins', name: 'N', x: [1, 2], y: [1, 2] },
+      { type: 'bins', name: 'H', x: [1, 2], y: [1, 2] },
+      A,
+    ]);
+    await focus(c);
+    press(c, 'ArrowRight');
+    expect(said(c)).toBe('H: low, bin 1 of 2.');
+    press(c, 'ArrowRight');
+    expect(said(c)).toBe('H: high, point 2 of 2.');
+    // Page Down keeps the position: A's point nearest x = 8 (px 464 of 580).
+    press(c, 'PageDown');
+    expect(said(c)).toBe('A: (8, 80), point 4 of 4.');
+    // Up and down move between the traces at this position, stops included.
+    press(c, 'ArrowDown');
+    expect(said(c)).toBe('H: high, point 2 of 2.');
+    // After a zoom only stops in view are visited.
+    await c.relayout({ 'xaxis.range': [5, 10] });
+    press(c, 'Home');
+    expect(said(c)).toBe('H: high, point 2 of 2.');
+  });
+});
+
+describe('lazily loaded accessibility parts', () => {
+  it("loads once per loader, serves parts by type or the chunk's default", async () => {
+    const parts: TraceA11yParts = { a: { keyboardView: () => ({}) }, '*': {} };
+    const load = vi.fn(() => Promise.resolve(parts));
+    const first = a11yParts({ type: 'a', a11y: load });
+    expect(first).toBeInstanceOf(Promise);
+    expect(a11yParts({ type: 'b', a11y: load })).toBe(first);
+    await first;
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(a11yParts({ type: 'a', a11y: load })).toBe(parts['a']);
+    expect(a11yParts({ type: 'b', a11y: load })).toBe(parts['*']);
+    expect(a11yParts({ type: 'a' })).toBeUndefined();
+    expect(a11yParts(undefined)).toBeUndefined();
+  });
+
+  it('leaves a module without parts when its chunk fails to load', async () => {
+    const load = vi.fn(() => Promise.reject(new Error('offline')));
+    await a11yParts({ type: 'a', a11y: load });
+    expect(a11yParts({ type: 'a', a11y: load })).toBeUndefined();
+    expect(load).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalled();
+  });
+
+  it('describes a trace with the generic line until its describe has loaded', async () => {
+    let resolve!: (parts: TraceA11yParts) => void;
+    const load = (): Promise<TraceA11yParts> => new Promise((r) => (resolve = r));
+    const lazy: TraceA11yParts = { tree: { describe: () => ({ summary: 'A tree of 3 nodes.' }) } };
+    t.registry.register(treeModule(load));
+    const c = await chart([{ type: 'tree', name: 'T', x: [1], y: [1] }]);
+    expect(c.description?.traces).toEqual(['Tree trace "T".']);
+    const described = c.describe();
+    resolve(lazy);
+    expect((await described)?.traces).toEqual(['A tree of 3 nodes.']);
+    // The hidden description follows.
+    await vi.waitFor(() =>
+      expect(c.element.querySelector('.holochart-a11y')?.textContent).toContain(
+        'A tree of 3 nodes.',
+      ),
+    );
   });
 });

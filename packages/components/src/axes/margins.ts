@@ -8,7 +8,7 @@ import type { MeasureLine } from '../shared/text.ts';
 import { axisGeometry, axisTicks, cloneScale, type AxisLike } from './geometry.ts';
 import { AxisShifts, automarginAllows, axisMarginSide, type MarginSide } from './placement.ts';
 
-/** One axis' margin requirement. */
+/** One axis' margin requirement. @internal */
 export interface AxisMarginNeed {
   axis: string;
   side: MarginSide;
@@ -20,6 +20,7 @@ export interface AxisMarginNeed {
  * Margin needs of every visible axis with `automargin` that sits on the plot-area edge. Uses each
  * axis' current scale; a scale that has no length yet (first layout pass) is measured at
  * `lengthHint(axis)` px instead, on a copy.
+ * @internal
  */
 export function axisMarginNeeds(
   axes: ReadonlyMap<string, AxisLike>,
@@ -77,7 +78,7 @@ export function axisMarginNeeds(
   return out;
 }
 
-/** Fold needs into one push per side (the largest need wins). */
+/** Fold needs into one push per side (the largest need wins). @internal */
 export function marginPushOf(needs: readonly AxisMarginNeed[]): MarginPush | undefined {
   if (needs.length === 0) return undefined;
   const push: { l?: number; r?: number; t?: number; b?: number } = {};

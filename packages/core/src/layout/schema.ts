@@ -12,7 +12,7 @@ import { fontExtraAttributes, layoutFontExtraAttributes } from './font-attribute
 import { gridSchema } from './grid.ts';
 import type { AttrSpec, EditType } from '../schema/types.ts';
 
-/** Transition easing names (Plotly-compatible). */
+/** Transition easing names (Plotly-compatible). @internal */
 export const EASINGS = [
   'linear',
   'quad',
@@ -52,7 +52,7 @@ export const EASINGS = [
   'bounce-in-out',
 ] as const;
 
-/** The default Plotly/D3 category10 colorway. */
+/** The default Plotly/D3 category10 colorway. @internal */
 export const DEFAULT_COLORWAY = [
   '#1f77b4',
   '#ff7f0e',
@@ -66,12 +66,13 @@ export const DEFAULT_COLORWAY = [
   '#17becf',
 ] as const;
 
-/** Default font family stack. */
+/** Default font family stack. @internal */
 export const DEFAULT_FONT_FAMILY = '"Open Sans", verdana, arial, sans-serif';
 
 /**
  * Font attributes without defaults. Containers like `title.font` inherit unset fields from
  * `layout.font` during supply-defaults.
+ * @experimental
  */
 export function fontSchema(description: string) {
   return attr.object(
@@ -949,7 +950,10 @@ export const rangeselectorSchema = attr.object(
 
 const xaxisBase = axisSchema('x');
 
-/** Cartesian x-axis schema (plan E3): the axis attributes plus the range slider and selector. */
+/**
+ * Cartesian x-axis schema (plan E3): the axis attributes plus the range slider and selector.
+ * @experimental
+ */
 export const xaxisSchema = attr.subplotObject(
   'x',
   { ...xaxisBase.children, rangeslider: rangesliderSchema, rangeselector: rangeselectorSchema },
@@ -959,7 +963,7 @@ export const xaxisSchema = attr.subplotObject(
     role: 'layout',
   },
 );
-/** Cartesian y-axis schema (plan E3). */
+/** Cartesian y-axis schema (plan E3). @experimental */
 export const yaxisSchema = axisSchema('y');
 
 /**
@@ -1023,7 +1027,10 @@ export const selectionsSchema = attr.items(
   },
 );
 
-/** The base layout schema. Registry-merged with trace-module and component layout attributes. */
+/**
+ * The base layout schema. Registry-merged with trace-module and component layout attributes.
+ * @experimental
+ */
 export const layoutSchema = attr.object(
   {
     width: attr.number({

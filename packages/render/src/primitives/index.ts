@@ -60,3 +60,9 @@ export type { Outline, PrismBuffers } from './extrusion-geometry.ts';
 export type { DomainCamera, DomainHost, DomainShape, DomainView } from './extrusion-domain.ts';
 export type { View3DProjector } from './view3d.ts';
 export type { View3DAngles, View3DCamera } from './view3d-camera.ts';
+// The lazily loaded chunks as type-only namespaces, so that the types of the loaded modules
+// (`MeshModule` is `typeof MeshLazy`, …) have names. No code: the chunks stay lazy.
+export type * as MeshLazy from './mesh-lazy.ts';
+export type * as LinesMarkers3DLazy from './lines-markers-3d.ts';
+export type * as ExtrusionLazy from './extrusion-lazy.ts';
+export type * as PatternCode from './pattern-code.ts';

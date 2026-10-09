@@ -140,6 +140,7 @@ const EN_US: LocaleDefinition = { format: { date: '%m/%d/%Y' } };
 /**
  * Canonical case of a locale name, so `de-ch`, `de_CH` and `DE-CH` all name `de-CH`: the language
  * lower case, two-letter regions upper case, four-letter scripts title case (`zh-Hant-TW`).
+ * @internal
  */
 export function normalizeLocaleName(name: string): string {
   return name
@@ -156,7 +157,10 @@ export function normalizeLocaleName(name: string): string {
     .join('-');
 }
 
-/** Where registered locales live: the core registry keeps one of these per chart registry. */
+/**
+ * Where registered locales live: the core registry keeps one of these per chart registry.
+ * @experimental
+ */
 export interface LocaleStore {
   /** Registered definitions by normalized name. */
   readonly locales: Map<string, LocaleDefinition>;
@@ -198,7 +202,7 @@ export function addLocale(store: LocaleStore, module: LocaleModule): void {
   store.resolved.clear();
 }
 
-/** True when `m` is a locale module (`moduleType: 'locale'` and a name). */
+/** True when `m` is a locale module (`moduleType: 'locale'` and a name). @internal */
 export function isLocaleModule(m: unknown): m is LocaleModule {
   const rec = m as Record<string, unknown> | null;
   return rec?.['moduleType'] === 'locale' && typeof rec['name'] === 'string';
@@ -238,6 +242,7 @@ let defaultFormat: LocaleFormat | undefined;
  * The default locale: US English with d3's own formatters (`%x` is `%-m/%-d/%Y`, `%X` is
  * `%-I:%M:%S %p`, as d3's en-US), used whenever nothing English is registered and the separators
  * are `.,`.
+ * @internal
  */
 export const DEFAULT_LOCALE: Locale = {
   name: 'en-US',
@@ -259,6 +264,7 @@ export type LocaleDefinitions = Readonly<Record<string, LocaleDefinition | undef
  * in `store`, then its language, then English; `separators` (`layout.separators`, default the
  * locale's) set the decimal and thousands separators. Resolved locales are cached in the store
  * (not when `defs` has entries).
+ * @internal
  */
 export function resolveLocale(
   name: string,
@@ -322,6 +328,7 @@ function createLocale(
 /**
  * The locale of a full layout or full axis (`_locale`, set by supply-defaults), or
  * {@link DEFAULT_LOCALE} for objects built by hand.
+ * @internal
  */
 export function localeOf(owner: unknown): Locale {
   return (owner as { _locale?: Locale } | null | undefined)?._locale ?? DEFAULT_LOCALE;
@@ -335,6 +342,7 @@ export function localeOf(owner: unknown): Locale {
  * ```ts
  * button.title = localize(fullLayout, 'Reset axes'); // 'Achsen zurücksetzen' with config.locale 'de'
  * ```
+ * @internal
  */
 export function localize(owner: unknown, text: string): string {
   return localeOf(owner)._(text);

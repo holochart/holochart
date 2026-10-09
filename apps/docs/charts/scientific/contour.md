@@ -7,6 +7,8 @@ chart: contour
 
 # Contour plot
 
+<ChartOverview />
+
 ## Overview
 
 A contour plot (trace type `contour`) draws a grid of values, such as a measured field, a
@@ -26,6 +28,9 @@ Pick a different chart when:
   is clearer.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -89,6 +94,8 @@ createChart(document.getElementById('chart')!, {
 
 ## Variations
 
+<ChartVariations />
+
 ### Lines with level labels
 
 `contours.coloring: 'lines'` colors each level's line from the colorscale and fills nothing.
@@ -97,7 +104,7 @@ and `labelfont` style the labels. Labels are placed like Plotly places them: pre
 horizontal, away from the plot edges and from each other, about one per long line, and the line
 breaks under each label.
 
-<Example id="contour/lines-labels" />
+<ExampleLink id="contour/lines-labels" />
 
 ### Heatmap coloring
 
@@ -106,7 +113,7 @@ grid points, on the GPU) under the level lines, with a continuous colorbar. It i
 coloring that takes `texttemplate` labels at the grid points. Here light, translucent lines with
 labels mark ten levels of two interfering waves on a coarse 31 × 21 grid.
 
-<Example id="contour/heatmap" />
+<ExampleLink id="contour/heatmap" />
 
 ### Constraint contours
 
@@ -116,13 +123,13 @@ the region where it holds. `contours.operation` is the comparison (`'='`, `'<'`,
 the trace's color, at half opacity) and the boundary a 2 px line. Several constraint traces over
 the objective's level lines show a feasible region, where all the shadings overlap:
 
-<Example id="contour/constraint" />
+<ExampleLink id="contour/constraint" />
 
 Interval operations shade inside (`'[]'`, `'()'`, `'[)'`, `'(]'`) or outside (`'][', ')(', '](',
 ')['`) a `value: [lower, upper]`; open and closed ends draw the same. `'='` draws the single level
 as a line and shades nothing. Constraint contours have no colorbar, and appear in the legend.
 
-<Example id="contour/constraint-interval" />
+<ExampleLink id="contour/constraint-interval" />
 
 ### Uneven grids
 
@@ -131,7 +138,7 @@ every crossing is placed by interpolating between the actual coordinates, so lev
 the data puts them. Here a resonance peak is sampled densely near the peak; the grid points are
 drawn on top as markers.
 
-<Example id="contour/uneven-grid" />
+<ExampleLink id="contour/uneven-grid" />
 
 ### Smoothing
 
@@ -139,7 +146,7 @@ drawn on top as markers.
 smoothing. `0` draws straight segments between grid crossings, which shows the grid on coarse
 data (left); 1.3 is the smoothest (right).
 
-<Example id="contour/smoothing" />
+<ExampleLink id="contour/smoothing" />
 
 ### Monthly grid with period alignment
 
@@ -148,14 +155,14 @@ within their periods, as for [heatmaps](/charts/scientific/heatmap#monthly-colum
 Here monthly temperature profiles stamped with the first of each month are drawn mid-month;
 hover shows the dates as given:
 
-<Example id="contour/period" />
+<ExampleLink id="contour/period" />
 
 ### Gaps
 
 `null` values leave holes with `connectgaps: false`: each hole reaches 90% of the way from a
 missing point to its neighbours (Plotly's clip), and lines and labels stop at its edge.
 
-<Example id="contour/gaps" />
+<ExampleLink id="contour/gaps" />
 
 ## Styling
 
@@ -220,7 +227,10 @@ missing point to its neighbours (Plotly's clip), and lines and labels stop at it
   [accessibility guide](/guides/accessibility)) gives the grid size, the levels (or the
   constraint) and where the highest and lowest values are, and its data table lists the grid
   points.
-- **Keyboard:** there is no keyboard navigation yet.
+- **Keyboard:** Tab moves into the plot area; the arrow keys then move a cell cursor along the row
+  (← / →) and the column (↑ / ↓), showing each cell's hover label. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Color:** level labels (`showlabels`) carry the values without relying on color. Prefer a
   sequential scale that is monotonic in lightness (the default), and give constraint shadings
   different line dashes as well as colors, as in the constraint example.
@@ -239,7 +249,7 @@ reference.
   cell labels
 - [Log plots](/charts/scientific/log-plots): contours work on log axes too
 
-<Example id="histogram2dcontour/filled" :height="320" />
+<ExampleLink id="histogram2dcontour/filled" />
 
 ## Plotly migration notes
 

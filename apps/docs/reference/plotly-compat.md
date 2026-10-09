@@ -38,67 +38,69 @@ Compared with **plotly.js 4.1.1**.
 
 |                                         | Supported  | Partial | Missing | Total |
 | --------------------------------------- | ---------- | ------- | ------- | ----- |
-| Trace types                             | 0          | 34      | 13      | 47    |
-| Attributes of the 34 shared trace types | 4157 (80%) | 174     | 851     | 5182  |
-| Top-level layout keys                   | 58         | 11      | 19      | 88    |
-| Layout attributes                       | 1187 (70%) | 57      | 456     | 1700  |
-| Config options                          | 12         | 2       | 19      | 33    |
+| Trace types                             | 0          | 36      | 11      | 47    |
+| Attributes of the 36 shared trace types | 4412 (80%) | 180     | 897     | 5489  |
+| Top-level layout keys                   | 59         | 11      | 18      | 88    |
+| Layout attributes                       | 1244 (73%) | 57      | 399     | 1700  |
+| Config options                          | 13         | 2       | 18      | 33    |
 
 A trace type or a layout key counts as supported only when every one of its Plotly attributes is, and as partial when Holochart has it but lacks or limits some of its attributes.
 
-Holochart also has a trace type that plotly.js does not: [`bar3d`](/reference/bar3d).
+Holochart also has trace types that plotly.js does not: [`bar3d`](/reference/bar3d), [`chord`](/reference/chord), [`graph`](/reference/graph), [`graph3d`](/reference/graph3d).
+
+`chord`, `graph`, `graph3d` need `import '@mk7s/holochart/graph'`.
 
 ## Trace types
 
-| Plotly trace type    | Status  | Supported | Partial | Missing | Notes                                                          |
-| -------------------- | ------- | --------- | ------- | ------- | -------------------------------------------------------------- |
-| `bar`                | Partial | 179 (77%) | 16      | 36      | [Attributes](/reference/bar)                                   |
-| `barpolar`           | Partial | 136 (87%) | 2       | 19      | [Attributes](/reference/barpolar)                              |
-| `box`                | Partial | 81 (77%)  | 0       | 24      | [Attributes](/reference/box)                                   |
-| `candlestick`        | Partial | 53 (80%)  | 0       | 13      | [Attributes](/reference/candlestick)                           |
-| `carpet`             | Missing |           |         |         | No carpet axes.                                                |
-| `choropleth`         | Missing |           |         |         | No geographic subplots (`layout.geo`).                         |
-| `choroplethmap`      | Missing |           |         |         | No tile maps (`layout.map`).                                   |
-| `cone`               | Partial | 125 (86%) | 2       | 18      | [Attributes](/reference/cone)                                  |
-| `contour`            | Partial | 155 (85%) | 2       | 25      | [Attributes](/reference/contour)                               |
-| `contourcarpet`      | Missing |           |         |         | No carpet axes.                                                |
-| `densitymap`         | Missing |           |         |         | No tile maps (`layout.map`).                                   |
-| `funnel`             | Partial | 149 (77%) | 12      | 33      | [Attributes](/reference/funnel)                                |
-| `funnelarea`         | Partial | 62 (64%)  | 9       | 26      | [Attributes](/reference/funnelarea)                            |
-| `heatmap`            | Partial | 132 (83%) | 2       | 25      | [Attributes](/reference/heatmap)                               |
-| `histogram`          | Partial | 191 (82%) | 7       | 36      | [Attributes](/reference/histogram)                             |
-| `histogram2d`        | Partial | 130 (83%) | 2       | 25      | [Attributes](/reference/histogram2d)                           |
-| `histogram2dcontour` | Partial | 152 (85%) | 2       | 25      | [Attributes](/reference/histogram2dcontour)                    |
-| `icicle`             | Partial | 139 (74%) | 14      | 36      | [Attributes](/reference/icicle)                                |
-| `image`              | Partial | 41 (77%)  | 0       | 12      | [Attributes](/reference/image)                                 |
-| `indicator`          | Partial | 105 (83%) | 1       | 21      | [Attributes](/reference/indicator)                             |
-| `isosurface`         | Partial | 142 (86%) | 2       | 21      | [Attributes](/reference/isosurface)                            |
-| `mesh3d`             | Partial | 130 (85%) | 2       | 21      | [Attributes](/reference/mesh3d)                                |
-| `ohlc`               | Partial | 54 (81%)  | 0       | 13      | [Attributes](/reference/ohlc)                                  |
-| `parcats`            | Partial | 113 (84%) | 2       | 19      | [Attributes](/reference/parcats)                               |
-| `parcoords`          | Partial | 122 (85%) | 2       | 20      | [Attributes](/reference/parcoords)                             |
-| `pie`                | Partial | 65 (59%)  | 15      | 31      | [Attributes](/reference/pie)                                   |
-| `quiver`             | Missing |           |         |         |                                                                |
-| `sankey`             | Partial | 68 (58%)  | 2       | 47      | [Attributes](/reference/sankey)                                |
-| `scatter`            | Partial | 189 (79%) | 13      | 37      | [Attributes](/reference/scatter)                               |
-| `scatter3d`          | Partial | 242 (85%) | 15      | 29      | [Attributes](/reference/scatter3d)                             |
-| `scattercarpet`      | Missing |           |         |         | No carpet axes.                                                |
-| `scattergeo`         | Missing |           |         |         | No geographic subplots (`layout.geo`).                         |
-| `scattergl`          | Missing |           |         |         | Use `scatter`: every Holochart trace is drawn on the GPU.      |
-| `scattermap`         | Missing |           |         |         | No tile maps (`layout.map`).                                   |
-| `scatterpolar`       | Partial | 151 (82%) | 4       | 29      | [Attributes](/reference/scatterpolar)                          |
-| `scatterpolargl`     | Missing |           |         |         | Use `scatterpolar`: every Holochart trace is drawn on the GPU. |
-| `scattersmith`       | Missing |           |         |         | No Smith charts (`layout.smith`).                              |
-| `scatterternary`     | Missing |           |         |         | No ternary subplots (`layout.ternary`).                        |
-| `splom`              | Partial | 136 (86%) | 2       | 20      | [Attributes](/reference/splom)                                 |
-| `streamtube`         | Partial | 126 (86%) | 3       | 18      | [Attributes](/reference/streamtube)                            |
-| `sunburst`           | Partial | 131 (75%) | 11      | 32      | [Attributes](/reference/sunburst)                              |
-| `surface`            | Partial | 155 (86%) | 4       | 21      | [Attributes](/reference/surface)                               |
-| `table`              | Partial | 58 (75%)  | 0       | 19      | [Attributes](/reference/table)                                 |
-| `treemap`            | Partial | 145 (74%) | 14      | 36      | [Attributes](/reference/treemap)                               |
-| `violin`             | Partial | 78 (83%)  | 0       | 16      | [Attributes](/reference/violin)                                |
-| `volume`             | Partial | 143 (86%) | 2       | 21      | [Attributes](/reference/volume)                                |
-| `waterfall`          | Partial | 79 (68%)  | 10      | 27      | [Attributes](/reference/waterfall)                             |
+| Plotly trace type    | Status  | Supported | Partial | Missing | Notes                                                                     |
+| -------------------- | ------- | --------- | ------- | ------- | ------------------------------------------------------------------------- |
+| `bar`                | Partial | 179 (77%) | 16      | 36      | [Attributes](/reference/bar)                                              |
+| `barpolar`           | Partial | 136 (87%) | 2       | 19      | [Attributes](/reference/barpolar)                                         |
+| `box`                | Partial | 81 (77%)  | 0       | 24      | [Attributes](/reference/box)                                              |
+| `candlestick`        | Partial | 53 (80%)  | 0       | 13      | [Attributes](/reference/candlestick)                                      |
+| `carpet`             | Missing |           |         |         | No carpet axes.                                                           |
+| `choropleth`         | Partial | 110 (85%) | 2       | 18      | [Attributes](/reference/choropleth). Needs `import '@mk7s/holochart/geo'` |
+| `choroplethmap`      | Missing |           |         |         | No tile maps (`layout.map`).                                              |
+| `cone`               | Partial | 125 (86%) | 2       | 18      | [Attributes](/reference/cone)                                             |
+| `contour`            | Partial | 155 (85%) | 2       | 25      | [Attributes](/reference/contour)                                          |
+| `contourcarpet`      | Missing |           |         |         | No carpet axes.                                                           |
+| `densitymap`         | Missing |           |         |         | No tile maps (`layout.map`).                                              |
+| `funnel`             | Partial | 149 (77%) | 12      | 33      | [Attributes](/reference/funnel)                                           |
+| `funnelarea`         | Partial | 62 (64%)  | 9       | 26      | [Attributes](/reference/funnelarea)                                       |
+| `heatmap`            | Partial | 132 (83%) | 2       | 25      | [Attributes](/reference/heatmap)                                          |
+| `histogram`          | Partial | 191 (82%) | 7       | 36      | [Attributes](/reference/histogram)                                        |
+| `histogram2d`        | Partial | 130 (83%) | 2       | 25      | [Attributes](/reference/histogram2d)                                      |
+| `histogram2dcontour` | Partial | 152 (85%) | 2       | 25      | [Attributes](/reference/histogram2dcontour)                               |
+| `icicle`             | Partial | 139 (74%) | 14      | 36      | [Attributes](/reference/icicle)                                           |
+| `image`              | Partial | 41 (77%)  | 0       | 12      | [Attributes](/reference/image)                                            |
+| `indicator`          | Partial | 105 (83%) | 1       | 21      | [Attributes](/reference/indicator)                                        |
+| `isosurface`         | Partial | 142 (86%) | 2       | 21      | [Attributes](/reference/isosurface)                                       |
+| `mesh3d`             | Partial | 130 (85%) | 2       | 21      | [Attributes](/reference/mesh3d)                                           |
+| `ohlc`               | Partial | 54 (81%)  | 0       | 13      | [Attributes](/reference/ohlc)                                             |
+| `parcats`            | Partial | 113 (84%) | 2       | 19      | [Attributes](/reference/parcats)                                          |
+| `parcoords`          | Partial | 122 (85%) | 2       | 20      | [Attributes](/reference/parcoords)                                        |
+| `pie`                | Partial | 65 (59%)  | 15      | 31      | [Attributes](/reference/pie)                                              |
+| `quiver`             | Missing |           |         |         |                                                                           |
+| `sankey`             | Partial | 68 (58%)  | 2       | 47      | [Attributes](/reference/sankey)                                           |
+| `scatter`            | Partial | 189 (79%) | 13      | 37      | [Attributes](/reference/scatter)                                          |
+| `scatter3d`          | Partial | 242 (85%) | 15      | 29      | [Attributes](/reference/scatter3d)                                        |
+| `scattercarpet`      | Missing |           |         |         | No carpet axes.                                                           |
+| `scattergeo`         | Partial | 145 (82%) | 4       | 28      | [Attributes](/reference/scattergeo). Needs `import '@mk7s/holochart/geo'` |
+| `scattergl`          | Missing |           |         |         | Use `scatter`: every Holochart trace is drawn on the GPU.                 |
+| `scattermap`         | Missing |           |         |         | No tile maps (`layout.map`).                                              |
+| `scatterpolar`       | Partial | 151 (82%) | 4       | 29      | [Attributes](/reference/scatterpolar)                                     |
+| `scatterpolargl`     | Missing |           |         |         | Use `scatterpolar`: every Holochart trace is drawn on the GPU.            |
+| `scattersmith`       | Missing |           |         |         | No Smith charts (`layout.smith`).                                         |
+| `scatterternary`     | Missing |           |         |         | No ternary subplots (`layout.ternary`).                                   |
+| `splom`              | Partial | 136 (86%) | 2       | 20      | [Attributes](/reference/splom)                                            |
+| `streamtube`         | Partial | 126 (86%) | 3       | 18      | [Attributes](/reference/streamtube)                                       |
+| `sunburst`           | Partial | 131 (75%) | 11      | 32      | [Attributes](/reference/sunburst)                                         |
+| `surface`            | Partial | 155 (86%) | 4       | 21      | [Attributes](/reference/surface)                                          |
+| `table`              | Partial | 58 (75%)  | 0       | 19      | [Attributes](/reference/table)                                            |
+| `treemap`            | Partial | 145 (74%) | 14      | 36      | [Attributes](/reference/treemap)                                          |
+| `violin`             | Partial | 78 (83%)  | 0       | 16      | [Attributes](/reference/violin)                                           |
+| `volume`             | Partial | 143 (86%) | 2       | 21      | [Attributes](/reference/volume)                                           |
+| `waterfall`          | Partial | 79 (68%)  | 10      | 27      | [Attributes](/reference/waterfall)                                        |
 
 The numbers count attributes of the Plotly trace type.
 
@@ -310,6 +312,17 @@ Missing: `line.colorbar.labelalias`, `line.colorbar.tickformatstops.*` (5), `zca
 </details>
 
 <details>
+<summary><code>scattergeo</code>: 2 partial, 6 missing</summary>
+
+Partial:
+
+- `textfont.style`, `textfont.weight`: one value only, no array
+
+Missing: `marker.angleref`, `marker.gradient.*` (2), `marker.line.dash`, `marker.standoff`, `textfont.shadow`
+
+</details>
+
+<details>
 <summary><code>scatterpolar</code>: 2 partial, 7 missing</summary>
 
 Partial:
@@ -422,7 +435,7 @@ Missing: `textfont.shadow`, `xhoverformat`, `yhoverformat`
 | `dragmode`               | Supported | 1         | 0       | 0       |                                            |
 | `editrevision`           | Missing   | 0         | 0       | 1       |                                            |
 | `font`                   | Supported | 9         | 0       | 0       |                                            |
-| `geo`                    | Missing   | 0         | 0       | 57      |                                            |
+| `geo`                    | Supported | 57        | 0       | 0       | Needs `import '@mk7s/holochart/geo'`       |
 | `grid`                   | Supported | 13        | 0       | 0       |                                            |
 | `height`                 | Supported | 1         | 0       | 0       |                                            |
 | `hoveranywhere`          | Missing   | 0         | 0       | 1       |                                            |
@@ -657,7 +670,7 @@ Missing: `yaxis.calendar`, `yaxis.insiderange`, `yaxis.labelalias`, `yaxis.modeb
 | `showTips`                | Missing   |                                                                        |
 | `staticPlot`              | Supported |                                                                        |
 | `toImageButtonOptions`    | Supported |                                                                        |
-| `topojsonURL`             | Missing   |                                                                        |
+| `topojsonURL`             | Supported |                                                                        |
 | `typesetMath`             | Missing   |                                                                        |
 | `watermark`               | Missing   |                                                                        |
 
@@ -696,7 +709,8 @@ here.
 ### Dates and text
 
 - A JavaScript `Date` is shown at its UTC time. Plotly shows it at the browser's local time.
-  Date strings are read alike, without a time zone. There is no `layout.timezone`, and no
+  Date strings without a UTC offset are read alike, without a time zone; Holochart converts a
+  string with an offset (`Z`, `+01:00`) to UTC. There is no `layout.timezone`, and no
   non-Gregorian calendar (`xcalendar`, `layout.calendar`).
 - Text is drawn from font files. A `font.family` that isn't
   [registered](/fundamentals/styling-themes#web-fonts) is drawn with the built-in font, TeX Gyre
@@ -727,12 +741,29 @@ here.
   only.
 - On axes with `rangebreaks`, OHLC bars, candles and heatmap cells next to a break keep their
   full width; Plotly narrows them.
+- Maps move under a drag in `dragmode: 'zoom'` as in `'pan'`; Plotly moves them in `'pan'` only.
+  `geo.uirevision` is not read (`layout.uirevision` is). See
+  [Maps](/fundamentals/maps#plotly-compatibility).
 - Pinch zoom works on cartesian subplots, and a vertical swipe scrolls the page in zoom mode.
   See [Interaction](/fundamentals/interaction-events#differences-from-plotly).
 - Sliders and update menus are DOM controls with keyboard support; their labels are plain text
   without Plotly's markup. See [Controls](/fundamentals/controls#differences-from-plotly).
 - Transitions animate every trace type and follow autoranged axes while they move. See
   [Transitions](/fundamentals/transitions-animation#differences-from-plotly).
+
+### Maps
+
+- `scattergeo`, `choropleth` and `layout.geo` are in a package the full bundle does not
+  register: a figure with a map needs `import '@mk7s/holochart/geo'`.
+- The base map is bundled Natural Earth data and nothing is fetched by default
+  (`config.topojsonURL` is empty; Plotly's default is its CDN). Coastlines and borders differ
+  slightly from Plotly's files, and disputed borders are drawn by de facto control.
+- A scoped map keeps whole every country polygon that reaches into the scope's box; Plotly's
+  scope files are cut at the box.
+- The graticule keeps its last meridian unless it is the first one again; Plotly drops the last
+  meridian of every map.
+- There are no modebar buttons for maps yet. Tile maps (`layout.map`) are not available.
+- See [Maps](/fundamentals/maps#plotly-compatibility) for the rest.
 
 ### 3D scenes
 
@@ -766,6 +797,8 @@ The main deviations of each trace type, with a link to its full migration notes.
 - **`indicator`**: Transitions lay the number out for every in-between value, and animate `delta.reference`. Notes: [indicator](/charts/financial/indicator#plotly-migration-notes).
 - **`sunburst`, `treemap`, `icicle`**: Labels fade in at the end of a drill-down instead of moving with their sectors. Treemap and icicle labels wrap before they shrink. Notes: [sunburst](/charts/hierarchical/sunburst#plotly-migration-notes), [treemap](/charts/hierarchical/treemap#plotly-migration-notes), [icicle](/charts/hierarchical/icicle#plotly-migration-notes).
 - **`sankey`**: Cyclic graphs are laid out and drawn with loops, so node placement can differ. No `node.hoverlabel` or `link.hoverlabel`. `'snap'` drags have no force simulation. Notes: [sankey](/charts/hierarchical/sankey#plotly-migration-notes).
+- **`scattergeo`**: `'ISO-3'` codes match in any case. Unmatched locations are named in one warning. A `toself` fill takes the smaller of the two regions its path bounds. No `marker.gradient`, `marker.angleref`, `marker.standoff` or `marker.line.dash`. Notes: [scattergeo](/charts/maps/scattergeo#plotly-migration-notes).
+- **`choropleth`**: A `geojson` wound the RFC 7946 way is rewound, with a warning. With `'geojson-id'`, a location given twice is drawn twice. The hover label falls back to the pointer when the region's label point is hidden. Notes: [choropleth](/charts/maps/choropleth#plotly-migration-notes).
 - **`scatter3d`**: Projections are camera-facing sprites on the walls; Plotly flattens them onto the wall. The error bars' `width` is ignored. Notes: [scatter3d](/charts/3d/scatter3d#plotly-migration-notes).
 - **`surface`**: The grid is drawn as given; Plotly resamples small grids for smoother shading. Contour levels don't follow the camera. Hover reports `pointNumber` as `[row, column]`. Notes: [surface](/charts/3d/surface#plotly-migration-notes).
 - **`mesh3d`, `cone`**: Cone sizes and `alphahull` scale by the trace's own data span, not by the span of every trace in the scene. A mesh's `contour.width` is honored. Notes: [mesh3d](/charts/3d/mesh3d#plotly-migration-notes), [cone](/charts/3d/cone#plotly-migration-notes).

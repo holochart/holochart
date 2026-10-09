@@ -56,8 +56,6 @@ export interface HolochartSchema {
 const MISSING_TRACE_NOTES: Readonly<Record<string, string>> = {
   scattergl: 'Use `scatter`: every Holochart trace is drawn on the GPU.',
   scatterpolargl: 'Use `scatterpolar`: every Holochart trace is drawn on the GPU.',
-  scattergeo: 'No geographic subplots (`layout.geo`).',
-  choropleth: 'No geographic subplots (`layout.geo`).',
   scattermap: 'No tile maps (`layout.map`).',
   choroplethmap: 'No tile maps (`layout.map`).',
   densitymap: 'No tile maps (`layout.map`).',
@@ -66,6 +64,28 @@ const MISSING_TRACE_NOTES: Readonly<Record<string, string>> = {
   carpet: 'No carpet axes.',
   scattercarpet: 'No carpet axes.',
   contourcarpet: 'No carpet axes.',
+};
+
+/** The import that adds the geo package to the full bundle, which leaves it out (ADR-026). */
+const GEO_IMPORT = "Needs `import '@mk7s/holochart/geo'`";
+/** The same for the graph package (ADR-029), whose trace types plotly.js does not have. */
+const GRAPH_IMPORT = "Needs `import '@mk7s/holochart/graph'`";
+
+/**
+ * What a figure needs for a trace type Holochart has, when the full bundle alone is not enough.
+ * Hand-written, like the notes above: the schema is the same wherever a module is registered from.
+ */
+const TRACE_NOTES: Readonly<Record<string, string>> = {
+  scattergeo: GEO_IMPORT,
+  choropleth: GEO_IMPORT,
+  graph: GRAPH_IMPORT,
+  chord: GRAPH_IMPORT,
+  graph3d: GRAPH_IMPORT,
+};
+
+/** The same for top-level layout keys. */
+const LAYOUT_NOTES: Readonly<Record<string, string>> = {
+  geo: GEO_IMPORT,
 };
 
 /**
@@ -309,6 +329,16 @@ export function renderCoverage(plotly: PlotlySchema, ours: HolochartSchema): str
         `does not: ${own.map((type) => `[${code(type)}](/reference/${type})`).join(', ')}.`,
       '',
     );
+    // What an own type needs on top of the full bundle, said once per import.
+    const notes = new Map<string, string[]>();
+    for (const type of own) {
+      const note = TRACE_NOTES[type];
+      if (note) notes.set(note, [...(notes.get(note) ?? []), code(type)]);
+    }
+    for (const [note, types] of notes) {
+      const verb = types.length === 1 ? 'needs' : 'need';
+      out.push(`${types.join(', ')} ${verb} ${note.replace(/^Needs /, '')}.`, '');
+    }
   }
 
   out.push('## Trace types', '');
@@ -326,7 +356,7 @@ export function renderCoverage(plotly: PlotlySchema, ours: HolochartSchema): str
           `${t.supported} (${percent(t)})`,
           t.partial,
           t.missing,
-          `[Attributes](/reference/${type})`,
+          [`[Attributes](/reference/${type})`, TRACE_NOTES[type]].filter(Boolean).join('. '),
         ];
       }),
     ),
@@ -368,7 +398,7 @@ export function renderCoverage(plotly: PlotlySchema, ours: HolochartSchema): str
           t.supported,
           t.partial,
           t.missing,
-          by ? `With ${by.map(code).join(', ')} traces` : '',
+          by ? `With ${by.map(code).join(', ')} traces` : (LAYOUT_NOTES[key] ?? ''),
         ];
       }),
     ),

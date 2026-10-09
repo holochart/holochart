@@ -63,7 +63,10 @@ function direction(d: WaterfallDirection) {
   );
 }
 
-/** The waterfall schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core. */
+/**
+ * The waterfall schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core.
+ * @experimental
+ */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const waterfallAttributes = /* @__PURE__ */ (() =>
   attr.object(
@@ -131,7 +134,7 @@ export const waterfallAttributes = /* @__PURE__ */ (() =>
     },
   ))();
 
-/** Layout attributes owned by `waterfall` (coerced when a waterfall trace is present). */
+/** Layout attributes owned by `waterfall` (coerced when a waterfall trace is present). @internal */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const waterfallLayoutAttributes = /* @__PURE__ */ (() => {
   const a = barLikeLayoutAttributes('waterfall', ['group', 'overlay'], 'group');

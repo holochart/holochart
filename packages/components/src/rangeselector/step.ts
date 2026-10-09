@@ -10,16 +10,16 @@
  */
 import type { Scale } from '@mk7s/holochart-core';
 
-/** `rangeselector.buttons[].step`. */
+/** `rangeselector.buttons[].step`. @internal */
 export type RangeselectorStep = 'month' | 'year' | 'day' | 'hour' | 'minute' | 'second' | 'all';
 
-/** A calendar step (every step but `all`). */
+/** A calendar step (every step but `all`). @internal */
 export type RangeselectorDateStep = Exclude<RangeselectorStep, 'all'>;
 
-/** `rangeselector.buttons[].stepmode`. */
+/** `rangeselector.buttons[].stepmode`. @internal */
 export type RangeselectorStepmode = 'backward' | 'todate';
 
-/** One defaulted `rangeselector.buttons[]` item. */
+/** One defaulted `rangeselector.buttons[]` item. @internal */
 export interface RangeselectorButton {
   /** `false`: not drawn (e.g. a template-linked item without its template item). */
   readonly visible?: boolean;
@@ -34,7 +34,7 @@ export interface RangeselectorButton {
   readonly _index?: number;
 }
 
-/** The parts of an axis (`AxisInfo`) the range selector math reads. */
+/** The parts of an axis (`AxisInfo`) the range selector math reads. @internal */
 export interface RangeselectorAxisLike {
   /** Layout key: `'xaxis'`, `'xaxis2'`, … */
   readonly name: string;

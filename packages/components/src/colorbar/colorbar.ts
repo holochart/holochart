@@ -45,7 +45,7 @@ function moduleLookup(
   return (trace) => ctx.traceModule?.(trace.type) ?? moduleFromTrace(trace);
 }
 
-/** Every colorbar of a figure, container px (pure given `measure`). */
+/** Every colorbar of a figure, container px (pure given `measure`). @internal */
 export function buildColorbarScenes(
   ctx: Pick<
     ComponentDrawContext,

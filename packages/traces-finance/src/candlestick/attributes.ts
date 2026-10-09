@@ -32,7 +32,10 @@ function direction(d: 'increasing' | 'decreasing') {
   );
 }
 
-/** The candlestick schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core. */
+/**
+ * The candlestick schema. Common trace attributes (`name`, `opacity`, `xaxis`, …) come from core.
+ * @experimental
+ */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const candlestickAttributes = /* @__PURE__ */ (() =>
   attr.object(
@@ -70,6 +73,7 @@ export const candlestickAttributes = /* @__PURE__ */ (() =>
 /**
  * Layout attributes owned by `candlestick`, the same as box's (coerced when a candlestick trace is
  * present). Candles group with the other candlestick traces of a subplot.
+ * @internal
  */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const candlestickLayoutAttributes = /* @__PURE__ */ (() =>

@@ -20,7 +20,10 @@
  */
 import type { FullLayout, FullTrace } from './types.ts';
 
-/** What one splom dimension says about one of its axes (Plotly's `_splomAxes[letter][id]`). */
+/**
+ * What one splom dimension says about one of its axes (Plotly's `_splomAxes[letter][id]`).
+ * @internal
+ */
 export interface SplomAxisStash {
   /** Default `title.text`: the dimension's `label`. */
   label: string;
@@ -34,7 +37,7 @@ export interface SplomAxisStash {
   trace: FullTrace;
 }
 
-/** Axis and grid defaults recorded by splom traces during one supply-defaults pass. */
+/** Axis and grid defaults recorded by splom traces during one supply-defaults pass. @internal */
 export interface SplomStash {
   /** Axes by letter, then axis id, in the order the dimensions named them. */
   axes: { x: Record<string, SplomAxisStash>; y: Record<string, SplomAxisStash> };
@@ -48,7 +51,10 @@ const AXES_KEY = '_splomAxes';
 const SUBPLOTS_KEY = '_splomSubplots';
 const GRID_KEY = '_splomGridDflt';
 
-/** The splom stash of `fullLayout`, or `undefined` when no splom trace recorded anything. */
+/**
+ * The splom stash of `fullLayout`, or `undefined` when no splom trace recorded anything.
+ * @internal
+ */
 export function getSplomStash(fullLayout: FullLayout): SplomStash | undefined {
   const axes = fullLayout[AXES_KEY] as SplomStash['axes'] | undefined;
   if (!axes) return undefined;
@@ -71,6 +77,7 @@ function ensureStash(fullLayout: FullLayout): SplomStash {
 /**
  * Record an axis of a splom dimension (Plotly's `fillAxisStashes`): the first trace that names an
  * axis decides its defaults. Returns whether this call created the entry.
+ * @internal
  */
 export function stashSplomAxis(fullLayout: FullLayout, id: string, entry: SplomAxisStash): boolean {
   const stash = ensureStash(fullLayout);
@@ -80,7 +87,7 @@ export function stashSplomAxis(fullLayout: FullLayout, id: string, entry: SplomA
   return true;
 }
 
-/** Record a drawn cell (cartesian subplot id such as `'x2y3'`). */
+/** Record a drawn cell (cartesian subplot id such as `'x2y3'`). @internal */
 export function stashSplomSubplot(fullLayout: FullLayout, id: string): void {
   const stash = ensureStash(fullLayout);
   if (!stash.subplots.includes(id)) stash.subplots.push(id);
@@ -89,6 +96,7 @@ export function stashSplomSubplot(fullLayout: FullLayout, id: string): void {
 /**
  * Put the splom axes at the grid edges (`xside: 'bottom'`, `yside: 'left'`): Plotly does this when
  * the lower half is hidden or only the diagonal is, so the axes stay on the left / bottom.
+ * @internal
  */
 export function stashSplomGridSides(fullLayout: FullLayout): void {
   const stash = ensureStash(fullLayout);
@@ -122,7 +130,10 @@ export function splomMatchDefaults(fullLayout: FullLayout): Map<string, string> 
   return out;
 }
 
-/** Cell contents and sides a splom gives `layout.grid` when the user's grid names none. */
+/**
+ * Cell contents and sides a splom gives `layout.grid` when the user's grid names none.
+ * @internal
+ */
 export interface GridFallback {
   readonly xaxes: readonly string[];
   readonly yaxes: readonly string[];

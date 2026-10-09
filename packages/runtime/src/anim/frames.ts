@@ -9,7 +9,7 @@ import type {
   AnimateTarget,
   AnimationOptions,
   ComputedFrame,
-  Frame,
+  FrameInput,
   FrameOptions,
   TransitionOptions,
 } from './types.ts';
@@ -40,10 +40,10 @@ export function frameName(frame: unknown, index: number): string {
 }
 
 /** Frames by name (a later frame with the same name wins, like Plotly's frame hash). */
-export function frameIndex(frames: readonly unknown[]): Map<string, Frame> {
-  const index = new Map<string, Frame>();
+export function frameIndex(frames: readonly unknown[]): Map<string, FrameInput> {
+  const index = new Map<string, FrameInput>();
   frames.forEach((frame, i) => {
-    if (isPlainObject(frame)) index.set(frameName(frame, i), frame as Frame);
+    if (isPlainObject(frame)) index.set(frameName(frame, i), frame as FrameInput);
   });
   return index;
 }
@@ -62,7 +62,7 @@ export function insertFrames(
 ): unknown[] {
   const out = [...frames];
   const names = frameIndex(frames);
-  const ops: { index: number; frame: Frame; replace: boolean }[] = [];
+  const ops: { index: number; frame: FrameInput; replace: boolean }[] = [];
   const big = Number.MAX_SAFE_INTEGER - list.length;
   list.forEach((item, i) => {
     if (!isPlainObject(item)) return;
@@ -79,7 +79,7 @@ export function insertFrames(
     const at = indices?.[i];
     ops.push({
       index: typeof at === 'number' && Number.isFinite(at) ? at : big + i,
-      frame: frame as Frame,
+      frame: frame as FrameInput,
       replace: names.has(frame['name'] as string),
     });
   });
@@ -150,7 +150,7 @@ function tracesOf(traces: unknown, count: number): (number | null | undefined)[]
 }
 
 /** Merge `frame` over a computed frame (Plotly's `computeFrame` step). */
-function mergeFrame(out: { data: Obj[]; traces: number[]; layout?: Obj }, frame: Frame): void {
+function mergeFrame(out: { data: Obj[]; traces: number[]; layout?: Obj }, frame: FrameInput): void {
   if (isPlainObject(frame.layout)) out.layout = extend(out.layout, frame.layout, LAYOUT_ARRAYS);
   if (!Array.isArray(frame.data)) return;
   const data = frame.data as unknown[];
@@ -172,10 +172,10 @@ function mergeFrame(out: { data: Obj[]; traces: number[]; layout?: Obj }, frame:
  * the chain stops at a missing name or a cycle). `undefined` when there is no such frame.
  */
 export function computeFrame(
-  index: ReadonlyMap<string, Frame>,
+  index: ReadonlyMap<string, FrameInput>,
   name: string,
 ): ComputedFrame | undefined {
-  const chain: Frame[] = [];
+  const chain: FrameInput[] = [];
   const seen = new Set<string>();
   let frame = index.get(name);
   if (!frame) return undefined;
@@ -191,11 +191,11 @@ export function computeFrame(
 }
 
 /** A frame object given to `animate` directly: used as is (`baseframe` ignored). */
-export function inlineFrame(frame: Frame): ComputedFrame {
+export function inlineFrame(frame: FrameInput): ComputedFrame {
   return merged([frame]);
 }
 
-function merged(frames: readonly Frame[]): ComputedFrame {
+function merged(frames: readonly FrameInput[]): ComputedFrame {
   const out: { data: Obj[]; traces: number[]; layout?: Obj } = { data: [], traces: [] };
   for (const f of frames) mergeFrame(out, f);
   return {
@@ -279,14 +279,14 @@ export function resolveTarget(target: AnimateTarget, frames: readonly unknown[])
     );
   }
   if (isPlainObject(target)) {
-    return [{ name: null, byName: false, frame: inlineFrame(target as Frame) }];
+    return [{ name: null, byName: false, frame: inlineFrame(target as FrameInput) }];
   }
   if (!Array.isArray(target)) return [];
   const out: TargetFrame[] = [];
   for (const item of target as readonly unknown[]) {
     if (typeof item === 'string' || typeof item === 'number') out.push(byName(String(item)));
     else if (isPlainObject(item)) {
-      out.push({ name: null, byName: false, frame: inlineFrame(item as Frame) });
+      out.push({ name: null, byName: false, frame: inlineFrame(item as FrameInput) });
     }
   }
   return out;

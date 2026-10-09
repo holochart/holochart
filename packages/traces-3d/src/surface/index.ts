@@ -22,19 +22,18 @@
  * | `hover`       | hover points and the shared hit of hover and highlights                 |
  * | `view`        | the trace view (and the mesh primitive for three.js materials)          |
  * | `normals`     | the shader's normals on the CPU (mesh primitive path, tests)            |
- * | `describe`    | the accessible description                                              |
  *
  * Deferred: Plotly's `refineData` resampling of small grids, projections of the highlight lines,
  * `xcalendar` / `ycalendar` / `zcalendar`.
  */
 import type { TraceModule } from '@mk7s/holochart-runtime';
 import { coloraxisLayoutSchema } from '@mk7s/holochart-traces-basic';
+import { sceneA11y } from '../a11y-loader.ts';
 import { sceneCrossTraceLayout, sceneSubplotDomain } from '../scene/layout.ts';
 import { surfaceAttributes } from './attributes.ts';
 import { calcSurface, type SurfaceCalc } from './calc.ts';
 import { surfaceColorbar } from './colors.ts';
 import { supplySurfaceDefaults, supplySurfaceLayoutDefaults } from './defaults.ts';
-import { describeSurface } from './describe.ts';
 import { surfaceHoverPoints } from './hover.ts';
 import { SurfaceView } from './view.ts';
 
@@ -56,9 +55,9 @@ export const surface: TraceModule<SurfaceCalc, typeof surfaceAttributes.children
   crossTraceLayout: sceneCrossTraceLayout,
   calc: calcSurface,
   plot: { create: (ctx) => new SurfaceView(ctx) },
+  a11y: sceneA11y,
   hoverPoints: surfaceHoverPoints,
   colorbar: (trace, ctx) => surfaceColorbar(trace, ctx.fullLayout),
-  describe: describeSurface,
 };
 
 export { surfaceAttributes } from './attributes.ts';

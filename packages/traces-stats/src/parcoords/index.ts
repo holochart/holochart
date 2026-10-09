@@ -12,11 +12,13 @@
  * Deferred: `line.coloraxis`, `dimensiondefaults` templates, the snap and axis-drop transitions
  * (E7.3).
  */
-import type { TraceModule } from '@mk7s/holochart-runtime';
+import { accessibleText, formatPlainNumber, type TraceModule } from '@mk7s/holochart-runtime';
 import { parcoordsAttributes } from './attributes.ts';
 import { calcParcoords, type ParcoordsCalc } from './calc.ts';
-import { lineColorbar } from './common.ts';
+import { lineColorbar, traceRect } from './common.ts';
 import { supplyParcoordsDefaults } from './defaults.ts';
+import { lazyA11y } from '../a11y-loader.ts';
+import { layoutAxes, unitToY } from './layout.ts';
 import { describeParcoords } from './describe.ts';
 import { parcoordsRenderer } from './plot.ts';
 
@@ -37,6 +39,7 @@ export const parcoords: TraceModule<ParcoordsCalc, typeof parcoordsAttributes.ch
   plot: parcoordsRenderer,
   colorbar: (trace, ctx) => lineColorbar(trace, ctx.fullLayout),
   describe: describeParcoords,
+  a11y: lazyA11y('parcoords', traceRect, layoutAxes, unitToY, accessibleText, formatPlainNumber),
 };
 
 export { parcoordsAttributes } from './attributes.ts';

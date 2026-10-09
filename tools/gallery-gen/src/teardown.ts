@@ -7,6 +7,7 @@ import {
   MANIFEST_FILE,
   REPO_ROOT,
   mergeRecords,
+  migrateManifest,
   pruneThumbnails,
   readManifest,
   recordsDir,
@@ -16,7 +17,8 @@ import {
 
 /**
  * Global teardown of the gallery run: merge the per-example records into the committed manifest
- * and delete thumbnails that no entry references any more (deleted or newly excluded examples).
+ * and delete thumbnails that no entry references any more (deleted, newly excluded or internal
+ * examples).
  */
 export default async function teardown(config: FullConfig): Promise<void> {
   const outputDir = config.projects[0]?.outputDir;
@@ -31,7 +33,9 @@ export default async function teardown(config: FullConfig): Promise<void> {
     console.log('gallery: no records (did every test fail?); manifest left unchanged.');
     return;
   }
-  const manifest = mergeRecords(readManifest(), records, new Set(listExampleIds(EXAMPLES_DIR)));
+  const manifest = migrateManifest(
+    mergeRecords(readManifest(), records, new Set(listExampleIds(EXAMPLES_DIR))),
+  );
   await writeManifest(manifest);
   const removed = pruneThumbnails(manifest);
   const rendered = records.filter((r) => 'entry' in r).length;

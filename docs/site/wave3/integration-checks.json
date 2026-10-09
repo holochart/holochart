@@ -1,0 +1,216 @@
+{
+  "checkedAt": "2026-10-09T19:11:52.569657+00:00",
+  "base": "http://127.0.0.1:5339/holochart/",
+  "homeHtmlSha256": "b687f6b1bca48b0241b1353b5fde9739ca35b7a5406c11d3e7f564369ad157ad",
+  "browser": "Chromium 153.0.8010.12 / SwiftShader",
+  "workers": 1,
+  "retries": 0,
+  "stats": {
+    "startTime": "2026-10-09T19:09:11.144Z",
+    "duration": 73305.955,
+    "expected": 21,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "scope": {
+    "foundation": 8,
+    "wave2Interactions": 8,
+    "wave3Content": 5
+  },
+  "build": {
+    "vitepressSeconds": 220.48,
+    "maxOldSpaceSizeMiB": 8192,
+    "includesGeneration": false
+  },
+  "contentChecks": {
+    "notebookArtifacts": 120,
+    "notebooks": 14,
+    "exactPythonVariants": 24,
+    "supportedFamilies": 6,
+    "sourceMatchedHostChecks": 76,
+    "typescriptSnippets": 433,
+    "internalLinks": 2053,
+    "deadLinks": 0,
+    "unitTests": 15
+  },
+  "typechecks": ["docs", "root tooling, tests, gallery generator, bench"],
+  "broadRendering": {
+    "report": "broad-render-checks.json",
+    "passed": 81,
+    "chartPages": 49,
+    "galleryPages": 13,
+    "homeHtmlSha256": "ad9d510405f7157fd5a85e44d219cae6d41023a37f5d79fdc9c39c543e51e893",
+    "scopeNote": "Broad chart/gallery rendering snapshot before the final accessibility markup and facet-computation refinements. Chart examples and their runtime/content sources remain unchanged; final interaction and settled-chart accessibility checks are recorded separately."
+  },
+  "remoteCIExecuted": false,
+  "tests": [
+    {
+      "title": "foundation landing pages expose primary navigation and working next steps",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 3752
+    },
+    {
+      "title": "gallery keeps legacy query/hash links and restores filters on browser history",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 4754
+    },
+    {
+      "title": "gallery responsive grid 1440px has 4 columns and no page overflow",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 2779
+    },
+    {
+      "title": "gallery responsive grid 1200px has 3 columns and no page overflow",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 2818
+    },
+    {
+      "title": "gallery responsive grid 820px has 2 columns and no page overflow",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 2771
+    },
+    {
+      "title": "gallery responsive grid 720px has 2 columns and no page overflow",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 3007
+    },
+    {
+      "title": "gallery responsive grid 390px has 1 columns and no page overflow",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 5488
+    },
+    {
+      "title": "dense example detail splits chart and complete source, then stacks on mobile",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 2737
+    },
+    {
+      "title": "home exposes six complete first-screen previews, families and three working entry paths",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 7602
+    },
+    {
+      "title": "homepage at 820px keeps previews and content within the viewport",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 983
+    },
+    {
+      "title": "homepage at 390px keeps previews and content within the viewport",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 1037
+    },
+    {
+      "title": "gallery defaults to eleven linked family sections and offers inventory separately",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 3882
+    },
+    {
+      "title": "family subtype history and combined facets survive sharing and reset",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 4053
+    },
+    {
+      "title": "verified language filters expose the actual notebook histogram and browser choropleth",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 3328
+    },
+    {
+      "title": "deep example source supports keyboard tabs, copying, downloads and language preference fallback",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 2460
+    },
+    {
+      "title": "detail returns to filtered results and quick previews keep legacy hash history",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 12019
+    },
+    {
+      "title": "detail source tab keeps its labelled panel through loading and failure",
+      "file": "wave3-content.spec.ts",
+      "status": "expected",
+      "durationMs": 1100
+    },
+    {
+      "title": "inline source tab keeps its labelled panel through loading and failure",
+      "file": "wave3-content.spec.ts",
+      "status": "expected",
+      "durationMs": 2779
+    },
+    {
+      "title": "production chart blocks hydrate without repairing server markup",
+      "file": "wave3-content.spec.ts",
+      "status": "expected",
+      "durationMs": 2224
+    },
+    {
+      "title": "production canonical URLs ignore gallery filters and use the configured base",
+      "file": "wave3-content.spec.ts",
+      "status": "expected",
+      "durationMs": 463
+    },
+    {
+      "title": "all notebook and exact Python downloads match their canonical sources",
+      "file": "wave3-content.spec.ts",
+      "status": "expected",
+      "durationMs": 2527
+    }
+  ],
+  "routeContinuity": {
+    "checkedAt": "2026-10-09T19:11:25.561Z",
+    "base": "/holochart/",
+    "previousRoutes": 4746,
+    "previousChartAnchors": 374,
+    "missingRoutes": [],
+    "missingAnchors": []
+  },
+  "viewports": {
+    "report": "viewports.json",
+    "captures": 30,
+    "documentOverflow": 0,
+    "browserExceptions": 0,
+    "desktopDirectoryCards": 8,
+    "desktopInventoryCards": 8
+  },
+  "finalAccessibility": {
+    "report": "accessibility.json",
+    "templateViewports": 24,
+    "violations": 0,
+    "humanContrastSpeechAndNativeZoomReviewed": false
+  },
+  "finalPerformance": {
+    "report": "performance.json",
+    "homeHtmlSha256": "b687f6b1bca48b0241b1353b5fde9739ca35b7a5406c11d3e7f564369ad157ad",
+    "budgets": {
+      "mobileLcp": true,
+      "mobileCls": true,
+      "filtering": true,
+      "staticCatalogContexts": true,
+      "allPassed": true
+    },
+    "scopeNote": "Cold mobile laboratory profile and separate normal headless desktop software compositor; not field Core Web Vitals.",
+    "desktopFilterP95Ms": 34.200000047683716,
+    "desktopComparison": {
+      "report": "wave2-desktop-baseline.json",
+      "homeHtmlSha256": "fe7a29ba27631ea314df015f95b199438a0777ab848fb7505762ab6ade0a168e",
+      "p95Ms": 150.29999995231628,
+      "scope": "Retained local Wave 2 artifact, 60 queries, same normal headless software compositor and explicit CPU rate 1; mobile not measured in this run."
+    }
+  }
+}

@@ -22,6 +22,7 @@ import { drillEntry } from '../hierarchy/levels.ts';
 import { levelOf } from '../hierarchy/view.ts';
 import { rectAt, rectGeometry, type RectCalc, type RectHit, type RectLayout } from './geometry.ts';
 import { padsOf, textSpot } from './text.ts';
+import { lazyA11y } from '../a11y-loader.ts';
 
 /** Container px of a hit's hover anchor (Plotly's `_hoverX`, `_hoverY`). */
 export function rectHoverAnchor(
@@ -154,3 +155,11 @@ export function rectClick(
     drills: next !== entry,
   };
 }
+
+/** `TraceModule.a11y` of `treemap` and `icicle`: their tiles as keyboard stops along the tree. */
+export const rectA11y = /* @__PURE__ */ lazyA11y(
+  'rects',
+  rectGeometry,
+  rectHoverPoint,
+  nodeContext,
+);

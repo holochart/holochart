@@ -1,5 +1,5 @@
 /**
- * Figure ⇄ JSON (plan E18.3): the engine behind `chart.toJSON()` and `Holochart.fromJSON()`.
+ * Figure ⇄ JSON (plan E18.3): the engine behind `chartToJSON()` and `Holochart.fromJSON()`.
  *
  * {@link encodeFigure} turns an input figure into plain JSON data that survives
  * `JSON.parse(JSON.stringify(…))` unchanged; {@link decodeFigure} turns that back into a figure.

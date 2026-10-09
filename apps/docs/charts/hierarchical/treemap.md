@@ -7,6 +7,8 @@ chart: treemap
 
 # Treemap
 
+<ChartOverview />
+
 ## Overview
 
 A treemap draws a hierarchy as nested rectangles: the root fills the chart, its children split
@@ -33,6 +35,9 @@ Pick a different chart when:
 - the data is a flow between stages rather than a tree: use a [Sankey diagram](/charts/hierarchical/sankey).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -84,13 +89,15 @@ keep them close to square:
 
 ## Variations
 
+<ChartVariations />
+
 ### Remainder and total values
 
 The same budget read both ways: with `'remainder'` each department's own value is added to its
 teams', so the departments carry an overhead besides their teams; with `'total'` a department's
 value is its total, and what its teams don't use stays empty:
 
-<Example id="treemap/branchvalues" />
+<ExampleLink id="treemap/branchvalues" />
 
 ### Tilings
 
@@ -115,7 +122,7 @@ createChart(document.getElementById('chart')!, {
 });
 ```
 
-<Example id="treemap/tilings" />
+<ExampleLink id="treemap/tilings" />
 
 ### Padding and corners
 
@@ -124,7 +131,7 @@ around each branch's children. By default the header side gets twice the label s
 sides half of it. `marker.cornerradius` rounds the tiles, never more than the padding on the label
 side:
 
-<Example id="treemap/padding" />
+<ExampleLink id="treemap/padding" />
 
 ### Depth fade and colorscales
 
@@ -133,7 +140,7 @@ the more levels they hold; `'reversed'` keeps the top saturated and fades the le
 `marker.colors` (or any colorscale attribute) color the tiles through a colorscale instead, with a
 colorbar:
 
-<Example id="treemap/depthfade" />
+<ExampleLink id="treemap/depthfade" />
 
 ### Levels and the path bar
 
@@ -141,13 +148,13 @@ colorbar:
 deeper tiles appear as you drill in. `level` sets the current root to a node's id (right), and
 the path bar above the chart lists its ancestors, root first:
 
-<Example id="treemap/levels" />
+<ExampleLink id="treemap/levels" />
 
 The path bar's `side` (`'top'` or `'bottom'`), `edgeshape` (`'>'`, `'<'`, `'|'`, `'/'`, `'\'`),
 `thickness` (default: `pathbar.textfont.size` plus 6 px) and `textfont` style it; `visible: false`
 hides it:
 
-<Example id="treemap/pathbar" />
+<ExampleLink id="treemap/pathbar" />
 
 ### Label positions
 
@@ -156,7 +163,7 @@ hides it:
 larger padding there too. Labels shrink to fit their tile; one that is short of width wraps at
 spaces first when that keeps it larger:
 
-<Example id="treemap/text-position" />
+<ExampleLink id="treemap/text-position" />
 
 ### Uniform text
 
@@ -166,7 +173,7 @@ still fits, as in Plotly (and as for bars and pies). Labels that would have to s
 Headers and path bar labels are sized with the tiles. Drill-down clicks don't animate while it
 is on:
 
-<Example id="treemap/uniformtext" />
+<ExampleLink id="treemap/uniformtext" />
 
 ### Patterns
 
@@ -174,7 +181,7 @@ is on:
 the hatches are drawn over the tile colors; with the default `'replace'` the background is the
 paper color:
 
-<Example id="treemap/patterns" />
+<ExampleLink id="treemap/patterns" />
 
 ## Styling
 
@@ -255,9 +262,9 @@ Holochart extensions (full bundle), see
   (`leaf.opacity`, `marker.depthfade`) are drawn as the flat chart shows them. Hover and click work
   on the tilted tiles; a click still drills down, and the tiles glide to their new places in 3D.
 
-<Example id="treemap/depth" />
+<ExampleLink id="treemap/depth" />
 
-<Example id="treemap/depth-height" />
+<ExampleLink id="treemap/depth-height" />
 
 ## Performance notes
 
@@ -276,7 +283,10 @@ Holochart extensions (full bundle), see
   reads `Treemap "name": N nodes on M levels.`, the current root when drilled in, and the largest
   branches with their shares; its table lists every node with its path, value and percent of the
   root.
-- **Keyboard:** there is no keyboard navigation or drilling between tiles yet.
+- **Keyboard:** Tab moves into the plot area; ← / → then move between sibling tiles, ↑ goes to the
+  parent and ↓ to the first child, and Enter drills in like a click. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Color:** children inherit their parent's color, so label tiles directly (`textinfo`) rather
   than relying on color, and keep the outlines in the background color to separate neighbors.
 
@@ -309,5 +319,5 @@ default. [`treemapcolorway`](/reference/layout#treemapcolorway) and
   rather than an `animate` call; labels fade in at the end of the transition instead of moving
   with their tiles; path bar segments are hit-tested as rectangles.
 - Not supported yet: `texttemplatefallback` / `hovertemplatefallback`, animated `level` changes
-  through `animate` or `react` with a transition, keyboard navigation.
+  through `animate` or `react` with a transition.
 - `depth`, `tilt` and `perspective` (3D-native options above) are Holochart extensions.

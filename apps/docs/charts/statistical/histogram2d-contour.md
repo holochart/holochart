@@ -7,6 +7,8 @@ chart: histogram2dcontour
 
 # 2D density contour
 
+<ChartOverview />
+
 ## Overview
 
 A 2D density contour (trace type `histogram2dcontour`) bins pairs of samples like a
@@ -25,6 +27,9 @@ Pick a different chart when:
   [contour plot](/charts/scientific/contour).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -87,6 +92,8 @@ createChart(document.getElementById('chart')!, {
 
 ## Variations
 
+<ChartVariations />
+
 ### Lines with level labels
 
 `contours.coloring: 'lines'` colors each level's line from the colorscale and fills nothing.
@@ -95,7 +102,7 @@ createChart(document.getElementById('chart')!, {
 label; `labelformat` (a d3 format) and `labelfont` style the labels. Here the levels are explicit
 and the lines are 1.5 px and smoothed (`line.smoothing`).
 
-<Example id="histogram2dcontour/lines-labels" />
+<ExampleLink id="histogram2dcontour/lines-labels" />
 
 ### Recipe: scatter + density contour overlay
 
@@ -105,7 +112,7 @@ points pile up. With `coloring: 'none'` the contour has no colorbar and gets a l
 instead, drawn as its line. Contours draw below scatter traces (Plotly's layer order) whatever
 their order in `data`.
 
-<Example id="histogram2dcontour/over-scatter" />
+<ExampleLink id="histogram2dcontour/over-scatter" />
 
 ### Heatmap coloring
 
@@ -114,7 +121,7 @@ interpolation on the GPU) under the level lines, with a continuous colorbar. It 
 coloring that takes `texttemplate` cell labels. Here light, translucent lines with level labels
 mark eight levels of a three-peak mixture.
 
-<Example id="histogram2dcontour/heatmap" />
+<ExampleLink id="histogram2dcontour/heatmap" />
 
 ### Filled bands without lines
 
@@ -124,7 +131,7 @@ of samples is normalized with `histnorm: 'probability'`, so each level is a shar
 drawn at up to 20 levels in Viridis. `line.smoothing: 0` keeps the contours unsmoothed: straight
 segments between grid crossings.
 
-<Example id="histogram2dcontour/bands" />
+<ExampleLink id="histogram2dcontour/bands" />
 
 ### Constraint regions
 
@@ -135,7 +142,7 @@ and `contours.value`, in `fillcolor`, with the boundary as a 2 px line, like the
 where the density is above 0.5% of the samples per bin, over the samples themselves. Plotly's
 `histogram2dcontour` ignores `contours.type`; Holochart supports it.
 
-<Example id="histogram2dcontour/constraint" />
+<ExampleLink id="histogram2dcontour/constraint" />
 
 ## Styling
 
@@ -195,7 +202,10 @@ where the density is above 0.5% of the samples per bin, over the samples themsel
 - **Screen readers:** the chart is a `<canvas>`; the hidden description (see the
   [accessibility guide](/guides/accessibility)) says how many samples were binned into how many
   bins and where the highest value is, and its data table lists the non-empty bins.
-- **Keyboard:** there is no keyboard navigation yet.
+- **Keyboard:** Tab moves into the plot area; the arrow keys then move a cell cursor along the row
+  (← / →) and the column (↑ / ↓), showing each cell's hover label. See [the keys by chart
+  family](/guides/accessibility#keys-by-chart-family). The script-tag build leaves these stops out
+  for now.
 - **Color:** level labels (`showlabels`) carry the values without relying on color. Prefer a
   sequential scale that is monotonic in lightness (the default, Viridis), and for overlays use one
   high-contrast line color (`coloring: 'none'`).
@@ -214,7 +224,7 @@ attribute, its type, and its default. Shared color axes are under
   in the [overlay recipe](#recipe-scatter-density-contour-overlay)
 - [Contour](/charts/scientific/contour): contour levels of values already on a grid
 
-<Example id="histogram2d/basic" :height="320" />
+<ExampleLink id="histogram2d/basic" />
 
 ## Plotly migration notes
 

@@ -10,7 +10,10 @@ import { oracleMeasure } from '../shared/text.ts';
 import { layoutUpdatemenu, updatemenuMarginPush, visibleUpdatemenus } from './layout.ts';
 import { supplyUpdatemenuDefaults, updatemenusAttributes } from './schema.ts';
 
-/** Margins the visible menus need (one push per menu, like Plotly's per-menu `autoMargin`). */
+/**
+ * Margins the visible menus need (one push per menu, like Plotly's per-menu `autoMargin`).
+ * @internal
+ */
 export function updatemenusMarginPushes(ctx: ComponentLayoutContext): MarginPush[] {
   const out: MarginPush[] = [];
   const margin = ctx.fullLayout.margin;

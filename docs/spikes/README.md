@@ -13,6 +13,21 @@ story E0.7 and the ADRs in [`docs/adr/`](../adr/README.md).
 
 Spikes C and D move to the M7 benchmarking pass (plan E16.1), by decision on 2026-09-23.
 
+## GEO1 spikes
+
+Evidence for the geographic-charts decisions (backlog GEO1), run through the same isolated runner.
+The sizes of the candidate dependencies and basemap data are in
+[`docs/release/bundle-size.md`](../release/bundle-size.md#geo-candidates-measured-for-geo1-2026-10-03)
+([`scripts/geo-sizes.mjs`](scripts/geo-sizes.mjs)).
+
+| Spike                                    | Question                                                                                                                     | Status   | Verdict                                                                                                                                                                                                   |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [F: geo projection](f-geo-projection.md) | Can a 50m world be reprojected through `d3-geo` on every frame of a drag? ([ADR-025](../adr/025-geo-projection-pipeline.md)) | Measured | ❌ at 50m: 89–95 ms per frame (11 fps), and 32 ms with every CPU shortcut. ✅ at 110m: 12 ms. A vertex-shader prototype draws 50m in 2–3 ms for a list of projections. Pan and zoom need no reprojection. |
+| [G: MapLibre](g-maplibre.md)             | A Holochart layer over MapLibre GL: custom layer or overlay canvas? ([ADR-027](../adr/027-map-renderer-integration.md))      | Measured | Both align to 0.1 px. The overlay needs no change in `packages/render` and costs 1–2 ms more per frame; the custom layer needs a hosted render root but can draw under the map's labels. Chromium only.   |
+
+A running dev server does not see a new file under `examples/` until `examples/index.ts` is
+touched, because `examples/` is outside the sandbox's Vite root.
+
 ## Running spikes safely
 
 Spike pages are sandbox examples tagged `spike` and `no-visual-test`. They run their benchmark on

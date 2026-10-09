@@ -186,7 +186,7 @@ export function isoAttributes(kind: IsoKind) {
   };
 }
 
-/** The isosurface schema. */
+/** The isosurface schema. @experimental */
 // A pure IIFE, so bundles without this trace drop the whole schema (E21.6).
 export const isosurfaceAttributes = /* @__PURE__ */ (() =>
   attr.object(isoAttributes('isosurface'), {

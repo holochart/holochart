@@ -14,7 +14,7 @@ rejects.
 
 | Situation                                                               | Result                                                                                                                                     |
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Unknown attribute, invalid or out-of-range value, bad container         | Console warning, once per attribute path. The default (or the clamped value) is used and the chart draws.                                  |
+| Unknown attribute, invalid or out-of-range value, bad container         | Console warning, once per attribute path. The default is used and the chart draws.                                                         |
 | Unknown trace type                                                      | Console warning, once. That trace is hidden; the rest of the chart draws.                                                                  |
 | Deprecated attribute                                                    | Console warning, once. The attribute still works.                                                                                          |
 | Any of the above with `config.strict: true`                             | The call rejects with a `ValidationError` for the first problem (deprecations still only warn).                                            |
@@ -27,6 +27,11 @@ rejects.
 | A grid larger than the GPU's textures (heatmap, image, surface, volume) | Console warning, once. That trace is not drawn.                                                                                            |
 | An event listener or callback of yours throws                           | Reported like an uncaught error (`reportError`), so it reaches the console and error trackers. The chart and the other listeners carry on. |
 | The WebGL context is lost                                               | No error. The chart emits `webglcontextlost`, and redraws itself after `webglcontextrestored`.                                             |
+
+The figure is validated when the chart is created, on `react`, when traces are added, and when
+an update recalculates a trace or the layout. An update that only restyles, such as a `restyle`
+of `marker.color`, is not validated again, so it neither warns nor rejects under `strict`. See
+[Strict mode](/fundamentals/configuration#strict-mode-for-development).
 
 Every call that draws returns a promise, and that promise is where errors arrive:
 

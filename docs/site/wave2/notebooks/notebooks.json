@@ -1,0 +1,79 @@
+[
+  {
+    "host": "notebooks",
+    "slug": "first-chart",
+    "canvases": 3,
+    "controlChanged": null,
+    "rerunViews": null,
+    "errors": [],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
+    "browser": "153.0.8010.12",
+    "date": "2026-10-09"
+  },
+  {
+    "host": "notebooks",
+    "slug": "plotly-express",
+    "canvases": 5,
+    "controlChanged": null,
+    "rerunViews": null,
+    "errors": [],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
+    "browser": "153.0.8010.12",
+    "date": "2026-10-09"
+  },
+  {
+    "host": "notebooks",
+    "slug": "graph-objects",
+    "canvases": 2,
+    "controlChanged": null,
+    "rerunViews": null,
+    "errors": [],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
+    "browser": "153.0.8010.12",
+    "date": "2026-10-09"
+  },
+  {
+    "host": "notebooks",
+    "slug": "widgets",
+    "canvases": 3,
+    "controlChanged": null,
+    "rerunViews": null,
+    "errors": [],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
+    "browser": "153.0.8010.12",
+    "date": "2026-10-09"
+  },
+  {
+    "host": "notebooks",
+    "slug": "widget-controls",
+    "canvases": 1,
+    "controlChanged": true,
+    "rerunViews": 1,
+    "errors": [],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
+    "browser": "153.0.8010.12",
+    "date": "2026-10-09"
+  },
+  {
+    "host": "notebooks",
+    "slug": "heatmap-field",
+    "canvases": 1,
+    "controlChanged": null,
+    "rerunViews": null,
+    "errors": [],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
+    "browser": "153.0.8010.12",
+    "date": "2026-10-09"
+  },
+  {
+    "host": "notebooks",
+    "slug": "histogram",
+    "canvases": 1,
+    "controlChanged": null,
+    "rerunViews": null,
+    "errors": [],
+    "hostWarnings": ["Cannot read properties of undefined (reading 'schema')"],
+    "browser": "153.0.8010.12",
+    "date": "2026-10-09"
+  }
+]

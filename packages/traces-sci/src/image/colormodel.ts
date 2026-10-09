@@ -5,7 +5,7 @@
  * conversion of a scaled pixel to 8-bit RGBA for the texture. Pure.
  */
 
-/** Plotly's image color models. */
+/** Plotly's image color models. @experimental */
 export type Colormodel = 'rgb' | 'rgba' | 'rgba256' | 'hsl' | 'hsla';
 
 /** One color model. */

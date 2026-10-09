@@ -19,7 +19,7 @@ export type ColorscaleStops = readonly (readonly [number, string])[];
 
 const rgb = (r: number, g: number, b: number): string => `rgb(${r},${g},${b})`;
 
-/** Evenly spaced stops from a list of colors. */
+/** Evenly spaced stops from a list of colors. @experimental */
 export function evenStops(colors: readonly string[]): ColorscaleStops {
   const n = colors.length;
   return colors.map((c, i) => [n > 1 ? i / (n - 1) : 0, c] as const);

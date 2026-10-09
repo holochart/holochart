@@ -5,7 +5,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { exampleIds, parsePage } from '../lint-pages.ts';
+import { parsePage } from '../lint-pages.ts';
 
 export const DOCS_ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
@@ -32,12 +32,19 @@ function markdownFiles(dir: string, rel = ''): string[] {
     } else if (
       entry.name.endsWith('.md') &&
       !entry.name.startsWith('_') &&
+      !relPath.includes('[') &&
       relPath !== 'README.md'
     ) {
       out.push(relPath);
     }
   }
   return out.sort();
+}
+
+/** Lightweight links and code demonstrations must not count as mounted chart figures. */
+export function liveExampleIds(body: string): string[] {
+  const source = body.replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1\s*$/gm, '');
+  return [...source.matchAll(/<Example\b[^>]*?\bid=(["'])(.+?)\1/g)].map((match) => match[2]!);
 }
 
 /** Every hand-written page. `filter` (a substring of the file path) narrows the list. */
@@ -47,6 +54,7 @@ export function docsPages(filter?: string): DocsPage[] {
     .map((file) => {
       const page = parsePage(file, readFileSync(path.join(DOCS_ROOT, file), 'utf8'));
       const route = file.replace(/(^|\/)index\.md$/, '$1').replace(/\.md$/, '');
-      return { file, route, examples: exampleIds(page.body) };
+      // ExampleLink validates an ordinary detail link; only Example creates a live figure.
+      return { file, route, examples: liveExampleIds(page.body) };
     });
 }

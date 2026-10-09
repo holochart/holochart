@@ -5,17 +5,17 @@
 import { parsePath, type PathSegment } from '../path/path.ts';
 import type { AttrSpec, EditFlag, ItemsNode, NodeMeta, ObjectNode, SchemaNode } from './types.ts';
 
-/** True for leaf attributes. */
+/** True for leaf attributes. @internal */
 export function isAttr(node: SchemaNode | undefined): node is AttrSpec {
   return node?.kind === 'attr';
 }
 
-/** True for nested containers. */
+/** True for nested containers. @internal */
 export function isObjectNode(node: SchemaNode | undefined): node is ObjectNode {
   return node?.kind === 'object';
 }
 
-/** True for arrays of objects. */
+/** True for arrays of objects. @internal */
 export function isItemsNode(node: SchemaNode | undefined): node is ItemsNode {
   return node?.kind === 'items';
 }
@@ -25,6 +25,7 @@ const SUFFIX = /^(.*?)([2-9]|[1-9]\d+)$/;
 /**
  * Split a container key into its family key and subplot number, e.g. `'xaxis2'` → `['xaxis', 2]`.
  * Keys without a numeric suffix return number 1.
+ * @internal
  */
 export function splitSubplotKey(key: string): [family: string, n: number] {
   const m = SUFFIX.exec(key);
@@ -34,6 +35,7 @@ export function splitSubplotKey(key: string): [family: string, n: number] {
 /**
  * Find the child of `node` for `key`, following subplot container families: when `xaxis` is
  * declared with `subplot: 'x'`, `xaxis2`, `xaxis3`, … resolve to the same node.
+ * @internal
  */
 export function resolveChild(node: ObjectNode, key: string): SchemaNode | undefined {
   if (Object.hasOwn(node.children, key)) return node.children[key];
@@ -46,6 +48,7 @@ export function resolveChild(node: ObjectNode, key: string): SchemaNode | undefi
 /**
  * Subplot id for a container key: `('xaxis2', xaxisNode)` → `'x2'`, `('xaxis', xaxisNode)` → `'x'`.
  * Returns `undefined` if `key` is not in the node's family.
+ * @internal
  */
 export function subplotIdForKey(key: string, familyKey: string, base: string): string | undefined {
   if (key === familyKey) return base;
@@ -53,7 +56,7 @@ export function subplotIdForKey(key: string, familyKey: string, base: string): s
   return family === familyKey && n > 1 ? `${base}${n}` : undefined;
 }
 
-/** Container key for a subplot id: `('x2', 'xaxis', 'x')` → `'xaxis2'`. */
+/** Container key for a subplot id: `('x2', 'xaxis', 'x')` → `'xaxis2'`. @internal */
 export function keyForSubplotId(id: string, familyKey: string, base: string): string {
   return familyKey + id.slice(base.length);
 }
@@ -62,6 +65,7 @@ export function keyForSubplotId(id: string, familyKey: string, base: string): st
  * The node at `path`, or `undefined` if the path leaves the schema. Index segments step into
  * `items` nodes and `info_array` items; an index after an `arrayOk`/`data_array` attribute resolves
  * to that attribute (a per-point value).
+ * @internal
  */
 export function getNodeAtPath(
   root: ObjectNode,
@@ -73,6 +77,7 @@ export function getNodeAtPath(
 /**
  * Like {@link getNodeAtPath} but also returns the chain of nodes visited (root excluded), for
  * edit-type inheritance.
+ * @internal
  */
 export function walkPath(
   root: ObjectNode,
@@ -103,6 +108,7 @@ export function walkPath(
 /**
  * The edit flags in effect at `path`: the node's own `editType`, else the nearest ancestor's.
  * Returns `undefined` if nothing on the path declares one.
+ * @internal
  */
 export function inheritedEditType(chain: readonly NodeMeta[]): readonly EditFlag[] | undefined {
   for (let i = chain.length - 1; i >= 0; i--) {
@@ -115,6 +121,7 @@ export function inheritedEditType(chain: readonly NodeMeta[]): readonly EditFlag
 /**
  * Visit every leaf attribute under `node` depth-first. The callback gets the attribute's path
  * segments (items nodes contribute an index `0` placeholder) and the chain of nodes above it.
+ * @internal
  */
 export function forEachAttr(
   node: ObjectNode | ItemsNode,

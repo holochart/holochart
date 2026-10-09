@@ -17,9 +17,7 @@
  * - **Picking**: `pointIndex[v]` maps every vertex to its data point, so a hit on the mesh hovers
  *   the point it was built around.
  */
-import type { RGBA } from '@mk7s/holochart-render';
-
-type Vec3 = [number, number, number];
+import type { RGBA, Vec3 } from '@mk7s/holochart-render';
 
 /** An indexed triangle mesh in world units, relative to `origin`. */
 export interface LineMesh {

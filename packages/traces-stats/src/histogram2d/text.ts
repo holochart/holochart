@@ -8,7 +8,13 @@
  * Pure: labels are in data space (linear coordinates), so zoom only moves them; the automatic
  * size depends on the cell size in px and is recomputed by the view when that changes.
  */
-import { localeOf, toRGBA, type FullLayout, type FullTrace, type RGBA } from '@mk7s/holochart-core';
+import {
+  localeOf,
+  toRGBA,
+  type FullLayout,
+  type FullTrace,
+  type RGBAColor,
+} from '@mk7s/holochart-core';
 import {
   sampleColorscale,
   textContrastColor,
@@ -24,7 +30,7 @@ import { axisHoverText, dataValue, zText } from './hover.ts';
 /** Plotly's `LINE_SPACING`: line advance as a multiple of the font size. */
 const LINE_SPACING = 1.3;
 
-/** One label before its size is known. */
+/** One label before its size is known. @internal */
 export interface CellText {
   readonly text: string;
   readonly x: number;
@@ -32,7 +38,7 @@ export interface CellText {
   readonly lines: number;
   /** Longest line, in characters (Plotly sizes by characters). */
   readonly chars: number;
-  readonly color: RGBA;
+  readonly color: RGBAColor;
 }
 
 /** The labels of every cell (see the module comment), in data space. */
@@ -79,7 +85,7 @@ export function cellTexts(
         { fallback: '', locale },
       );
       if (!text) continue;
-      let color: RGBA;
+      let color: RGBAColor;
       if (fixed) color = fixed;
       else if (empty) color = textContrastColor(background);
       else {
@@ -101,7 +107,10 @@ export function cellTexts(
   return out;
 }
 
-/** What {@link autoCellFontSize} reads of a grid: its size and cell edges (linear coordinates). */
+/**
+ * What {@link autoCellFontSize} reads of a grid: its size and cell edges (linear coordinates).
+ * @internal
+ */
 export interface CellTextGrid {
   readonly nx: number;
   readonly ny: number;
@@ -113,6 +122,7 @@ export interface CellTextGrid {
  * Plotly's automatic cell-label size: the smallest cell (in px, less the gaps), divided by the
  * widest label's characters (× half the line spacing) and by its lines (× the line spacing),
  * capped at `layout.font.size`. 0 when labels cannot fit.
+ * @internal
  */
 export function autoCellFontSize(
   calc: CellTextGrid,
@@ -145,7 +155,7 @@ export function autoCellFontSize(
   return size > 0 && Number.isFinite(size) ? size : 0;
 }
 
-/** Render labels for a size: centered on each cell. */
+/** Render labels for a size: centered on each cell. @internal */
 export function cellLabels(texts: readonly CellText[], font: TextFont): TextLabel[] {
   return texts.map((t) => ({
     text: t.text,

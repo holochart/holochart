@@ -173,6 +173,7 @@ export function resolveAxisRange(
  * The transform from linear coordinates to a 2D subplot viewport's world px (origin at the
  * viewport's bottom-left, ADR-008). Each axis' scale is affine in linear space (`p = l·m + b`, with
  * `p` measured from `range[0]`), so a zoom or pan is only a new transform: no buffer uploads.
+ * @experimental
  */
 export function dataTransform(x: Scale, y: Scale): DataTransform {
   const ax = x.affine();
@@ -225,6 +226,7 @@ function addCandidate(
  * @param values - Linear coordinates.
  * @param padPx - Padding for every point, or one value per point.
  * @param options.padded - Also leave Plotly's 5%-of-length padding (markers, text).
+ * @experimental
  */
 export function linearExtremes(
   values: ArrayLike<number>,

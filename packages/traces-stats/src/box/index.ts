@@ -15,7 +15,7 @@ import {
 } from './calc.ts';
 import { describeBox } from './describe.ts';
 import { supplyBoxDefaults, supplyGroupingDefaults } from './defaults.ts';
-import { boxHoverPoints, boxSelectPoints } from './hover.ts';
+import { boxA11y, boxHoverPoints, boxSelectPoints } from './hover.ts';
 import { boxRenderer } from './plot.ts';
 import { boxLegendIcon } from './style.ts';
 
@@ -42,6 +42,7 @@ export const box: TraceModule<BoxCalc, typeof boxAttributes.children> = {
   categoryValues: boxCategoryValues,
   plot: boxRenderer,
   hoverPoints: boxHoverPoints,
+  a11y: boxA11y,
   selectPoints: (calc, trace, query) => boxSelectPoints(calc, trace, query),
   legendIcon: boxLegendIcon,
   describe: describeBox,

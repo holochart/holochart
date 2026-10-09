@@ -1,4 +1,13 @@
+import { readdirSync } from 'node:fs';
 import { defineConfig } from 'vitest/config';
+
+const NINETY = { lines: 90, functions: 90, branches: 90, statements: 90 };
+const TRACE_CALC = { lines: 85, functions: 85, branches: 85, statements: 85 };
+
+/** Every `packages/traces-*`, so a new trace package gets the calc threshold without an edit here. */
+const tracePackages = readdirSync(new URL('./packages', import.meta.url)).filter((name) =>
+  name.startsWith('traces-'),
+);
 
 export default defineConfig({
   resolve: {
@@ -41,9 +50,21 @@ export default defineConfig({
       ],
       reporter: ['text', 'html', 'lcov', 'json-summary'],
       reportsDirectory: 'coverage',
-      // Plan E20.1 targets. Trace calc thresholds (≥ 85%) get added as trace packages land (M1).
+      // Plan E20.1 targets, backlog S2.7. Each glob is checked on its own, over all its files.
       thresholds: {
-        'packages/core/src/**/*.ts': { lines: 90, functions: 90, branches: 90, statements: 90 },
+        'packages/core/src/**/*.ts': NINETY,
+        // Measured when added (S2.7): runtime 98.9 / 97.1 / 93.9 / 97.2 and render
+        // 98.2 / 96.8 / 94.3 / 97.4 (% lines / functions / branches / statements). What the unit
+        // suite leaves out is mostly of two kinds. Code that only runs in a browser: the
+        // primitives' per-frame hooks (they need a WebGL renderer drawing) and waiting for
+        // `document.fonts`; the visual and interaction suites run those in Chromium. And guards:
+        // calls after dispose or destroy, fallbacks for values the defaults always fill.
+        'packages/runtime/src/**/*.ts': NINETY,
+        'packages/render/src/**/*.ts': NINETY,
+        // Trace calc modules (`calc.ts`, `calc-*.ts`), per trace package.
+        ...Object.fromEntries(
+          tracePackages.map((name) => [`packages/${name}/src/**/calc*.ts`, TRACE_CALC]),
+        ),
       },
     },
   },

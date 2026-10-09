@@ -7,16 +7,19 @@ import {
 } from '@mk7s/holochart-runtime';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
+import { scatter3d as scatter3dParts, ORBIT_STEP } from '../a11y.ts';
+import { sceneKit } from '../a11y-loader.ts';
 import { sceneComponent } from '../scene/component.ts';
 import { acquireScene } from '../scene/scene.ts';
 import { SCATTER3D_SYMBOLS } from './attributes.ts';
 import { calcScatter3d, errorBars3d, markerDiameters3d, type Scatter3dCalc } from './calc.ts';
-import { scatter3d } from './index.ts';
+import { scatter3d, scatter3dHoverPoint } from './index.ts';
 import { errorSegments, lineColors, textAnchor3d, textLabels3d } from './plot.ts';
 import { surfaceTriangles } from './surface.ts';
 
 const registry = createChartRegistry().register(scatter3d, sceneComponent);
 const AREA: ViewportRect = { x: 0, y: 0, width: 600, height: 400 };
+const IDENTITY = { scaleX: 1, scaleY: 1, offsetX: 0, offsetY: 0 };
 
 function defaults(data: Record<string, unknown>[], layout: Record<string, unknown> = {}) {
   return supplyDefaults(
@@ -342,19 +345,99 @@ describe('scatter3d drawing data', () => {
 });
 
 describe('scatter3d module', () => {
+  /** The lazily loaded accessibility parts of scatter3d (`../a11y.ts`), as its loader builds them. */
+  const parts = scatter3dParts(scatter3dHoverPoint, ...sceneKit)['scatter3d']!;
+
   it('describes the trace with its point count and ranges', () => {
     const { entries, fullData, fullLayout } = build([{ x: [1, 2], y: [3, 4], z: [5, 6] }]);
     sceneOf(fullLayout, entries[0]!.calc);
-    const d = scatter3d.describe!({
+    const d = parts.describe!({
       trace: fullData[0]!,
-      calc: entries[0]!.calc,
+      calc: entries[0]!.calc as never,
       index: 0,
       fullLayout,
       xaxis: undefined,
       yaxis: undefined,
       maxRows: 100,
     })!;
+    expect(d.kind).toBe('3D scatter');
     expect(d.summary).toMatch(/^3D scatter 'trace 0': 2 points; x 1–2; y 3–4; z 5–6\.$/);
+  });
+
+  it('describes the points without their error bars', () => {
+    const { entries, fullData, fullLayout } = build([
+      { x: [1, 2], y: [3, 4], z: [5, 6], error_z: { type: 'constant', value: 10 } },
+    ]);
+    sceneOf(fullLayout, entries[0]!.calc);
+    const d = parts.describe!({
+      trace: fullData[0]!,
+      calc: entries[0]!.calc as never,
+      index: 0,
+      fullLayout,
+      xaxis: undefined,
+      yaxis: undefined,
+      maxRows: 100,
+    })!;
+    expect(d.summary).toMatch(/z 5–6\.$/);
+  });
+
+  it('lists its points with a position as keyboard stops, in data order', () => {
+    const { entries, fullData, fullLayout } = build([
+      { x: [1, 2, null, 4], y: [3, 4, 5, 6], z: [5, 6, 7, 8], text: ['a', 'b', 'c', 'd'] },
+    ]);
+    const calc = entries[0]!.calc;
+    const live = sceneOf(fullLayout, calc);
+    const ctx = {
+      fullLayout,
+      xaxis: undefined,
+      yaxis: undefined,
+      transform: IDENTITY,
+      height: 400,
+    };
+    const stops = parts.keyboardPoints!(calc as never, fullData[0]!, ctx)!;
+    expect(stops.length).toBe(3);
+    expect([0, 1, 2].map((k) => stops.at(k)?.pointIndex)).toEqual([0, 1, 3]);
+    expect(stops.at(3)).toBeUndefined();
+    const p = stops.at(2)!;
+    // The label reads like the hover label and sits where the point is drawn.
+    expect(p.hoverText).toBe('x: 4<br>y: 6<br>z: 8<br>d');
+    const world = live.toWorld(calc.x[3]!, calc.y[3]!, calc.z[3]!);
+    const at = live.project(world[0], world[1], world[2]);
+    expect(p.px).toBeCloseTo(at.x, 6);
+    expect(p.py).toBeCloseTo(400 - at.y, 6);
+  });
+
+  it('orbits, dollies and resets the camera for the view keys', () => {
+    const { entries, fullData, fullLayout } = build([{ x: [1, 2], y: [3, 4], z: [5, 6] }]);
+    const live = sceneOf(fullLayout, entries[0]!.calc);
+    const ctx = { fullLayout, xaxis: undefined, yaxis: undefined, transform: IDENTITY };
+    const key = (action: string) =>
+      parts.keyboardView!(fullData[0]!, ctx, action) as
+        Record<string, { eye: { x: number; y: number; z: number } }> | undefined;
+    const eye = live.camera.eye;
+    const azimuth = (e: { x: number; y: number }) => Math.atan2(e.y, e.x);
+    const distance = (e: { x: number; y: number; z: number }) => Math.hypot(e.x, e.y, e.z);
+    // Turntable (the default): Shift + ↑ lifts the camera, Shift + → takes it around to the right.
+    const up = key('panUp')!['scene.camera']!.eye;
+    expect(up.z).toBeGreaterThan(eye[2]);
+    expect(distance(up)).toBeCloseTo(Math.hypot(...eye), 9);
+    const right = key('panRight')!['scene.camera']!.eye;
+    expect(azimuth(right) - Math.atan2(eye[1], eye[0])).toBeCloseTo(ORBIT_STEP, 9);
+    expect(right.z).toBeCloseTo(eye[2], 9);
+    const left = key('panLeft')!['scene.camera']!.eye;
+    expect(azimuth(left) - Math.atan2(eye[1], eye[0])).toBeCloseTo(-ORBIT_STEP, 9);
+    // + moves in, - moves out.
+    expect(distance(key('zoomIn')!['scene.camera']!.eye)).toBeLessThan(Math.hypot(...eye));
+    expect(distance(key('zoomOut')!['scene.camera']!.eye)).toBeGreaterThan(Math.hypot(...eye));
+    // 0: the first drawn view, with its aspect ratio.
+    const reset = key('reset') as unknown as Record<string, unknown>;
+    expect(reset['scene.camera']).toMatchObject({
+      eye: { x: eye[0], y: eye[1], z: eye[2] },
+      projection: { type: 'perspective' },
+    });
+    expect(reset['scene.aspectmode']).toBe(live.initial.aspectmode);
+    // Keys that are not view keys are not the scene's.
+    expect(key('left')).toBeUndefined();
   });
 
   it('shows a colorscaled line in the legend with one color', () => {

@@ -1,12 +1,12 @@
 /** Types of the supply-defaults output (`fullData`, `fullLayout`, `fullConfig`). */
 import type { configSchema } from '../config/schema.ts';
 import type { Config } from '../generated/config.ts';
-import type { Layout, LayoutTitle } from '../generated/layout.ts';
+import type { BaseLayout, BaseLayoutTitle } from '../generated/layout.ts';
 import type { ReducedMotion } from './a11y.ts';
 import type { gridSchema } from '../layout/grid.ts';
 import type { layoutSchema, xaxisSchema } from '../layout/schema.ts';
 import type { Locale } from '../locale/locale.ts';
-import type { TraceModule } from '../registry/types.ts';
+import type { CoreTraceModule } from '../registry/types.ts';
 import type { InferFull } from '../schema/types.ts';
 import type { Template } from '../templates/templates.ts';
 
@@ -26,8 +26,8 @@ export type TraceInput = object;
  */
 // Not `Omit<Layout, 'title'>`: `keyof Layout` reduces `'xaxis2'` into `` `xaxis${number}` ``, so
 // mapping over it would lose the typed numbered axes.
-export type LayoutInput = Layout & {
-  readonly title?: LayoutTitle | (LayoutTitle & { readonly [key: string]: unknown });
+export type LayoutInput = BaseLayout & {
+  readonly title?: BaseLayoutTitle | (BaseLayoutTitle & { readonly [key: string]: unknown });
   readonly [key: string]: unknown;
 };
 
@@ -37,7 +37,7 @@ export type LayoutInput = Layout & {
  *
  * @typeParam D - The trace type (see {@link FigureInput}).
  */
-export interface Frame<D extends object = TraceInput> {
+export interface FrameInput<D extends object = TraceInput> {
   /** Name to animate to (numbers are converted to strings). Unnamed frames get `'frame N'`. */
   readonly name?: string | number;
   /** Group name: `animate('group')` plays the frames of a group in order. */
@@ -71,7 +71,7 @@ export interface FigureInput<D extends object = TraceInput, L extends object = L
   data?: readonly D[];
   layout?: L;
   config?: Config;
-  frames?: readonly Frame<D>[];
+  frames?: readonly FrameInput<D>[];
   /**
    * Named column tables that traces reference with `dataset: 'name'` and `'@column'` strings
    * (plan E1.6), e.g. `{ sales: { date: [...], revenue: Float64Array } }`.
@@ -103,7 +103,7 @@ export interface FullTrace {
   /** The user's input trace object (not copied). */
   _input: Readonly<Record<string, unknown>>;
   /** The trace module, or `undefined` for unregistered types (which are forced invisible). */
-  _module: TraceModule | undefined;
+  _module: CoreTraceModule | undefined;
   [key: string]: unknown;
 }
 
@@ -166,6 +166,16 @@ export type FullLayout = BaseFullLayout & {
   _locale?: Locale;
   /** `config.a11y.reducedMotion` (plan E17.5), read through `reducedMotion()`. Set by supply-defaults. */
   _reducedMotion?: ReducedMotion;
+  /**
+   * `config.staticPlot`: the chart takes no input (an image export draws one). A trace view that
+   * moves things by itself draws their end at once. Set by supply-defaults.
+   */
+  _staticPlot?: boolean;
+  /**
+   * `config.worker` (ADR-011), for the traces that can work off the main thread: the default of
+   * the `graph` trace's `worker`. Set by supply-defaults.
+   */
+  _worker?: boolean | 'auto';
   /**
    * Axes linked by `matches` (plan E3.9, `defaults/constraints.ts`): one object per group, axis id
    * → 1, e.g. `[{ x: 1, x2: 1 }]`. Axes of a group share their range. Set by supply-defaults.

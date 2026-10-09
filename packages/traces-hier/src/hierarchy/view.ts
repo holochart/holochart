@@ -11,7 +11,7 @@
  * `react`) snap, and so does everything under `prefers-reduced-motion: reduce`. Clicks during a
  * transition emit their events but don't drill (Plotly).
  */
-import { reducedMotion, uniformTextOf, type FullTrace, type RGBA } from '@mk7s/holochart-core';
+import { reducedMotion, uniformTextOf, type FullTrace, type RGBAColor } from '@mk7s/holochart-core';
 import { fadeTextRuns, type Primitive, type TextLabel } from '@mk7s/holochart-render';
 import {
   getChart,
@@ -63,7 +63,7 @@ export function syncPrimitive<T, P extends Primitive<T>>(
 }
 
 /** `c` with its alpha multiplied by `alpha`. */
-export function fadeColor(c: RGBA, alpha: number): RGBA {
+export function fadeColor(c: RGBAColor, alpha: number): RGBAColor {
   return alpha === 1 ? c : [c[0], c[1], c[2], c[3] * alpha];
 }
 
@@ -102,7 +102,7 @@ export interface NodeLabel {
   readonly font: TextLabel['font'];
   /** Styled runs at the fitted size (E2.10), when the label mixes styles. */
   readonly runs?: TextLabel['runs'];
-  readonly color: RGBA;
+  readonly color: RGBAColor;
   /** Degrees clockwise (default 0). */
   readonly angle?: number;
   /** How lines of several are aligned (default centered). */

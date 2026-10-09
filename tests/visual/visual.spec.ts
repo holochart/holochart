@@ -128,6 +128,14 @@ for (const id of exampleIds) {
 
     const tolerance = result.meta.testTolerance ?? DEFAULT_TOLERANCE;
     const tileTolerance = result.meta.testTileTolerance ?? DEFAULT_TILE_TOLERANCE;
+    // Both are fractions of the pixels. A pixel count (`testTileTolerance: 96`) is above every
+    // possible fraction, so it would switch the check off without anyone noticing.
+    for (const [name, value] of [
+      ['testTolerance', tolerance],
+      ['testTileTolerance', tileTolerance],
+    ] as const) {
+      expect(value >= 0 && value <= 1, `meta.${name} of "${id}" is a fraction (0 to 1)`).toBe(true);
+    }
     const baseline = existsSync(baselinePath) ? readFileSync(baselinePath) : undefined;
     let comparison: CompareResult | undefined;
     if (baseline) {

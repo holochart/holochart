@@ -107,6 +107,7 @@ import {
   type TextSizing,
   type TextStyle,
 } from './text-layout.ts';
+import { noteGlyphAtlas, onGlyphAtlasChange } from './text-atlas.ts';
 import { getDefaultFontMetricsOracle, type FontMetricsOracle } from './text-metrics.ts';
 import type { TextDecorationLayer } from './text-decoration.ts';
 import {
@@ -242,7 +243,11 @@ export function preloadTextFont(options: {
     ([engine]) =>
       new Promise((resolve) => {
         const font = resolveDrawnFontURL(request.family, request.weight, request.style) ?? null;
-        engine.preloadFont({ font, characters }, () => resolve());
+        engine.preloadFont({ font, characters }, (info) => {
+          // Labels already drawn may be waiting for these glyphs (text-atlas.ts).
+          noteGlyphAtlas(info?.sdfTexture);
+          resolve();
+        });
       }),
   );
 }
@@ -286,6 +291,8 @@ export class TextPrimitive implements Primitive<TextData> {
   private engine: TextEngine | null = null;
   /** A text-engine load started by this primitive is in flight. */
   private attaching = false;
+  /** Stops the shared glyph atlas from redrawing this primitive (set once the engine is attached). */
+  private unwatchAtlas: (() => void) | null = null;
   /** Decoration lines (`font.lineposition`), created when a label is first decorated. */
   private decorations: TextDecorationLayer | null = null;
   /** The decoration module is being loaded for this primitive. */
@@ -426,6 +433,8 @@ export class TextPrimitive implements Primitive<TextData> {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    this.unwatchAtlas?.();
+    this.unwatchAtlas = null;
     const batch = this.batch;
     for (const m of this.members) {
       batch?.removeText(m.text);
@@ -534,6 +543,8 @@ export class TextPrimitive implements Primitive<TextData> {
     };
     this.batch = batch;
     this.object.add(batch);
+    // Glyphs another chart's text generates can be in these labels too (text-atlas.ts).
+    this.unwatchAtlas = onGlyphAtlasChange(() => this.context.invalidate());
     return this.syncWhenFontsReady(batch);
   }
 
@@ -817,6 +828,9 @@ export class TextPrimitive implements Primitive<TextData> {
   private startSync(batch: BatchedText): Promise<void> {
     const done = new Promise<void>((resolve) => batch.sync(resolve));
     void done.then(() => {
+      // Before the disposed check: the glyphs this sync generated are in the shared atlas either
+      // way, and other primitives' labels may be waiting for them.
+      noteGlyphAtlas(batch.textRenderInfo?.sdfTexture);
       if (this.disposed) return;
       // Typesetting finished: decorations follow the new glyph layout.
       if (this.decorations || this.resolved.some((r) => r.decoration)) {

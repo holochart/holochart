@@ -22,7 +22,7 @@ import {
 } from '@mk7s/holochart-runtime';
 import { dimensionsOf, type FullDimension } from './defaults.ts';
 
-/** Calcdata of a splom trace. */
+/** Calcdata of a splom trace. @experimental */
 export interface SplomCalc {
   /** Sample count (the shortest visible dimension). */
   readonly length: number;

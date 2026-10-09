@@ -32,6 +32,7 @@ function axesAttribute(letter: 'x' | 'y') {
   });
 }
 
+/** @experimental */
 export const splomAttributes = attr.object(
   {
     dimensions: attr.items(

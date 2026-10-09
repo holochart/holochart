@@ -26,8 +26,8 @@ import {
   rotate,
   sub,
   type SceneCamera,
-  type Vec3,
 } from './camera.ts';
+import type { Vec3 } from '@mk7s/holochart-render';
 
 const EPS = 1e-9;
 
@@ -83,6 +83,7 @@ function frameRotation(
 /**
  * The in-between cameras from `from` to `to`: a function of progress (0 → `from`, 1 → `to`
  * exactly; values outside [0, 1], from overshooting easings, extrapolate). See the module comment.
+ * @internal
  */
 export function cameraTween(from: SceneCamera, to: SceneCamera): (t: number) => SceneCamera {
   const oa = sub(from.eye, from.center);
@@ -133,19 +134,22 @@ export function cameraTween(from: SceneCamera, to: SceneCamera): (t: number) => 
   };
 }
 
-/** The camera at progress `t` from `from` to `to` (see {@link cameraTween}). */
+/** The camera at progress `t` from `from` to `to` (see {@link cameraTween}). @experimental */
 export function interpolateCamera(from: SceneCamera, to: SceneCamera, t: number): SceneCamera {
   return cameraTween(from, to)(t);
 }
 
-/** A camera vector of `animateCamera` / `scene.camera` input: missing components are kept. */
+/**
+ * A camera vector of `animateCamera` / `scene.camera` input: missing components are kept.
+ * @internal
+ */
 export interface CameraVectorInput {
   readonly x?: number | undefined;
   readonly y?: number | undefined;
   readonly z?: number | undefined;
 }
 
-/** What `animateCamera` moves to: Plotly's `scene.camera` shape; missing parts stay. */
+/** What `animateCamera` moves to: Plotly's `scene.camera` shape; missing parts stay. @internal */
 export interface CameraTargetInput {
   readonly eye?: CameraVectorInput | undefined;
   readonly center?: CameraVectorInput | undefined;
@@ -158,7 +162,7 @@ function merged(v: CameraVectorInput | undefined, current: Vec3): Vec3 {
   return [n(v?.x, current[0]), n(v?.y, current[1]), n(v?.z, current[2])];
 }
 
-/** The camera `target` asks for, starting from `current` (missing components kept). */
+/** The camera `target` asks for, starting from `current` (missing components kept). @internal */
 export function resolveCameraTarget(current: SceneCamera, target: CameraTargetInput): SceneCamera {
   return {
     eye: merged(target.eye, current.eye),
@@ -177,6 +181,7 @@ const AXES: Readonly<Record<string, Vec3>> = { x: [1, 0, 0], y: [0, 1, 0], z: [0
 /**
  * The camera after the scene turned `degrees` about `axis` through `center` (counterclockwise
  * seen from the axis' positive end): the eye and `up` turn the other way.
+ * @internal
  */
 export function autorotateCamera(
   camera: SceneCamera,
@@ -193,7 +198,7 @@ export function autorotateCamera(
   };
 }
 
-/** `layout.sceneN.autorotate` (Holochart extension, E7.5). */
+/** `layout.sceneN.autorotate` (Holochart extension, E7.5). @internal */
 export const sceneAutorotateAttributes = /* @__PURE__ */ (() =>
   attr.object(
     {

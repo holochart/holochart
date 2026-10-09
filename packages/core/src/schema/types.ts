@@ -14,7 +14,7 @@
  * generation of named TS types, and `plot-schema.json`.
  */
 
-/** Every value type understood by coercion and validation. */
+/** Every value type understood by coercion and validation. @experimental */
 export const VAL_TYPES = [
   'number',
   'integer',
@@ -33,7 +33,7 @@ export const VAL_TYPES = [
   'function',
 ] as const;
 
-/** A value type understood by coercion and validation. */
+/** A value type understood by coercion and validation. @experimental */
 export type ValType = (typeof VAL_TYPES)[number];
 
 /**
@@ -49,6 +49,7 @@ export type ValType = (typeof VAL_TYPES)[number];
  * - `style` — update colors, sizes and other uniforms/attributes in place.
  * - `colorbars`, `legend`, `modebar`, `camera` — redraw that component only.
  * - `none` — no visual effect (e.g. `meta`, `uirevision`).
+ * @experimental
  */
 export const EDIT_FLAGS = [
   'calc',
@@ -65,17 +66,17 @@ export const EDIT_FLAGS = [
   'none',
 ] as const;
 
-/** One edit-type flag. See {@link EDIT_FLAGS}. */
+/** One edit-type flag. See {@link EDIT_FLAGS}. @experimental */
 export type EditFlag = (typeof EDIT_FLAGS)[number];
 
-/** An attribute's edit type: a single flag or a combination of flags. */
+/** An attribute's edit type: a single flag or a combination of flags. @experimental */
 export type EditType = EditFlag | readonly EditFlag[];
 
-/** Docs grouping tag for an attribute. */
+/** Docs grouping tag for an attribute. @experimental */
 export type AttrRole = 'data' | 'style' | 'info' | 'layout';
 
-/** Values allowed in `enumerated.values` and `flaglist.extras`. */
-export type Primitive = string | number | boolean;
+/** Values allowed in `enumerated.values` and `flaglist.extras`. @experimental */
+export type PrimitiveValue = string | number | boolean;
 
 /** Any JS typed array except `BigInt64Array`/`BigUint64Array` (charts deal in doubles). */
 export type TypedArray =
@@ -145,12 +146,12 @@ export type PerPointColor =
   | TypedArray
   | PointStyleFunction<string | number>;
 
-/** A function-valued attribute (non-serializable, ADR-012). */
+/** A function-valued attribute (non-serializable, ADR-012). @experimental */
 // Parameters are `any` on purpose: accessors are called with trace-specific arguments.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyFunction = (...args: any[]) => unknown;
 
-/** Metadata shared by every schema node (leaves and containers). */
+/** Metadata shared by every schema node (leaves and containers). @experimental */
 export interface NodeMeta {
   /**
    * Pipeline stages invalidated by a change. Inherited from the nearest ancestor that declares
@@ -176,6 +177,7 @@ export interface NodeMeta {
 /**
  * Constraint fields for leaf attributes. Which fields apply depends on `valType`; builders in
  * `attr.ts` only expose the relevant ones.
+ * @experimental
  */
 export interface AttrConstraints {
   /** Default value (`undefined` means the attribute is absent from the full output when unset). */
@@ -186,7 +188,7 @@ export interface AttrConstraints {
   /** Clamp out-of-range numbers instead of falling back to `dflt`. */
   readonly clamp?: boolean;
   /** Allowed values for `enumerated`. */
-  readonly values?: readonly Primitive[];
+  readonly values?: readonly PrimitiveValue[];
   /**
    * `enumerated` only: also accept values this predicate approves, e.g. marker symbols registered
    * at runtime (plan E8.11). Not serialized (`plot-schema.json` lists `values` only).
@@ -198,7 +200,7 @@ export interface AttrConstraints {
    * Special values accepted verbatim: flaglist extras (`'none'`), numeric extras (`'auto'`),
    * subplot-id extras (`'paper'`, `'free'`).
    */
-  readonly extras?: readonly Primitive[];
+  readonly extras?: readonly PrimitiveValue[];
   /** Accept per-point arrays in addition to a scalar value. */
   readonly arrayOk?: boolean;
   /** Reject empty strings (`string`). */
@@ -216,6 +218,7 @@ export interface AttrConstraints {
  *
  * @typeParam TIn - Accepted input type (what users write).
  * @typeParam TFull - Type after defaults (what later stages read).
+ * @experimental
  */
 export interface AttrSpec<TIn = unknown, TFull = unknown> extends NodeMeta, AttrConstraints {
   readonly kind: 'attr';
@@ -228,12 +231,12 @@ export interface AttrSpec<TIn = unknown, TFull = unknown> extends NodeMeta, Attr
   readonly '~full'?: [TFull] | undefined;
 }
 
-/** Child map of a container node. */
+/** Child map of a container node. @experimental */
 export interface Children {
   readonly [key: string]: SchemaNode;
 }
 
-/** A nested container (e.g. `marker`, `layout.margin`). */
+/** A nested container (e.g. `marker`, `layout.margin`). @experimental */
 export interface ObjectNode<C extends Children = Children> extends NodeMeta {
   readonly kind: 'object';
   readonly children: C;
@@ -244,7 +247,7 @@ export interface ObjectNode<C extends Children = Children> extends NodeMeta {
   readonly subplot?: string;
 }
 
-/** An array of objects (annotations, shapes, …) that supports `templateitemname`. */
+/** An array of objects (annotations, shapes, …) that supports `templateitemname`. @experimental */
 export interface ItemsNode<C extends Children = Children> extends NodeMeta {
   readonly kind: 'items';
   /** Schema of one item. `name` and `templateitemname` are added automatically. */
@@ -256,7 +259,7 @@ export interface ItemsNode<C extends Children = Children> extends NodeMeta {
   readonly itemName: string;
 }
 
-/** Any schema node. */
+/** Any schema node. @experimental */
 // The phantom parameters are erased for structural walking code.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type SchemaNode = AttrSpec<any, any> | ObjectNode | ItemsNode;
@@ -265,7 +268,7 @@ export type SchemaNode = AttrSpec<any, any> | ObjectNode | ItemsNode;
 type InputObject<C> = { -readonly [K in keyof C]?: InferInput<C[K]> };
 type FullObject<C> = { -readonly [K in keyof C]: InferFull<C[K]> };
 
-/** Fields added to every item of an {@link ItemsNode} in the full output. */
+/** Fields added to every item of an {@link ItemsNode} in the full output. @experimental */
 export interface FullItemExtras {
   /** Index of the item in the user's input array, or -1 for items that only exist in the template. */
   _index: number;
@@ -279,6 +282,7 @@ export interface FullItemExtras {
  * const marker = attr.object({ size: attr.number({ dflt: 6, arrayOk: true }) });
  * type MarkerInput = InferInput<typeof marker>; // { size?: number | readonly number[] | TypedArray }
  * ```
+ * @experimental
  */
 export type InferInput<N> = N extends {
   readonly kind: 'attr';
@@ -296,6 +300,7 @@ export type InferInput<N> = N extends {
  * attributes without one may be `undefined`. Containers are always present. Trace modules with
  * conditional defaults (e.g. `marker` only when `mode` includes `markers`) document where that
  * guarantee is weaker.
+ * @experimental
  */
 export type InferFull<N> = N extends {
   readonly kind: 'attr';

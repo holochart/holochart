@@ -51,7 +51,7 @@ export function supplySampleDefaults(
   return true;
 }
 
-/** Cell labels (Plotly `handleHeatmapLabelDefaults`): the font inherits `layout.font`. */
+/** Cell labels (Plotly `handleHeatmapLabelDefaults`): the font inherits `layout.font`. @internal */
 export function supplyCellTextDefaults(ctx: TraceDefaultsContext): void {
   const texttemplate = ctx.coerce<string>('texttemplate');
   if (!texttemplate) return;

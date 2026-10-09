@@ -440,7 +440,7 @@ export interface ColorbarTitleFont {
 /**
  * Bar: rectangles from a base to a value, vertical or horizontal.
  */
-export type BarTrace = CommonTraceAttributes &
+export type BaseBarTrace = CommonTraceAttributes &
   CartesianTraceAttributes & {
     /**
      * Trace type.
@@ -1125,7 +1125,7 @@ export interface BarTraceUnselectedTextfont {
 /**
  * Pie or donut: slices of a circle proportional to their values.
  */
-export type PieTrace = Omit<CommonTraceAttributes, 'hoverinfo'> &
+export type BasePieTrace = Omit<CommonTraceAttributes, 'hoverinfo'> &
   DomainTraceAttributes & {
     /**
      * Trace type.
@@ -1495,7 +1495,7 @@ export interface PieTraceTitleFont {
 /**
  * Scatter: markers, lines, text labels and filled or stacked areas at x/y positions.
  */
-export type ScatterTrace = CommonTraceAttributes &
+export type BaseScatterTrace = CommonTraceAttributes &
   CartesianTraceAttributes & {
     /**
      * Trace type (the default: a trace without `type` is a scatter trace).
@@ -3163,4 +3163,4 @@ export interface TableTraceCellsFont {
 /**
  * Any trace of `@mk7s/holochart-traces-basic`, discriminated on `type`. Type a partial bundle's figures with it: `FigureInput<TracesBasic>`.
  */
-export type TracesBasic = BarTrace | PieTrace | ScatterTrace | TableTrace;
+export type TracesBasic = BaseBarTrace | BasePieTrace | BaseScatterTrace | TableTrace;

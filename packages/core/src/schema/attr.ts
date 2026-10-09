@@ -25,7 +25,7 @@ import type {
   ItemsNode,
   NodeMeta,
   ObjectNode,
-  Primitive,
+  PrimitiveValue,
   TypedArray,
 } from './types.ts';
 import type { StyleFunction } from '../style/types.ts';
@@ -44,19 +44,19 @@ type Accessor<T, O> = O extends { arrayOk: true }
 /** Shorthand for an attribute whose input and full types are derived from options `O`. */
 type Attr<T, O> = AttrSpec<T | Accessor<T, O>, Full<T, O>>;
 
-/** Options for `number`, `integer` and `angle`. */
+/** Options for `number`, `integer` and `angle`. @experimental */
 export interface NumberOptions extends NodeMeta {
-  readonly dflt?: Primitive;
+  readonly dflt?: PrimitiveValue;
   readonly min?: number;
   readonly max?: number;
   /** Clamp out-of-range values instead of falling back to `dflt`. */
   readonly clamp?: boolean;
   readonly arrayOk?: boolean;
   /** Non-numeric values accepted verbatim, e.g. `['auto']`. */
-  readonly extras?: readonly Primitive[];
+  readonly extras?: readonly PrimitiveValue[];
 }
 
-/** Options for `string`. */
+/** Options for `string`. @experimental */
 export interface StringOptions extends NodeMeta {
   readonly dflt?: string;
   readonly arrayOk?: boolean;
@@ -66,58 +66,58 @@ export interface StringOptions extends NodeMeta {
   readonly values?: never;
 }
 
-/** Options for `boolean`. */
+/** Options for `boolean`. @experimental */
 export interface BooleanOptions extends NodeMeta {
   readonly dflt?: boolean;
   readonly arrayOk?: boolean;
 }
 
-/** Options for `enumerated`. */
+/** Options for `enumerated`. @experimental */
 export interface EnumeratedOptions extends NodeMeta {
-  readonly values: readonly Primitive[];
-  readonly dflt?: Primitive;
+  readonly values: readonly PrimitiveValue[];
+  readonly dflt?: PrimitiveValue;
   readonly arrayOk?: boolean;
   /** Also accept values this predicate approves (values registered at runtime). */
   readonly accepts?: (value: unknown) => boolean;
 }
 
-/** Options for `flaglist`. */
+/** Options for `flaglist`. @experimental */
 export interface FlaglistOptions extends NodeMeta {
   readonly flags: readonly string[];
   /** Values that stand alone and cannot be combined, e.g. `'none'`, `true`, `false`. */
-  readonly extras?: readonly Primitive[];
-  readonly dflt?: Primitive;
+  readonly extras?: readonly PrimitiveValue[];
+  readonly dflt?: PrimitiveValue;
   readonly arrayOk?: boolean;
 }
 
-/** Options for `color`. */
+/** Options for `color`. @experimental */
 export interface ColorOptions extends NodeMeta {
   readonly dflt?: string;
   readonly arrayOk?: boolean;
 }
 
-/** Options for `colorlist`. */
+/** Options for `colorlist`. @experimental */
 export interface ColorlistOptions extends NodeMeta {
   readonly dflt?: readonly string[];
 }
 
-/** Options for `colorscale`. */
+/** Options for `colorscale`. @experimental */
 export interface ColorscaleOptions extends NodeMeta {
   readonly dflt?: ColorScale;
 }
 
-/** Options for `subplotId`. */
+/** Options for `subplotId`. @experimental */
 export interface SubplotIdOptions extends NodeMeta {
   /** Base id such as `'x'`, `'y'`, `'scene'`. Ids match `/^base([2-9]|[1-9]\d+)?$/`. */
   readonly dflt: string;
   /** Extra values accepted verbatim, e.g. `['free']` or `['paper']`. */
-  readonly extras?: readonly Primitive[];
+  readonly extras?: readonly PrimitiveValue[];
 }
 
-/** Options for `dataArray`. */
+/** Options for `dataArray`. @experimental */
 export type DataArrayOptions = NodeMeta;
 
-/** Options for `infoArray`. */
+/** Options for `infoArray`. @experimental */
 export interface InfoArrayOptions extends NodeMeta {
   /** One spec applied to every item, or one spec per position. */
   readonly items: AttrSpec | readonly AttrSpec[];
@@ -126,16 +126,16 @@ export interface InfoArrayOptions extends NodeMeta {
   readonly freeLength?: boolean;
 }
 
-/** Options for `any`. */
+/** Options for `any`. @experimental */
 export interface AnyOptions extends NodeMeta {
   readonly dflt?: unknown;
   readonly arrayOk?: boolean;
 }
 
-/** Options for `fn`. */
+/** Options for `fn`. @experimental */
 export type FunctionOptions = NodeMeta;
 
-/** Options for `items`. */
+/** Options for `items`. @experimental */
 export interface ItemsOptions extends NodeMeta {
   /** Singular item name; the template key `<itemName>defaults` applies to every item. */
   readonly itemName: string;
@@ -157,7 +157,7 @@ type InfoItemsFull<O> = O extends { items: infer I }
     : Exclude<InferFull<I>, undefined>[]
   : unknown[];
 
-/** Children added to every item of an `items` node so templates can target them. */
+/** Children added to every item of an `items` node so templates can target them. @experimental */
 export interface TemplatedItemChildren extends Children {
   readonly name: AttrSpec<string, string | undefined>;
   readonly templateitemname: AttrSpec<string, string | undefined>;
@@ -317,10 +317,101 @@ function items<const C extends Children>(
 }
 
 /**
+ * The builders of the schema DSL ({@link attr}), one per attribute type and container.
+ * @experimental
+ */
+export interface AttrBuilders {
+  /**
+   * A floating-point number.
+   * Numeric strings are coerced to numbers. Out-of-range values fall back to `dflt` (or are
+   * clamped with `clamp: true`).
+   */
+  readonly number: <const O extends NumberOptions = NumberOptions & { dflt?: undefined }>(
+    opts?: O,
+  ) => Attr<NumArrayOk<number, O> | Extras<O>, O>;
+  /** An integer. Non-integral numbers are rejected. */
+  readonly integer: <const O extends NumberOptions = NumberOptions & { dflt?: undefined }>(
+    opts?: O,
+  ) => Attr<NumArrayOk<number, O> | Extras<O>, O>;
+  /** A string. Numbers are stringified unless `strict: true`. */
+  readonly string: <const O extends StringOptions = StringOptions & { dflt?: undefined }>(
+    opts?: O,
+  ) => Attr<ArrayOk<string, O>, O>;
+  /** A boolean. Only `true` and `false` are accepted. */
+  readonly boolean: <const O extends BooleanOptions = BooleanOptions & { dflt?: undefined }>(
+    opts?: O,
+  ) => Attr<ArrayOk<boolean, O>, O>;
+  /** One of a fixed set of values. */
+  readonly enumerated: <const O extends EnumeratedOptions>(
+    opts: O,
+  ) => Attr<ArrayOk<EnumValue<O>, O>, O>;
+  /** A `+`-joined combination of flags (`'lines+markers'`), or one of `extras` alone. */
+  readonly flaglist: <const O extends FlaglistOptions>(
+    opts: O,
+  ) => Attr<ArrayOk<FlagValue<O> | Extras<O>, O>, O>;
+  /** Any CSS color. Stored in the full output as canonical `rgb()`/`rgba()`. */
+  readonly color: <const O extends ColorOptions = ColorOptions & { dflt?: undefined }>(
+    opts?: O,
+  ) => Attr<ArrayOk<string, O>, O>;
+  /** A list of CSS colors (e.g. `colorway`). */
+  readonly colorlist: <const O extends ColorlistOptions = ColorlistOptions & { dflt?: undefined }>(
+    opts?: O,
+  ) => AttrSpec<readonly string[], Full<string[], O>>;
+  /** A named colorscale or a list of `[position, color]` stops. */
+  readonly colorscale: <
+    const O extends ColorscaleOptions = ColorscaleOptions & { dflt?: undefined },
+  >(
+    opts?: O,
+  ) => Attr<ColorScale, O>;
+  /** An angle in degrees, normalized to [-180, 180). */
+  readonly angle: <const O extends NumberOptions = NumberOptions & { dflt?: undefined }>(
+    opts?: O,
+  ) => Attr<NumArrayOk<number, O> | Extras<O>, O>;
+  /** A subplot reference such as `'x'`, `'x2'`, `'scene3'`. `'x1'` is normalized to `'x'`. */
+  readonly subplotId: <const O extends SubplotIdOptions>(
+    opts: O,
+  ) => Attr<SubplotValue<O> | Extras<O>, O>;
+  /** A column of data (plain or typed array). Kept by reference, never copied. */
+  readonly dataArray: <const O extends DataArrayOptions = DataArrayOptions>(
+    opts?: O,
+  ) => AttrSpec<DataArray, DataArray | undefined>;
+  /** A fixed-shape array such as an axis `range` (`[min, max]`). */
+  readonly infoArray: <const O extends InfoArrayOptions>(
+    opts: O,
+  ) => AttrSpec<InfoItems<O>, Full<InfoItemsFull<O>, O>>;
+  /** Any value; only `undefined`/`null` mean unset. */
+  readonly any: <const O extends AnyOptions = AnyOptions>(opts?: O) => AttrSpec<unknown, unknown>;
+  /** A function (style accessor, callback). Dropped from `plot-schema.json` values. */
+  readonly fn: <const O extends FunctionOptions = FunctionOptions>(
+    opts?: O,
+  ) => AttrSpec<AnyFunction, AnyFunction | undefined>;
+  /** A nested container. */
+  readonly object: <const C extends Children>(children: C, meta?: NodeMeta) => ObjectNode<C>;
+  /**
+   * A subplot container family: `xaxis` also matches `xaxis2`, `xaxis3`, … (plan E1.4).
+   * `subplot` is the base subplot id of the family (`'x'` for `xaxis`).
+   */
+  readonly subplotObject: <const C extends Children>(
+    subplot: string,
+    children: C,
+    meta?: NodeMeta,
+  ) => ObjectNode<C>;
+  /**
+   * An array of objects (annotations, shapes, …). Every item automatically gets `name` and
+   * `templateitemname` so it can be defined in, or linked to, a template (plan E1.5).
+   */
+  readonly items: <const C extends Children>(
+    children: C,
+    opts: ItemsOptions,
+  ) => ItemsNode<C & TemplatedItemChildren>;
+}
+
+/**
  * The schema DSL. Each builder returns a plain, JSON-like object, so schemas can be inspected,
  * merged and serialized to `plot-schema.json`.
+ * @experimental
  */
-export const attr = {
+export const attr: AttrBuilders = {
   number,
   integer,
   string,
@@ -339,4 +430,4 @@ export const attr = {
   object,
   subplotObject,
   items,
-} as const;
+};

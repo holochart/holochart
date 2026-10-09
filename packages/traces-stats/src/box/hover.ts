@@ -23,6 +23,7 @@ import {
   type SelectionQuery,
 } from '@mk7s/holochart-runtime';
 import { boxAxes, calcToLinear, type BoxCalc } from './calc.ts';
+import { lazyA11y } from '../a11y-loader.ts';
 import { isOpaque } from './style.ts';
 
 /** A box statistic hover labels show. */
@@ -324,6 +325,15 @@ export function boxHoverPoints(
 }
 
 export { axesOf as hoverAxes };
+
+/** `TraceModule.a11y` of `box` and `violin`: the statistics of each box as keyboard stops. */
+export const boxA11y = /* @__PURE__ */ lazyA11y(
+  'boxes',
+  axesOf,
+  statPoints,
+  formatAxisValue,
+  localeOf,
+);
 
 /**
  * Data indices of the drawn points inside a box or lasso selection (Plotly's box `selectPoints`:

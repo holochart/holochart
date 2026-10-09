@@ -1,10 +1,23 @@
 ---
 title: Chart types
-description: Every chart type Holochart covers, grouped by family, with its trace type and target milestone.
-status: draft
+description: Compare chart families, find existing chart guides, and browse classified examples.
+status: complete
+aside: false
+pageClass: hc-catalog
 ---
 
+<script setup>
+import FamilyDirectory from '../.vitepress/theme/components/FamilyDirectory.vue';
+</script>
+
 # Chart types
+
+Choose a chart family to browse examples, or follow a subtype link to its existing guide.
+Each gallery count includes cross-listed examples once within that family.
+
+<FamilyDirectory />
+
+## Trace coverage and roadmap
 
 Each chart type is drawn by one or more **trace types**. Some chart types are their own trace type
 (`bar`, `pie`). Others are a way of configuring an existing one: a line chart is a `scatter` trace
@@ -105,12 +118,38 @@ the differences from Plotly.
 
 ## Maps
 
-Maps are a stretch goal, planned after 1.0.
+Projected maps were built ahead of their milestone: the geo subplot, `scattergeo` and
+`choropleth` are available. They are in `@mk7s/holochart-traces-geo`, which the full bundle
+leaves out, so a page with a map adds `import '@mk7s/holochart/geo'`: see
+[Maps](/fundamentals/maps#adding-the-package). The 3D globe and tile maps are planned.
 
-| Chart       | Trace type(s)                         | Milestone |
-| ----------- | ------------------------------------- | --------- |
-| Scatter Geo | `scattergeo`                          | M8        |
-| Choropleth  | `choropleth`                          | M8        |
-| 3D Globe    | `scattergeo`, `choropleth` on a globe | M8        |
-| Tile maps   | `scattermap`, `choroplethmap`         | M8        |
-| Density map | `densitymap`                          | M8        |
+| Chart                                                                   | Trace type(s)                         | Milestone |
+| ----------------------------------------------------------------------- | ------------------------------------- | --------- |
+| [Scatter on maps](/charts/maps/scattergeo)                              | `scattergeo`                          | M8        |
+| [Lines on maps](/charts/maps/scattergeo#great-circle-routes-on-a-globe) | `scattergeo` (`mode: 'lines'`)        | M8        |
+| [Bubble map](/charts/maps/scattergeo#bubble-map)                        | `scattergeo` (sized markers)          | M8        |
+| [Choropleth](/charts/maps/choropleth)                                   | `choropleth`                          | M8        |
+| [Projections & Geo Subplots](/fundamentals/maps)                        | `layout.geo`                          | M8        |
+| 3D Globe                                                                | `scattergeo`, `choropleth` on a globe | M8        |
+| Tile maps                                                               | `scattermap`, `choroplethmap`         | M8        |
+| Density map                                                             | `densitymap`                          | M8        |
+
+## Network graphs
+
+Node-link drawings, chord diagrams and their 3D form are Holochart's own: Plotly.js has no graph
+trace. They are in `@mk7s/holochart-traces-graph`, which the full bundle leaves out, so a page
+with a network adds `import '@mk7s/holochart/graph'`: see
+[Network graphs](/fundamentals/graphs#adding-the-package).
+
+| Chart                                                                       | Trace type(s)                               | Milestone |
+| --------------------------------------------------------------------------- | ------------------------------------------- | --------- |
+| [Network graph](/charts/graphs/graph)                                       | `graph`                                     | —         |
+| [Force-directed graph](/charts/graphs/graph#force-directed-and-forceatlas2) | `graph` (`arrangement: 'force'`)            | —         |
+| [Layered diagram (DAG)](/charts/graphs/graph#layered-diagrams)              | `graph` (`arrangement: 'layered'`)          | —         |
+| [Tree, radial tree](/charts/graphs/graph#trees)                             | `graph` (`arrangement: 'tree'`, `'radial'`) | —         |
+| [Dendrogram](/charts/graphs/graph#dendrogram)                               | `graph` (`arrangement: 'dendrogram'`)       | —         |
+| [Arc diagram](/charts/graphs/graph#arc-diagram)                             | `graph` (`arrangement: 'arc'`)              | —         |
+| [Hive plot](/charts/graphs/graph#hive-plot)                                 | `graph` (`arrangement: 'hive'`)             | —         |
+| [Chord diagram](/charts/graphs/chord)                                       | `chord`                                     | —         |
+| [3D network graph](/charts/graphs/graph3d)                                  | `graph3d`                                   | —         |
+| [Adjacency matrix](/fundamentals/graphs#the-adjacency-matrix)               | `heatmap` (with a helper)                   | —         |
