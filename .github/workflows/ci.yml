@@ -84,10 +84,15 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: pnpm build
 
-  visual:
-    name: visual
+  visual-tests:
+    name: visual (shard ${{ matrix.shard }}/2)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # The expanded gallery exceeds one runner's 30-minute budget.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     # Pinned image: the Chromium build and system libraries match @playwright/test 1.63.0, so
     # SwiftShader output is reproducible. Regenerate baselines in this same image (CONTRIBUTING.md).
     container:
@@ -100,7 +105,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - name: Visual regression tests (Chromium + SwiftShader)
-        run: pnpm test:visual
+        run: pnpm test:visual --shard ${{ matrix.shard }}/2
       # Job summary: pixelmatch count (what the test gates on) next to the exact diff (pixels whose
       # RGBA differs at all, and the max channel delta), so drift inside tolerance is visible (E20.9).
       - name: Visual diff summary (pixelmatch vs exact)
@@ -110,7 +115,7 @@ jobs:
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
         with:
-          name: visual-diff-report
+          name: visual-diff-report-shard-${{ matrix.shard }}
           path: |
             playwright-report/
             tests/visual/__actual__/
@@ -118,6 +123,18 @@ jobs:
             test-results/visual/
           retention-days: 14
           if-no-files-found: ignore
+
+  # Preserve the branch-protection check name; both shards must pass.
+  visual:
+    name: visual
+    needs: visual-tests
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require both visual shards to pass
+        env:
+          VISUAL_RESULT: ${{ needs.visual-tests.result }}
+        run: test "$VISUAL_RESULT" = success
 
   # Docs pages render (backlog S1.5): every hand-written docs page loads in the VitePress dev server
   # with no console errors, failed requests or example embeds that error or never become ready.
