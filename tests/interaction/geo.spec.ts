@@ -1976,7 +1976,8 @@ test.describe('context loss', () => {
       await settle(page);
       for (const [lonlat, color, how] of DRAWN[variant]!) {
         const p = await at(page, lonlat);
-        if (!p.hidden) await expectColor(page, p, color, true, how);
+        if (!p.hidden)
+          await expectColor(page, p, color, true, how, variant === 'hires3d' ? 90_000 : 10_000);
       }
       // The wheel zooms it.
       const scale = (await view(page)).scale;

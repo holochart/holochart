@@ -285,14 +285,16 @@ test.describe('force.simulate', () => {
     expect((await waitForEvent(page, 'hover')).payload.points).toMatchObject([
       { kind: 'node', pointNumber: 0 },
     ]);
-    // Again from the start, with the pointer waiting there: the node is drawn in the spiral in
-    // the middle, so there is nothing to hover yet.
+    // Again from the start, with the pointer waiting there: node 0 is still in the spiral.
+    // A moving link can cross the pointer before the node arrives.
     await page.evaluate((key) => (window as unknown as Record<string, Hook>)[key]!.restart(), HOOK);
     await events(page, true);
     await page.mouse.move(end.x + 1, end.y);
     await page.mouse.move(end.x, end.y);
     await page.waitForTimeout(150);
-    expect((await events(page)).some((e) => e.name === 'hover')).toBe(false);
+    expect(
+      (await events(page)).filter((e) => e.name === 'hover').flatMap((e) => e.payload.points ?? []),
+    ).not.toContainEqual(expect.objectContaining({ kind: 'node', pointNumber: 0 }));
     // It arrives, and a move finds it.
     await atRest(page);
     await page.mouse.move(end.x + 1, end.y);
