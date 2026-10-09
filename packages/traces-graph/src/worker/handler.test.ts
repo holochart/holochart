@@ -402,7 +402,8 @@ describe('the default pause', () => {
     let ran = false;
     // Node's default pause uses setImmediate. A zero-delay timer has a minimum
     // delay and need not be due even after many fast check-phase turns.
-    setImmediate(() => (ran = true));
+    const node = globalThis as typeof globalThis & { setImmediate: (callback: () => void) => void };
+    node.setImmediate(() => (ran = true));
     expect(ran).toBe(false);
     await pause();
     expect(ran).toBe(true);

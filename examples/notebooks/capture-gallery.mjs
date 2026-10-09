@@ -1,5 +1,6 @@
 /** Read deterministic figure arguments from selected browser examples without rendering them. */
 import fs from 'node:fs';
+import { captureDifference } from './compare-captures.ts';
 import path from 'node:path';
 import vm from 'node:vm';
 import crypto from 'node:crypto';
@@ -105,11 +106,12 @@ async function main() {
     result.push({ slug, examples: await Promise.all(ids.map(capture)) });
   if (process.argv.includes('--check')) {
     const canonical = JSON.parse(fs.readFileSync(path.join(here, 'gallery-captures.json'), 'utf8'));
-    if (JSON.stringify(canonical) !== JSON.stringify(result))
+    const difference = captureDifference(canonical, result);
+    if (difference)
       throw new Error(
-        'Browser source/figure drift: refresh captures and Python canonical figures, then repeat kernel and notebook-host checks.',
+        `Browser source/figure drift at ${difference}: refresh captures and Python canonical figures, then repeat kernel and notebook-host checks.`,
       );
-    console.log('Verified24 deterministic browser figure captures and source dependency hashes.');
+    console.log('Verified 24 deterministic browser figure captures and source dependency hashes.');
   } else
     fs.writeFileSync(
       path.join(here, 'gallery-captures.json'),
