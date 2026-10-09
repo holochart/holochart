@@ -1,6 +1,6 @@
 /** Read deterministic figure arguments from selected browser examples without rendering them. */
 import fs from 'node:fs';
-import { captureDifference } from './compare-captures.ts';
+import { captureDifference } from '../../tools/gallery-gen/src/compare-captures.ts';
 import path from 'node:path';
 import vm from 'node:vm';
 import crypto from 'node:crypto';

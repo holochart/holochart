@@ -86,6 +86,13 @@ try {
         host === 'lab' ? `lab/workspaces/holochart-${slug}-${Date.now()}/tree` : 'notebooks';
       await page.goto(`${origin}/${route}/${file}?token=${token}`);
       await page.locator('.jp-CodeCell').first().waitFor({ timeout: 60_000 });
+      // Cells appear before the frontend finishes connecting to the kernel.
+      // Restarting during that handshake cancels subshell/debug initialization requests.
+      await expect(page.locator('.jp-Notebook-ExecutionIndicator')).toHaveAttribute(
+        'data-status',
+        'idle',
+        { timeout: 60_000 },
+      );
       const restart = page.getByRole('button', {
         name: 'Restart the kernel and run all cells',
         exact: true,

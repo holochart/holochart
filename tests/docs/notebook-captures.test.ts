@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { captureDifference } from '../../examples/notebooks/compare-captures.ts';
+import { captureDifference } from '../../tools/gallery-gen/src/compare-captures.ts';
 
 const capture = (z: unknown, hash = 'source-hash') => ({
   figure: { data: [{ z }] },
