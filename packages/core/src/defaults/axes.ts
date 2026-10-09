@@ -31,6 +31,11 @@
  * - `funnel` traces (M4, Plotly `cartesian/layout_defaults`): their value axis defaults to
  *   `visible: false` and a horizontal funnel's y axis to `autorange: 'reversed'` (first stage on
  *   top), unless another trace type uses the axis (or a `range` is given).
+ * - a trace module may ask for axis defaults (`axisHints`, ADR-029): `hide` makes its axes (or
+ *   the one it names) default to `visible: false` unless a trace without the hint is on them,
+ *   `equal` makes its y axis default to `scaleanchor` = its x axis, `reverse` makes one axis
+ *   default to `autorange: 'reversed'`, and `x` / `y` are the data the axis is typed from when
+ *   the trace keeps its positions somewhere else than in `x` / `y`.
  *
  * Every rule reads the resolved input the same way it writes it, so the output fed back in is a
  * fixed point (supply-defaults idempotence).
@@ -153,9 +158,12 @@ function addUnique(list: string[], id: string): void {
   if (!list.includes(id)) list.push(id);
 }
 
-/** Does this trace give the axis data to type from (Plotly's `getFirstNonEmptyTrace`)? */
-function typingData(trace: FullTrace, letter: 'x' | 'y'): unknown {
-  const v = trace[letter];
+/**
+ * Does this trace give the axis data to type from (Plotly's `getFirstNonEmptyTrace`)? `hinted` is
+ * the data its module's `axisHints` names for the axis, read instead of `x` / `y`.
+ */
+function typingData(trace: FullTrace, letter: 'x' | 'y', hinted?: unknown): unknown {
+  const v = hinted ?? trace[letter];
   if (isArrayLike(v) && v.length > 0) return v;
   const v0 = trace[`${letter}0`];
   // Plotly skips falsy `x0` (including the default 0), so an index-only trace does not type.
@@ -536,6 +544,12 @@ export function supplyCartesianAxes(
   const funnelHide = new Set<string>();
   const funnelReverse = new Set<string>();
   const shown = new Set<string>();
+  // What trace modules ask for (`axisHints`): axes to hide, and y axes to lock to their x axis.
+  const hintHide = new Set<string>();
+  const hintEqual = new Map<string, string>();
+  // Axes a hint reverses, and the axes a trace without that hint is on (which keep their way).
+  const hintReverse = new Set<string>();
+  const hintForward = new Set<string>();
 
   for (const trace of fullData) {
     if (trace._module?.categories.includes('cartesian') !== true) continue;
@@ -547,6 +561,7 @@ export function supplyCartesianAxes(
     if (!counterpart.x.has(x)) counterpart.x.set(x, y);
     if (!counterpart.y.has(y)) counterpart.y.set(y, x);
     if (trace.visible === false) continue;
+    const hints = trace._module?.axisHints?.(trace);
     if (trace.type === 'image') {
       imageAxes.add(x);
       imageAxes.add(y);
@@ -555,15 +570,19 @@ export function supplyCartesianAxes(
       if (trace['orientation'] === 'h') funnelReverse.add(y);
     } else {
       plainY.add(y);
-      shown.add(x);
-      shown.add(y);
+      // `hide` names the axes to hide (both, or one); the others are shown.
+      (hints?.hide === true || hints?.hide === 'x' ? hintHide : shown).add(x);
+      (hints?.hide === true || hints?.hide === 'y' ? hintHide : shown).add(y);
     }
+    (hints?.reverse === 'x' ? hintReverse : hintForward).add(x);
+    (hints?.reverse === 'y' ? hintReverse : hintForward).add(y);
+    if (hints?.equal === true && !hintEqual.has(y)) hintEqual.set(y, x);
     for (const [letter, id] of [
       ['x', x],
       ['y', y],
     ] as const) {
       if (firstData[letter].has(id)) continue;
-      const data = typingData(trace, letter);
+      const data = typingData(trace, letter, hints?.[letter]);
       if (data !== undefined) firstData[letter].set(id, { trace, data });
     }
   }
@@ -649,9 +668,16 @@ export function supplyCartesianAxes(
             ...(imageAxes.has(id)
               ? imageAxisDefaults(resolve, letter === 'y' && !plainY.has(id))
               : {}),
-            ...(funnelHide.has(id) && !shown.has(id) ? { visible: false } : {}),
+            ...((funnelHide.has(id) || hintHide.has(id)) && !shown.has(id)
+              ? { visible: false }
+              : {}),
             ...(funnelReverse.has(id) &&
             !plainY.has(id) &&
+            rangeAutorange(resolve('range'), false) === true
+              ? { autorange: 'reversed' }
+              : {}),
+            ...(hintReverse.has(id) &&
+            !hintForward.has(id) &&
             rangeAutorange(resolve('range'), false) === true
               ? { autorange: 'reversed' }
               : {}),
@@ -688,8 +714,9 @@ export function supplyCartesianAxes(
     supplyRangeControls(layoutIn, fullLayout, subplots, templateLayout, xNode);
   }
   supplyFreeAxes(fullLayout, subplots, resolvers);
-  // Image y axes keep square pixels with their anchor (Plotly's `scaleanchorDflt`).
-  const scaleanchorDefaults = new Map<string, string>();
+  // Image y axes keep square pixels with their anchor (Plotly's `scaleanchorDflt`); so do the y
+  // axes of traces that ask for equal scales, with their trace's x axis.
+  const scaleanchorDefaults = new Map<string, string>(hintEqual);
   for (const id of subplots.yaxis) {
     const anchor = (fullLayout[keyForSubplotId(id, 'yaxis', 'y')] as FullAxis | undefined)?.anchor;
     if (imageAxes.has(id) && typeof anchor === 'string') scaleanchorDefaults.set(id, anchor);

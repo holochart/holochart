@@ -18,7 +18,15 @@
     "three": "catalog:"
   },
   "devDependencies": {
+    "@types/d3-geo": "catalog:",
+    "@types/geojson": "catalog:",
     "@types/three": "catalog:",
-    "typescript": "catalog:"
+    "@types/topojson-client": "catalog:",
+    "d3-geo": "catalog:",
+    "d3-geo-projection": "catalog:",
+    "maplibre-gl": "^6.11.2",
+    "topojson-client": "catalog:",
+    "typescript": "catalog:",
+    "world-atlas": "^2.0.2"
   }
 }

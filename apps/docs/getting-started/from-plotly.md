@@ -134,12 +134,37 @@ An attribute or value that Holochart doesn't have is ignored with a console warn
 chart still draws. Set `config.strict: true` while migrating to turn those warnings into
 [errors](/reference/errors).
 
+### Maps
+
+`scattergeo`, `choropleth` and `layout.geo` work as in Plotly, with every projection, but the
+full bundle does not include them: maps are a package of their own, so that pages without a map
+do not download map code. Add one import next to the bundle's (or register `tracesGeo` in a
+partial bundle):
+
+```ts
+import * as Holochart from '@mk7s/holochart';
+import '@mk7s/holochart/geo';
+```
+
+Without it a map trace is hidden, and the console warning names this import. Two more things
+differ from Plotly:
+
+- The base map is bundled (Natural Earth) and nothing is fetched: `config.topojsonURL` is empty
+  by default, where Plotly's default is its CDN. Coastlines and borders therefore differ slightly
+  from Plotly's, and maps work offline.
+- `geo.fitbounds` defaults to `'locations'`, as in plotly.js 4: the view is fitted to the data
+  unless the figure sets the view or `fitbounds: false`.
+
+[Maps](/fundamentals/maps#plotly-compatibility) lists the rest, and the chart pages of
+[scattergeo](/charts/maps/scattergeo#plotly-migration-notes) and
+[choropleth](/charts/maps/choropleth#plotly-migration-notes) what differs per trace.
+
 ## What is missing
 
 Not available in Holochart:
 
-- **Maps and geographic charts**: `scattergeo`, `choropleth`, `scattermap`, `choroplethmap`,
-  `densitymap`, and the `layout.geo` and `layout.map` subplots.
+- **Tile maps**: `scattermap`, `choroplethmap`, `densitymap` and the `layout.map` subplot.
+  Projected maps are available: see [Maps](#maps) above.
 - **Ternary, Smith and carpet plots**: `scatterternary`, `scattersmith`, `carpet`,
   `scattercarpet`, `contourcarpet`.
 - **`quiver`** traces.
@@ -199,5 +224,8 @@ Plotly ignores these, so a figure that uses them still loads there, without them
 - [Style rules and style functions](/fundamentals/conditional-styling) for conditional styling.
 - [Custom marker symbols and image markers](/customization/custom-markers).
 - The [`bar3d`](/charts/3d/bar3d) trace.
+- [Network graphs](/fundamentals/graphs): the [`graph`](/charts/graphs/graph),
+  [`chord`](/charts/graphs/chord) and [`graph3d`](/charts/graphs/graph3d) traces, with layouts
+  built in. They need one more import, `@mk7s/holochart/graph`.
 - [Accessibility](/guides/accessibility): a screen-reader description, data tables and keyboard
   navigation on every chart.

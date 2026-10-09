@@ -8,6 +8,14 @@
  * container and the template's `sceneN` (or `scene`), with the axis types detected from the first
  * visible trace on it and the category lists of category axes collected from every trace on it
  * (`_categories`). The ids are listed in `fullLayout._sceneIds`.
+ *
+ * A trace module may ask for axis defaults with core's `axisHints`, as cartesian traces do: when
+ * every trace of a scene says `hide` (its positions are not a readable scale), the scene's axes
+ * default to `visible: false`, which leaves the grids, walls, ticks, titles and spikes out; and
+ * `x` / `y` / `z` name the data to type an axis from when it is not the trace's `x` / `y` / `z`.
+ * Such a scene also starts with the camera closer ({@link BARE_EYE}): Plotly's default eye leaves
+ * room around the box for tick labels and axis titles, and without them the drawing would take
+ * about half of the scene.
  */
 import {
   autoType,
@@ -35,6 +43,14 @@ import { supplySceneLightingLayout } from './lighting-attributes.ts';
 
 /** `fullLayout` key of the scene ids, in order of their number. */
 export const SCENE_IDS = '_sceneIds';
+
+/**
+ * The default `camera.eye` component (x, y and z alike) of a scene whose traces all hide its axes
+ * (see the module comment): Plotly's direction at 64 % of its distance. From there the ball
+ * inscribed in the scene's box takes 93 % of the height of a perspective view, as the box itself
+ * does from Plotly's eye.
+ */
+export const BARE_EYE = 0.8;
 
 /** The axis letters of a scene, in order. */
 export const SCENE_LETTERS = ['x', 'y', 'z'] as const;
@@ -191,10 +207,13 @@ function supplyScene(
   if (!validExtent(coerce('domain.x', dfltX))) setIn(out, 'domain.x', dfltX);
   if (!validExtent(coerce('domain.y', dfltY))) setIn(out, 'domain.y', dfltY);
 
+  const overrides: Record<string, unknown> = { uirevision: layoutOut['uirevision'] };
+  // Nothing is drawn around the box: the camera starts closer, unless the figure places it.
+  if (axesHidden(traces)) for (const k of SCENE_LETTERS) overrides[`camera.eye.${k}`] = BARE_EYE;
   coerceContainer(sceneAttributes, input, out, {
     template,
     only: new Set(['bgcolor', 'camera', 'aspectmode', 'aspectratio', 'uirevision']),
-    overrides: { uirevision: layoutOut['uirevision'] },
+    overrides,
   });
   // A ratio is given only when all three are positive; otherwise 1:1:1 and no `manual` mode.
   const ratio = out['aspectratio'] as Record<string, unknown>;
@@ -238,6 +257,16 @@ function supplyScene(
   supplySceneAutorotate(input, template, out);
 }
 
+/** Every trace of the scene asks for hidden axes (`axisHints`). */
+function axesHidden(traces: readonly FullTrace[]): boolean {
+  return traces.length > 0 && traces.every((t) => t._module?.axisHints?.(t)?.hide === true);
+}
+
+/** The data trace `t` puts on axis `letter`: what its module's `axisHints` names, else `t[letter]`. */
+function axisData(t: FullTrace, letter: SceneLetter): unknown {
+  return t._module?.axisHints?.(t)?.[letter] ?? t[letter];
+}
+
 function supplyAxis(
   letter: 'x' | 'y' | 'z',
   input: Container,
@@ -275,6 +304,8 @@ function supplyAxis(
     categoryorder: isArrayLike(categoryarray) && categoryarray.length > 0 ? 'array' : 'trace',
     'title.text': letter,
   };
+  // Hidden unless the figure says so.
+  if (axesHidden(traces)) overrides['visible'] = false;
   for (const [prefix, scale] of [
     ['tickfont', 1],
     ['title.font', 1.2],
@@ -295,9 +326,9 @@ function supplyAxis(
 
   let type = out['type'] as string;
   if (type === '-') {
-    const first = traces.find((t) => t.visible === true && isArrayLike(t[letter]));
+    const first = traces.find((t) => t.visible === true && isArrayLike(axisData(t, letter)));
     type = first
-      ? autoType(first[letter], {
+      ? autoType(axisData(first, letter), {
           noMultiCategory: true,
           ...(out['autotypenumbers'] === 'strict' ? { autotypenumbers: 'strict' as const } : {}),
         })
@@ -312,7 +343,7 @@ function supplyAxis(
         categoryorder: out['categoryorder'] as CategoryOrder,
         ...(isArrayLike(out['categoryarray']) ? { categoryarray: out['categoryarray'] } : {}),
       },
-      traces.map((t) => t[letter]),
+      traces.map((t) => axisData(t, letter)),
     );
     out['_categories'] = cats.categories ?? [];
   }

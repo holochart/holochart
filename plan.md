@@ -1617,9 +1617,13 @@ Customization is a **cascade**. Each layer overrides the one above it:
 - [ ] `@mk7s/holochart-node` CLI + API using headless Chromium (Playwright) with a warm page pool: `render(figure, { format, width, height }) → Buffer`
 - [ ] Docker image
 
-#### E18.7 — Jupyter / Python bridge (anywidget)   `P3` `L`   deps: E18.3
+#### E18.7 — Jupyter / Python bridge (anywidget)   `P3` `L`   deps: E18.3   · ✅ Implemented ahead of M8 (unpublished)
 > As a Python data scientist, I want to use Holochart from notebooks, so that I can get GPU charts in Python.
-- [ ] `holochart` Python package built on `anywidget`, accepting dict figures (and `plotly.graph_objects.Figure` via `.to_dict()` + the compat importer)
+- [x] `holochart-py` distribution (`import holochart`) built on `anywidget`, accepting dict/JSON figures and `plotly.graph_objects.Figure` directly; uses the browser bundle's supported attributes without waiting for the compat importer
+- [x] Explicit `plotly.io` renderer registration: `holochart.register_renderer(default=True)` makes existing `fig.show()` calls display a widget, with config/dimension forwarding
+- [x] Ship the matching 2D/3D IIFEs and four default font faces in wheel/sdist; decode Plotly's NumPy arrays, update via `react`, and dispose charts/listeners when views close
+- [x] Python dispatch/serialization tests and an offline browser smoke test for 2D, 3D, updates and cleanup
+- [ ] Publish the Python package after the first npm release (independent of other M8 work)
 
 #### E18.8 — Clipboard & data export   `P2` `S`   deps: E6.3
 > As an end user, I want to copy selected data as CSV, so that I can take values elsewhere.

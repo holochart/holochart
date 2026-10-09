@@ -440,7 +440,7 @@ jobs:
   docs:
     name: docs build
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
@@ -451,10 +451,34 @@ jobs:
       # browser, that they match examples/. Regenerate with `pnpm gallery` when it fails.
       - name: Gallery in sync with examples (E19.5)
         run: pnpm gallery:check
+      - name: Committed notebook downloads match canonical sources
+        run: python3 examples/notebooks/generate.py --check
+      - name: Install Chromium for copied-source and production checks
+        run: pnpm exec playwright install --with-deps chromium
+      # A clean checkout has no ignored source ledger. Verify the cookbook exports and the
+      # choropleth used by the language-filter regression before serializing their badges.
+      - name: Generate and render complete cookbook source exports
+        run: |
+          pnpm --filter @mk7s/holochart-docs gen:sources
+          node tools/gallery-gen/src/smoke-sources.ts layout/grid-coupled line/with-bars area/band recipes/ranked-bars line/gaps timeseries/date-formatting scatter/interactive axes/linked-axes themes/plotly_white layout/grid-independent choropleth/basic
       # VitePress fails the build on dead internal links (no ignoreDeadLinks in the config).
       - run: pnpm --filter @mk7s/holochart-docs build
+      - name: Distributed sources and real-host evidence are current
+        run: pnpm --filter @mk7s/holochart-docs check:site
       # After the build, so links to the generated reference pages are checked too. Hard gates:
       # attribute descriptions, >= 5 examples per released trace type, snippet type-check,
       # internal links; the rest is reported in the job summary (apps/docs/README.md).
       - name: Docs quality gates (E19.10)
         run: pnpm --filter @mk7s/holochart-docs quality
+      - name: Production routes, sources, downloads and accessibility
+        env:
+          DOCS_RENDER_SERVER: preview
+        run: pnpm --filter @mk7s/holochart-docs check:render foundation.spec.ts wave2.spec.ts wave3.spec.ts wave3-content.spec.ts wave4.spec.ts --workers=1 --retries=0
+      - name: Upload production site failures
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-production-report
+          path: test-results/docs-render/
+          retention-days: 14
+          if-no-files-found: ignore

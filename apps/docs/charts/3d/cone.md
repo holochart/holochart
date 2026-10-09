@@ -7,6 +7,8 @@ chart: cone
 
 # Cone plot
 
+<ChartOverview />
+
 ## Overview
 
 A cone plot (trace type `cone`) draws a 3D vector field, such as a flow velocity, a magnetic
@@ -24,6 +26,9 @@ Pick a different chart when:
   is easier to read.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -70,32 +75,34 @@ colorbar. The live example draws a vortex sampled on a 7 × 7 × 3 grid:
 
 ## Variations
 
+<ChartVariations />
+
 ### Sizing modes
 
 The same field with each `sizemode`: `scaled` and `absolute` fit the cones to the sampling, and
 `raw` draws the vectors' lengths as they are (here times 0.25).
 
-<Example id="cone/sizemode" />
+<ExampleLink id="cone/sizemode" />
 
 ### Anchors
 
 Four cones positioned on one plane (the gray band), one per `anchor`: `tip` ends at the plane,
 `tail` starts at it, `cm` crosses it a quarter of the way along and `center` halfway.
 
-<Example id="cone/anchor" />
+<ExampleLink id="cone/anchor" />
 
 ### Colorscale and domain
 
 `colorscale`, `cmin` and `cmax` map the norms: here Viridis over a fixed domain (faster vectors
 clip to the last color) with a titled colorbar. `anchor: 'tail'` starts each cone at its sample.
 
-<Example id="cone/colorscale" />
+<ExampleLink id="cone/colorscale" />
 
 ### A dense field
 
 The Arnold–Beltrami–Childress flow on a 10 × 10 × 10 grid: 1,000 cones in one draw call.
 
-<Example id="cone/abc-flow" />
+<ExampleLink id="cone/abc-flow" />
 
 ## Styling
 

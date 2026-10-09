@@ -130,6 +130,7 @@ export type {
   CoreComponentModule,
   LayoutDefaultsContext,
   Registry,
+  TraceAxisHints,
   TraceCategory,
   TraceDefaultsContext,
   CoreTraceModule,

@@ -4,7 +4,8 @@
  * from the bottom-left (so `xaxis` / `yaxis` are the bottom-left cell's), every cell has its own
  * axis pair, and the axes are linked with `matches` as `make_subplots(shared_xaxes='all',
  * shared_yaxes='all')` links them. Facet labels are paper annotations: at the top of each column,
- * rotated at the right of each row, or at the top of each cell when wrapped.
+ * rotated at the right of each row, or at the top of each cell when wrapped. Pie-like traces take
+ * the cells' domains themselves, and maps one `geo` subplot per cell.
  */
 import {
   FACET_LABEL_NAME,
@@ -30,7 +31,7 @@ export interface GridPlan {
   readonly marginalY?: string | undefined;
   /** Whether a `color` column is given (marginal sizes depend on it, as in px). */
   readonly colorGiven: boolean;
-  readonly subplotType: 'xy' | 'domain' | 'splom' | 'polar' | 'scene';
+  readonly subplotType: 'xy' | 'domain' | 'splom' | 'polar' | 'scene' | 'geo';
 }
 
 /** The grid built from a plan. */
@@ -140,7 +141,9 @@ export function layoutGrid(args: Args, plan: GridPlan): Grid {
     if (plan.marginalX && plan.marginalY && row === 1 && col === ncols) return false;
     return true;
   };
-  const type = plan.subplotType === 'domain' ? 'domain' : 'xy';
+  // Geo subplots take `domain` cells: each cell's extent becomes a `layout.geo*` domain below.
+  const geo = plan.subplotType === 'geo';
+  const type = geo || plan.subplotType === 'domain' ? 'domain' : 'xy';
   const specs: (SubplotSpec | null)[][] = [];
   for (let gr = 1; gr <= nrows; gr++) {
     const row = nrows - gr + 1;
@@ -169,6 +172,17 @@ export function layoutGrid(args: Args, plan: GridPlan): Grid {
     sp.cells[nrows - row]?.[col - 1] ?? undefined;
   const layout: Record<string, unknown> = { ...sp.layout };
   const axis = (id: string) => layout[axisKey(id)] as Record<string, unknown>;
+  // One geo subplot per cell, numbered from the bottom-left like the axes (`geo`, `geo2`, …), as
+  // `make_subplots(specs=[[{'type': 'scattergeo'}, …]])` numbers them.
+  const geoIds = new Map<SubplotCell, string>();
+  if (geo) {
+    for (const k of sp.cells.flat()) {
+      if (!k) continue;
+      const id = `geo${geoIds.size ? geoIds.size + 1 : ''}`;
+      geoIds.set(k, id);
+      layout[id] = { domain: { x: [...k.domain.x], y: [...k.domain.y] } };
+    }
+  }
 
   if (type === 'xy') {
     // shared_xaxes / shared_yaxes = 'all': every axis matches the first; inner tick labels hidden.
@@ -224,7 +238,8 @@ export function layoutGrid(args: Args, plan: GridPlan): Grid {
     place(trace, row, col) {
       const k = cell(row, col);
       if (!k) return;
-      if (k.type === 'domain') {
+      if (geo) trace['geo'] = geoIds.get(k);
+      else if (k.type === 'domain') {
         const prev = trace['domain'] as Record<string, unknown> | undefined;
         trace['domain'] = { ...prev, x: [...k.domain.x], y: [...k.domain.y] };
       } else {

@@ -1,0 +1,582 @@
+{
+  "head": "3a01ba5",
+  "commits": [
+    ["98501c0", [], 1790167722, "Add Holochart project plan"],
+    [
+      "72df838",
+      [0],
+      1790171281,
+      "feat: M0 foundation — monorepo, core schema system, render engine, tooling"
+    ],
+    ["0821911", [0, 1], 1790171413, "Merge pull request #1 from holochart/m0/foundation"],
+    [
+      "12f39e2",
+      [2],
+      1790175002,
+      "feat: close out M0 — GPU picking, tsdown bundles, property tests, spikes"
+    ],
+    ["ee360a5", [3], 1790175270, "fix(core): make '@' column references round-trip safe"],
+    [
+      "1b6fd42",
+      [3],
+      1790175807,
+      "fix(render): size screen-space primitives from the renderer; fix line join cracks"
+    ],
+    [
+      "8d8a38b",
+      [5],
+      1790178646,
+      "perf(render): specialize marker shaders; 3.1-3.2x faster 1M-marker pan"
+    ],
+    ["31ab45f", [2, 3], 1790181306, "Merge pull request #2 from holochart/m0/completion"],
+    [
+      "05ac2c7",
+      [3, 4],
+      1790181317,
+      "Merge pull request #3 from holochart/fix/dataset-ref-idempotence"
+    ],
+    ["a5dd78b", [8, 5], 1790181326, "Merge pull request #4 from holochart/fix/line-gpu-cost"],
+    ["738b486", [5, 6], 1790181332, "Merge pull request #5 from holochart/perf/marker-fill"],
+    ["6abeccb", [7, 9], 1790181386, "Merge m0/completion (#3 '@' refs, #4 line fix) into main"],
+    [
+      "fc62f44",
+      [11, 10],
+      1790181386,
+      "Merge fix/line-gpu-cost (#5 marker specialization) into main"
+    ],
+    ["d61b4b3", [7, 12], 1790185020, "Merge pull request #6 from holochart/m0/land-stacked"],
+    ["5078623", [12], 1790185061, "feat: M1 wave 1 — scales, chart runtime, docs site, packaging"],
+    [
+      "d880b1b",
+      [14],
+      1790189459,
+      "feat: M1 wave 2 — axes, legend, modebar, full scatter, bars, interaction"
+    ],
+    [
+      "b64039a",
+      [14],
+      1790189848,
+      "fix(core): make supplyDefaults idempotent and crash-free on malformed input"
+    ],
+    ["b579d9f", [15, 16], 1790189912, "Merge branch 'm1/kickoff' into m1/wave2"],
+    ["ac5d8f9", [16], 1790190191, "fix(core): log d2lArray maps ±Infinity to NaN like d2l"],
+    ["02b2808", [17, 18], 1790190194, "Merge branch 'm1/kickoff' into m1/wave2"],
+    ["255bfa0", [13, 18], 1790191018, "Merge pull request #7 from holochart/m1/kickoff"],
+    [
+      "1d23ea7",
+      [19],
+      1790191565,
+      "fix: re-layout when web fonts load; version-agnostic troika test mock"
+    ],
+    ["f35266f", [21], 1790193063, "test(visual): park the pointer before screenshots"],
+    ["9c70937", [20, 22], 1790197206, "Merge pull request #8 from holochart/m1/wave2"],
+    [
+      "940fcb6",
+      [23],
+      1790206330,
+      "feat: M1 wave 3 — colorbar, annotations, streaming, JSON, chart docs"
+    ],
+    ["280f02f", [23, 24], 1790206585, "Merge pull request #9 from holochart/m1/wave3"],
+    [
+      "ec4679e",
+      [25],
+      1790211798,
+      "feat: M2 wave 0 — bundle diet, value-based categoryorder, annotation tests"
+    ],
+    ["1e38569", [25, 26], 1790211952, "Merge pull request #10 from holochart/m2/wave0"],
+    [
+      "66432d0",
+      [27],
+      1790216329,
+      "feat: M2 wave 1 — area, bubble, pie, grid, shapes, images, themes"
+    ],
+    ["2eebc54", [27, 28], 1790216728, "Merge pull request #11 from holochart/m2/wave1"],
+    ["9166528", [29], 1790221513, "feat: dark, dense default look + bundled TeX Gyre Heros"],
+    [
+      "54ac212",
+      [30],
+      1790221865,
+      "fix(core): don't let a template's own `__proto__` key replace a prototype"
+    ],
+    ["2caa8de", [29, 31], 1790222298, "Merge pull request #12 from holochart/m2/default-look"],
+    ["9746e15", [32], 1790224636, "docs: OpenRouter token-growth demo page"],
+    ["b665e1d", [32, 33], 1790224872, "Merge pull request #13 from holochart/demo/openrouter"],
+    [
+      "1b629e6",
+      [34],
+      1790229722,
+      "feat: M2 wave 2 — rich text, uniformtext, table, Gantt, a11y, export, gallery"
+    ],
+    ["1db5f05", [34, 35], 1790230055, "Merge pull request #14 from holochart/m2/wave2"],
+    [
+      "a4fb7f1",
+      [36],
+      1790244066,
+      "chore: close M2 — exit review, table rich text, gated release workflow"
+    ],
+    ["b4e5d00", [36, 37], 1790244361, "Merge pull request #15 from holochart/m2/exit-review"],
+    [
+      "509c958",
+      [38],
+      1790249407,
+      "feat: M3 wave 0 — bundle trims, axis/layout gaps, interaction, quality, plotly.py themes"
+    ],
+    ["ca46169", [38, 39], 1790249709, "Merge pull request #16 from holochart/m3/wave0"],
+    [
+      "ab8aff0",
+      [40],
+      1790267656,
+      "feat: M3 wave 1 — histogram, histogram2d, contours, box, violin, axes"
+    ],
+    ["929af9d", [40, 41], 1790268741, "Merge pull request #17 from holochart/m3/wave1"],
+    ["6b1a670", [42], 1790342812, "feat: M3 wave 2 — splom, parcoords, parcats, controls"],
+    ["01bb45a", [42, 43], 1790364163, "Merge pull request #18 from holochart/m3/wave2"],
+    ["2a6ffad", [44], 1790398029, "feat: M3 wave 3 — transitions, frames/animate, Express"],
+    ["fb66832", [44, 45], 1790399819, "Merge pull request #19 from holochart/m3/wave3"],
+    [
+      "519add8",
+      [46],
+      1790518687,
+      "feat: M4 wave 0 — style rules, custom markers, line LOD, carry-forward"
+    ],
+    [
+      "5b16b6b",
+      [47],
+      1790519306,
+      "test(visual): window tolerance for demos/openrouter/categories on Linux"
+    ],
+    ["f6aea8f", [46, 48], 1790519757, "Merge pull request #20 from holochart/m4/wave0"],
+    ["c46089f", [49], 1790527867, "feat: M4 wave 1 — heatmap, image, imshow, contour, polar"],
+    ["9577513", [49, 50], 1790533861, "Merge pull request #21 from holochart/m4/wave1"],
+    [
+      "fb6f4cd",
+      [51],
+      1790544793,
+      "feat: M4 wave 2 — ohlc, candlestick, waterfall, funnel, funnelarea, indicator, patterns"
+    ],
+    ["86d3ad7", [52], 1790546230, "chore(size): raise the basic budget to 242 kB"],
+    ["4276a0d", [53], 1790547953, "fix(indicator): drop kept number scales when fonts change"],
+    ["645b632", [51, 54], 1790548314, "Merge pull request #22 from holochart/m4/wave2"],
+    [
+      "87b923d",
+      [55],
+      1790566432,
+      "feat: M5 wave 0 — hierarchy engine, sunburst, sankey, Express trendlines, locales"
+    ],
+    ["e349422", [55, 56], 1790567082, "Merge pull request #23 from holochart/m5/wave0"],
+    [
+      "747646e",
+      [57],
+      1790586453,
+      "feat: M5 wave 1 — treemap, icicle, Express hierarchies, accessibility, sankey flow"
+    ],
+    ["786d177", [57, 58], 1790595848, "Merge pull request #24 from holochart/m5/wave1"],
+    [
+      "32d7310",
+      [59],
+      1790596166,
+      "test(visual): tolerate OS-rasterized DOM text in two a11y examples"
+    ],
+    [
+      "12016db",
+      [59, 60],
+      1790601845,
+      "Merge pull request #25 from holochart/fix/a11y-dom-tolerance"
+    ],
+    [
+      "ce045f6",
+      [61],
+      1790602496,
+      "feat: M5 wave 2 — keyboard navigation, touch, focus, carry-forward"
+    ],
+    ["fdffd51", [61, 62], 1790618332, "Merge pull request #26 from holochart/m5/wave2"],
+    [
+      "2aeb638",
+      [63],
+      1790624014,
+      "feat: M5 carry-forward — exit review, CI hardening, legends, parity gaps, GPU bench"
+    ],
+    ["6bec56b", [63, 64], 1790625041, "Merge pull request #27 from holochart/m5/wave3"],
+    [
+      "52a2d3d",
+      [65],
+      1790730653,
+      "feat: M6 wave 0 — 3D scene subplot, mesh & lighting, 3D lines/markers, IIFE split"
+    ],
+    [
+      "ca5e01e",
+      [66],
+      1790731619,
+      "fix: CI failures on M6 wave 0 (three min types, 3D example readouts, drill clicks)"
+    ],
+    ["a789cfa", [67], 1790732288, "style: format the hierarchy interaction helpers"],
+    ["e3a3cf2", [65, 68], 1790753346, "Merge pull request #28 from holochart/m6/wave0"],
+    [
+      "c304179",
+      [69],
+      1790761621,
+      "feat: M6 wave 1 — scatter3d, 3D hover, surface, mesh3d, cone, camera animation"
+    ],
+    ["7db7844", [69, 70], 1790769860, "Merge pull request #29 from holochart/m6/wave1"],
+    [
+      "2cb6fd3",
+      [71],
+      1790774626,
+      "feat: M6 wave 2 — streamtube, isosurface, volume (ray-marched), bar3d, 3D tubes/ribbons"
+    ],
+    ["b49fe2c", [71, 72], 1790775909, "Merge pull request #30 from holochart/m6/wave2"],
+    [
+      "327de2b",
+      [73],
+      1790814170,
+      "feat: M6 wave 3 — 2.5D view and extrusion, Express 3D, M6 exit review"
+    ],
+    ["8582414", [74], 1790864236, "test: perspective tolerance for the view3d examples"],
+    ["ce9d449", [73, 75], 1790878287, "Merge pull request #31 from holochart/m6/wave3"],
+    [
+      "b3bb285",
+      [76],
+      1790893518,
+      "feat: ship wave R0 — package hygiene, CI package checks, robustness, READMEs"
+    ],
+    [
+      "63d4339",
+      [77],
+      1790894779,
+      "test: sankey particle property test judges wrap-around from the phase itself"
+    ],
+    ["09ca09e", [76, 78], 1790896082, "Merge pull request #32 from holochart/ship/r0"],
+    [
+      "7227276",
+      [79],
+      1790915358,
+      "feat: ship wave R1 — typed figures, alpha pre mode, initial-release changeset"
+    ],
+    ["89be67b", [79, 80], 1790920992, "Merge pull request #35 from holochart/ship/r1"],
+    [
+      "44953a7",
+      [80],
+      1790935668,
+      "docs: chemistry and physics basics demo, TQQQ and SOXL demo, hovertemplate text fallback"
+    ],
+    ["62fa8fb", [82], 1790966228, "docs: Dallas weather demo"],
+    [
+      "d708828",
+      [83],
+      1790968311,
+      "feat: shared renderer keeps a page within a WebGL context budget (S2.1)"
+    ],
+    ["d68fbf4", [84], 1790970973, "feat: complete context restore, device texture limits (S2.2)"],
+    ["f257a14", [85], 1790977178, "feat: container edge cases and error policy (S2.3, S2.4)"],
+    ["51001c1", [86], 1790977178, "test: Firefox and WebKit runs, leak test (S2.5, S2.6)"],
+    [
+      "c4f5eec",
+      [87],
+      1790977178,
+      "docs: framework, SSR, CSP and troubleshooting guides; Plotly compatibility (S2.9, S2.10)"
+    ],
+    ["7e1681d", [88], 1790990909, "docs: ship backlog, with wave R2 progress"],
+    ["da0b545", [89], 1791036752, "test: fix three CI failures on the R2 branch"],
+    ["9b9ece8", [90], 1791038020, "docs: tirzepatide and GLP-1 class review demo"],
+    [
+      "6795271",
+      [91],
+      1791038131,
+      "test: let the GPU catch up before hovering after a context restore"
+    ],
+    ["15251ef", [81, 92], 1791039895, "Merge pull request #37 from holochart/ship/r2"],
+    [
+      "d3770ce",
+      [93],
+      1791054042,
+      "test: type-check every published package under exactOptionalPropertyTypes (S2.13a)"
+    ],
+    ["8f614fa", [94], 1791054042, "docs: tag the plugin API @experimental (S2.13)"],
+    ["668ea93", [95], 1791054042, "build: API reports for every package (S2.13)"],
+    [
+      "fa311e3",
+      [96],
+      1791054042,
+      "docs: tag the chart members typed by experimental contracts (S2.13)"
+    ],
+    [
+      "2e457f5",
+      [97],
+      1791054251,
+      "feat(runtime)!: chartToJSON(chart) replaces chart.toJSON(); naming rule (S2.13)"
+    ],
+    ["036535d", [98], 1791054823, "docs: API reference for every published package (S2.11)"],
+    ["99e8993", [99], 1791054823, "docs: changelog page generated from changesets (S2.11)"],
+    [
+      "0e6607e",
+      [100],
+      1791054823,
+      "docs: keep internal examples out of the attribute reference (S2.12)"
+    ],
+    ["796de4d", [101], 1791054823, "docs: correct how Date objects and UTC offsets are read"],
+    [
+      "ad799f5",
+      [102],
+      1791054823,
+      "docs: keep internal examples out of the gallery and the pages (S2.12)"
+    ],
+    ["c19220b", [103], 1791054823, "docs: public examples replace the _dev embeds (S2.12)"],
+    [
+      "9a2ca96",
+      [104],
+      1791054823,
+      "docs: traces, data formats, configuration and updating charts (S2.11)"
+    ],
+    ["daec548", [105], 1791054824, "docs: performance guide (S2.11)"],
+    [
+      "97f57c8",
+      [106],
+      1791054824,
+      "docs: colorscale and marker symbol references generated from the registries (S2.11)"
+    ],
+    ["fef068d", [107], 1791054824, "docs: finish the reference overview (S2.11)"],
+    ["d4f400f", [108], 1791054824, "docs: correct false statements in finished pages"],
+    [
+      "83f180d",
+      [109],
+      1791054824,
+      "docs: describe the changelog and gallery-page generators in the docs README"
+    ],
+    ["f719256", [110], 1791054824, "docs: finish controls and shapes & images (S2.11)"],
+    ["6ad85fc", [111], 1791054825, "docs: finish layout, axes & subplots (S2.11)"],
+    [
+      "c81b5cc",
+      [112],
+      1791054825,
+      "docs: finish hover, text & templates and interaction & events (S2.11)"
+    ],
+    [
+      "9145eea",
+      [113],
+      1791054825,
+      "docs: chartToJSON(chart) replaces chart.toJSON() in every page"
+    ],
+    ["c68dc71", [114], 1791054825, "docs: state the attribute naming rule"],
+    [
+      "2bec7d6",
+      [115],
+      1791054847,
+      "docs: the naming rule's exception for 3D material and scene attributes"
+    ],
+    [
+      "dc2352b",
+      [116],
+      1791056868,
+      "feat(runtime): keyboard stops with their own arrows, and accessibility parts that load on first use (S2.14)"
+    ],
+    [
+      "987f9e4",
+      [117],
+      1791056868,
+      "feat(traces-hier): keyboard points for sunburst, treemap, icicle and sankey (S2.14)"
+    ],
+    [
+      "7ac76ba",
+      [118],
+      1791056868,
+      "feat(traces-stats, traces-sci, traces-finance): bin and cell cursors, box and violin statistics, funnelarea, parcats, parcoords and polar keyboard points (S2.14)"
+    ],
+    [
+      "752ed6a",
+      [119],
+      1791056868,
+      "feat(traces-3d): keyboard orbit, scatter3d point navigation and descriptions of every 3D trace (S2.14)"
+    ],
+    [
+      "77c0758",
+      [120],
+      1791056868,
+      "build: budget the trace accessibility chunks, and leave the 2D ones out of the script build (S2.14)"
+    ],
+    [
+      "ef9ce85",
+      [121],
+      1791056868,
+      "test: axe-core audits over a sample of examples, in the interaction suite (S2.14, E20.8)"
+    ],
+    [
+      "f576f33",
+      [122],
+      1791056868,
+      "docs: keyboard access by chart family, announcement sentences, changeset (S2.14)"
+    ],
+    [
+      "b2e4445",
+      [123],
+      1791057099,
+      "docs: chart pages describe the keyboard access each family now has (S2.14)"
+    ],
+    [
+      "7529e88",
+      [123],
+      1791071730,
+      "build: keep @internal exports in the declarations, strip only @internal members"
+    ],
+    [
+      "f51ece3",
+      [125],
+      1791071735,
+      "refactor: tag the plumbing the packages share @internal and the rest of the plugin surface @experimental"
+    ],
+    [
+      "cab16de",
+      [124],
+      1791071828,
+      "feat(traces-stats): name an unlabelled parcoords dimension through the locale dictionary (S2.15)"
+    ],
+    [
+      "cd16821",
+      [127],
+      1791071828,
+      "feat(locales): translate the accessibility strings in ten locales (S2.15)"
+    ],
+    [
+      "e3cdd48",
+      [128],
+      1791071828,
+      "test: Arabic and Hebrew labels measure and draw without errors (S2.15)"
+    ],
+    [
+      "363a64c",
+      [129],
+      1791071828,
+      "docs: translated accessibility strings, what stays English and right-to-left limits; changeset (S2.15)"
+    ],
+    ["b4f826f", [126], 1791072353, "refactor!: one name per thing across the packages"],
+    [
+      "e74898f",
+      [130],
+      1791072426,
+      "test(traces-hier): compare sankey nodes pairwise in the overlap property"
+    ],
+    [
+      "f56f8ec",
+      [132],
+      1791072426,
+      "test(visual): restore the window limit of demos/openrouter/categories and name the cause (S2.8)"
+    ],
+    [
+      "1292213",
+      [133],
+      1791072426,
+      "docs(contributing): exact diffs from SwiftShader's fixed-point rasterizer, tolerance units, bit-exact refresh (S2.8, E20.9)"
+    ],
+    [
+      "baea292",
+      [134],
+      1791072426,
+      "test(runtime): interaction, keyboard, hover labels, styles, mirrors and chart updates (S2.7)"
+    ],
+    [
+      "daf7825",
+      [135],
+      1791072426,
+      "test(render): render root frames, markers, extrusions, lighting, text and font loading (S2.7)"
+    ],
+    [
+      "2b011d8",
+      [136],
+      1791072426,
+      "test(traces): calc results for stats, 3D, sci, scatter, funnelarea and ohlc inputs (S2.7)"
+    ],
+    [
+      "cae2941",
+      [137],
+      1791072426,
+      "test: coverage thresholds for runtime, render and trace calc modules (S2.7)"
+    ],
+    [
+      "256304c",
+      [131],
+      1791072710,
+      "refactor: give real names to the types that leaked under bundler-made or keyword-like ones"
+    ],
+    ["030a8d1", [139], 1791073343, "feat(holochart)!: list the full bundle's exports by name"],
+    ["bd02ec7", [138], 1791073890, "perf(render): R32F heatmap upload (S2.16)"],
+    [
+      "84fd921",
+      [141],
+      1791073890,
+      "perf(traces-sci): heatmap calc and description stop rescanning the grid (S2.16)"
+    ],
+    [
+      "f7fd000",
+      [142],
+      1791073890,
+      "chore(bench): --profile prints where a mount spends its CPU time"
+    ],
+    [
+      "80d0cd8",
+      [143],
+      1791073890,
+      "perf(render): lines cost 2.1-2.6x Line2 solid and 2.4-3.0x dashed (S2.16)"
+    ],
+    [
+      "7f8be7c",
+      [144],
+      1791073890,
+      "build(size): budget policy with a ledger of named causes and a full ESM ceiling (S2.16)"
+    ],
+    ["3a7fb9b", [145], 1791073890, "docs(perf): S2.16 measurements and method; changeset"],
+    [
+      "d913ccf",
+      [146],
+      1791073890,
+      "perf(render): shader reasons move to module docs, keeping the bundle size level (S2.16)"
+    ],
+    [
+      "7763d0f",
+      [140],
+      1791073938,
+      "test(bundle): the 3D add-on adds the 3D package's public names, not its internal ones"
+    ],
+    [
+      "edc2056",
+      [148],
+      1791073938,
+      "feat(api-report): show @internal exports, report the script global, check the full bundle's list"
+    ],
+    [
+      "e7c92ca",
+      [149],
+      1791073942,
+      "docs: what @internal means on an export, the curated bundle list, renames and migration; changeset"
+    ],
+    ["f9d9d3d", [150], 1791073943, "chore: regenerate the API reports"],
+    [
+      "e427556",
+      [147],
+      1791073963,
+      "build(size): ledger line for the trace accessibility chunk's budget (S2.14, S2.16)"
+    ],
+    [
+      "9765621",
+      [152],
+      1791073988,
+      "perf(runtime): the chart summary scans a grid once per calc, not once per summary (S2.16)"
+    ],
+    [
+      "76ece6b",
+      [151, 153],
+      1791074197,
+      "Merge branch 'ship/r3' into worktree-agent-a37c6d7488e88cccb-integrated"
+    ],
+    [
+      "ca0dcea",
+      [154],
+      1791074912,
+      "chore: follow the renames and regenerate render's report after merging ship/r3"
+    ],
+    [
+      "3a01ba5",
+      [155],
+      1791077910,
+      "docs: backlog records wave R3, what it left open and what it found; graph ideas"
+    ]
+  ]
+}

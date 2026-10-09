@@ -3,9 +3,12 @@ title: Sankey
 description: Show flows between stages or categories, as links as wide as their value between nodes sized by their throughput.
 status: complete
 chart: sankey
+launch-featured: true
 ---
 
 # Sankey
+
+<ChartOverview />
 
 ## Overview
 
@@ -32,6 +35,9 @@ Pick a different chart when:
   [funnel](/charts/financial/funnel).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -77,12 +83,14 @@ node and carries a `value`. The live example is a (synthetic) national energy ba
 
 ## Variations
 
+<ChartVariations />
+
 ### Vertical
 
 `orientation: 'v'` turns the diagram so the flow runs top to bottom. Node labels are then drawn
 over the nodes, from their left edge, as in Plotly:
 
-<Example id="sankey/vertical" />
+<ExampleLink id="sankey/vertical" />
 
 ### Fixed node positions
 
@@ -108,7 +116,7 @@ createChart(document.getElementById('chart')!, {
 });
 ```
 
-<Example id="sankey/fixed-positions" />
+<ExampleLink id="sankey/fixed-positions" />
 
 ### Circular links
 
@@ -117,14 +125,14 @@ step — are routed as loops: out of the source's right side, around a corner, a
 (or above) the nodes and back into the target's left side. Loops whose spans overlap get stacked
 lanes, and room is reserved for them inside the domain:
 
-<Example id="sankey/circular" />
+<ExampleLink id="sankey/circular" />
 
 ### Node groups
 
 `node.groups` merges nodes into one combined node; here wind, solar and hydro become
 "Renewables":
 
-<Example id="sankey/groups" />
+<ExampleLink id="sankey/groups" />
 
 ### Concentration colorscales
 
@@ -152,14 +160,14 @@ createChart(document.getElementById('chart')!, {
 });
 ```
 
-<Example id="sankey/colorscales" />
+<ExampleLink id="sankey/colorscales" />
 
 ### Arrows and link colors
 
 `link.arrowlen` ends every link with an arrowhead into its target (at most half the gap between
 the columns); `link.color` takes one color per link:
 
-<Example id="sankey/arrows" />
+<ExampleLink id="sankey/arrows" />
 
 ### Flow particles
 
@@ -197,7 +205,7 @@ createChart(document.getElementById('chart')!, {
   still frame that is always the same, e.g. an exported image or a visual test. The example below
   is frozen 2 s in; without `time` the particles move.
 
-<Example id="sankey/flow" />
+<ExampleLink id="sankey/flow" />
 
 The particles move only while the chart is on screen, dim with the links outside a hover
 highlight, and follow their links while a node is dragged. With `prefers-reduced-motion: reduce`

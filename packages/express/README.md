@@ -25,6 +25,12 @@ newer can also `require()` it.
   `strip`, `ecdf`, `densityHeatmap`, `densityContour`, `imshow`, `scatterMatrix`,
   `parallelCoordinates`, `parallelCategories`, `funnel`, `funnelArea`, `sunburst`, `treemap`,
   `icicle`, `scatterPolar`, `linePolar`, `barPolar`, `scatter3d`, `line3d`
+- **Maps (experimental):** `scatterGeo`, `lineGeo`, `choropleth`. Drawing them needs
+  `@mk7s/holochart-traces-geo` registered, which the full bundle leaves out: add
+  `import '@mk7s/holochart/geo'`
+- **Networks (experimental):** `graph`, `chord`, `adjacencyMatrix`, from an edge table and an
+  optional node table. Drawing `graph` and `chord` needs `@mk7s/holochart-traces-graph` registered,
+  which the full bundle leaves out: add `import '@mk7s/holochart/graph'`
 - **Data and stats:** `data` (`fromCSV`, `toTable`, …), `ff.distplot`, `getTrendlineResults`, `ols`,
   `lowess`, `rolling`
 

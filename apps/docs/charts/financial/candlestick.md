@@ -3,9 +3,12 @@ title: Candlestick
 description: Show the open, high, low and close of each period as a body from open to close with wicks to the high and low, colored by direction.
 status: complete
 chart: candlestick
+launch-featured: true
 ---
 
 # Candlestick
+
+<ChartOverview />
 
 ## Overview
 
@@ -29,6 +32,9 @@ Pick a different chart when:
   [box plot](/charts/statistical/box).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -77,13 +83,15 @@ example shows three months of daily candles:
 
 ## Variations
 
+<ChartVariations />
+
 ### Range breaks and range selector
 
 A year of daily candles on a trading calendar: `rangebreaks` hide weekends and holidays, so the
 candles sit side by side at an even width, and range selector buttons jump to the last month,
 three months, the year to date or everything:
 
-<Example id="candlestick/range-breaks" :height="440" />
+<ExampleLink id="candlestick/range-breaks" />
 
 ### Fills, outlines and whisker caps
 
@@ -92,7 +100,7 @@ hollow candles), `increasing.line` and `decreasing.line` set the outline and wic
 width, `whiskerwidth` adds caps to the wicks (a fraction of the candle width) and a smaller
 `layout.boxgap` makes candles wider:
 
-<Example id="candlestick/styled" />
+<ExampleLink id="candlestick/styled" />
 
 ### Intraday candles with overnight breaks
 
@@ -100,7 +108,7 @@ Fifteen-minute candles over three sessions, with the nights (`pattern: 'hour'`) 
 hidden. Candles keep their width across the breaks; `hovermode: 'x'` puts the time on the axis
 and the prices beside the candle:
 
-<Example id="candlestick/intraday" :height="420" />
+<ExampleLink id="candlestick/intraday" />
 
 ### Volume, moving averages and signals
 
@@ -108,7 +116,15 @@ A trading chart recipe: candlesticks with 20- and 50-day moving averages (scatte
 sell markers where they cross, and a volume subplot sharing the x axis (`xaxis.anchor: 'y2'` with
 two y domains). The range breaks apply to both subplots, since they share the axis:
 
-<Example id="recipes/candlestick-volume" :height="520" />
+<ExampleLink id="recipes/candlestick-volume" />
+
+### Comparing fund prices alongside volume
+
+Use a shared date axis to compare multiple funds and add volume as a separate trace. This complete
+fund dashboard keeps time alignment visible and makes the chart a realistic exploration task.
+The public demo uses local financial fixtures; its complete download includes those fixtures.
+
+<ExampleLink id="demos/index-funds/candles" />
 
 ## Styling
 

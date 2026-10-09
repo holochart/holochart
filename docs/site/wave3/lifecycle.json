@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-10-09T19:10:58.936Z",
+  "browser": "153.0.8010.12",
+  "context": "Sixteen sequential bar/basic quick previews; WebGL states sampled using weak references",
+  "stats": {
+    "created": 17,
+    "active": 1,
+    "maximum": 2,
+    "disposed": 16,
+    "chartCreated": 16,
+    "chartActive": 0,
+    "sharedActive": 1
+  },
+  "homeHtmlSha256": "b687f6b1bca48b0241b1353b5fde9739ca35b7a5406c11d3e7f564369ad157ad"
+}

@@ -32,6 +32,16 @@ export const holochartFr: Readonly<Record<string, string>> = {
   '{name}: {dimension}, {category}, {text}, {n} of {count}.':
     '{name} : {dimension}, {category}, {text}, {n} sur {count}.',
   'Dimension {n}': 'Dimension {n}',
+  'Map centered at longitude {lon}°, latitude {lat}°, scale {scale}.':
+    'Carte centrée sur la longitude {lon}°, la latitude {lat}°, échelle {scale}.',
+  '{name}: {text}, node {n} of {count}.': '{name} : {text}, nœud {n} sur {count}.',
+  '{name}: {text}, link {n} of {count} of {node}.':
+    '{name} : {text}, lien {n} sur {count} du nœud {node}.',
+  '{name}: {text}, rank {rank} of {ranks}, {n} of {count}.':
+    '{name} : {text}, rang {rank} sur {ranks}, {n} sur {count}.',
+  'Up: {up}.': 'Haut : {up}.',
+  'Down: {down}.': 'Bas : {down}.',
+  'Folded.': 'Replié.',
   // Chart summaries.
   '{y} by {x}.': '{y} par {x}.',
   '{count} more traces are not summarized.': '{count} autres séries ne sont pas résumées.',

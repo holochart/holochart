@@ -2,7 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 
 /**
  * Leak test (backlog S2.6, plan E20.6) on `_dev/interaction-leak`: every chart family is created,
- * hovered, updated (`react`, `relayout`) and destroyed (`destroy()` and `purge(el)` in turn)
+ * hovered (maps are also dragged and wheeled, and torn down with the timers of those gestures
+ * pending), updated (`react`, `relayout`) and destroyed (`destroy()` and `purge(el)` in turn)
  * `LEAK_CYCLES` times (10 by default), once with a WebGL context of its own and once on the shared renderer
  * (ADR-023). After a few warm-up rounds (fonts, glyph atlases, lazy chunks, the style element and
  * program caches are filled once per page), everything a chart takes must come back:
@@ -77,6 +78,8 @@ const FAMILIES = [
   'volumes',
   'bar3d',
   'view3d',
+  'geo',
+  'globe',
 ] as const;
 type Family = (typeof FAMILIES)[number];
 type Mode = 'dedicated' | 'shared';
@@ -136,6 +139,8 @@ const KNOWN_LEAKS: Partial<Record<Mode | `${Family}/${Mode}`, { why: string; gro
         ['scene', 1],
         ['fields', 1],
         ['bar3d', 1],
+        // The text labels of the scattergeo trace; without them the family is clean.
+        ['geo', 1],
       ] as const
     ).map(([family, buffers]) => [
       `${family}/shared`,
@@ -536,7 +541,11 @@ for (const family of FAMILIES) {
       page,
       browserName,
     }) => {
-      test.setTimeout(120_000 + CYCLES * 6_000);
+      // A round of the maps projects a 50m basemap three times and runs two gestures on it: on
+      // software GL it takes several times as long as most families' (about as long as `scene`'s).
+      // A round of the 3D globe builds its meshes once per page and switches two maps' drawing.
+      const perRound = family === 'geo' ? 15_000 : family === 'globe' ? 15_000 : 6_000;
+      test.setTimeout(120_000 + CYCLES * perRound);
       const warnings: string[] = [];
       page.on('pageerror', (error) => warnings.push(`pageerror: ${error.message}`));
 
@@ -588,9 +597,10 @@ for (const family of FAMILIES) {
       // The same counters grow as listed, no others, and none by more than listed. A known
       // leak that depends on timing (a text batch that sometimes keeps its length) can fall short
       // of its figure in a short run; one that stops growing fails here, so its entry gets removed.
-      expect(Object.keys(growth).sort(), `counters growing over ${CYCLES} rounds`).toEqual(
-        Object.keys(expected).sort(),
-      );
+      expect(
+        Object.keys(growth).sort(),
+        `counters growing over ${CYCLES} rounds: ${JSON.stringify(growth)}`,
+      ).toEqual(Object.keys(expected).sort());
       for (const [key, most] of Object.entries(expected)) {
         expect(growth[key], `${key} per round`).toBeGreaterThan(0);
         expect(growth[key], `${key} per round`).toBeLessThanOrEqual(most);

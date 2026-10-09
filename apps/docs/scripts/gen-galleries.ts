@@ -1,6 +1,6 @@
 /**
- * Generates the lists of two reference pages from the library's own registries, so they cannot go
- * stale:
+ * Generates the lists of two reference pages and one fundamentals page from the library's own
+ * registries and tables, so they cannot go stale:
  *
  * - `reference/colorscales.md`: every named colorscale and qualitative palette, with swatches.
  *   From core's color registries (`colors`, `colorways`) as the full `@mk7s/holochart` bundle
@@ -9,6 +9,13 @@
  * - `reference/marker-symbols.md`: every marker symbol with its numeric codes and its shape. From
  *   the render package's symbol table (`MARKER_SYMBOLS`, the geometry the GPU draws); the trace
  *   types that take a symbol come from the bundle's schema.
+ * - `fundamentals/maps.md`: every `geo.projection.type`. Plotly's, split into the projections that
+ *   are in the geo package's initial code and those of its lazy chunk, and Holochart's own type,
+ *   the 3D globe, in a table of its own. From the two tables of
+ *   `packages/traces-geo/src/geo/constants.ts` (`D3_GEO_PROJECTIONS`,
+ *   `D3_GEO_PROJECTION_PROJECTIONS`) and its `GLOBE_PROJECTION`, read from the source file because
+ *   the package does not export them; together they are checked against the enumeration of
+ *   `projection.type` in the package's schema.
  *
  * Output: the text between the `generated:<region>` markers of the pages, which are checked in.
  * The rest of each page is hand-written. Nothing is written when a page is up to date. The script
@@ -36,11 +43,19 @@ import {
   type ColorscaleStops,
 } from '@mk7s/holochart-core';
 import { MARKER_SYMBOLS, SYMBOL_VARIANTS, type SymbolDef } from '@mk7s/holochart-render';
+import {
+  D3_GEO_PROJECTION_PROJECTIONS,
+  D3_GEO_PROJECTIONS,
+  FITBOUNDS_INCOMPATIBLE,
+  GLOBE_PROJECTION,
+  LONAXIS_SPAN,
+} from '../../../packages/traces-geo/src/geo/constants.ts';
 import { compactAttributes, isLeaf, ITEMS, type Tree } from './plotly-compat/schema-tree.ts';
 
 const DOCS_ROOT = fileURLToPath(new URL('..', import.meta.url));
 const COLORS_PAGE = 'reference/colorscales.md';
 const SYMBOLS_PAGE = 'reference/marker-symbols.md';
+const MAPS_PAGE = 'fundamentals/maps.md';
 
 // ---- Markdown and HTML helpers ------------------------------------------------------------------
 
@@ -527,6 +542,119 @@ export function renderSymbolsTable(model: SymbolsModel): string {
   );
 }
 
+// ---- Map projections ----------------------------------------------------------------------------
+
+/** One `geo.projection.type`. */
+export interface ProjectionEntry {
+  /** The value of `projection.type`: Plotly's as Plotly spells them, and Holochart's own. */
+  name: string;
+  /** The d3 factory that draws it (`geoMercator`); of the globe, the factory of its view. */
+  factory: string;
+  /** What a drag does on a world map of this type (`GeoView.mode` of the geo package). */
+  drag: 'pans' | 'turns in longitude, moves up and down' | 'turns in longitude and latitude';
+  /** Whether `fitbounds` can fit it. */
+  fitbounds: boolean;
+}
+
+export interface ProjectionsModel {
+  /** The projections of `d3-geo`, in the geo package's initial code. */
+  builtin: ProjectionEntry[];
+  /** The projections of `d3-geo-projection`, in the package's lazy chunk. */
+  lazy: ProjectionEntry[];
+  /**
+   * Holochart's own types, which are not Plotly's and in neither table: the 3D globe
+   * (`GLOBE_PROJECTION`).
+   */
+  extra: ProjectionEntry[];
+}
+
+/** The Plotly type whose view (rotation, scale, drag, fit) the 3D globe has. */
+const GLOBE_VIEW = 'orthographic' satisfies keyof typeof D3_GEO_PROJECTIONS;
+
+/**
+ * The two projection tables of the geo package as rows, and the globe as a row of its own. A world
+ * map of a type with a longitude span of its own (`LONAXIS_SPAN`, Plotly's clipped projections and
+ * the globe) turns both ways under a drag; Albers USA is always the scoped map of the United
+ * States, which pans.
+ */
+export function projectionsModel(): ProjectionsModel {
+  const entries = (tableOf: Readonly<Record<string, string>>): ProjectionEntry[] =>
+    Object.entries(tableOf)
+      .map(([name, factory]) => ({
+        name,
+        factory,
+        drag:
+          name === 'albers usa'
+            ? ('pans' as const)
+            : Object.hasOwn(LONAXIS_SPAN, name)
+              ? ('turns in longitude and latitude' as const)
+              : ('turns in longitude, moves up and down' as const),
+        fitbounds: !FITBOUNDS_INCOMPATIBLE.has(name),
+      }))
+      .sort((a, b) => (a.name < b.name ? -1 : 1));
+  return {
+    builtin: entries(D3_GEO_PROJECTIONS),
+    lazy: entries(D3_GEO_PROJECTION_PROJECTIONS),
+    extra: entries({ [GLOBE_PROJECTION]: D3_GEO_PROJECTIONS[GLOBE_VIEW] }),
+  };
+}
+
+/** Distinct projections among `entries`: two names can share a factory (`winkel3`). */
+function distinct(entries: readonly ProjectionEntry[]): number {
+  return new Set(entries.map((e) => e.factory)).size;
+}
+
+function projectionsTable(entries: readonly ProjectionEntry[]): string {
+  return table(
+    ['`projection.type`', 'd3 projection', 'A drag on a world map', '`fitbounds`'],
+    entries.map((e) => [code(e.name), code(e.factory), e.drag, e.fitbounds ? 'Yes' : 'No']),
+  );
+}
+
+export function renderProjectionsSummary(model: ProjectionsModel): string {
+  const all = [...model.builtin, ...model.lazy];
+  const extras = model.extra.map((e) => code(e.name)).join(', ');
+  return (
+    `\`projection.type\` takes Plotly's **${all.length}** names (${distinct(all)} projections: ` +
+    `${all.length - distinct(all)} are second names of another). ` +
+    `**${model.builtin.length}** are in the package's own code and **${model.lazy.length}** in ` +
+    `its lazy chunk. It also takes ${extras}, a [Holochart extra](#holochart-extra) that is not ` +
+    'a Plotly projection.'
+  );
+}
+
+export function renderProjectionsBuiltin(model: ProjectionsModel): string {
+  return projectionsTable(model.builtin);
+}
+
+export function renderProjectionsLazy(model: ProjectionsModel): string {
+  return projectionsTable(model.lazy);
+}
+
+/**
+ * Holochart's own types. The second column is the Plotly type whose view the type has, not a d3
+ * projection: the globe is not drawn by one.
+ */
+export function renderProjectionsExtra(model: ProjectionsModel): string {
+  return table(
+    ['`projection.type`', 'Its view is that of', 'A drag on a world map', '`fitbounds`'],
+    model.extra.map((e) => [code(e.name), code(GLOBE_VIEW), e.drag, e.fitbounds ? 'Yes' : 'No']),
+  );
+}
+
+/**
+ * Throws unless the two tables of Plotly's names and Holochart's own types are together exactly
+ * the values the schema of `geo.projection.type` accepts, each once (the full bundle does not
+ * register the geo package, so its schema comes from the geo entry).
+ */
+export function checkProjections(model: ProjectionsModel, schemaValues: readonly unknown[]): void {
+  const listed = [...model.builtin, ...model.lazy, ...model.extra].map((e) => e.name).sort();
+  const accepted = schemaValues.map(String).sort();
+  if (listed.length !== accepted.length || listed.some((name, i) => name !== accepted[i])) {
+    throw new Error('the projection tables and the schema of geo.projection.type disagree');
+  }
+}
+
 // ---- The full bundle: schema and defaults -------------------------------------------------------
 
 type Bundle = typeof import('@mk7s/holochart');
@@ -622,7 +750,11 @@ function colorDefaults(bundle: Bundle): ColorsModel['defaults'] {
 // ---- Pages --------------------------------------------------------------------------------------
 
 /** The generated regions of each page, by page path and region name. */
-export function renderPages(colorsModel: ColorsModel, symbolsModel: SymbolsModel) {
+export function renderPages(
+  colorsModel: ColorsModel,
+  symbolsModel: SymbolsModel,
+  projections: ProjectionsModel,
+) {
   return {
     [COLORS_PAGE]: {
       'colors-summary': renderColorsSummary(colorsModel),
@@ -635,6 +767,12 @@ export function renderPages(colorsModel: ColorsModel, symbolsModel: SymbolsModel
       'symbols-summary': renderSymbolsSummary(symbolsModel),
       'symbols-traces': renderSymbolsTraces(symbolsModel),
       'symbols-table': renderSymbolsTable(symbolsModel),
+    },
+    [MAPS_PAGE]: {
+      'geo-projections-summary': renderProjectionsSummary(projections),
+      'geo-projections-builtin': renderProjectionsBuiltin(projections),
+      'geo-projections-lazy': renderProjectionsLazy(projections),
+      'geo-projections-extra': renderProjectionsExtra(projections),
     },
   } satisfies Record<string, Record<string, string>>;
 }
@@ -667,9 +805,16 @@ async function main(): Promise<void> {
     attributes: facts.symbolAttributes,
   };
 
+  const projections = projectionsModel();
+  // The geo entry of the bundle re-exports the geo package, with the schema of `layout.geo`.
+  const geo = await import('@mk7s/holochart/geo');
+  checkProjections(projections, geo.geoAttributes.children.projection.children.type.values ?? []);
+
   // Render every page before writing any, so a failure leaves the pages as they were.
   const pages: { file: string; current: string; next: string }[] = [];
-  for (const [page, regions] of Object.entries(renderPages(colorsModel, symbolsModel))) {
+  for (const [page, regions] of Object.entries(
+    renderPages(colorsModel, symbolsModel, projections),
+  )) {
     const file = path.join(DOCS_ROOT, page);
     const current = await readFile(file, 'utf8');
     let next = current;
@@ -698,7 +843,9 @@ async function main(): Promise<void> {
   }
   console.log(
     `galleries: ${colorsModel.scales.length} colorscales, ${colorsModel.palettes.length} palettes, ` +
-      `${symbolsModel.symbols.length} symbols`,
+      `${symbolsModel.symbols.length} symbols, ` +
+      `${projections.builtin.length + projections.lazy.length} projections of Plotly's, ` +
+      `${projections.extra.length} of Holochart's own`,
   );
   if (stale.length > 0) {
     console.error(

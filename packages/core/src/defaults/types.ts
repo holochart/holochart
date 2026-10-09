@@ -167,6 +167,16 @@ export type FullLayout = BaseFullLayout & {
   /** `config.a11y.reducedMotion` (plan E17.5), read through `reducedMotion()`. Set by supply-defaults. */
   _reducedMotion?: ReducedMotion;
   /**
+   * `config.staticPlot`: the chart takes no input (an image export draws one). A trace view that
+   * moves things by itself draws their end at once. Set by supply-defaults.
+   */
+  _staticPlot?: boolean;
+  /**
+   * `config.worker` (ADR-011), for the traces that can work off the main thread: the default of
+   * the `graph` trace's `worker`. Set by supply-defaults.
+   */
+  _worker?: boolean | 'auto';
+  /**
    * Axes linked by `matches` (plan E3.9, `defaults/constraints.ts`): one object per group, axis id
    * → 1, e.g. `[{ x: 1, x2: 1 }]`. Axes of a group share their range. Set by supply-defaults.
    */

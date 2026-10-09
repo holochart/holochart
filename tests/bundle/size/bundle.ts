@@ -45,6 +45,8 @@ interface Chunk {
   isEntry?: boolean;
   /** Chunks this one imports statically. */
   imports?: string[];
+  /** Chunks this one loads with a dynamic `import()` that survived tree shaking. */
+  dynamicImports?: string[];
   moduleIds?: string[];
 }
 interface Rolldown {
@@ -66,6 +68,9 @@ async function loadRolldown(): Promise<Rolldown> {
   const rolldownPath = createRequire(vite).resolve('rolldown');
   return (await import(pathToFileURL(rolldownPath).href)) as Rolldown;
 }
+
+/** Render's shared chunk of primitive helpers (`dist/common-*.js`: precision, materials, uniforms). */
+const RENDER_SHARED_MODULE = /[\\/]render[\\/]dist[\\/]common-[\w-]+\.js$/;
 
 const VIRTUAL = '\0size-entry';
 const THREE = /^three($|\/)/;
@@ -92,7 +97,10 @@ async function bundle(rd: Rolldown, code: string, minify: boolean): Promise<Spli
   }
 }
 
-/** Initial = the entry chunk plus its static-import closure; lazy = every other chunk. */
+/**
+ * Initial = the entry chunk plus its static-import closure; lazy = every other chunk the app can
+ * reach.
+ */
 function split(chunks: Chunk[]): Split {
   const entry = chunks.find((c) => c.isEntry);
   if (entry?.code === undefined) throw new Error('rolldown produced no entry chunk');
@@ -107,7 +115,25 @@ function split(chunks: Chunk[]): Split {
     }
   };
   visit(entry);
-  return { initial: [...initial], lazy: chunks.filter((c) => !initial.has(c)) };
+  // What the app can load on demand: every chunk some reachable chunk imports dynamically, with
+  // its own static imports. A chunk nothing reaches is left out: the bundler emits one for every
+  // `import()` it parses, also in a function that tree shaking then removes (render's
+  // `loadPicker` in an app without a globe), and such a chunk is never fetched.
+  const reached = new Set<Chunk>(initial);
+  const queue = [...initial];
+  for (let chunk = queue.pop(); chunk; chunk = queue.pop()) {
+    // The bundler lists a dynamic import even when its `import()` was removed: the chunk's code
+    // has to name the file.
+    const dynamic = (chunk.dynamicImports ?? []).filter((name) => chunk.code?.includes(name));
+    for (const name of [...(chunk.imports ?? []), ...dynamic]) {
+      const dep = byName.get(name);
+      if (dep && !reached.has(dep)) {
+        reached.add(dep);
+        queue.push(dep);
+      }
+    }
+  }
+  return { initial: [...initial], lazy: chunks.filter((c) => reached.has(c) && !initial.has(c)) };
 }
 
 const code = (chunks: readonly Chunk[]): string => chunks.map((c) => c.code ?? '').join('\n');
@@ -121,7 +147,10 @@ function splitLazy(lazy: readonly Chunk[]): { rest: Chunk[]; parts: Map<string, 
   const rest: Chunk[] = [];
   const parts = new Map<string, Chunk[]>();
   for (const chunk of lazy) {
-    const ids = chunk.moduleIds ?? [];
+    // Render's shared primitive helpers are no part's own. In an app that draws nothing up front
+    // (the runtime alone) the fill chunk is their only user, and a bundler puts them in its chunk:
+    // they are then counted with it, which is where that app pays for them.
+    const ids = (chunk.moduleIds ?? []).filter((id) => !RENDER_SHARED_MODULE.test(id));
     const owners = new Set(ids.map((id) => lazyPartOf(id)));
     const [only] = owners;
     if (owners.size === 1 && only !== undefined) {
@@ -129,7 +158,10 @@ function splitLazy(lazy: readonly Chunk[]): { rest: Chunk[]; parts: Map<string, 
         throw new Error(`unknown part ${only}`);
       parts.set(only, [...(parts.get(only) ?? []), chunk]);
     } else if ([...owners].some((o) => o !== undefined)) {
-      throw new Error(`${chunk.fileName} mixes a lazy part (${[...owners].join(', ')}) with code`);
+      const other = ids.filter((id) => lazyPartOf(id) === undefined);
+      throw new Error(
+        `${chunk.fileName} mixes a lazy part (${[...owners].join(', ')}) with code: ${other.join(', ')}`,
+      );
     } else {
       rest.push(chunk);
     }

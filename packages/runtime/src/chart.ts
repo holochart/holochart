@@ -2199,7 +2199,9 @@ export class Chart {
         const columns: unknown[] = [];
         for (const trace of fullData) {
           if (trace.visible !== false && trace[`${letter}axis`] === id) {
-            columns.push(trace[letter]);
+            // A trace that keeps its positions elsewhere names them (core's `axisHints`).
+            const hinted = trace._module?.axisHints?.(trace)?.[letter as 'x' | 'y'];
+            columns.push(hinted ?? trace[letter]);
           } else {
             const data = axisDataOf(trace, id);
             if (data !== undefined) columns.push(data);
@@ -2665,6 +2667,7 @@ export class Chart {
         width: size.width,
         height: size.height,
         plotArea: this.#plotArea,
+        chart: this,
       });
       for (const e of group.entries) {
         const tp = plans[e.index] as TraceUpdatePlan;
@@ -2734,29 +2737,32 @@ export class Chart {
         });
       },
       invalidate: () => root.invalidate(),
+      recalc: () => {
+        if (this.#destroyed) return;
+        this.#schedule((plan) => addStages(plan, index, ['calc'])).catch(() => undefined);
+      },
       subplotViewport: (key, options) => this.#subplotViewport(key, options),
       selectedPoints: this.#selectionOf(index),
     };
   }
 
-  /** See `TracePlotContext.subplotViewport`: one 3D viewport per key, kept while asked for. */
+  /** See `TracePlotContext.subplotViewport`: one viewport per key, kept while asked for. */
   #subplotViewport(key: string, options: SubplotViewportOptions): Viewport {
     let entry = this.#keyed.get(key);
     if (!entry) {
-      const viewport = this.#requireRoot().addViewport({
-        kind: '3d',
-        rect: options.rect,
-        projection: options.projection ?? 'perspective',
-        // After every cartesian subplot and mirror (1e6 + …), before the overlay.
-        order: 2e6,
-        name: `subplot-${key}`,
-      });
+      // After every cartesian subplot and mirror (1e6 + …), before the overlay.
+      const placed = { rect: options.rect, order: 2e6, name: `subplot-${key}` };
+      const viewport = this.#requireRoot().addViewport(
+        options.kind === '2d'
+          ? { kind: '2d', clip: true, ...placed }
+          : { kind: '3d', projection: options.projection ?? 'perspective', ...placed },
+      );
       this.#keyed.set(key, (entry = { viewport, used: true }));
     }
     const vp = entry.viewport;
     entry.used = true;
     vp.setRect(options.rect);
-    vp.setProjection(options.projection ?? 'perspective');
+    if (vp.kind === '3d') vp.setProjection(options.projection ?? 'perspective');
     vp.background = options.background ?? null;
     return vp;
   }
@@ -2854,7 +2860,10 @@ export class Chart {
       subplots: () => this.#subplotList,
       entries: (sp) =>
         this.#areas.has(sp)
-          ? this.#domainEntries().entries.filter((e) => e.trace['subplot'] === sp.id)
+          ? this.#domainEntries().entries.filter(
+              // Polar traces name their subplot in `subplot`, geo traces in `geo`.
+              (e) => e.trace['subplot'] === sp.id || e.trace['geo'] === sp.id,
+            )
           : this.#entries(sp.id),
       domainEntries: () => this.#domainEntries(),
       selectArea: (x, y) => {

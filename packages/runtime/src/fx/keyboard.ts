@@ -45,10 +45,13 @@
  * - The first key without a cursor starts at the first trace's first point (End: its last point).
  * - The cursor stays when the chart loses focus (its label hides) and after data or layout
  *   changes while its trace and point still exist; on a list of stops it follows its point (a
- *   hierarchy node keeps the cursor through a drill-down).
+ *   hierarchy node keeps the cursor through a drill-down). Stops built on demand say where the
+ *   cursor is among them now (`KeyboardStops.locate`: a `graph` node keeps the cursor through a
+ *   fold, and when it is no longer drawn the cursor goes to a stop near it), or that it is
+ *   nowhere: it then goes to the first stop. Those that cannot say keep the cursor's index.
  * - On a trace that is not on cartesian axes and handles view keys (`TraceA11y.keyboardView`: 3D
- *   scenes), `+` / `-` move the camera in and out, Shift + arrows orbit it and `0` resets it; the
- *   cursor's trace gets them, every such trace without a cursor.
+ *   scenes, maps), `+` / `-` move the camera in and out, Shift + arrows orbit it (a map pans or
+ *   turns) and `0` resets it; the cursor's trace gets them, every such trace without a cursor.
  *
  * Not navigated: cartesian grid or aggregating traces without stops of their own, and 3D traces
  * other than scatter3d (their scenes still take the view keys).
@@ -57,16 +60,20 @@
  *
  * Each move announces the point like its hover label, in plain text: "Revenue: (Mar 1, 2024, 11),
  * point 3 of 6." (every label of a stop with several, and a label's secondary box when the trace
- * filled it: a sankey value). Zoom, pan, rotation and reset are announced briefly. Every text
- * comes from {@link KEYBOARD_TEMPLATES} or from the stop (`KeyboardPoint.say`), English sentences
- * that are also their locale dictionary keys.
+ * filled it: a sankey value). Zoom, pan, rotation and reset are announced briefly, or with the
+ * sentence the trace has for its new view (`TraceA11y.keyboardViewSay`: a map says where it is
+ * centered). Every text comes from {@link KEYBOARD_TEMPLATES}, from the stop (`KeyboardPoint.say`)
+ * or from the trace, English sentences that are also their locale dictionary keys.
  *
  * ## Events
  *
  * Moving emits `hover` (without `event`, like `chart.hover`), Escape `unhover`, Enter `click` (and
  * `selected` with `clickmode: 'select'`) with the Plotly-shaped point and the `KeyboardEvent`.
- * Hierarchy nodes (sunburst, treemap, icicle) get the click their view handles (drill-down). Zoom,
- * pan and reset emit `relayout` with the same keys as a drag (`'xaxis.range[0]'`, …).
+ * Hierarchy nodes (sunburst, treemap, icicle) get the click their view handles (drill-down). The
+ * view of a trace on cartesian axes gets the click of a stop that asks for it
+ * (`KeyboardPoint.click`: a `graph` tree folds a node), and the stop is announced again when the
+ * click changed what it says. Zoom, pan and reset emit `relayout` with the same keys as a drag
+ * (`'xaxis.range[0]'`, …).
  */
 import {
   getIn,
@@ -352,6 +359,11 @@ export class KeyboardNav {
   #flip = false;
   /** The point shown last: the cursor follows it through a rebuild of its trace's stops. */
   #shown: HoverPoint | undefined;
+  /**
+   * What the cursor's stop said when Enter went to its trace's view (`KeyboardPoint.click`), until
+   * the next pipeline run or key: the stop is announced again when the click changed that.
+   */
+  #clicked: string | undefined;
   /** Traces' accessibility parts on their way (`TraceModule.a11y`), and the keys waiting for them. */
   #loading: Promise<unknown> | undefined;
   readonly #queue: KeyboardEvent[] = [];
@@ -385,6 +397,7 @@ export class KeyboardNav {
     const action = keyAction(e);
     if (!action) return;
     e.preventDefault();
+    this.#clicked = undefined;
     this.#list();
     if (this.#loading) {
       this.#queue.push(e);
@@ -409,6 +422,8 @@ export class KeyboardNav {
   /** After a pipeline run: points may have moved or gone; re-show the cursor while focused. */
   refresh(): void {
     this.#traces = undefined;
+    const clicked = this.#clicked;
+    this.#clicked = undefined;
     if (!this.#cursor) return;
     const traces = this.#list();
     const cursor = this.#cursor;
@@ -419,12 +434,16 @@ export class KeyboardNav {
         (p) => p.pointIndex === was.pointIndex && p.kind === was.kind,
       );
       if (k >= 0) cursor.item = k;
+    } else if (t && !t.order && was && t.stops?.locate) {
+      // Stops built on demand say where the cursor is now; when it is nowhere, the first stop.
+      cursor.item = Math.max(0, t.stops.locate(was));
     }
     if (!t || cursor.item >= t.count) {
       this.#cursor = undefined;
       return;
     }
-    if (this.#focused()) this.#show(false);
+    // After Enter on a stop whose view takes clicks: said again when the click changed it.
+    if (this.#focused()) this.#show(clicked !== undefined, clicked);
   }
 
   /** Focus left the chart: hide the label, keep the cursor. */
@@ -675,15 +694,17 @@ export class KeyboardNav {
     if (next) this.#setCursor(next.k, next.item);
   }
 
-  /** Show the cursor's label (emits `hover`), and announce it. */
-  #show(speak: boolean): void {
+  /** Show the cursor's label (emits `hover`), and announce it unless it says `unless`. */
+  #show(speak: boolean, unless?: string): void {
     const found = this.#found();
     if (!found) return;
     const { entry, point } = found;
     this.#shown = point;
     const more = (point as KeyboardPoint).more ?? [];
     this.#host.hover([found, ...more.map((p) => ({ entry, point: p }))]);
-    if (speak) this.#say(this.#describe(found));
+    if (!speak) return;
+    const text = this.#describe(found);
+    if (text !== unless) this.#say(text);
   }
 
   /** "Revenue: (Mar 1, 2024, 11), point 3 of 6." */
@@ -723,18 +744,25 @@ export class KeyboardNav {
     this.#live.textContent = text === '' ? '' : this.#flip ? text : `${text}\u00a0`;
   }
 
-  /** Enter / Space: the view's own click (hierarchies drill down), else `click` / click-select. */
+  /**
+   * Enter / Space: the view's own click (hierarchies drill down, a `graph` tree folds), else
+   * `click` / click-select.
+   */
   #click(e: KeyboardEvent): void {
     const found = this.#found();
     if (!found) return;
-    const { entry, point } = found;
+    const { entry } = found;
+    const point: KeyboardPoint = found.point;
     const host = this.#host;
+    const t = this.#list()[(this.#cursor as Cursor).trace] as NavTrace;
     const a = anchorOf(entry, point);
-    if (!entry.subplot && host.clickTrace(entry.index, a.x, a.y, e)) return;
+    // A view on cartesian axes gets the click of the stops that ask for it only: the views of
+    // other traces take clicks for their own ends (a link in a text label opens).
+    if (point.click) this.#clicked = this.#describe(found);
+    if ((!entry.subplot || point.click) && host.clickTrace(entry.index, a.x, a.y, e)) return;
     const s = host.fx.settings();
     const events = host.fx.events;
     if (s.clickEvent) events.emit('click', { points: [buildPoint(entry, point, true)], event: e });
-    const t = this.#list()[(this.#cursor as Cursor).trace] as NavTrace;
     // Stops aren't data points (a bin, a box): they are clicked, not selected.
     if (!s.clickSelect || !entry.module.selectPoints || point.pointIndex < 0 || t.stops) return;
     // Click-select: this point; Shift toggles it in the trace's selection.
@@ -769,14 +797,26 @@ export class KeyboardNav {
     const { fx } = this.#host;
     const at = this.#found()?.entry;
     const update: Record<string, unknown> = {};
+    // What the traces say of their new view (`keyboardViewSay`), each sentence once: the traces
+    // of one subplot say the same.
+    const fullLayout = fx.fullLayout();
+    const said = new Set<string>();
     for (const e of at ? [at] : (fx.domainEntries?.().entries ?? [])) {
       const parts = a11yParts(e.module);
-      if (!(parts instanceof Promise))
-        Object.assign(update, parts?.keyboardView?.(e.trace, e.ctx, action));
+      if (parts instanceof Promise) continue;
+      const own = parts?.keyboardView?.(e.trace, e.ctx, action);
+      if (!own) continue;
+      Object.assign(update, own);
+      const say = parts?.keyboardViewSay?.(e.trace, e.ctx, action, own);
+      if (say) said.add(announce(fullLayout, say[0], say[1]));
     }
     if (Object.keys(update).length === 0) return false;
     this.#host.relayout(update);
-    this.#say(announce(fx.fullLayout(), action[0] === 'p' ? 'rotate' : action));
+    this.#say(
+      said.size > 0
+        ? [...said].join(' ')
+        : announce(fullLayout, action[0] === 'p' ? 'rotate' : action),
+    );
     return true;
   }
 

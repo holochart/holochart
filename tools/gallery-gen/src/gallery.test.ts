@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { checkGallery, staticMeta } from './check.ts';
+import { classifyExample } from '../../../examples/_lib/catalog.ts';
 import {
   isExcluded,
   isInternalExample,
@@ -21,6 +22,7 @@ function entry(id: string, over: Partial<GalleryEntry> = {}): GalleryEntry {
     threeD: false,
     thumbnail: thumbnailPath(id),
     thumbnailSize: { width: 640, height: 400 },
+    ...classifyExample({ id, tags: ['a'], traceTypes: ['scatter'], thumbnail: thumbnailPath(id) }),
     ...over,
   };
 }
@@ -28,7 +30,7 @@ function entry(id: string, over: Partial<GalleryEntry> = {}): GalleryEntry {
 describe('mergeRecords', () => {
   it('replaces rendered entries, drops skipped and deleted ones, keeps the rest, sorts by id', () => {
     const previous = {
-      version: 1 as const,
+      version: 2 as const,
       look: 'holochart' as const,
       examples: [entry('b/kept'), entry('a/old', { title: 'Old' }), entry('c/gone'), entry('d/x')],
     };
@@ -63,7 +65,7 @@ describe('isInternalExample', () => {
 
 describe('mergeRecords with internal examples', () => {
   const previous = {
-    version: 1 as const,
+    version: 2 as const,
     look: 'holochart' as const,
     examples: [entry('_dev/old'), entry('_spikes/old'), entry('a/kept'), entry('b/kept')],
   };
@@ -77,6 +79,22 @@ describe('mergeRecords with internal examples', () => {
   it('ignores a rendered record of an internal example', () => {
     const merged = mergeRecords(previous, [{ id: '_dev/new', entry: entry('_dev/new') }], existing);
     expect(merged.examples.map((e) => e.id)).toEqual(['a/kept', 'b/kept']);
+  });
+
+  it('removes excluded entries in partial runs and rejects records of deleted examples', () => {
+    const manifest = {
+      ...previous,
+      examples: [...previous.examples, entry('a/perf', { tags: ['perf'] })],
+    };
+    const merged = mergeRecords(
+      manifest,
+      [
+        { id: 'a/deleted', entry: entry('a/deleted') },
+        { id: 'b/kept', entry: entry('b/kept', { tags: ['no-visual-test'] }) },
+      ],
+      new Set([...existing, 'a/perf']),
+    );
+    expect(merged.examples.map((e) => e.id)).toEqual(['a/kept']);
   });
 });
 

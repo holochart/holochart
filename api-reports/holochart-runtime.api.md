@@ -577,6 +577,7 @@ export interface ComponentUpdatePlan {
 // @experimental (undocumented)
 export interface ComponentView {
     animateCamera?(camera: CameraTarget, run: CameraAnimationRun): Promise<void> | undefined;
+    readonly clickThrough?: boolean;
     // (undocumented)
     dispose?(): void;
     drawShape?(gesture: DrawGesture): boolean | void;
@@ -682,6 +683,7 @@ export interface DomainInfo {
 
 // @experimental
 export interface DomainLayoutContext {
+    readonly chart?: Chart;
     // (undocumented)
     readonly fullLayout: FullLayout;
     // (undocumented)
@@ -912,6 +914,7 @@ export interface HoverPoint {
     readonly px: number;
     // (undocumented)
     readonly py: number;
+    readonly selects?: readonly number[];
     readonly showName?: boolean;
     readonly spikeDistance?: number;
     // (undocumented)
@@ -952,6 +955,7 @@ export function isDrawDragmode(mode: unknown): mode is DrawDragmode;
 
 // @experimental
 export interface KeyboardPoint extends HoverPoint {
+    readonly click?: boolean;
     readonly more?: readonly HoverPoint[];
     readonly nav?: readonly (number | undefined)[];
     readonly say?: readonly [template: string, values?: Readonly<Record<string, string>>];
@@ -963,6 +967,7 @@ export interface KeyboardStops {
     at(i: number): KeyboardPoint | undefined;
     // (undocumented)
     readonly length: number;
+    locate?(point: KeyboardPoint): number;
 }
 
 // @experimental
@@ -1316,6 +1321,7 @@ export interface SubplotMirrorOptions {
 // @experimental
 export interface SubplotViewportOptions {
     readonly background?: RGBA | null;
+    readonly kind?: '2d' | '3d';
     readonly projection?: 'orthographic' | 'perspective';
     readonly rect: Readonly<ViewportRect>;
 }
@@ -1365,6 +1371,7 @@ export interface TraceA11y {
     describe?(ctx: DescribeContext<never>): TraceDescription | undefined;
     keyboardPoints?(calc: never, trace: FullTrace, ctx: HoverContext): KeyboardStops | undefined;
     keyboardView?(trace: FullTrace, ctx: HoverContext, action: string): Readonly<Record<string, unknown>> | undefined;
+    keyboardViewSay?(trace: FullTrace, ctx: HoverContext, action: string, update: Readonly<Record<string, unknown>>): readonly [template: string, values?: Readonly<Record<string, string>>] | undefined;
 }
 
 // @experimental
@@ -1434,7 +1441,7 @@ export interface TraceModule<Calc = unknown, C extends Children = Children> exte
     crossTraceCalc?(entries: readonly CrossTraceEntry<Calc>[], ctx: CrossTraceContext): Iterable<number> | void;
     crossTraceLayout?(entries: readonly DomainTraceEntry<Calc>[], ctx: DomainLayoutContext): void;
     describe?(ctx: DescribeContext<Calc>): TraceDescription | undefined;
-    eventData?(calc: Calc, trace: FullTrace, pointIndex: number): Readonly<Record<string, unknown>>;
+    eventData?(calc: Calc, trace: FullTrace, pointIndex: number, selection?: readonly number[]): Readonly<Record<string, unknown>>;
     extremes?(calc: Calc, trace: FullTrace, ctx: CalcContext): TraceExtremes;
     extremesAppend?(previous: TraceExtremes, calc: Calc, previousCalc: Calc, trace: FullTrace, ctx: CalcContext, append: TraceAppend): TraceExtremes | undefined;
     hoverPoints?(calc: Calc, trace: FullTrace, query: HoverQuery, ctx: HoverContext): HoverPoint[];
@@ -1467,6 +1474,7 @@ export interface TracePlotContext<Calc = unknown> {
     invalidate(): void;
     readonly plotArea?: Readonly<ViewportRect>;
     readonly primitives: PrimitiveContext;
+    recalc?(): void;
     remove<T>(primitive: Primitive<T>): void;
     readonly selectedPoints?: null | readonly number[];
     readonly subplot: SubplotInfo | undefined;

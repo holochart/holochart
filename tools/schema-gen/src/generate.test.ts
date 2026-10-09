@@ -24,6 +24,8 @@ describe('generated files', async () => {
       'packages/traces-3d/src/generated/traces.ts',
       'packages/traces-basic/src/generated/traces.ts',
       'packages/traces-finance/src/generated/traces.ts',
+      'packages/traces-geo/src/generated/traces.ts',
+      'packages/traces-graph/src/generated/traces.ts',
       'packages/traces-hier/src/generated/traces.ts',
       'packages/traces-sci/src/generated/traces.ts',
       'packages/traces-stats/src/generated/traces.ts',

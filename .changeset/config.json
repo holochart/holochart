@@ -17,6 +17,8 @@
       "@mk7s/holochart-traces-finance",
       "@mk7s/holochart-traces-hier",
       "@mk7s/holochart-traces-3d",
+      "@mk7s/holochart-traces-geo",
+      "@mk7s/holochart-traces-graph",
       "@mk7s/holochart-themes",
       "@mk7s/holochart-express",
       "@mk7s/holochart-locales"

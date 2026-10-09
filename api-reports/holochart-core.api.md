@@ -677,6 +677,7 @@ export type Config = {
     modeBarButtonsToAdd?: unknown;
     displaylogo?: boolean;
     scrollZoom?: 'cartesian' | 'geo' | 'map' | 'scene' | `${'cartesian' | 'geo' | 'map' | 'scene'}+${string}` | false | true;
+    topojsonURL?: string;
     doubleClick?: 'autosize' | 'reset' | 'reset+autosize' | false;
     doubleClickDelay?: number;
     editable?: boolean;
@@ -731,6 +732,7 @@ export const configSchema: ObjectNode<{
     readonly modeBarButtonsToAdd: AttrSpec<unknown, unknown>;
     readonly displaylogo: AttrSpec<boolean, boolean>;
     readonly scrollZoom: AttrSpec<"cartesian" | "geo" | "map" | "scene" | `cartesian+${string}` | `geo+${string}` | `map+${string}` | `scene+${string}` | boolean, "cartesian" | "geo" | "map" | "scene" | `cartesian+${string}` | `geo+${string}` | `map+${string}` | `scene+${string}` | boolean>;
+    readonly topojsonURL: AttrSpec<string, string>;
     readonly doubleClick: AttrSpec<"autosize" | "reset" | "reset+autosize" | false, "autosize" | "reset" | "reset+autosize" | false>;
     readonly doubleClickDelay: AttrSpec<number, number>;
     readonly editable: AttrSpec<boolean, boolean>;
@@ -836,6 +838,7 @@ export interface CoreComponentModule {
 // @experimental
 export interface CoreTraceModule<C extends Children = Children> {
     readonly animatable?: readonly string[];
+    axisHints?(trace: FullTrace): TraceAxisHints | undefined;
     // (undocumented)
     readonly calc?: unknown;
     // (undocumented)
@@ -1323,6 +1326,8 @@ export type FullLayout = BaseFullLayout & {
     _subplots: Subplots;
     _locale?: Locale;
     _reducedMotion?: ReducedMotion;
+    _staticPlot?: boolean;
+    _worker?: 'auto' | boolean;
     _axisMatchGroups?: Record<string, 1>[];
     _axisConstraintGroups?: Record<string, number | string>[];
     [key: string]: unknown;
@@ -3638,6 +3643,18 @@ export function toRGBA(value: string): RGBAColor | null;
 
 // @experimental
 export function toRGBAArray(colors: ArrayLike<unknown>, fallback?: RGBAColor, out?: Float32Array): Float32Array;
+
+// @experimental
+export interface TraceAxisHints {
+    readonly equal?: boolean;
+    readonly hide?: 'x' | 'y' | boolean;
+    readonly reverse?: 'x' | 'y';
+    readonly x?: unknown;
+    // (undocumented)
+    readonly y?: unknown;
+    // (undocumented)
+    readonly z?: unknown;
+}
 
 // @experimental
 export type TraceCategory = 'cartesian' | 'domain' | 'errorBarsOK' | 'geo' | 'gl3d' | 'noOpacity' | 'polar' | 'showLegend' | 'symbols' | (string & {});

@@ -128,6 +128,31 @@ describe('@mk7s/holochart bundle', () => {
     expect(types.length).toBeGreaterThan(30);
     // The module is exported under its type name, which is what the hint tells users to import.
     for (const type of types) expect(Holochart).toHaveProperty(type);
-    expect(core.tracePackage('scattergeo')).toBeUndefined();
+    // A type no package has (tile maps are GEO9).
+    expect(core.tracePackage('scattermap')).toBeUndefined();
+  });
+
+  it('leaves the geo package out, and says how to add it (ADR-026)', () => {
+    // Known to core's table, but not registered here: `@mk7s/holochart/geo` does (geo.test.ts).
+    expect(core.tracePackage('scattergeo')).toBe('@mk7s/holochart-traces-geo');
+    expect(core.tracePackage('choropleth')).toBe('@mk7s/holochart-traces-geo');
+    expect(Holochart.registry.getTrace('scattergeo')).toBeUndefined();
+    expect(Holochart).not.toHaveProperty('scattergeo');
+    const [issue] = Holochart.validate([{ type: 'scattergeo' }], {}, Holochart.registry.core);
+    expect(issue?.message).toBe(
+      "unknown trace type 'scattergeo': `scattergeo` is in @mk7s/holochart-traces-geo; import it from there and call `register(scattergeo)`, or with the full bundle add `import '@mk7s/holochart/geo'` (the trace is hidden)",
+    );
+  });
+
+  it('leaves the graph package out, and says how to add it (ADR-029)', () => {
+    // Known to core's table, but not registered here: `@mk7s/holochart/graph` does (graph.test.ts).
+    expect(core.tracePackage('graph')).toBe('@mk7s/holochart-traces-graph');
+    expect(Holochart.registry.getTrace('graph')).toBeUndefined();
+    expect(Holochart).not.toHaveProperty('graph');
+    expect(Holochart).not.toHaveProperty('tracesGraph');
+    const [issue] = Holochart.validate([{ type: 'graph' }], {}, Holochart.registry.core);
+    expect(issue?.message).toBe(
+      "unknown trace type 'graph': `graph` is in @mk7s/holochart-traces-graph; import it from there and call `register(graph)`, or with the full bundle add `import '@mk7s/holochart/graph'` (the trace is hidden)",
+    );
   });
 });

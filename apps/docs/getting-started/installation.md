@@ -1,41 +1,139 @@
 ---
 title: Installation
-description: Install Holochart from npm or a CDN, pick a bundle size, and use it with a framework.
+description: Build Holochart from source, set up Python and Jupyter, choose browser bundles, and check package availability.
 status: complete
 ---
 
 # Installation
 
-::: warning Alpha
-Holochart is not published to npm yet. The commands below show how installation works once the
-first release, `0.1.0-alpha`, ships (see the [roadmap](/roadmap)). Until then, see
-[Try it from the monorepo](#try-it-from-the-monorepo).
+<span id="install-from-npm"></span>
+
+<InstallStatus />
+
+Choose [Python / Jupyter development setup](#python-and-jupyter-from-source),
+[JavaScript / TypeScript](#try-it-from-the-monorepo), or
+[plain HTML](#browser-bundles-from-source). Source setup includes a one-time dependency install
+and browser build. The [first-chart tutorial](/getting-started/first-chart) takes about five
+minutes **after setup**; clone/install/build time is additional.
+
+## Build from source today
+
+Run these commands in a **terminal**, not a notebook cell. You need Git, Node.js **22 or newer**,
+and the repository's pinned **pnpm 11.15.1**. Check `node --version` and `pnpm --version` first.
+If pnpm is missing, install it:
+
+```sh
+npm install --global pnpm@11.15.1
+```
+
+An existing Corepack-managed pnpm can also use the repository's `packageManager` pin; enable
+Corepack if needed. Then clone and build:
+
+```sh
+git clone https://github.com/holochart/holochart.git
+cd holochart
+pnpm install
+pnpm build:packages
+```
+
+Keep this terminal in the repository root (`holochart/`) for every relative path below. This
+public-main clone supplies the browser setup. **It does not currently include the Python
+bridge**; the Python development workflow below requires a separate existing checkout that
+contains `packages/holochart-py`. No public source revision containing that bridge has been
+verified. The browser build creates both IIFEs; running a Python package install before building
+its matching browser assets reports missing assets.
+
+The public-main browser path below was verified with basic charts and includes the 3D bundle.
+The map and graph extension imports described elsewhere on this site require a development
+checkout containing `packages/traces-geo` and `packages/traces-graph`; those packages are not
+currently on public `main` either. Check the package directory exists before using its imports.
+
+## Try it from the monorepo
+
+After the common source build above, start the browser sandbox from the repository root:
+
+```sh
+pnpm dev
+```
+
+Open the local URL printed by Vite. The sandbox has an example picker; append
+`?example=scatter3d/basic` to its URL to open a specific example. The examples import
+`@mk7s/holochart` through the workspace, so there is no registry install step. Use the
+[first-chart tutorial](/getting-started/first-chart) to learn the browser API, then explore the
+[gallery](/gallery/). Stop the development server with Ctrl+C.
+
+## Python and Jupyter from source
+
+::: warning Development checkout required
+The bridge is currently local development work. A fresh clone of GitHub `main` cannot install
+it because `packages/holochart-py` is absent. These instructions apply only when you already
+have a development checkout containing that directory and its matching browser source.
+A public Python source-install revision has not been verified.
 :::
 
-## Install from npm
+You need **Python 3.10 or newer**, Git, Node.js 22+ and pnpm 11.15.1. The following commands
+are for macOS/Linux terminals. Replace the path with your existing development checkout and
+confirm `packages/holochart-py/pyproject.toml` exists there before installing. Use a separate
+virtual environment so the notebook kernel and package installation share one Python executable:
 
-Holochart ships as `@mk7s/holochart`. It needs `three` as a peer dependency.
-
-::: code-group
-
-```sh [npm]
-npm install @mk7s/holochart@alpha three
+```sh
+cd /absolute/path/to/development-checkout
+pnpm install
+pnpm build:packages
+python3 -m venv .venv-holochart
+source .venv-holochart/bin/activate
+python -m pip install 'packages/holochart-py[plotly]' jupyterlab ipykernel
+python -m ipykernel install --user --name holochart --display-name "Python (Holochart)"
+python -m jupyterlab
 ```
 
-```sh [pnpm]
-pnpm add @mk7s/holochart@alpha three
+On Windows PowerShell, create the environment with `py -3 -m venv .venv-holochart`, then
+activate it with `.\.venv-holochart\Scripts\Activate.ps1` before running the remaining
+`python` commands. Git and Node/pnpm are needed for the source build on either platform.
+
+In JupyterLab, create a notebook and select **Python (Holochart)** as its kernel. In VS Code or
+another notebook editor, select the same kernel or the `.venv-holochart` interpreter. Run this
+in a **notebook cell** to check the environment:
+
+```python
+import sys
+import holochart
+
+print(sys.executable)  # Must be the .venv-holochart environment's Python.
+print(holochart.__file__)
 ```
 
-```sh [yarn]
-yarn add @mk7s/holochart@alpha three
+Then run the [notebook chart examples](/guides/notebooks#existing-plotly-figures). They need a
+widget manager and a WebGL2-capable browser. Installing `holochart-py` does not change Plotly's
+renderer automatically: register it once per kernel as shown in that guide.
+
+### Install into an existing notebook kernel
+
+Build the browser assets in a terminal first. For an existing kernel, use **`%pip` in a
+notebook cell**; it installs into the active kernel rather than an unrelated shell Python.
+This also requires the development checkout described above. Replace the absolute path with
+that checkout's path:
+
+```python
+%pip install '/absolute/path/to/holochart/packages/holochart-py[plotly]'
 ```
 
-:::
+Restart the kernel after this installation (or after reinstalling/upgrading the bridge), then
+rerun imports and renderer registration. If the output is blank after an asset change, also
+reload the notebook page and rerun the display cell. When frontend code changes, repeat
+`pnpm build:packages` in the repository root and reinstall the Python package to embed the new
+assets; restarting alone does not update an installed wheel.
 
-While Holochart is in alpha, releases are published under the `alpha` dist-tag, so `@alpha` gets
-the newest one. Once a stable version is out, drop the tag.
+### What a built Python wheel needs
 
-Then import it:
+A built wheel contains the matching browser scripts and default fonts. Installing that wheel
+needs Python and a notebook widget manager; **it does not need npm, Node, or a CDN**. The source
+build above needs Node/pnpm to create those assets once. A verified PyPI release will expose
+its own quick-install command in the availability panel independently of npm.
+
+## Browser package imports
+
+Inside the source workspace, or after a verified npm release, import the full bundle:
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -51,18 +149,15 @@ Your app keeps a single `three` instance. That matters for two reasons:
 - three.js objects you create (meshes, materials, vectors) are the same classes Holochart uses, so
   you can add them to a chart's scene without `instanceof` checks failing.
 
-Holochart supports `three` 0.180 and newer, up to the newest minor version tested in CI; the
-exact range is the `three` peer dependency in each package's `package.json`.
+The current package declares `three >=0.180.0 <0.187.0`. The repository install supplies its
+tested version. Check the peer dependency in the selected release's `package.json` when
+installing a published version.
 
 ## Smaller bundles with partial packages
 
-`@mk7s/holochart` registers every trace type, component and theme. If you only need a few trace
-types, install the runtime, the components and the trace packages you use, then register them
-yourself:
-
-```sh
-pnpm add @mk7s/holochart-runtime@alpha @mk7s/holochart-components@alpha @mk7s/holochart-traces-basic@alpha three
-```
+`@mk7s/holochart` registers the built-in 2D and 3D traces, components and themes. If you only need a few trace
+types, use the runtime, components and trace packages from the source workspace and register
+them yourself. Standalone registry installation depends on a verified release of each package:
 
 ```ts
 import { createChart, register } from '@mk7s/holochart-runtime';
@@ -89,10 +184,6 @@ title or legend. To save more, register single components instead (`axesComponen
 The default look (the `holochart` template), `plotly-classic` and `none` are built in. Other named
 themes and the extra named colorscales and palettes are opt-in:
 
-```sh
-pnpm add @mk7s/holochart-themes@alpha @mk7s/holochart-core@alpha
-```
-
 ```ts
 import { register } from '@mk7s/holochart-runtime';
 import { registerBuiltinColors } from '@mk7s/holochart-core';
@@ -104,62 +195,93 @@ registerBuiltinColors(); // cmocean, CARTO and ColorBrewer colorscales, qualitat
 
 The packages are:
 
-| Package                          | Contents                                                                                                               |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `@mk7s/holochart`                | Full bundle: re-exports and registers everything, 2D and 3D, with Express as `express`                                 |
-| `@mk7s/holochart-runtime`        | `createChart`, `newPlot`, the update API, events, and registration                                                     |
-| `@mk7s/holochart-core`           | Figure model, attribute schema, validation, defaults, update planning                                                  |
-| `@mk7s/holochart-render`         | three.js engine: renderer, viewports, GPU primitives, picking                                                          |
-| `@mk7s/holochart-components`     | Axes, legend, colorbar, annotations, shapes, hover labels, modebar, sliders and menus (`builtinComponents`)            |
-| `@mk7s/holochart-traces-basic`   | Basic traces: scatter, bar, pie, table (`basicTraces`)                                                                 |
-| `@mk7s/holochart-traces-stats`   | Statistical traces: histogram, histogram2d, histogram2dcontour, box, violin, splom, parcoords, parcats (`statsTraces`) |
-| `@mk7s/holochart-traces-sci`     | Scientific traces: heatmap, contour, image, and polar scatterpolar, barpolar (`sciTraces`)                             |
-| `@mk7s/holochart-traces-finance` | Financial traces: ohlc, candlestick, waterfall, funnel, funnelarea, indicator (`financeTraces`)                        |
-| `@mk7s/holochart-traces-hier`    | Hierarchical and flow traces: sunburst, treemap, icicle, sankey (`hierTraces`)                                         |
-| `@mk7s/holochart-traces-3d`      | The 3D scene and 3D traces: scatter3d, surface, mesh3d, cone, streamtube, isosurface, volume, bar3d (`traces3d`)       |
-| `@mk7s/holochart-express`        | [Express](/express/): Plotly Express-style charts from tabular data                                                    |
-| `@mk7s/holochart-themes`         | Built-in templates, palettes, and colorscales                                                                          |
-| `@mk7s/holochart-locales`        | [Locales](/fundamentals/locales): UI strings, month names, number and date formats, one module per locale              |
+| Package                          | Contents                                                                                                                                                      |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@mk7s/holochart`                | Full bundle: re-exports and registers everything, 2D and 3D, with Express as `express`                                                                        |
+| `@mk7s/holochart-runtime`        | `createChart`, `newPlot`, the update API, events, and registration                                                                                            |
+| `@mk7s/holochart-core`           | Figure model, attribute schema, validation, defaults, update planning                                                                                         |
+| `@mk7s/holochart-render`         | three.js engine: renderer, viewports, GPU primitives, picking                                                                                                 |
+| `@mk7s/holochart-components`     | Axes, legend, colorbar, annotations, shapes, hover labels, modebar, sliders and menus (`builtinComponents`)                                                   |
+| `@mk7s/holochart-traces-basic`   | Basic traces: scatter, bar, pie, table (`basicTraces`)                                                                                                        |
+| `@mk7s/holochart-traces-stats`   | Statistical traces: histogram, histogram2d, histogram2dcontour, box, violin, splom, parcoords, parcats (`statsTraces`)                                        |
+| `@mk7s/holochart-traces-sci`     | Scientific traces: heatmap, contour, image, and polar scatterpolar, barpolar (`sciTraces`)                                                                    |
+| `@mk7s/holochart-traces-finance` | Financial traces: ohlc, candlestick, waterfall, funnel, funnelarea, indicator (`financeTraces`)                                                               |
+| `@mk7s/holochart-traces-hier`    | Hierarchical and flow traces: sunburst, treemap, icicle, sankey (`hierTraces`)                                                                                |
+| `@mk7s/holochart-traces-3d`      | The 3D scene and 3D traces: scatter3d, surface, mesh3d, cone, streamtube, isosurface, volume, bar3d (`traces3d`)                                              |
+| `@mk7s/holochart-traces-geo`     | [Maps](/fundamentals/maps): the geo subplot, scattergeo, choropleth (`tracesGeo`). Not in the full bundle (see below)                                         |
+| `@mk7s/holochart-traces-graph`   | [Network graphs](/fundamentals/graphs): graph, chord (`tracesGraph`), graph3d (`tracesGraph3d`), layouts and data helpers. Not in the full bundle (see below) |
+| `@mk7s/holochart-express`        | [Express](/express/): Plotly Express-style charts from tabular data                                                                                           |
+| `@mk7s/holochart-themes`         | Built-in templates, palettes, and colorscales                                                                                                                 |
+| `@mk7s/holochart-locales`        | [Locales](/fundamentals/locales): UI strings, month names, number and date formats, one module per locale                                                     |
 
 Each trace package exports its trace types one by one and as a list to register at once
 (`register(...basicTraces, ...traces3d)`). The 3D traces also need the scene, which `traces3d`
 includes.
 
-## Use a script tag (CDN)
+Maps and network graphs are the two families the full bundle leaves out, so that apps without a
+map or a network do not download them. With the full bundle, add one import for each; in a
+partial bundle, register `tracesGeo` or `tracesGraph` like any other list:
 
-For pages without a build step, use the self-contained IIFE build,
-`@mk7s/holochart/holochart.iife.min.js`. It exposes a global `window.Holochart`.
-
-```html
-<div id="chart" style="width: 600px; height: 400px"></div>
-<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart@0.1/dist/holochart.iife.min.js"></script>
-<script>
-  const chart = Holochart.createChart(document.getElementById('chart'), {
-    data: [{ type: 'scatter', x: [1, 2, 3], y: [4, 1, 7] }],
-  });
-</script>
+```ts
+import * as Holochart from '@mk7s/holochart';
+import '@mk7s/holochart/geo'; // registers @mk7s/holochart-traces-geo
+import '@mk7s/holochart/graph'; // registers @mk7s/holochart-traces-graph
 ```
 
-For [3D scenes](/fundamentals/3d-scenes), add the 3D add-on after it. The main script is 2D only,
-so pages without 3D charts don't download the 3D code:
+The map data (coastlines, countries) is part of that package and loads on demand; see
+[Maps](/fundamentals/maps#what-the-data-costs) for what it costs. The graph package has the
+`graph`, `chord` and `graph3d` traces with their layouts; see
+[Network graphs](/fundamentals/graphs#adding-the-package).
 
-```html
-<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart@0.1/dist/holochart.iife.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart@0.1/dist/holochart-3d.iife.min.js"></script>
+<span id="use-a-script-tag-cdn"></span>
+
+## Browser bundles from source
+
+For plain HTML, use the locally built self-contained IIFE. From the repository root after the
+common source build, copy the **whole `dist` directory** so the default fonts stay alongside
+the script:
+
+```sh
+mkdir -p preview
+cp -R packages/holochart/dist/. preview/
 ```
 
-The add-on registers the 3D scene and traces into `window.Holochart` (`Holochart.traces3d`, and the
-exports of `@mk7s/holochart-traces-3d`). It uses the main script's three.js, so load both from the
-same version, and the main script first.
+Save this as `preview/index.html`:
 
-The URLs pin the `0.1` release line, so a new minor version (which may change APIs before 1.0)
-never reaches your page unannounced. jsDelivr version ranges skip pre-releases: during the alpha,
-pin the exact version instead, for example `@mk7s/holochart@0.1.0-alpha.0`.
+```html
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Holochart from source</title>
+  <div id="chart" style="width: 100%; height: 400px"></div>
+  <script src="./holochart.iife.min.js"></script>
+  <script>
+    const chart = Holochart.createChart(document.getElementById('chart'), {
+      data: [{ type: 'scatter', x: [1, 2, 3], y: [4, 1, 7] }],
+      config: { responsive: true },
+    });
+  </script>
+</html>
+```
 
-The IIFE build bundles its own copy of three.js, because three no longer ships a global build.
-Do not mix it with another copy of three on the same page: objects created with a separately
-loaded `THREE` are different classes from the ones inside the bundle. If you need to add your own
-three.js objects, use the npm packages with a bundler instead.
+Serve the files over HTTP using Python 3 in a terminal:
+
+```sh
+python3 -m http.server 8000 --directory preview
+```
+
+Open the local server on port 8000 in your browser. Loading via `file://` can prevent font
+requests. For [3D scenes](/fundamentals/3d-scenes), add this script **after the main IIFE** and
+before your chart code:
+
+```html
+<script src="./holochart-3d.iife.min.js"></script>
+```
+
+Keep both scripts from the same build. The IIFE bundles its own three.js; use the ESM packages
+with a bundler when your application needs to share three.js objects with Holochart. CDN URLs
+become usable only after the corresponding npm artifact is published and verified.
 
 ## Use with a framework
 
@@ -254,23 +376,6 @@ shows a text fallback (see
 No minimum browser versions have been established. Two differences are known: Safari cannot
 export WebP (`toImage({ format: 'webp' })` rejects; PNG and JPEG work), and in Safari the range
 selector's buttons are not reached with Tab.
-
-## Try it from the monorepo
-
-Until the first alpha is published, you can run Holochart from source. You need Node 22 or newer
-and pnpm (via Corepack).
-
-```sh
-git clone https://github.com/holochart/holochart.git
-cd holochart
-corepack enable
-pnpm install
-pnpm dev
-```
-
-`pnpm dev` starts the sandbox, a small Vite app with an example picker. Open an example by id, for
-example `?example=scatter3d/basic`: every example in the [gallery](/gallery/) is there, and the
-internal test pages under `examples/_dev/` too.
 
 ## License
 

@@ -31,6 +31,9 @@ export type Role =
   | 'marginalY'
   | 'r'
   | 'theta'
+  | 'lat'
+  | 'lon'
+  | 'locations'
   | 'trendline';
 
 /** One trace per group: its type, data roles and constant attributes (px's `TraceSpec`). */
@@ -66,9 +69,9 @@ export interface Config {
   /**
    * Where a numeric `color` goes (`marker` / `line` colorscale on `coloraxis`, or the sectors'
    * `marker.colors` of a pie), if supported. `'sectors'`: per-sector colors that are always
-   * discrete (`funnelArea`).
+   * discrete (`funnelArea`). `'z'`: the values of a `choropleth` (`z`, on `coloraxis`).
    */
-  readonly continuousColor?: 'marker' | 'line' | 'pie' | 'sectors';
+  readonly continuousColor?: 'marker' | 'line' | 'pie' | 'sectors' | 'z';
   /**
    * Put a numeric color's colorscale and colorbar on the trace (`line.colorscale`, `showscale`)
    * rather than on `layout.coloraxis`: Holochart's `parcoords` / `parcats` have no `line.coloraxis`.
@@ -76,10 +79,10 @@ export interface Config {
   readonly inlineColorscale?: boolean;
   /**
    * `'domain'` for pie-like traces, `'splom'` for a scatter matrix (which lays out its own axes),
-   * `'polar'` for polar traces (one `layout.polar`), `'scene'` for 3D traces (one `layout.scene`);
-   * default `'xy'`.
+   * `'polar'` for polar traces (one `layout.polar`), `'scene'` for 3D traces (one `layout.scene`),
+   * `'geo'` for map traces (one `layout.geo`, `geo2`, … per facet); default `'xy'`.
    */
-  readonly subplotType?: 'xy' | 'domain' | 'splom' | 'polar' | 'scene';
+  readonly subplotType?: 'xy' | 'domain' | 'splom' | 'polar' | 'scene' | 'geo';
   /** `'v'` / `'h'` for functions with an orientation (histogram labels depend on it). */
   readonly orientation?: 'v' | 'h';
   /** Histogram / density aggregation. */

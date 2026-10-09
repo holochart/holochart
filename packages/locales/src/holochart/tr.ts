@@ -38,6 +38,16 @@ export const holochartTr: Readonly<Record<string, string>> = {
   '{name}: {dimension}, {category}, {text}, {n} of {count}.':
     '{name}: {dimension}, {category}, {text}, {count} öğeden {n}. öğe.',
   'Dimension {n}': 'Boyut {n}',
+  'Map centered at longitude {lon}°, latitude {lat}°, scale {scale}.':
+    'Harita {lon}° boylam, {lat}° enlem merkezli, ölçek {scale}.',
+  '{name}: {text}, node {n} of {count}.': '{name}: {text}, {count} düğümden {n}. düğüm.',
+  '{name}: {text}, link {n} of {count} of {node}.':
+    '{name}: {text}, {node} düğümünün {count} bağlantısından {n}. bağlantı.',
+  '{name}: {text}, rank {rank} of {ranks}, {n} of {count}.':
+    '{name}: {text}, {ranks} katmandan {rank}. katman, {count} öğeden {n}. öğe.',
+  'Up: {up}.': 'Yukarı: {up}.',
+  'Down: {down}.': 'Aşağı: {down}.',
+  'Folded.': 'Daraltıldı.',
   // Chart summaries.
   '{y} by {x}.': '{x} bazında {y}.',
   '{count} more traces are not summarized.': 'Özetlenmeyen diğer iz sayısı: {count}.',

@@ -661,6 +661,166 @@ describe('component pointer hook', () => {
   });
 });
 
+describe('a component view that takes every press in its area (GEO2: a map that pans)', () => {
+  /**
+   * A view that drags the whole plot area: it takes the press, the moves of its drag and the
+   * release, and leaves plain moves (so the points hover) and the click to the chart.
+   */
+  function panner(
+    seen: string[],
+    options: { clickThrough?: boolean; click?: boolean; cursor?: string } = {},
+  ): ComponentModule {
+    let dragging = false;
+    return {
+      name: 'panner-test',
+      draw: {
+        create: () => ({
+          ...(options.clickThrough !== undefined && { clickThrough: options.clickThrough }),
+          update: () => undefined,
+          handlePointer(e) {
+            const inside = e.x >= 40 && e.x <= 620 && e.y >= 30 && e.y <= 350;
+            if (dragging) {
+              seen.push(e.type);
+              if (e.type === 'up' || e.type === 'leave') dragging = false;
+              return true;
+            }
+            if (!inside) return false;
+            if (e.type === 'move') {
+              if (options.cursor) e.cursor = options.cursor;
+              return false;
+            }
+            seen.push(e.type);
+            if (e.type === 'down') return (dragging = true);
+            if (e.type === 'click') return options.click === true;
+            return e.type === 'dblclick';
+          },
+        }),
+      },
+    };
+  }
+
+  async function pannerChart(
+    seen: string[],
+    options: Parameters<typeof panner>[1] = {},
+    layout: Record<string, unknown> = {},
+  ): Promise<Chart> {
+    const s = setup({ width: 640, height: 400, components: [panner(seen, options)] });
+    t = s;
+    return chart([DOTS], layout, {}, s);
+  }
+
+  it('a press released without moving is a click on the point under it', async () => {
+    const seen: string[] = [];
+    const c = await pannerChart(seen, { clickThrough: true });
+    const log = record(c, 'click', 'relayout');
+    fire(c, 'pointerdown', cx(5), cy(50));
+    fire(c, 'pointerup', cx(5) + 1, cy(50));
+    expect(seen).toEqual(['down', 'up', 'click']);
+    expect(log.map((l) => l.name)).toEqual(['click']);
+    const points = (log[0]!.payload as { points: Record<string, unknown>[] }).points;
+    expect(points).toHaveLength(1);
+    expect(points[0]).toMatchObject({ curveNumber: 0, pointNumber: 1, x: 5, y: 50 });
+    // Away from every point there is nothing to click.
+    fire(c, 'pointerdown', cx(2.5), cy(10));
+    fire(c, 'pointerup', cx(2.5), cy(10));
+    expect(log).toHaveLength(1);
+  });
+
+  it('a second click is the view’s double click, after its click went through', async () => {
+    const seen: string[] = [];
+    const c = await pannerChart(seen, { clickThrough: true });
+    const log = record(c, 'click', 'doubleclick');
+    for (let k = 0; k < 2; k++) {
+      fire(c, 'pointerdown', cx(5), cy(50));
+      fire(c, 'pointerup', cx(5), cy(50));
+    }
+    expect(seen).toEqual(['down', 'up', 'click', 'down', 'up', 'click', 'dblclick']);
+    // Both presses clicked the point; the reset is the view's own business.
+    expect(log.map((l) => l.name)).toEqual(['click', 'click']);
+  });
+
+  it('click-selects through the view with `clickmode: event+select`', async () => {
+    const seen: string[] = [];
+    const c = await pannerChart(seen, { clickThrough: true }, { clickmode: 'event+select' });
+    const log = record(c, 'click', 'selected');
+    fire(c, 'pointerdown', cx(5), cy(50));
+    fire(c, 'pointerup', cx(5), cy(50));
+    expect(log.map((l) => l.name)).toEqual(['click', 'selected']);
+    await c.relayout({});
+    expect(c.fullData[0]?.['selectedpoints']).toEqual([1]);
+  });
+
+  it('a drag is not a click', async () => {
+    const seen: string[] = [];
+    const c = await pannerChart(seen, { clickThrough: true });
+    const log = record(c, 'click');
+    fire(c, 'pointerdown', cx(5), cy(50));
+    fire(c, 'pointermove', cx(5) + 20, cy(50));
+    fire(c, 'pointerup', cx(5) + 20, cy(50));
+    expect(seen).toEqual(['down', 'move', 'up']);
+    expect(log).toHaveLength(0);
+  });
+
+  it('keeps the click when the view handles it, or does not ask for it', async () => {
+    const handled: string[] = [];
+    const a = await pannerChart(handled, { clickThrough: true, click: true });
+    const first = record(a, 'click');
+    fire(a, 'pointerdown', cx(5), cy(50));
+    fire(a, 'pointerup', cx(5), cy(50));
+    expect(handled).toEqual(['down', 'up', 'click']);
+    expect(first).toHaveLength(0);
+
+    const plain: string[] = [];
+    const b = await pannerChart(plain);
+    const second = record(b, 'click');
+    fire(b, 'pointerdown', cx(5), cy(50));
+    fire(b, 'pointerup', cx(5), cy(50));
+    expect(plain).toEqual(['down', 'up', 'click']);
+    expect(second).toHaveLength(0);
+  });
+
+  it('unhovers when the view’s drag starts to move, not on a press', async () => {
+    const seen: string[] = [];
+    const c = await pannerChart(seen, { clickThrough: true });
+    const log = record(c, 'hover', 'unhover');
+    fire(c, 'pointermove', cx(5), cy(50));
+    frame();
+    expect(labels(c)).toEqual(['(5, 50)']);
+    fire(c, 'pointerdown', cx(5), cy(50));
+    // Within the click tolerance the point is still the one a release would click.
+    fire(c, 'pointermove', cx(5) + 2, cy(50));
+    expect(labels(c)).toEqual(['(5, 50)']);
+    fire(c, 'pointermove', cx(5) + 12, cy(50));
+    // What was under the pointer moves with the drag: its label would be left behind.
+    expect(labels(c)).toEqual([]);
+    expect(log.map((l) => l.name)).toEqual(['hover', 'unhover']);
+    fire(c, 'pointermove', cx(5) + 30, cy(50));
+    frame();
+    expect(labels(c)).toEqual([]);
+    expect(log).toHaveLength(2);
+    fire(c, 'pointerup', cx(5) + 30, cy(50));
+    // The next plain move hovers again.
+    fire(c, 'pointermove', cx(5), cy(50));
+    frame();
+    expect(labels(c)).toEqual(['(5, 50)']);
+  });
+
+  it('takes the cursor of a view that leaves the move to the chart', async () => {
+    const seen: string[] = [];
+    const c = await pannerChart(seen, { clickThrough: true, cursor: 'grab' }, { dragmode: 'zoom' });
+    fire(c, 'pointermove', cx(5), cy(50));
+    frame();
+    // The view's cursor, and still the chart's hover.
+    expect(canvas(c).style.cursor).toBe('grab');
+    expect(labels(c)).toEqual(['(5, 50)']);
+    // Outside the view's area the chart's own zones decide (the x axis strip).
+    fire(c, 'pointermove', cx(5), 365);
+    expect(canvas(c).style.cursor).toBe('move');
+    fire(c, 'pointermove', 630, 390);
+    expect(canvas(c).style.cursor).toBe('');
+  });
+});
+
 describe('draw dragmodes (E5.5)', () => {
   function drawer() {
     const gestures: { mode: string; phase: string; points: number[]; subplot: string }[] = [];
@@ -873,6 +1033,32 @@ describe('touch (E6.6)', () => {
     document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     expect(labels(c)).toEqual([]);
     expect(log.at(-1)?.name).toBe('unhover');
+  });
+
+  it('a pipeline run redraws a tap’s hover, and brings none where a finger dragged', async () => {
+    const c = await chart([DOTS], { dragmode: 'pan' });
+    const log = record(c, 'hover', 'unhover');
+    // A one-finger pan that starts on a point: the point follows the finger and is under it
+    // when the pan's relayout has run. Fingers hover by tapping, so nothing is hovered.
+    fire(c, 'pointerdown', cx(5), cy(50), touch());
+    fire(c, 'pointermove', cx(5) + 30, cy(50), touch());
+    frame();
+    fire(c, 'pointermove', cx(5) + 60, cy(50), touch());
+    frame();
+    fire(c, 'pointerup', cx(5) + 60, cy(50), touch());
+    await c.relayout({});
+    frame();
+    expect(c.axes.get('x')!.scale.range[0]).toBeLessThan(-1);
+    expect(labels(c)).toEqual([]);
+    expect(log).toHaveLength(0);
+    // A tap's hover is the chart's to keep: it is drawn again after a run.
+    await c.relayout({ 'xaxis.range': [0, 10] });
+    tap(c, cx(5), cy(50));
+    expect(labels(c)).toEqual(['(5, 50)']);
+    await c.relayout({ 'title.text': 'again' });
+    frame();
+    expect(labels(c)).toEqual(['(5, 50)']);
+    expect(log.map((l) => l.name)).toEqual(['hover']);
   });
 
   it('a double tap resets the view; taps farther apart do not', async () => {

@@ -3,9 +3,12 @@ title: Line
 description: Connect data points with lines to show trends over an ordered variable such as time.
 status: complete
 chart: scatter
+launch-featured: true
 ---
 
 # Line
+
+<ChartOverview />
 
 ## Overview
 
@@ -23,6 +26,9 @@ Pick a different chart when:
   [area chart](/charts/basic/area) (`fill`, `stackgroup`).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -54,12 +60,14 @@ daily values with a title and axis titles:
 
 ## Variations
 
+<ChartVariations />
+
 ### Step lines
 
 `line.shape: 'hv'` holds each value until the next point, which suits rates, prices, and states.
 `'vh'` steps first, and `'hvh'` / `'vhv'` step halfway between points.
 
-<Example id="line/step" />
+<ExampleLink id="line/step" />
 
 ### Spline vs linear
 
@@ -67,14 +75,14 @@ daily values with a title and axis titles:
 default 1) sets how round it is. A spline can overshoot between points, so prefer straight lines
 when exact values between samples matter.
 
-<Example id="line/spline" />
+<ExampleLink id="line/spline" />
 
 ### Gaps and connectgaps
 
 Missing values break the line by default, which shows the reader that data is missing. Set
 `connectgaps: true` to bridge them with a straight segment.
 
-<Example id="line/gaps" />
+<ExampleLink id="line/gaps" />
 
 ### Dashes and widths
 
@@ -82,7 +90,7 @@ Missing values break the line by default, which shows the reader that data is mi
 dash list in pixels such as `'8px,3px,2px,3px'`. `line.width` is in pixels. A common pattern:
 solid for actuals, dashed for a forecast, dotted for a target.
 
-<Example id="line/dashes" />
+<ExampleLink id="line/dashes" />
 
 ### Many series with a legend
 
@@ -90,7 +98,7 @@ Each trace takes the next colorway color and a legend entry. Click a legend entr
 trace, and double-click to show only that trace. `hovermode: 'x unified'` lists every series at
 the hovered x in one label.
 
-<Example id="line/many-series" />
+<ExampleLink id="line/many-series" />
 
 ### Error bands
 
@@ -106,13 +114,13 @@ The recipe below shows the older workarounds, from before `fill` existed:
 - **Bound lines.** Draw the upper and lower bounds as two thin dashed traces, grouped with the
   mean using `legendgroup`.
 
-<Example id="recipes/error-bands" />
+<ExampleLink id="recipes/error-bands" />
 
 ### Every line shape
 
 All line shapes, dash styles, and `connectgaps` on the same eight points:
 
-<Example id="scatter/lines-shapes" />
+<ExampleLink id="scatter/lines-shapes" />
 
 ## Styling
 

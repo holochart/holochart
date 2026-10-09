@@ -32,6 +32,16 @@ export const holochartIt: Readonly<Record<string, string>> = {
   '{name}: {dimension}, {category}, {text}, {n} of {count}.':
     '{name}: {dimension}, {category}, {text}, {n} di {count}.',
   'Dimension {n}': 'Dimensione {n}',
+  'Map centered at longitude {lon}°, latitude {lat}°, scale {scale}.':
+    'Mappa centrata su longitudine {lon}°, latitudine {lat}°, scala {scale}.',
+  '{name}: {text}, node {n} of {count}.': '{name}: {text}, nodo {n} di {count}.',
+  '{name}: {text}, link {n} of {count} of {node}.':
+    '{name}: {text}, collegamento {n} di {count} del nodo {node}.',
+  '{name}: {text}, rank {rank} of {ranks}, {n} of {count}.':
+    '{name}: {text}, strato {rank} di {ranks}, {n} di {count}.',
+  'Up: {up}.': 'Su: {up}.',
+  'Down: {down}.': 'Giù: {down}.',
+  'Folded.': 'Compresso.',
   // Chart summaries.
   '{y} by {x}.': '{y} per {x}.',
   '{count} more traces are not summarized.': 'Altre tracce non riepilogate: {count}.',

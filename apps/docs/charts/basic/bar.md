@@ -3,9 +3,12 @@ title: Bar
 description: Compare values across categories with vertical or horizontal bars, grouped or stacked.
 status: complete
 chart: bar
+launch-featured: true
 ---
 
 # Bar
+
+<ChartOverview />
 
 ## Overview
 
@@ -22,6 +25,9 @@ Pick a different chart when:
 - you have many long category labels: use [horizontal bars](/charts/basic/horizontal-bar).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -54,27 +60,29 @@ adds a negative value, outlines, and rounded corners:
 
 ## Variations
 
+<ChartVariations />
+
 ### Grouped bars
 
 With `layout.barmode: 'group'` (the default), bar traces at the same position sit side by side.
 `bargap` spaces the positions and `bargroupgap` the bars within a group. Traces that share an
 `offsetgroup` share a slot, so a narrow bar can sit in front of a wide one (targets vs actuals).
 
-<Example id="bar/grouped" />
+<ExampleLink id="bar/grouped" />
 
 ### Stacked bars
 
 `barmode: 'stack'` stacks traces at each position in trace order. `layout.barcornerradius`
 rounds only the outer end of each stack. Set `barnorm: 'percent'` to stack to 100.
 
-<Example id="bar/stacked" />
+<ExampleLink id="bar/stacked" />
 
 ### Positive and negative stacks
 
 `barmode: 'relative'` stacks positive values up from zero and negative values down from zero
 separately, for inflows and outflows.
 
-<Example id="bar/relative" />
+<ExampleLink id="bar/relative" />
 
 ### Labels on bars
 
@@ -82,7 +90,7 @@ separately, for inflows and outflows.
 when it fits and outside otherwise; `'inside'`, `'outside'`, and `'none'` force a choice.
 Inside labels switch between dark and light text to contrast with the bar color.
 
-<Example id="bar/text" />
+<ExampleLink id="bar/text" />
 
 ### Stacked bars with totals
 
@@ -90,7 +98,7 @@ A bar label belongs to one segment, so to label the total of each stack, add a `
 with `mode: 'text'` at the totals, `textposition: 'top center'`, `showlegend: false`, and
 `hoverinfo: 'skip'`. Autorange doesn't make room for text, so set the y range with some headroom.
 
-<Example id="recipes/stacked-totals" />
+<ExampleLink id="recipes/stacked-totals" />
 
 ### Sorted by value
 
@@ -100,7 +108,7 @@ and `'min'`, `'max'`, `'sum'`, `'mean'` and `'median'` work the same way, `ascen
 `descending`. Ties keep the data order. On horizontal bars, sort the y axis `'total ascending'` to
 put the largest bar on top, because category axes run bottom-up.
 
-<Example id="bar/sorted" />
+<ExampleLink id="bar/sorted" />
 
 ### Horizontal bars on a log axis
 
@@ -108,7 +116,7 @@ put the largest bar on top, because category axes run bottom-up.
 Plotly. Numeric `marker.color` maps through a colorscale. More in
 [Horizontal bar](/charts/basic/horizontal-bar).
 
-<Example id="bar/horizontal" />
+<ExampleLink id="bar/horizontal" />
 
 ### Monthly bars with periods
 
@@ -119,7 +127,7 @@ Give a `scatter` trace the same period to line its points up with the bars. With
 `ticklabelmode: 'period'` the month labels sit under their months. Hover shows the date as given,
 not the aligned position, as in Plotly.
 
-<Example id="bar/period" />
+<ExampleLink id="bar/period" />
 
 ### Pattern fills
 
@@ -128,14 +136,14 @@ not the aligned position, as in Plotly.
 series apart without color, for print and color-blind readers. See
 [Patterns & textures](/customization/markers-patterns) for fill modes and colors.
 
-<Example id="bar/patterns" />
+<ExampleLink id="bar/patterns" />
 
 ### 3D bars
 
 `depth` extrudes the bars toward the viewer and `bevel` rounds their edges; `layout.view3d` shows
 the plot in perspective (see [3D-native options](#_3d-native-options)).
 
-<Example id="bar/depth" />
+<ExampleLink id="bar/depth" />
 
 ## Styling
 
@@ -177,7 +185,7 @@ Holochart extensions (full bundle), see [Extrusion & 2.5D](/customization/extrus
 
 Grouped, stacked, relative and horizontal bars, negative values and `base` all extrude:
 
-<Example id="bar/depth-grouped" />
+<ExampleLink id="bar/depth-grouped" />
 
 ## Performance notes
 
@@ -217,7 +225,7 @@ Bar layout options such as [`barmode`](/reference/layout#barmode) and
 - [Line](/charts/basic/line): trends over an ordered variable
 - [Scatter](/charts/basic/scatter): lollipop and dot plots, lighter alternatives to bars
 
-<Example id="recipes/lollipop" :height="320" />
+<ExampleLink id="recipes/lollipop" />
 
 ## Plotly migration notes
 

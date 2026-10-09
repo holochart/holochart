@@ -7,6 +7,8 @@ chart: streamtube
 
 # Stream tubes
 
+<ChartOverview />
+
 ## Overview
 
 A stream tube plot (trace type `streamtube`) follows a 3D vector field, such as a fluid velocity
@@ -25,6 +27,9 @@ Pick a different chart when:
   is simpler.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -89,12 +94,14 @@ along y, sampled on a 7 × 9 × 7 grid, from the default 5 × 5 starting plane:
 
 ## Variations
 
+<ChartVariations />
+
 ### Starting points
 
 Nine tubes started from a 3 × 3 patch of the Arnold–Beltrami–Childress flow (a 16³ grid), thinned
 with `sizeref: 0.3`.
 
-<Example id="streamtube/starts" />
+<ExampleLink id="streamtube/starts" />
 
 ### Tube size
 
@@ -102,21 +109,21 @@ A source and a sink with tubes started around the source: the tubes swell where 
 out of the source and gathers into the sink. `sizeref` scales them: 0.4 on the left, 1.5 on the
 right (both traces share a `coloraxis`).
 
-<Example id="streamtube/sizeref" />
+<ExampleLink id="streamtube/sizeref" />
 
 ### Tube length and sampling
 
 `maxdisplayed` caps the samples per tube and sets the sampling step with it: the default 1000 on
 the left, 60 on the right (a coarser step, so shorter, faceted tubes).
 
-<Example id="streamtube/maxdisplayed" />
+<ExampleLink id="streamtube/maxdisplayed" />
 
 ### Colorscale and domain
 
 `colorscale`, `cmin` and `cmax` map the speed: here Viridis over a fixed domain (the fastest
 flow, near the poles, clips to the last color) with a titled colorbar.
 
-<Example id="streamtube/colorscale" />
+<ExampleLink id="streamtube/colorscale" />
 
 ## Styling
 

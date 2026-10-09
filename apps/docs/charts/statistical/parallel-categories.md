@@ -7,6 +7,8 @@ chart: parcats
 
 # Parallel categories
 
+<ChartOverview />
+
 ## Overview
 
 A parallel categories chart (`parcats`) shows several categorical variables side by side. Each
@@ -35,6 +37,9 @@ Pick a different chart when:
   Sankey diagram (M5).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -104,13 +109,15 @@ createChart(el, {
 
 ## Variations
 
+<ChartVariations />
+
 ### Aggregated data with counts
 
 With `counts`, each row of the dimensions stands for a group of samples: the 2,201 people aboard
 the Titanic take 32 rows here. `categoryarray` fixes the order of the classes, the age groups and
 the outcome. Rows with a count of 0 add nothing.
 
-<Example id="parcats/counts" />
+<ExampleLink id="parcats/counts" />
 
 ### Curved paths and category labels
 
@@ -118,7 +125,7 @@ the outcome. Rows with a count of 0 add nothing.
 straight ribbon, which is easier to follow when many paths cross. Answers coded 1 to 5 are shown
 by name with `categoryarray` and `ticktext`, which also puts "Excellent" at the top.
 
-<Example id="parcats/hspline" />
+<ExampleLink id="parcats/hspline" />
 
 ### Paths colored by an outcome
 
@@ -128,7 +135,7 @@ different colors form separate paths even when their categories are the same. `b
 colored segments. With `hoveron: 'color'`, hovering a band highlights only the paths of the
 hovered color and shows conditional probabilities.
 
-<Example id="parcats/colored" />
+<ExampleLink id="parcats/colored" />
 
 ### Freeform arrangement and path order
 
@@ -137,7 +144,7 @@ up and down. `displayindex` sets the column order (here the last dimension is sh
 `sortpaths: 'backward'` stacks the paths inside each band by the categories of the columns from
 the right instead of from the left. The paths are curved and have one plain color.
 
-<Example id="parcats/freeform" />
+<ExampleLink id="parcats/freeform" />
 
 ## Styling
 

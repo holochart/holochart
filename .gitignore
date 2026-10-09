@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 .pnpm-store/
+# Local environments and the plain HTML preview from the source-install guide
+/.venv-holochart/
+/preview/
 
 # Build output
 dist/
@@ -14,6 +17,8 @@ build/
 # Docs site
 apps/docs/.vitepress/dist/
 apps/docs/.vitepress/cache/
+apps/docs/public/gallery/sources/
+apps/docs/public/gallery/sources.json
 
 # Tests & benchmarks
 coverage/
@@ -44,3 +49,8 @@ Thumbs.db
 
 # `pnpm release:pack` output (docs/release/releasing.md)
 release-artifacts/
+
+apps/docs/public/gallery/artifacts/
+
+# Local production rollback archive
+apps/docs/.vitepress/rollback/

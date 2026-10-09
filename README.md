@@ -84,6 +84,91 @@ These URLs work once the package is published. jsDelivr version ranges such as `
 pre-releases, so during the alpha pin the exact version (for example `@0.1.0-alpha.0`). See
 [Installation][installation] for the trade-offs of the script-tag build.
 
+## Python notebooks
+
+[`holochart-py`](packages/holochart-py) lets existing Plotly figures draw with Holochart in
+JupyterLab, Jupyter Notebook, and notebook editors with an ipywidgets manager. The Python
+distribution is `holochart-py`; the import is `holochart`.
+
+### Install and start JupyterLab
+
+The package is not on PyPI yet. From a clone of this repository, use Python 3.10 or newer,
+Node 22 or newer, and pnpm 11. Run these commands from the repository root on macOS or Linux:
+
+```sh
+# Build the browser assets that the Python package embeds.
+pnpm install
+pnpm build:packages
+
+# Install the bridge and Jupyter in the same Python environment.
+python3 -m venv packages/holochart-py/.venv
+source packages/holochart-py/.venv/bin/activate
+python -m pip install 'packages/holochart-py[plotly]' jupyterlab ipykernel
+python -m ipykernel install --user --name holochart --display-name "Python (Holochart)"
+jupyter lab
+```
+
+In JupyterLab's Launcher, create a notebook with the **Python (Holochart)** kernel. In an
+existing notebook, select that kernel before running the examples. For VS Code, open an
+`.ipynb` file and select the Python environment at `packages/holochart-py/.venv`.
+
+### Draw your first chart
+
+Run this in a notebook cell. Select the renderer once per kernel session; subsequent
+`fig.show()` calls use Holochart:
+
+```python
+import holochart
+import plotly.graph_objects as go
+
+holochart.register_renderer(default=True)
+
+fig = go.Figure(
+    go.Scatter(
+        x=[1, 2, 3, 4],
+        y=[3, 1, 4, 2],
+        mode="lines+markers",
+        name="Visits",
+    )
+)
+fig.update_layout(title="Hello Holochart")
+fig.show(height=400)
+```
+
+This also works with existing Plotly Express figures. To use Holochart for just one output,
+call `holochart.register_renderer()` and then `fig.show(renderer="holochart")`.
+
+### Update a live widget
+
+Use `HolochartWidget` directly for JSON dictionaries or a Plotly Figure. Run this in another
+cell:
+
+```python
+from IPython.display import display
+from holochart import HolochartWidget
+
+chart = HolochartWidget(fig, height=400)
+display(chart)
+```
+
+In a later cell, replace `figure` to redraw the same output:
+
+```python
+chart.figure = {"data": [{"type": "bar", "x": ["A", "B"], "y": [6, 2]}]}
+chart.config = {"displayModeBar": False}
+```
+
+Assign a replacement dictionary to notify the widget; edits in place do not trigger a redraw.
+The installed package includes the 2D and 3D browser bundles and default fonts. Charts require
+WebGL2; characters missing from the default font can still trigger fallback font downloads.
+
+If an import fails, check that the notebook uses the environment where the package was
+installed, then restart the kernel and rerun the registration cell. If the output only shows a
+widget representation, check that the notebook editor has widget support enabled.
+
+See the [package README](packages/holochart-py/README.md) for build and compatibility details and the
+[notebook guide](https://mk7s.dev/holochart/guides/notebooks).
+
 ## Packages
 
 `@mk7s/holochart` is the full bundle and what most apps should install. For smaller bundles,
@@ -103,6 +188,8 @@ install the runtime and only the packages you use, and `register(...)` them
 | [`@mk7s/holochart-traces-finance`](packages/traces-finance) | ohlc, candlestick, waterfall, funnel, funnelarea, indicator                                |
 | [`@mk7s/holochart-traces-hier`](packages/traces-hier)       | sunburst, treemap, icicle, sankey                                                          |
 | [`@mk7s/holochart-traces-3d`](packages/traces-3d)           | The 3D scene; scatter3d, surface, mesh3d, cone, streamtube, isosurface, volume, bar3d      |
+| [`@mk7s/holochart-traces-geo`](packages/traces-geo)         | Maps: the geo subplot and scattergeo. Not in the full bundle: add `@mk7s/holochart/geo`    |
+| [`@mk7s/holochart-traces-graph`](packages/traces-graph)     | Network graphs: the graph trace. Not in the full bundle: add `@mk7s/holochart/graph`       |
 | [`@mk7s/holochart-themes`](packages/themes)                 | Built-in templates: `plotly_dark`, `seaborn`, `high-contrast`, …                           |
 | [`@mk7s/holochart-express`](packages/express)               | Plotly Express-style charts from tabular data: grouping, facets, animation frames          |
 | [`@mk7s/holochart-locales`](packages/locales)               | UI strings, month names, number and date formats, one module per locale (separate install) |

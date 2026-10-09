@@ -1,0 +1,23 @@
+{
+  "name": "@mk7s/holochart-geo-data",
+  "private": true,
+  "type": "module",
+  "description": "Builds the basemap TopoJSON of @mk7s/holochart-traces-geo from Natural Earth (ADR-024).",
+  "scripts": {
+    "build": "node src/cli.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/d3-geo": "catalog:",
+    "@types/geojson": "catalog:",
+    "@types/node": "^26.6.2",
+    "@types/topojson-client": "catalog:",
+    "@types/topojson-server": "^3.0.4",
+    "@types/topojson-specification": "catalog:",
+    "d3-geo": "catalog:",
+    "d3-geo-projection": "catalog:",
+    "topojson-client": "catalog:",
+    "topojson-server": "^3.0.1",
+    "typescript": "catalog:"
+  }
+}

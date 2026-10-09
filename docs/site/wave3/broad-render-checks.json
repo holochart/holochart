@@ -1,0 +1,530 @@
+{
+  "checkedAt": "2026-10-09T18:39:05.476370+00:00",
+  "base": "http://127.0.0.1:5339/holochart/",
+  "homeHtmlSha256": "ad9d510405f7157fd5a85e44d219cae6d41023a37f5d79fdc9c39c543e51e893",
+  "browser": "Chromium 153.0.8010.12 / SwiftShader",
+  "workers": 2,
+  "retries": 0,
+  "stats": {
+    "startTime": "2026-10-09T18:34:42.791Z",
+    "duration": 208991.228,
+    "expected": 81,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "scope": {
+    "foundation": 8,
+    "chartPages": 49,
+    "galleryPages": 13,
+    "wave2Interactions": 6,
+    "wave3Content": 5
+  },
+  "build": {
+    "vitepressSeconds": 223.97,
+    "maxOldSpaceSizeMiB": 8192,
+    "includesGeneration": false
+  },
+  "contentChecks": {
+    "notebookArtifacts": 120,
+    "notebooks": 14,
+    "exactPythonVariants": 24,
+    "supportedFamilies": 6,
+    "sourceMatchedHostChecks": 76,
+    "typescriptSnippets": 433,
+    "internalLinks": 2053,
+    "deadLinks": 0,
+    "unitTests": 15
+  },
+  "typechecks": ["docs", "root tooling, tests, gallery generator, bench"],
+  "remoteCIExecuted": false,
+  "tests": [
+    {
+      "title": "foundation landing pages expose primary navigation and working next steps",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 5183
+    },
+    {
+      "title": "gallery keeps legacy query/hash links and restores filters on browser history",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 5427
+    },
+    {
+      "title": "gallery responsive grid 1440px has 4 columns and no page overflow",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 2655
+    },
+    {
+      "title": "gallery responsive grid 1200px has 3 columns and no page overflow",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 2635
+    },
+    {
+      "title": "gallery responsive grid 820px has 2 columns and no page overflow",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 2651
+    },
+    {
+      "title": "gallery responsive grid 720px has 2 columns and no page overflow",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 2712
+    },
+    {
+      "title": "gallery responsive grid 390px has 1 columns and no page overflow",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 3177
+    },
+    {
+      "title": "dense example detail splits chart and complete source, then stacks on mobile",
+      "file": "foundation.spec.ts",
+      "status": "expected",
+      "durationMs": 1027
+    },
+    {
+      "title": "charts/3d/bar3d.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 5879
+    },
+    {
+      "title": "charts/3d/cone.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 6072
+    },
+    {
+      "title": "charts/3d/index.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 6880
+    },
+    {
+      "title": "charts/3d/isosurface.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 6784
+    },
+    {
+      "title": "charts/3d/mesh3d.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 6451
+    },
+    {
+      "title": "charts/3d/scatter3d.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 6188
+    },
+    {
+      "title": "charts/3d/streamtube.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 7456
+    },
+    {
+      "title": "charts/3d/surface.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 7585
+    },
+    {
+      "title": "charts/3d/volume.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 15974
+    },
+    {
+      "title": "charts/basic/area.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 9615
+    },
+    {
+      "title": "charts/basic/bar.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 8720
+    },
+    {
+      "title": "charts/basic/bubble.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 7919
+    },
+    {
+      "title": "charts/basic/gantt.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 7727
+    },
+    {
+      "title": "charts/basic/horizontal-bar.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 7256
+    },
+    {
+      "title": "charts/basic/line.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 7012
+    },
+    {
+      "title": "charts/basic/pie.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 7934
+    },
+    {
+      "title": "charts/basic/scatter.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 6819
+    },
+    {
+      "title": "charts/basic/table.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 6313
+    },
+    {
+      "title": "charts/financial/candlestick.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 6582
+    },
+    {
+      "title": "charts/financial/funnel.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 6336
+    },
+    {
+      "title": "charts/financial/funnelarea.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 7469
+    },
+    {
+      "title": "charts/financial/indicator.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 6354
+    },
+    {
+      "title": "charts/financial/ohlc.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 6333
+    },
+    {
+      "title": "charts/financial/waterfall.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 7372
+    },
+    {
+      "title": "charts/graphs/chord.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 6102
+    },
+    {
+      "title": "charts/graphs/graph.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 7185
+    },
+    {
+      "title": "charts/graphs/graph3d.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 6891
+    },
+    {
+      "title": "charts/hierarchical/icicle.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 7622
+    },
+    {
+      "title": "charts/hierarchical/sankey.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 7579
+    },
+    {
+      "title": "charts/hierarchical/sunburst.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 6719
+    },
+    {
+      "title": "charts/hierarchical/treemap.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 7163
+    },
+    {
+      "title": "charts/index.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 1612
+    },
+    {
+      "title": "charts/maps/choropleth.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 9820
+    },
+    {
+      "title": "charts/maps/scattergeo.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 9191
+    },
+    {
+      "title": "charts/scientific/barpolar.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 6780
+    },
+    {
+      "title": "charts/scientific/contour.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 7937
+    },
+    {
+      "title": "charts/scientific/heatmap.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 5032
+    },
+    {
+      "title": "charts/scientific/image.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 4531
+    },
+    {
+      "title": "charts/scientific/log-plots.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 5505
+    },
+    {
+      "title": "charts/scientific/polar.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 6233
+    },
+    {
+      "title": "charts/statistical/box.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 4721
+    },
+    {
+      "title": "charts/statistical/histogram.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 4482
+    },
+    {
+      "title": "charts/statistical/histogram2d-contour.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 4924
+    },
+    {
+      "title": "charts/statistical/histogram2d.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 4962
+    },
+    {
+      "title": "charts/statistical/parallel-categories.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 4708
+    },
+    {
+      "title": "charts/statistical/parallel-coordinates.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 5149
+    },
+    {
+      "title": "charts/statistical/splom.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 5994
+    },
+    {
+      "title": "charts/statistical/strip.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 5393
+    },
+    {
+      "title": "charts/statistical/violin.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 6626
+    },
+    {
+      "title": "gallery/3d/index.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 1827
+    },
+    {
+      "title": "gallery/all/index.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 1688
+    },
+    {
+      "title": "gallery/basic/index.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 1333
+    },
+    {
+      "title": "gallery/financial/index.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 1666
+    },
+    {
+      "title": "gallery/hierarchical/index.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 2179
+    },
+    {
+      "title": "gallery/index.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 1391
+    },
+    {
+      "title": "gallery/maps/index.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 1606
+    },
+    {
+      "title": "gallery/networks/index.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 1712
+    },
+    {
+      "title": "gallery/polar/index.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 1932
+    },
+    {
+      "title": "gallery/relationships/index.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 1913
+    },
+    {
+      "title": "gallery/scientific/index.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 1760
+    },
+    {
+      "title": "gallery/statistical/index.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 1774
+    },
+    {
+      "title": "gallery/time-series/index.md",
+      "file": "render.spec.ts",
+      "status": "expected",
+      "durationMs": 2149
+    },
+    {
+      "title": "home exposes six complete first-screen previews, families and three working entry paths",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 4982
+    },
+    {
+      "title": "homepage at 820px keeps previews and content within the viewport",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 1172
+    },
+    {
+      "title": "homepage at 390px keeps previews and content within the viewport",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 680
+    },
+    {
+      "title": "gallery defaults to eleven linked family sections and offers inventory separately",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 3248
+    },
+    {
+      "title": "deep example source supports keyboard tabs, copying, downloads and language preference fallback",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 1727
+    },
+    {
+      "title": "detail returns to filtered results and quick previews keep legacy hash history",
+      "file": "wave2.spec.ts",
+      "status": "expected",
+      "durationMs": 11865
+    },
+    {
+      "title": "detail source tab keeps its labelled panel through loading and failure",
+      "file": "wave3-content.spec.ts",
+      "status": "expected",
+      "durationMs": 1955
+    },
+    {
+      "title": "inline source tab keeps its labelled panel through loading and failure",
+      "file": "wave3-content.spec.ts",
+      "status": "expected",
+      "durationMs": 2480
+    },
+    {
+      "title": "production chart blocks hydrate without repairing server markup",
+      "file": "wave3-content.spec.ts",
+      "status": "expected",
+      "durationMs": 2779
+    },
+    {
+      "title": "production canonical URLs ignore gallery filters and use the configured base",
+      "file": "wave3-content.spec.ts",
+      "status": "expected",
+      "durationMs": 501
+    },
+    {
+      "title": "all notebook and exact Python downloads match their canonical sources",
+      "file": "wave3-content.spec.ts",
+      "status": "expected",
+      "durationMs": 2606
+    }
+  ],
+  "scopeNote": "Broad chart/gallery rendering snapshot before the final accessibility markup and facet-computation refinements. Chart examples and their runtime/content sources remain unchanged; final interaction and settled-chart accessibility checks are recorded separately."
+}

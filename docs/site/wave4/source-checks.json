@@ -1,0 +1,105 @@
+{
+  "scope": "Ten unchanged canonical cookbook examples. Five existing copied-bundle proofs retained; five newly copied, browser-rendered and cleaned up in Wave 4. Compilation alone is not a rendering proof.",
+  "examples": [
+    {
+      "id": "layout/grid-coupled",
+      "hash": "67d4bc4a2b27515d0714f9e67a4bd45d31b932f2a1ff01d0f366b28833a1dbe9",
+      "verification": "rendered",
+      "browserEvidence": {
+        "hash": "67d4bc4a2b27515d0714f9e67a4bd45d31b932f2a1ff01d0f366b28833a1dbe9",
+        "runner": "Chromium WebGL2; copied standalone source + ready/canvas/cleanup",
+        "checkedAt": "2026-10-09T17:49:38.994Z"
+      }
+    },
+    {
+      "id": "line/with-bars",
+      "hash": "7985f52343173f33a07f21731f2634f954506f115e450f3ed9f4309e05347a45",
+      "verification": "rendered",
+      "browserEvidence": {
+        "hash": "7985f52343173f33a07f21731f2634f954506f115e450f3ed9f4309e05347a45",
+        "runner": "Chromium WebGL2; copied standalone source + ready/canvas/cleanup",
+        "checkedAt": "2026-10-09T17:49:28.497Z"
+      }
+    },
+    {
+      "id": "area/band",
+      "hash": "8d03cddce877566bafa47e855c6906ce4b647d8fbc88243f9f41d3c8c2a91298",
+      "verification": "rendered",
+      "browserEvidence": {
+        "hash": "8d03cddce877566bafa47e855c6906ce4b647d8fbc88243f9f41d3c8c2a91298",
+        "runner": "Chromium WebGL2; copied standalone source + ready/canvas/cleanup",
+        "checkedAt": "2026-10-09T20:13:37.716Z"
+      }
+    },
+    {
+      "id": "recipes/ranked-bars",
+      "hash": "783a54587397bef3e2c7723a11a96b9913d0539c98c6a6a4d0d023b66684b670",
+      "verification": "rendered",
+      "browserEvidence": {
+        "hash": "783a54587397bef3e2c7723a11a96b9913d0539c98c6a6a4d0d023b66684b670",
+        "runner": "Chromium WebGL2; copied standalone source + ready/canvas/cleanup",
+        "checkedAt": "2026-10-09T20:13:38.923Z"
+      }
+    },
+    {
+      "id": "line/gaps",
+      "hash": "9bb60a17d78fb551ddedb3d43ca019d3e965885a567ae52a83688b83ffb67e38",
+      "verification": "rendered",
+      "browserEvidence": {
+        "hash": "9bb60a17d78fb551ddedb3d43ca019d3e965885a567ae52a83688b83ffb67e38",
+        "runner": "Chromium WebGL2; copied standalone source + ready/canvas/cleanup",
+        "checkedAt": "2026-10-09T17:48:18.549Z"
+      }
+    },
+    {
+      "id": "timeseries/date-formatting",
+      "hash": "2fed9e2718a7363cf3ca79415d3ede8574dd091a6eb94d48a92f81d9b940004c",
+      "verification": "rendered",
+      "browserEvidence": {
+        "hash": "2fed9e2718a7363cf3ca79415d3ede8574dd091a6eb94d48a92f81d9b940004c",
+        "runner": "Chromium WebGL2; copied standalone source + ready/canvas/cleanup",
+        "checkedAt": "2026-10-09T20:13:40.382Z"
+      }
+    },
+    {
+      "id": "scatter/interactive",
+      "hash": "7231f71feb9bf680e49b8f62e6e92c5723869fdfd4fe9fa25d35dd1eb00deb4a",
+      "verification": "rendered",
+      "browserEvidence": {
+        "hash": "7231f71feb9bf680e49b8f62e6e92c5723869fdfd4fe9fa25d35dd1eb00deb4a",
+        "runner": "Chromium WebGL2; copied standalone source + ready/canvas/cleanup",
+        "checkedAt": "2026-10-09T20:13:41.701Z"
+      }
+    },
+    {
+      "id": "axes/linked-axes",
+      "hash": "4ae8f0e0c4d4f2a2966c182d068c4b4c742d074dac4025e54c72e228baf5d2bf",
+      "verification": "rendered",
+      "browserEvidence": {
+        "hash": "4ae8f0e0c4d4f2a2966c182d068c4b4c742d074dac4025e54c72e228baf5d2bf",
+        "runner": "Chromium WebGL2; copied standalone source + ready/canvas/cleanup",
+        "checkedAt": "2026-10-09T20:13:43.237Z"
+      }
+    },
+    {
+      "id": "themes/plotly_white",
+      "hash": "0d248ec160e634ac3cdc720935d8105de88281834d32a21323cd42b4fd2aefcb",
+      "verification": "rendered",
+      "browserEvidence": {
+        "hash": "0d248ec160e634ac3cdc720935d8105de88281834d32a21323cd42b4fd2aefcb",
+        "runner": "Chromium WebGL2; copied standalone source + ready/canvas/cleanup",
+        "checkedAt": "2026-10-09T17:49:42.309Z"
+      }
+    },
+    {
+      "id": "layout/grid-independent",
+      "hash": "0a985eef44fed7c186bcbe8881571522cc232e8864c70a932f29927c2c359c29",
+      "verification": "rendered",
+      "browserEvidence": {
+        "hash": "0a985eef44fed7c186bcbe8881571522cc232e8864c70a932f29927c2c359c29",
+        "runner": "Chromium WebGL2; copied standalone source + ready/canvas/cleanup",
+        "checkedAt": "2026-10-09T17:49:36.988Z"
+      }
+    }
+  ]
+}

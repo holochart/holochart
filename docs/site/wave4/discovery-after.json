@@ -1,0 +1,382 @@
+{
+  "checkedAt": "2026-10-09T20:31:10.054Z",
+  "method": "Replay the 33 source-reviewed beginner task descriptions as literal gallery queries, globally and inside their family. Editorial regression evidence only; no participants, analytics, startup timings or completion-time claims.",
+  "identities": {
+    "manifestSha256": "936415222d1c502034f0963953ede96d586a90af66e04070032b6b8ec2077d6f",
+    "taskSourceSha256": "01d752ca69989cd95f09009ec28fccc319a606791cbe6886e2bb4f7e57f41e2a",
+    "searchSourceSha256": "7fcfc949da8bbae5f709108e12ad2dc9fd6770a314fb5d55dcb1eec093923c0b"
+  },
+  "summary": {
+    "tasks": 33,
+    "zeroResults": 0,
+    "missingExpected": 0,
+    "expectedFirst": 33,
+    "verifiedPythonTasks": 12,
+    "pythonSupportLeaks": 0
+  },
+  "tasks": [
+    {
+      "family": "basic",
+      "query": "Compare category totals",
+      "expectedId": "bar/basic",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": true,
+      "pythonIds": ["bar/basic"]
+    },
+    {
+      "family": "basic",
+      "query": "Label values directly",
+      "expectedId": "bar/text",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": true,
+      "pythonIds": ["bar/text"]
+    },
+    {
+      "family": "basic",
+      "query": "Show components of a total",
+      "expectedId": "bar/stacked",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": true,
+      "pythonIds": ["bar/stacked"]
+    },
+    {
+      "family": "time-series",
+      "query": "Draw a trend",
+      "expectedId": "line/basic",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "time-series",
+      "query": "Expose missing observations",
+      "expectedId": "line/gaps",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": true,
+      "pythonIds": ["line/gaps"]
+    },
+    {
+      "family": "time-series",
+      "query": "Show discrete state changes",
+      "expectedId": "line/step",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": true,
+      "pythonIds": ["line/step"]
+    },
+    {
+      "family": "relationships",
+      "query": "Compare two measurements",
+      "expectedId": "scatter/basic",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "relationships",
+      "query": "Encode a third value by size",
+      "expectedId": "bubble/basic",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "relationships",
+      "query": "Identify observations with labels",
+      "expectedId": "scatter/text-labels",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": true,
+      "pythonIds": ["scatter/text-labels"]
+    },
+    {
+      "family": "statistical",
+      "query": "Bin a small sample",
+      "expectedId": "histogram/notebook-starter",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": true,
+      "pythonIds": ["histogram/notebook-starter"]
+    },
+    {
+      "family": "statistical",
+      "query": "Summarize sample spread",
+      "expectedId": "box/basic",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "statistical",
+      "query": "Compare distribution shapes",
+      "expectedId": "violin/basic",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": true,
+      "pythonIds": ["violin/basic"]
+    },
+    {
+      "family": "scientific",
+      "query": "Display a numeric matrix",
+      "expectedId": "heatmap/basic",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": true,
+      "pythonIds": ["heatmap/basic"]
+    },
+    {
+      "family": "scientific",
+      "query": "Represent uneven coordinate spacing",
+      "expectedId": "heatmap/uneven",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": true,
+      "pythonIds": ["heatmap/uneven"]
+    },
+    {
+      "family": "scientific",
+      "query": "Draw levels of a field",
+      "expectedId": "contour/basic",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "hierarchical",
+      "query": "Show a part of a whole",
+      "expectedId": "pie/basic",
+      "globalResults": 2,
+      "globalRank": 1,
+      "familyResults": 2,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "hierarchical",
+      "query": "Compare nested amounts",
+      "expectedId": "treemap/basic",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "hierarchical",
+      "query": "Explore levels of a hierarchy",
+      "expectedId": "sunburst/basic",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "financial",
+      "query": "Show stage conversion",
+      "expectedId": "funnel/basic",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "financial",
+      "query": "Compare conversion between two cohorts",
+      "expectedId": "funnel/grouped",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "financial",
+      "query": "Present a formatted revenue metric",
+      "expectedId": "indicator/number",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "polar",
+      "query": "Plot angular measurements",
+      "expectedId": "polar/basic",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "polar",
+      "query": "Compare category profiles",
+      "expectedId": "polar/radar",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "polar",
+      "query": "Stack values on a circular category axis",
+      "expectedId": "polar/barpolar",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "maps",
+      "query": "Place measured cities on a world map",
+      "expectedId": "scattergeo/basic",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "maps",
+      "query": "Label capitals in a scoped map",
+      "expectedId": "scattergeo/europe",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "maps",
+      "query": "Display state-level locations",
+      "expectedId": "scattergeo/usa",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "networks",
+      "query": "Show energy flows",
+      "expectedId": "sankey/basic",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "networks",
+      "query": "Explain a household budget",
+      "expectedId": "sankey/vertical",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "networks",
+      "query": "Trace samples across categorical dimensions",
+      "expectedId": "parcats/basic",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    },
+    {
+      "family": "3d",
+      "query": "Compare spatial observations",
+      "expectedId": "scatter3d/basic",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": true,
+      "pythonIds": ["scatter3d/basic"]
+    },
+    {
+      "family": "3d",
+      "query": "Draw a grid height field",
+      "expectedId": "surface/basic",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": true,
+      "pythonIds": ["surface/basic"]
+    },
+    {
+      "family": "3d",
+      "query": "Compare revenue across products and regions",
+      "expectedId": "bar3d/matrix",
+      "globalResults": 1,
+      "globalRank": 1,
+      "familyResults": 1,
+      "familyRank": 1,
+      "verifiedPython": false,
+      "pythonIds": []
+    }
+  ]
+}

@@ -7,6 +7,8 @@ chart: sunburst
 
 # Sunburst
 
+<ChartOverview />
+
 ## Overview
 
 A sunburst draws a hierarchy as rings: the root is a disc in the middle, its children the first
@@ -31,6 +33,9 @@ Pick a different chart when:
 - the data is a flow between stages rather than a tree (Sankey diagrams are planned).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -82,13 +87,15 @@ largest first, starting at 3 o'clock and going counterclockwise:
 
 ## Variations
 
+<ChartVariations />
+
 ### Remainder and total values
 
 The same values read both ways: with `'remainder'` Eve's own 65 adds to her children's 42; with
 `'total'` the 65 is the family's total, so her children fill 42/65 of the ring. Labels show each
 sector's percent of its parent (`textinfo: 'label+percent parent'`):
 
-<Example id="sunburst/branchvalues" />
+<ExampleLink id="sunburst/branchvalues" />
 
 ### Ids and repeated labels
 
@@ -115,7 +122,7 @@ createChart(document.getElementById('chart')!, {
 });
 ```
 
-<Example id="sunburst/ids" />
+<ExampleLink id="sunburst/ids" />
 
 ### Colorscale
 
@@ -124,7 +131,7 @@ the sectors through a colorscale instead of the colorway. Here size is headcount
 growth, on a diverging scale centered on zero (`cmid`), with a colorbar. Without `marker.colors`,
 a colorscale colors by `values`, or by counts without values:
 
-<Example id="sunburst/colorscale" />
+<ExampleLink id="sunburst/colorscale" />
 
 ### Levels and depth
 
@@ -150,7 +157,7 @@ createChart(document.getElementById('chart')!, {
 });
 ```
 
-<Example id="sunburst/levels" />
+<ExampleLink id="sunburst/levels" />
 
 ### Label orientation
 
@@ -159,7 +166,7 @@ when they would be smaller than a pixel. `insidetextorientation` picks the direc
 `'horizontal'`, `'radial'` (along the radius), `'tangential'` (along the ring) or `'auto'` (the
 default: whichever fits largest):
 
-<Example id="sunburst/text-orientation" />
+<ExampleLink id="sunburst/text-orientation" />
 
 ### Uniform text
 
@@ -168,7 +175,7 @@ still fits, as in Plotly (and as for bars and pies). Labels that would have to s
 `minsize` to fit are hidden with `mode: 'hide'`, or drawn at the common size with `'show'`.
 Drill-down clicks don't animate while it is on:
 
-<Example id="sunburst/uniformtext" />
+<ExampleLink id="sunburst/uniformtext" />
 
 ### Patterns
 
@@ -176,7 +183,7 @@ Drill-down clicks don't animate while it is on:
 the hatches are drawn over the sector colors; with the default `'replace'` the background is the
 paper color:
 
-<Example id="sunburst/patterns" />
+<ExampleLink id="sunburst/patterns" />
 
 ## Styling
 

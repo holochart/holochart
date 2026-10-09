@@ -112,14 +112,20 @@ export interface DomainInfo {
 }
 
 /**
- * A non-cartesian subplot's own 3D viewport (M6: 3D scenes; ADR-004), from
+ * A non-cartesian subplot's own viewport (M6: 3D scenes; GEO2: map projections; ADR-004), from
  * {@link TracePlotContext.subplotViewport} / {@link ComponentDrawContext.subplotViewport}.
  * @experimental
  */
 export interface SubplotViewportOptions {
   /** Rect in container px (top-left origin); the viewport clips to it. */
   readonly rect: Readonly<ViewportRect>;
-  /** Default `'perspective'`; a change swaps the camera (`Viewport.setProjection`). */
+  /**
+   * `'3d'` (the default) has a perspective or orthographic camera and a depth buffer. `'2d'` is a
+   * pixel-space viewport like a cartesian subplot's (ADR-008): world units are CSS px from the
+   * rect's bottom-left corner, y up. Fixed by the first call for a key.
+   */
+  readonly kind?: '2d' | '3d';
+  /** 3D only. Default `'perspective'`; a change swaps the camera (`Viewport.setProjection`). */
   readonly projection?: 'perspective' | 'orthographic';
   /** Painted under the subplot (sRGB 0–1); `null` or unset for none. */
   readonly background?: RGBA | null;
@@ -138,6 +144,12 @@ export interface DomainLayoutContext {
   readonly height: number;
   /** The plot area inside the margins, container px (top-left origin). */
   readonly plotArea: Readonly<ViewportRect>;
+  /**
+   * The chart, for subplots that keep state from one pass to the next (GEO2: a map keeps its
+   * projected geometry across the relayout that ends a pan). Always set by the runtime; optional
+   * for hand-built contexts.
+   */
+  readonly chart?: Chart;
 }
 
 // ---- Trace contract ---------------------------------------------------------------------------
@@ -272,6 +284,15 @@ export interface TracePlotContext<Calc = unknown> {
   remove<T>(primitive: Primitive<T>): void;
   /** Schedule a frame (ADR-007), e.g. after async resources finish loading. */
   invalidate(): void;
+  /**
+   * Run this trace's `calc` again in the chart's next pipeline run, without a change to the
+   * figure: what the view was waiting for has arrived (backlog G7: the layout of a `graph` from a
+   * worker), and `calc` now returns another result. The run is a `calc` update of the trace like
+   * any other (autorange, `update` with `plan.calc`), and update promises that have not resolved
+   * yet wait for it, as they do for a pass a component asked for. Always set by the runtime;
+   * optional for hand-built contexts.
+   */
+  recalc?(): void;
   /**
    * The 3D viewport of non-cartesian subplot `key` (M6: a 3D scene, `'scene'`, `'scene2'`, …;
    * ADR-004): its own rect, perspective or orthographic camera and depth buffer (cleared first),
@@ -466,9 +487,17 @@ export interface TraceModule<
   selectPoints?(calc: Calc, trace: FullTrace, query: SelectionQuery, ctx: HoverContext): number[];
   /**
    * Extra fields of point `pointIndex` in selection events (plotly.js `_module.eventData`), e.g.
-   * polar `r` / `theta`. Default: none.
+   * polar `r` / `theta`. Default: none. `selection`: the indices of every point of the trace in
+   * the selection the event reports, in the order of the event's points (the same array for each
+   * of them), for fields that depend on the others (a `graph` node lists its links to the other
+   * selected nodes).
    */
-  eventData?(calc: Calc, trace: FullTrace, pointIndex: number): Readonly<Record<string, unknown>>;
+  eventData?(
+    calc: Calc,
+    trace: FullTrace,
+    pointIndex: number,
+    selection?: readonly number[],
+  ): Readonly<Record<string, unknown>>;
   /**
    * Every stop keyboard navigation (E6.5) visits, in reading order (pie: its slices in drawing
    * order), shaped like {@link hoverPoints}' results; a stop may say where the arrows lead from
@@ -534,9 +563,9 @@ export interface TraceA11y {
   /** See {@link TraceModule.describe}. */
   describe?(ctx: DescribeContext<never>): TraceDescription | undefined;
   /**
-   * Keys that move the view of a trace that is not on cartesian axes (3D scenes): `+` / `-`
+   * Keys that move the view of a trace that is not on cartesian axes (3D scenes, maps): `+` / `-`
    * (`'zoomIn'`, `'zoomOut'`), Shift + arrows (`'panLeft'`, `'panRight'`, `'panUp'`, `'panDown'`:
-   * a scene orbits its camera) and `0` (`'reset'`). Returns the relayout that does it, applied
+   * a scene orbits its camera, a map pans or turns) and `0` (`'reset'`). Returns the relayout that does it, applied
    * like a drag's (a GUI relayout), or `undefined` when the key does nothing here.
    */
   keyboardView?(
@@ -544,6 +573,19 @@ export interface TraceA11y {
     ctx: HoverContext,
     action: string,
   ): Readonly<Record<string, unknown>> | undefined;
+  /**
+   * The announcement of a view key this trace took instead of "Zoomed in.", "View rotated." or
+   * "View reset." (a map says where its view is now): an English sentence template, which is also
+   * its key in a locale dictionary, and values for its placeholders, as in
+   * {@link KeyboardPoint.say}. `update` is what {@link keyboardView} just returned for `action`;
+   * asked before it is applied. `undefined` keeps the runtime's sentence.
+   */
+  keyboardViewSay?(
+    trace: FullTrace,
+    ctx: HoverContext,
+    action: string,
+    update: Readonly<Record<string, unknown>>,
+  ): readonly [template: string, values?: Readonly<Record<string, string>>] | undefined;
 }
 
 /**
@@ -566,6 +608,14 @@ export interface KeyboardPoint extends HoverPoint {
    * placeholders. The runtime fills in `{name}`, `{text}`, `{n}` and `{count}` unless given.
    */
   readonly say?: readonly [template: string, values?: Readonly<Record<string, string>>];
+  /**
+   * Enter on this stop is first a click on the trace's view at the stop's anchor
+   * ({@link TraceView.handlePointer} with a `click`), also when the trace is on cartesian axes: a
+   * `graph` tree folds or unfolds a node. Without it only the views of traces that are not on
+   * cartesian axes are offered the click. A click the view does not take goes on as the chart's
+   * `click`. When the pipeline run that follows changes what the stop says, it is announced again.
+   */
+  readonly click?: boolean;
 }
 
 /**
@@ -576,6 +626,16 @@ export interface KeyboardPoint extends HoverPoint {
 export interface KeyboardStops {
   readonly length: number;
   at(i: number): KeyboardPoint | undefined;
+  /**
+   * For stops built on demand: where the cursor is among them, asked when the trace's stops are
+   * listed again after a pipeline run. `point` is the stop the cursor was on, the object `at`
+   * returned, from these stops or from the ones the trace listed before. Returns the index of the
+   * stop that stands for the same thing now, else of a stop near it (a `graph` node that is no
+   * longer drawn: the nearest ancestor that is), or -1 for the first stop. Without this method
+   * the cursor keeps its index. The runtime finds the cursor in an array of stops itself, by
+   * `pointIndex` and `kind`.
+   */
+  locate?(point: KeyboardPoint): number;
 }
 
 /** Context for {@link TraceModule.describe}. @experimental */
@@ -888,6 +948,12 @@ export interface HoverPoint {
    * `'link'`): the same `pointIndex` of another kind is a new hover.
    */
   readonly kind?: string;
+  /**
+   * The points a click on this one selects, where clicks select (`clickmode` with `'select'`),
+   * when they are not `[pointIndex]`: a `graph` link is not a point of its trace (`selectPoints`
+   * returns node indices), so it selects its two end nodes; an empty list selects nothing.
+   */
+  readonly selects?: readonly number[];
 }
 
 /**
@@ -1169,7 +1235,11 @@ export interface ComponentPointerEvent {
   metaKey: boolean;
   /** The DOM event (absent for `click` / `dblclick`, which the runtime synthesizes). */
   native: Event | undefined;
-  /** Set by a component that handles a `move` to choose the cursor (e.g. `'pointer'`). */
+  /**
+   * Set by a component on a `move` to choose the cursor (e.g. `'pointer'`). A view that returns
+   * `false` for the move, so that the points under it still hover, may set it too: it then stands
+   * for the cursor of the chart's own drag zones (GEO6: `'move'` over a map that pans).
+   */
   cursor: string | undefined;
 }
 
@@ -1217,6 +1287,12 @@ export interface ComponentView {
    * don't need this.
    */
   handlePointer?(event: ComponentPointerEvent): boolean | void;
+  /**
+   * For a view that takes every press in an area to drag it (GEO2: a map pans): a press released
+   * without moving, whose `click` the view does not handle, is then a click on the points under
+   * it, with the chart's `click` event and click-to-select, as on a cartesian subplot.
+   */
+  readonly clickThrough?: boolean;
   /**
    * Shape drawing hook (E5.5, see {@link DrawGesture}). Return `true` when the view handles the
    * gesture: later views are then not asked for this call.

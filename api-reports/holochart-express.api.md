@@ -10,6 +10,15 @@
 import { Chart } from '@mk7s/holochart-runtime';
 import { Template } from '@mk7s/holochart-core';
 
+// @experimental
+export const adjacencyMatrix: GraphFunction<GraphInput | GraphMatrix, AdjacencyMatrixOptions>;
+
+// @experimental
+export interface AdjacencyMatrixOptions extends Omit<GraphDataOptions, keyof DiscreteColorOptions>, ContinuousColorOptions {
+    readonly color?: ColumnRef;
+    readonly order?: 'community' | 'degree' | 'group' | 'input' | readonly number[];
+}
+
 // @public
 export type AggFunction = 'avg' | 'count' | 'max' | 'median' | 'min' | 'sum' | ((values: number[]) => number);
 
@@ -114,6 +123,18 @@ export interface Chart3dOptions extends CommonOptions, DiscreteColorOptions, Hov
     readonly y?: ColumnRef;
     readonly z?: ColumnRef;
 }
+
+// @experimental
+export const chord: GraphFunction<GraphInput | GraphMatrix, ChordOptions>;
+
+// @experimental
+export type ChordOptions = GraphDataOptions;
+
+// @experimental
+export const choropleth: ExpressFunction<ChoroplethOptions>;
+
+// @experimental
+export interface ChoroplethOptions extends GeoOptions, ContinuousColorOptions {}
 
 // @public
 export type ColumnRef = ArrayLike<unknown> | string;
@@ -343,8 +364,72 @@ export interface GaussianKde {
 // @public
 export function gaussianKde(samples: ArrayLike<unknown>): GaussianKde;
 
+// @experimental
+export interface GeoOptions extends CommonOptions, DiscreteColorOptions, HoverOptions, FacetOptions, AnimationFrameOptions {
+    readonly basemapVisible?: boolean;
+    readonly center?: {
+        readonly lat?: number;
+        readonly lon?: number;
+    };
+    readonly featureIdKey?: string;
+    readonly fitBounds?: 'geojson' | 'locations' | false;
+    readonly geojson?: object | string;
+    readonly locationMode?: 'ISO-3' | 'USA-states' | 'country names' | 'geojson-id';
+    readonly locations?: ColumnRef;
+    readonly projection?: string;
+    readonly scope?: 'africa' | 'antarctica' | 'asia' | 'europe' | 'north america' | 'oceania' | 'south america' | 'usa' | 'world';
+}
+
 // @public
 export function getTrendlineResults(figure: ExpressFigure | object): readonly TrendlineResult[];
+
+// @experimental
+export const graph: GraphFunction<GraphInput, GraphOptions>;
+
+// @experimental
+export interface GraphDataOptions extends CommonOptions, DiscreteColorOptions, HoverOptions {
+    readonly directed?: boolean;
+    readonly id?: ColumnRef;
+    readonly label?: ColumnRef;
+    readonly linkColor?: ColumnRef;
+    readonly linkColorMap?: 'identity' | Readonly<Record<string, string>>;
+    readonly linkHoverData?: Readonly<Record<string, boolean | string>> | readonly ColumnRef[];
+    readonly linkLabel?: ColumnRef;
+    readonly nodes?: DataInput;
+    readonly source?: ColumnRef;
+    readonly target?: ColumnRef;
+    readonly weight?: ColumnRef;
+}
+
+// @experimental
+export interface GraphFunction<D, O> {
+    // (undocumented)
+    (data: D | null | undefined, options?: O): ExpressFigure;
+    // (undocumented)
+    (el: HTMLElement, data: D | null | undefined, options?: O): Promise<Chart>;
+}
+
+// @experimental
+export type GraphInput = DataInput | NodeLinkInput;
+
+// @experimental
+export type GraphMatrix = readonly ArrayLike<number>[];
+
+// @experimental
+export interface GraphOptions extends GraphDataOptions, ContinuousColorOptions, SymbolOptions {
+    readonly arc?: Readonly<Record<string, unknown>>;
+    readonly arrangement?: 'arc' | 'circular' | 'custom' | 'dendrogram' | 'force' | 'grid' | 'hive' | 'layered' | 'preset' | 'radial' | 'tree';
+    readonly custom?: Readonly<Record<string, unknown>>;
+    readonly force?: Readonly<Record<string, unknown>>;
+    readonly hive?: Readonly<Record<string, unknown>>;
+    readonly layered?: Readonly<Record<string, unknown>>;
+    readonly size?: 'degree' | 'indegree' | 'outdegree' | ColumnRef;
+    readonly sizeMax?: number;
+    readonly tree?: Readonly<Record<string, unknown>>;
+    readonly value?: ColumnRef;
+    readonly x?: ColumnRef;
+    readonly y?: ColumnRef;
+}
 
 // @public
 export interface HierarchyOptions extends CommonOptions, DiscreteColorOptions, ContinuousColorOptions, HoverOptions {
@@ -408,6 +493,12 @@ const hx: {
     readonly barPolar: ExpressFunction<BarPolarOptions>;
     readonly scatter3d: ExpressFunction<Scatter3dOptions>;
     readonly line3d: ExpressFunction<Line3dOptions>;
+    readonly scatterGeo: ExpressFunction<ScatterGeoOptions>;
+    readonly lineGeo: ExpressFunction<LineGeoOptions>;
+    readonly choropleth: ExpressFunction<ChoroplethOptions>;
+    readonly graph: GraphFunction<GraphInput, GraphOptions>;
+    readonly chord: GraphFunction<GraphInput | GraphMatrix, GraphDataOptions>;
+    readonly adjacencyMatrix: GraphFunction<GraphInput | GraphMatrix, AdjacencyMatrixOptions>;
     readonly getTrendlineResults: typeof getTrendlineResults;
     readonly data: {
         readonly fromCSV: typeof fromCSV;
@@ -525,6 +616,18 @@ export interface LineDashOptions {
     readonly lineDashSequence?: readonly string[];
 }
 
+// @experimental
+export const lineGeo: ExpressFunction<LineGeoOptions>;
+
+// @experimental
+export interface LineGeoOptions extends GeoOptions, SymbolOptions, LineDashOptions {
+    readonly lat?: ColumnRef;
+    readonly lineGroup?: ColumnRef;
+    readonly lon?: ColumnRef;
+    readonly markers?: boolean;
+    readonly text?: ColumnRef;
+}
+
 // @public
 export interface LineOptions extends CommonOptions, XYOptions, DiscreteColorOptions, HoverOptions, FacetOptions, AnimationFrameOptions, AxisOptions, SymbolOptions, LineDashOptions, ErrorBarOptions {
     readonly agg?: AggFunction;
@@ -563,6 +666,31 @@ export type MarginalKind = 'box' | 'histogram' | 'rug' | 'violin';
 export interface MarginalOptions {
     readonly marginalX?: MarginalKind;
     readonly marginalY?: MarginalKind;
+}
+
+// @experimental
+export interface NodeLinkInput {
+    // (undocumented)
+    readonly directed?: boolean | undefined;
+    // (undocumented)
+    readonly link: {
+        readonly source: ArrayLike<unknown>;
+        readonly target: ArrayLike<unknown>;
+        readonly value?: ArrayLike<unknown> | undefined;
+        readonly label?: ArrayLike<unknown> | undefined;
+        readonly color?: ArrayLike<unknown> | undefined;
+        readonly customdata?: ArrayLike<unknown> | undefined;
+    };
+    // (undocumented)
+    readonly node?: undefined | {
+        readonly label?: ArrayLike<unknown> | undefined;
+        readonly group?: ArrayLike<unknown> | undefined;
+        readonly x?: ArrayLike<unknown> | undefined;
+        readonly y?: ArrayLike<unknown> | undefined;
+        readonly value?: ArrayLike<unknown> | undefined;
+        readonly color?: ArrayLike<unknown> | undefined;
+        readonly customdata?: ArrayLike<unknown> | undefined;
+    };
 }
 
 // @public
@@ -665,6 +793,19 @@ export interface Scatter3dOptions extends Chart3dOptions, ContinuousColorOptions
     readonly opacity?: number;
     readonly size?: ColumnRef;
     readonly sizeMax?: number;
+}
+
+// @experimental
+export const scatterGeo: ExpressFunction<ScatterGeoOptions>;
+
+// @experimental
+export interface ScatterGeoOptions extends GeoOptions, ContinuousColorOptions, SymbolOptions {
+    readonly lat?: ColumnRef;
+    readonly lon?: ColumnRef;
+    readonly opacity?: number;
+    readonly size?: ColumnRef;
+    readonly sizeMax?: number;
+    readonly text?: ColumnRef;
 }
 
 // @public

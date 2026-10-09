@@ -1,6 +1,6 @@
 ---
 title: Mappings & colors
-description: Map columns to positions, colors, symbols, dashes, sizes and hover text; grouping, legends, colorscales and aggregation in Express; funnels and polar charts.
+description: Map columns to positions, colors, symbols, dashes, sizes and hover text; grouping, legends, colorscales and aggregation in Express; funnels, polar charts, maps and networks.
 status: complete
 ---
 
@@ -295,6 +295,235 @@ An animated 3D scatter (`animationFrame`, `animationGroup`) moves the points bet
 a scene whose ranges hold still:
 
 <Example id="express/scatter3d-animated" :height="560" />
+
+## Maps
+
+`scatterGeo`, `lineGeo` and `choropleth` are `px.scatter_geo`, `px.line_geo` and `px.choropleth`:
+places on a `geo` subplot, given as `lat` and `lon` columns or as a `locations` column of country
+codes, state codes, country names or the ids of your own `geojson`. `scatterGeo` and `lineGeo`
+group as `scatter` and `line` do (`color`, `symbol`, `size`, `opacity` and a continuous `color` on
+`coloraxis`; `lineDash`, `lineGroup` and `markers`), with `text` and the hover options.
+`choropleth` fills the regions that `locations` name by `color`: a numeric column through a
+colorscale on `coloraxis`, any other column with one color and legend item per value.
+
+Maps are not part of the `@mk7s/holochart` bundle, so that apps without one do not pay for them.
+The Express functions are in the bundle and only build figures; drawing a map takes one more
+import, which registers the `geo` subplot and its traces:
+
+<Example id="express/scatter-geo" :height="480" />
+
+```ts
+import '@mk7s/holochart/geo';
+import hx from '@mk7s/holochart-express';
+
+declare const countries: object[]; // [{ iso: 'FRA', continent: 'Europe', pop: 68, lifeExp: 82.5 }, …]
+hx.scatterGeo(countries, {
+  locations: 'iso',
+  color: 'continent',
+  size: 'pop',
+  projection: 'natural earth',
+});
+hx.choropleth(countries, { locations: 'iso', color: 'lifeExp', scope: 'europe' });
+
+declare const stops: object[]; // [{ route: 'A', lat: 48.86, lon: 2.35 }, …]
+hx.lineGeo(stops, { lat: 'lat', lon: 'lon', color: 'route', markers: true });
+
+declare const districts: object; // a GeoJSON FeatureCollection
+declare const votes: object[]; // [{ district: 'Northside', turnout: 0.61 }, …]
+hx.choropleth(votes, {
+  geojson: districts,
+  featureIdKey: 'properties.name',
+  locations: 'district',
+  color: 'turnout',
+  fitBounds: 'geojson',
+});
+```
+
+| Option           | px                | What it does                                                                                |
+| ---------------- | ----------------- | ------------------------------------------------------------------------------------------- |
+| `lat`, `lon`     | `lat`, `lon`      | `scatterGeo`, `lineGeo`: columns of degrees north and east                                  |
+| `locations`      | `locations`       | Column of places: the regions of a choropleth, or where markers and lines go                |
+| `locationMode`   | `locationmode`    | `'ISO-3'` (default), `'USA-states'`, `'country names'` or `'geojson-id'`                    |
+| `geojson`        | `geojson`         | The features `locations` refer to: an object or a URL (passed on, never copied)             |
+| `featureIdKey`   | `featureidkey`    | The key of the features matched against `locations` (default `'id'`)                        |
+| `projection`     | `projection`      | `geo.projection.type`: `'natural earth'`, `'orthographic'`, `'mercator'`, …                 |
+| `scope`          | `scope`           | `geo.scope`: `'world'` (default), `'usa'` or a continent (`'europe'`, `'north america'`, …) |
+| `center`         | `center`          | `geo.center`: `{ lat, lon }` at the middle of the map                                       |
+| `fitBounds`      | `fitbounds`       | `geo.fitbounds`: `'locations'`, `'geojson'` or `false`                                      |
+| `basemapVisible` | `basemap_visible` | `geo.visible`: `false` hides the coastlines, land, borders and frame                        |
+
+`facetRow`, `facetCol` and `facetColWrap` make one `geo` subplot per value (`geo`, `geo2`, …, laid
+out like the [facet grid](/express/facets)); the projection, scope, center and fit apply to each,
+and a continuous `color` shares one colorbar. With `animationFrame` the map gets the frame slider
+and holds its view still: `fitbounds` is `false` unless you pass `fitBounds`, since Holochart
+would otherwise fit the map to each frame's data. Everything else about the map (base layers,
+colors, the graticule, rotation) is in `figure.layout.geo`.
+
+## Networks
+
+`graph`, `chord` and `adjacencyMatrix` draw a network three ways from the same two tables: an
+**edge table** with one row per link (the ids of its two ends in `source` and `target`, and a
+`weight`), and optionally a **node table** with one row per node (`nodes`), whose `id` column is
+what the edges refer to. plotly.py has nothing like them; the options follow its naming.
+
+Like maps, graphs are not part of the `@mk7s/holochart` bundle. The Express functions are, and
+only build figures; drawing a `graph` or `chord` takes one more import, which registers the
+traces of the [graph package](/fundamentals/graphs#adding-the-package) (`adjacencyMatrix` is a
+`heatmap` and needs none). The traces themselves are on the [graph](/charts/graphs/graph) and
+[chord](/charts/graphs/chord) pages:
+
+<Example id="express/graph" :height="520" />
+
+```ts
+import '@mk7s/holochart/graph';
+import hx from '@mk7s/holochart-express';
+
+declare const reviews: object[]; // [{ reviewer: 'Ada', author: 'Bo', count: 9 }, …]
+declare const people: object[]; // [{ name: 'Ada', team: 'Platform', role: 'lead' }, …]
+hx.graph(reviews, {
+  source: 'reviewer',
+  target: 'author',
+  weight: 'count',
+  nodes: people,
+  id: 'name',
+  color: 'team', // one color and legend item per team
+  size: 'degree', // sized by their number of links
+  hoverData: ['role'],
+  directed: true, // arrowheads
+});
+hx.chord(reviews, { source: 'reviewer', target: 'author', weight: 'count' });
+hx.adjacencyMatrix(reviews, { source: 'reviewer', target: 'author', weight: 'count' });
+```
+
+Each call makes one trace. The edge table's options are `source`, `target`, `weight` and the
+`link…` ones; every other column option names a column of the node table:
+
+| Option                      | Table | What it does                                                                              |
+| --------------------------- | ----- | ----------------------------------------------------------------------------------------- |
+| `source`, `target`          | edges | The ids of a link's two ends (defaults `'source'`, `'target'`); `link.source`, `.target`  |
+| `weight`                    | edges | `link.value`: the pull of a link in a layout, the width of a ribbon, the value of a cell  |
+| `linkLabel`                 | edges | `link.label`, a line of the link hover label                                              |
+| `linkColor`, `linkColorMap` | edges | One link color per value, from the map and then the color sequence (links have no legend) |
+| `linkHoverData`             | edges | More lines of the link hover label, like `hoverData`                                      |
+| `nodes`                     | —     | The node table                                                                            |
+| `id`                        | nodes | The ids the edges refer to (default `'id'`)                                               |
+| `label`                     | nodes | `node.label` (default: the ids)                                                           |
+| `color`                     | nodes | Groups with a legend, or (`graph`, numeric) a colorscale with a colorbar                  |
+| `size`, `sizeMax`           | nodes | `graph`: a column, or `'degree'`, `'indegree'`, `'outdegree'`; diameters from 6 px        |
+| `symbol`                    | nodes | `graph`: one marker symbol per value (`symbolSequence`, `symbolMap`)                      |
+| `x`, `y`                    | nodes | `graph`: positions; with both for every node the graph is drawn as placed                 |
+| `value`                     | nodes | `graph`: `node.value`, for dendrogram heights and for tree and hive orders                |
+| `hoverName`, `hoverData`    | nodes | The bold first line and more lines of the node hover label; `customData` as elsewhere     |
+| `directed`                  | —     | `graph`: arrowheads. `chord`: the trace's `directed`. `adjacencyMatrix`: rows are sources |
+| `arrangement`, `force`, …   | —     | `graph`: the layout and its options, passed to the trace (see below)                      |
+
+- **Nodes** are the rows of the node table, in order, followed by the ids that only the edges
+  name, in order of first appearance. So a node without links is drawn, and a node without a row
+  is too, with its id as its label and no group. Ids that print the same (`1` and `'1'`) are one
+  node. Edge rows without both ends and node rows without an id are skipped; an id on two node
+  rows is an error.
+- **Without a node table** the nodes come from the edges alone. Options that name node columns
+  then have nothing to name: `size: 'degree'` works, and so do arrays with one value per node.
+- **`color`** groups the nodes like any Express `color`: the values go to `node.group`, the trace
+  gives every group a color of the colorway and a legend item (a click hides the group), and the
+  legend is titled with the column. `colorDiscreteSequence`, `colorDiscreteMap` and
+  `categoryOrders` choose the colors, which Express writes as `layout.colorway` in the order of
+  the groups; `colorDiscreteMap: 'identity'` uses the values as colors. A numeric `color` on
+  `graph` is a colorscale on `layout.coloraxis` (`colorContinuousScale`, `rangeColor`,
+  `colorContinuousMidpoint`). A chord has no colorscale, so `chord` always groups.
+- **`arrangement`** picks the graph's layout (`'force'`, `'layered'`, `'tree'`, `'radial'`,
+  `'dendrogram'`, `'circular'`, `'grid'`, `'arc'`, `'hive'`, `'preset'`, `'custom'`), and the
+  options `force`, `layered`, `tree`, `arc`, `hive` and `custom` are the trace's containers of
+  those names, passed as they are: `{ arrangement: 'layered', layered: { rankdir: 'LR' } }`.
+  Left out, the trace decides: as placed when every node has an `x` and a `y`, else `'force'`.
+- **Hover labels** list the mapped columns under their names (`labels` renames them), nodes and
+  links apart: `name=Ada`, `team=Platform`, `degree=5`; `reviewer=Ada`, `author=Bo`, `count=9`.
+- Facets and animation frames are not offered: a figure is one network.
+
+### Chord diagrams
+
+`chord` takes the same tables and the options above that are about data. `weight` is the width of
+a ribbon; `color` groups the nodes, which puts the nodes of a group next to each other on the
+ring under one outer arc, in one color, with one legend item.
+
+<Example id="express/chord" :height="560" />
+
+It also takes a square matrix, `matrix[i][j]` being the flow from node `i` to node `j`. A matrix
+has no node table, so node options are arrays with one value per row (or columns of a `nodes`
+table whose rows are in the matrix's order):
+
+```ts
+import '@mk7s/holochart/graph';
+import hx from '@mk7s/holochart-express';
+
+const trips = [
+  [12, 34, 9],
+  [31, 8, 22],
+  [7, 25, 15],
+];
+hx.chord(trips, { label: ['Harbor', 'Old Town', 'Campus'], labels: { value: 'Trips' } });
+```
+
+### Adjacency matrices
+
+`adjacencyMatrix` draws the network as a heatmap, a row and a column per node and each cell the
+summed `weight` of the links between the two (their number without `weight`). It still reads at
+densities where a node-link drawing is a hairball. Cells are square, the first node is at the
+top, the labels are the ticks of both axes, and `colorContinuousScale`, `rangeColor` and
+`colorContinuousMidpoint` style the colorscale. A link fills both cells of its pair unless
+`directed` is set, which makes rows sources and columns targets. A matrix given as the data is
+shown as it is, reordered.
+
+`order` sorts rows and columns, which is what makes clusters show as blocks on the diagonal:
+
+| `order`       | Rows and columns                                                                   |
+| ------------- | ---------------------------------------------------------------------------------- |
+| `'input'`     | The nodes' own order (the default without `color`)                                 |
+| `'degree'`    | The most connected first, by weight                                                |
+| `'group'`     | The nodes of a `color` value together, by degree within (the default with `color`) |
+| `'community'` | The same, with the largest group first: for communities given as `color`           |
+| `[3, 0, 2…]`  | These node indices, in this order                                                  |
+
+<Example id="express/adjacency-matrix" :height="600" />
+
+Express does not detect communities itself. The graph package has the helper (`louvain`), and
+its results line up with Express's nodes:
+
+```ts
+import { fromEdgeList, louvain } from '@mk7s/holochart/graph';
+import hx from '@mk7s/holochart-express';
+
+declare const mails: Record<string, unknown>[]; // [{ from: 'P4', to: 'P17', messages: 3 }, …]
+const network = fromEdgeList(mails, {
+  source: 'from',
+  target: 'to',
+  value: 'messages',
+  directed: false,
+});
+hx.adjacencyMatrix(network, { color: louvain(network), order: 'community' });
+```
+
+### Node-link data and measures
+
+The three functions also take **node-link data** in place of the edge table: the `node` and `link`
+containers that the adapters of the graph package return (`fromNodeLink` for networkx, d3,
+graphology and Cytoscape JSON, `fromDot` for Graphviz text, `fromEdgeList`,
+`fromAdjacencyMatrix`). Its labels, groups, positions, values, link values, link labels and
+`directed` are used without being named, and any option overrides them.
+
+A measure of the package is an array with one number per node, in the order of the nodes, which
+is what a node option takes in place of a column name. Numbers are a colorscale on `graph`; make
+them names to get groups with a legend:
+
+```ts
+import { fromNodeLink, louvain } from '@mk7s/holochart/graph';
+import hx from '@mk7s/holochart-express';
+
+declare const json: unknown; // networkx node_link_data, a graphology export, cy.json(), …
+const network = fromNodeLink(json);
+const community = Array.from(louvain(network), (c) => `Community ${c + 1}`);
+hx.graph(network, { color: community, size: 'degree', labels: { color: 'Community' } });
+```
 
 ## Templates
 

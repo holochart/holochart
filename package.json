@@ -10,6 +10,7 @@
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "dev": "pnpm --filter @mk7s/holochart-sandbox dev",
+    "docs": "pnpm --filter @mk7s/holochart-docs dev --host 127.0.0.1",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

@@ -3,9 +3,12 @@ title: Scatter
 description: Plot x/y points as markers to show the relationship between two variables.
 status: complete
 chart: scatter
+launch-featured: true
 ---
 
 # Scatter
+
+<ChartOverview />
 
 ## Overview
 
@@ -26,6 +29,9 @@ Pick a different chart when:
   or a dot plot (below) when the values don't start at zero.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -57,13 +63,15 @@ See [Data formats](/fundamentals/data-formats) and
 
 ## Variations
 
+<ChartVariations />
+
 ### Modes and symbols
 
 When you don't set `mode`, Holochart uses Plotly's rule: `'lines+markers'` for fewer than 20
 points, `'lines'` otherwise. Set `mode: 'markers'` for a pure scatter plot. `marker.symbol` takes
 one symbol or one per point, and `zorder` raises a trace above the others.
 
-<Example id="scatter/basic" />
+<ExampleLink id="scatter/basic" />
 
 ### Colorscales and bubbles
 
@@ -74,42 +82,42 @@ colorbar; `marker.colorbar` takes the full axis tick API (`dtick`, `ticksuffix`,
 plus `title`, `orientation`, `thickness` and `len`. Traces that set the same `marker.coloraxis`
 share one scale and one colorbar.
 
-<Example id="scatter/colorscale" />
+<ExampleLink id="scatter/colorscale" />
 
 ### Text labels
 
 Add `'text'` to `mode` to label points. `textposition` places each label around its marker (one
 value or one per point), and `texttemplate` formats it with the same syntax as `hovertemplate`.
 
-<Example id="scatter/text-labels" />
+<ExampleLink id="scatter/text-labels" />
 
 ### Error bars
 
 `error_y` and `error_x` draw uncertainty per point: from data arrays (symmetric or asymmetric),
 as a percentage, a constant, or the square root of the value.
 
-<Example id="scatter/error-bars" />
+<ExampleLink id="scatter/error-bars" />
 
 ### Dot plot
 
 A Cleveland dot plot is two or more marker traces over categories. Put the categories on the y
 axis so long labels stay readable.
 
-<Example id="recipes/dot-plot" />
+<ExampleLink id="recipes/dot-plot" />
 
 ### Dumbbell
 
 A dumbbell chart joins each pair of dots. All connectors are one `mode: 'lines'` trace whose
 points go `[start, end, null]` per category; the `null` breaks the line between categories.
 
-<Example id="recipes/dumbbell" />
+<ExampleLink id="recipes/dumbbell" />
 
 ### Lollipop
 
 A lollipop is a marker on a stem from zero. The stem is a capless, one-sided error bar:
 `error_y: { symmetric: false, array: zeros, arrayminus: values, width: 0 }`.
 
-<Example id="recipes/lollipop" />
+<ExampleLink id="recipes/lollipop" />
 
 ## Styling
 
@@ -133,7 +141,7 @@ Hover, zoom, pan, and selection work on every scatter trace. Try them here: hove
 zoom, double-click to reset, and use the modebar (top right, on hover) to switch to pan, box
 select, or lasso.
 
-<Example id="scatter/interactive" />
+<ExampleLink id="scatter/interactive" />
 
 - **Hover.** `layout.hovermode` is `'closest'` by default. `'x'` and `'y'` show every trace at the
   hovered position, and `'x unified'` / `'y unified'` put them in one label. Change the label text

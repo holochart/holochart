@@ -87,3 +87,7 @@ exports `@experimental`, and exports that are only there for another Holochart p
   hand-written file). The global's report is written by the tool itself, from the members of the
   `HolochartGlobal` type: API Extractor would follow the file into the package's own declarations
   and report all of them a second time.
+- `@mk7s/holochart/geo` has no report of its own. It registers `@mk7s/holochart-traces-geo` and
+  re-exports all of it (`export *`), so that package's report is its API
+  (`packages/holochart/src/geo.test.ts` checks that the two export the same values).
+  `@mk7s/holochart/graph` is the same for `@mk7s/holochart-traces-graph` (`graph.test.ts`).

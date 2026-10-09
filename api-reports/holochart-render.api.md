@@ -1504,10 +1504,16 @@ export interface LoadDefaultFontFacesOptions {
 export function loadExtrusionModule(): Promise<ExtrusionModule>;
 
 // @experimental
+export function loadFillTriangulation(): Promise<typeof triangulateFills>;
+
+// @experimental
 export function loadLinesMarkers3D(): Promise<LinesMarkers3DModule>;
 
 // @experimental
 export function loadMeshModule(): Promise<MeshModule>;
+
+// @experimental
+export function loadPicker(): Promise<typeof createPicker>;
 
 // @experimental
 export function lutCoord(t: number, size?: number): number;
@@ -1766,6 +1772,8 @@ export interface MeshData {
     cmin: number | undefined;
     color: ColorInput;
     colorscale: Colorscale;
+    depthTest: boolean;
+    depthWrite: 'auto' | boolean;
     faceColor: Float32Array | null;
     // (undocumented)
     hooks: MeshShaderHooks | null;
@@ -3439,7 +3447,7 @@ export function writeLineSentinel(c: LineCursor, out: LineStreamArrays | undefin
 
 // Warnings were encountered during analysis:
 //
-// dist/index.d.ts:4604:3 - (ae-forgotten-export) The symbol "customSymbolNames" needs to be exported by the entry point index.d.ts
+// dist/index.d.ts:4623:3 - (ae-forgotten-export) The symbol "customSymbolNames" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

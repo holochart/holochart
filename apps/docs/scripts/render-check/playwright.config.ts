@@ -23,7 +23,15 @@ const BASE = BASE_NAME ? `/${BASE_NAME}/` : '/';
 
 export default defineConfig({
   testDir: '.',
-  testMatch: 'render.spec.ts',
+  testMatch: [
+    'render.spec.ts',
+    'airline-infographic.spec.ts',
+    'foundation.spec.ts',
+    'wave2.spec.ts',
+    'wave3.spec.ts',
+    'wave3-content.spec.ts',
+    'wave4.spec.ts',
+  ],
   outputDir: '../../../../test-results/docs-render',
   // Per page; the spec extends it by the number of embeds.
   timeout: 60_000,

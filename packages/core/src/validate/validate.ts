@@ -16,7 +16,7 @@ import type { AttrSpec, ObjectNode, SchemaNode } from '../schema/types.ts';
 import { isPlainObject } from '../util/objects.ts';
 import type { Issue } from './issues.ts';
 import { suggest } from './suggest.ts';
-import { tracePackage } from './trace-packages.ts';
+import { layoutKeyPackage, traceAddOnImport, tracePackage } from './trace-packages.ts';
 
 /** Options for {@link validate}. */
 export interface ValidateOptions {
@@ -200,7 +200,9 @@ function checkTemplate(template: unknown, registry: Registry, issues: Issue[]): 
           configurable: true,
         });
     }
-    checkNode(schema, rest, `${path}.layout`, issues);
+    // A template is written once for every kind of figure, so a block for a subplot whose
+    // package is not registered (`geo` in the full bundle, ADR-026) is not a mistake.
+    checkNode(schema, withoutAddOnKeys(schema, rest), `${path}.layout`, issues);
   } else if (layout !== undefined) {
     checkNode(registry.getLayoutSchema(), layout, `${path}.layout`, issues);
   }
@@ -210,7 +212,8 @@ function checkTemplate(template: unknown, registry: Registry, issues: Issue[]): 
       const schema = registry.getTraceSchema(type);
       const p = `${path}.data.${type}`;
       if (!schema) {
-        issues.push(unknownType(type, p, registry));
+        // As for layout blocks above: defaults for a trace of an add-on package are not a mistake.
+        if (traceAddOnImport(type) === undefined) issues.push(unknownType(type, p, registry));
         continue;
       }
       if (!Array.isArray(list)) {
@@ -228,12 +231,47 @@ function checkTemplate(template: unknown, registry: Registry, issues: Issue[]): 
   }
 }
 
+/** Keys of `layout` that a package which is not registered defines (see `layoutKeyPackage`). */
+function addOnKeys(schema: ObjectNode, layout: Record<string, unknown>): string[] {
+  return Object.keys(layout).filter(
+    (key) => resolveChild(schema, key) === undefined && layoutKeyPackage(key) !== undefined,
+  );
+}
+
+function withoutAddOnKeys(
+  schema: ObjectNode,
+  layout: Record<string, unknown>,
+): Record<string, unknown> {
+  const skip = addOnKeys(schema, layout);
+  if (skip.length === 0) return layout;
+  return Object.fromEntries(Object.entries(layout).filter(([key]) => !skip.includes(key)));
+}
+
+/** `layout.geo` on a chart without the geo package: say what to register (ADR-026). */
+function unregisteredLayoutKey(key: string, value: unknown): Issue {
+  const { pkg, addOn } = layoutKeyPackage(key)!;
+  return {
+    path: childPath('layout', key),
+    message:
+      `'${key}' is defined by ${pkg}, which is not registered; import it and call ` +
+      '`register(...)` with its modules' +
+      (addOn ? `, or with the full bundle add \`import '${addOn}'\`` : '') +
+      ' (the attribute is ignored)',
+    value,
+    code: 'unknown-attribute',
+    severity: 'warning',
+  };
+}
+
 function unknownType(type: string, path: string, registry: Registry): Issue {
-  // A built-in type whose package was left out of a partial bundle: say what to register.
+  // A built-in type whose package was left out of a partial bundle: say what to register. The
+  // full bundle leaves some packages out too (ADR-026): then also name the import that adds one.
   const pkg = tracePackage(type);
+  const addOn = traceAddOnImport(type);
   const suggestion = pkg ? undefined : suggest(type, registry.traceTypes());
   const hint = pkg
-    ? `: \`${type}\` is in ${pkg}; import it from there and call \`register(${type})\``
+    ? `: \`${type}\` is in ${pkg}; import it from there and call \`register(${type})\`` +
+      (addOn ? `, or with the full bundle add \`import '${addOn}'\`` : '')
     : suggestion !== undefined
       ? `; did you mean '${suggestion}'?`
       : '';
@@ -331,7 +369,11 @@ export function validate(
       });
     } else {
       const { template, ...rest } = layout;
-      checkObject(registry.getLayoutSchema(), rest, 'layout', issues);
+      const schema = registry.getLayoutSchema();
+      for (const key of addOnKeys(schema, rest)) {
+        issues.push(unregisteredLayoutKey(key, rest[key]));
+      }
+      checkObject(schema, withoutAddOnKeys(schema, rest), 'layout', issues);
       checkTemplate(template, registry, issues);
     }
   }

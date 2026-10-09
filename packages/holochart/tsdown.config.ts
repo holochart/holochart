@@ -87,7 +87,11 @@ const VERSION_DEFINE = { __HOLOCHART_VERSION__: JSON.stringify(pkg.version) };
  *
  * - `dist/index.js` + `dist/index.d.ts`: ESM for bundler users, the full bundle (3D included; its
  *   heavy code is in render's lazy chunks). Holochart packages and `three` (peer dependency,
- *   ADR-003) stay external.
+ *   ADR-003) stay external. The same build has a second entry, `dist/geo.js` + `dist/geo.d.ts`
+ *   (`@mk7s/holochart/geo`, ADR-026): it registers the geo package, which `dist/index.js` never
+ *   imports (`tests/bundle/esm-no-geo.spec.ts`). A third, `dist/graph.js` + `dist/graph.d.ts`
+ *   (`@mk7s/holochart/graph`, ADR-029), does the same for the graph package
+ *   (`tests/bundle/esm-no-graph.spec.ts`).
  * - `dist/holochart.iife.min.js`: self-contained, minified IIFE for `<script>` / CDN use, exposing
  *   `window.Holochart`: the 2D bundle (`src/iife.ts`, everything but the 3D package). Everything is
  *   bundled, including `three` (which no longer ships a UMD or global build). Workspace packages
@@ -105,7 +109,7 @@ const VERSION_DEFINE = { __HOLOCHART_VERSION__: JSON.stringify(pkg.version) };
  */
 export default defineConfig([
   {
-    entry: ['src/index.ts'],
+    entry: ['src/index.ts', 'src/geo.ts', 'src/graph.ts'],
     format: 'esm',
     platform: 'neutral',
     target: 'es2022',

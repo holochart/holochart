@@ -7,6 +7,8 @@ chart: funnelarea
 
 # Funnel area
 
+<ChartOverview />
+
 ## Overview
 
 A funnel area draws the stages of a process as trapezoids stacked into a funnel, first stage on
@@ -28,6 +30,9 @@ Pick a different chart when:
   [bars](/charts/basic/bar), or funnels in `funnelmode: 'group'`.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -66,6 +71,8 @@ one item per stage. The live example labels each stage with its name and value
 
 ## Variations
 
+<ChartVariations />
+
 ### Side by side with a shared scale
 
 `layout.grid` splits the plot area and each trace picks a cell with `domain.column`. By default
@@ -73,7 +80,7 @@ each funnel area fills its cell; with the same `scalegroup` their areas follow t
 the smaller year reads as smaller. Stage colors are shared by label, and one legend item hides a
 stage in both:
 
-<Example id="funnelarea/domains" />
+<ExampleLink id="funnelarea/domains" />
 
 ### Aspect and base ratios
 
@@ -81,7 +88,7 @@ stage in both:
 width of the narrow end relative to the wide end (default 0.333, at most 0.999). The stage areas
 stay proportional to the values in every shape:
 
-<Example id="funnelarea/ratios" />
+<ExampleLink id="funnelarea/ratios" />
 
 ### Labels and templates
 
@@ -105,7 +112,7 @@ createChart(document.getElementById('chart')!, {
 });
 ```
 
-<Example id="funnelarea/texttemplate" />
+<ExampleLink id="funnelarea/texttemplate" />
 
 ### Stage colors
 
@@ -128,7 +135,7 @@ createChart(document.getElementById('chart')!, {
 });
 ```
 
-<Example id="funnelarea/colors" />
+<ExampleLink id="funnelarea/colors" />
 
 ### Pattern fills
 
@@ -153,7 +160,7 @@ createChart(document.getElementById('chart')!, {
 });
 ```
 
-<Example id="funnelarea/patterns" />
+<ExampleLink id="funnelarea/patterns" />
 
 ### Uniform text
 
@@ -164,7 +171,7 @@ size of the smallest label that still fits, as in Plotly (and as for
 labels that would have to shrink below `minsize` to fit are hidden; with `'show'` they are drawn
 at the common size. `minsize` also raises smaller label fonts:
 
-<Example id="funnelarea/uniformtext" />
+<ExampleLink id="funnelarea/uniformtext" />
 
 ## Styling
 

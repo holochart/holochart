@@ -39,6 +39,16 @@ export const holochartRu: Readonly<Record<string, string>> = {
   '{name}: {dimension}, {category}, {text}, {n} of {count}.':
     '{name}: {dimension}, {category}, {text}, {n} из {count}.',
   'Dimension {n}': 'Измерение {n}',
+  'Map centered at longitude {lon}°, latitude {lat}°, scale {scale}.':
+    'Карта с центром на долготе {lon}°, широте {lat}°, масштаб {scale}.',
+  '{name}: {text}, node {n} of {count}.': '{name}: {text}, узел {n} из {count}.',
+  '{name}: {text}, link {n} of {count} of {node}.':
+    '{name}: {text}, связь {n} из {count} узла {node}.',
+  '{name}: {text}, rank {rank} of {ranks}, {n} of {count}.':
+    '{name}: {text}, слой {rank} из {ranks}, {n} из {count}.',
+  'Up: {up}.': 'Вверх: {up}.',
+  'Down: {down}.': 'Вниз: {down}.',
+  'Folded.': 'Свёрнуто.',
   // Chart summaries.
   '{y} by {x}.': 'По оси X: {x}; по оси Y: {y}.',
   '{count} more traces are not summarized.': 'Ещё рядов данных без описания: {count}.',

@@ -2641,6 +2641,11 @@
         "description": "Which subplot kinds zoom on mouse wheel. `true`/`false` enable/disable all of them.",
         "valType": "flaglist"
       },
+      "topojsonURL": {
+        "dflt": "",
+        "description": "Where the geo package fetches basemap files from (`<url>/world_110m.json`, …), in Plotly's topojson layout. Empty (the default) uses the data bundled with the package and fetches nothing; Plotly itself defaults to its CDN.",
+        "valType": "string"
+      },
       "doubleClick": {
         "values": [false, "reset", "autosize", "reset+autosize"],
         "dflt": "reset+autosize",

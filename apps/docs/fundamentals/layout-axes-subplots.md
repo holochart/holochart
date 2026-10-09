@@ -388,9 +388,10 @@ If you add annotations of your own, concatenate them with the titles:
 - `l`, `r`, `t`, `b`: padding inside the cell, as plot-area fractions.
 
 `makeSubplots` does not support other subplot types: `scene`, `polar`, `ternary`, `geo`, `map`,
-`mapbox` and `smith` throw an error. To put polar subplots or 3D scenes in a grid, set their
-`domain` (or `domain.row` / `domain.column` with `layout.grid`) instead: see
-[polar subplots](#polar-subplots) and [several scenes](/fundamentals/3d-scenes#several-scenes).
+`mapbox` and `smith` throw an error. To put polar subplots, 3D scenes or maps in a grid, set
+their `domain` (or `domain.row` / `domain.column` with `layout.grid`) instead: see
+[polar subplots](#polar-subplots), [several scenes](/fundamentals/3d-scenes#several-scenes) and
+[several maps](/fundamentals/maps#several-maps-and-other-subplots).
 
 `horizontalSpacing` and `verticalSpacing` are fractions of the plot area and default to
 `0.2 / cols` and `0.3 / rows`. `rowHeights` and `columnWidths` are relative sizes, one per row or

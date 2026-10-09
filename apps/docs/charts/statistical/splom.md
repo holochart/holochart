@@ -7,6 +7,8 @@ chart: splom
 
 # Scatter plot matrix
 
+<ChartOverview />
+
 ## Overview
 
 A scatter plot matrix (splom) draws every pair of dimensions of a table as a scatter plot. There
@@ -30,6 +32,9 @@ Pick a different chart when:
 - the variables are counts per category rather than samples: use a heatmap or grouped bars.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -77,6 +82,8 @@ dimension axes:
 
 ## Variations
 
+<ChartVariations />
+
 ### Lower half only
 
 The cells above the diagonal mirror the ones below. `showupperhalf: false` drops them, and
@@ -84,14 +91,14 @@ The cells above the diagonal mirror the ones below. `showupperhalf: false` drops
 column would be empty, so five dimensions take four rows and four columns. `marker.color` can hold
 one color per sample:
 
-<Example id="splom/lower-half" />
+<ExampleLink id="splom/lower-half" />
 
 ### Colored by a numeric column
 
 Numbers in `marker.color` are mapped through the colorscale on the GPU, and `marker.showscale`
 adds a colorbar. The colored column doesn't have to be one of the dimensions:
 
-<Example id="splom/colorscale" />
+<ExampleLink id="splom/colorscale" />
 
 ### Dates, categories and log axes
 
@@ -99,7 +106,7 @@ Each dimension's axes take their type from its values, or from `axis.type`. `axi
 dimension's x and y axes, so zooming its column also zooms its row. Hover labels format each value
 the way its axis does:
 
-<Example id="splom/axis-types" />
+<ExampleLink id="splom/axis-types" />
 
 ### Many dimensions
 
@@ -107,7 +114,7 @@ Eight dimensions make 64 cells. Each cell is one GPU draw over the two shared di
 the matrix costs eight uploads, whatever the number of cells. Small, translucent markers show the
 density, and a smaller `layout.grid` gap leaves more room for each cell:
 
-<Example id="splom/dense" />
+<ExampleLink id="splom/dense" />
 
 ## Styling
 

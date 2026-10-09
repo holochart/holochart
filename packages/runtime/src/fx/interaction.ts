@@ -7,7 +7,9 @@
  *
  * Every pointer event is first offered to component views (`ComponentView.handlePointer`, topmost
  * first). If one handles it — a legend item, say — the chart's own handling is skipped for that
- * event (and, for a handled `down`, for the whole gesture). Otherwise:
+ * event (and, for a handled `down`, for the whole gesture: a hovered point is unhovered when the
+ * view's drag starts to move, and a press released without moving is the view's click, or with
+ * `ComponentView.clickThrough` a click on the points under it). Otherwise:
  *
  * - **move** (no button): hover. Moves only record the position; the work runs once per animation
  *   frame at the latest position, so a slow frame never builds a backlog and the last position
@@ -248,6 +250,8 @@ export class Interaction {
   #px = 0;
   #py = 0;
   #pointerInside = false;
+  /** `pointerType` of the latest press or move: a finger hovers by tapping only (E6.6). */
+  #pointerType = '';
   #lastEvent: Event | undefined;
   #frame = 0;
   #hoverPending = false;
@@ -307,7 +311,8 @@ export class Interaction {
 
   /**
    * After a pipeline run: settings may have changed and hovered points may have moved. Labels
-   * are redrawn at the latest pointer position; programmatic hover is dropped.
+   * are redrawn at the latest pointer position (a finger's only if a tap hovered there: where one
+   * dragged and lifted nothing is hovered); programmatic hover is dropped.
    */
   refresh(): void {
     const s = (this.#settings = this.#host.settings());
@@ -342,7 +347,9 @@ export class Interaction {
         this.#host.layer.hideSpikes();
       }
     }
-    if (this.#pointerInside && !this.#drag) {
+    // Where a finger dragged and lifted there is no hover to bring back, only a tap's to redraw.
+    const fingerOnly = this.#pointerType === 'touch' && this.#finder.count === 0;
+    if (this.#pointerInside && !this.#drag && !fingerOnly) {
       this.#hoverForce = true;
       this.#request('hover');
     }
@@ -455,6 +462,7 @@ export class Interaction {
   readonly #onDown = (e: PointerEvent): void => {
     this.#local(e);
     this.#pointerInside = true;
+    this.#pointerType = e.pointerType;
     const pointerId = e.pointerId ?? 1;
     if (e.pointerType === 'touch') {
       this.#touches.set(pointerId, { x: this.#px, y: this.#py });
@@ -548,6 +556,7 @@ export class Interaction {
   readonly #onMove = (e: PointerEvent): void => {
     this.#local(e);
     this.#pointerInside = true;
+    this.#pointerType = e.pointerType;
     this.#lastEvent = e;
     const pointerId = e.pointerId ?? 1;
     if (e.pointerType === 'touch' && this.#touches.has(pointerId)) {
@@ -569,14 +578,16 @@ export class Interaction {
       const dy = drag.y - drag.y0;
       if (!drag.moved && !isTap(dx, dy, e.pointerType)) {
         drag.moved = true;
-        if (!drag.component) {
+        if (drag.component) {
+          // A view's drag moves what the pointer was over (a map pans, GEO6): the label of the
+          // point hovered there would stay where the point no longer is.
+          if (this.#finder.count > 0) this.#unhover(e);
+        } else if (e.pointerType === 'touch' && isPageScroll(this.#touchAction, dx, dy)) {
           // Under `pan-y`, a swipe that starts vertically is the page's: the browser scrolls it
           // (and cancels the pointer).
-          if (e.pointerType === 'touch' && isPageScroll(this.#touchAction, dx, dy)) {
-            drag.action = 'none';
-          } else {
-            this.#unhover(e);
-          }
+          drag.action = 'none';
+        } else {
+          this.#unhover(e);
         }
       }
       if (drag.component) {
@@ -599,8 +610,11 @@ export class Interaction {
       if (this.#finder.count > 0) this.#unhover(e);
       return;
     }
+    // A view that left the move to the chart, so that the points under it hover, may still have
+    // said what a press there does (a map that pans, GEO6).
+    const cursor = this.#cev.cursor;
     this.#zoneAt(this.#px, this.#py);
-    this.#setCursor(this.#cursorFor(this.#hitZone, this.#settings));
+    this.#setCursor(cursor ?? this.#cursorFor(this.#hitZone, this.#settings));
     this.#request('hover');
   };
 
@@ -638,7 +652,7 @@ export class Interaction {
     if (drag.component) {
       this.#drag = null;
       this.#component('up', e, drag.component);
-      if (!drag.moved) this.#componentClick(e, drag.component);
+      if (!drag.moved) this.#componentClick(e, drag);
       return;
     }
     if (!drag.moved) {
@@ -692,10 +706,19 @@ export class Interaction {
     if (!this.#programmatic) this.#unhover(e);
   };
 
-  #componentClick(e: PointerEvent, view: unknown): void {
+  /**
+   * A press and release on a component that took the press. The component gets the click first;
+   * one that asks for it (`ComponentView.clickThrough`) and leaves the click lets it become a
+   * click on the points under it.
+   */
+  #componentClick(e: PointerEvent, drag: Drag): void {
+    const view = drag.component;
     if (e.pointerType === 'touch') this.#tap(e);
     const double = this.#isDouble(e);
-    this.#component('click', e, view);
+    const handled = this.#component('click', e, view);
+    if (!handled && (view as { clickThrough?: boolean } | undefined)?.clickThrough === true) {
+      this.#emitClick(e, drag, this.#settings);
+    }
     if (double) this.#component('dblclick', e, view);
   }
 
@@ -1168,7 +1191,9 @@ export class Interaction {
       // Traces without selection support (pie) are not click-selected.
       if (!f.entry.module.selectPoints) continue;
       const list = next.get(f.entry.index) ?? [];
-      list.push(f.point.pointIndex);
+      // A point that is not one of the trace's own (a graph link) names what it selects.
+      if (f.point.selects) list.push(...f.point.selects);
+      else list.push(f.point.pointIndex);
       next.set(f.entry.index, list);
     }
     if (next.size === 0) return;
@@ -1521,7 +1546,7 @@ export class Interaction {
       const entry = this.#entryFor(index);
       if (!entry) continue;
       for (const i of list) {
-        const fields = entry.module.eventData?.(entry.calc, entry.trace, i) ?? {};
+        const fields = entry.module.eventData?.(entry.calc, entry.trace, i, list) ?? {};
         points.push(buildPoint(entry, { pointIndex: i, distance: 0, px: 0, py: 0, fields }, false));
       }
     }

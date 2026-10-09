@@ -252,6 +252,7 @@ export type {
   TemplatedItemChildren,
   TemplateSource,
   Tick,
+  TraceAxisHints,
   TraceCategory,
   TraceDefaultsContext,
   TraceDomain,

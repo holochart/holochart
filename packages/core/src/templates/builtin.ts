@@ -204,6 +204,25 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
         radialaxis: { ...polarAxis, title: { font: { size: 9, color: TEXT } } },
       },
       scene: { xaxis: sceneAxis, yaxis: sceneAxis, zaxis: sceneAxis },
+      // Maps (the geo package): land a step above the background with lakes cut out of it, as
+      // Plotly's templates show them; coastlines brighter than borders, which are brighter than
+      // the graticule; the frame is an axis line. Plotly's own defaults (tan land, blue water,
+      // #444 lines on white) are picked for a white page.
+      geo: {
+        bgcolor: BG,
+        showland: true,
+        landcolor: '#17171f',
+        showlakes: true,
+        lakecolor: BG,
+        oceancolor: BG,
+        rivercolor: '#26324a',
+        coastlinecolor: ZERO,
+        countrycolor: AXIS,
+        subunitcolor: AXIS,
+        framecolor: AXIS,
+        lonaxis: { gridcolor: '#202029' },
+        lataxis: { gridcolor: '#202029' },
+      },
       modebar: { bgcolor: 'rgba(10,10,15,0.6)', color: '#4a4c58', activecolor: TEXT },
       annotationdefaults: { arrowcolor: TEXT, arrowwidth: 1, font: { color: TEXT } },
       shapedefaults: { line: { color: TEXT, width: 1 } },
@@ -233,6 +252,14 @@ export const holochartTemplate: Template = /* @__PURE__ */ (() => {
       // 8 px reads heavy when dense, 4 px gets lost in depth), slim colorbars.
       scatter3d: [{ marker: { size: 5, line: { width: 0, color: BG }, colorbar } }],
       barpolar: [{ marker: { line: { color: BG, width: 0.5 }, colorbar } }],
+      // Map scatter (the geo package): scatter's thin lines, small markers and background rims.
+      scattergeo: [
+        { line: { width: 1.25 }, marker: { size: 4, line: { width: 0, color: BG }, colorbar } },
+      ],
+      // Regions of a choropleth are told apart by a thin rim in the background color (Plotly's
+      // #444 at 1 px reads as grey lines on a dark page). No colorscale here: the trace picks the
+      // layout's sequential or diverging scale itself.
+      choropleth: [{ colorbar, marker: { line: { color: BG, width: 0.5 } } }],
       // Histograms are bars: same borderless look and readable error bars.
       histogram: [
         {

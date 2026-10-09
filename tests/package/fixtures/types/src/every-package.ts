@@ -2,6 +2,8 @@
 // so each `index.d.ts` is type-checked with the fixture's options: strict,
 // `exactOptionalPropertyTypes`, no skipLibCheck (backlog S2.13a).
 import type * as holochart from '@mk7s/holochart';
+import type * as holochartGeo from '@mk7s/holochart/geo';
+import type * as holochartGraph from '@mk7s/holochart/graph';
 import type * as components from '@mk7s/holochart-components';
 import type * as core from '@mk7s/holochart-core';
 import type * as express from '@mk7s/holochart-express';
@@ -12,6 +14,8 @@ import type * as themes from '@mk7s/holochart-themes';
 import type * as traces3d from '@mk7s/holochart-traces-3d';
 import type * as tracesBasic from '@mk7s/holochart-traces-basic';
 import type * as tracesFinance from '@mk7s/holochart-traces-finance';
+import type * as tracesGeo from '@mk7s/holochart-traces-geo';
+import type * as tracesGraph from '@mk7s/holochart-traces-graph';
 import type * as tracesHier from '@mk7s/holochart-traces-hier';
 import type * as tracesSci from '@mk7s/holochart-traces-sci';
 import type * as tracesStats from '@mk7s/holochart-traces-stats';
@@ -19,6 +23,10 @@ import type * as tracesStats from '@mk7s/holochart-traces-stats';
 /** One export of each package, so none of the imports is unused. */
 export interface EveryPackage {
   holochart: holochart.Figure;
+  // The full bundle's geo entry re-exports the geo package (ADR-026).
+  holochartGeo: typeof holochartGeo.tracesGeo;
+  // So does its graph entry, for the graph package (ADR-029).
+  holochartGraph: typeof holochartGraph.tracesGraph;
   components: typeof components.builtinComponents;
   core: core.FigureInput;
   express: typeof express.scatter;
@@ -29,6 +37,8 @@ export interface EveryPackage {
   traces3d: traces3d.Scatter3dTrace;
   tracesBasic: tracesBasic.BaseScatterTrace;
   tracesFinance: tracesFinance.CandlestickTrace;
+  tracesGeo: typeof tracesGeo.tracesGeo;
+  tracesGraph: tracesGraph.GraphTrace;
   tracesHier: tracesHier.SankeyTrace;
   tracesSci: tracesSci.ContourTrace;
   tracesStats: tracesStats.BoxTrace;

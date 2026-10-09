@@ -1,0 +1,568 @@
+{
+  "checkedAt": "2026-10-09T19:22:44.525Z",
+  "artifact": "b687f6b1bca48b0241b1353b5fde9739ca35b7a5406c11d3e7f564369ad157ad",
+  "note": "CPU leakage was not confirmed. Forced SwiftShader enables emulated GPU compositing, while normal headless Chromium uses its default software compositor; no further frontend changes.",
+  "software": {
+    "browser": "153.0.8010.12",
+    "profile": "fresh SwiftShader browser, explicit CPU1, initialnetworkidle+fontsready",
+    "p95": 134.90000009536743,
+    "max": 295.7000000476837,
+    "samples": [
+      {
+        "q": "basic",
+        "ms": 16.700000047683716
+      },
+      {
+        "q": "",
+        "ms": 20.799999952316284
+      },
+      {
+        "q": "surface",
+        "ms": 20.799999952316284
+      },
+      {
+        "q": "bar",
+        "ms": 21.399999856948853
+      },
+      {
+        "q": "",
+        "ms": 21.40000009536743
+      },
+      {
+        "q": "",
+        "ms": 24.40000009536743
+      },
+      {
+        "q": "histogram",
+        "ms": 25.200000047683716
+      },
+      {
+        "q": "candles",
+        "ms": 25.90000009536743
+      },
+      {
+        "q": "histogram",
+        "ms": 26.09999990463257
+      },
+      {
+        "q": "",
+        "ms": 27.200000047683716
+      },
+      {
+        "q": "bar",
+        "ms": 30.299999952316284
+      },
+      {
+        "q": "candles",
+        "ms": 30.799999952316284
+      },
+      {
+        "q": "histogram",
+        "ms": 40.700000047683716
+      },
+      {
+        "q": "basic",
+        "ms": 41.89999985694885
+      },
+      {
+        "q": "line",
+        "ms": 45.90000009536743
+      },
+      {
+        "q": "",
+        "ms": 48.700000047683716
+      },
+      {
+        "q": "",
+        "ms": 49.09999990463257
+      },
+      {
+        "q": "map",
+        "ms": 49.19999980926514
+      },
+      {
+        "q": "",
+        "ms": 50
+      },
+      {
+        "q": "basic",
+        "ms": 50.10000014305115
+      },
+      {
+        "q": "",
+        "ms": 50.60000014305115
+      },
+      {
+        "q": "line",
+        "ms": 56.09999990463257
+      },
+      {
+        "q": "",
+        "ms": 56.90000009536743
+      },
+      {
+        "q": "",
+        "ms": 56.90000009536743
+      },
+      {
+        "q": "",
+        "ms": 60.799999952316284
+      },
+      {
+        "q": "",
+        "ms": 62.799999952316284
+      },
+      {
+        "q": "",
+        "ms": 64
+      },
+      {
+        "q": "",
+        "ms": 64.09999990463257
+      },
+      {
+        "q": "line",
+        "ms": 64.40000009536743
+      },
+      {
+        "q": "",
+        "ms": 64.5
+      },
+      {
+        "q": "",
+        "ms": 65.90000009536743
+      },
+      {
+        "q": "nothing-matches-this-query",
+        "ms": 66.09999990463257
+      },
+      {
+        "q": "bar",
+        "ms": 66.10000014305115
+      },
+      {
+        "q": "",
+        "ms": 66.29999995231628
+      },
+      {
+        "q": "",
+        "ms": 66.39999985694885
+      },
+      {
+        "q": "",
+        "ms": 66.70000004768372
+      },
+      {
+        "q": "nothing-matches-this-query",
+        "ms": 66.70000004768372
+      },
+      {
+        "q": "",
+        "ms": 66.89999985694885
+      },
+      {
+        "q": "",
+        "ms": 67.29999995231628
+      },
+      {
+        "q": "",
+        "ms": 77.5
+      },
+      {
+        "q": "candles",
+        "ms": 81.20000004768372
+      },
+      {
+        "q": "",
+        "ms": 81.59999990463257
+      },
+      {
+        "q": "",
+        "ms": 83.39999985694885
+      },
+      {
+        "q": "surface",
+        "ms": 83.60000014305115
+      },
+      {
+        "q": "nothing-matches-this-query",
+        "ms": 93.39999985694885
+      },
+      {
+        "q": "",
+        "ms": 97.89999985694885
+      },
+      {
+        "q": "",
+        "ms": 98.79999995231628
+      },
+      {
+        "q": "map",
+        "ms": 99.09999990463257
+      },
+      {
+        "q": "",
+        "ms": 107.79999995231628
+      },
+      {
+        "q": "radar",
+        "ms": 109
+      },
+      {
+        "q": "map",
+        "ms": 119.40000009536743
+      },
+      {
+        "q": "",
+        "ms": 120.40000009536743
+      },
+      {
+        "q": "radar",
+        "ms": 121.70000004768372
+      },
+      {
+        "q": "",
+        "ms": 128.60000014305115
+      },
+      {
+        "q": "",
+        "ms": 130.39999985694885
+      },
+      {
+        "q": "error band",
+        "ms": 134.5
+      },
+      {
+        "q": "surface",
+        "ms": 134.90000009536743
+      },
+      {
+        "q": "error band",
+        "ms": 136
+      },
+      {
+        "q": "radar",
+        "ms": 169.79999995231628
+      },
+      {
+        "q": "error band",
+        "ms": 295.7000000476837
+      }
+    ],
+    "mainThreadMs": {
+      "LayoutDuration": 99.60100000000003,
+      "RecalcStyleDuration": 64.667,
+      "ScriptDuration": 8.031,
+      "TaskDuration": 814.0720000000001
+    },
+    "gpu": {
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "features": {
+        "2d_canvas": "enabled",
+        "direct_rendering_display_compositor": "disabled_off_ok",
+        "gpu_compositing": "enabled",
+        "multiple_raster_threads": "enabled_on",
+        "opengl": "enabled_on",
+        "rasterization": "enabled",
+        "raw_draw": "disabled_off_ok",
+        "skia_graphite": "enabled_on",
+        "trees_in_viz": "disabled_off",
+        "video_decode": "enabled",
+        "video_encode": "enabled",
+        "webgl": "enabled",
+        "webgpu": "unavailable_software",
+        "webnn": "disabled_off"
+      }
+    },
+    "cpuSampling": {
+      "wallMs": 4416.318,
+      "topFrames": [
+        ["(idle)", 3608.102000000005],
+        ["(program)", 429.5349999999998],
+        ["(anonymous)", 96.11500000000001],
+        ["(garbage collector)", 39.451],
+        ["Ao", 24.791999999999998],
+        ["replaceState", 22.949],
+        ["fi", 18.158],
+        ["removeChild", 11.593],
+        ["get", 9.238],
+        ["setAttribute", 9.012],
+        ["insertBefore", 8.853000000000002],
+        ["v", 8.415]
+      ]
+    }
+  },
+  "normal": {
+    "browser": "153.0.8010.12",
+    "profile": "fresh normal Chromium, explicitCPU1, initialnetworkidle+fontsready",
+    "p95": 33.5,
+    "max": 50,
+    "mainThreadMs": {
+      "LayoutDuration": 104.052,
+      "RecalcStyleDuration": 60.885999999999996,
+      "ScriptDuration": 4.337000000000001,
+      "TaskDuration": 740.6919999999999
+    },
+    "gpu": {
+      "renderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver-5.0.0)",
+      "features": {
+        "2d_canvas": "unavailable_software",
+        "direct_rendering_display_compositor": "disabled_off_ok",
+        "gpu_compositing": "disabled_software",
+        "multiple_raster_threads": "enabled_on",
+        "opengl": "disabled_off",
+        "rasterization": "disabled_software",
+        "raw_draw": "disabled_off_ok",
+        "skia_graphite": "disabled_off",
+        "trees_in_viz": "disabled_off",
+        "video_decode": "disabled_software",
+        "video_encode": "disabled_software",
+        "webgl": "unavailable_software",
+        "webgpu": "unavailable_software",
+        "webnn": "unavailable_software"
+      }
+    },
+    "samples": [
+      {
+        "q": "basic",
+        "ms": 26.799999952316284
+      },
+      {
+        "q": "candles",
+        "ms": 32.80000019073486
+      },
+      {
+        "q": "surface",
+        "ms": 33.10000014305115
+      },
+      {
+        "q": "line",
+        "ms": 33.200000047683716
+      },
+      {
+        "q": "",
+        "ms": 33.200000047683716
+      },
+      {
+        "q": "error band",
+        "ms": 33.200000047683716
+      },
+      {
+        "q": "surface",
+        "ms": 33.200000047683716
+      },
+      {
+        "q": "bar",
+        "ms": 33.200000047683716
+      },
+      {
+        "q": "surface",
+        "ms": 33.200000047683716
+      },
+      {
+        "q": "",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "candles",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "histogram",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "error band",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "map",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "bar",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "basic",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "radar",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "nothing-matches-this-query",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "line",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "map",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "basic",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "radar",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "nothing-matches-this-query",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "error band",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "map",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "",
+        "ms": 33.299999952316284
+      },
+      {
+        "q": "radar",
+        "ms": 33.30000019073486
+      },
+      {
+        "q": "",
+        "ms": 33.30000019073486
+      },
+      {
+        "q": "",
+        "ms": 33.30000019073486
+      },
+      {
+        "q": "",
+        "ms": 33.30000019073486
+      },
+      {
+        "q": "histogram",
+        "ms": 33.30000019073486
+      },
+      {
+        "q": "",
+        "ms": 33.30000019073486
+      },
+      {
+        "q": "",
+        "ms": 33.39999985694885
+      },
+      {
+        "q": "",
+        "ms": 33.39999985694885
+      },
+      {
+        "q": "candles",
+        "ms": 33.39999985694885
+      },
+      {
+        "q": "",
+        "ms": 33.39999985694885
+      },
+      {
+        "q": "",
+        "ms": 33.39999985694885
+      },
+      {
+        "q": "nothing-matches-this-query",
+        "ms": 33.40000009536743
+      },
+      {
+        "q": "",
+        "ms": 33.40000009536743
+      },
+      {
+        "q": "line",
+        "ms": 33.40000009536743
+      },
+      {
+        "q": "",
+        "ms": 33.40000009536743
+      },
+      {
+        "q": "",
+        "ms": 33.5
+      },
+      {
+        "q": "",
+        "ms": 33.5
+      },
+      {
+        "q": "",
+        "ms": 33.5
+      },
+      {
+        "q": "",
+        "ms": 33.5
+      },
+      {
+        "q": "histogram",
+        "ms": 33.5
+      },
+      {
+        "q": "",
+        "ms": 33.5
+      },
+      {
+        "q": "",
+        "ms": 33.5
+      },
+      {
+        "q": "",
+        "ms": 33.5
+      },
+      {
+        "q": "",
+        "ms": 33.799999952316284
+      },
+      {
+        "q": "",
+        "ms": 49.90000009536743
+      },
+      {
+        "q": "bar",
+        "ms": 50
+      }
+    ]
+  }
+}

@@ -59,12 +59,21 @@ const SAMPLES: readonly Sample[] = [
   { id: 'sankey/basic', mode: 'test', covers: 'sankey' },
   { id: 'parcoords/basic', mode: 'test', covers: 'parallel coordinates' },
   { id: 'polar/radar', mode: 'test', covers: 'polar' },
+  { id: 'graph/groups', mode: 'test', covers: 'network graph, legend of groups' },
+  { id: 'graph/layered', mode: 'test', covers: 'layered graph with box nodes' },
+  { id: 'chord/groups', mode: 'test', covers: 'chord diagram' },
   { id: 'scatter3d/basic', mode: 'test', covers: '3D scatter' },
   { id: 'surface/basic', mode: 'test', covers: 'surface' },
+  { id: 'graph3d/preset', mode: 'test', covers: '3D network graph' },
   { id: 'table/basic', mode: 'test', covers: 'table trace' },
   { id: 'indicator/gauge', mode: 'test', covers: 'indicator' },
   { id: 'timeseries/range-slider', mode: 'test', covers: 'range slider, range selector' },
   { id: 'accessibility/data-table', mode: 'test', covers: 'visible data table' },
+  {
+    id: '_dev/keyboard-graph',
+    mode: 'interaction',
+    covers: 'network graph with keyboard stops on nodes and links',
+  },
   { id: 'accessibility/keyboard-focus', mode: 'test', covers: 'focused plot area, hover label' },
   { id: 'themes/high-contrast-dark', mode: 'test', covers: 'dark high-contrast theme' },
   { id: 'themes/plotly', mode: 'test', covers: 'light Plotly theme' },
@@ -86,6 +95,9 @@ const KEYBOARD_SAMPLES: readonly Sample[] = SAMPLES.filter((s) =>
     // box with one label per statistic.
     'sunburst/basic',
     'box/grouped',
+    // A node of a graph, and of a chord diagram (G10: one chunk for the graph package).
+    '_dev/keyboard-graph',
+    'chord/groups',
   ].includes(s.id),
 );
 

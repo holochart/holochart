@@ -57,6 +57,16 @@ export const holochartKo: Readonly<Record<string, string>> = {
   '{name}: {dimension}, {category}, {text}, {n} of {count}.':
     '{name}: {dimension}, {category}, {text}, {count}개 중 {n}번째.',
   'Dimension {n}': '차원 {n}',
+  'Map centered at longitude {lon}°, latitude {lat}°, scale {scale}.':
+    '지도 중심: 경도 {lon}°, 위도 {lat}°, 축척 {scale}.',
+  '{name}: {text}, node {n} of {count}.': '{name}: {text}, 노드 {count}개 중 {n}번째.',
+  '{name}: {text}, link {n} of {count} of {node}.':
+    '{name}: {text}, 노드 {node}의 링크 {count}개 중 {n}번째.',
+  '{name}: {text}, rank {rank} of {ranks}, {n} of {count}.':
+    '{name}: {text}, {ranks}개 층 중 {rank}번째 층, {count}개 중 {n}번째.',
+  'Up: {up}.': '위: {up}.',
+  'Down: {down}.': '아래: {down}.',
+  'Folded.': '접힘.',
   // Chart summaries.
   '{y} by {x}.': 'X축: {x}, Y축: {y}.',
   '{count} more traces are not summarized.': '요약되지 않은 트레이스가 {count}개 더 있습니다.',

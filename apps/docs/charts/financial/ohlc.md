@@ -7,6 +7,8 @@ chart: ohlc
 
 # OHLC
 
+<ChartOverview />
+
 ## Overview
 
 An OHLC chart shows four prices per period: a vertical line from the **low** to the **high**,
@@ -29,6 +31,9 @@ Pick a different chart when:
   [waterfall chart](/charts/financial/waterfall).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -76,13 +81,15 @@ under its x axis by default, as in Plotly: drag its window to pan, its ends to z
 
 ## Variations
 
+<ChartVariations />
+
 ### Colors, widths and ticks
 
 `increasing.line` and `decreasing.line` style each direction (`color`, `width`, `dash`);
 `line.width` and `line.dash` set both at once. `tickwidth` is the length of the open and close
 ticks as a fraction of the spacing between bars (default 0.3, at most 0.5):
 
-<Example id="ohlc/styled" />
+<ExampleLink id="ohlc/styled" />
 
 ### Monthly bars with period alignment
 
@@ -90,7 +97,7 @@ Bars that stand for a whole month, stamped with its first trading day, are cente
 month with `xperiod: 'M1'`, so they line up with monthly ticks. The tick length follows the
 shortest month:
 
-<Example id="ohlc/monthly" />
+<ExampleLink id="ohlc/monthly" />
 
 ### Range breaks and unified hover
 
@@ -98,7 +105,7 @@ shortest month:
 by side at an even spacing. With `hovermode: 'x unified'` one label lists the prices of every
 trace at the date under the pointer:
 
-<Example id="ohlc/range-breaks" />
+<ExampleLink id="ohlc/range-breaks" />
 
 ### Moving averages and bands
 
@@ -106,7 +113,7 @@ Indicators are ordinary [scatter](/charts/basic/scatter) traces on the same axes
 moving average and Bollinger bands filled with `fill: 'tonexty'`. Scatter traces draw over
 financial ones, as in Plotly:
 
-<Example id="ohlc/indicators" />
+<ExampleLink id="ohlc/indicators" />
 
 ## Styling
 

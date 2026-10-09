@@ -143,6 +143,7 @@ categories, the locale's separators). What each trace type says:
 | heatmap, contour, 2D histogram                    | the value range, where the highest and lowest values are, the hottest row and column                                           |
 | candlestick, OHLC                                 | the change from the first open to the last close, the highest high and lowest low                                              |
 | indicator                                         | the value and its change from the reference                                                                                    |
+| choropleth                                        | the regions where the value is highest and lowest, by name                                                                     |
 
 The rules are simple and deterministic, so a summary never claims more than the data shows:
 
@@ -309,19 +310,24 @@ keys pressed meanwhile are kept and replayed.
 Every stop shows the hover label(s) a pointer would get there and announces what they say, with
 the stop's place in the chart. Page Up / Page Down, Enter, Escape and the view keys work as above.
 
-| Traces                                              | Stops                                            | ← / →                                                   | ↑ / ↓                                                           | Home / End                  |
-| --------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------- | --------------------------------------------------------------- | --------------------------- |
-| scatter, line, bar, waterfall, funnel, OHLC, candle | data points, along x                             | previous / next point                                   | the trace next above / below at this x                          | first / last point          |
-| histogram                                           | bins: the range and the bar's value              | previous / next bin                                     | the trace next above / below at this bin                        | first / last bin            |
-| box, violin                                         | one per box: every statistic at once (max … min) | previous / next box                                     | the trace next above / below at this position                   | first / last box            |
-| heatmap, contour, histogram2d, histogram2dcontour   | cells in view, rows from the top                 | along the row                                           | along the column                                                | ends of the row             |
-| pie, funnelarea                                     | slices, stages, in drawing order                 | previous / next                                         | previous / next                                                 | first / last                |
-| sunburst, treemap, icicle                           | drawn nodes of the current level                 | previous / next sibling                                 | ↑ the parent, ↓ the first child                                 | first / last sibling        |
-| sankey                                              | nodes by column, and links                       | previous / next node (on a link: links of that node)    | ↓ downstream (first outgoing link, a link's target), ↑ upstream | first / last node (or link) |
-| parcats                                             | categories                                       | the category beside it in the previous / next dimension | previous / next category of the dimension                       | first / last category       |
-| parcoords                                           | each line on each axis (a label on the axis)     | the same line on the previous / next axis               | the previous / next line on this axis                           | first / last axis           |
-| scatterpolar, barpolar                              | points inside the subplot, bars, in data order   | previous / next                                         | previous / next                                                 | first / last                |
-| scatter3d                                           | points, in data order                            | previous / next                                         | previous / next                                                 | first / last                |
+| Traces                                              | Stops                                                                                    | ← / →                                                               | ↑ / ↓                                                                     | Home / End                                     |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------- |
+| scatter, line, bar, waterfall, funnel, OHLC, candle | data points, along x                                                                     | previous / next point                                               | the trace next above / below at this x                                    | first / last point                             |
+| histogram                                           | bins: the range and the bar's value                                                      | previous / next bin                                                 | the trace next above / below at this bin                                  | first / last bin                               |
+| box, violin                                         | one per box: every statistic at once (max … min)                                         | previous / next box                                                 | the trace next above / below at this position                             | first / last box                               |
+| heatmap, contour, histogram2d, histogram2dcontour   | cells in view, rows from the top                                                         | along the row                                                       | along the column                                                          | ends of the row                                |
+| pie, funnelarea                                     | slices, stages, in drawing order                                                         | previous / next                                                     | previous / next                                                           | first / last                                   |
+| sunburst, treemap, icicle                           | drawn nodes of the current level                                                         | previous / next sibling                                             | ↑ the parent, ↓ the first child                                           | first / last sibling                           |
+| sankey                                              | nodes by column, and links                                                               | previous / next node (on a link: links of that node)                | ↓ downstream (first outgoing link, a link's target), ↑ upstream           | first / last node (or link)                    |
+| parcats                                             | categories                                                                               | the category beside it in the previous / next dimension             | previous / next category of the dimension                                 | first / last category                          |
+| parcoords                                           | each line on each axis (a label on the axis)                                             | the same line on the previous / next axis                           | the previous / next line on this axis                                     | first / last axis                              |
+| scatterpolar, barpolar                              | points inside the subplot, bars, in data order                                           | previous / next                                                     | previous / next                                                           | first / last                                   |
+| scatter3d                                           | points, in data order                                                                    | previous / next                                                     | previous / next                                                           | first / last                                   |
+| scattergeo, choropleth                              | points on the map and in view, in data order; drawn regions, in the order of `locations` | previous / next                                                     | previous / next                                                           | first / last                                   |
+| graph, graph3d (a network)                          | drawn nodes, and the links of each node                                                  | previous / next node (on a link: the links of that node, around it) | ↓ a node's first link, a link's other end; ↑ from a link back to its node | most-connected / last node (first / last link) |
+| graph (tree, radial, dendrogram)                    | drawn nodes                                                                              | previous / next sibling                                             | ↑ the parent, ↓ the first child                                           | first / last sibling                           |
+| graph, graph3d (layered)                            | drawn nodes                                                                              | previous / next node of the rank                                    | ↓ / ↑ the linked node in the next / previous rank                         | first / last of the rank                       |
+| chord                                               | node arcs around the ring, and ribbons                                                   | around the ring (on a ribbon: the ribbons of its source)            | ↓ a node's first ribbon, a ribbon's target; ↑ a ribbon's source           | first / last                                   |
 
 - **Hierarchies**: Enter drills into the node like a click (out of the entry, like a click on the
   center), and the cursor stays on its node through the transition.
@@ -335,6 +341,29 @@ the stop's place in the chart. Page Up / Page Down, Enter, Escape and the view k
   `relayout` of `scene.camera`, as a drag is. With the cursor on a 3D point, its scene gets the
   keys; without a cursor, every scene does. Surface, mesh3d, cone, streamtube, isosurface, volume
   and bar3d have no stops yet (their scenes take the view keys).
+- **Maps**: on a chart with a [geo subplot](/fundamentals/maps#keyboard), Shift + arrows move the
+  view by a tenth of the subplot (a scoped map pans, a world map turns in longitude and moves up
+  and down, a globe turns in longitude and latitude), `+` / `-` zoom about the middle, and `0`
+  resets it to the first drawn view. Each key is one GUI `relayout` with the keys a drag writes
+  (`geo.projection.rotation.lon`, `geo.center.lat`, `geo.projection.scale`, …), and the new view
+  is announced. With the cursor on a point or a region, its subplot gets the keys; without a
+  cursor, every geo subplot does. A point or a region that the projection hides, or that is out
+  of view, is not a stop: move the map to reach it.
+- **Graphs**: in every arrangement ↓ goes along a link, ↑ comes back and ← / → move among the
+  stops beside the cursor. In a network the stops are the nodes and, below each node, its links:
+  ↓ from a node goes to its first link, ← / → then turn through that node's links (clockwise as
+  drawn, and around again), ↓ follows the link to the node at its other end and ↑ returns to the
+  node. Home on a node jumps to the most-connected one. A tree arrangement is walked like a
+  sunburst (siblings, parent, first child); a layered one rank by rank, with ↑ / ↓ along the
+  links to the rank before and after. Each stop announces its place and where ↑ and ↓ lead
+  ("net: A → D, Value: 2, link 1 of 2 of A. Down: D."). Nodes that are not drawn (a folded
+  subtree, a group hidden through the legend) are not stops. In a tree arrangement Enter on a
+  node that has children folds its subtree away and Enter again unfolds it, as a click does
+  (unless `tree.collapsible` is `false`); a folded node says "Folded." after its place, and the
+  cursor stays on it. When the node under the cursor stops being drawn, the cursor moves to
+  what is left nearby: to the node a subtree folded into, or to the nearest node still drawn. `graph3d` adds the scene's view
+  keys. Stops are built on demand, so a graph of 100,000 nodes costs about 10 ms on the first
+  key.
 - **Not navigated yet**: `image`, `splom`, `table` cells and `indicator`.
 - **The script-tag build** (`holochart.iife.min.js`) leaves the 2D families' stops out for now
   (histogram, box, violin, the grids, funnelarea, the hierarchies, sankey, parcats, parcoords and
@@ -349,17 +378,22 @@ any order. `{name}` is the trace name and `{text}` what the hover label(s) say.
 elsewhere they are English, and you can add them to a locale the way
 [summaries](#summaries-in-other-languages) are added.
 
-| Sentence                                                                   | Said for                                           |
-| -------------------------------------------------------------------------- | -------------------------------------------------- |
-| `{name}: {text}, point {n} of {count}.`                                    | data points, slices, stages, polar and 3D points   |
-| `{name}: {text}, {n} of {count}.`                                          | histogram bins, sankey nodes and links, a lone box |
-| `{name}: {position}, {text}, {n} of {count}.`                              | a box or violin at `{position}` of its trace       |
-| `{name}: {text}, row {row} of {rows}, column {column} of {columns}.`       | grid cells; parcoords lines (rows) on axes         |
-| `{name}: {text}, level {level}, {n} of {count}, children: {children}.`     | sunburst, treemap and icicle nodes                 |
-| `{name}: {dimension}, {category}, {text}, {n} of {count}.`                 | parcats categories                                 |
-| `Dimension {n}`                                                            | in `{text}`: a parcoords dimension without a label |
-| `No data points to explore.`                                               | a chart without stops                              |
-| `Zoomed in.` / `Zoomed out.` / `Panned.` / `View rotated.` / `View reset.` | the view keys                                      |
+| Sentence                                                                   | Said for                                                              |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `{name}: {text}, point {n} of {count}.`                                    | data points, slices, stages, polar and 3D points                      |
+| `{name}: {text}, {n} of {count}.`                                          | histogram bins, sankey nodes and links, a lone box                    |
+| `{name}: {position}, {text}, {n} of {count}.`                              | a box or violin at `{position}` of its trace                          |
+| `{name}: {text}, row {row} of {rows}, column {column} of {columns}.`       | grid cells; parcoords lines (rows) on axes                            |
+| `{name}: {text}, level {level}, {n} of {count}, children: {children}.`     | sunburst, treemap and icicle nodes; graph nodes in a tree arrangement |
+| `{name}: {text}, node {n} of {count}.`                                     | graph and chord nodes                                                 |
+| `{name}: {text}, link {n} of {count} of {node}.`                           | a graph node's links, a chord's ribbons                               |
+| `{name}: {text}, rank {rank} of {ranks}, {n} of {count}.`                  | graph nodes in a layered arrangement                                  |
+| `Up: {up}.` / `Down: {down}.`                                              | after a graph stop's sentence: where ↑ / ↓ lead                       |
+| `Folded.`                                                                  | after the sentence of a graph tree node whose subtree is folded away  |
+| `{name}: {dimension}, {category}, {text}, {n} of {count}.`                 | parcats categories                                                    |
+| `Dimension {n}`                                                            | in `{text}`: a parcoords dimension without a label                    |
+| `No data points to explore.`                                               | a chart without stops                                                 |
+| `Zoomed in.` / `Zoomed out.` / `Panned.` / `View rotated.` / `View reset.` | the view keys                                                         |
 
 ### The controls
 
@@ -456,7 +490,9 @@ Shapes are handed out in order — `/`, `.`, `\`, `x`, `-`, `+`, `|` — one per
 traces that take a pattern) and one per slice for pies, by the slice's position in the data.
 A trace or template that sets its own `marker.pattern.shape` (even `''`, no pattern) keeps it.
 Hierarchies (sunburst) and sankey keep their colors only: one pattern per trace wouldn't tell their
-sectors apart. For lines, vary `line.dash` and marker symbols yourself.
+sectors apart. For lines, vary `line.dash` and marker symbols yourself. Choropleth regions have no
+patterns either: write the values on the map instead, as
+[the choropleth page](/charts/maps/choropleth#values-as-labels) shows.
 
 ### Reduced motion
 

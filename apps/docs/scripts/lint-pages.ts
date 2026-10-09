@@ -10,8 +10,8 @@
  * Chart pages (`charts/<family>/<chart>.md`):
  * - name the trace type they document in `chart:`.
  * - when `status: complete`: have every required H2 section of `charts/_template.md` in order
- *   ("3D-native options" is optional), at least 5 example embeds with at least 4 under
- *   "Variations", and link to the attribute reference `/reference/<chart>`.
+ *   ("3D-native options" is optional), at least 5 unique live or linked examples, with 4 under
+ *   "Variations" (5 for launch-featured pages), and link to the attribute reference `/reference/<chart>`.
  *   Draft and stub chart pages only get warnings for these, so work in progress can merge.
  *
  * Exits with 1 on errors. `--strict` turns warnings into errors. `--root <dir>` lints another docs
@@ -80,7 +80,9 @@ export function parsePage(file: string, source: string): Page {
 
 /** Example ids embedded with `<Example id="…" />`. */
 export function exampleIds(body: string): string[] {
-  return [...body.matchAll(/<Example\b[^>]*?\bid=(["'])(.+?)\1/g)].map((m) => m[2] as string);
+  return [...body.matchAll(/<(?:Example|ExampleLink)\b[^>]*?\bid=(["'])(.+?)\1/g)].map(
+    (m) => m[2] as string,
+  );
 }
 
 /**
@@ -121,7 +123,7 @@ export function lintPage(page: Page, knownExamples: ReadonlySet<string>): Findin
     add('error', 'stub pages need `milestone: M<n>` (the milestone in which content lands).');
   }
 
-  const ids = exampleIds(page.body);
+  const ids = [...new Set(exampleIds(page.body))];
   for (const id of ids) {
     if (isInternalExample(id)) {
       add(
@@ -158,14 +160,24 @@ export function lintPage(page: Page, knownExamples: ReadonlySet<string>): Findin
   }
 
   if (isTemplate) return findings;
+  if (/<ChartOverview\b/.test(page.body)) {
+    const liveCount = [...page.body.matchAll(/<Example\b/g)].length;
+    if (liveCount !== 1) add(level, `compact guides need one live Example; found ${liveCount}.`);
+    if (!/<ChartVariations\b/.test(page.body))
+      add(level, 'compact guides need a ChartVariations grid.');
+  }
 
   if (ids.length < MIN_EXAMPLES) {
-    add(level, `has ${ids.length} example embeds; chart pages need at least ${MIN_EXAMPLES}.`);
+    add(level, `has ${ids.length} complete examples; chart pages need at least ${MIN_EXAMPLES}.`);
   }
   const variations = found.find(([t]) => t === 'Variations')?.[1] ?? '';
-  const variationCount = exampleIds(variations).length;
-  if (variationCount < MIN_VARIATIONS) {
-    add(level, `"Variations" has ${variationCount} examples; it needs at least ${MIN_VARIATIONS}.`);
+  const variationCount = [...new Set(exampleIds(variations))].length;
+  const requiredVariations = fm['launch-featured'] === 'true' ? 5 : MIN_VARIATIONS;
+  if (variationCount < requiredVariations) {
+    add(
+      level,
+      `"Variations" has ${variationCount} examples; it needs at least ${requiredVariations}.`,
+    );
   }
   const refSection = found.find(([t]) => t === 'Attribute reference')?.[1] ?? '';
   if (fm['chart'] && !refSection.includes(`/reference/${fm['chart']}`)) {

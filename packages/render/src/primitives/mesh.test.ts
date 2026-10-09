@@ -173,6 +173,20 @@ describe('MeshPrimitive colors', () => {
     p.update({ opacity: 1 });
     expect(p.translucent).toBe(false);
   });
+
+  it('depth test and depth write can be set (a layer on a surface already drawn)', () => {
+    const p = mesh({});
+    expect(p.material.depthTest).toBe(true);
+    expect(p.material.depthWrite).toBe(true);
+    p.update({ depthTest: false, depthWrite: false });
+    expect(p.material.depthTest).toBe(false);
+    expect(p.material.depthWrite).toBe(false);
+    // `'auto'` follows the translucency again; a forced write survives it.
+    p.update({ depthWrite: 'auto', opacity: 0.5 });
+    expect(p.material.depthWrite).toBe(false);
+    p.update({ depthWrite: true });
+    expect(p.material.depthWrite).toBe(true);
+  });
 });
 
 describe('MeshPrimitive partial updates (E16.3)', () => {

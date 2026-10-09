@@ -1,0 +1,57 @@
+[
+  {
+    "slug": "small-multiples",
+    "example": "layout/grid-coupled",
+    "python": true,
+    "families": ["relationships", "basic"]
+  },
+  {
+    "slug": "mixed-line-bar",
+    "example": "line/with-bars",
+    "python": true,
+    "families": ["time-series", "basic"]
+  },
+  {
+    "slug": "confidence-bands",
+    "example": "area/band",
+    "python": false,
+    "families": ["time-series", "statistical"]
+  },
+  {
+    "slug": "sorting-ranking",
+    "example": "recipes/ranked-bars",
+    "python": false,
+    "families": ["basic"]
+  },
+  { "slug": "missing-data", "example": "line/gaps", "python": true, "families": ["time-series"] },
+  {
+    "slug": "date-axes",
+    "example": "timeseries/date-formatting",
+    "python": false,
+    "families": ["time-series"]
+  },
+  {
+    "slug": "custom-hover",
+    "example": "scatter/interactive",
+    "python": false,
+    "families": ["relationships"]
+  },
+  {
+    "slug": "linked-views",
+    "example": "axes/linked-axes",
+    "python": false,
+    "families": ["time-series", "relationships"]
+  },
+  {
+    "slug": "themes",
+    "example": "themes/plotly_white",
+    "python": true,
+    "families": ["basic", "relationships"]
+  },
+  {
+    "slug": "dashboard-sizing",
+    "example": "layout/grid-independent",
+    "python": true,
+    "families": ["basic", "relationships", "time-series"]
+  }
+]

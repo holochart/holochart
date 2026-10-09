@@ -11,17 +11,33 @@ import type { Page } from '@playwright/test';
  */
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const ENTRY = resolve(ROOT, 'packages/holochart/dist/index.js');
+/** `@mk7s/holochart/geo` as built: the entry that adds the geo package (ADR-026). */
+export const GEO_ENTRY = resolve(ROOT, 'packages/holochart/dist/geo.js');
+/** `@mk7s/holochart/graph` as built: the entry that adds the graph package (ADR-029). */
+export const GRAPH_ENTRY = resolve(ROOT, 'packages/holochart/dist/graph.js');
 export const ORIGIN = 'http://holochart.test';
 
-interface OutputChunk {
+export interface OutputChunk {
   type: 'chunk' | 'asset';
   fileName: string;
   code?: string;
   isEntry?: boolean;
+  /** The modules bundled into the chunk (absolute paths; virtual modules start with `\0`). */
+  moduleIds?: string[];
 }
 
 /** Bundle the full ESM build (three included) into chunks, in memory: file name → code. */
 export async function bundleApp(): Promise<Map<string, string>> {
+  const output = await bundleAppChunks();
+  return new Map(output.map((c) => [c.fileName, c.code ?? '']));
+}
+
+/**
+ * The chunks of an app that imports the full ESM build (three included), with the modules each
+ * chunk was made of. `addOns`: built entries the app imports after it for their side effects
+ * ({@link GEO_ENTRY}, {@link GRAPH_ENTRY}).
+ */
+export async function bundleAppChunks(addOns: readonly string[] = []): Promise<OutputChunk[]> {
   const vite = realpathSync(fileURLToPath(import.meta.resolve('vite')));
   const rolldown = (await import(pathToFileURL(createRequire(vite).resolve('rolldown')).href)) as {
     rolldown(options: Record<string, unknown>): Promise<{
@@ -39,14 +55,15 @@ export async function bundleApp(): Promise<Map<string, string>> {
         resolveId: (id: string) => (id === 'app' ? id : null),
         load: (id: string) =>
           id === 'app'
-            ? `import * as Holochart from ${JSON.stringify(ENTRY)}; window.Holochart = Holochart;`
+            ? `import * as Holochart from ${JSON.stringify(ENTRY)}; window.Holochart = Holochart;` +
+              addOns.map((file) => `\nimport ${JSON.stringify(file)};`).join('')
             : null,
       },
     ],
   });
   try {
     const { output } = await build.generate({ format: 'es', entryFileNames: 'app.js' });
-    return new Map(output.filter((c) => c.type === 'chunk').map((c) => [c.fileName, c.code ?? '']));
+    return output.filter((c) => c.type === 'chunk');
   } finally {
     await build.close();
   }

@@ -7,6 +7,8 @@ chart: bar
 
 # Gantt
 
+<ChartOverview />
+
 ## Overview
 
 A Gantt chart (or timeline) draws one horizontal bar per task, from its start date to its finish
@@ -28,6 +30,9 @@ Pick a different chart when:
   times, or aggregate first.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart, timeline } from '@mk7s/holochart';
@@ -113,13 +118,15 @@ figures by hand:
 
 ## Variations
 
+<ChartVariations />
+
 ### Colored by resource
 
 `color: 'Team'` makes one trace per team, with the column name as the legend title. The traces
 follow `categoryOrders.Team`, then first appearance. Colors come from the theme's colorway;
 clicking a legend item hides all tasks of that team.
 
-<Example id="gantt/resources" />
+<ExampleLink id="gantt/resources" />
 
 ### Milestones
 
@@ -149,7 +156,7 @@ figure.data.push({
 });
 ```
 
-<Example id="gantt/milestones" />
+<ExampleLink id="gantt/milestones" />
 
 To put a milestone on a task's row instead, use that task's name as its `y`.
 
@@ -181,7 +188,7 @@ const arrow = {
 };
 ```
 
-<Example id="gantt/dependencies" />
+<ExampleLink id="gantt/dependencies" />
 
 ### Today line
 
@@ -190,7 +197,7 @@ height at a date, with an optional `label`. Here the tasks are also colored by t
 that date, with `colorDiscreteMap` pinning a color per status. In an app, pass today's date; the
 example uses a fixed one so it renders the same every day.
 
-<Example id="gantt/today-line" />
+<ExampleLink id="gantt/today-line" />
 
 The same line as a static shape, for a figure you build up front:
 `{ type: 'line', xref: 'x', yref: 'paper', x0: day, x1: day, y0: 0, y1: 1, line: { dash: 'dash' } }`.

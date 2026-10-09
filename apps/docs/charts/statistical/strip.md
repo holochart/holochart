@@ -7,6 +7,8 @@ chart: box
 
 # Strip plot
 
+<ChartOverview />
+
 ## Overview
 
 A strip plot (a jittered dot plot) draws every observation as a point at its category, spread a
@@ -25,6 +27,9 @@ Pick a different chart when:
 - both axes are numeric: that's a [scatter plot](/charts/basic/scatter).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart, strip } from '@mk7s/holochart';
@@ -95,27 +100,29 @@ applies: category, numeric and date positions, values that aren't numbers are sk
 
 ## Variations
 
+<ChartVariations />
+
 ### Colored groups
 
 `color` makes one trace per value. With `stripmode: 'group'` each value gets its own strip within
 each category (the traces share an `alignmentgroup` and each has its own `offsetgroup`), and the
 legend shows each group's marker.
 
-<Example id="strip/grouped" />
+<ExampleLink id="strip/grouped" />
 
 ### Horizontal strips
 
 A numeric `x` and a categorical `y` give horizontal strips. `hoverName` and `hoverData` add
 columns to the hover label; a wider `jitter` spreads dense strips further.
 
-<Example id="strip/horizontal" />
+<ExampleLink id="strip/horizontal" />
 
 ### Overlaid groups
 
 `stripmode: 'overlay'` draws all groups of a category on one strip, so they mix;
 `colorDiscreteMap` fixes their colors.
 
-<Example id="strip/overlay" />
+<ExampleLink id="strip/overlay" />
 
 ### Over box plots
 
@@ -123,14 +130,14 @@ The figure is plain data: add a `box` trace of the same samples first (under the
 boxes summarize while the points show every observation. That box hides its own points
 (`boxpoints: false`) and doesn't hover (`hoverinfo: 'skip'`).
 
-<Example id="strip/with-box" />
+<ExampleLink id="strip/with-box" />
 
 ### A box with all points
 
 A regular box plot can also show every sample beside the box (`boxpoints: 'all'` with a negative
 `pointpos`):
 
-<Example id="box/points" />
+<ExampleLink id="box/points" />
 
 ## Styling
 

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { colorwayNames, getColorway, registerColorway } from '../colors/registry.ts';
+import { createRegistry } from '../registry/registry.ts';
 import { reducedMotion } from './a11y.ts';
+import { supplyDefaults } from './supply-defaults.ts';
 
 /** A window whose `prefers-reduced-motion` query answers `reduce`. */
 function view(reduce: boolean): Window {
@@ -27,6 +29,22 @@ describe('reducedMotion (E17.5)', () => {
       },
     } as never;
     expect(reducedMotion({}, broken)).toBe(false);
+  });
+});
+
+describe('what supply-defaults keeps of the config on the full layout', () => {
+  const full = (config: Record<string, unknown>) =>
+    supplyDefaults({ data: [], layout: {}, config }, createRegistry()).fullLayout;
+
+  it('says whether the plot is static, for views that would move things by themselves', () => {
+    expect(full({})._staticPlot).toBe(false);
+    expect(full({ staticPlot: true })._staticPlot).toBe(true);
+  });
+
+  it('keeps config.worker, the default of a trace that can work off the main thread', () => {
+    expect(full({})._worker).toBe(false);
+    expect(full({ worker: 'auto' })._worker).toBe('auto');
+    expect(full({ worker: true })._worker).toBe(true);
   });
 });
 

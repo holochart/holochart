@@ -5,6 +5,8 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import * as prettier from 'prettier';
+import type { ExampleClassification } from '../../../examples/_lib/catalog.ts';
+import { classificationFor } from './classification.ts';
 
 export const REPO_ROOT = path.resolve(import.meta.dirname, '../../..');
 export const EXAMPLES_DIR = path.join(REPO_ROOT, 'examples');
@@ -36,11 +38,12 @@ export const THREE_D_TRACE_TYPES: ReadonlySet<string> = new Set([
   'volume',
   'isosurface',
   'bar3d',
+  'graph3d',
 ]);
 /** Tags that mark an example as 3D-native. */
 export const THREE_D_TAGS: ReadonlySet<string> = new Set(['3d', '3d-native']);
 
-export interface GalleryEntry {
+export interface LegacyGalleryEntry {
   /** Example id: path under `examples/` without `.ts`, e.g. `scatter/basic`. */
   id: string;
   title: string;
@@ -60,12 +63,20 @@ export interface GalleryEntry {
   thumbnailSize: { width: number; height: number };
 }
 
+export interface GalleryEntry extends LegacyGalleryEntry, ExampleClassification {}
+
 export interface GalleryManifest {
   /** Bumped when the entry shape changes. */
-  version: 1;
+  version: 2;
   /** Chart look the thumbnails were rendered with (the default template, ADR-021). */
   look: 'holochart';
   examples: GalleryEntry[];
+}
+
+export interface LegacyGalleryManifest {
+  version: 1;
+  look: 'holochart';
+  examples: LegacyGalleryEntry[];
 }
 
 /** One test's outcome, written by `gallery.spec.ts` and merged by `teardown.ts`. */
@@ -109,6 +120,23 @@ export function readManifest(file = MANIFEST_FILE): GalleryManifest | undefined 
   return JSON.parse(readFileSync(file, 'utf8')) as GalleryManifest;
 }
 
+/** Explicit v1 → v2 migration. Existing IDs, descriptions, sizes and thumbnails are unchanged. */
+export function migrateManifest(
+  previous: GalleryManifest | LegacyGalleryManifest,
+): GalleryManifest {
+  if (previous.version !== 1 && previous.version !== 2)
+    throw new Error('Unsupported gallery manifest version.');
+  return {
+    version: 2,
+    look: previous.look,
+    examples: previous.examples.map((e) => ({
+      ...e,
+      ...classificationFor(e, EXAMPLES_DIR),
+      threeD: isThreeD(e.traceTypes, e.tags),
+    })),
+  };
+}
+
 /**
  * Merge a run's records into the previous manifest. Rendered examples replace their entry,
  * skipped ones are dropped, examples that were not part of this run (a `-g` subset, or a failed
@@ -117,19 +145,28 @@ export function readManifest(file = MANIFEST_FILE): GalleryManifest | undefined 
  * manifest still lists.
  */
 export function mergeRecords(
-  previous: GalleryManifest | undefined,
+  previous: GalleryManifest | LegacyGalleryManifest | undefined,
   records: readonly GalleryRecord[],
   existingIds: ReadonlySet<string>,
 ): GalleryManifest {
-  const byId = new Map<string, GalleryEntry>();
+  const byId = new Map<string, GalleryEntry | LegacyGalleryEntry>();
   const published = (id: string): boolean => existingIds.has(id) && !isInternalExample(id);
-  for (const e of previous?.examples ?? []) if (published(e.id)) byId.set(e.id, e);
+  for (const e of previous?.examples ?? [])
+    if (published(e.id) && !isExcluded(e.tags)) byId.set(e.id, e);
   for (const r of records) {
-    if ('entry' in r && !isInternalExample(r.id)) byId.set(r.id, r.entry);
+    if ('entry' in r && published(r.id) && !isExcluded(r.entry.tags)) byId.set(r.id, r.entry);
     else byId.delete(r.id);
   }
-  const examples = [...byId.values()].sort((a, b) => a.id.localeCompare(b.id));
-  return { version: 1, look: 'holochart', examples };
+  // A partial first render against v1 also upgrades untouched entries before claiming v2.
+  // Existing v2 records retain their metadata here; teardown explicitly refreshes all metadata.
+  const examples = [...byId.values()]
+    .map((e) =>
+      previous?.version === 1 && !('primaryFamily' in e)
+        ? { ...e, ...classificationFor(e, EXAMPLES_DIR), threeD: isThreeD(e.traceTypes, e.tags) }
+        : (e as GalleryEntry),
+    )
+    .sort((a, b) => a.id.localeCompare(b.id));
+  return { version: 2, look: 'holochart', examples };
 }
 
 /** Write the manifest formatted with the repo's Prettier config (so `format:check` stays green). */

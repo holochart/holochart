@@ -49,6 +49,16 @@ export const holochartPtBR: Readonly<Record<string, string>> = {
   '{name}: {dimension}, {category}, {text}, {n} of {count}.':
     '{name}: {dimension}, {category}, {text}, {n} de {count}.',
   'Dimension {n}': 'Dimensão {n}',
+  'Map centered at longitude {lon}°, latitude {lat}°, scale {scale}.':
+    'Mapa centralizado na longitude {lon}°, latitude {lat}°, escala {scale}.',
+  '{name}: {text}, node {n} of {count}.': '{name}: {text}, nó {n} de {count}.',
+  '{name}: {text}, link {n} of {count} of {node}.':
+    '{name}: {text}, ligação {n} de {count} do nó {node}.',
+  '{name}: {text}, rank {rank} of {ranks}, {n} of {count}.':
+    '{name}: {text}, camada {rank} de {ranks}, {n} de {count}.',
+  'Up: {up}.': 'Acima: {up}.',
+  'Down: {down}.': 'Abaixo: {down}.',
+  'Folded.': 'Recolhido.',
   // Chart summaries.
   '{y} by {x}.': '{y} por {x}.',
   '{count} more traces are not summarized.': 'Outras séries não resumidas: {count}.',

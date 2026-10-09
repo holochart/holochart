@@ -7,6 +7,8 @@ chart: histogram2d
 
 # 2D histogram
 
+<ChartOverview />
+
 ## Overview
 
 A 2D histogram takes pairs of samples (`x`, `y`), bins them along both axes, and colors each cell
@@ -26,6 +28,9 @@ Pick a different chart when:
 - only one variable matters: use a histogram.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -113,6 +118,8 @@ createChart(document.getElementById('chart')!, {
 
 ## Variations
 
+<ChartVariations />
+
 ### Cell labels on a category axis
 
 `texttemplate` writes a label in every non-empty cell, with `%{z}`, `%{x}` and `%{y}` (bin centers)
@@ -121,7 +128,7 @@ largest size at which they fit the cells, and without `textfont.color` they are 
 whichever contrasts with the cell. Here x is a category axis (one bin per weekday) and y uses
 explicit 3-hour bins.
 
-<Example id="histogram2d/texttemplate" />
+<ExampleLink id="histogram2d/texttemplate" />
 
 ### Gaps between cells
 
@@ -129,7 +136,7 @@ explicit 3-hour bins.
 coarse grids. `nbinsx` / `nbinsy` cap the number of bins, and `colorscale` replaces the default
 scale. Gaps only apply to flat cells (`zsmooth: false`).
 
-<Example id="histogram2d/gaps" />
+<ExampleLink id="histogram2d/gaps" />
 
 ### Smoothing
 
@@ -138,7 +145,7 @@ for uneven bins (month bins, for example); `'fast'` interpolates by cell index, 
 for equal bins. Both run in the fragment shader: no extra geometry, and zooming stays a uniform
 update. The two panels share one `coloraxis`, so one colorbar describes both.
 
-<Example id="histogram2d/smooth" />
+<ExampleLink id="histogram2d/smooth" />
 
 ### Density with a titled colorbar
 
@@ -146,7 +153,7 @@ update. The two panels share one `coloraxis`, so one colorbar describes both.
 integrates to 1 and grids with different bin sizes compare fairly. `zhoverformat` and
 `colorbar.tickformat` keep the small numbers readable.
 
-<Example id="histogram2d/density" />
+<ExampleLink id="histogram2d/density" />
 
 ### Dates and month bins
 

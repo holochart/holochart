@@ -3,9 +3,12 @@ title: Heatmap
 description: Show a grid of values as colored cells, on numeric, date, log or category axes, with optional cell labels.
 status: complete
 chart: heatmap
+launch-featured: true
 ---
 
 # Heatmap
+
+<ChartOverview />
 
 ## Overview
 
@@ -28,6 +31,9 @@ Pick a different chart when:
   [`hx.imshow`](/express/imshow) builds the heatmap for you.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -122,6 +128,8 @@ createChart(document.getElementById('chart')!, {
 
 ## Variations
 
+<ChartVariations />
+
 ### Annotated heatmap
 
 `texttemplate` writes a label in every cell, with `%{z}`, `%{x}`, `%{y}` and `%{text}` and
@@ -130,7 +138,7 @@ largest size at which they fit the cells, and without `textfont.color` they are 
 whichever contrasts with the cell. Here a correlation matrix on category axes uses a diverging
 scale centered on 0 (`zmid`) and 1 px gaps (`xgap`, `ygap`):
 
-<Example id="heatmap/annotated" />
+<ExampleLink id="heatmap/annotated" />
 
 ### Uneven cells and filled gaps
 
@@ -138,7 +146,7 @@ Give `x` and `y` one more value than columns and rows, and they are the cell edg
 any width and height. The grid is still one texture; the shader finds the cell under each pixel
 with a binary search of an edge texture. `connectgaps` fills the missing values:
 
-<Example id="heatmap/uneven" />
+<ExampleLink id="heatmap/uneven" />
 
 ### Smoothing
 
@@ -146,7 +154,7 @@ with a binary search of an edge texture. `connectgaps` fills the missing values:
 for uneven cells. `'fast'` interpolates by cell index; like Plotly, it is turned off on log axes
 and uneven grids. Both run in the fragment shader. The two panels share one `coloraxis`:
 
-<Example id="heatmap/smooth" :height="380" />
+<ExampleLink id="heatmap/smooth" />
 
 ### Date and log axes
 
@@ -154,7 +162,7 @@ Daily columns from `x0` (a date) and `dx` (one day in ms), against frequency ban
 grow geometrically on a log y axis. On a log axis the cell edges are geometric means of the
 centers, so the bands are evenly tall:
 
-<Example id="heatmap/dates" />
+<ExampleLink id="heatmap/dates" />
 
 ### Monthly columns with period alignment
 
@@ -164,7 +172,7 @@ column in it (`'start'`, `'middle'` or `'end'`); `xperiod0` sets where periods s
 month's column is centered in its month, under its `ticklabelmode: 'period'` label. Hover shows
 the dates as given. `yperiod` does the same for rows.
 
-<Example id="heatmap/period" />
+<ExampleLink id="heatmap/period" />
 
 ### Range breaks
 
@@ -173,14 +181,14 @@ date falls in a break are dropped, as in Plotly, and the others share the remain
 trading day keeps a full-width column and Friday meets Monday. Here weekends and two holidays are
 hidden from daily data:
 
-<Example id="heatmap/rangebreaks" />
+<ExampleLink id="heatmap/rangebreaks" />
 
 ### Column data on a category axis
 
 A 1D `z` with `x` and `y` columns, listed in any order, is placed on the grid of their distinct
 values. The weekdays sit on a category axis ordered by `categoryarray`:
 
-<Example id="heatmap/columns" />
+<ExampleLink id="heatmap/columns" />
 
 ## Styling
 
@@ -281,13 +289,13 @@ Holochart extensions (full bundle), see [Extrusion & 2.5D](/customization/extrus
 - `layout.view3d`: the grid in perspective, like a 3D histogram; hover reports the column under
   the pointer, top or side.
 
-<Example id="heatmap/columns-city" />
+<ExampleLink id="heatmap/columns-city" />
 
 All columns are one merged mesh (one draw call). A 200 × 200 grid — 40,000 columns — builds in
 about 0.2 s, again on each zoom step (pans only move it); grids of more than 100,000 cells stay
 flat, with a console warning.
 
-<Example id="heatmap/columns-terrain" />
+<ExampleLink id="heatmap/columns-terrain" />
 
 ## Performance notes
 
@@ -334,7 +342,7 @@ reference.
 - [Express `imshow`](/express/imshow): a matrix as a heatmap in one call, with facets and
   animation over extra dimensions
 
-<Example id="express/imshow" :height="400" />
+<ExampleLink id="express/imshow" />
 
 ## Plotly migration notes
 

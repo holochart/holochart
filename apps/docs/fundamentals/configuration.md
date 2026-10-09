@@ -105,11 +105,13 @@ disabled. The element gets `role="img"` instead of `role="figure"`; see
 - `'cartesian'`: x/y subplots. A wheel step zooms the axes around the pointer. It does nothing
   when `layout.dragmode` is `false`.
 - `'scene'`: [3D scenes](/fundamentals/3d-scenes#controls).
+- `'geo'`: [maps](/fundamentals/maps#interactions). A wheel step zooms the map around the
+  pointer, when `layout.dragmode` is `'pan'` or `'zoom'`.
 
-The default has `'scene'` and not `'cartesian'`: the wheel zooms 3D scenes, and over a 2D chart
-it scrolls the page. `scrollZoom: true` turns wheel zoom on for both, and `false` for neither.
-`'geo'` and `'map'` are accepted for Plotly compatibility; Holochart has no map subplots. Plotly's
-`'gl3d'` and `'mapbox'` are not accepted: write `'scene'`.
+The default has `'scene'` and `'geo'` and not `'cartesian'`: the wheel zooms 3D scenes and maps,
+and over a cartesian chart it scrolls the page. `scrollZoom: true` turns wheel zoom on for all
+of them, and `false` for none. `'map'` is accepted for Plotly compatibility; Holochart has no
+tile maps. Plotly's `'gl3d'` and `'mapbox'` are not accepted: write `'scene'`.
 
 `scrollZoom` is about the mouse wheel only. Pinch zoom on touch screens works whatever it says.
 

@@ -16,3 +16,12 @@ declare module 'virtual:holochart-example-sources' {
 
 /** Base URL of the dev sandbox used by "Open in sandbox" links (set in `.vitepress/config.ts`). */
 declare const __HOLOCHART_SANDBOX_URL__: string;
+
+declare module 'virtual:holochart-sidebar-control' {
+  export const useSidebarControl: typeof import('vitepress/dist/client/theme-default/composables/sidebar.js').useSidebarControl;
+}
+declare module 'virtual:holochart-sidebar-link' {
+  import type { Component } from 'vue';
+  const component: Component;
+  export default component;
+}

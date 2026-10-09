@@ -7,6 +7,8 @@ chart: indicator
 
 # Indicator
 
+<ChartOverview />
+
 ## Overview
 
 An indicator shows a **single value** the way a dashboard tile does, with up to three elements
@@ -33,6 +35,9 @@ Pick a different chart when:
 - you show the parts of a whole: use a [pie chart](/charts/basic/pie).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -65,13 +70,15 @@ title takes a quarter of that size. The live example adds a `$` prefix and a tho
 
 ## Variations
 
+<ChartVariations />
+
 ### Number and delta
 
 `delta.position` puts the delta `'bottom'` (default), `'top'`, `'left'` or `'right'` of the
 number; `delta.relative` shows a percentage change, `delta.valueformat`, `prefix` and `suffix`
 format it. Number and delta are scaled together to fit the domain:
 
-<Example id="indicator/delta" />
+<ExampleLink id="indicator/delta" />
 
 ### Angular gauge with steps and a threshold
 
@@ -79,7 +86,7 @@ format it. Number and delta are scaled together to fit the domain:
 value across `thickness` of the ring. The number and delta sit in the ring's hole, and the axis
 ticks and labels go around its outer edge:
 
-<Example id="indicator/gauge" />
+<ExampleLink id="indicator/gauge" />
 
 ### Bullet gauges
 
@@ -87,14 +94,14 @@ ticks and labels go around its outer edge:
 bottom edge, the title to its left (outside the domain, right-aligned) and the number in the right
 quarter of the domain. Stack several with `domain.y`:
 
-<Example id="indicator/bullet" />
+<ExampleLink id="indicator/bullet" />
 
 ### A KPI dashboard
 
 Cards, angular and bullet gauges on a `layout.grid`, each placed by `domain.row` and
 `domain.column` (or explicit `domain.x` / `domain.y`), each fitting its number to its own cell:
 
-<Example id="indicator/dashboard" />
+<ExampleLink id="indicator/dashboard" />
 
 ### Counting up with a transition
 
@@ -103,7 +110,7 @@ Cards, angular and bullet gauges on a `layout.grid`, each placed by `domain.row`
 frame), moves the delta and sweeps the gauge bar. With `prefers-reduced-motion: reduce` the change
 snaps:
 
-<Example id="indicator/count-up" />
+<ExampleLink id="indicator/count-up" />
 
 ```ts
 import { createChart, type Figure } from '@mk7s/holochart';
@@ -145,7 +152,7 @@ void chart.react(figure(385));
 Outlined bars and steps, a border, a `dtick` axis with a percent format, a delta on the left with
 custom symbols, and named bullet ticks:
 
-<Example id="indicator/styled" />
+<ExampleLink id="indicator/styled" />
 
 ```ts
 import { createChart } from '@mk7s/holochart';

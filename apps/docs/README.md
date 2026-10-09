@@ -9,7 +9,7 @@ reference are generated at build time.
 From the repository root:
 
 ```sh
-pnpm --filter @mk7s/holochart-docs dev        # http://localhost:5174/holochart/ (sandbox: 5173)
+pnpm run docs                                  # http://127.0.0.1:5174/holochart/ (sandbox: 5173)
 pnpm --filter @mk7s/holochart-docs build      # static site in apps/docs/.vitepress/dist
 pnpm --filter @mk7s/holochart-docs preview    # serve the built site
 pnpm --filter @mk7s/holochart-docs lint:pages # page lint (CI)
@@ -26,7 +26,21 @@ pnpm --filter @mk7s/holochart-docs typecheck
 | `reference/api/**`                   | `scripts/gen-api.ts` (TypeDoc + markdown plugin)       | `/reference/api/`         |
 | `.vitepress/generated/changelog.md`  | `scripts/gen-changelog.ts`                             | included by `/changelog`  |
 
-Run `pnpm run gen:reference` or `pnpm run gen:api` on their own when iterating on one of them.
+`gen:notebooks` builds `.ipynb` downloads, Python sources and included web snippets from the
+canonical `examples/notebooks/*.py` sources. `gen:quickstarts` creates the plain HTML download
+from its canonical browser starter. `gen:sources` exports complete browser modules for gallery
+detail pages, including local helpers/data/assets; generated modules remain ignored in Git.
+Compilation and actual copied-module browser rendering are separate verification states.
+
+`check:discovery` replays the 33 reviewed beginner task descriptions against gallery search and
+verified Python filtering. `check:site` includes this gate. These are editorial regression checks;
+observed user-task results are recorded separately in the launch checklist. The cookbook uses
+canonical examples and their complete source exports; the demo directory keeps deterministic
+reports separate from the live weather application and links reusable standalone techniques.
+
+Run individual generators while iterating. `gen:notebooks`, `gen:quickstarts` and `gen:sources`
+accept `--check` to detect stale artifacts without rewriting them. `gen:reference` and `gen:api`
+can also run independently.
 `gen:api` accepts `--strict` to fail instead of writing placeholder pages when TypeDoc fails.
 
 `gen` also runs `gen:compat` (`scripts/gen-plotly-compat.ts`), which rewrites the coverage tables
@@ -36,11 +50,12 @@ checked in: commit the change when the tables move, and don't edit between the m
 1 instead of writing. plotly.js' schema comes from the reduced copy in `scripts/plotly-compat/`
 (see `reduce-plotly-schema.ts` there to refresh it).
 
-`gen:galleries` (`scripts/gen-galleries.ts`) works the same way for `reference/colorscales.md`
-and `reference/marker-symbols.md`: it rewrites the regions between their `generated:…` markers
-from the color registries of `@mk7s/holochart-core` and the symbol table of
-`@mk7s/holochart-render`, the pages are checked in, and `--check` exits with 1 when one is out
-of date.
+`gen:galleries` (`scripts/gen-galleries.ts`) works the same way for `reference/colorscales.md`,
+`reference/marker-symbols.md` and the projection tables of `fundamentals/maps.md`: it rewrites
+the regions between their `generated:…` markers from the color registries of
+`@mk7s/holochart-core`, the symbol table of `@mk7s/holochart-render` and the projection tables of
+`@mk7s/holochart-traces-geo` (`src/geo/constants.ts`), the pages are checked in, and `--check`
+exits with 1 when one is out of date.
 
 `gen:changelog` lists the pending changesets (`.changeset/*.md`) as "Unreleased" and merges the
 `CHANGELOG.md` files that `changeset version` writes into the packages, one entry per change and
@@ -67,7 +82,8 @@ Environment variables:
 .vitepress/
   config.ts                 site config, Cloudflare _headers, Vite settings
   sidebar.ts                nav and sidebars (titles come from page frontmatter)
-  plugins/example-sources.ts  highlighted example sources for <Example>
+  plugins/sidebar-accessibility.ts  semantic sidebar controls
+  theme/components/ExampleSource.vue  lazy complete source and language variants
   theme/                    theme: accents (custom.css), <Example>, status banner
 getting-started/ fundamentals/ charts/ customization/ guides/ express/ extending/ reference/ ...
 scripts/gen-api.ts          TypeDoc API reference
@@ -103,8 +119,10 @@ public/                     static files (logo)
 Copy `charts/_template.md` to `charts/<family>/<chart>.md` and keep its H2 sections in order. Set
 `chart:` to the trace type the page documents (a line chart uses `scatter`). When the page is
 finished, set `status: complete`: from then on `lint:pages` requires every section (except the
-optional "3D-native options"), at least 5 example embeds with at least 4 in "Variations", and a
-link to `/reference/<chart>`. Draft pages only get warnings.
+optional "3D-native options"), one live minimal example, at least four linked variations,
+and a link to `/reference/<chart>`. Launch-featured guides require five substantive non-minimal
+variations. Use `<ChartOverview />`, `<ChartVariations />` and `<ExampleLink id="…" />`; retain
+existing example anchors and useful detailed sections. Draft pages only get warnings.
 
 ## Examples
 
@@ -116,8 +134,10 @@ Embed any example from `examples/` by id (its path without `.ts`):
 ```
 
 The component renders the example live in the browser only (never during SSR), starts it when it
-scrolls into view, disposes it when the page unmounts, and has a TypeScript source tab (highlighted
-at build time), a copy button, and an "Open in sandbox" link. Examples follow the contract in
+scrolls into view, and disposes it when the page unmounts. Its Complete source panel lazily loads
+the standalone browser module and any real Python variant, with copy and download controls.
+The old private-harness source inventory is not loaded by the runtime. An "Open in sandbox"
+link appears only when a sandbox URL is configured. Examples follow the contract in
 `examples/_lib/types.ts`; new example files are picked up without registration. `lint:pages`
 fails if a page embeds an id that doesn't exist, or an internal example: `examples/_dev/` and
 `examples/_spikes/` hold fixtures for the test suites and measurements, not examples for readers.
@@ -127,13 +147,15 @@ To add an example, create `examples/<category>/<slug>.ts` exporting `meta` and `
 
 ## Gallery
 
-`/gallery/` (plan E19.5) shows a thumbnail of every public example that is a visual test
+`/gallery/` starts with curated sections for eleven chart families; `/gallery/all` shows every
+public example that is a visual test
 (examples tagged `no-visual-test` or `perf` are left out, and so are the internal ones, whose id
-starts with `_`: `_dev/…`, `_spikes/…`), filterable by category, trace type, tag and "3D-native",
-with a title search. Selecting a card opens the example live with its source and
-links to the docs pages that embed it (each `<Example>` has the anchor `#example-<id>`, `/`
-becoming `-`). The open example is in the URL hash (`/gallery/#scatter/basic`), the filters in
-the query string.
+starts with `_`: `_dev/…`, `_spikes/…`). Family pages and the full inventory have alias search,
+subtype, verified language, difficulty and feature filters. Selecting a card opens its stable
+`/gallery/example/<id>` detail route with complete source and documentation links. Quick preview
+opens an inline dialog; its ID stays in the hash and filters stay in the query string. Legacy
+`/gallery/#scatter/basic` links still open the preview. `<Example>` and default `<ExampleLink>`
+retain the anchor `#example-<id>`, with `/` becoming `-`.
 
 Thumbnails come from `tools/gallery-gen`, which runs the visual suite's pipeline (the same
 Playwright config, Chromium + SwiftShader flags, sandbox test mode and screenshot helpers in
@@ -252,3 +274,28 @@ also built with `HOLOCHART_DOCS_BASE=/holochart/v1/` (`v2/`, ...) into its own f
 upload, and `/holochart/` stays the latest release. The nav's version menu (in
 `.vitepress/sidebar.ts`) then links the published versions.
 PR previews can build with `HOLOCHART_DOCS_BASE=/` on a preview host.
+
+## Redesign content and release gates
+
+Run `pnpm --filter @mk7s/holochart-docs check:site` after generation. It checks notebook downloads,
+exact Python identities, public browser source drift and both real-host proof reports. Gallery
+checks reject unknown taxonomy IDs, undeclared dependencies and missing featured coverage.
+Focused production browser tests check category routes, facets/history, legacy links, source
+copy/downloads, language fallback, keyboard navigation, static fallbacks and preview disposal.
+CI executes the notebook collection in fresh kernels and through actual widget managers;
+new CI workflow steps still need their first remote run after these changes are committed.
+
+Every gallery source exports complete public imports, fixture data and cleanup. Generated tiny
+`public/gallery/artifacts/<id>.json` records let an inline source tab load only its own metadata
+and chosen source. `gen:sources` validates compilation; `node tools/gallery-gen/src/smoke-sources.ts
+<id> …` from the repository root verifies exact copied modules with a real browser. These are
+separate claims. Inline code keeps the same language preference as example detail pages.
+
+Add a Python gallery variant by following `examples/notebooks/README.md`: capture the exact
+browser figure and helper hashes, create the canonical literal source, generate its standalone
+single-figure download, and verify execution plus both supported notebook hosts. Shared deterministic
+data is checked for exact figure identity; browser thumbnails alone never prove Python support.
+
+Release roles, human first-use tasks, retained routes and rollback are recorded in
+`docs/site/wave3/launch-checklist.md`. Do not mark deployment, screen-reader review or observed
+user timings complete based solely on automated preview tests.

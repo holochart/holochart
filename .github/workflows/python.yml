@@ -1,0 +1,150 @@
+name: Python notebook bridge
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python: '3.10'
+            plotly: 'plotly>=5,<6'
+            anywidget: 'anywidget>=0.9,<0.10'
+          - python: '3.12'
+            plotly: 'plotly>=6,<7'
+            anywidget: 'anywidget>=0.10,<0.11'
+          - python: '3.14'
+            plotly: 'plotly>=7,<8'
+            anywidget: 'anywidget>=0.11,<1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pnpm exec turbo run build --filter=@mk7s/holochart
+      - name: Install and test the bridge
+        env:
+          PLOTLY_REQUIREMENT: ${{ matrix.plotly }}
+          ANYWIDGET_REQUIREMENT: ${{ matrix.anywidget }}
+        run: |
+          python -m pip install -e 'packages/holochart-py[dev]' "$PLOTLY_REQUIREMENT" "$ANYWIDGET_REQUIREMENT"
+          python -m pytest packages/holochart-py
+      - name: Build wheel from sdist and verify installed assets outside the repository
+        run: |
+          python -m build packages/holochart-py
+          python -m pip uninstall -y holochart-py
+          python -m pip install --no-deps packages/holochart-py/dist/*.whl
+          cd /tmp
+          python - <<'PY'
+          from holochart import HolochartWidget, register_renderer
+          widget = HolochartWidget({'data': [{'type': 'bar', 'y': [1, 2]}]})
+          assert 'createWidget' in widget.get_state()['_esm']
+          assert 'data:font/otf;base64,' in widget.get_state()['_esm']
+          register_renderer()
+          widget.close()
+          PY
+      - name: Prepare isolated notebook environment and host inputs
+        if: matrix.python == '3.14'
+        shell: bash
+        run: |
+          set -euo pipefail
+          notebook_run_root=$(mktemp -d "${RUNNER_TEMP}/holochart-notebooks.XXXXXX")
+          python -m venv "$notebook_run_root/venv"
+          "$notebook_run_root/venv/bin/python" -m pip install -r examples/notebooks/requirements-verified.txt
+          "$notebook_run_root/venv/bin/python" -m pip install --no-deps packages/holochart-py/dist/*.whl
+          "$notebook_run_root/venv/bin/python" -m ipykernel install --prefix "$notebook_run_root/kernel" --name holochart-ci --display-name 'Python (Holochart CI)'
+          python examples/notebooks/prepare-host-check.py --root "$notebook_run_root" --kernel holochart-ci
+          mkdir -p "$notebook_run_root/reports"
+          cp "$notebook_run_root/inputs.json" "$notebook_run_root/reports/inputs.json"
+          cp examples/notebooks/requirements-verified.txt "$notebook_run_root/reports/requirements-verified.txt"
+          echo "HOLOCHART_NOTEBOOK_RUN_ROOT=$notebook_run_root" >> "$GITHUB_ENV"
+          echo "HOLOCHART_NOTEBOOK_INPUTS=$notebook_run_root/inputs.json" >> "$GITHUB_ENV"
+          echo "HOLOCHART_NOTEBOOK_OUTPUT=$notebook_run_root/reports" >> "$GITHUB_ENV"
+          echo "HOLOCHART_NOTEBOOK_KERNEL=holochart-ci" >> "$GITHUB_ENV"
+          echo "HOLOCHART_NOTEBOOK_DATE=$(date -u +%F)" >> "$GITHUB_ENV"
+          echo "JUPYTER_PATH=$notebook_run_root/kernel/share/jupyter" >> "$GITHUB_ENV"
+      - name: Verify all learning notebooks and exact gallery sources in fresh kernels
+        if: matrix.python == '3.14'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 examples/notebooks/generate.py --check
+          python3 examples/notebooks/identity.py
+          node examples/notebooks/capture-gallery.mjs --check
+          python3 -m unittest discover -s examples/notebooks -p 'test_*.py'
+          "$HOLOCHART_NOTEBOOK_RUN_ROOT/venv/bin/python" - <<'PY'
+          import hashlib, json, os, platform
+          from importlib.metadata import version
+          from pathlib import Path
+          import holochart
+          assert not Path(holochart.__file__).resolve().is_relative_to(Path.cwd()), 'Expected the installed wheel, not repository source imports.'
+          chart = holochart.HolochartWidget()
+          bundle_hash = hashlib.sha256(chart.get_state()['_esm'].encode()).hexdigest()
+          chart.close()
+          environment = {
+              'python': platform.python_version(), 'os': platform.system(),
+              'architecture': platform.machine(), 'bridgeInstalledOutsideRepository': True,
+              'widgetBundleSha256': bundle_hash,
+              'packages': {name: version(name) for name in ['holochart-py', 'jupyterlab', 'notebook', 'ipykernel', 'anywidget', 'ipywidgets', 'traitlets', 'plotly', 'pandas', 'numpy', 'nbclient', 'nbformat']},
+          }
+          (Path(os.environ['HOLOCHART_NOTEBOOK_OUTPUT']) / 'environment.json').write_text(json.dumps(environment, indent=2) + '\n')
+          PY
+          "$HOLOCHART_NOTEBOOK_RUN_ROOT/venv/bin/python" examples/notebooks/verify.py --kernel "$HOLOCHART_NOTEBOOK_KERNEL" --output "$HOLOCHART_NOTEBOOK_OUTPUT/kernel.json"
+      - name: Install real-host browser dependencies
+        if: matrix.python == '3.14'
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Verify all 38 artifacts in actual JupyterLab and Notebook widget managers
+        if: matrix.python == '3.14'
+        shell: bash
+        env:
+          HOLOCHART_NOTEBOOK_TOKEN: holochart-ci-local
+        run: |
+          set -euo pipefail
+          notebook_python="$HOLOCHART_NOTEBOOK_RUN_ROOT/venv/bin/python"
+          "$notebook_python" -m jupyterlab --no-browser --ServerApp.ip=127.0.0.1 --ServerApp.port=8907 --ServerApp.port_retries=0 --ServerApp.root_dir="$HOLOCHART_NOTEBOOK_RUN_ROOT/notebooks" --IdentityProvider.token="$HOLOCHART_NOTEBOOK_TOKEN" > "$HOLOCHART_NOTEBOOK_OUTPUT/lab-server.log" 2>&1 &
+          lab_pid=$!
+          "$notebook_python" -m notebook --no-browser --ServerApp.ip=127.0.0.1 --ServerApp.port=8908 --ServerApp.port_retries=0 --ServerApp.root_dir="$HOLOCHART_NOTEBOOK_RUN_ROOT/notebooks" --IdentityProvider.token="$HOLOCHART_NOTEBOOK_TOKEN" > "$HOLOCHART_NOTEBOOK_OUTPUT/notebooks-server.log" 2>&1 &
+          notebook_pid=$!
+          trap 'kill "$lab_pid" "$notebook_pid" 2>/dev/null || true; wait "$lab_pid" "$notebook_pid" 2>/dev/null || true' EXIT
+          "$notebook_python" - <<'PY'
+          import os, time, urllib.request
+          token = os.environ['HOLOCHART_NOTEBOOK_TOKEN']
+          for port in [8907, 8908]:
+              for attempt in range(90):
+                  try:
+                      request = urllib.request.Request(f'http://127.0.0.1:{port}/api/status', headers={'Authorization': f'token {token}'})
+                      with urllib.request.urlopen(request, timeout=2) as response:
+                          assert response.status == 200
+                      break
+                  except Exception:
+                      if attempt == 89:
+                          raise
+                      time.sleep(1)
+          PY
+          mapfile -t notebook_slugs < <(python - <<'PY'
+          import json, os
+          with open(os.environ['HOLOCHART_NOTEBOOK_INPUTS']) as source:
+              for slug in json.load(source):
+                  print(slug)
+          PY
+          )
+          HOLOCHART_NOTEBOOK_ORIGIN=http://127.0.0.1:8907 node apps/docs/scripts/notebook-host-check.mjs lab "${notebook_slugs[@]}"
+          HOLOCHART_NOTEBOOK_ORIGIN=http://127.0.0.1:8908 node apps/docs/scripts/notebook-host-check.mjs notebooks "${notebook_slugs[@]}"
+      - name: Upload fresh kernel and actual notebook-host evidence
+        if: ${{ !cancelled() && matrix.python == '3.14' && env.HOLOCHART_NOTEBOOK_OUTPUT != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-notebook-hosts-${{ matrix.python }}
+          path: ${{ env.HOLOCHART_NOTEBOOK_OUTPUT }}
+          if-no-files-found: warn

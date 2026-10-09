@@ -172,13 +172,23 @@ trace lines, table captions) and a few control names; see
 
 ## Script tag
 
+<InstallStatus ecosystem="javascript" />
+
+First follow the [local browser bundle setup](/getting-started/installation#browser-bundles-from-source).
+After `pnpm build:packages`, also copy the locale scripts into that same preview directory.
+Run this in a terminal from the repository root:
+
+```sh
+cp -R packages/locales/dist/scripts preview/
+```
+
 The `<script>` build does not include locales. `@mk7s/holochart-locales` ships one script per
 locale in `dist/scripts/`, like plotly.js's `plotly-locale-de.js`: load it after
 `holochart.iife.min.js` and it registers itself.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart/dist/holochart.iife.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart-locales/dist/scripts/holochart-locale-de.js"></script>
+<script src="./holochart.iife.min.js"></script>
+<script src="./scripts/holochart-locale-de.js"></script>
 <script>
   Holochart.createChart(document.getElementById('chart'), {
     data: [{ y: [1.5, 2.25, 1.75] }],

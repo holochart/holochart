@@ -37,6 +37,16 @@ export const holochartZhCN: Readonly<Record<string, string>> = {
   '{name}: {dimension}, {category}, {text}, {n} of {count}.':
     '{name}：{dimension}，{category}，{text}，第{n}项，共{count}项。',
   'Dimension {n}': '维度{n}',
+  'Map centered at longitude {lon}°, latitude {lat}°, scale {scale}.':
+    '地图中心位于经度 {lon}°、纬度 {lat}°，缩放比例 {scale}。',
+  '{name}: {text}, node {n} of {count}.': '{name}：{text}，第{n}个节点，共{count}个。',
+  '{name}: {text}, link {n} of {count} of {node}.':
+    '{name}：{text}，节点{node}的第{n}条连接，共{count}条。',
+  '{name}: {text}, rank {rank} of {ranks}, {n} of {count}.':
+    '{name}：{text}，第{rank}层，共{ranks}层，第{n}项，共{count}项。',
+  'Up: {up}.': '上：{up}。',
+  'Down: {down}.': '下：{down}。',
+  'Folded.': '已折叠。',
   // Chart summaries.
   '{y} by {x}.': 'X轴：{x}，Y轴：{y}。',
   '{count} more traces are not summarized.': '另有{count}条轨迹未纳入摘要。',

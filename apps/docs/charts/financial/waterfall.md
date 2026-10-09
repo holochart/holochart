@@ -7,6 +7,8 @@ chart: waterfall
 
 # Waterfall
 
+<ChartOverview />
+
 ## Overview
 
 A waterfall chart shows how a starting value becomes a final one through a series of changes.
@@ -31,6 +33,9 @@ Pick a different chart when:
   [line chart](/charts/basic/line), or [OHLC](/charts/financial/ohlc) bars for prices.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -77,6 +82,8 @@ two subtotals and `textinfo: 'delta'` labels outside the bars:
 
 ## Variations
 
+<ChartVariations />
+
 ### Horizontal cash bridge
 
 With only `x` values, or `orientation: 'h'`, the bars run along x, one per `y` stage. An
@@ -84,7 +91,7 @@ With only `x` values, or `orientation: 'h'`, the bars run along x, one per `y` s
 total after it. Here the stage axis is reversed (`yaxis.autorange: 'reversed'`) so the bridge reads
 top to bottom:
 
-<Example id="waterfall/horizontal" />
+<ExampleLink id="waterfall/horizontal" />
 
 ### Grouped waterfalls
 
@@ -93,7 +100,7 @@ default; `'overlay'` draws them over each other). `waterfallgap` sets the gap be
 `waterfallgroupgap` the gap between the traces of one position. Each trace keeps its own running
 total and connectors; here both start at a common `base`:
 
-<Example id="waterfall/grouped" />
+<ExampleLink id="waterfall/grouped" />
 
 ### Connector modes
 
@@ -101,7 +108,7 @@ total and connectors; here both start at a common `base`:
 next bar. `'spanning'` also draws it across the bars at their ends, so one continuous line runs
 through the whole waterfall. `connector.line` sets its color, width and dash:
 
-<Example id="waterfall/connector-modes" />
+<ExampleLink id="waterfall/connector-modes" />
 
 ### A bridge built from bars
 
@@ -110,7 +117,7 @@ from ordinary [bar](/charts/basic/bar) traces: each change is a bar with a `base
 total, and the traces share one `offsetgroup` so every bar takes the full slot. A waterfall trace
 computes those bases for you:
 
-<Example id="reports/budget-bridge" />
+<ExampleLink id="reports/budget-bridge" />
 
 ## Styling
 
@@ -206,7 +213,7 @@ Holochart extensions (full bundle), see [Extrusion & 2.5D](/customization/extrus
 The connector lines run along the front faces of the bar ends (both `between` and `spanning`),
 and labels sit on the front faces.
 
-<Example id="waterfall/depth" />
+<ExampleLink id="waterfall/depth" />
 
 ## Performance notes
 

@@ -44,6 +44,8 @@ const PACKAGES = [
   'packages/traces-finance',
   'packages/traces-hier',
   'packages/traces-3d',
+  'packages/traces-geo',
+  'packages/traces-graph',
   'packages/themes',
   'packages/express',
   'packages/locales',

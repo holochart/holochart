@@ -21,7 +21,7 @@ import type {
   LineDashOptions,
   SymbolOptions,
 } from '../options.ts';
-import { continuousColor, opacityPatch, tailRoles } from './shared.ts';
+import { continuousColor, opacityPatch, sizeref, tailRoles } from './shared.ts';
 
 /** Options every 3D function takes: the columns, error bars and the scene's axes. */
 export interface Chart3dOptions
@@ -86,12 +86,6 @@ const ERROR_ROLES: readonly Role[] = [
   'errorZ',
   'errorZMinus',
 ];
-
-function sizeref(values: readonly unknown[], sizeMax: number): number {
-  let max = 0;
-  for (const v of values) if (typeof v === 'number' && Number.isFinite(v) && v > max) max = v;
-  return (2 * max) / sizeMax ** 2;
-}
 
 /** Options naming the columns that group the traces (px's `grouper`), when given. */
 const GROUPING = ['symbol', 'lineDash', 'lineGroup', 'animationFrame'] as const;

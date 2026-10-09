@@ -1,0 +1,2184 @@
+{
+  "checkedAt": "2026-10-09T19:13:36.369Z",
+  "base": "http://127.0.0.1:5339/holochart/",
+  "homeHtmlSha256": "b687f6b1bca48b0241b1353b5fde9739ca35b7a5406c11d3e7f564369ad157ad",
+  "browser": "153.0.8010.12",
+  "axe": "4.13.0",
+  "coverage": "WCAG2/2.1 A/AA and best practices; no human screen-reader or native zoom claim",
+  "pages": [
+    {
+      "route": "",
+      "width": 1440,
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                "code"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            }
+          ]
+        }
+      ],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-conditional-attr",
+        "aria-deprecated-role",
+        "aria-hidden-body",
+        "aria-prohibited-attr",
+        "aria-required-attr",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "scrollable-region-focusable",
+        "tabindex"
+      ]
+    },
+    {
+      "route": "gallery/",
+      "width": 1440,
+      "violations": [],
+      "incomplete": [],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-conditional-attr",
+        "aria-hidden-body",
+        "aria-prohibited-attr",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "tabindex"
+      ]
+    },
+    {
+      "route": "gallery/all/",
+      "width": 1440,
+      "violations": [],
+      "incomplete": [],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-conditional-attr",
+        "aria-hidden-body",
+        "aria-prohibited-attr",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "autocomplete-valid",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "form-field-multiple-labels",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "label-title-only",
+        "label",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "select-name",
+        "summary-name",
+        "tabindex"
+      ]
+    },
+    {
+      "route": "gallery/basic/",
+      "width": 1440,
+      "violations": [],
+      "incomplete": [],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-conditional-attr",
+        "aria-hidden-body",
+        "aria-prohibited-attr",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "autocomplete-valid",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "form-field-multiple-labels",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "label-title-only",
+        "label",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "select-name",
+        "summary-name",
+        "tabindex"
+      ]
+    },
+    {
+      "route": "gallery/example/bar/basic",
+      "width": 1440,
+      "violations": [],
+      "incomplete": [],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-conditional-attr",
+        "aria-deprecated-role",
+        "aria-hidden-body",
+        "aria-hidden-focus",
+        "aria-prohibited-attr",
+        "aria-required-attr",
+        "aria-required-children",
+        "aria-required-parent",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "definition-list",
+        "dlitem",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "empty-table-header",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "scope-attr-valid",
+        "scrollable-region-focusable",
+        "tabindex",
+        "table-duplicate-name",
+        "td-headers-attr",
+        "th-has-data-cells"
+      ]
+    },
+    {
+      "route": "getting-started/",
+      "width": 1440,
+      "violations": [],
+      "incomplete": [],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-command-name",
+        "aria-conditional-attr",
+        "aria-deprecated-role",
+        "aria-hidden-body",
+        "aria-hidden-focus",
+        "aria-prohibited-attr",
+        "aria-required-attr",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "scrollable-region-focusable",
+        "tabindex"
+      ]
+    },
+    {
+      "route": "getting-started/javascript",
+      "width": 1440,
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                ".line:nth-child(43) > span:nth-child(9)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            }
+          ]
+        }
+      ],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-command-name",
+        "aria-conditional-attr",
+        "aria-deprecated-role",
+        "aria-hidden-body",
+        "aria-hidden-focus",
+        "aria-prohibited-attr",
+        "aria-required-attr",
+        "aria-required-children",
+        "aria-required-parent",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "empty-table-header",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "scope-attr-valid",
+        "scrollable-region-focusable",
+        "tabindex",
+        "table-duplicate-name",
+        "td-headers-attr",
+        "th-has-data-cells"
+      ]
+    },
+    {
+      "route": "getting-started/html",
+      "width": 1440,
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                ".line:nth-child(57) > span:nth-child(9)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(68) > span:nth-child(12)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            }
+          ]
+        }
+      ],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-command-name",
+        "aria-conditional-attr",
+        "aria-deprecated-role",
+        "aria-hidden-body",
+        "aria-hidden-focus",
+        "aria-prohibited-attr",
+        "aria-required-attr",
+        "aria-required-children",
+        "aria-required-parent",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "empty-table-header",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "scope-attr-valid",
+        "scrollable-region-focusable",
+        "tabindex",
+        "table-duplicate-name",
+        "td-headers-attr",
+        "th-has-data-cells"
+      ]
+    },
+    {
+      "route": "getting-started/python-jupyter",
+      "width": 1440,
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                ".line:nth-child(7) > span:nth-child(9)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(4) > span:nth-child(17)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            }
+          ]
+        }
+      ],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-conditional-attr",
+        "aria-deprecated-role",
+        "aria-hidden-body",
+        "aria-prohibited-attr",
+        "aria-required-attr",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "scrollable-region-focusable",
+        "tabindex"
+      ]
+    },
+    {
+      "route": "python/",
+      "width": 1440,
+      "violations": [],
+      "incomplete": [],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-conditional-attr",
+        "aria-deprecated-role",
+        "aria-hidden-body",
+        "aria-prohibited-attr",
+        "aria-required-attr",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "tabindex"
+      ]
+    },
+    {
+      "route": "guides/notebooks",
+      "width": 1440,
+      "violations": [],
+      "incomplete": [],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-conditional-attr",
+        "aria-deprecated-role",
+        "aria-hidden-body",
+        "aria-prohibited-attr",
+        "aria-required-attr",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "tabindex"
+      ]
+    },
+    {
+      "route": "charts/basic/bar",
+      "width": 1440,
+      "violations": [],
+      "incomplete": [],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-command-name",
+        "aria-conditional-attr",
+        "aria-deprecated-role",
+        "aria-hidden-body",
+        "aria-hidden-focus",
+        "aria-prohibited-attr",
+        "aria-required-attr",
+        "aria-required-children",
+        "aria-required-parent",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "empty-table-header",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "scope-attr-valid",
+        "scrollable-region-focusable",
+        "tabindex",
+        "table-duplicate-name",
+        "td-headers-attr",
+        "th-has-data-cells"
+      ]
+    },
+    {
+      "route": "",
+      "width": 390,
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                "code"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            }
+          ]
+        }
+      ],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-conditional-attr",
+        "aria-deprecated-role",
+        "aria-hidden-body",
+        "aria-prohibited-attr",
+        "aria-required-attr",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "scrollable-region-focusable",
+        "tabindex"
+      ]
+    },
+    {
+      "route": "gallery/",
+      "width": 390,
+      "violations": [],
+      "incomplete": [],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-conditional-attr",
+        "aria-hidden-body",
+        "aria-prohibited-attr",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "tabindex"
+      ]
+    },
+    {
+      "route": "gallery/all/",
+      "width": 390,
+      "violations": [],
+      "incomplete": [],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-conditional-attr",
+        "aria-hidden-body",
+        "aria-prohibited-attr",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "autocomplete-valid",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "form-field-multiple-labels",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "label-title-only",
+        "label",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "select-name",
+        "summary-name",
+        "tabindex"
+      ]
+    },
+    {
+      "route": "gallery/basic/",
+      "width": 390,
+      "violations": [],
+      "incomplete": [],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-conditional-attr",
+        "aria-hidden-body",
+        "aria-prohibited-attr",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "autocomplete-valid",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "form-field-multiple-labels",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "label-title-only",
+        "label",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "select-name",
+        "summary-name",
+        "tabindex"
+      ]
+    },
+    {
+      "route": "gallery/example/bar/basic",
+      "width": 390,
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                "pre > code"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it partially overlaps other elements"
+            }
+          ]
+        }
+      ],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-conditional-attr",
+        "aria-deprecated-role",
+        "aria-hidden-body",
+        "aria-hidden-focus",
+        "aria-prohibited-attr",
+        "aria-required-attr",
+        "aria-required-children",
+        "aria-required-parent",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "definition-list",
+        "dlitem",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "empty-table-header",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "scope-attr-valid",
+        "scrollable-region-focusable",
+        "tabindex",
+        "table-duplicate-name",
+        "td-headers-attr",
+        "th-has-data-cells"
+      ]
+    },
+    {
+      "route": "getting-started/",
+      "width": 390,
+      "violations": [],
+      "incomplete": [],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-command-name",
+        "aria-conditional-attr",
+        "aria-deprecated-role",
+        "aria-hidden-body",
+        "aria-hidden-focus",
+        "aria-prohibited-attr",
+        "aria-required-attr",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "scrollable-region-focusable",
+        "tabindex"
+      ]
+    },
+    {
+      "route": "getting-started/javascript",
+      "width": 390,
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                ".language-sh.vp-adaptive-theme:nth-child(6) > pre > code > .line > span:nth-child(5)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".language-html > pre > code > .line:nth-child(5) > span:nth-child(8)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".language-html > pre > code > .line:nth-child(6) > span:nth-child(6)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(9) > span:nth-child(10)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(9) > span:nth-child(12)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(10) > span:nth-child(10)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(10) > span:nth-child(12)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(11) > span:nth-child(10)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(11) > span:nth-child(12)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(12) > span:nth-child(8)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(12) > span:nth-child(10)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(13) > span:nth-child(8)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(13) > span:nth-child(10)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(3) > span:nth-child(8)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(4) > span:nth-child(8)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".language-ts > pre > code > .line:nth-child(5) > span:nth-child(8)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(6) > span:nth-child(8)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(7) > span:nth-child(10)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(7) > span:nth-child(13)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(8) > span:nth-child(5)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(20) > span:nth-child(24)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(20) > span:nth-child(26)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(20) > span:nth-child(28)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(20) > span:nth-child(30)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(20) > span:nth-child(32)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(20) > span:nth-child(34)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(33) > span:nth-child(18)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(33) > span:nth-child(20)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(33) > span:nth-child(25)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(33) > span:nth-child(28)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(34) > span:nth-child(9)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(40) > span:nth-child(7)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(41) > span:nth-child(7)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(42) > span:nth-child(7)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(43) > span:nth-child(9)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(47) > span:nth-child(11)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(50) > span:nth-child(7)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(51) > span:nth-child(7)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(54) > span:nth-child(12)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            }
+          ]
+        }
+      ],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-command-name",
+        "aria-conditional-attr",
+        "aria-deprecated-role",
+        "aria-hidden-body",
+        "aria-hidden-focus",
+        "aria-prohibited-attr",
+        "aria-required-attr",
+        "aria-required-children",
+        "aria-required-parent",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "empty-table-header",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "scope-attr-valid",
+        "scrollable-region-focusable",
+        "tabindex",
+        "table-duplicate-name",
+        "td-headers-attr",
+        "th-has-data-cells"
+      ]
+    },
+    {
+      "route": "getting-started/html",
+      "width": 390,
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                ".line:nth-child(5) > span:nth-child(8)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(6) > span:nth-child(6)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(9) > span:nth-child(10)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(9) > span:nth-child(12)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(10) > span:nth-child(10)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(10) > span:nth-child(12)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(11) > span:nth-child(10)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(11) > span:nth-child(12)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(12) > span:nth-child(8)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(12) > span:nth-child(10)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(13) > span:nth-child(7)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(17) > span:nth-child(8)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(18) > span:nth-child(6)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(18) > span:nth-child(8)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(19) > span:nth-child(6)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(19) > span:nth-child(8)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(20) > span:nth-child(8)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(21) > span:nth-child(10)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(21) > span:nth-child(13)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(22) > span:nth-child(5)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(34) > span:nth-child(19)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(34) > span:nth-child(22)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(34) > span:nth-child(24)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(34) > span:nth-child(26)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(34) > span:nth-child(28)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(34) > span:nth-child(30)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(34) > span:nth-child(32)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(34) > span:nth-child(34)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(47) > span:nth-child(14)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(47) > span:nth-child(16)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(47) > span:nth-child(18)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(47) > span:nth-child(20)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(47) > span:nth-child(25)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(47) > span:nth-child(28)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(48) > span:nth-child(9)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(54) > span:nth-child(5)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(54) > span:nth-child(7)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(55) > span:nth-child(5)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(55) > span:nth-child(7)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(56) > span:nth-child(7)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(57) > span:nth-child(9)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(61) > span:nth-child(9)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(61) > span:nth-child(11)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(64) > span:nth-child(7)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(65) > span:nth-child(7)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(66) > span:nth-child(7)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(68) > span:nth-child(10)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(68) > span:nth-child(12)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".language-sh.vp-adaptive-theme:nth-child(14) > pre > code > .line > span:nth-child(6)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            }
+          ]
+        }
+      ],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-command-name",
+        "aria-conditional-attr",
+        "aria-deprecated-role",
+        "aria-hidden-body",
+        "aria-hidden-focus",
+        "aria-prohibited-attr",
+        "aria-required-attr",
+        "aria-required-children",
+        "aria-required-parent",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "empty-table-header",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "scope-attr-valid",
+        "scrollable-region-focusable",
+        "tabindex",
+        "table-duplicate-name",
+        "td-headers-attr",
+        "th-has-data-cells"
+      ]
+    },
+    {
+      "route": "getting-started/python-jupyter",
+      "width": 390,
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                ".language-sh > pre > code > .line:nth-child(6) > span:nth-child(5)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".language-sh > pre > code > .line:nth-child(6) > span:nth-child(6)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".language-sh > pre > code > .line:nth-child(6) > span:nth-child(7)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".language-sh > pre > code > .line:nth-child(7) > span:nth-child(7)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".language-sh > pre > code > .line:nth-child(7) > span:nth-child(8)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(7) > span:nth-child(9)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".language-python.vp-adaptive-theme:nth-child(20) > pre > code > .line:nth-child(7) > span:nth-child(8)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(3) > span:nth-child(19)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(3) > span:nth-child(21)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(3) > span:nth-child(23)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                "span:nth-child(25)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(4) > span:nth-child(11)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(4) > span:nth-child(13)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(4) > span:nth-child(15)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(4) > span:nth-child(17)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(1) > span:nth-child(14)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(1) > span:nth-child(16)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(1) > span:nth-child(19)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(1) > span:nth-child(21)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".language-python.vp-adaptive-theme:nth-child(26) > pre > code > .line:nth-child(2) > span:nth-child(12)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(2) > span:nth-child(14)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(2) > span:nth-child(16)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(2) > span:nth-child(18)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(8) > span:nth-child(18)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(8) > span:nth-child(20)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(8) > span:nth-child(22)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            }
+          ]
+        }
+      ],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-conditional-attr",
+        "aria-deprecated-role",
+        "aria-hidden-body",
+        "aria-prohibited-attr",
+        "aria-required-attr",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "scrollable-region-focusable",
+        "tabindex"
+      ]
+    },
+    {
+      "route": "python/",
+      "width": 390,
+      "violations": [],
+      "incomplete": [],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-conditional-attr",
+        "aria-deprecated-role",
+        "aria-hidden-body",
+        "aria-prohibited-attr",
+        "aria-required-attr",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "tabindex"
+      ]
+    },
+    {
+      "route": "guides/notebooks",
+      "width": 390,
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                "span:nth-child(25)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                "span:nth-child(27)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(4) > span:nth-child(10)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(4) > span:nth-child(12)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(4) > span:nth-child(15)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(4) > span:nth-child(17)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(4) > span:nth-child(19)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(4) > span:nth-child(21)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(4) > span:nth-child(23)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(6) > span:nth-child(16)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(6) > span:nth-child(18)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                ".line:nth-child(6) > span:nth-child(20)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            }
+          ]
+        }
+      ],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-conditional-attr",
+        "aria-hidden-body",
+        "aria-prohibited-attr",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "scrollable-region-focusable",
+        "tabindex"
+      ]
+    },
+    {
+      "route": "charts/basic/bar",
+      "width": 390,
+      "violations": [],
+      "incomplete": [
+        {
+          "id": "color-contrast",
+          "nodes": [
+            {
+              "target": [
+                ".line:nth-child(3) > span:nth-child(8)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                ".line:nth-child(3) > span:nth-child(10)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                "span:nth-child(15)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                "span:nth-child(17)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            },
+            {
+              "target": [
+                "span:nth-child(20)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                "span:nth-child(22)"
+              ],
+              "summary": "Fix any of the following:\n  Element's background color could not be determined because it's partially obscured by another element"
+            },
+            {
+              "target": [
+                "span:nth-child(24)"
+              ],
+              "summary": "Fix any of the following:\n  Element content is too short to determine if it is actual text content"
+            }
+          ]
+        }
+      ],
+      "passed": [
+        "aria-allowed-attr",
+        "aria-allowed-role",
+        "aria-command-name",
+        "aria-conditional-attr",
+        "aria-deprecated-role",
+        "aria-hidden-body",
+        "aria-hidden-focus",
+        "aria-prohibited-attr",
+        "aria-required-attr",
+        "aria-required-children",
+        "aria-required-parent",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "avoid-inline-spacing",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "document-title",
+        "duplicate-id-aria",
+        "empty-heading",
+        "empty-table-header",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "image-redundant-alt",
+        "landmark-banner-is-top-level",
+        "landmark-contentinfo-is-top-level",
+        "landmark-main-is-top-level",
+        "landmark-no-duplicate-banner",
+        "landmark-no-duplicate-contentinfo",
+        "landmark-no-duplicate-main",
+        "landmark-one-main",
+        "landmark-unique",
+        "link-in-text-block",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-viewport-large",
+        "meta-viewport",
+        "nested-interactive",
+        "page-has-heading-one",
+        "presentation-role-conflict",
+        "region",
+        "scope-attr-valid",
+        "scrollable-region-focusable",
+        "tabindex",
+        "table-duplicate-name",
+        "td-headers-attr",
+        "th-has-data-cells"
+      ]
+    }
+  ]
+}

@@ -7,6 +7,8 @@ chart: mesh3d
 
 # 3D mesh
 
+<ChartOverview />
+
 ## Overview
 
 A 3D mesh (trace type `mesh3d`) draws a surface made of triangles in a
@@ -26,6 +28,9 @@ Pick a different chart when:
   is easier to read than a surface seen in perspective.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -78,19 +83,21 @@ in the trace's colorway color, smooth shaded:
 
 ## Variations
 
+<ChartVariations />
+
 ### Delaunay triangulation of scattered points
 
 With neither `i`, `j`, `k` nor `alphahull`, 300 random samples of a terrain become a surface:
 the default `alphahull: -1` triangulates their x–y positions. `intensity: z` colors it by height.
 
-<Example id="mesh3d/delaunay" />
+<ExampleLink id="mesh3d/delaunay" />
 
 ### Convex hull
 
 `alphahull: 0` wraps a point cloud in its convex hull. `flatshading` shows the facets and
 `opacity` draws it translucent (its triangles are sorted back to front when the view changes).
 
-<Example id="mesh3d/convex-hull" />
+<ExampleLink id="mesh3d/convex-hull" />
 
 ### Alpha shape
 
@@ -98,7 +105,7 @@ A positive `alphahull` keeps the concave outline of the points: here 900 points 
 whose hole the convex hull would close. Larger values carve tighter (and may split the shape or
 leave holes where points are sparse); smaller values approach the convex hull.
 
-<Example id="mesh3d/alpha-shape" />
+<ExampleLink id="mesh3d/alpha-shape" />
 
 ### Intensity per vertex or per triangle
 
@@ -106,20 +113,20 @@ Per-vertex `intensity` is interpolated across each triangle (the colorscale is s
 pixel); `intensitymode: 'cell'` gives each triangle one value, and one color. Both meshes here
 share a `coloraxis`, and with it one colorbar and one color domain.
 
-<Example id="mesh3d/intensity" />
+<ExampleLink id="mesh3d/intensity" />
 
 ### Vertex and face colors
 
 `vertexcolor` blends CSS colors across the triangles, `facecolor` paints each triangle.
 
-<Example id="mesh3d/colors" />
+<ExampleLink id="mesh3d/colors" />
 
 ### Flat shading
 
 `flatshading: true` lights each triangle with its own normal: the low-poly sphere on the right
 shows its facets, the one on the left interpolates normals across them.
 
-<Example id="mesh3d/flatshading" />
+<ExampleLink id="mesh3d/flatshading" />
 
 ### Lighting
 
@@ -128,14 +135,14 @@ shown whatever the light), `diffuse`, `specular` (highlights), `roughness` (thei
 `fresnel` (brighter at grazing angles). `lightposition` places the light in clip space, so it
 moves with the view (default far to the upper right).
 
-<Example id="mesh3d/lighting" />
+<ExampleLink id="mesh3d/lighting" />
 
 ### Hover contour
 
 `contour.show` draws, while hovering, the contour line through the hovered point: the level set of
 `intensity` (of z without intensity) at its value, in `contour.color` and `contour.width`.
 
-<Example id="mesh3d/contour" />
+<ExampleLink id="mesh3d/contour" />
 
 ## Styling
 

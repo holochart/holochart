@@ -7,6 +7,8 @@ chart: icicle
 
 # Icicle
 
+<ChartOverview />
+
 ## Overview
 
 An icicle chart draws a hierarchy level by level: the root is a column on one side, its children
@@ -31,6 +33,9 @@ Pick a different chart when:
 - the data is a flow between stages rather than a tree: use a [Sankey diagram](/charts/hierarchical/sankey).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -71,6 +76,8 @@ First-level cells take the colorway, their descendants inherit the color, and le
 
 ## Variations
 
+<ChartVariations />
+
 ### Vertical
 
 `tiling.orientation: 'v'` stacks the levels from the top down, cells as wide as their values
@@ -93,14 +100,14 @@ createChart(document.getElementById('chart')!, {
 });
 ```
 
-<Example id="icicle/vertical" />
+<ExampleLink id="icicle/vertical" />
 
 ### Flipped
 
 `tiling.flip` mirrors the layout: `'x'` puts the root of a horizontal icicle on the right, `'y'`
 the root of a vertical one at the bottom:
 
-<Example id="icicle/flip" />
+<ExampleLink id="icicle/flip" />
 
 ### Levels and the path bar
 
@@ -108,14 +115,14 @@ the root of a vertical one at the bottom:
 (left: two levels); deeper cells appear as you drill in. `level` sets the current root (right),
 and the path bar lists its ancestors, here below the chart (`pathbar.side: 'bottom'`):
 
-<Example id="icicle/levels" />
+<ExampleLink id="icicle/levels" />
 
 ### Colorscale
 
 Numbers in `marker.colors` (or any colorscale attribute) color the cells through a colorscale,
 with a colorbar; `marker.pattern` hatches cells:
 
-<Example id="icicle/colorscale" />
+<ExampleLink id="icicle/colorscale" />
 
 ### Uniform text
 
@@ -124,7 +131,7 @@ still fits, as in Plotly (and as for bars and pies). Labels that would have to s
 `minsize` to fit are hidden with `mode: 'hide'`, or drawn at the common size with `'show'`.
 Path bar labels are sized with the cells. Drill-down clicks don't animate while it is on:
 
-<Example id="icicle/uniformtext" />
+<ExampleLink id="icicle/uniformtext" />
 
 ## Styling
 
@@ -179,7 +186,7 @@ Holochart extensions (full bundle), see
   (`leaf.opacity`, `marker.depthfade`) are drawn as the flat chart shows them. Hover and click work
   on the tilted tiles; a click still drills down, and the tiles glide to their new places in 3D.
 
-<Example id="icicle/depth" />
+<ExampleLink id="icicle/depth" />
 
 ## Performance notes
 

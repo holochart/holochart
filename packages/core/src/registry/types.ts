@@ -73,6 +73,41 @@ export interface LayoutDefaultsContext {
 }
 
 /**
+ * What a cartesian trace asks of its axes, beyond holding its data (see
+ * {@link CoreTraceModule.axisHints}). Every field is a default: what the figure sets on an axis
+ * wins, and so does another trace that shows the axis. A trace in a 3D scene asks the same of its
+ * scene's three axes (`hide: true`, and `x` / `y` / `z`; a scene has its own `aspectmode`).
+ * @experimental
+ */
+export interface TraceAxisHints {
+  /**
+   * The axes carry no readable scale for this trace (positions a layout computed): each defaults
+   * to `visible: false`, unless a trace without this hint is on it. `'x'` or `'y'` hides that axis
+   * only (the other one is a real scale: a dendrogram's heights, the dates of a timeline).
+   */
+  readonly hide?: boolean | 'x' | 'y';
+  /**
+   * One unit is as long on y as on x (shapes keep their proportions): the y axis defaults to
+   * `scaleanchor` = the trace's x axis.
+   */
+  readonly equal?: boolean;
+  /**
+   * That axis runs the other way (larger values to the left, or at the bottom): it defaults to
+   * `autorange: 'reversed'`, unless a trace without this hint is on it or a `range` is given.
+   */
+  readonly reverse?: 'x' | 'y';
+  /**
+   * The data the trace puts on its x and y axis when that is not its `x` / `y` attribute
+   * (positions inside a container): the axis type is detected from it, and a category axis lists
+   * its values. Unset: `x` / `y` are read as for every trace. `z`: the same for the z axis of a 3D
+   * scene.
+   */
+  readonly x?: unknown;
+  readonly y?: unknown;
+  readonly z?: unknown;
+}
+
+/**
  * A trace type (plan §4.4). `schema` is the single source of truth for the trace's own
  * attributes; common attributes (`visible`, `name`, `opacity`, …, and `xaxis`/`yaxis` for
  * cartesian traces) are added by the registry.
@@ -100,6 +135,13 @@ export interface CoreTraceModule<C extends Children = Children> {
     ctx: LayoutDefaultsContext,
   ): void;
   readonly meta: TraceModuleMeta;
+  /**
+   * Axis defaults a cartesian trace asks for (ADR-029), called with the defaulted trace while the
+   * axes are defaulted: hidden axes, equal scales, and where its positions are when they are not
+   * in `x` / `y`. Return `undefined` (or leave the method out) for a trace that is drawn on its
+   * axes like any other. The 3D scenes ask it of their traces too, for their three axes.
+   */
+  axisHints?(trace: FullTrace): TraceAxisHints | undefined;
   /** Attribute paths that support transitions (E7.3). */
   readonly animatable?: readonly string[];
   // Render-side contract (E2/E22). Typed loosely until those stages exist.

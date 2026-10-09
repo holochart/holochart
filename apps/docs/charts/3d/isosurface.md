@@ -7,6 +7,8 @@ chart: isosurface
 
 # Isosurface
 
+<ChartOverview />
+
 ## Overview
 
 An `isosurface` trace draws the surfaces where a scalar field defined on a 3D grid takes a given
@@ -33,6 +35,9 @@ Pick a different chart when:
 `holochart-3d.iife.min.js` after `holochart.iife.min.js`.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -79,6 +84,8 @@ colorbar. The live example is Plotly's documentation example: nested ellipsoids 
 
 ## Variations
 
+<ChartVariations />
+
 ### Surface count, fill and pattern
 
 `surface.count` spreads that many isosurfaces over `[isomin, isomax]`; `surface.fill` below 1 draws
@@ -86,28 +93,28 @@ every triangle as a frame around a hole, so inner surfaces show through; `surfac
 subset of each grid cell's five tetrahedra (`'A'`–`'E'` and their combinations) or a checkerboard
 of cells (`'odd'`, `'even'`).
 
-<Example id="isosurface/surface-options" />
+<ExampleLink id="isosurface/surface-options" />
 
 ### Caps
 
 Caps close the solid where the grid's boundary cuts it: on each face of the grid, the part whose
 values are in range. They are on by default (`caps.x.show`, `.y`, `.z`).
 
-<Example id="isosurface/caps" />
+<ExampleLink id="isosurface/caps" />
 
 ### Slices
 
 `slices.z.show` draws planes of constant z through the grid, colored by value where it is in range:
 at `locations` (between grid planes, interpolated), or at every inner grid plane without them.
 
-<Example id="isosurface/slices" />
+<ExampleLink id="isosurface/slices" />
 
 ### Space frame
 
 `spaceframe.show` draws the central tetrahedron of every grid cell inside the range as thin frames
 (`spaceframe.fill`, 0.15 by default): the lattice the field was sampled on.
 
-<Example id="isosurface/spaceframe" />
+<ExampleLink id="isosurface/spaceframe" />
 
 ## Styling
 

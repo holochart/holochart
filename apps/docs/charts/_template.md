@@ -12,12 +12,15 @@ This file is excluded from the site build.
 - Keep the H2 sections below, in this order.
 - "3D-native options" may be omitted when not applicable.
 - A page marked `status: complete` must have all other sections and at least 5
-  <Example id="…" /> embeds (Variations needs at least 4).
+  complete examples: one live <Example id="…" />, then <ExampleLink id="…" /> variations.
+  Variations needs at least 4 unique cases, or 5 for `launch-featured: true`.
 - `pnpm --filter @mk7s/holochart-docs lint:pages` enforces this.
 - `chart` in the frontmatter is the trace type the page documents (a line chart uses `scatter`).
 -->
 
 # Chart name
+
+<ChartOverview />
 
 ## Overview
 
@@ -33,7 +36,9 @@ This file is excluded from the site build.
 
 ## Variations
 
-<!-- At least 4 <Example id="…" /> embeds, each with a heading and one or two sentences. -->
+<ChartVariations />
+
+<!-- At least 4 <ExampleLink id="…" /> cases (5 when launch-featured), each with a heading and practical explanation. Reuse existing tested examples; these link to the full chart/source page. -->
 
 ## Styling
 

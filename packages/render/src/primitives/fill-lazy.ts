@@ -13,3 +13,6 @@
  * module normally: one copy, and the IIFE inlines it.
  */
 export { createFillPrimitive } from './fill.ts';
+// For `loadFillTriangulation`: code outside render that triangulates polygons of its own (the
+// sphere meshes of GEO8's globe) takes earcut from this chunk, not from a second copy.
+export { triangulateFills } from './fill-triangulate.ts';

@@ -9,7 +9,8 @@
 //   pnpm --filter @mk7s/holochart-sandbox exec vite --port 5197 --strictPort --host 127.0.0.1 &
 //   node docs/spikes/scripts/run-spike.mjs --spike a-markers --params 'scale=0.1' --out /tmp/spikes
 //
-// Options: --port (5197), --spike (required: a-markers | b-lines | c-text | d-viewports),
+// Options: --port (5197), --spike (required: a-markers | b-lines | c-text | d-viewports |
+//          f-geo-projection | g-maplibre),
 //          --params (extra query string), --dpr (1), --timeout (seconds, 240),
 //          --rss-cap-mb (browser process tree RSS limit, 6144), --out (required),
 //          --gl (metal | swiftshader; default metal),

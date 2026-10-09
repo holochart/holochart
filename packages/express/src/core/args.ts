@@ -45,10 +45,28 @@ export const COLUMN_KEYS = [
   'xEnd',
   'r',
   'theta',
+  'lat',
+  'lon',
+  'locations',
+  // The graph functions (`charts/graph.ts`): columns of the edge table, then of the node table.
+  'source',
+  'target',
+  'weight',
+  'linkLabel',
+  'linkColor',
+  'id',
+  'label',
+  'value',
 ] as const;
 
 /** Options that name a list of columns. */
-export const LIST_KEYS = ['hoverData', 'customData', 'dimensions', 'path'] as const;
+export const LIST_KEYS = [
+  'hoverData',
+  'customData',
+  'dimensions',
+  'path',
+  'linkHoverData',
+] as const;
 
 export type ColumnKey = (typeof COLUMN_KEYS)[number];
 export type ListKey = (typeof LIST_KEYS)[number];
@@ -177,7 +195,7 @@ export function prepare(
   for (const key of LIST_KEYS) {
     const ref = options[key] as ColumnRef[] | Record<string, boolean | string> | undefined;
     if (ref === undefined || ref === null) continue;
-    if (key === 'hoverData' && isPlainObject(ref)) {
+    if ((key === 'hoverData' || key === 'linkHoverData') && isPlainObject(ref)) {
       const names: string[] = [];
       for (const [name, how] of Object.entries(ref)) {
         // `false` hides a line (it need not be a column: `{ x: false }` names the x column).

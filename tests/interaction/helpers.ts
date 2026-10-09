@@ -14,10 +14,18 @@ const BOOT_TIMEOUT_MS = 30_000;
 /**
  * Open an interaction example in the sandbox at its fixed test size and wait for its first frame.
  * (Interaction examples are tagged `no-visual-test`, so they run in the normal sandbox mode.)
+ * `query` adds parameters the example reads itself (`{ geo: 'globe' }` → `&geo=globe`).
  */
-export async function openInteraction(page: Page, id: string): Promise<void> {
+export async function openInteraction(
+  page: Page,
+  id: string,
+  query: Readonly<Record<string, string>> = {},
+): Promise<void> {
+  const extra = Object.entries(query)
+    .map(([key, value]) => `&${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join('');
   for (let attempt = 1; ; attempt++) {
-    await page.goto(`/?example=${id}&size=meta`, { waitUntil: 'load' });
+    await page.goto(`/?example=${id}&size=meta${extra}`, { waitUntil: 'load' });
     try {
       await page.waitForFunction(
         () => (window as unknown as { __interaction?: unknown }).__interaction !== undefined,

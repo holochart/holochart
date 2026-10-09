@@ -35,6 +35,16 @@ export const holochartJa: Readonly<Record<string, string>> = {
   '{name}: {dimension}, {category}, {text}, {n} of {count}.':
     '{name}：{dimension}、{category}、{text}、{count}個中{n}番目。',
   'Dimension {n}': '次元{n}',
+  'Map centered at longitude {lon}°, latitude {lat}°, scale {scale}.':
+    '地図の中心は経度{lon}°、緯度{lat}°、縮尺{scale}。',
+  '{name}: {text}, node {n} of {count}.': '{name}：{text}、ノード{count}個中{n}番目。',
+  '{name}: {text}, link {n} of {count} of {node}.':
+    '{name}：{text}、ノード{node}のリンク{count}本中{n}本目。',
+  '{name}: {text}, rank {rank} of {ranks}, {n} of {count}.':
+    '{name}：{text}、{ranks}層中{rank}層目、{count}個中{n}番目。',
+  'Up: {up}.': '上：{up}。',
+  'Down: {down}.': '下：{down}。',
+  'Folded.': '折りたたみ済み。',
   // Chart summaries.
   '{y} by {x}.': 'X軸：{x}、Y軸：{y}。',
   '{count} more traces are not summarized.': '要約されていないトレースがあと{count}件あります。',

@@ -1,6 +1,6 @@
 ---
 title: Content Security Policy
-description: The CSP directives Holochart needs for its text worker, fonts and DOM controls, a tested policy, and how to run under a policy without blob URLs.
+description: The CSP directives Holochart needs for its text worker, fonts and DOM controls, a tested policy, how to run under a policy without blob URLs, and what maps add.
 status: complete
 ---
 
@@ -138,6 +138,82 @@ that has the script and use it in the figure, as described in
 [Locales](/fundamentals/locales). `render.configureText({ unicodeFontsURL })` points the
 text engine at a self-hosted copy of the fallback fonts instead; that route has not been tested.
 
+## Maps
+
+[Maps](/fundamentals/maps) need **nothing more by default**. The base map (Natural Earth
+coastlines, countries, lakes and rivers), the table of country names and the extra projections
+are chunks of the geo package, which your bundler emits next to your own chunks: they are loaded
+with `import()` from your origin, so `script-src 'self'` covers them, and no request leaves the
+page. A map works offline and under `connect-src 'self'`. There is no worker and no tile server.
+
+Two attributes make a map fetch from a URL you give. Both use `fetch`, so the origin has to be
+in `connect-src` unless it is your own:
+
+| Attribute                      | What is fetched                                                                                   | Directive                   |
+| ------------------------------ | ------------------------------------------------------------------------------------------------- | --------------------------- |
+| `config.topojsonURL`           | The base map files, instead of the bundled ones: `<url>/world_110m.json`, `<url>/usa_50m.json`, … | `connect-src <that origin>` |
+| `geojson` of a trace, as a URL | The regions of a `choropleth`, or the features a `scattergeo` trace's `locations` name            | `connect-src <that origin>` |
+
+```text
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' blob:;
+  worker-src blob:;
+  connect-src 'self' blob: https://maps.example.com;
+  font-src 'self' blob:;
+  style-src 'self' 'unsafe-inline'
+```
+
+When the policy blocks one of them, the request fails like any failed load: the chart is drawn
+without the base layers (or without the trace that needed the file), the console has one warning
+next to the browser's CSP report, and `chart.ready` still resolves. Passing the `geojson` as an
+object, fetched by your own code, or leaving `topojsonURL` unset avoids both.
+
+`config.topojsonURL` is empty by default, where Plotly's default is its CDN.
+
+These rows follow from how the package loads its data and have not been tested under a served
+policy the way the rows above were.
+
+## Graph layouts in a worker
+
+A [graph](/charts/graphs/graph#performance-notes) with `worker` set lays itself out in a web
+worker. Unlike the text worker, this one is a file, not a `blob:` URL: `layout-worker.js` of
+`@mk7s/holochart-traces-graph`, which Vite and webpack emit next to your own chunks. It loads
+from your own origin, so `worker-src` has to allow `'self'`:
+
+```text
+worker-src 'self' blob:;
+```
+
+A policy without `worker-src` needs nothing more when `script-src` or `default-src` has
+`'self'`: browsers fall back to it. The [policy above](#a-working-policy) sets
+`worker-src blob:` alone, which blocks this worker: add `'self'`.
+
+If the worker cannot start (the policy blocks it, the bundler did not emit the file, as esbuild
+does not, or the page is opened from `file://`), nothing breaks: the layout runs on the main
+thread a few milliseconds at a time, with the same result, and the console has one warning that
+says why.
+
+To serve the file yourself, copy
+`node_modules/@mk7s/holochart-traces-graph/dist/layout-worker.js` (one file, no imports, about
+30 kB gzipped) to your site and name it before the first graph is drawn:
+
+```ts
+import { setGraphWorkerUrl } from '@mk7s/holochart/graph';
+
+setGraphWorkerUrl('/assets/layout-worker.js');
+```
+
+The address has to be on the page's own origin; browsers do not start a worker from another.
+The worker fetches nothing and uses neither `eval` nor `importScripts`.
+
+::: info Tested
+In Chromium, with the policy in a `<meta>` element: `default-src 'self'` runs the worker; the
+policy above with `worker-src blob:` falls back to the main thread; with
+`worker-src 'self' blob:` the worker runs. Firefox, Safari and a policy sent as a header were
+not tested. Vite was tested; webpack and Parcel document support for the pattern and were not.
+:::
+
 ## Other things a policy can block
 
 - **Images.** `layout.images` and `marker.image` load from the URLs you give them, so `img-src`
@@ -145,7 +221,7 @@ text engine at a self-hosted copy of the fallback fonts instead; that route has 
 - **Image export.** `toImage` returns a `data:` URL and loads nothing. If you show the result in
   an `<img>`, your `img-src` has to allow `data:`.
 - **Lazy chunks.** Holochart loads parts of itself on demand (the text engine, image export,
-  animation) with `import()`. Bundlers emit them as files next to your own chunks, so
+  animation, the data of maps) with `import()`. Bundlers emit them as files next to your own chunks, so
   `script-src 'self'` covers them.
 
 See also [Troubleshooting](./troubleshooting#fonts-and-text).

@@ -264,19 +264,30 @@ createChart(el, { data: [{ type: 'bar', x: ['a', 'b'], y: [2, 3] }] });
 
 Each trace package exports its trace types one by one, and a list of all of them:
 
-| Package                          | Trace types                                                                                        | List            |
-| -------------------------------- | -------------------------------------------------------------------------------------------------- | --------------- |
-| `@mk7s/holochart-traces-basic`   | `scatter`, `bar`, `pie`, `table`                                                                   | `basicTraces`   |
-| `@mk7s/holochart-traces-stats`   | `histogram`, `histogram2d`, `histogram2dcontour`, `box`, `violin`, `splom`, `parcoords`, `parcats` | `statsTraces`   |
-| `@mk7s/holochart-traces-sci`     | `heatmap`, `image`, `contour`, `scatterpolar`, `barpolar`                                          | `sciTraces`     |
-| `@mk7s/holochart-traces-finance` | `ohlc`, `candlestick`, `waterfall`, `funnel`, `funnelarea`, `indicator`                            | `financeTraces` |
-| `@mk7s/holochart-traces-hier`    | `sunburst`, `treemap`, `icicle`, `sankey`                                                          | `hierTraces`    |
-| `@mk7s/holochart-traces-3d`      | `scatter3d`, `surface`, `mesh3d`, `cone`, `bar3d`, `streamtube`, `isosurface`, `volume`            | `traces3d`      |
+| Package                          | Trace types                                                                                        | List                           |
+| -------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `@mk7s/holochart-traces-basic`   | `scatter`, `bar`, `pie`, `table`                                                                   | `basicTraces`                  |
+| `@mk7s/holochart-traces-stats`   | `histogram`, `histogram2d`, `histogram2dcontour`, `box`, `violin`, `splom`, `parcoords`, `parcats` | `statsTraces`                  |
+| `@mk7s/holochart-traces-sci`     | `heatmap`, `image`, `contour`, `scatterpolar`, `barpolar`                                          | `sciTraces`                    |
+| `@mk7s/holochart-traces-finance` | `ohlc`, `candlestick`, `waterfall`, `funnel`, `funnelarea`, `indicator`                            | `financeTraces`                |
+| `@mk7s/holochart-traces-hier`    | `sunburst`, `treemap`, `icicle`, `sankey`                                                          | `hierTraces`                   |
+| `@mk7s/holochart-traces-3d`      | `scatter3d`, `surface`, `mesh3d`, `cone`, `bar3d`, `streamtube`, `isosurface`, `volume`            | `traces3d`                     |
+| `@mk7s/holochart-traces-geo`     | `scattergeo`, `choropleth`                                                                         | `tracesGeo`                    |
+| `@mk7s/holochart-traces-graph`   | `graph`, `chord`; `graph3d`                                                                        | `tracesGraph`; `tracesGraph3d` |
 
-Two lists hold more than trace types. `traces3d` includes the component that draws 3D scenes
-(`sceneComponent`), and `sciTraces` includes the one that draws polar subplots
-(`polarComponent`). If you register 3D or polar trace types one by one, register that component
-too.
+Four lists hold more than trace types. `traces3d` includes the component that draws 3D scenes
+(`sceneComponent`), `sciTraces` includes the one that draws polar subplots (`polarComponent`),
+and `tracesGeo` the one that draws [maps](/fundamentals/maps) (`geoComponent`). If you register
+3D, polar or geo trace types one by one, register that component too. `tracesGraph3d` is
+`graph3d` with `sceneComponent`, apart from `tracesGraph` so that 2D graphs do not bring the 3D
+package along.
+
+`@mk7s/holochart-traces-geo` and `@mk7s/holochart-traces-graph` are the two trace packages the
+full bundle does not register. With `@mk7s/holochart`, add `import '@mk7s/holochart/geo'`, which
+registers `tracesGeo`, or `import '@mk7s/holochart/graph'`, which registers `tracesGraph` and
+`tracesGraph3d`; the warning for an unregistered `scattergeo`, `choropleth`, `graph`, `chord` or
+`graph3d` names its import as well. See [Maps](/fundamentals/maps#adding-the-package) and
+[Network graphs](/fundamentals/graphs#adding-the-package).
 
 A built-in trace type that was not registered is hidden like any unknown type, and the warning
 names its package:

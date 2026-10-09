@@ -17,6 +17,14 @@ import { stripDescriptionsPlugin } from './strip-descriptions.ts';
 export interface LibraryConfigOptions {
   /** Also emit `dist/index.development.js` with descriptions (packages that declare schemas). */
   development?: boolean;
+  /**
+   * Modules that are data and nothing else, each loaded by a dynamic `import()` of its own
+   * (traces-geo's basemap, ADR-024: 0.1 to 0.7 MB each). A chunk made of them is written once,
+   * as `dist/<name>.js`, without a hash and without a sourcemap: the production build writes it
+   * and the development build imports that same file ({@link dataChunks}). Without this,
+   * each would ship four times: in both builds, and again in each one's sourcemap.
+   */
+  dataModules?: RegExp;
 }
 
 /** True unless `HOLOCHART_KEEP_DESCRIPTIONS` is set: whether production builds strip descriptions. */
@@ -115,6 +123,50 @@ export function dtsWithoutMapComment() {
   };
 }
 
+/** The slice of an output chunk the plugins below read (rolldown is not resolvable from here). */
+interface OutputChunk {
+  type: string;
+  fileName: string;
+  code?: string;
+  moduleIds?: readonly string[];
+}
+
+/**
+ * The output of {@link LibraryConfigOptions.dataModules}, shared by the production and the
+ * development build.
+ *
+ * - `chunkFileNames`: a chunk whose entry is a data module is `<name>.js` in both builds (the
+ *   other chunks keep `otherChunks`), so the two entry files import the same file.
+ * - `plugin(write)`: of the chunks made only of data modules, the production build (`write`)
+ *   drops the sourcemap, which would be the data a second time, and the development build drops
+ *   the chunk itself, which the production build writes. Data has no descriptions to strip, so
+ *   the two would be byte for byte the same.
+ */
+export function dataChunks(dataModules: RegExp, otherChunks: string) {
+  const isData = (chunk: OutputChunk): boolean =>
+    chunk.type === 'chunk' &&
+    chunk.moduleIds !== undefined &&
+    chunk.moduleIds.length > 0 &&
+    chunk.moduleIds.every((id) => dataModules.test(id));
+  return {
+    chunkFileNames: (chunk: { facadeModuleId?: string | null }): string =>
+      chunk.facadeModuleId && dataModules.test(chunk.facadeModuleId) ? '[name].js' : otherChunks,
+    plugin: (write: boolean) => ({
+      name: 'holochart:data-chunks',
+      generateBundle(_options: unknown, bundle: Record<string, OutputChunk>): void {
+        for (const chunk of Object.values(bundle)) {
+          if (!isData(chunk)) continue;
+          delete bundle[`${chunk.fileName}.map`];
+          if (!write) delete bundle[chunk.fileName];
+          else if (chunk.code) {
+            chunk.code = chunk.code.replace(/\n\/\/# sourceMappingURL=\S+\s*$/, '\n');
+          }
+        }
+      },
+    }),
+  };
+}
+
 /**
  * tsdown configs for one library package: ESM + one bundled `index.d.ts`. `dependencies` and
  * `peerDependencies` (e.g. `three`, ADR-003) are external automatically; declarations come from
@@ -128,13 +180,24 @@ export function libraryConfig(options: LibraryConfigOptions = {}): Record<string
     target: 'es2022',
     sourcemap: true,
   };
+  const data = (otherChunks: string) =>
+    options.dataModules ? dataChunks(options.dataModules, otherChunks) : undefined;
+  const productionData = data('[name]-[hash].js');
   const production = {
     ...base,
     dts: DTS_OPTIONS,
     clean: true,
-    plugins: [...productionPlugins(), dtsWithoutInternalMembers(), dtsWithoutMapComment()],
+    plugins: [
+      ...productionPlugins(),
+      dtsWithoutInternalMembers(),
+      dtsWithoutMapComment(),
+      ...(productionData ? [productionData.plugin(true)] : []),
+    ],
+    ...(productionData ? { outputOptions: { chunkFileNames: productionData.chunkFileNames } } : {}),
   };
   if (!options.development) return [production];
+  const DEVELOPMENT_CHUNKS = '[name]-[hash].development.js';
+  const developmentData = data(DEVELOPMENT_CHUNKS);
   return [
     production,
     {
@@ -144,8 +207,9 @@ export function libraryConfig(options: LibraryConfigOptions = {}): Record<string
       clean: false,
       outputOptions: {
         entryFileNames: '[name].development.js',
-        chunkFileNames: '[name]-[hash].development.js',
+        chunkFileNames: developmentData?.chunkFileNames ?? DEVELOPMENT_CHUNKS,
       },
+      ...(developmentData ? { plugins: [developmentData.plugin(false)] } : {}),
     },
   ];
 }

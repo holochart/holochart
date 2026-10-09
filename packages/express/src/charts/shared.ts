@@ -118,6 +118,16 @@ export function opacityPatch(args: Args): Record<string, unknown> {
   return typeof opacity === 'number' ? { marker: { opacity } } : {};
 }
 
+/**
+ * px's `sizeref` of a `size` column: marker areas proportional to the values, the largest marker
+ * `sizeMax` px across.
+ */
+export function sizeref(values: readonly unknown[], sizeMax: number): number {
+  let max = 0;
+  for (const v of values) if (typeof v === 'number' && Number.isFinite(v) && v > max) max = v;
+  return (2 * max) / sizeMax ** 2;
+}
+
 /** Drop `undefined` values (so specs only carry what px would write). */
 export function defined(o: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined));

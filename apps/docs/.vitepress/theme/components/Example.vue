@@ -9,8 +9,8 @@
  *   `MAX_LIVE` examples run at once (`live-examples.ts`), the farthest from view is disposed when
  *   another starts, and it starts again when it scrolls back.
  * - Disposes the example on unmount (page navigation).
- * - Tabs for the live preview and the TypeScript source (highlighted at build time), a copy
- *   button, and a link that opens the example in the dev sandbox.
+ * - Tabs for preview and independently runnable source; shared language tabs lazily fetch
+ *   complete browser/Python downloads with real artifact verification.
  * - The figure's id is `example-<id>` (`exampleAnchor`), so the gallery can link to the embed.
  * - `bare`: only the live chart, without the tab bar and caption, for showcase pages (demos)
  *   that frame the chart with their own headings and text.
@@ -18,6 +18,8 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue';
 import { exampleAnchor } from '../example-anchor.ts';
 import { claimLiveSlot, rebalance } from '../live-examples.ts';
+import { withBase } from 'vitepress';
+import ExampleSource from './ExampleSource.vue';
 
 type Runtime = typeof import('../example-runtime.ts');
 type Handle = import('../example-runtime.ts').ExampleHandle;
@@ -30,6 +32,8 @@ const props = defineProps<{
   height?: number;
   /** Show only the live chart: no Preview/Source tabs, no caption. */
   bare?: boolean;
+  /** Show preview and source together when the viewport is wide enough. */
+  split?: boolean;
 }>();
 
 const DEFAULT_HEIGHT = 400;
@@ -39,11 +43,14 @@ const status = ref<'idle' | 'loading' | 'ready' | 'error'>('idle');
 const errorMessage = ref('');
 const meta = shallowRef<Meta | null>(null);
 const height = ref(props.height ?? DEFAULT_HEIGHT);
-const source = shallowRef<{ code: string; html: string } | null>(null);
-const sourceError = ref('');
-const copied = ref(false);
 const root = ref<HTMLElement | null>(null);
 const stage = ref<HTMLElement | null>(null);
+const wide = ref(false);
+const sideBySide = computed(() => Boolean(props.split && wide.value && !props.bare));
+let splitQuery: MediaQueryList | undefined;
+function syncSplit(): void {
+  wide.value = splitQuery?.matches ?? false;
+}
 
 let handle: Handle | undefined;
 let observer: IntersectionObserver | undefined;
@@ -55,7 +62,6 @@ let releaseSlot: (() => void) | undefined;
 let generation = 0;
 let unmounted = false;
 let runtime: Promise<Runtime> | undefined;
-let copiedTimer: ReturnType<typeof setTimeout> | undefined;
 
 const sandboxHref = computed(() => {
   const baseUrl = __HOLOCHART_SANDBOX_URL__;
@@ -116,47 +122,29 @@ async function start(): Promise<void> {
     releaseSlot = undefined;
     status.value = 'error';
     errorMessage.value = message(err);
+    stage.value?.replaceChildren();
     console.error(`[Example ${props.id}]`, err);
   }
-}
-
-async function loadSource(): Promise<{ code: string; html: string } | null> {
-  if (source.value) return source.value;
-  try {
-    const rt = await loadRuntime();
-    const load = rt.sources[props.id];
-    if (!load) throw new Error(`Unknown example "${props.id}".`);
-    const mod = await load();
-    source.value = { code: mod.code, html: mod.html };
-  } catch (err) {
-    sourceError.value = message(err);
-  }
-  return source.value;
 }
 
 function showPreview(): void {
   tab.value = 'preview';
 }
-
-async function showSource(): Promise<void> {
+function showSource(): void {
   tab.value = 'source';
-  await loadSource();
 }
-
-async function copy(): Promise<void> {
-  const src = await loadSource();
-  if (!src) return;
-  try {
-    await navigator.clipboard.writeText(src.code);
-    copied.value = true;
-    clearTimeout(copiedTimer);
-    copiedTimer = setTimeout(() => (copied.value = false), 2000);
-  } catch (err) {
-    console.error(`[Example ${props.id}] copy failed`, err);
-  }
+async function moveTab(value: 'preview' | 'source'): Promise<void> {
+  tab.value = value;
+  await nextTick();
+  document.getElementById(`${exampleAnchor(props.id)}-tab-${value}`)?.focus();
 }
 
 onMounted(() => {
+  if (props.split) {
+    splitQuery = window.matchMedia('(min-width: 1100px)');
+    syncSplit();
+    splitQuery.addEventListener('change', syncSplit);
+  }
   const el = root.value;
   if (!el || typeof IntersectionObserver === 'undefined') {
     inView = true;
@@ -179,9 +167,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  splitQuery?.removeEventListener('change', syncSplit);
   unmounted = true;
   observer?.disconnect();
-  clearTimeout(copiedTimer);
   dispose();
 });
 </script>
@@ -191,15 +179,20 @@ onBeforeUnmount(() => {
     :id="exampleAnchor(id)"
     ref="root"
     class="hc-example"
-    :class="{ 'hc-example--bare': bare }"
+    :class="{ 'hc-example--bare': bare, 'hc-example--split': sideBySide }"
     :data-example-id="id"
   >
     <div v-if="!bare" class="hc-example-bar">
-      <div class="hc-example-tabs" role="tablist" :aria-label="`Example ${id}`">
+      <div v-if="!sideBySide" class="hc-example-tabs" role="tablist" :aria-label="`Example ${id}`">
         <button
           type="button"
           role="tab"
           class="hc-example-tab"
+          :id="`${exampleAnchor(id)}-tab-preview`"
+          :aria-controls="`${exampleAnchor(id)}-panel-preview`"
+          :tabindex="tab === 'preview' ? 0 : -1"
+          @keydown.right.prevent="moveTab('source')"
+          @keydown.left.prevent="moveTab('source')"
           :aria-selected="tab === 'preview'"
           @click="showPreview"
         >
@@ -209,16 +202,22 @@ onBeforeUnmount(() => {
           type="button"
           role="tab"
           class="hc-example-tab"
+          :id="`${exampleAnchor(id)}-tab-source`"
+          :aria-controls="`${exampleAnchor(id)}-panel-source`"
+          :tabindex="tab === 'source' ? 0 : -1"
+          @keydown.right.prevent="moveTab('preview')"
+          @keydown.left.prevent="moveTab('preview')"
           :aria-selected="tab === 'source'"
           @click="showSource"
         >
-          Source (TS)
+          Complete source
         </button>
       </div>
+      <span v-else class="hc-example-view-label">Live preview · Complete source</span>
       <div class="hc-example-actions">
-        <button type="button" class="hc-example-action" @click="copy">
-          {{ copied ? 'Copied' : 'Copy' }}
-        </button>
+        <a class="hc-example-action" :href="withBase(`/gallery/example/${id}`)"
+          >Details & downloads</a
+        >
         <a
           v-if="sandboxHref"
           class="hc-example-action"
@@ -232,9 +231,12 @@ onBeforeUnmount(() => {
     </div>
 
     <div
-      v-show="tab === 'preview'"
+      v-show="sideBySide || tab === 'preview'"
       class="hc-example-preview"
-      :role="bare ? undefined : 'tabpanel'"
+      :id="`${exampleAnchor(id)}-panel-preview`"
+      :aria-labelledby="bare || sideBySide ? undefined : `${exampleAnchor(id)}-tab-preview`"
+      :role="bare ? undefined : sideBySide ? 'region' : 'tabpanel'"
+      :aria-label="sideBySide ? 'Live preview' : undefined"
     >
       <div
         ref="stage"
@@ -243,17 +245,47 @@ onBeforeUnmount(() => {
         :aria-label="meta?.title ?? id"
         :style="{ height: `${height}px` }"
       />
-      <div v-if="status !== 'ready'" class="hc-example-status" :data-status="status">
-        <span v-if="status === 'error'">Could not run example “{{ id }}”: {{ errorMessage }}</span>
+      <img
+        v-if="status !== 'ready'"
+        class="hc-example-static-preview"
+        :src="withBase(`/gallery/thumbs/${id}.webp`)"
+        :alt="`Static preview of ${meta?.title ?? id}`"
+        @error="($event.target as HTMLImageElement).hidden = true"
+      />
+      <div
+        v-if="status !== 'ready'"
+        class="hc-example-status"
+        :data-status="status"
+        :role="status === 'error' ? 'alert' : 'status'"
+      >
+        <template v-if="status === 'error'">
+          <strong>Live chart unavailable.</strong> {{ errorMessage }}
+          <p>
+            The static preview and complete source remain available. This chart needs WebGL2; check
+            browser graphics support or try another browser.
+          </p>
+          <p>
+            <a :href="withBase('/guides/troubleshooting#no-webgl2')">WebGL troubleshooting</a> ·
+            <button v-if="!bare" type="button" @click="showSource">Open complete source</button
+            ><a v-else :href="withBase(`/gallery/example/${id}#hc-complete-source`)"
+              >Source and downloads</a
+            >
+          </p>
+        </template>
         <span v-else>Loading example…</span>
       </div>
     </div>
 
-    <div v-if="!bare" v-show="tab === 'source'" class="hc-example-source" role="tabpanel">
-      <!-- Highlighted at build time by the example-sources Vite plugin from the repo's own file. -->
-      <div v-if="source" v-html="source.html" />
-      <p v-else-if="sourceError" class="hc-example-status" data-status="error">{{ sourceError }}</p>
-      <p v-else class="hc-example-status">Loading source…</p>
+    <div
+      v-if="!bare"
+      v-show="sideBySide || tab === 'source'"
+      class="hc-example-source"
+      :id="`${exampleAnchor(id)}-panel-source`"
+      :aria-labelledby="sideBySide ? undefined : `${exampleAnchor(id)}-tab-source`"
+      :role="sideBySide ? 'region' : 'tabpanel'"
+      :aria-label="sideBySide ? 'Complete source' : undefined"
+    >
+      <ExampleSource v-if="sideBySide || tab === 'source'" :id="id" />
     </div>
 
     <figcaption v-if="!bare" class="hc-example-caption">
@@ -264,3 +296,40 @@ onBeforeUnmount(() => {
     </figcaption>
   </figure>
 </template>
+
+<style>
+.hc-example-static-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.hc-example-preview .hc-example-status[data-status='idle'],
+.hc-example-preview .hc-example-status[data-status='loading'] {
+  background: transparent;
+}
+.hc-example-preview .hc-example-status[data-status='error'] {
+  position: relative;
+  inset: auto;
+  display: block;
+  pointer-events: auto;
+  text-align: left;
+  background: var(--vp-c-bg-soft);
+}
+.hc-example-status[data-status='error'] p {
+  margin: 8px 0 0;
+  font-family: var(--vp-font-family-base);
+  font-size: 13px;
+}
+.hc-example-status[data-status='error'] :is(a, button) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--vp-c-brand-1);
+}
+.hc-example-preview:has(.hc-example-status[data-status='error']) .hc-example-static-preview {
+  height: auto;
+  max-height: 400px;
+}
+</style>

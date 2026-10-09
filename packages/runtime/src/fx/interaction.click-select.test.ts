@@ -10,7 +10,7 @@ import type { FigureInput } from '@mk7s/holochart-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createChart, type Chart } from '../chart.ts';
 import type { ChartEventName } from '../events.ts';
-import { setup, type TestSetup } from '../__testing__/fakes.ts';
+import { createDotsModule, createLog, setup, type TestSetup } from '../__testing__/fakes.ts';
 
 const MARGIN = { l: 40, r: 20, t: 30, b: 50 };
 const RANGES = { xaxis: { range: [0, 10] }, yaxis: { range: [0, 100] } };
@@ -188,5 +188,83 @@ describe('clicking empty space', () => {
     const log = record(c, 'deselect', 'selected', 'click');
     await click(c, [cx(8), cy(20)]);
     expect(log).toEqual([]);
+  });
+});
+
+describe("a point that is not one of its trace's own", () => {
+  /**
+   * 'pairs': dots whose hover point says what a click on it selects (`HoverPoint.selects`): the
+   * point and the next one, and nothing for the last point. Its `eventData` reports the other
+   * points of the selection it is given.
+   */
+  function pairs() {
+    const log = createLog();
+    const base = createDotsModule(log);
+    const selections: (readonly number[] | undefined)[] = [];
+    const module: typeof base = {
+      ...base,
+      type: 'pairs',
+      hoverPoints: (calc, trace, query, ctx) =>
+        base.hoverPoints!(calc, trace, query, ctx).map((p) => ({
+          ...p,
+          selects: p.pointIndex === 4 ? [] : [p.pointIndex, p.pointIndex + 1],
+        })),
+      eventData: (_calc, _trace, i, selection) => {
+        selections.push(selection);
+        return { others: selection?.filter((j) => j !== i) };
+      },
+    };
+    t.registry.register(module);
+    const drawnWith = (): readonly number[] | null | undefined => log.updates.at(-1)?.selected;
+    return { selections, drawnWith };
+  }
+
+  it('selects what it names instead of itself, and shift toggles those', async () => {
+    const { drawnWith } = pairs();
+    const c = await chart([{ ...FIVE, type: 'pairs' }], { clickmode: 'event+select' });
+    const log = record(c, 'click', 'selected');
+    await click(c, at(1));
+    expect(drawnWith()).toEqual([1, 2]);
+    // The click is still the click on the point itself.
+    expect(log).toEqual([
+      { name: 'click', points: [[0, 1]] },
+      {
+        name: 'selected',
+        points: [
+          [0, 1],
+          [0, 2],
+        ],
+      },
+    ]);
+    // Shift toggles each of them: 2 is taken out, 3 comes in.
+    await click(c, at(2), SHIFT);
+    expect(drawnWith()).toEqual([1, 3]);
+  });
+
+  it('selects nothing when it names nothing', async () => {
+    const { drawnWith } = pairs();
+    const c = await chart([{ ...FIVE, type: 'pairs' }], { clickmode: 'event+select' });
+    await click(c, at(1));
+    expect(drawnWith()).toEqual([1, 2]);
+    // A plain click replaces the selection, here with none of the trace's points.
+    await click(c, at(4));
+    expect(drawnWith()).toEqual([]);
+  });
+
+  it('`eventData` is given the selection the point is part of', async () => {
+    const { selections } = pairs();
+    const c = await chart([{ ...FIVE, type: 'pairs' }], { clickmode: 'event+select' });
+    const others: unknown[] = [];
+    c.on('selected', (payload) => {
+      others.push(...payload.points.map((p) => p['others']));
+    });
+    await click(c, at(1));
+    expect(selections).toEqual([
+      [1, 2],
+      [1, 2],
+    ]);
+    // The same list for every point of the event.
+    expect(selections[0]).toBe(selections[1]);
+    expect(others).toEqual([[2], [1]]);
   });
 });

@@ -31,6 +31,7 @@ import {
   inferOrientation,
   marginalSpecs,
   opacityPatch,
+  sizeref,
   tailRoles,
   type AggFunction,
 } from './shared.ts';
@@ -107,12 +108,6 @@ function modes(
   if (args.cols['text'] !== undefined) set.add('text');
   if (set.size === 0) set.add('lines');
   return [...set].sort().join('+');
-}
-
-function sizeref(values: readonly unknown[], sizeMax: number): number {
-  let max = 0;
-  for (const v of values) if (typeof v === 'number' && Number.isFinite(v) && v > max) max = v;
-  return (2 * max) / sizeMax ** 2;
 }
 
 function buildScatter(data: DataInput | null | undefined, options: ScatterOptions): ExpressFigure {

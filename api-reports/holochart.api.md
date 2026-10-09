@@ -134,6 +134,8 @@ import { ChartRegistryOptions } from '@mk7s/holochart-runtime';
 import { ChartThree } from '@mk7s/holochart-runtime';
 import { ChartToJSONOptions } from '@mk7s/holochart-runtime';
 import { Children } from '@mk7s/holochart-core';
+import { ChordTrace } from '@mk7s/holochart-traces-graph';
+import { ChoroplethTrace } from '@mk7s/holochart-traces-geo';
 import { CMOCEAN_CYCLICAL } from '@mk7s/holochart-core';
 import { CMOCEAN_DIVERGING } from '@mk7s/holochart-core';
 import { CMOCEAN_SEQUENTIAL } from '@mk7s/holochart-core';
@@ -301,6 +303,8 @@ import { FxSettings } from '@mk7s/holochart-runtime';
 import { getChart } from '@mk7s/holochart-runtime';
 import { getColorscale } from '@mk7s/holochart-core';
 import { getColorway } from '@mk7s/holochart-core';
+import { Graph3dTrace } from '@mk7s/holochart-traces-graph';
+import { GraphTrace } from '@mk7s/holochart-traces-graph';
 import { GridInsight } from '@mk7s/holochart-runtime';
 import { heatmap } from '@mk7s/holochart-traces-sci';
 import { heatmapAttributes } from '@mk7s/holochart-traces-sci';
@@ -621,6 +625,7 @@ import { Scatter3dTraceProjectionY } from '@mk7s/holochart-traces-3d';
 import { Scatter3dTraceProjectionZ } from '@mk7s/holochart-traces-3d';
 import { scatterAttributes } from '@mk7s/holochart-traces-basic';
 import { ScatterCalc } from '@mk7s/holochart-traces-basic';
+import { ScattergeoTrace } from '@mk7s/holochart-traces-geo';
 import { ScatterLink } from '@mk7s/holochart-traces-basic';
 import { scatterpolar } from '@mk7s/holochart-traces-sci';
 import { scatterpolarAttributes } from '@mk7s/holochart-traces-sci';
@@ -801,6 +806,7 @@ import { toRGBAArray } from '@mk7s/holochart-core';
 import { TraceA11y } from '@mk7s/holochart-runtime';
 import { TraceA11yParts } from '@mk7s/holochart-runtime';
 import { TraceAppend } from '@mk7s/holochart-runtime';
+import { TraceAxisHints } from '@mk7s/holochart-core';
 import { TraceCategory } from '@mk7s/holochart-core';
 import { TraceCellRef } from '@mk7s/holochart-runtime';
 import { TraceDefaultsContext } from '@mk7s/holochart-core';
@@ -1875,6 +1881,16 @@ export type Layout = {
     waterfallmode?: 'group' | 'overlay';
     waterfallgap?: number;
     waterfallgroupgap?: number;
+    geo?: LayoutGeo;
+    geo2?: LayoutGeo;
+    geo3?: LayoutGeo;
+    geo4?: LayoutGeo;
+    geo5?: LayoutGeo;
+    geo6?: LayoutGeo;
+    geo7?: LayoutGeo;
+    geo8?: LayoutGeo;
+    geo9?: LayoutGeo;
+    [key: `geo${number}`]: unknown;
     iciclecolorway?: readonly string[] | string;
     extendiciclecolors?: boolean;
     sunburstcolorway?: readonly string[] | string;
@@ -2087,6 +2103,97 @@ export interface LayoutColorscale {
 export { LayoutDefaultsContext }
 
 export { LayoutFont }
+
+// @public
+export interface LayoutGeo {
+    bgcolor?: string;
+    center?: LayoutGeoCenter;
+    coastlinecolor?: string;
+    coastlinewidth?: number;
+    countrycolor?: string;
+    countrywidth?: number;
+    domain?: LayoutGeoDomain;
+    fitbounds?: 'geojson' | 'locations' | false;
+    framecolor?: string;
+    framewidth?: number;
+    lakecolor?: string;
+    landcolor?: string;
+    lataxis?: LayoutGeoLataxis;
+    lonaxis?: LayoutGeoLonaxis;
+    oceancolor?: string;
+    projection?: LayoutGeoProjection;
+    resolution?: 110 | 50;
+    rivercolor?: string;
+    riverwidth?: number;
+    scope?: 'africa' | 'antarctica' | 'asia' | 'europe' | 'north america' | 'oceania' | 'south america' | 'usa' | 'world';
+    showcoastlines?: boolean;
+    showcountries?: boolean;
+    showframe?: boolean;
+    showlakes?: boolean;
+    showland?: boolean;
+    showocean?: boolean;
+    showrivers?: boolean;
+    showsubunits?: boolean;
+    subunitcolor?: string;
+    subunitwidth?: number;
+    uirevision?: unknown;
+    visible?: boolean;
+}
+
+// @public
+export interface LayoutGeoCenter {
+    lat?: number;
+    lon?: number;
+}
+
+// @public
+export interface LayoutGeoDomain {
+    column?: number;
+    row?: number;
+    x?: readonly number[];
+    y?: readonly number[];
+}
+
+// @public
+export interface LayoutGeoLataxis {
+    dtick?: number;
+    gridcolor?: string;
+    griddash?: string;
+    gridwidth?: number;
+    range?: readonly number[];
+    showgrid?: boolean;
+    tick0?: number;
+}
+
+// @public
+export interface LayoutGeoLonaxis {
+    dtick?: number;
+    gridcolor?: string;
+    griddash?: string;
+    gridwidth?: number;
+    range?: readonly number[];
+    showgrid?: boolean;
+    tick0?: number;
+}
+
+// @public
+export interface LayoutGeoProjection {
+    distance?: number;
+    maxscale?: number;
+    minscale?: number;
+    parallels?: readonly number[];
+    rotation?: LayoutGeoProjectionRotation;
+    scale?: number;
+    tilt?: number;
+    type?: 'airy' | 'aitoff' | 'albers usa' | 'albers' | 'august' | 'azimuthal equal area' | 'azimuthal equidistant' | 'baker' | 'bertin1953' | 'boggs' | 'bonne' | 'bottomley' | 'bromley' | 'collignon' | 'conic conformal' | 'conic equal area' | 'conic equidistant' | 'craig' | 'craster' | 'cylindrical equal area' | 'cylindrical stereographic' | 'eckert1' | 'eckert2' | 'eckert3' | 'eckert4' | 'eckert5' | 'eckert6' | 'eisenlohr' | 'equal earth' | 'equirectangular' | 'fahey' | 'foucaut sinusoidal' | 'foucaut' | 'ginzburg4' | 'ginzburg5' | 'ginzburg6' | 'ginzburg8' | 'ginzburg9' | 'globe3d' | 'gnomonic' | 'gringorten quincuncial' | 'gringorten' | 'guyou' | 'hammer' | 'hill' | 'homolosine' | 'hufnagel' | 'hyperelliptical' | 'kavrayskiy7' | 'lagrange' | 'larrivee' | 'laskowski' | 'loximuthal' | 'mercator' | 'miller' | 'mollweide' | 'mt flat polar parabolic' | 'mt flat polar quartic' | 'mt flat polar sinusoidal' | 'natural earth' | 'natural earth1' | 'natural earth2' | 'nell hammer' | 'nicolosi' | 'orthographic' | 'patterson' | 'peirce quincuncial' | 'polyconic' | 'rectangular polyconic' | 'robinson' | 'satellite' | 'sinu mollweide' | 'sinusoidal' | 'stereographic' | 'times' | 'transverse mercator' | 'van der grinten' | 'van der grinten2' | 'van der grinten3' | 'van der grinten4' | 'wagner4' | 'wagner6' | 'wiechel' | 'winkel tripel' | 'winkel3';
+}
+
+// @public
+export interface LayoutGeoProjectionRotation {
+    lat?: number;
+    lon?: number;
+    roll?: number;
+}
 
 export { LayoutGrid }
 
@@ -3789,6 +3896,8 @@ export { TraceA11yParts }
 
 export { TraceAppend }
 
+export { TraceAxisHints }
+
 export { TraceCategory }
 
 export { TraceCellRef }
@@ -3856,6 +3965,10 @@ export interface TraceTypes {
     // (undocumented)
     candlestick: CandlestickTrace;
     // (undocumented)
+    chord: ChordTrace;
+    // (undocumented)
+    choropleth: ChoroplethTrace;
+    // (undocumented)
     cone: ConeTrace;
     // (undocumented)
     contour: ContourTrace;
@@ -3863,6 +3976,10 @@ export interface TraceTypes {
     funnel: FunnelTrace;
     // (undocumented)
     funnelarea: FunnelareaTrace;
+    // (undocumented)
+    graph: GraphTrace;
+    // (undocumented)
+    graph3d: Graph3dTrace;
     // (undocumented)
     heatmap: HeatmapTrace;
     // (undocumented)
@@ -3895,6 +4012,8 @@ export interface TraceTypes {
     scatter: ScatterTrace;
     // (undocumented)
     scatter3d: Scatter3dTrace;
+    // (undocumented)
+    scattergeo: ScattergeoTrace;
     // (undocumented)
     scatterpolar: ScatterpolarTrace;
     // (undocumented)

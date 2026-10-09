@@ -7,6 +7,8 @@ chart: table
 
 # Table
 
+<ChartOverview />
+
 ## Overview
 
 A table trace draws a grid of formatted values with a fixed header, inside the figure. Use it when
@@ -27,6 +29,9 @@ Pick a different chart when:
   data grid next to the chart for those.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -73,6 +78,8 @@ text with spaces wraps to the column width and makes its row taller:
 
 ## Variations
 
+<ChartVariations />
+
 ### Formats, per-column and per-row styles
 
 `format` takes a [d3-format](https://d3js.org/d3-format) specifier (`',.2f'`, `'+.2%'`, `'.3s'`),
@@ -105,7 +112,7 @@ createChart(el, {
 });
 ```
 
-<Example id="table/styled" />
+<ExampleLink id="table/styled" />
 
 ### Wide tables, column widths, and multi-row headers
 
@@ -117,7 +124,7 @@ or narrower columns.
 String values with spaces wrap to the column width, and the row grows to fit them. Text that
 doesn't fit and can't wrap (a long word, a number) is clipped at the column edge.
 
-<Example id="table/wide" :height="400" />
+<ExampleLink id="table/wide" />
 
 ### Rich text in cells
 
@@ -150,7 +157,7 @@ spaces, across its styled runs, and the row grows to fit. Values with `<br>` bre
 Links show a pointer cursor and open on click, in their `target` (`_blank` by default) and
 without an opener; a press that turns into a scroll or a column drag opens nothing.
 
-<Example id="table/rich-text" />
+<ExampleLink id="table/rich-text" />
 
 ### A table next to a chart
 
@@ -159,7 +166,7 @@ rest with `xaxis.domain`. With `layout.grid`, a table can also take a cell with 
 `domain.column`, like a pie (see
 [Layout, axes & subplots](/fundamentals/layout-axes-subplots#pies-and-other-domain-traces)).
 
-<Example id="table/with-chart" :height="400" />
+<ExampleLink id="table/with-chart" />
 
 ### 100,000 rows, virtualized
 
@@ -167,7 +174,7 @@ Only the rows on screen are laid out and drawn, and row heights are measured laz
 near the viewport. Scroll with the wheel, by dragging the rows, or with the scrollbar, which
 appears right of the table while the pointer moves over it. The log below has 100,000 rows:
 
-<Example id="table/virtualized" />
+<ExampleLink id="table/virtualized" />
 
 ## Styling
 

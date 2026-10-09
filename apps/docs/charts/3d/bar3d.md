@@ -7,6 +7,8 @@ chart: bar3d
 
 # 3D bars
 
+<ChartOverview />
+
 ::: info Holochart extension
 `bar3d` is not a Plotly trace type: Plotly has no 3D bar chart. Figures that use it only render in
 Holochart. Its attributes follow Plotly's conventions (`marker`, colorscales, `lighting`,
@@ -36,6 +38,9 @@ Pick a different chart when:
 `holochart-3d.iife.min.js` after `holochart.iife.min.js`.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -85,13 +90,15 @@ row gets its own color and legend entry; hover a column for its product, region 
 
 ## Variations
 
+<ChartVariations />
+
 ### A numeric grid
 
 Bars on numeric axes sit at their `x`, `y` values: here a bivariate histogram of 2,000 samples,
 counted on a 12 × 12 grid of 0.5-wide bins. `width` and `depth` are set to 0.45 (in axis units)
 instead of the default 0.4 (0.8 of the 0.5 spacing); empty bins draw nothing.
 
-<Example id="bar3d/numeric-grid" />
+<ExampleLink id="bar3d/numeric-grid" />
 
 ### Stacked bars
 
@@ -99,7 +106,7 @@ Three traces (fossil, nuclear and renewable generation) share `stackgroup: 'mix'
 country and year each source starts where the one before it ended. The z axis covers the stack
 totals, and hovering a block shows its own value and where it starts (`base`).
 
-<Example id="bar3d/stacked" />
+<ExampleLink id="bar3d/stacked" />
 
 ### Colored by height
 
@@ -107,7 +114,7 @@ With a `marker.colorscale` and no `marker.color` array, the bars are colored by 
 temperature anomalies over ten years through a diverging scale centered on zero (`cmid: 0`), with
 a colorbar; negative anomalies go down from 0.
 
-<Example id="bar3d/colorscale" />
+<ExampleLink id="bar3d/colorscale" />
 
 ### Materials and translucency
 
@@ -115,7 +122,7 @@ The same bars three times: Plotly's lighting model (the default); a three.js `st
 (`metalness`, `roughness`) lit by the scene's light rig (`scene2.lighting`); and translucent bars
 (`opacity: 0.55`) without edges.
 
-<Example id="bar3d/materials" />
+<ExampleLink id="bar3d/materials" />
 
 ## Styling
 

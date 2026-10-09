@@ -3,6 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { TEST_CONTAINER_ID } from '../../../apps/sandbox/src/test-protocol.ts';
 import { listExampleIds } from '../../../tests/visual/examples.ts';
 import { openExample, parkPointer, screenshotExample } from '../../../tests/visual/harness.ts';
+import { classificationFor } from './classification.ts';
 import {
   EXAMPLES_DIR,
   PUBLIC_DIR,
@@ -128,6 +129,7 @@ for (const id of exampleIds) {
       threeD: isThreeD(traceTypes, meta.tags),
       thumbnail,
       thumbnailSize: { width: webp.width, height: webp.height },
+      ...classificationFor({ id, tags: meta.tags, traceTypes, thumbnail }, EXAMPLES_DIR),
     };
     writeRecord(outputDir, { id, entry });
   });

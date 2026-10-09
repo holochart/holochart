@@ -22,6 +22,8 @@ import {
 import { sayer, SUMMARY_TEMPLATES } from '../../packages/runtime/src/a11y/summary.ts';
 import { announce, KEYBOARD_TEMPLATES } from '../../packages/runtime/src/fx/keyboard.ts';
 import { sceneModebarButtons } from '../../packages/traces-3d/src/scene/modebar.ts';
+import * as geo from '../../packages/traces-geo/src/a11y.ts';
+import * as graph from '../../packages/traces-graph/src/a11y.ts';
 import * as hier from '../../packages/traces-hier/src/a11y.ts';
 import * as stats from '../../packages/traces-stats/src/a11y.ts';
 import { STAT_LABELS } from '../../packages/traces-stats/src/box/hover.ts';
@@ -40,9 +42,10 @@ const TRANSLATED = [de, es, fr, italian, ja, ko, ptBR, ru, tr, zhCN];
 const SUMMARIES: readonly string[] = Object.values(SUMMARY_TEMPLATES);
 
 /**
- * What keyboard navigation announces: the runtime's sentences (`fx/keyboard.ts`) and those the
+ * What keyboard navigation announces: the runtime's sentences (`fx/keyboard.ts`), those the
  * trace packages' stops bring (`KeyboardPoint.say`), with the parcoords label they name a
- * dimension by.
+ * dimension by and the sentences a graph's stops add for a folded node and for where ↑ and ↓
+ * lead, and what a map says of its view after a view key (`TraceA11y.keyboardViewSay`).
  */
 const ANNOUNCEMENTS: readonly string[] = [
   ...new Set([
@@ -54,6 +57,14 @@ const ANNOUNCEMENTS: readonly string[] = [
     stats.CELL_TEMPLATE,
     stats.CATEGORY_TEMPLATE,
     stats.DIMENSION_TEMPLATE,
+    geo.VIEW_TEMPLATE,
+    graph.NODE_TEMPLATE,
+    graph.LINK_TEMPLATE,
+    graph.RANK_TEMPLATE,
+    graph.TREE_TEMPLATE,
+    graph.FOLDED_TEMPLATE,
+    graph.UP_TEMPLATE,
+    graph.DOWN_TEMPLATE,
   ]),
 ];
 
@@ -184,6 +195,17 @@ describe('translated sentences at run time', () => {
         columns: '4',
       }),
     ).toBe('z: 7, fila 2 de 3, columna 1 de 4.');
+    // So is what a map says of its view after a view key (`TraceA11y.keyboardViewSay`).
+    const view = { lon: '12,5', lat: '−40', scale: '1,25' };
+    expect(announce(layoutIn('de'), geo.VIEW_TEMPLATE, view)).toBe(
+      'Karte zentriert auf Längengrad 12,5°, Breitengrad −40°, Maßstab 1,25.',
+    );
+    expect(announce(layoutIn('ja'), geo.VIEW_TEMPLATE, view)).toBe(
+      '地図の中心は経度12,5°、緯度−40°、縮尺1,25。',
+    );
+    expect(announce(layoutIn('nl'), geo.VIEW_TEMPLATE, view)).toBe(
+      'Map centered at longitude 12,5°, latitude −40°, scale 1,25.',
+    );
   });
 
   it('summarize in the chart’s language', () => {

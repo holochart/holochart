@@ -7,35 +7,51 @@ Plan E21.1 and §5 ("Size tracking"). Budgets are checked in CI by the `bundle s
 Sizes are **minified + gzipped**, in decimal kB (1 kB = 1000 bytes, size-limit's unit), and
 **exclude three.js** unless stated.
 
-| Entry                                        | What it measures                                                                                    | Budget  |
-| -------------------------------------------- | --------------------------------------------------------------------------------------------------- | ------- |
-| `partial: core + scatter`                    | `createChart` + `register` from runtime, `scatter` trace                                            | 157 kB  |
-| `text engine (lazy chunk …)`                 | the SDF text engine chunk, loaded on first text use                                                 | 49 kB   |
-| `fill primitive (lazy chunk …)`              | fill primitive + earcut + exact fill rules, on first fill                                           | 9.4 kB  |
-| `animation (lazy chunk …)`                   | transitions, frames and `animate`, on first animation                                               | 6.4 kB  |
-| `line level of detail (lazy chunk …)`        | min/max pyramid for lines of 100k+ points, on first use                                             | 2.3 kB  |
-| `custom marker symbols … (lazy chunk)`       | SVG-path SDFs, image and glyph atlases, on first use                                                | 3.9 kB  |
-| `pattern fills (lazy chunk …)`               | Plotly's pattern rules, shader code and attribute writer, on first pattern                          | 2.25 kB |
-| `style rules and functions (lazy …)`         | `styleRules` and function-valued attributes, on first use                                           | 4 kB    |
-| `chart summaries and data table (…)`         | generated summaries and the visible data table (two chunks, summed)                                 | 5.8 kB  |
-| `default font, regular face (lazy …)`        | TeX Gyre Heros Regular chunk, loaded on first text use                                              | 95 kB   |
-| `default font, bold face (lazy …)`           | the bold face chunk, loaded when bold text is drawn                                                 | 95 kB   |
-| `default font, italic face (lazy …)`         | the italic face chunk, loaded when italic text is drawn                                             | 98 kB   |
-| `default font, bold italic face (…)`         | the bold italic face chunk                                                                          | 95 kB   |
-| `partial: basic`                             | runtime + components + traces-basic + themes (all exports)                                          | 248 kB  |
-| `controls views (lazy chunks of basic)`      | menus, sliders, range selector/slider, selections views                                             | 16 kB   |
-| `keyboard navigation and legend keys (…)`    | data keyboard navigation (first focus) and legend keys (two chunks)                                 | 5.5 kB  |
-| `legend scrolling (lazy chunk of basic)`     | scrolled legend viewport, scrollbar, wheel/drag/touch/keyboard scrolling, on first overflow         | 1.8 kB  |
-| `@mk7s/holochart (full, ESM)`                | everything the full bundle exports, 3D included                                                     | 540 kB  |
-| `sankey flow particles (lazy chunk of full)` | the `link.flow` particle primitive, on first sankey flow                                            | 3.6 kB  |
-| `3D mesh primitive and lighting (lazy …)`    | mesh primitive, lighting, light rigs, material types, transparency sorting, on first 3D mesh        | 11.7 kB |
-| `3D lines, sprites and spheres (lazy …)`     | 3D lines, sprite markers, sphere impostors, depth sorting, on first 3D lines or markers             | 10.7 kB |
-| `2.5D view and extrusion primitive (…)`      | 2.5D camera, projector, stencil clipping, prisms, extrusion primitive, on first `view3d` or `depth` | 13.5 kB |
-| `2.5D view component (lazy chunk of full)`   | the `layout.view3d` component's view: tilted axes and grids, turning drags, on first `view3d`       | 2.7 kB  |
-| `trace keyboard stops and 3D descriptions …` | the trace packages' accessibility chunks (one per package, summed), on first keyboard focus         | 4.6 kB  |
-| `@mk7s/holochart IIFE, 2D (includes three)`  | `dist/holochart.iife.min.js` as shipped, **with** three.js: everything but 3D                       | 690 kB  |
-| `@mk7s/holochart 3D add-on IIFE (…)`         | `dist/holochart-3d.iife.min.js` as shipped: the 3D package and render's 3D chunks                   | 115 kB  |
-| each `@mk7s/holochart-*` package             | `export *` of that package                                                                          | report  |
+| Entry                                              | What it measures                                                                                      | Budget   |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | -------- |
+| `partial: core + scatter`                          | `createChart` + `register` from runtime, `scatter` trace                                              | 157 kB   |
+| `text engine (lazy chunk …)`                       | the SDF text engine chunk, loaded on first text use                                                   | 49 kB    |
+| `fill primitive (lazy chunk …)`                    | fill primitive + earcut + exact fill rules, on first fill                                             | 9.4 kB   |
+| `animation (lazy chunk …)`                         | transitions, frames and `animate`, on first animation                                                 | 6.4 kB   |
+| `line level of detail (lazy chunk …)`              | min/max pyramid for lines of 100k+ points, on first use                                               | 2.3 kB   |
+| `custom marker symbols … (lazy chunk)`             | SVG-path SDFs, image and glyph atlases, on first use                                                  | 3.9 kB   |
+| `pattern fills (lazy chunk …)`                     | Plotly's pattern rules, shader code and attribute writer, on first pattern                            | 2.25 kB  |
+| `style rules and functions (lazy …)`               | `styleRules` and function-valued attributes, on first use                                             | 4 kB     |
+| `chart summaries and data table (…)`               | generated summaries and the visible data table (two chunks, summed)                                   | 5.8 kB   |
+| `default font, regular face (lazy …)`              | TeX Gyre Heros Regular chunk, loaded on first text use                                                | 95 kB    |
+| `default font, bold face (lazy …)`                 | the bold face chunk, loaded when bold text is drawn                                                   | 95 kB    |
+| `default font, italic face (lazy …)`               | the italic face chunk, loaded when italic text is drawn                                               | 98 kB    |
+| `default font, bold italic face (…)`               | the bold italic face chunk                                                                            | 95 kB    |
+| `partial: basic`                                   | runtime + components + traces-basic + themes (all exports)                                            | 248 kB   |
+| `controls views (lazy chunks of basic)`            | menus, sliders, range selector/slider, selections views                                               | 16 kB    |
+| `keyboard navigation and legend keys (…)`          | data keyboard navigation (first focus) and legend keys (two chunks)                                   | 5.7 kB   |
+| `legend scrolling (lazy chunk of basic)`           | scrolled legend viewport, scrollbar, wheel/drag/touch/keyboard scrolling, on first overflow           | 1.8 kB   |
+| `@mk7s/holochart (full, ESM)`                      | everything the full bundle exports, 3D included                                                       | 540 kB   |
+| `sankey flow particles (lazy chunk of full)`       | the `link.flow` particle primitive, on first sankey flow                                              | 3.6 kB   |
+| `3D mesh primitive and lighting (lazy …)`          | mesh primitive, lighting, light rigs, material types, transparency sorting, on first 3D mesh          | 11.7 kB  |
+| `3D lines, sprites and spheres (lazy …)`           | 3D lines, sprite markers, sphere impostors, depth sorting, on first 3D lines or markers               | 10.7 kB  |
+| `2.5D view and extrusion primitive (…)`            | 2.5D camera, projector, stencil clipping, prisms, extrusion primitive, on first `view3d` or `depth`   | 13.5 kB  |
+| `2.5D view component (lazy chunk of full)`         | the `layout.view3d` component's view: tilted axes and grids, turning drags, on first `view3d`         | 2.7 kB   |
+| `trace keyboard stops and 3D descriptions …`       | the trace packages' accessibility chunks (one per package, summed), on first keyboard focus           | 4.6 kB   |
+| `partial: core + geo`                              | runtime + the geo package (`tracesGeo`): the geo subplot, scattergeo, choropleth, d3-geo              | 209 kB   |
+| `3D globe (lazy chunks of core + geo)`             | what draws a `globe3d` subplot: sphere geometry, base layers, the traces' globe views, on first globe | 11.9 kB  |
+| `extra map projections (lazy chunk of core + geo)` | the 68 projection types of d3-geo-projection, when a figure names one                                 | 13.3 kB  |
+| `country names (lazy chunk of core + geo)`         | the table of `locationmode: 'country names'`, on first use                                            | 15.8 kB  |
+| `basemap 1:110m, countries and land (…)`           | Natural Earth data a map at `resolution: 110` loads                                                   | 32.1 kB  |
+| `basemap 1:110m, lakes, rivers, subunits (…)`      | loaded when a map shows them                                                                          | 8.95 kB  |
+| `basemap 1:50m, countries and land (…)`            | Natural Earth data a map at `resolution: 50` loads                                                    | 182.5 kB |
+| `basemap 1:50m, lakes, rivers, subunits (…)`       | loaded when a map shows them                                                                          | 107.5 kB |
+| `geo keyboard stops and view keys (…)`             | the geo traces' accessibility chunk, on first keyboard focus                                          | 0.9 kB   |
+| `partial: core + graph`                            | runtime + the graph package (`tracesGraph`): the graph and chord traces and their layouts             | 236 kB   |
+| `partial: core + graph3d`                          | runtime + `tracesGraph3d`: the graph3d trace and the 3D scene it is drawn in                          | 224 kB   |
+| `graph keyboard stops (…)`                         | the graph package's accessibility chunk (graph, graph3d, chord), on first keyboard focus              | 3.8 kB   |
+| `graph layout worker client and link bundling (…)` | loaded when a graph first lays out off the main thread (`worker`) or bundles links (`link.bundle`)    | 8.7 kB   |
+| `graph layout worker (dist/layout-worker.js)`      | the worker file itself, as shipped: every layout and the bundling, one file without imports           | 30.5 kB  |
+| `@mk7s/holochart IIFE, 2D (includes three)`        | `dist/holochart.iife.min.js` as shipped, **with** three.js: everything but 3D                         | 693 kB   |
+| `@mk7s/holochart 3D add-on IIFE (…)`               | `dist/holochart-3d.iife.min.js` as shipped: the 3D package and render's 3D chunks                     | 115 kB   |
+| each `@mk7s/holochart-*` package                   | `export *` of that package                                                                            | report   |
+| `@mk7s/holochart-traces-geo`                       | `export *` of the geo package, which the full bundle never imports (ADR-026); gated by the rows above | report   |
+| `@mk7s/holochart-traces-graph`                     | `export *` of the graph package, which the full bundle never imports (ADR-029); gated by its row      | report   |
 
 The IIFE budget is the full budget plus a 200 kB allowance for the bundled three.js (about
 170–190 kB min + gzip on its own; ADR-015). Per-package entries are reported but not gated.
@@ -196,6 +212,471 @@ entry measures the whole package instead and the report adds a footnote.
 In CI, the job writes the table to the job summary, uploads `size.json` as the `size-report`
 artifact, compares with the latest successful `main` run, and posts or updates one PR comment
 (same-repo PRs only; fork PRs get a read-only token, so they get the job summary only).
+
+## Sizes after large graphs (G5, G7, G10, 2026-10-06)
+
+The final rows of the graph package. A `graph` layout can now run off the main thread and be
+drawn while it settles (`worker`), a large graph is drawn with a level of detail that follows the
+zoom (`lod`), and links can be bundled (`link.bundle`). Measured with `pnpm size` locally.
+
+| Entry                                                        | Size      | Budget  |
+| ------------------------------------------------------------ | --------- | ------- |
+| partial: core + graph                                        | 233.83 kB | 236 kB  |
+| the same before large graphs (G5 and G10 in)                 | 226.91 kB | 231 kB  |
+| the same before the pointer and the descriptions (G2–G4, G8) | 218.54 kB | 223 kB  |
+| graph layout worker client and link bundling (lazy chunk)    | 8.24 kB   | 8.7 kB  |
+| graph keyboard stops (lazy chunk)                            | 3.60 kB   | 3.8 kB  |
+| graph layout worker (`dist/layout-worker.js`)                | 29.77 kB  | 30.5 kB |
+| partial: core + graph3d                                      | 220.47 kB | 224 kB  |
+| keyboard navigation and legend keys (lazy chunks of basic)   | 5.57 kB   | 5.7 kB  |
+| `@mk7s/holochart` (full, ESM)                                | 538.05 kB | 540 kB  |
+| `@mk7s/holochart` IIFE, 2D (includes three)                  | 688.37 kB | 693 kB  |
+| `@mk7s/holochart-traces-graph` (all)                         | 233.10 kB | report  |
+
+What the numbers say:
+
+- **Large graphs add 6.9 kB to the first chunk**, which is what has to answer at once. By module,
+  minified alone: the view side of a layout that is still to come (asking for it, drawing the
+  positions the worker reports once per frame, holding `chart.ready`) 1.55 kB; what a calc waits
+  for, the rule for `worker` and the answers that are kept, 1.36 kB; the level of detail 1.35 kB;
+  the spatial index of the links that hover uses 1.05 kB; the rest, about 1.5 kB, is in calc, the
+  view, the link geometry that is patched while a node is dragged, and the three attributes.
+- **8.2 kB load on demand**: the client of the layout worker (2.2 kB alone), the handler it runs
+  on the main thread in slices when no worker can be started (1.4 kB), the protocol (0.8 kB),
+  force-directed bundling (3.3 kB) and hierarchical bundling (1.6 kB). A figure loads the chunk
+  the first time one of its layouts runs off the main thread or its links are bundled; with the
+  defaults (`worker: false`, no bundling) it never does.
+- **That chunk is a copy.** The package's entry exports the same modules (`layoutInWorker`,
+  `setGraphWorkerUrl`, `bundleLinks`, …) for apps that lay graphs out themselves, and a module the
+  entry imports stays in the entry's chunk however lazily someone else imports it: with one copy
+  the row measured 241.43 kB. The package build therefore points the trace's `import()` at
+  copies of those modules under ids of their own (`packages/traces-graph/tsdown.config.ts`); an
+  app that uses none of the entry's exports drops the entry's copy like any unused code. Both
+  copies share the one worker of the page (`src/worker/shared.ts`, which is in the build once).
+- **The layouts are in three places**: the first chunk (calc runs them), the lazy chunk imports
+  them from there, and the worker file carries its own copy, because a worker shares no chunk
+  with the page.
+- **`partial: core + graph3d` no longer carries the 2D layouts it never runs.** Its calc took
+  the registry of custom layouts from `layout/index.ts`, the table of every built-in layout.
+  The registry is now a file of its own (`layout/registry.ts`) and `graph3d` imports it from
+  there: the row went from 234.58 kB to 220.47 kB, and its budget from 236 kB to 224 kB.
+- **Three budgets outside the package moved** (ledger lines in `tests/bundle/size/policy.ts`):
+  the keyboard chunk of basic to 5.7 kB (two additions to the keyboard contract, 0.09 kB), the
+  graph keyboard stops to 3.8 kB, and the 2D script-tag build to 693 kB (Express gained
+  `graph`, `chord` and `adjacencyMatrix`, about 3.0 kB; it has no lazy chunks). The full ESM
+  bundle is at 538.05 of 540 kB, about 0.3 kB under its budget once CI's margin is counted.
+- **Still not lazy, and next if the graph row has to shrink**: the view side of the stream
+  (1.55 kB, by loading it with the first calc that waits) and the node drag (about 4 kB, on the
+  first press on a node).
+
+## Sizes after the graph package (G1, 2026-10-06)
+
+Network graphs are a package of their own, `@mk7s/holochart-traces-graph`, which the full bundle
+does not import (ADR-029): an app adds it with `import '@mk7s/holochart/graph'`. A test bundles
+the full entry as an app would and fails if a module of the graph package is in it
+(`tests/bundle/esm-no-graph.spec.ts`). The package has one budgeted row, on a
+`partial: core + graph` entry: the runtime with `tracesGraph` registered. It has no lazy chunks of
+its own; what the entry loads on demand is the runtime's and render's (text engine, fonts, fill,
+markers, animation, keyboard), which the core + scatter rows gate. The budget is the measured
+size plus about 2 %. Measured with `pnpm size` locally.
+
+| Entry                                | Size      | Budget |
+| ------------------------------------ | --------- | ------ |
+| partial: core + graph                | 185.59 kB | 190 kB |
+| the same, `graph` registered alone   | 176.05 kB | —      |
+| partial: core + scatter              | 155.06 kB | 157 kB |
+| full, ESM                            | 534.86 kB | 540 kB |
+| `@mk7s/holochart-traces-graph` (all) | 117.71 kB | report |
+
+What the numbers say:
+
+- **A graph costs 21.0 kB** over core + scatter: the trace (model, calc, links with arrowheads
+  and curves, box nodes, labels, legend, hover and selection) and the preset, circular and grid
+  layouts. The rest of the entry is what scatter also needs: the runtime, render's lines,
+  markers, rects and text, and the parts of traces-basic the trace builds on. The second row is
+  not an entry of its own: it was measured once, with `graph` in place of `tracesGraph`.
+- **The chord trace adds 9.5 kB** to the row, since `tracesGraph` registers both.
+- **`export *` of the package** also counts the layouts that no arrangement runs yet.
+
+## Sizes after the graph layouts (G2–G4, 2026-10-06)
+
+Every arrangement of the `graph` trace now runs its layout: force-directed, layered, the tidy and
+radial trees, the dendrogram, the arc diagram and the hive plot. The layouts are part of the
+`partial: core + graph` entry, not lazy chunks: calc is synchronous, so a layout that loaded on
+demand would need a pending state and a second pass (ADR-029), and an app without a graph does not
+load the package at all. The budget is again the measured size plus about 2 %. Measured with
+`pnpm size` locally; the layouts on their own with a one-off bundle of each (minified, gzipped).
+
+| Entry                                             | Size      | Budget |
+| ------------------------------------------------- | --------- | ------ |
+| partial: core + graph                             | 218.54 kB | 223 kB |
+| the same before the layouts (preset, circular, …) | 185.59 kB | 190 kB |
+| layered layout, alone                             | 11.76 kB  | —      |
+| force layout (springs and ForceAtlas2), alone     | 7.29 kB   | —      |
+| tidy tree, radial tree and dendrogram, together   | 4.99 kB   | —      |
+| arc diagram layout, alone                         | 1.35 kB   | —      |
+| hive plot layout, alone                           | 1.30 kB   | —      |
+| the seven layouts, together                       | 25.58 kB  | —      |
+
+What the numbers say:
+
+- **The layouts are 25.6 kB of the 33.0 kB the entry grew by.** The layered layout is the
+  largest: cycle breaking, network simplex ranking, crossing reduction, Brandes–Köpf placement,
+  three kinds of routes and clusters. The three trees share their forest builder and contour
+  pass, which is why they cost less together (5.0 kB) than their sum (9.8 kB).
+- **The trace side is about 7 kB**: the option containers and their mapping to the layouts,
+  routed and secondary links, the titles of cluster frames and hive axes, turned labels, box
+  nodes that shrink to fit, the `force.simulate` animation and the tween of a folding tree.
+- **The same layouts are in the layout worker** (`dist/layout-worker.js`, its own row): a worker
+  shares no chunk with the page, so it carries its own copy.
+- **The full bundle has no graph code**: `dist/index.js` imports nothing from the package (only
+  its declarations name `GraphTrace`, for typed figures). It measured 534.86 kB in this tree,
+  against 534.76 kB in the geo section below.
+- **No layout is still to come**: the seven above are every arrangement of ADR-029 that needs
+  one (`preset`, `circular` and `grid` were in the row before). What came after them is in the
+  section "Sizes after large graphs" above: the pointer (G5), the descriptions (G10) and large
+  graphs (G7), each with a ledger line.
+
+## Sizes after the geo package (GEO2–GEO8, 2026-10-04)
+
+Maps are a package of their own, `@mk7s/holochart-traces-geo`, which the full bundle does not
+import (ADR-026): an app adds it with `import '@mk7s/holochart/geo'`. A test bundles the full
+entry as an app would and fails if a module of the geo package, d3-geo, d3-geo-projection or
+topojson-client is in it (`tests/bundle/esm-no-geo.spec.ts`). The package therefore has rows of
+its own, on a `partial: core + geo` entry: the runtime with `tracesGeo` registered. Everything a
+map loads on demand is a lazy chunk with a budget: the projections of d3-geo-projection, the
+country-name table, the keyboard code, and the basemap data, two chunks per resolution
+(ADR-024). Budgets are the measured size plus about 2 %. Measured with `pnpm size` locally.
+
+| Entry                                      | Before          | After     | Budget   |
+| ------------------------------------------ | --------------- | --------- | -------- |
+| full, ESM                                  | 533.75 kB       | 534.76 kB | 540 kB   |
+| partial: core + scatter                    | not re-measured | 154.95 kB | 157 kB   |
+| partial: core + geo                        | —               | 204.77 kB | 209 kB   |
+| 3D globe (lazy)                            | —               | 11.58 kB  | 11.9 kB  |
+| extra map projections (lazy)               | —               | 12.94 kB  | 13.3 kB  |
+| country names (lazy)                       | —               | 15.40 kB  | 15.8 kB  |
+| basemap 1:110m, countries and land (lazy)  | —               | 31.30 kB  | 32.1 kB  |
+| basemap 1:110m, lakes, rivers, subunits    | —               | 8.68 kB   | 8.95 kB  |
+| basemap 1:50m, countries and land (lazy)   | —               | 178.28 kB | 182.5 kB |
+| basemap 1:50m, lakes, rivers, subunits     | —               | 104.99 kB | 107.5 kB |
+| geo keyboard stops and view keys (lazy)    | —               | 0.79 kB   | 0.9 kB   |
+| keyboard navigation and legend keys (lazy) | 5.42 kB         | 5.48 kB   | 5.5 kB   |
+| IIFE (2D, includes three)                  | —               | 684.95 kB | 690 kB   |
+
+What the numbers say:
+
+- **A map costs 50 kB of code** over core + scatter, of which d3-geo and topojson-client are
+  about 12 kB (the GEO1 measurement below) and 4.6 kB is what a 3D globe needs up front (its
+  viewport, camera and matrix, and the loaders of its lazy code); a world map at the default resolution then loads
+  31 kB of data, 40 kB with lakes, rivers and US states.
+- **The full bundle grew by 1.0 kB**, none of it map code: the Express functions `scatterGeo`,
+  `lineGeo` and `choropleth` (0.61 kB; they build figures and import nothing from the geo
+  package) and the runtime's additions for subplots like this one. The "Before" figure is the
+  tree as it stood before the geo work; the 538.10 kB in the S2.14 section below was measured
+  before later R3 trims.
+- **1:50m data is over ADR-024's target**: 283 kB with all layers against 235 kB, because it is
+  quantized on a 2e4 grid (1.1 km). The 1e4 grid the target was measured on is 236 kB but drops
+  three small countries and puts small islands on a visible grid.
+- **The keyboard chunk has 0.02 kB of headroom.** The runtime's hook that lets a trace word its
+  own view-key announcement (GEO6) added 0.06 kB to it. CI measures about 0.3 % more than this
+  machine, so the next addition to that chunk needs a trim or a ledger line.
+- **A 3D globe (GEO8) loads on demand**: 11.6 kB of the geo package's own lazy code, and
+  render's mesh chunk (10.7 kB), 3D-line chunk (9.8 kB) and picker chunk (about 6 kB). The
+  pickers are a public export of render that 3D scenes import statically; a lazy chunk that
+  imported `createPicker` the same way put them in the initial chunk of every map (5.7 kB), so
+  render now also builds them as `dist/picker-lazy.js`, reached through `loadPicker()`.
+- **Two corrections to how lazy chunks are counted** (`tests/bundle/size/bundle.ts`): a chunk the
+  bundler emits for an `import()` that tree shaking removed is not counted, since it is never
+  fetched (without this, the picker chunk showed up in the lazy size of apps that have no
+  globe); and render's shared helper chunk no longer trips the "mixes a lazy part with code"
+  check when the fill chunk is its only user (the runtime alone).
+- The script-tag build has no maps yet (ADR-026 plans a third script).
+
+## Geo candidates, measured for GEO1 (2026-10-03)
+
+Backlog story GEO1 asks for the sizes of the candidate dependencies and basemap data of the
+geographic charts before any of them is chosen. These are the numbers. **Nothing here ships yet,
+no entry is added and no budget changes**; the ADRs that GEO1 produces decide what is used.
+
+Measured by [`docs/spikes/scripts/geo-sizes.mjs`](../spikes/scripts/geo-sizes.mjs), which bundles
+the way `bundle.ts` does (rolldown 1.2.9, tree-shaken, minified, then gzip level 9; brotli at
+quality 11 beside it), from the copies in `examples/node_modules`: d3-geo 3.1.1,
+d3-geo-projection 4.0.0, topojson-client 3.1.0, world-atlas 2.0.2 (Natural Earth 4.1.0 as
+TopoJSON) and maplibre-gl 6.11.2. Local macOS run, Node 26.8.1.
+
+```sh
+node docs/spikes/scripts/geo-sizes.mjs                               # the tables below
+node docs/spikes/scripts/geo-sizes.mjs --out <dir> --plotly --timing # + Plotly's files, timings
+```
+
+**Marginal** is what an entry adds to a bundle that already holds the d3 code Holochart ships: the
+bundle of Holochart's d3 imports plus the entry, minus the bundle of those imports alone. Holochart
+imports `color` from d3-color, `format` and `formatLocale` from d3-format, and `timeFormatLocale`
+and `utcFormat` from d3-time-format (23.49 kB min, 8.39 kB gzip, with the d3-time they pull in).
+d3-array is a dependency of core but no source file imports it, and none of it is in the bundles,
+so the geo candidates share nothing with what is there: marginal and standalone sizes differ by
+less than 0.1 kB gzip. Checked against the built packages: the first-step subset plus
+topojson-client adds 11.64 kB gzip to `export *` of core and 11.92 kB to the full bundle.
+
+### Code
+
+| Entry                                                           | Min      | Gzip     | Brotli   | Marginal gzip |
+| --------------------------------------------------------------- | -------- | -------- | -------- | ------------- |
+| d3-array: what d3-geo uses (`Adder`, `merge`, `range`)          | 0.73 kB  | 0.47 kB  | 0.43 kB  | 0.35 kB       |
+| d3-geo: whole module                                            | 36.80 kB | 13.30 kB | 11.87 kB | 13.24 kB      |
+| d3-geo: one projection (`geoMercator`)                          | 16.54 kB | 6.52 kB  | 5.92 kB  | 6.45 kB       |
+| d3-geo: first step (14 exports, no `geoPath`)                   | 28.22 kB | 10.62 kB | 9.53 kB  | 10.57 kB      |
+| d3-geo: first step + `geoPath`                                  | 32.24 kB | 11.92 kB | 10.70 kB | 11.87 kB      |
+| d3-geo: first step + every Plotly projection d3-geo has (15)    | 30.73 kB | 11.44 kB | 10.25 kB | 11.38 kB      |
+| d3-geo-projection: whole module, with the d3-geo it needs       | 81.35 kB | 30.81 kB | 27.00 kB | 30.70 kB      |
+| d3-geo-projection: the classic nine, with the d3-geo they need  | 19.91 kB | 8.07 kB  | 7.27 kB  | 7.99 kB       |
+| d3-geo-projection: every Plotly projection d3-geo lacks (67), … | 46.42 kB | 18.90 kB | 16.74 kB | 18.84 kB      |
+| topojson-client: whole module                                   | 6.86 kB  | 2.43 kB  | 2.20 kB  | 2.36 kB       |
+| topojson-client: `feature` + `mesh`                             | 3.22 kB  | 1.27 kB  | 1.15 kB  | 1.20 kB       |
+| topojson-client: `feature` + `mesh` + `merge`                   | 4.32 kB  | 1.58 kB  | 1.44 kB  | 1.51 kB       |
+
+The first step is GEO2's: `geoEquirectangular`, `geoMercator`, `geoNaturalEarth1`,
+`geoOrthographic`, `geoAlbersUsa`, `geoGraticule`, `geoInterpolate`, `geoDistance`, `geoArea`,
+`geoCentroid`, `geoBounds`, `geoContains`, `geoStream` and `geoCircle`.
+
+d3-geo tree-shakes, but most of it is the machinery every projection needs (rotation, antimeridian
+and circle clipping, adaptive resampling, the stream transforms): one projection alone is 6.5 kB
+gzip, half the module. After that a projection is cheap. The ten more that Plotly has and d3-geo
+supplies add 0.8 kB together; `geoPath` adds 1.3 kB.
+
+### Plotly's projections
+
+`layout.geo.projection.type` in plotly.js 4.1.1 has 84 names (the keys of `projNames` in
+`src/plots/geo/constants.js`), 82 distinct projections: `natural earth` and `natural earth1` are
+one, as are `winkel tripel` and `winkel3`. d3-geo and d3-geo-projection cover all of them.
+
+- **In d3-geo (16 names, 15 projections):** albers, albers usa, azimuthal equal area, azimuthal
+  equidistant, conic conformal, conic equal area, conic equidistant, equal earth,
+  equirectangular, gnomonic, mercator, natural earth, natural earth1, orthographic,
+  stereographic, transverse mercator.
+- **Need d3-geo-projection (68 names, 67 projections):** airy, aitoff, august, baker, bertin1953,
+  boggs, bonne, bottomley, bromley, collignon, craig, craster, cylindrical equal area,
+  cylindrical stereographic, eckert1 to eckert6, eisenlohr, fahey, foucaut, foucaut sinusoidal,
+  ginzburg4, ginzburg5, ginzburg6, ginzburg8, ginzburg9, gringorten, gringorten quincuncial,
+  guyou, hammer, hill, homolosine, hufnagel, hyperelliptical, kavrayskiy7, lagrange, larrivee,
+  laskowski, loximuthal, miller, mollweide, mt flat polar parabolic, mt flat polar quartic,
+  mt flat polar sinusoidal, natural earth2, nell hammer, nicolosi, patterson, peirce quincuncial,
+  polyconic, rectangular polyconic, robinson, satellite, sinu mollweide, sinusoidal, times,
+  van der grinten, van der grinten2 to van der grinten4, wagner4, wagner6, wiechel,
+  winkel tripel, winkel3.
+
+The "classic nine" are the ones Plotly 1.x had from d3-geo-projection: kavrayskiy7, miller,
+robinson, eckert4, mollweide, hammer, winkel tripel, aitoff and sinusoidal.
+
+What d3-geo-projection adds to a bundle that already holds "first step + every Plotly projection
+d3-geo has":
+
+| Added                                     | Min      | Gzip     | Brotli   |
+| ----------------------------------------- | -------- | -------- | -------- |
+| the classic nine                          | 4.13 kB  | 1.70 kB  | 1.51 kB  |
+| every Plotly projection d3-geo lacks (67) | 30.71 kB | 12.40 kB | 10.84 kB |
+| the whole module                          | 60.27 kB | 22.32 kB | 19.27 kB |
+
+One projection at a time, each of the 67 adds between 0.07 kB (sinusoidal) and 1.23 kB (peirce
+quincuncial) gzip, median 0.26 kB; 37 are under 0.3 kB and 15 are 0.5 kB or more. The heaviest
+share their elliptic-function code (peirce quincuncial 1.23, gringorten quincuncial 1.13, guyou
+1.09, gringorten 0.98, eisenlohr 0.89 kB), so the singles sum to 23.4 kB while all 67 together are
+12.4 kB. The classic nine one by one: robinson 0.58, winkel tripel 0.53, aitoff 0.37, eckert4
+0.23, mollweide 0.22, hammer 0.21, miller 0.12, kavrayskiy7 0.11, sinusoidal 0.07 kB. The script
+prints the full list. d3-geo-projection tree-shakes cleanly: what Plotly does not use (the
+interrupted, polyhedral and other projections, `geoProject`, `geoStitch`, `geoQuantize`) is the
+other 9.9 kB of the module.
+
+### Natural Earth basemap data (world-atlas)
+
+| File                | Raw = minified JSON | Gzip      | Brotli    | As a chunk, object literal (min / gzip) | As a chunk, `JSON.parse` string (min / gzip) |
+| ------------------- | ------------------- | --------- | --------- | --------------------------------------- | -------------------------------------------- |
+| countries-110m.json | 107.76 kB           | 38.40 kB  | 32.97 kB  | 105.99 / 38.32 kB                       | 107.80 / 38.46 kB                            |
+| land-110m.json      | 55.21 kB            | 20.70 kB  | 18.20 kB  | 55.21 / 20.74 kB                        | 55.25 / 20.78 kB                             |
+| countries-50m.json  | 756.42 kB           | 230.10 kB | 205.59 kB | 754.01 / 229.71 kB                      | 756.46 / 230.16 kB                           |
+| land-50m.json       | 545.53 kB           | 169.40 kB | 152.68 kB | 545.53 / 169.43 kB                      | 545.58 / 169.46 kB                           |
+
+The files are already minified. As a lazy JS chunk the two forms are the same size within 0.2 %:
+the object literal (what rolldown's own JSON import emits) saves the quotes around keys, the
+`JSON.parse` string (what Vite emits for large JSON) gzips as well. `JSON.parse` evaluates about
+twice as fast: countries-50m takes 18.0 ms as a literal, 8.6 ms as a `JSON.parse` chunk and 6.3 ms
+as `JSON.parse` of fetched text; countries-110m 2.2, 1.2 and 0.9 ms (Node 26, median of 15, one
+machine: indicative). Decoding every object with `feature` takes 3 ms at 50m.
+
+Geometry after `topojson.feature`. Rings are closed, so a ring's vertex count includes the repeated
+first point. All four files are quantized to a longitude step of 0.0036° (1e5 steps).
+
+| File           | Object    | Arcs  | Arc points | Features | Polygons | Rings | Vertices |
+| -------------- | --------- | ----- | ---------- | -------- | -------- | ----- | -------- |
+| countries-110m | countries | 595   | 8,246      | 177      | 285      | 286   | 10,587   |
+| countries-110m | land      | 595   | 8,246      | 1        | 124      | 125   | 5,127    |
+| land-110m      | land      | 130   | 5,129      | 1        | 125      | 126   | 5,123    |
+| countries-50m  | countries | 1,959 | 80,617     | 241      | 1,616    | 1,629 | 99,539   |
+| countries-50m  | land      | 1,959 | 80,617     | 1        | 1,427    | 1,429 | 60,835   |
+| land-50m       | land      | 1,425 | 60,635     | 1        | 1,419    | 1,421 | 60,629   |
+
+**One file serves four layers.** `countries-*.json` already contains a `land` object (the merge of
+the countries, sharing their arcs), so `land-*.json` is not needed and `topojson.merge` is not
+either. Lines come from `mesh`:
+
+| From           | Layer                                         | Lines | Vertices |
+| -------------- | --------------------------------------------- | ----- | -------- |
+| countries-110m | coastlines: `mesh(land)`                      | 125   | 5,127    |
+| countries-110m | borders: `mesh(countries, (a, b) => a !== b)` | 159   | 2,807    |
+| countries-50m  | coastlines                                    | 1,429 | 60,835   |
+| countries-50m  | borders                                       | 187   | 19,439   |
+
+So "a 50m world" is 60,835 vertices of land fill in 1,429 rings, 99,539 vertices of country fills
+in 1,629 rings, 60,835 vertices of coastline and 19,439 of borders; the same at 110m is 5,127,
+10,587, 5,127 and 2,807. Shipping countries-50m alone instead of countries-50m and land-50m saves
+169.4 kB gzip; at 110m, 20.7 kB. The separate land files differ slightly from the merged land
+(1,419 against 1,427 polygons at 50m), as they come from Natural Earth's physical layer.
+
+Precision is the largest lever on the data. The same two files rounded to a step of 0.036° (1e4
+steps, the grid of Plotly's older files; about 4 km at the equator) keep nearly every vertex:
+
+| File                            | Minified JSON | Gzip      | Brotli    | Countries vertices | Land vertices |
+| ------------------------------- | ------------- | --------- | --------- | ------------------ | ------------- |
+| countries-110m, requantized 1e4 | 91.89 kB      | 28.41 kB  | 24.81 kB  | 10,584             | 5,126         |
+| countries-50m, requantized 1e4  | 620.59 kB     | 136.26 kB | 116.50 kB | 98,651             | 60,271        |
+
+What world-atlas lacks for GEO2's layers:
+
+| GEO2 layer       | From world-atlas                                                                        |
+| ---------------- | --------------------------------------------------------------------------------------- |
+| `showland`       | yes: `land`                                                                             |
+| `showcountries`  | yes: interior `mesh` of `countries`                                                     |
+| `showcoastlines` | yes: `mesh` of `land`                                                                   |
+| `showocean`      | no data needed: the projection's outline filled under the land                          |
+| `showlakes`      | no                                                                                      |
+| `showrivers`     | no                                                                                      |
+| `showsubunits`   | no (no states or provinces; the `usa` scope and `locationmode: 'USA-states'` need them) |
+
+Also: country ids are ISO 3166-1 numeric (`"716"`), not the ISO-3 codes `locationmode: 'ISO-3'`
+joins on, and the only property is `name`, so a numeric-to-ISO-3 table is needed; three features
+at 110m and five at 50m have no id (N. Cyprus, Somaliland, Kosovo; at 50m also Indian Ocean Ter.
+and Siachen Glacier); 110m has 177 countries and 50m 241, so small states are missing at 110m;
+there are no label points (Plotly's files carry a `ct` centroid per feature). world-atlas 2.0.2
+packages Natural Earth 4.1.0 (2018). The package is ISC; Natural Earth states that its data is in
+the public domain.
+
+### Plotly's own topojson, for comparison
+
+Downloaded by `--plotly` from `cdn.plot.ly` into the `--out` directory, not into the repository.
+plotly.js 4 has two sets. `https://cdn.plot.ly/un/` is the default `topojsonURL` since the switch
+to United Nations geodata for coastlines, countries, land and ocean, with Natural Earth for lakes,
+rivers and subunits (built in the repo's `topojson/` directory; the npm package no longer contains
+the files). `https://cdn.plot.ly/` holds the older files, built by `sane-topojson` from Natural
+Earth 4.1.0, the same source as world-atlas. Every file has the seven objects `coastlines`,
+`land`, `ocean`, `lakes`, `rivers`, `countries` and `subunits`; countries have ISO-3 ids and a
+centroid, subunits a postal code and their country. `subunits` holds the US states at 110m (51
+features) and the states of the USA, Canada, Australia and Brazil at 50m (100).
+
+| File                           | Raw        | Gzip       | Brotli     | Lon step | Arcs  |
+| ------------------------------ | ---------- | ---------- | ---------- | -------- | ----- |
+| un/world_110m.json             | 285.05 kB  | 108.80 kB  | 92.62 kB   | 0.00036° | 1,521 |
+| un/world_50m.json              | 1692.31 kB | 611.34 kB  | 499.26 kB  | 0.00036° | 9,010 |
+| un/usa_110m.json               | 68.51 kB   | 23.33 kB   | 19.60 kB   | 0.0093°  | 743   |
+| un/usa_50m.json                | 304.14 kB  | 97.05 kB   | 82.99 kB   | 0.0024°  | 1,721 |
+| un, all 18 files (9 scopes)    | 4458.39 kB | 1511.04 kB | 1267.54 kB |          |       |
+| older world_110m.json          | 136.64 kB  | 40.46 kB   | 34.59 kB   | 0.036°   | 1,040 |
+| older world_50m.json           | 1100.03 kB | 232.74 kB  | 190.24 kB  | 0.036°   | 4,785 |
+| older usa_110m.json            | 49.10 kB   | 16.13 kB   | 13.43 kB   | 0.013°   | 666   |
+| older usa_50m.json             | 470.76 kB  | 147.19 kB  | 97.85 kB   | 0.013°   | 7,152 |
+| older, all 14 files (7 scopes) | 3850.37 kB | 1069.77 kB | 776.70 kB  |          |       |
+
+The older set has no `antarctica` or `oceania` files (HTTP 403). The continent scopes both sets
+have (africa, asia, europe, north-america, south-america) are 8 to 27 kB gzip at 110m and 39 to
+335 kB at 50m; the script prints every file with its objects.
+
+What a layer costs, from the older world files (one object and the arcs it uses; layers share
+arcs, so the rows sum to more than the file):
+
+| Layer      | 110m: features | 110m: vertices | 110m: gzip | 50m: features | 50m: vertices | 50m: gzip |
+| ---------- | -------------- | -------------- | ---------- | ------------- | ------------- | --------- |
+| countries  | 177            | 10,583         | 29.52 kB   | 241           | 98,354        | 140.80 kB |
+| land       | 127            | 5,126          | 16.81 kB   | 1,420         | 59,859        | 104.81 kB |
+| coastlines | 134            | 5,127          | 16.85 kB   | 1,428         | 59,896        | 105.16 kB |
+| ocean      | 2              | 5,118          | 16.72 kB   | 1             | 59,843        | 103.77 kB |
+| lakes      | 25             | 475            | 1.80 kB    | 275           | 12,376        | 18.92 kB  |
+| rivers     | 13             | 1,145          | 3.21 kB    | 461           | 25,523        | 47.20 kB  |
+| subunits   | 51             | 2,169          | 5.68 kB    | 100           | 34,001        | 49.72 kB  |
+| whole file |                |                | 40.46 kB   |               |               | 232.74 kB |
+
+Plotly's older `world_110m.json` holds all seven layers in 40.5 kB gzip, 2 kB more than
+world-atlas's countries-110m with two, and `world_50m.json` in 232.7 kB against 230.1 kB, because
+of the coarser grid. The UN world files use a grid ten times finer than world-atlas and are 2.6 to
+2.7 times the size of the older ones.
+
+License and attribution, as far as the files and the repository say: the files carry no license
+or attribution field (their keys are `type`, `objects`, `arcs`, `transform`, `bbox`). plotly.js is
+MIT, and its changelog names the sources, but `topojson/` has no README or license of its own and
+states no terms for the UN geodata; the UN geoportal that `topojson/config.mjs` downloads from did
+not resolve from this machine, so its terms are unread. `sane-topojson` is MIT and its data is
+Natural Earth. The UN terms have to be read before the `un/` files could be redistributed; the
+older files and world-atlas rest on Natural Earth alone.
+
+### maplibre-gl 6.11.2
+
+| What                                                   | Min        | Gzip      | Brotli    |
+| ------------------------------------------------------ | ---------- | --------- | --------- |
+| `dist/maplibre-gl.mjs` (as shipped)                    | 590.23 kB  | 149.48 kB | 126.41 kB |
+| `dist/maplibre-gl-shared.mjs` (as shipped)             | 515.92 kB  | 146.90 kB | 120.87 kB |
+| `dist/maplibre-gl-worker.mjs` (as shipped)             | 19.13 kB   | 6.11 kB   | 5.49 kB   |
+| `dist/maplibre-gl.css` (as shipped)                    | 83.31 kB   | 10.49 kB  | 8.61 kB   |
+| bundled: `export *` (main + shared)                    | 1066.70 kB | 281.92 kB | 231.71 kB |
+| bundled: `Map` only                                    | 1019.39 kB | 270.99 kB | 222.80 kB |
+| bundled: `LngLat` only                                 | 376.72 kB  | 105.41 kB | 87.70 kB  |
+| bundled: the worker as its own entry (worker + shared) | 510.00 kB  | 144.26 kB | 118.92 kB |
+
+A page with a map downloads the main module, the shared module and the worker: 302.5 kB gzip of
+JavaScript as shipped, plus 10.5 kB of CSS. That is more than half of Holochart's full ESM bundle
+(538 kB). It does not tree-shake in any useful way: importing only `Map` saves 4 %, and importing
+only `LngLat`, a class of two numbers, still costs 105 kB. The package ships prebundled, minified
+files, so a bundler has little to work with.
+
+The worker needs attention in a bundled app. The main module builds the worker's URL at run time
+from `import.meta.url` and a file name chosen at run time, which rolldown does not follow: the
+bundle of `export *` contains no worker. The app has to serve `maplibre-gl-worker.mjs` and
+`maplibre-gl-shared.mjs` beside its bundle or point MapLibre at them (`setWorkerUrl`). Served as
+the shipped files, page and worker fetch the shared module from one URL. Bundled as a separate
+worker entry, the worker carries its own copy of nearly all the shared code (144 kB gzip), 426 kB
+gzip in total. Also, the package's `sideEffects` field lists only its CSS and `src/`, so a module
+that merely imports the worker file gets nothing (rolldown drops it, 0 bytes); the worker has to
+be an entry.
+
+### What `traces-geo` would add
+
+Dependencies only, marginal over the d3 code Holochart ships; Holochart's own geo code comes on
+top. Data rows use the `JSON.parse` chunk.
+
+| What                                                            | Min       | Gzip      | Brotli    |
+| --------------------------------------------------------------- | --------- | --------- | --------- |
+| d3-geo first step + topojson-client (`feature`, `mesh`)         | 31.76 kB  | 11.69 kB  | 10.32 kB  |
+| … with every Plotly projection d3-geo has (15)                  | 34.30 kB  | 12.50 kB  | 11.16 kB  |
+| … with every Plotly projection (82), d3-geo-projection included | 65.13 kB  | 24.98 kB  | 22.00 kB  |
+| first step + topojson-client + countries-110m chunk             | 139.56 kB | 50.15 kB  | 43.32 kB  |
+| first step + topojson-client + countries-50m chunk              | 788.22 kB | 241.84 kB | 215.47 kB |
+| first step + topojson-client + both chunks                      | 896.03 kB | 280.31 kB | 248.47 kB |
+
+What the numbers say:
+
+- The code is small and the data is not. The dependencies of a first geo subplot are 11.7 kB
+  gzip, and every projection Plotly has brings them to 25.0 kB. One 110m basemap is 38 kB and one
+  50m basemap 230 kB, 3 and 20 times the first-step code.
+- For scale: the full ESM bundle is at 538.10 kB with a budget of 540 kB and a ceiling of 560 kB.
+  The first-step dependencies alone are six times its budget headroom and more than half of
+  what is left under the ceiling, before any Holochart code.
+- "Every projection Plotly has" costs 13.3 kB gzip more than the first step: 0.8 kB for the ten
+  others in d3-geo and 12.4 kB for the 67 from d3-geo-projection. The classic nine are 1.7 kB.
+- One countries file per resolution is enough for land, countries, coastlines and borders. Lakes,
+  rivers and subunits are not in world-atlas; in Plotly's older files they cost about 11 kB gzip
+  at 110m and 116 kB at 50m (layer by layer, above).
+- A coarser grid takes countries-50m from 230 to 136 kB gzip and countries-110m from 38 to 28 kB
+  with the same vertices.
+- d3-geo-projection and topojson-client list `commander` among their dependencies (for their
+  command-line tools). It is not bundled, but it is installed with them.
 
 ## Sizes after S2.14: keyboard and screen-reader coverage (ship wave R3, 2026-10-03)
 

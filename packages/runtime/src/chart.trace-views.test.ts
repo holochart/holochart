@@ -173,6 +173,103 @@ describe('primitives of a trace view', () => {
   });
 });
 
+describe('recalc() of a plot context', () => {
+  /** A trace type whose calc counts its runs and whose view logs the plans it is given. */
+  function counting(calcs: { n: number }, hooks: Hooks): TraceModule<number> {
+    return { ...(probe('p', [], hooks) as unknown as TraceModule<number>), calc: () => ++calcs.n };
+  }
+
+  it("runs the trace's calc again and updates its view, without a change to the figure", async () => {
+    const calcs = { n: 0 };
+    const plans: TraceUpdatePlan[] = [];
+    let ctx: TracePlotContext | undefined;
+    t.registry.register(
+      counting(calcs, {
+        create: (c) => void (ctx = c),
+        update: (c, plan) => {
+          ctx = c;
+          plans.push(plan);
+        },
+      }),
+    );
+    const c = await chart([{ type: 'p' }, { type: 'p' }]);
+    expect(calcs.n).toBe(2);
+    const restyles = vi.fn();
+    c.on('restyle', restyles);
+    const before = JSON.stringify(c.data);
+    // The second trace's context was kept last.
+    expect(ctx?.index).toBe(1);
+    ctx?.recalc?.();
+    await c.ready;
+    await Promise.resolve();
+    // Only that trace was calculated again, and its view saw a new calc.
+    expect(calcs.n).toBe(3);
+    expect(plans.filter((plan) => plan.calc)).toHaveLength(1);
+    expect(plans.at(-1)).toMatchObject({ calc: true, plot: true });
+    // The other trace is moved at most (the layout pass ran, as after any calc).
+    expect(plans.filter((plan) => !plan.calc).every((plan) => !plan.plot && !plan.style)).toBe(
+      true,
+    );
+    expect(ctx?.calc).toBe(3);
+    expect(restyles).not.toHaveBeenCalled();
+    expect(JSON.stringify(c.data)).toBe(before);
+  });
+
+  it('is waited for by the promises that have not resolved: a view that waits for work of its own', async () => {
+    // The view holds the chart with a primitive whose `ready` is its work; when the work is
+    // done it asks for calc again, and the chart is ready once that run has drawn.
+    const calcs = { n: 0 };
+    let finish: (() => void) | undefined;
+    let ctx: TracePlotContext | undefined;
+    const hold = primitive() as FakePrimitive & { ready?: Promise<void> };
+    t.registry.register(
+      counting(calcs, {
+        create: (c) => {
+          ctx = c;
+          hold.ready = new Promise<void>((resolve) => {
+            finish = () => {
+              ctx?.recalc?.();
+              resolve();
+            };
+          });
+          c.add(hold);
+        },
+        update: (c, plan) => {
+          ctx = c;
+          if (plan.calc) c.remove(hold);
+        },
+      }),
+    );
+    const c = createChart(
+      t.container,
+      { data: [{ type: 'p' }], layout: { margin: MARGIN } } as FigureInput,
+      t.options,
+    );
+    charts.push(c);
+    let ready = false;
+    void c.ready.then(() => (ready = true));
+    for (let i = 0; i < 5; i++) await Promise.resolve();
+    // Drawn once, and waiting.
+    expect(calcs.n).toBe(1);
+    expect(ready).toBe(false);
+    finish?.();
+    await c.ready;
+    expect(calcs.n).toBe(2);
+    expect(c.getTraceObjects(0)).toEqual([]);
+  });
+
+  it('does nothing on a chart that is gone', async () => {
+    const calcs = { n: 0 };
+    let ctx: TracePlotContext | undefined;
+    t.registry.register(counting(calcs, { create: (c) => void (ctx = c) }));
+    const c = await chart([{ type: 'p' }]);
+    c.destroy();
+    expect(() => ctx?.recalc?.()).not.toThrow();
+    await Promise.resolve();
+    expect(calcs.n).toBe(1);
+  });
+});
+
 describe('a view is rebuilt when its trace', () => {
   it('changes type: the old type disposes, the new one creates', async () => {
     const calls: string[] = [];

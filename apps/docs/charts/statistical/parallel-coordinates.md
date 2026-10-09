@@ -7,6 +7,8 @@ chart: parcoords
 
 # Parallel coordinates
 
+<ChartOverview />
+
 ## Overview
 
 A parallel coordinates chart (`parcoords`) draws one vertical axis per variable (a _dimension_)
@@ -33,6 +35,9 @@ Pick a different chart when:
 - readers need the exact values of a few rows: use a [table](/charts/basic/table).
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -117,6 +122,8 @@ createChart(el, {
 
 ## Variations
 
+<ChartVariations />
+
 ### Lines colored by a value
 
 `line.color` with one number per line maps each line through `line.colorscale`; `line.showscale`
@@ -124,7 +131,7 @@ adds a colorbar. Lines with higher values are drawn on top of lower ones, as in 
 car is colored by its fuel economy, and the cylinder axis is ordinal: `tickvals: [4, 6, 8]` puts
 its ticks on the three values, and `range: [3.5, 8.5]` leaves room around them.
 
-<Example id="parcoords/colorscale" />
+<ExampleLink id="parcoords/colorscale" />
 
 ### Brushed ranges
 
@@ -132,7 +139,7 @@ its ticks on the three values, and `range: [3.5, 8.5]` leaves room around them.
 axis one; only lines inside a range on both axes keep their color, and the others fade to grey.
 The ranges show as magenta bars on their axes. Brush any axis to change them.
 
-<Example id="parcoords/constraints" />
+<ExampleLink id="parcoords/constraints" />
 
 ### Ordinal axes, tick text and label placement
 
@@ -142,7 +149,7 @@ a click on the axis selects the tick under the pointer. `tickformat` formats the
 axes (`'$,'`, `'d'`, `'.0%'`). `labelangle: -20` tilts the axis labels and `labelside: 'bottom'`
 puts them below the axes (so this chart has a bottom margin instead of a top one).
 
-<Example id="parcoords/ticktext" />
+<ExampleLink id="parcoords/ticktext" />
 
 ### 100,000 lines
 
@@ -151,7 +158,7 @@ has 100,000 rows across eight axes and one brushed range; brushing another axis 
 lines without rebuilding them. At this size the lines move to a dragged axis when it is dropped
 rather than while it is dragged (see [Performance notes](#performance-notes)).
 
-<Example id="parcoords/large" />
+<ExampleLink id="parcoords/large" />
 
 ## Styling
 

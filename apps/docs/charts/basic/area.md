@@ -7,6 +7,8 @@ chart: scatter
 
 # Area
 
+<ChartOverview />
+
 ## Overview
 
 An area chart fills the space under a line. Use it to show how a quantity changes over time when
@@ -28,6 +30,9 @@ Pick a different chart when:
   band starts where the one below ends. Consider small multiples of lines instead.
 
 ## Minimal example
+
+The figure sketch below shows the essential data shape. Open **Complete source** on the live
+example for a runnable module with setup, dependencies and cleanup.
 
 ```ts
 import { createChart } from '@mk7s/holochart';
@@ -72,6 +77,8 @@ color at half opacity. The live example draws a year of daily values:
 
 ## Variations
 
+<ChartVariations />
+
 ### Stacked areas
 
 Traces with the same `stackgroup` add up: each trace's y values are drawn on top of the traces
@@ -80,7 +87,7 @@ so `stackgroup` is often the only attribute you need. Each fill is drawn just ab
 trace's fill and below its line, so every boundary stays visible. Hovering a stacked point shows
 the trace's own value, not the running total.
 
-<Example id="area/stacked" />
+<ExampleLink id="area/stacked" />
 
 ### 100% stacked
 
@@ -88,7 +95,7 @@ the trace's own value, not the running total.
 chart shows shares instead of amounts. Set it on the first trace of the group; the first trace that
 sets it decides for the whole group. Add `yaxis.ticksuffix: '%'` for the tick labels.
 
-<Example id="area/percent" />
+<ExampleLink id="area/percent" />
 
 ### Range band
 
@@ -98,7 +105,7 @@ such as `'rgba(239, 85, 59, 0.2)'`. Put both in one `legendgroup` and hide one o
 entries, so a single click toggles the band. This replaces the older
 [error band workaround](/charts/basic/line#error-bands).
 
-<Example id="area/band" />
+<ExampleLink id="area/band" />
 
 ### Streamgraph
 
@@ -107,7 +114,7 @@ minus half the total for each x: `fill: 'none'`, `line.width: 0`, `showlegend: f
 `hoverinfo: 'skip'`. The series stack on top of it. `line.shape: 'spline'` smooths the bands, and
 the fills follow the smoothed lines.
 
-<Example id="area/streamgraph" />
+<ExampleLink id="area/streamgraph" />
 
 ### Gradient fills
 
@@ -116,7 +123,7 @@ along y and `'horizontal'` along x, from `start` to `stop` (data values; by defa
 extent). `'radial'` runs from the center of the fill's bounding box outwards. Use rgba stops to
 fade to transparent.
 
-<Example id="area/gradient" />
+<ExampleLink id="area/gradient" />
 
 ### Pattern fills
 
@@ -124,7 +131,7 @@ fade to transparent.
 `fillmode`), drawn in `fillcolor` by default. Tiles are sized in screen pixels, so the pattern
 keeps its spacing when you zoom. See [Patterns & textures](/customization/markers-patterns).
 
-<Example id="area/pattern" />
+<ExampleLink id="area/pattern" />
 
 ### Closed shapes
 
@@ -132,7 +139,7 @@ keeps its spacing when you zoom. See [Patterns & textures](/customization/marker
 SVG, so the center of a pentagram is filled. A `null` in the data starts a new shape within the
 same trace.
 
-<Example id="area/toself" />
+<ExampleLink id="area/toself" />
 
 ### Horizontal stacks
 
@@ -140,7 +147,7 @@ same trace.
 profiles over a vertical variable such as altitude or depth. As with `groupnorm`, the first trace of
 the group that sets `orientation` decides.
 
-<Example id="area/stacked-horizontal" />
+<ExampleLink id="area/stacked-horizontal" />
 
 ### Stack gaps
 
@@ -148,7 +155,7 @@ When a stacked trace lacks some x positions that other traces of its group have,
 `stackgaps: 'infer zero'` (the default) counts it as 0 there, and `'interpolate'` interpolates
 linearly between its neighbors (constant beyond its ends). Set it on the first trace of the group.
 
-<Example id="area/stackgaps" />
+<ExampleLink id="area/stackgaps" />
 
 ## Styling
 
@@ -189,17 +196,17 @@ Holochart extensions (full bundle), see [Extrusion & 2.5D](/customization/extrus
 - `material`: Plotly's lighting model (default), `flat`, or a three.js material type.
 - `layout.view3d`: the plot area in perspective; hover on the points stays exact on the front face.
 
-<Example id="area/depth" />
+<ExampleLink id="area/depth" />
 
 Every filled trace uses the same depth range, so **stacked areas form one slab in layers**, each
 lit on its front and its top wall:
 
-<Example id="area/depth-stacked" />
+<ExampleLink id="area/depth-stacked" />
 
 The slab is exactly the region the flat fill covers — holes, and self-intersecting `toself` shapes
 filled by the nonzero rule — with walls only on its outline:
 
-<Example id="area/depth-toself" />
+<ExampleLink id="area/depth-toself" />
 
 The slab takes `fillcolor`; `fillgradient` and `fillpattern` are drawn flat, and `bevel` doesn't
 apply to fills.

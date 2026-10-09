@@ -1,5 +1,6 @@
 // Node ESM consumer of the installed tarballs (no DOM, no bundler): every package imports, the
-// full bundle has its key exports, and the renderer-free figure pipeline runs.
+// full bundle has its key exports, its `geo` and `graph` entries add the geo and graph packages,
+// and the renderer-free figure pipeline runs.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as hc from '@mk7s/holochart';
@@ -39,6 +40,29 @@ const traces = listing.traces.map((t) => t.type);
 for (const type of ['scatter', 'bar', 'heatmap', 'candlestick', 'sunburst', 'scatter3d']) {
   assert.ok(traces.includes(type), `registered trace ${type}`);
 }
+
+// Maps are not in the full bundle (ADR-026): its `geo` entry registers the geo package into the
+// same registry, and re-exports it.
+assert.ok(!traces.includes('scattergeo'), 'the full bundle alone registers no scattergeo');
+const geo = await import('@mk7s/holochart/geo');
+const geoPackage = await import('@mk7s/holochart-traces-geo');
+assert.equal(geo.tracesGeo, geoPackage.tracesGeo, '@mk7s/holochart/geo re-exports the package');
+assert.ok(hc.registry.getTrace('scattergeo'), '@mk7s/holochart/geo registers scattergeo');
+
+// Nor are network graphs (ADR-029): the `graph` entry does the same for the graph package.
+assert.ok(!traces.includes('graph'), 'the full bundle alone registers no graph');
+const graph = await import('@mk7s/holochart/graph');
+const graphPackage = await import('@mk7s/holochart-traces-graph');
+assert.equal(
+  graph.tracesGraph,
+  graphPackage.tracesGraph,
+  '@mk7s/holochart/graph re-exports the package',
+);
+assert.equal(
+  hc.registry.getTrace('graph'),
+  graphPackage.graph,
+  '@mk7s/holochart/graph registers graph',
+);
 
 // The figure pipeline (core, on the registry's core part) runs in Node.
 const core = hc.registry.core;

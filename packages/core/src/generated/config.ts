@@ -57,6 +57,12 @@ export type Config = {
     | true
     | false;
   /**
+   * Where the geo package fetches basemap files from (`<url>/world_110m.json`, …), in Plotly's topojson layout. Empty (the default) uses the data bundled with the package and fetches nothing; Plotly itself defaults to its CDN.
+   *
+   * @defaultValue `""`
+   */
+  topojsonURL?: string;
+  /**
    * What double-clicking the plot area does.
    *
    * @defaultValue `"reset+autosize"`
