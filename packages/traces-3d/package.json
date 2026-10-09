@@ -1,6 +1,6 @@
 {
   "name": "@mk7s/holochart-traces-3d",
-  "version": "0.0.0",
+  "version": "0.1.0-alpha.0",
   "description": "3D scene subplot and 3D trace types: scatter3d, surface, mesh3d, cone, streamtube, volume, isosurface, bar3d.",
   "keywords": [
     "charts",

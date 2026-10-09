@@ -1,6 +1,6 @@
 {
   "name": "@mk7s/holochart-express",
-  "version": "0.0.0",
+  "version": "0.1.0-alpha.0",
   "description": "Plotly Express-style one-line charts from tabular data: grouping, facets, animation frames, ECDF, marginals.",
   "keywords": [
     "charts",

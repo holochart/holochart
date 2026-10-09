@@ -1,6 +1,6 @@
 {
   "name": "@mk7s/holochart-locales",
-  "version": "0.0.0",
+  "version": "0.1.0-alpha.0",
   "description": "Locale modules for Holochart (plotly.js's locales): UI strings, month and day names, number separators and date formats, one module per locale.",
   "keywords": [
     "charts",
