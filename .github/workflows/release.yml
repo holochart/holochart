@@ -50,7 +50,7 @@ jobs:
     outputs:
       hasChangesets: ${{ steps.changesets.outputs.has-changesets }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup
@@ -78,7 +78,7 @@ jobs:
       count: ${{ steps.plan.outputs.count }}
       version: ${{ steps.plan.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - name: Build and pack unpublished versions
         run: pnpm release:pack
@@ -93,7 +93,7 @@ jobs:
         run: node tests/package/lint.ts
       - name: Upload packed tarballs
         if: ${{ steps.plan.outputs.count != '0' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-artifacts
           path: release-artifacts/
@@ -123,11 +123,11 @@ jobs:
             echo "::error::NPM_TOKEN is not set in the 'npm' environment and NPM_TRUSTED_PUBLISHING is not 'true'; refusing to publish (docs/release/releasing.md)."
             exit 1
           fi
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: ./.github/actions/setup
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: release-artifacts
           path: release-artifacts/
