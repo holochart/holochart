@@ -94,8 +94,13 @@ try {
       );
       // The session API created a fresh kernel for this clean notebook. Run it directly:
       // restarting again races the host's pending debugger/subshell initialization.
+      // Activate the notebook before a main-menu command; the file browser can still
+      // own focus while the first notebook is opening in a fresh JupyterLab workspace.
+      await page.locator('.jp-CodeCell').first().locator('.cm-content').click();
       await page.getByRole('menuitem', { name: 'Run', exact: true }).click();
-      await page.getByRole('menuitem', { name: 'Run All Cells', exact: true }).click();
+      const runAll = page.getByRole('menuitem', { name: 'Run All Cells', exact: true });
+      await expect(runAll).not.toHaveAttribute('aria-disabled', 'true');
+      await runAll.click();
       await expect(
         page.locator('.jp-OutputArea').getByText(`HOLOCHART_COMPLETE_${slug}`, { exact: false }),
       ).toBeVisible({ timeout: 90_000 });
@@ -172,6 +177,24 @@ try {
       console.log(
         `${host}/${slug}: ${count} canvas output(s), control=${controlChanged ?? 'n/a'}, no errors`,
       );
+    } catch (error) {
+      await Promise.allSettled([
+        page.screenshot({
+          path: path.join(output, `${host}-${slug}-failure.png`),
+          timeout: 10_000,
+        }),
+        page
+          .locator('body')
+          .ariaSnapshot()
+          .then((snapshot) =>
+            writeFile(path.join(output, `${host}-${slug}-failure.txt`), snapshot),
+          ),
+        writeFile(
+          path.join(output, `${host}-${slug}-errors.json`),
+          JSON.stringify({ errors, hostWarnings }, null, 2),
+        ),
+      ]);
+      throw error;
     } finally {
       await page.close();
       await api(`sessions/${session.id}`, { method: 'DELETE' });
