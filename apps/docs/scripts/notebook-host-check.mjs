@@ -144,8 +144,11 @@ try {
         await expect(page.locator('[data-host-marker="retained"]')).toHaveCount(0);
         rerunViews = 1;
       }
-      await canvases.first().scrollIntoViewIfNeeded();
-      await canvases.first().screenshot({ path: path.join(output, `${host}-${slug}.png`) });
+      // Notebook can replace a virtualized widget view as screenshot scrolls it into view.
+      // Resolve the canvas again on detachment; keep all output and page-error checks strict.
+      await expect(async () => {
+        await canvases.first().screenshot({ path: path.join(output, `${host}-${slug}.png`) });
+      }).toPass({ timeout: 30_000 });
       if (errors.length) throw new Error(errors.join('; '));
       if ((await hashSource(input.source)) !== sourceSha256)
         throw new Error(`${slug}: source changed during browser verification.`);
