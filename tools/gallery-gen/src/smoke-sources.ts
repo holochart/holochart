@@ -33,6 +33,15 @@ const ids = requested.length
       'themes/holochart',
     ].filter((id) => id in index.examples);
 const temp = mkdtempSync(path.join(REPO_ROOT, 'examples/_standalone-smoke-'));
+const copies = new Map(
+  ids.map((id, i) => {
+    const artifact = index.examples[id];
+    if (!artifact) throw new Error(`Unknown exported source ${id}.`);
+    const copied = path.join(temp, `example-${i}.js`);
+    writeFileSync(copied, readFileSync(path.join(PUBLIC_DIR, artifact.javascript), 'utf8'));
+    return [id, copied];
+  }),
+);
 const server = await createServer({
   configFile: false,
   root: REPO_ROOT,
@@ -40,7 +49,7 @@ const server = await createServer({
   logLevel: 'error',
   resolve: { conditions: ['source'] },
   optimizeDeps: {
-    entries: [],
+    entries: [...copies.values()],
     include: [
       'three',
       'troika-three-text',
@@ -67,9 +76,7 @@ try {
   for (const id of ids) {
     const artifact = index.examples[id];
     if (!artifact) throw new Error(`Unknown exported source ${id}.`);
-    const copied = path.join(temp, 'main.js');
-    const code = readFileSync(path.join(PUBLIC_DIR, artifact.javascript), 'utf8');
-    writeFileSync(copied, code);
+    const copied = copies.get(id)!;
     const moduleUrl = `/@fs/${copied}?smoke=${encodeURIComponent(id)}`;
     // Finish the initial dependency crawl before a browser imports the copied module.
     // Otherwise cold-cache optimizer reloads can abort that first dynamic import.
@@ -78,6 +85,9 @@ try {
     const page = await browser.newPage({ viewport: { width: 1000, height: 900 } });
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
+    page.on('requestfailed', (request) =>
+      errors.push(`${request.failure()?.errorText}: ${request.url()}`),
+    );
     page.on('response', (response) => {
       if (response.status() >= 400 && response.url().includes('/@'))
         errors.push(`${response.status()} ${response.statusText()}: ${response.url()}`);

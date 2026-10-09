@@ -87,18 +87,15 @@ try {
       await page.goto(`${origin}/${route}/${file}?token=${token}`);
       await page.locator('.jp-CodeCell').first().waitFor({ timeout: 60_000 });
       // Cells appear before the frontend finishes connecting to the kernel.
-      // Restarting during that handshake cancels subshell/debug initialization requests.
       await expect(page.locator('.jp-Notebook-ExecutionIndicator')).toHaveAttribute(
         'data-status',
         'idle',
         { timeout: 60_000 },
       );
-      const restart = page.getByRole('button', {
-        name: 'Restart the kernel and run all cells',
-        exact: true,
-      });
-      await restart.click({ timeout: 60_000 });
-      await page.getByRole('dialog').locator('button.jp-mod-accept').click();
+      // The session API created a fresh kernel for this clean notebook. Run it directly:
+      // restarting again races the host's pending debugger/subshell initialization.
+      await page.getByRole('menuitem', { name: 'Run', exact: true }).click();
+      await page.getByRole('menuitem', { name: 'Run All Cells', exact: true }).click();
       await expect(
         page.locator('.jp-OutputArea').getByText(`HOLOCHART_COMPLETE_${slug}`, { exact: false }),
       ).toBeVisible({ timeout: 90_000 });

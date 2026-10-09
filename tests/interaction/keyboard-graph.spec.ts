@@ -338,12 +338,19 @@ test('a tree: the cursor of a node in a subtree that folds goes to the node it f
 test('a layered graph: ← / → within a rank, ↑ / ↓ along the links', async ({ page }) => {
   await openInteraction(page, EXAMPLE, { graph: 'layered' });
   await tabIntoChart(page);
-  expect(await press(page, 'ArrowRight')).toBe(
-    'pipeline: Load, Links in: 0, out: 2, Group: source, rank 1 of 3, 1 of 1. Down: Clean.',
+  const load = await press(page, 'ArrowRight');
+  expect(load).toMatch(
+    /^pipeline: Load, Links in: 0, out: 2, Group: source, rank 1 of 3, 1 of 1\. Down: (Clean|Enrich)\.$/,
   );
   await expect(labels(page)).toContainText('Load');
+  // Font measurements can shift which linked node is nearest across the rank.
+  // Follow the announced destination, then Home starts the left-to-right rank traversal.
+  const down = load!.includes('Down: Clean.') ? 'Clean' : 'Enrich';
   const first = await press(page, 'ArrowDown');
   expect(first).toBe(
+    `pipeline: ${down}, Links in: 1, out: 1, Group: work, rank 2 of 3, ${down === 'Clean' ? 1 : 2} of 2. Up: Load. Down: Report.`,
+  );
+  expect(await press(page, 'Home')).toBe(
     'pipeline: Clean, Links in: 1, out: 1, Group: work, rank 2 of 3, 1 of 2. Up: Load. Down: Report.',
   );
   expect(await press(page, 'ArrowRight')).toBe(
@@ -352,10 +359,12 @@ test('a layered graph: ← / → within a rank, ↑ / ↓ along the links', asyn
   // The end of the rank: the cursor stays.
   expect(await press(page, 'ArrowRight')).toMatch(/^pipeline: Enrich, /);
   expect(await press(page, 'Home')).toMatch(/^pipeline: Clean, /);
-  expect(await press(page, 'ArrowDown')).toBe(
-    'pipeline: Report, Links in: 2, out: 0, Group: sink, rank 3 of 3, 1 of 1. Up: Clean.',
+  const report = await press(page, 'ArrowDown');
+  expect(report).toMatch(
+    /^pipeline: Report, Links in: 2, out: 0, Group: sink, rank 3 of 3, 1 of 1\. Up: (Clean|Enrich)\.$/,
   );
-  expect(await press(page, 'ArrowUp')).toMatch(/^pipeline: Clean, /);
+  const up = report!.includes('Up: Clean.') ? 'Clean' : 'Enrich';
+  expect(await press(page, 'ArrowUp')).toContain(`pipeline: ${up}, `);
   expect(await press(page, 'ArrowUp')).toMatch(/^pipeline: Load, /);
 });
 
