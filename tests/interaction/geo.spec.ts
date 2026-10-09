@@ -191,17 +191,24 @@ async function expectColor(
   rgb: readonly number[],
   is = true,
   how?: 'lit',
+  timeout = 10_000,
 ): Promise<void> {
   await expect
     .poll(async () => shows(await pixel(page, p), rgb, how), {
+      timeout,
       message: `pixel at (${p.x.toFixed(1)}, ${p.y.toFixed(1)}) ${is ? 'is' : 'is not'} ${how ?? ''} ${rgb.join(',')}`,
     })
     .toBe(is);
 }
 
 /** Whether the pixel at a point is a color under the light of a globe. */
-const expectLit = (page: Page, p: Pt, rgb: readonly number[], is = true): Promise<void> =>
-  expectColor(page, p, rgb, is, 'lit');
+const expectLit = (
+  page: Page,
+  p: Pt,
+  rgb: readonly number[],
+  is = true,
+  timeout = 10_000,
+): Promise<void> => expectColor(page, p, rgb, is, 'lit', timeout);
 
 const visibleLabel = (page: Page) =>
   page.locator('.holochart-hoverlabel').filter({ visible: true });
@@ -1027,6 +1034,7 @@ test.describe('globe3d', () => {
   test('resolution 50: the globe is drawn from the 50m basemap and turns without the 110m one', async ({
     page,
   }) => {
+    test.setTimeout(180_000);
     const loaded: string[] = [];
     page.on('request', (request) => {
       const m = /\/(base-\d+m|extras-\d+m)\.ts/.exec(request.url());
@@ -1055,7 +1063,9 @@ test.describe('globe3d', () => {
     expect(relayout['geo.projection.rotation.lon']).toBeLessThan(-20);
     await park(page);
     await settle(page);
-    await expectLit(page, to, LAND);
+    // Rebuilding the 50m mesh after release can hold up Chromium screenshots on
+    // software GL for longer than the normal 10s pixel-check budget.
+    await expectLit(page, to, LAND, true, 90_000);
     await expectLit(page, await at(page, ATLANTIC), OCEAN);
     await expectColor(page, await at(page, A[0]), RED);
     // Zoom in on the strait of Gibraltar, which the 50m coast has open and narrow.

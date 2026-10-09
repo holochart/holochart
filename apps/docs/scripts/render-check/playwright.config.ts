@@ -64,13 +64,13 @@ export default defineConfig({
   webServer: {
     command: PREVIEW
       ? `pnpm exec vitepress preview --port ${PORT}`
-      : `pnpm run gen && pnpm exec vitepress dev --host ${HOST}`,
+      : `pnpm run gen && node ../../tools/gallery-gen/src/smoke-sources.ts choropleth/basic && pnpm exec vitepress dev --host ${HOST}`,
     cwd: '../..',
     // The docs config reads the dev server's port from DOCS_PORT (`--port` can't override it).
     env: { DOCS_PORT: String(PORT) },
     url: `http://${HOST}:${PORT}${BASE}`,
     reuseExistingServer: !CI,
-    timeout: 180_000,
+    timeout: 240_000,
     stdout: 'ignore',
     stderr: 'pipe',
   },
