@@ -1,6 +1,6 @@
 {
   "name": "@mk7s/holochart-traces-geo",
-  "version": "0.0.0",
+  "version": "0.1.0-alpha.0",
   "description": "Geographic trace types on map projections: the geo subplot, scattergeo.",
   "keywords": [
     "charts",

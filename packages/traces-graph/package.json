@@ -1,6 +1,6 @@
 {
   "name": "@mk7s/holochart-traces-graph",
-  "version": "0.0.0",
+  "version": "0.1.0-alpha.0",
   "description": "Network graph trace types: node-link graphs with force, layered and tree layouts, chord diagrams.",
   "keywords": [
     "charts",

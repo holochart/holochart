@@ -15,7 +15,7 @@
 '@mk7s/holochart-locales': minor
 ---
 
-First public alpha of Holochart: declarative, Plotly-compatible charts drawn on the GPU with three.js. Figures are Plotly's `{ data, layout, config, frames }`, with the same attribute names, defaults and events. All 14 packages share one version. This is an alpha on the `alpha` npm dist-tag: APIs may still change in any `0.x` minor.
+First public alpha of Holochart: declarative, Plotly-compatible charts drawn on the GPU with three.js. Figures are Plotly's `{ data, layout, config, frames }`, with the same attribute names, defaults and events. All 16 packages share one version. This is an alpha on the `alpha` npm dist-tag: APIs may still change in any `0.x` minor.
 
 #### Install
 
@@ -36,7 +36,7 @@ First public alpha of Holochart: declarative, Plotly-compatible charts drawn on 
 - **3D** (`-traces-3d`): scene subplots (`layout.scene`, cameras, turntable / orbit / pan / zoom, touch, 3D hover with spikes, `scene.annotations`) with `scatter3d` (1M points in one draw call), `surface`, `mesh3d` (Delaunay, convex hull, alpha shapes), `cone`, `streamtube`, `isosurface` and `volume` (Plotly's stacked isosurfaces or GPU ray marching). Holochart extensions: `bar3d`, tube and ribbon lines, lit spheres, three.js materials and scene lights, `chart.animateCamera` and `scene.autorotate`.
 - **2.5D** (full bundle): `layout.view3d` tilts cartesian subplots in perspective. `depth`, `bevel` and `material` extrude bars, funnels, waterfalls, heatmaps, filled areas, pies, treemaps and icicles, and hover, click and zoom stay exact on the tilted plane.
 
-Not yet supported Plotly traces: maps and geo (`scattergeo`, `choropleth`, `scattermap`, `densitymap`, …), `carpet` / `scattercarpet` / `contourcarpet`, `scatterternary`, and the quiver and streamline figure factories.
+Not yet supported Plotly traces: tile-based maps (`scattermap`, `choroplethmap`, `densitymap`, and their Mapbox variants), `carpet` / `scattercarpet` / `contourcarpet`, `scatterternary`, and the quiver and streamline figure factories.
 
 #### Layout and components
 

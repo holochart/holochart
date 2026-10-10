@@ -1,6 +1,6 @@
 {
   "name": "@mk7s/holochart-traces-finance",
-  "version": "0.0.0",
+  "version": "0.1.0-alpha.0",
   "description": "Financial trace types: ohlc, candlestick, waterfall, funnel, funnelarea, indicator.",
   "keywords": [
     "charts",
