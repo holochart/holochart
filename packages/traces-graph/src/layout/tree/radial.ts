@@ -21,7 +21,8 @@
  *    sizes plus `nodesep` (`subtreesep` between subtrees) take up on their ring: `2·asin(s / 2r)`.
  *    Inner rings are tight, so their nodes ask for more angle, as they should.
  * 3. The angles are scaled to fill the `sector`, the drawing centred in it. On a full circle, or a
- *    sector too wide to leave it, room is kept between the last node of every ring and the first.
+ *    sector too wide to leave it, room is kept between the last node of every ring and the first,
+ *    and no two neighbours are spread so far apart that they meet again on the other side.
  * 4. With the angles fixed, each ring is pushed out as far as its closest pair of neighbours needs
  *    (their chord must be at least their sizes plus the separation), and never closer to the ring
  *    inside it than step 1 allows. When the tree fits the sector, nothing moves and the rings are
@@ -130,7 +131,11 @@ export function radialTreeLayout(
     reach[a]! + reach[b]! + (parent[a]! >= 0 && parent[a] === parent[b] ? nodesep : subtreesep);
   const turn = tidyBreadth(view, (a, b) => chordAngle(room(a, b), ringAt[depth[a]! + ringShift]!));
 
-  // Step 3: scale to the sector. `closed` is the angle the widest ring needs to close on itself.
+  // Step 3: scale to the sector. `closed` is the angle the widest ring needs to close on itself:
+  // two neighbours must be clear of each other both ways round the circle. That asks for room
+  // between the last node of a ring and the first, and between two neighbours whose gap is most
+  // of their ring, when the nodes around them take no angle (no size and no `subtreesep`): the
+  // far ends of the gap would meet again on the other side.
   let t0 = Infinity;
   let t1 = -Infinity;
   let closed = 0;
@@ -142,6 +147,16 @@ export function radialTreeLayout(
     t1 = Math.max(t1, turn[b]!);
     if (a !== b) {
       closed = Math.max(closed, turn[b]! - turn[a]! + chordAngle(room(b, a), ringAt[d]!));
+    }
+  }
+  const previousOn = new Int32Array(rings).fill(-1);
+  for (let s = 0; s < order.length; s++) {
+    const v = order[s]!;
+    const d = depth[v]! + ringShift;
+    const u = previousOn[d]!;
+    previousOn[d] = v;
+    if (d > 0 && u >= 0) {
+      closed = Math.max(closed, turn[v]! - turn[u]! + chordAngle(room(u, v), ringAt[d]!));
     }
   }
   const width = t1 > t0 ? t1 - t0 : 0;
@@ -162,7 +177,7 @@ export function radialTreeLayout(
     const half = Math.sin(between / 2);
     if (s > 0 && half > 1e-12) need[d] = Math.max(need[d]!, s / (2 * half));
   };
-  const previousOn = new Int32Array(rings).fill(-1);
+  previousOn.fill(-1);
   for (let s = 0; s < order.length; s++) {
     const v = order[s]!;
     const d = depth[v]! + ringShift;

@@ -8,12 +8,12 @@ status: complete
 
 This tutorial builds a small chart with a line trace and a bar trace, then updates it and listens
 for clicks. It takes about five minutes **after your environment is set up**.
-Source cloning, dependency installation and the browser build take additional time.
 
 <InstallStatus ecosystem="javascript" />
 
-Complete the [source workspace setup](/getting-started/installation#try-it-from-the-monorepo)
-first. This tutorial explains the browser API; the
+[Install Holochart from npm](/getting-started/installation#install-from-npm) first, in an app
+with a bundler such as Vite. The [JavaScript quick start](/getting-started/javascript) sets up
+such an app from an empty directory. This tutorial explains the browser API; the
 [Python notebook guide](/guides/notebooks) covers the notebook bridge.
 
 ## 1. Add a container

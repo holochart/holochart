@@ -61,7 +61,7 @@ export const configSchema = attr.object(
     }),
     editable: attr.boolean({
       dflt: false,
-      description: 'Make titles, legend, annotations and shapes editable in place (E6.7).',
+      description: 'Make titles, legend, annotations and shapes editable in place.',
     }),
     edits: attr.object(
       {
@@ -92,39 +92,39 @@ export const configSchema = attr.object(
     ariaLabel: attr.string({
       dflt: '',
       description:
-        'The chart\'s accessible name (`aria-label`), read by screen readers. Empty: `layout.meta.description` when set, else the figure title followed by an automatic summary ("Line chart with 3 traces"). Holochart only (plan E17.1).',
+        'The chart\'s accessible name (`aria-label`), read by screen readers. Empty: `layout.meta.description` when set, else the figure title followed by an automatic summary ("Line chart with 3 traces"). Holochart only.',
     }),
     a11y: attr.object(
       {
         summaries: attr.boolean({
           dflt: true,
           description:
-            'Add generated summaries of trends and extremes ("Revenue rises from 1.2M in Jan to 3.4M in Dec") to what screen readers get. Their code loads after the first draw. Holochart only (plan E17.2).',
+            'Add generated summaries of trends and extremes ("Revenue rises from 1.2M in Jan to 3.4M in Dec") to what screen readers get. Their code loads after the first draw. Holochart only.',
         }),
         dataTable: attr.enumerated({
           values: ['hidden', 'visible', false],
           dflt: 'hidden',
           description:
-            "The traces' data tables: `'hidden'` for screen readers only (first 100 rows), `'visible'` shown below the chart with every row (virtualized), `false` none. Holochart only (plan E17.3).",
+            "The traces' data tables: `'hidden'` for screen readers only (first 100 rows), `'visible'` shown below the chart with every row (virtualized), `false` none. Holochart only.",
         }),
         patterns: attr.boolean({
           dflt: false,
           description:
-            'Give bars, histograms, polar bars, filled areas (`fillpattern`) and pie slices a distinct pattern each, as an encoding redundant with color, unless the trace or template sets one. Holochart only (plan E17.5).',
+            'Give bars, histograms, polar bars, filled areas (`fillpattern`) and pie slices a distinct pattern each, as an encoding redundant with color, unless the trace or template sets one. Holochart only.',
         }),
         reducedMotion: attr.enumerated({
           values: ['auto', true, false],
           dflt: 'auto',
           description:
-            "Snap transitions and drill-down tweens instead of animating them: `'auto'` when the user's system asks for reduced motion (the `prefers-reduced-motion` media query), `true` always, `false` never. Holochart only (plan E17.5).",
+            "Snap transitions and drill-down tweens instead of animating them: `'auto'` when the user's system asks for reduced motion (the `prefers-reduced-motion` media query), `true` always, `false` never. Holochart only.",
         }),
         keyboard: attr.boolean({
           dflt: true,
           description:
-            'Keyboard access: Tab reaches the plot area (the arrows step through the data, `+` / `-` zoom) and the legend items. Holochart only (plan E6.5, E17.4).',
+            'Keyboard access: Tab reaches the plot area (the arrows step through the data, `+` / `-` zoom) and the legend items. Holochart only.',
         }),
       },
-      { description: 'Accessibility options (plan E17). Holochart only.' },
+      { description: 'Accessibility options. Holochart only.' },
     ),
     toImageButtonOptions: attr.object(
       {
@@ -177,22 +177,22 @@ export const configSchema = attr.object(
       values: [true, false, 'auto'],
       dflt: false,
       description:
-        'Run the calc stage in a Web Worker (ADR-011). `auto` switches on above a data-size threshold.',
+        'Default of the `worker` attribute of traces that can compute off the main thread, in a Web Worker (today the layout of `graph` traces). `auto` switches on above a data-size threshold.',
     }),
     hoverRenderer: attr.enumerated({
       values: ['dom'],
       dflt: 'dom',
       description:
-        'How hover labels render. Only `dom` (positioned HTML over the canvas) exists in M1; a WebGL label renderer is planned (E5.7).',
+        'How hover labels render. `dom` (positioned HTML over the canvas) is the only renderer.',
     }),
     renderHover: attr.fn({
       description:
-        'Custom hover label: `(points) => HTMLElement | null`. Return `null`/`undefined` to use the built-in label. Not serializable (ADR-012).',
+        'Custom hover label: `(points) => HTMLElement | null`. Return `null`/`undefined` to use the built-in label. A function, so it is not serializable.',
     }),
     textRenderer: attr.enumerated({
       values: ['webgl', 'dom'],
       dflt: 'webgl',
-      description: 'Render text as WebGL SDF glyphs or as a DOM overlay (ADR-005).',
+      description: 'Render text as WebGL SDF glyphs or as a DOM overlay.',
     }),
     strict: attr.boolean({
       dflt: false,

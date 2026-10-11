@@ -38,7 +38,9 @@ export function browserProject(
         browserName: 'firefox',
         launchOptions: {
           firefoxUserPrefs: {
-            // Headless Firefox on a machine without a GPU (CI) otherwise refuses WebGL.
+            // Headless Firefox on a machine without a GPU (CI) otherwise refuses WebGL. On Linux
+            // these are not enough: it also needs a display, so the nightly workflow runs it
+            // under `xvfb-run`, where it draws with Mesa's llvmpipe.
             'webgl.force-enabled': true,
             'webgl.disabled': false,
           },

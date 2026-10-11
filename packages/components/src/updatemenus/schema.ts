@@ -12,7 +12,7 @@ const LAYOUT = ['layout'] as const;
 const DOM = ['modebar'] as const;
 
 const METHOD_DESCRIPTION =
-  "Chart API method the item calls: `restyle`, `relayout`, `update` (Plotly's `update`, i.e. `chart.updateAttributes`), `animate` (frames, plan E7.4) or `skip` (only the event).";
+  "Chart API method the item calls: `restyle`, `relayout`, `update` (Plotly's `update`, i.e. `chart.updateAttributes`), `animate` (frames) or `skip` (only the event).";
 
 const ARGS = attr.infoArray({
   items: attr.any({ dflt: null, description: 'An argument (`null` allowed).' }),
@@ -141,7 +141,7 @@ export const updatemenusAttributes = attr.items(
     itemName: 'updatemenu',
     editType: LAYOUT,
     description:
-      'Buttons and dropdowns over the chart that call `restyle`, `relayout`, `update` or `animate` (plan E5.10).',
+      'Buttons and dropdowns over the chart that call `restyle`, `relayout`, `update` or `animate`.',
   },
 );
 

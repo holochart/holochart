@@ -1,8 +1,7 @@
 # Spike C: 2,000 labels, WebGL SDF text vs DOM overlay
 
 - **Plan:** E0.7 spike C; informs ADR-005.
-- **Status:** **Not measured yet.** Deferred to the M7 benchmarking pass (with E16.1), by decision
-  on 2026-09-23. The page is ready.
+- **Status:** Measured on 2026-10-11 ([Results](#results-2026-10-11)).
 - **Page:** [`examples/_spikes/c-text.ts`](../../examples/_spikes/c-text.ts)
 
 ## What the page measures
@@ -24,8 +23,37 @@ node docs/spikes/scripts/run-spike.mjs --spike c-text --params 'reps=5' --out /t
 
 The label count is fixed at 2,000 (the ADR-005 question), which is a light workload.
 
-## What we know so far
+## Results (2026-10-11)
 
-The `text-labels` visual example renders about 60 labels in one draw call (plus one for outlined
-labels), and the E0.7 determinism spike found it stable run to run. That says nothing about 2,000
-labels or update cost, which is what ADR-005 needs.
+|         |                                                                                  |
+| ------- | -------------------------------------------------------------------------------- |
+| Machine | Apple M1 Max, macOS, **under load from other applications** (load average 18–30) |
+| Browser | Playwright Chromium (HeadlessChrome 153), ANGLE → Metal                          |
+| Runner  | [`scripts/run-spike.mjs`](scripts/run-spike.mjs), DPR 1, peak browser RSS 1.1 GB |
+
+Medians of 5 repetitions (3 for pan), 2,000 labels, in ms. The "DOM first" columns are the same
+run with `order=dom-first`. Because the machine was busy, read the ratios, not the absolute
+numbers.
+
+| Measurement                                 | WebGL (troika) | WebGL, DOM first | DOM overlay | DOM, DOM first |
+| ------------------------------------------- | -------------- | ---------------- | ----------- | -------------- |
+| First sync until ready, cold (loads troika) | 302            | 177              | n/a         | n/a            |
+| Sync until ready, warm                      | 100            | 88               | 11.8        | 19.2           |
+| Change 100 labels: update call              | 3.1            | 2.9              | 1.4         | 1.3            |
+| Change 100 labels: until the frame is ready | 12.5           | 13.0             | n/a         | n/a            |
+| Pan, per frame                              | 3.5            | 4.0              | 1.7         | 1.7            |
+| Draw calls                                  | 1              | 1                | n/a         | n/a            |
+
+The DOM times include forced style and layout but **not paint**, so they are a lower bound.
+
+What it says for ADR-005:
+
+- **WebGL text holds a frame budget with 2,000 labels.** A pan costs 3.5–4 ms a frame in one draw
+  call, and a 100-label change is ready in 13 ms.
+- **The first layout is the weak spot.** 2,000 labels take about 90 ms warm and 180–300 ms cold,
+  eight times the DOM's creation time. A chart draws tens of labels, not thousands, so this is a
+  cost for the densest figures only.
+- **The DOM is cheaper on everything measured**, which excludes paint. It is not in the
+  framebuffer, so it cannot be exported or depth-tested. Nothing here argues for it as the default.
+- The `textRenderer: 'dom'` mode that ADR-005 describes as an option was not built; this page
+  measures a hand-written overlay.

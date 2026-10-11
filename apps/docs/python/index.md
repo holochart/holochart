@@ -22,8 +22,8 @@ ipywidgets manager and browser WebGL2. Python and browser examples share figure 
 
 The [Python quick start](/getting-started/python-jupyter) supplies five observations, imports,
 renderer registration, the first chart, styling and a replacement update. Complete the source
-setup first: it currently requires a development checkout containing `packages/holochart-py`.
-A public-main clone alone cannot install the bridge.
+setup first: `holochart-py` is not on PyPI yet, so you install it from a clone of the
+repository. An ordinary clone contains the bridge (`packages/holochart-py`).
 
 <NotebookLinks slug="first-chart" />
 
@@ -34,7 +34,7 @@ A public-main clone alone cannot install the bridge.
 
 ### 1. Install and select a kernel
 
-[Development setup](/getting-started/installation#python-and-jupyter-from-source) provides
+[Source setup](/getting-started/installation#python-and-jupyter-from-source) provides
 prerequisites, browser build, virtual environment, kernel registration/selection and restart
 instructions. Install into the same Python environment as the notebook kernel.
 

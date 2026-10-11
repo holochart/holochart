@@ -344,8 +344,9 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     // measured + ~10% after M2 wave 1 by decision (area fills, fonts, grid: 129.2 kB), and again after
     // M2 wave 2 (rich text, accessibility, export: 139.0 kB). E21.6 splits the fill code out so
     // scatter without fills doesn't load it. Raised to 157 kB for M5 by decision (M5 wave 1: locales
-    // plumbing, style/a11y hooks: 152.1 kB on CI).
-    limit: '157 kB',
+    // plumbing, style/a11y hooks: 152.1 kB on CI). Raised to 159 kB on 2026-10-11 (ledger in
+    // policy.ts: the bug fixes of backlogv2 V2-A3, 155.18 → 157.31 kB locally).
+    limit: '159 kB',
     imports: [
       { pkg: 'runtime', names: ['createChart', 'register'] },
       { pkg: 'traces-basic', names: ['scatter'] },
@@ -456,7 +457,9 @@ export const SIZE_ENTRIES: readonly SizeEntry[] = [
     // M5 by decision (M5 wave 1: locales, a11y config and summary hooks: ~241.6 kB on CI; wave 2 adds
     // keyboard, touch and focus handling). Raised to 250 kB in ship wave R2 by decision (the shared
     // renderer and GPU capability checks, S2.1 and S2.2: 246.4 → 247.3 kB locally, ~248.0 kB on CI).
-    limit: '250 kB',
+    // Raised to 252 kB on 2026-10-11 (ledger in policy.ts: the bug fixes of backlogv2 V2-A3,
+    // 248.87 → 250.15 kB locally).
+    limit: '252 kB',
     imports: [
       { pkg: 'runtime' },
       { pkg: 'components' },

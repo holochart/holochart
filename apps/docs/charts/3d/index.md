@@ -83,22 +83,23 @@ for the method; CI renders with software GL and can't measure them):
 
 <InstallStatus ecosystem="javascript" />
 
-Follow the [browser bundles from source](/getting-started/installation#browser-bundles-from-source)
-setup to build and copy the scripts plus fonts into a local HTTP-served directory.
-The paths below refer to that directory; keep both scripts from the same build.
-
 `@mk7s/holochart` includes the 3D scene and traces. The script-tag build is split: the main
 `holochart.iife.min.js` is 2D only, and the 3D add-on `holochart-3d.iife.min.js`, loaded after it,
-registers the scene and every 3D trace into `window.Holochart` using the main script's three.js:
+registers the scene and every 3D trace into `window.Holochart` using the main script's three.js.
+Load both from the CDN, at the same exact version:
 
 ```html
-<script src="./holochart.iife.min.js"></script>
-<script src="./holochart-3d.iife.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart@0.1.0-alpha.0/dist/holochart.iife.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart@0.1.0-alpha.0/dist/holochart-3d.iife.min.js"></script>
 ```
 
-With the source workspace and partial bundles, register the 3D package yourself:
-`register(...traces3d)` from `@mk7s/holochart-traces-3d` (the list includes the scene). See
-[Installation](/getting-started/installation#use-a-script-tag-cdn).
+See [Use a script tag](/getting-started/installation#use-a-script-tag) for a complete page. To
+serve the two scripts and their fonts from your own origin, see
+[Host the scripts yourself](/getting-started/installation#host-the-scripts-yourself).
+
+With partial bundles, register the 3D package yourself: `register(...traces3d)` from
+`@mk7s/holochart-traces-3d` (the list includes the scene). See
+[Smaller bundles](/getting-started/installation#smaller-bundles-with-partial-packages).
 
 ## Differences from Plotly
 

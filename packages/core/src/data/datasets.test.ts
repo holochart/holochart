@@ -243,6 +243,60 @@ describe('resolveDataRefs', () => {
     expect(bad.issues[0]?.path).toBe('data[3].dimensions[1].values');
   });
 
+  it("decodes Plotly's { dtype, bdata, shape } typed arrays on array attributes", () => {
+    const x = { dtype: 'f8', bdata: 'AAAAAAAA8D8AAAAAAAAAQA==' };
+    const size = { dtype: 'i1', bdata: 'AQID' };
+    const trace = {
+      type: 'scatter',
+      x,
+      y: [3, 4],
+      marker: { size, symbol: 'square' },
+      line: { width: 3 },
+      // Not an array attribute, and not in the schema: left as given.
+      name: { dtype: 'u1', bdata: 'AQID' },
+      extra: { dtype: 'u1', bdata: 'AQID' },
+    };
+    const { trace: out, issues } = resolveDataRefs(trace, scatter, undefined, 'data[0]');
+    expect(issues).toEqual([]);
+    expect(out['x']).toEqual(Float64Array.of(1, 2));
+    expect(out['y']).toBe(trace.y);
+    expect((out['marker'] as Record<string, unknown>)['size']).toEqual(Int8Array.of(1, 2, 3));
+    expect(out['line']).toBe(trace.line);
+    expect(out['name']).toBe(trace.name);
+    expect(out['extra']).toBe(trace.extra);
+    // Input untouched; resolving again gives the same arrays (data arrays compare by reference).
+    expect(trace.x).toBe(x);
+    const again = resolveDataRefs(trace, scatter, undefined, 'data[0]').trace;
+    expect(again['x']).toBe(out['x']);
+    // Already decoded: nothing left to do.
+    expect(resolveDataRefs(out, scatter, undefined, 'data[0]').trace).toBe(out);
+  });
+
+  it('decodes a 2D shape into rows, and dataset columns given as specs', () => {
+    const z = { dtype: 'i2', bdata: 'AQACAAMABAAFAAYA', shape: '2, 3' };
+    const r = resolveDataRefs({ x: z }, scatter, undefined, 'data[0]');
+    expect(r.trace['x']).toEqual([Int16Array.of(1, 2, 3), Int16Array.of(4, 5, 6)]);
+
+    const column = { dtype: 'f8', bdata: 'AAAAAAAA8D8AAAAAAAAAQA==' };
+    const viaDataset = resolveDataRefs(
+      { dataset: 'py', y: '@v' },
+      scatter,
+      { py: { v: column } } as never,
+      'data[0]',
+    );
+    expect(viaDataset.issues).toEqual([]);
+    expect(viaDataset.trace['y']).toEqual(Float64Array.of(1, 2));
+  });
+
+  it('leaves a spec that cannot be decoded for validation to reject', () => {
+    const trace = { x: { dtype: 'f8', bdata: 'AAAA' }, y: [1] };
+    const r = resolveDataRefs(trace, scatter, undefined, 'data[0]');
+    expect(r.trace).toBe(trace);
+    expect(r.issues).toEqual([]);
+    const issues = validate([trace], {}, registry);
+    expect(issues.map((i) => [i.path, i.code])).toEqual([['data[0].x', 'invalid-value']]);
+  });
+
   it('never throws and never mutates on arbitrary input', () => {
     const refish = fc.oneof(
       fc.constantFrom('@date', '@revenue', '@region', '@total', '@nope', '@@lit', '@', 'sales'),

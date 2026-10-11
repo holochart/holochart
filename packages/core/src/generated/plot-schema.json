@@ -180,7 +180,7 @@
         "role": "object",
         "text": {
           "dflt": "",
-          "description": "Title text (supports rich-text tags, E2.10).",
+          "description": "Title text (supports rich-text tags).",
           "valType": "string"
         },
         "font": {
@@ -290,12 +290,12 @@
       },
       "uniformtext": {
         "editType": "plot",
-        "description": "Uniform text sizing for bar and pie labels (E4.6).",
+        "description": "Uniform text sizing for bar and pie labels.",
         "role": "object",
         "mode": {
           "values": [false, "hide", "show"],
           "dflt": false,
-          "description": "Uniform size for the text inside bars and pie slices, per trace type (E4.6): labels are drawn at the smallest fitted size; `hide` drops labels that would be smaller than `minsize`, `show` draws them at the uniform size. `false` lets every label scale on its own.",
+          "description": "Uniform size for the text inside bars and pie slices, per trace type: labels are drawn at the smallest fitted size; `hide` drops labels that would be smaller than `minsize`, `show` draws them at the uniform size. `false` lets every label scale on its own.",
           "valType": "enumerated"
         },
         "minsize": {
@@ -334,7 +334,7 @@
       },
       "transition": {
         "editType": "none",
-        "description": "Default transition for animated updates (E7.3).",
+        "description": "Default transition for animated updates.",
         "role": "object",
         "duration": {
           "min": 0,
@@ -642,7 +642,7 @@
         },
         "rangebreaks": {
           "editType": "calc",
-          "description": "Spans hidden from the axis (plan E3.8): the axis skips them, so a weekday-only stock chart has no gaps for weekends or nights. Date and linear axes; data inside a break is not drawn. Ticks never land in a break; hover, zoom and pan work across breaks.",
+          "description": "Spans hidden from the axis: the axis skips them, so a weekday-only stock chart has no gaps for weekends or nights. Date and linear axes; data inside a break is not drawn. Ticks never land in a break; hover, zoom and pan work across breaks.",
           "itemName": "rangebreak",
           "role": "items",
           "items": {
@@ -803,7 +803,7 @@
           "extras": [true, false],
           "dflt": false,
           "editType": "layout+ticks+plot",
-          "description": "Grow the figure margins so tick labels and the title fit (E4.2). `true` allows every direction; flags restrict it.",
+          "description": "Grow the figure margins so tick labels and the title fit. `true` allows every direction; flags restrict it.",
           "valType": "flaglist"
         },
         "tickmode": {
@@ -1338,7 +1338,7 @@
           "role": "object",
           "text": {
             "dflt": "",
-            "description": "Axis title text (supports rich-text tags, E2.10).",
+            "description": "Axis title text (supports rich-text tags).",
             "valType": "string"
           },
           "font": {
@@ -1408,7 +1408,7 @@
         },
         "rangeslider": {
           "editType": "layout",
-          "description": "Range slider (plan E5.9): an overview of all the data under the x axis, with a window over the range in view. Drag the window to pan, its ends to zoom, or click elsewhere to center the window there; the axis range changes with one `relayout` at the end of the drag. Y axes anchored to an axis with a range slider default to `fixedrange: true`, as in Plotly.",
+          "description": "Range slider: an overview of all the data under the x axis, with a window over the range in view. Drag the window to pan, its ends to zoom, or click elsewhere to center the window there; the axis range changes with one `relayout` at the end of the drag. Y axes anchored to an axis with a range slider default to `fixedrange: true`, as in Plotly.",
           "role": "object",
           "visible": {
             "description": "Show the range slider. Defaults to `true` when `rangeslider` is given (`rangeslider: {}` is enough) or the axis has an `ohlc` or `candlestick` trace, else `false`.",
@@ -1481,7 +1481,7 @@
         },
         "rangeselector": {
           "editType": "layout",
-          "description": "Range selector (plan E5.9): buttons over the chart that set the x range to a preset span ending at the current range end (last 6 months, year to date, all). Date axes only. The button whose range is in view shows as active.",
+          "description": "Range selector: buttons over the chart that set the x range to a preset span ending at the current range end (last 6 months, year to date, all). Date axes only. The button whose range is in view shows as active.",
           "role": "object",
           "visible": {
             "description": "Show the range selector. Defaults to `true` when it has `buttons`.",
@@ -1742,7 +1742,7 @@
         },
         "rangebreaks": {
           "editType": "calc",
-          "description": "Spans hidden from the axis (plan E3.8): the axis skips them, so a weekday-only stock chart has no gaps for weekends or nights. Date and linear axes; data inside a break is not drawn. Ticks never land in a break; hover, zoom and pan work across breaks.",
+          "description": "Spans hidden from the axis: the axis skips them, so a weekday-only stock chart has no gaps for weekends or nights. Date and linear axes; data inside a break is not drawn. Ticks never land in a break; hover, zoom and pan work across breaks.",
           "itemName": "rangebreak",
           "role": "items",
           "items": {
@@ -1903,7 +1903,7 @@
           "extras": [true, false],
           "dflt": false,
           "editType": "layout+ticks+plot",
-          "description": "Grow the figure margins so tick labels and the title fit (E4.2). `true` allows every direction; flags restrict it.",
+          "description": "Grow the figure margins so tick labels and the title fit. `true` allows every direction; flags restrict it.",
           "valType": "flaglist"
         },
         "tickmode": {
@@ -2438,7 +2438,7 @@
           "role": "object",
           "text": {
             "dflt": "",
-            "description": "Axis title text (supports rich-text tags, E2.10).",
+            "description": "Axis title text (supports rich-text tags).",
             "valType": "string"
           },
           "font": {
@@ -2509,7 +2509,7 @@
       },
       "selections": {
         "editType": "plot",
-        "description": "Selections as layout objects (plan E5.12): each box or lasso drag in `select` / `lasso` mode adds one (shift keeps the others), and every selection on a subplot selects the points inside it (`selectedpoints` follows). Set them to restore a selection; drag one to move or resize it; a double-click clears them.",
+        "description": "Selections as layout objects: each box or lasso drag in `select` / `lasso` mode adds one (shift keeps the others), and every selection on a subplot selects the points inside it (`selectedpoints` follows). Set them to restore a selection; drag one to move or resize it; a double-click clears them.",
         "itemName": "selection",
         "role": "items",
         "items": {
@@ -2660,7 +2660,7 @@
       },
       "editable": {
         "dflt": false,
-        "description": "Make titles, legend, annotations and shapes editable in place (E6.7).",
+        "description": "Make titles, legend, annotations and shapes editable in place.",
         "valType": "boolean"
       },
       "edits": {
@@ -2730,37 +2730,37 @@
       },
       "ariaLabel": {
         "dflt": "",
-        "description": "The chart's accessible name (`aria-label`), read by screen readers. Empty: `layout.meta.description` when set, else the figure title followed by an automatic summary (\"Line chart with 3 traces\"). Holochart only (plan E17.1).",
+        "description": "The chart's accessible name (`aria-label`), read by screen readers. Empty: `layout.meta.description` when set, else the figure title followed by an automatic summary (\"Line chart with 3 traces\"). Holochart only.",
         "valType": "string"
       },
       "a11y": {
-        "description": "Accessibility options (plan E17). Holochart only.",
+        "description": "Accessibility options. Holochart only.",
         "role": "object",
         "summaries": {
           "dflt": true,
-          "description": "Add generated summaries of trends and extremes (\"Revenue rises from 1.2M in Jan to 3.4M in Dec\") to what screen readers get. Their code loads after the first draw. Holochart only (plan E17.2).",
+          "description": "Add generated summaries of trends and extremes (\"Revenue rises from 1.2M in Jan to 3.4M in Dec\") to what screen readers get. Their code loads after the first draw. Holochart only.",
           "valType": "boolean"
         },
         "dataTable": {
           "values": ["hidden", "visible", false],
           "dflt": "hidden",
-          "description": "The traces' data tables: `'hidden'` for screen readers only (first 100 rows), `'visible'` shown below the chart with every row (virtualized), `false` none. Holochart only (plan E17.3).",
+          "description": "The traces' data tables: `'hidden'` for screen readers only (first 100 rows), `'visible'` shown below the chart with every row (virtualized), `false` none. Holochart only.",
           "valType": "enumerated"
         },
         "patterns": {
           "dflt": false,
-          "description": "Give bars, histograms, polar bars, filled areas (`fillpattern`) and pie slices a distinct pattern each, as an encoding redundant with color, unless the trace or template sets one. Holochart only (plan E17.5).",
+          "description": "Give bars, histograms, polar bars, filled areas (`fillpattern`) and pie slices a distinct pattern each, as an encoding redundant with color, unless the trace or template sets one. Holochart only.",
           "valType": "boolean"
         },
         "reducedMotion": {
           "values": ["auto", true, false],
           "dflt": "auto",
-          "description": "Snap transitions and drill-down tweens instead of animating them: `'auto'` when the user's system asks for reduced motion (the `prefers-reduced-motion` media query), `true` always, `false` never. Holochart only (plan E17.5).",
+          "description": "Snap transitions and drill-down tweens instead of animating them: `'auto'` when the user's system asks for reduced motion (the `prefers-reduced-motion` media query), `true` always, `false` never. Holochart only.",
           "valType": "enumerated"
         },
         "keyboard": {
           "dflt": true,
-          "description": "Keyboard access: Tab reaches the plot area (the arrows step through the data, `+` / `-` zoom) and the legend items. Holochart only (plan E6.5, E17.4).",
+          "description": "Keyboard access: Tab reaches the plot area (the arrows step through the data, `+` / `-` zoom) and the legend items. Holochart only.",
           "valType": "boolean"
         }
       },
@@ -2831,23 +2831,23 @@
       "worker": {
         "values": [true, false, "auto"],
         "dflt": false,
-        "description": "Run the calc stage in a Web Worker (ADR-011). `auto` switches on above a data-size threshold.",
+        "description": "Default of the `worker` attribute of traces that can compute off the main thread, in a Web Worker (today the layout of `graph` traces). `auto` switches on above a data-size threshold.",
         "valType": "enumerated"
       },
       "hoverRenderer": {
         "values": ["dom"],
         "dflt": "dom",
-        "description": "How hover labels render. Only `dom` (positioned HTML over the canvas) exists in M1; a WebGL label renderer is planned (E5.7).",
+        "description": "How hover labels render. `dom` (positioned HTML over the canvas) is the only renderer.",
         "valType": "enumerated"
       },
       "renderHover": {
-        "description": "Custom hover label: `(points) => HTMLElement | null`. Return `null`/`undefined` to use the built-in label. Not serializable (ADR-012).",
+        "description": "Custom hover label: `(points) => HTMLElement | null`. Return `null`/`undefined` to use the built-in label. A function, so it is not serializable.",
         "valType": "function"
       },
       "textRenderer": {
         "values": ["webgl", "dom"],
         "dflt": "webgl",
-        "description": "Render text as WebGL SDF glyphs or as a DOM overlay (ADR-005).",
+        "description": "Render text as WebGL SDF glyphs or as a DOM overlay.",
         "valType": "enumerated"
       },
       "strict": {

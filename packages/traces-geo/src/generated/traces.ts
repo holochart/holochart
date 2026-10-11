@@ -130,13 +130,13 @@ export type ChoroplethTrace = Omit<CommonTraceAttributes, 'hoverinfo'> & {
    */
   reversescale?: boolean;
   /**
-   * Show a colorbar for this colorscale (drawn by the colorbar component, plan E5.3).
+   * Show a colorbar for this colorscale (drawn by the colorbar component).
    *
    * @defaultValue `true`
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: Colorbar;
   /**
@@ -444,13 +444,13 @@ export interface ScattergeoTraceMarker {
    */
   cmid?: number;
   /**
-   * Show a colorbar for this colorscale (drawn by the colorbar component, plan E5.3).
+   * Show a colorbar for this colorscale (drawn by the colorbar component).
    *
    * @defaultValue `false`
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: Colorbar;
   /**

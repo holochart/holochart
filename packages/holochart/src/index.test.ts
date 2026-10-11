@@ -42,6 +42,13 @@ describe('@mk7s/holochart bundle', () => {
     expect(typeof Holochart.render.createRenderRoot).toBe('function');
   });
 
+  it('exports the shape helpers, eraseActiveShape included', () => {
+    expect(Holochart.addShape).toBe(components.addShape);
+    expect(Holochart.eraseActiveShape).toBe(components.eraseActiveShape);
+    // No shapes view has registered an eraser for this object: nothing is active.
+    expect(Holochart.eraseActiveShape({})).toBe(false);
+  });
+
   it('lists its exports: package values unchanged, the shared plumbing left out', () => {
     const packages: Record<string, Record<string, unknown>> = {
       core,

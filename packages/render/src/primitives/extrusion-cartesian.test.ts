@@ -6,7 +6,6 @@ import { createResourceManager } from '../resources.ts';
 import type { DataTransform, Primitive } from '../types.ts';
 import { ExtrusionPrimitive, UNCLIPPED, type ExtrusionHost } from './extrusion.ts';
 import {
-  HEATMAP_COLUMNS_MAX,
   heatmapColumns,
   raycastSlab,
   slabGeometry,
@@ -323,20 +322,41 @@ describe('syncHeatmapColumns', () => {
   });
 
   it('reads percentages of the mean cell width; stays flat beyond the cell limit, warning once', async () => {
+    // A fresh module instance: the warning is given once per page, so whether it is still due
+    // would otherwise depend on what ran before (this test itself, under `--repeats`).
+    vi.resetModules();
+    const fresh = await import('./extrusion-cartesian.ts');
     const mesh = await loadMeshModule();
     const heat = { object: new Object3D(), current: grid([1, 2], 2, 1) };
     const h = host({ depth: '150%' });
-    const p = syncHeatmapColumns(undefined, h, heat as unknown as HeatmapPrimitive, [], mesh)!;
+    const p = fresh.syncHeatmapColumns(
+      undefined,
+      h,
+      heat as unknown as HeatmapPrimitive,
+      [],
+      mesh,
+    )!;
     // Cells are 10 px wide.
     expect(p.maxDepth).toBe(15);
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    const nx = HEATMAP_COLUMNS_MAX + 1;
-    const big = { object: new Object3D(), current: { ...grid([1, 2], 2, 1), nx, xEdges: [0, 1] } };
-    const px = { ...h, trace: { depth: 40 } };
-    expect(syncHeatmapColumns(p, px, big as unknown as HeatmapPrimitive, [], mesh)).toBe(undefined);
-    syncHeatmapColumns(undefined, px, big as unknown as HeatmapPrimitive, [], mesh);
-    expect(warn).toHaveBeenCalledTimes(1);
-    warn.mockRestore();
+    try {
+      const nx = fresh.HEATMAP_COLUMNS_MAX + 1;
+      const big = {
+        object: new Object3D(),
+        current: { ...grid([1, 2], 2, 1), nx, xEdges: [0, 1] },
+      } as unknown as HeatmapPrimitive;
+      const px = { ...h, trace: { depth: 40 } };
+      expect(fresh.syncHeatmapColumns(p, px, big, [], mesh)).toBe(undefined);
+      expect(warn).toHaveBeenCalledTimes(1);
+      // Asked again, of the same grid or of another chart's: flat, and not a word more.
+      expect(fresh.syncHeatmapColumns(undefined, px, big, [], mesh)).toBe(undefined);
+      expect(fresh.syncHeatmapColumns(undefined, host({ depth: 40 }), big, [], mesh)).toBe(
+        undefined,
+      );
+      expect(warn).toHaveBeenCalledTimes(1);
+    } finally {
+      warn.mockRestore();
+    }
   });
 });
 

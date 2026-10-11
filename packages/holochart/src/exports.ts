@@ -881,6 +881,7 @@ export {
   builtinComponents,
   colorbarComponent,
   componentsReady,
+  eraseActiveShape,
   imagesComponent,
   legendComponent,
   modebarComponent,

@@ -12,9 +12,12 @@
  *   `clamp: true`, in which case they are clamped and a note is attached.
  * - Per-point arrays (`arrayOk`) and data arrays are kept by reference — validating or copying
  *   millions of points here would defeat zero-copy ingestion; the calc stage handles bad points.
+ *   The two forms that are not arrays the later stages can read are converted here
+ *   (`inputDataArray`): Plotly's `{ dtype, bdata }` encoding and 64-bit integer arrays.
  */
 import type { AttrSpec, PrimitiveValue } from '../schema/types.ts';
 import { getColorway } from '../colors/registry.ts';
+import { inputDataArray } from '../data/arrays.ts';
 import { canonicalColor } from './color.ts';
 
 /**
@@ -153,6 +156,9 @@ function coerceInfoArray(spec: AttrSpec, v: unknown): CoerceResult {
  * @internal
  */
 export function coerceValue(spec: AttrSpec, v: unknown): CoerceResult {
+  // Where an array is accepted, so are Plotly's `{ dtype, bdata }` encoding and 64-bit integer
+  // arrays (as plotly.js decodes specs when coercing `data_array` and `arrayOk` attributes).
+  if (spec.valType === 'data_array' || spec.arrayOk === true) v = inputDataArray(v);
   switch (spec.valType) {
     case 'number':
       return coerceNumeric(spec, v, false);

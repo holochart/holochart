@@ -280,6 +280,19 @@ function graphemes(text: string): string[] {
 /** Break-opportunity tokens: each ends after a whitespace run or a hyphen run (troika's rules). */
 const WRAP_TOKEN = /[^\s\-\u2010\u2012-\u2014]*(?:[-\u2010\u2012-\u2014]+|\s+)?/g;
 
+/** Measurements answered so far, by every oracle (see {@link textMeasurementCount}). */
+let measurements = 0;
+
+/**
+ * How many measurements the oracles made by {@link createFontMetricsOracle} have answered so far,
+ * cached ones included. Read it before and after some work to learn whether that work measured
+ * text, and so whether its result is stale once fonts change: the chart runtime does this for each
+ * trace's calc, extremes and plot, and reruns only those when a font has loaded.
+ */
+export function textMeasurementCount(): number {
+  return measurements;
+}
+
 /** Create an oracle. Most code should use {@link getDefaultFontMetricsOracle}. */
 export function createFontMetricsOracle(options: FontMetricsOracleOptions = {}): FontMetricsOracle {
   const measurer = options.measurer ?? createCanvasTextMeasurer() ?? createFallbackTextMeasurer();
@@ -298,6 +311,8 @@ export function createFontMetricsOracle(options: FontMetricsOracleOptions = {}):
    * that changes what is drawn never serves a stale entry even without {@link clear}.
    */
   const resolve = (font: TextFace): [TextFace, string] => {
+    // Every method resolves its face first, so this counts each measurement asked for.
+    measurements++;
     const face = resolveFace ? resolveFace(font) : font;
     return [face, textFaceKey(face)];
   };

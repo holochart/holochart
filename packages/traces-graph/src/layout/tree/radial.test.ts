@@ -181,6 +181,34 @@ describe('radial tree: rings and angles', () => {
     );
   });
 
+  it('keeps two siblings apart when nothing else on their ring takes any angle', () => {
+    // Found by the property above (nightly, seed 1125085653). With no sizes and no `subtreesep`
+    // node 1 takes no angle beside node 4, so the gap between the siblings 4 and 5 was the
+    // whole of their ring: stretched over the full circle it put 5 back on top of 4.
+    const graph = treeGraph([-1, 0, -1, -1, 3, 3], { halfWidth: 0, halfHeight: 0 });
+    const found = {
+      nodesep: 1.0000000000000001e-7,
+      subtreesep: 0,
+      ranksep: 0,
+      sector: { start: 0, span: -359.9999999998854 },
+    };
+    const tiny = radialTreeLayout(graph, found);
+    expectRadial(graph, tiny, found);
+    expect(Math.hypot(tiny.x[5]! - tiny.x[4]!, tiny.y[5]! - tiny.y[4]!)).toBeCloseTo(1e-7, 12);
+    // The same at a size one can see: the siblings face each other across the ring.
+    const options = { nodesep: 20, subtreesep: 0, ranksep: 50 };
+    const r = radialTreeLayout(graph, options);
+    expectRadial(graph, r, options);
+    expect(list(r.radius)).toEqual([50, 100, 50, 50, 100, 100]);
+    expect(round(Math.abs(r.angle[5]! - r.angle[4]!))).toBe(180);
+    // And with a `subtreesep` next to nothing the ring stays where it was, instead of growing
+    // until the two were clear of each other the short way round (to a radius of 31,887).
+    const near = { ...options, subtreesep: 1e-3 };
+    const s = radialTreeLayout(graph, near);
+    expectRadial(graph, s, near);
+    expect(list(s.radius)).toEqual([50, 100, 50, 50, 100, 100]);
+  });
+
   it('keeps all nodes of equal size apart, not only neighbours', () => {
     fc.assert(
       fc.property(arbitraryForest(30), (parents) => {

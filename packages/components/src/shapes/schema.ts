@@ -138,7 +138,7 @@ export const shapeItemAttributes = {
 export const shapesAttributes = attr.items(shapeItemAttributes, {
   itemName: 'shape',
   editType: SHAPE_EDIT,
-  description: 'Lines, rectangles, ellipses and paths in data or paper coordinates (plan E5.5).',
+  description: 'Lines, rectangles, ellipses and paths in data or paper coordinates.',
 });
 
 /** Label placement values. @internal */

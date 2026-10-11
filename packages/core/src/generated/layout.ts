@@ -8,7 +8,7 @@ import type { DataArray } from '../schema/types.ts';
  */
 export interface BaseLayoutTitle {
   /**
-   * Title text (supports rich-text tags, E2.10).
+   * Title text (supports rich-text tags).
    *
    * @defaultValue `""`
    */
@@ -187,7 +187,7 @@ export type BaseLayout = {
    */
   showlegend?: boolean;
   /**
-   * Uniform text sizing for bar and pie labels (E4.6).
+   * Uniform text sizing for bar and pie labels.
    */
   uniformtext?: LayoutUniformtext;
   /**
@@ -215,7 +215,7 @@ export type BaseLayout = {
     | 'turntable'
     | false;
   /**
-   * Default transition for animated updates (E7.3).
+   * Default transition for animated updates.
    */
   transition?: LayoutTransition;
   /**
@@ -319,7 +319,7 @@ export type BaseLayout = {
    */
   [key: `yaxis${number}`]: unknown;
   /**
-   * Selections as layout objects (plan E5.12): each box or lasso drag in `select` / `lasso` mode adds one (shift keeps the others), and every selection on a subplot selects the points inside it (`selectedpoints` follows). Set them to restore a selection; drag one to move or resize it; a double-click clears them.
+   * Selections as layout objects: each box or lasso drag in `select` / `lasso` mode adds one (shift keeps the others), and every selection on a subplot selects the points inside it (`selectedpoints` follows). Set them to restore a selection; drag one to move or resize it; a double-click clears them.
    */
   selections?: readonly LayoutSelection[];
 };
@@ -466,11 +466,11 @@ export interface LayoutFont {
 }
 
 /**
- * Uniform text sizing for bar and pie labels (E4.6).
+ * Uniform text sizing for bar and pie labels.
  */
 export interface LayoutUniformtext {
   /**
-   * Uniform size for the text inside bars and pie slices, per trace type (E4.6): labels are drawn at the smallest fitted size; `hide` drops labels that would be smaller than `minsize`, `show` draws them at the uniform size. `false` lets every label scale on its own.
+   * Uniform size for the text inside bars and pie slices, per trace type: labels are drawn at the smallest fitted size; `hide` drops labels that would be smaller than `minsize`, `show` draws them at the uniform size. `false` lets every label scale on its own.
    *
    * @defaultValue `false`
    */
@@ -486,7 +486,7 @@ export interface LayoutUniformtext {
 }
 
 /**
- * Default transition for animated updates (E7.3).
+ * Default transition for animated updates.
  */
 export interface LayoutTransition {
   /**
@@ -698,7 +698,7 @@ export interface LayoutXaxis {
    */
   maxallowed?: unknown;
   /**
-   * Spans hidden from the axis (plan E3.8): the axis skips them, so a weekday-only stock chart has no gaps for weekends or nights. Date and linear axes; data inside a break is not drawn. Ticks never land in a break; hover, zoom and pan work across breaks.
+   * Spans hidden from the axis: the axis skips them, so a weekday-only stock chart has no gaps for weekends or nights. Date and linear axes; data inside a break is not drawn. Ticks never land in a break; hover, zoom and pan work across breaks.
    */
   rangebreaks?: readonly LayoutXaxisRangebreak[];
   /**
@@ -774,7 +774,7 @@ export interface LayoutXaxis {
    */
   layer?: 'above traces' | 'below traces';
   /**
-   * Grow the figure margins so tick labels and the title fit (E4.2). `true` allows every direction; flags restrict it.
+   * Grow the figure margins so tick labels and the title fit. `true` allows every direction; flags restrict it.
    *
    * @defaultValue `false`
    */
@@ -1148,11 +1148,11 @@ export interface LayoutXaxis {
    */
   title?: LayoutXaxisTitle;
   /**
-   * Range slider (plan E5.9): an overview of all the data under the x axis, with a window over the range in view. Drag the window to pan, its ends to zoom, or click elsewhere to center the window there; the axis range changes with one `relayout` at the end of the drag. Y axes anchored to an axis with a range slider default to `fixedrange: true`, as in Plotly.
+   * Range slider: an overview of all the data under the x axis, with a window over the range in view. Drag the window to pan, its ends to zoom, or click elsewhere to center the window there; the axis range changes with one `relayout` at the end of the drag. Y axes anchored to an axis with a range slider default to `fixedrange: true`, as in Plotly.
    */
   rangeslider?: LayoutXaxisRangeslider;
   /**
-   * Range selector (plan E5.9): buttons over the chart that set the x range to a preset span ending at the current range end (last 6 months, year to date, all). Date axes only. The button whose range is in view shows as active.
+   * Range selector: buttons over the chart that set the x range to a preset span ending at the current range end (last 6 months, year to date, all). Date axes only. The button whose range is in view shows as active.
    */
   rangeselector?: LayoutXaxisRangeselector;
 }
@@ -1409,7 +1409,7 @@ export interface LayoutXaxisMinor {
  */
 export interface LayoutXaxisTitle {
   /**
-   * Axis title text (supports rich-text tags, E2.10).
+   * Axis title text (supports rich-text tags).
    *
    * @defaultValue `""`
    */
@@ -1490,7 +1490,7 @@ export interface LayoutXaxisTitleFont {
 }
 
 /**
- * Range slider (plan E5.9): an overview of all the data under the x axis, with a window over the range in view. Drag the window to pan, its ends to zoom, or click elsewhere to center the window there; the axis range changes with one `relayout` at the end of the drag. Y axes anchored to an axis with a range slider default to `fixedrange: true`, as in Plotly.
+ * Range slider: an overview of all the data under the x axis, with a window over the range in view. Drag the window to pan, its ends to zoom, or click elsewhere to center the window there; the axis range changes with one `relayout` at the end of the drag. Y axes anchored to an axis with a range slider default to `fixedrange: true`, as in Plotly.
  */
 export interface LayoutXaxisRangeslider {
   /**
@@ -1588,7 +1588,7 @@ export interface LayoutXaxisRangesliderYaxis {
 }
 
 /**
- * Range selector (plan E5.9): buttons over the chart that set the x range to a preset span ending at the current range end (last 6 months, year to date, all). Date axes only. The button whose range is in view shows as active.
+ * Range selector: buttons over the chart that set the x range to a preset span ending at the current range end (last 6 months, year to date, all). Date axes only. The button whose range is in view shows as active.
  */
 export interface LayoutXaxisRangeselector {
   /**
@@ -1825,7 +1825,7 @@ export interface LayoutYaxis {
    */
   maxallowed?: unknown;
   /**
-   * Spans hidden from the axis (plan E3.8): the axis skips them, so a weekday-only stock chart has no gaps for weekends or nights. Date and linear axes; data inside a break is not drawn. Ticks never land in a break; hover, zoom and pan work across breaks.
+   * Spans hidden from the axis: the axis skips them, so a weekday-only stock chart has no gaps for weekends or nights. Date and linear axes; data inside a break is not drawn. Ticks never land in a break; hover, zoom and pan work across breaks.
    */
   rangebreaks?: readonly LayoutYaxisRangebreak[];
   /**
@@ -1901,7 +1901,7 @@ export interface LayoutYaxis {
    */
   layer?: 'above traces' | 'below traces';
   /**
-   * Grow the figure margins so tick labels and the title fit (E4.2). `true` allows every direction; flags restrict it.
+   * Grow the figure margins so tick labels and the title fit. `true` allows every direction; flags restrict it.
    *
    * @defaultValue `false`
    */
@@ -2528,7 +2528,7 @@ export interface LayoutYaxisMinor {
  */
 export interface LayoutYaxisTitle {
   /**
-   * Axis title text (supports rich-text tags, E2.10).
+   * Axis title text (supports rich-text tags).
    *
    * @defaultValue `""`
    */

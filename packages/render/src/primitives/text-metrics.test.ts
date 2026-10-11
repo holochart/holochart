@@ -22,6 +22,7 @@ import {
   renderedTextFace,
   setDefaultFontMetricsOracle,
   textFaceKey,
+  textMeasurementCount,
   wrapText,
   type TextFace,
   type TextMeasurer,
@@ -132,6 +133,25 @@ describe('FontMetricsOracle cache', () => {
 
   it('keys faces by style, weight, and family', () => {
     expect(textFaceKey({ family: 'Inter', weight: 'bold' })).toBe('normal|700|Inter');
+  });
+
+  it('counts every measurement asked for, cached or not (textMeasurementCount)', () => {
+    const o = createFontMetricsOracle({ measurer: monospaceMeasurer() });
+    const measured = (work: () => unknown): boolean => {
+      const before = textMeasurementCount();
+      work();
+      return textMeasurementCount() !== before;
+    };
+    expect(measured(() => o.measureWidth('hello', font))).toBe(true);
+    // A cache hit is still text that was measured: its user depends on the font.
+    expect(measured(() => o.measureWidth('hello', font))).toBe(true);
+    expect(measured(() => o.measureText('', font))).toBe(true);
+    expect(measured(() => o.measureAdvance('a ', font))).toBe(true);
+    expect(measured(() => o.wrapText('a b', font, 5))).toBe(true);
+    expect(measured(() => o.ellipsize('abc', font, 5))).toBe(true);
+    expect(measured(() => measureText('default oracle', font))).toBe(true);
+    expect(measured(() => o.clear())).toBe(false);
+    expect(measured(() => textFaceKey(font))).toBe(false);
   });
 });
 

@@ -199,8 +199,42 @@ export function calcImage(
   };
 }
 
+/**
+ * The linear coordinates one direction gives the autorange: the picture's two outer edges. On a
+ * log axis an edge at or below 0 has no position, and the other edge alone would collapse the
+ * range onto one value. Plotly (`image/calc.js`) adds the start of every pixel on a log axis and
+ * the axis keeps the positive ones; so here the range then spans the pixel starts above 0.
+ */
+function rangeEdges(
+  axis: AxisInfo | undefined,
+  edges: readonly [number, number],
+  start: number,
+  step: number,
+  count: number,
+): readonly [number, number] {
+  if (axis?.type !== 'log' || (Number.isFinite(edges[0]) && Number.isFinite(edges[1]))) {
+    return edges;
+  }
+  let lo = Infinity;
+  let hi = -Infinity;
+  // `count` is the far edge; NaN (at or below 0) fails both comparisons.
+  for (let i = 0; i <= count; i++) {
+    const l = calcToLinear(axis, start + i * step);
+    if (l < lo) lo = l;
+    if (l > hi) hi = l;
+  }
+  return lo <= hi ? [lo, hi] : edges;
+}
+
 /** Autorange: the whole picture, edge to edge, without padding (Plotly). */
-export function imageExtremes(calc: ImageCalc): TraceExtremes {
+export function imageExtremes(
+  calc: ImageCalc,
+  _trace?: FullTrace,
+  ctx?: Pick<CalcContext, 'xaxis' | 'yaxis'>,
+): TraceExtremes {
   if (calc.w === 0 || calc.h === 0) return {};
-  return { x: linearExtremes(calc.xEdges), y: linearExtremes(calc.yEdges) };
+  return {
+    x: linearExtremes(rangeEdges(ctx?.xaxis, calc.xEdges, calc.x0, calc.dx, calc.w)),
+    y: linearExtremes(rangeEdges(ctx?.yaxis, calc.yEdges, calc.y0, calc.dy, calc.h)),
+  };
 }

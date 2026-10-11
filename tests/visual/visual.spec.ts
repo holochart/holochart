@@ -17,6 +17,7 @@ import {
   screenshotDomLayers,
   screenshotExample,
 } from './harness.ts';
+import { baselinePlatformOf, gatesBaseline } from './platform.ts';
 import { DIFF_REPORT_DIR, reportFileFor, type DiffRecord } from './report-data.ts';
 
 /**
@@ -33,6 +34,9 @@ import { DIFF_REPORT_DIR, reportFileFor, type DiffRecord } from './report-data.t
  * pixels overall. DOM-drawn parts (hover labels, menus, sliders), whose text the OS rasterizes,
  * are exempt from the window limit: they are found with two more screenshots, with the canvases
  * hidden and with everything hidden.
+ *
+ * An example listed in `platform.ts` is gated in CI and on its baseline's platform only:
+ * elsewhere its difference is annotated and its baseline is never rewritten.
  */
 const ROOT = path.resolve(import.meta.dirname, '../..');
 const EXAMPLES_DIR = path.join(ROOT, 'examples');
@@ -63,6 +67,7 @@ function recordDiff(
   tolerance: number,
   tileTolerance: number,
   c: CompareResult,
+  gated: boolean,
 ): void {
   const percent = (c.ratio * 100).toFixed(4);
   testInfo.annotations.push({
@@ -82,6 +87,7 @@ function recordDiff(
     tileDiffPixels: c.tileDiffPixels,
     exactPixels: c.exactPixels,
     maxDelta: c.maxDelta,
+    ...(gated ? {} : { gated: false }),
   };
   writeFile(reportFileFor(path.join(ROOT, DIFF_REPORT_DIR), id), JSON.stringify(record));
 }
@@ -136,6 +142,9 @@ for (const id of exampleIds) {
     ] as const) {
       expect(value >= 0 && value <= 1, `meta.${name} of "${id}" is a fraction (0 to 1)`).toBe(true);
     }
+    // False for a baseline made on another platform than this one, outside CI (`platform.ts`).
+    const gated = gatesBaseline(id);
+    const elsewhere = `its baseline is the ${baselinePlatformOf(id)} rendering, this is ${process.platform}`;
     const baseline = existsSync(baselinePath) ? readFileSync(baselinePath) : undefined;
     let comparison: CompareResult | undefined;
     if (baseline) {
@@ -146,12 +155,15 @@ for (const id of exampleIds) {
         tileTolerance,
         ...(exempt ? { exempt } : {}),
       });
-      recordDiff(testInfo, id, tolerance, tileTolerance, comparison);
+      recordDiff(testInfo, id, tolerance, tileTolerance, comparison, gated);
     }
 
     if (isUpdateMode(testInfo)) {
-      // Only rewrite when something changed, so unrelated baselines don't churn.
-      if (!comparison || comparison.diffPixels > 0) {
+      if (!gated) {
+        // This machine's rendering would fail in CI: the baseline comes from CI or its container.
+        testInfo.annotations.push({ type: 'baseline', description: `kept (${elsewhere})` });
+      } else if (!comparison || comparison.diffPixels > 0) {
+        // Only rewrite when something changed, so unrelated baselines don't churn.
         writeFile(baselinePath, screenshot);
         testInfo.annotations.push({
           type: 'baseline',
@@ -163,9 +175,17 @@ for (const id of exampleIds) {
       await testInfo.attach('actual', { path: actualPath, contentType: 'image/png' });
       throw new Error(
         `No baseline for "${id}" (expected ${path.relative(ROOT, baselinePath)}). ` +
-          `Review ${path.relative(ROOT, actualPath)} and run \`pnpm test:visual:update -g ${id}\`.`,
+          (gated
+            ? `Review ${path.relative(ROOT, actualPath)} and run \`pnpm test:visual:update -g ${id}\`.`
+            : `Take it from CI or its container (CONTRIBUTING.md): ${elsewhere}.`),
       );
     } else if (!comparison.pass) {
+      if (!gated) {
+        testInfo.annotations.push({
+          type: 'platform',
+          description: `not gated here (${elsewhere}): ${comparison.message}`,
+        });
+      }
       writeFile(actualPath, screenshot);
       await testInfo.attach('baseline', { path: baselinePath, contentType: 'image/png' });
       await testInfo.attach('actual', { path: actualPath, contentType: 'image/png' });
@@ -176,7 +196,7 @@ for (const id of exampleIds) {
     }
 
     expect(pageErrors, 'uncaught errors in the page').toEqual([]);
-    if (comparison && !isUpdateMode(testInfo)) {
+    if (comparison && gated && !isUpdateMode(testInfo)) {
       expect(comparison.pass, `"${id}" differs from its baseline: ${comparison.message}`).toBe(
         true,
       );

@@ -56,12 +56,12 @@ its documented widget support is not a Holochart rendering result.
 
 <div class="hc-table-scroll hc-environment-table hc-environment-table--comparison" role="region" aria-label="Notebook environment setup comparison" tabindex="0">
 
-| Environment                 | Widget manager / frontend                                                            | Graphics                                                                           | Package and notebook availability                                                                                   | Data access                                                                    | Startup evidence                                                      |
-| --------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
-| Local JupyterLab / Notebook | Actual managers verified with all 38 artifacts.                                      | WebGL2 verified in the browser version above.                                      | Development wheel installed; downloads and tested pins available.                                                   | All learning data is included in the cells.                                    | No startup-time benchmark recorded.                                   |
-| VS Code desktop             | Python/Jupyter extensions and selected kernel needed; Holochart frontend unverified. | Editor webview must provide WebGL2; not checked in this attempt.                   | Install the bridge in the selected local kernel; open a downloaded notebook.                                        | Included data works without a remote dataset account.                          | Not measured; isolated test window could not be observed.             |
-| Colab                       | Custom widget manager setup needed; exact anywidget/bridge combination unverified.   | Browser output must provide WebGL2; remote runtime GPU is a separate resource.     | No published bridge install or verified public source revision; a manually supplied built wheel would need testing. | Included data needs no Drive mount; runtime files are temporary.               | Not measured; no remote session started.                              |
-| Binder                      | Pinned Jupyter/anywidget setup is a candidate, not a verified Binder image.          | Client browser must provide WebGL2; server Python execution does not establish it. | Public immutable notebook revision plus bridge wheel or complete build inputs required.                             | Included data avoids credentials; save work before the temporary session ends. | Not measured; image build, pull and server start are separate stages. |
+| Environment                 | Widget manager / frontend                                                            | Graphics                                                                           | Package and notebook availability                                                                                | Data access                                                                    | Startup evidence                                                      |
+| --------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| Local JupyterLab / Notebook | Actual managers verified with all 38 artifacts.                                      | WebGL2 verified in the browser version above.                                      | Development wheel installed; downloads and tested pins available.                                                | All learning data is included in the cells.                                    | No startup-time benchmark recorded.                                   |
+| VS Code desktop             | Python/Jupyter extensions and selected kernel needed; Holochart frontend unverified. | Editor webview must provide WebGL2; not checked in this attempt.                   | Install the bridge in the selected local kernel; open a downloaded notebook.                                     | Included data works without a remote dataset account.                          | Not measured; isolated test window could not be observed.             |
+| Colab                       | Custom widget manager setup needed; exact anywidget/bridge combination unverified.   | Browser output must provide WebGL2; remote runtime GPU is a separate resource.     | Not on PyPI; a source install needs the Node/pnpm build, and a manually supplied built wheel would need testing. | Included data needs no Drive mount; runtime files are temporary.               | Not measured; no remote session started.                              |
+| Binder                      | Pinned Jupyter/anywidget setup is a candidate, not a verified Binder image.          | Client browser must provide WebGL2; server Python execution does not establish it. | Public immutable notebook revision plus bridge wheel or complete build inputs required.                          | Included data avoids credentials; save work before the temporary session ends. | Not measured; image build, pull and server start are separate stages. |
 
 </div>
 
@@ -116,10 +116,11 @@ Colab can open uploaded notebooks, but each runtime still needs its packages ins
 files and availability are temporary, and sharing a notebook does not share its installed
 environment. [Colab FAQ](https://research.google.com/colaboratory/faq.html).
 
-Our current bridge is unpublished, and the source-install status does not name a public revision
-containing it. A GitHub launch badge would therefore imply an install path that has not been
-established. A future check must provide a built wheel with a recorded hash, record Colab's actual
-Python/library versions, enable the manager, and verify initial render, updates and rerun cleanup.
+Our current bridge is not on PyPI. Its source is in the public repository, and installing from
+it needs the Node/pnpm build first. A GitHub launch badge would therefore imply an install path
+that has not been established in Colab. A future check must provide a built wheel with a
+recorded hash, record Colab's actual Python/library versions, enable the manager, and verify
+initial render, updates and rerun cleanup.
 The local pins include Jupyter host packages; they are **not a tested replacement for Colab's
 managed runtime**. A separate host setup must be validated instead of overwriting it wholesale.
 
@@ -156,8 +157,8 @@ notebook application.
 [download a learning notebook](/python/notebooks/), or
 [check a missing output](/python/troubleshooting).
 
-An active widget manager and WebGL2 are required. Python still needs a development checkout
-containing the bridge; [source installation](/getting-started/installation#python-and-jupyter-from-source)
+An active widget manager and WebGL2 are required. The bridge is not on PyPI yet, so you install
+it from a clone of the repository; [source installation](/getting-started/installation#python-and-jupyter-from-source)
 explains the environment and kernel selection.
 
 <style>

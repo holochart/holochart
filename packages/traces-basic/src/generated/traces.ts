@@ -14,7 +14,7 @@ import type {
 } from '@mk7s/holochart-core';
 
 /**
- * The colorbar of this colorscale (plan E5.3).
+ * The colorbar of this colorscale.
  */
 export interface Colorbar {
   /**
@@ -747,13 +747,13 @@ export interface BarTraceMarker {
    */
   cmid?: number;
   /**
-   * Show a colorbar for this colorscale (drawn by the colorbar component, plan E5.3).
+   * Show a colorbar for this colorscale (drawn by the colorbar component).
    *
    * @defaultValue `false`
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: Colorbar;
   /**
@@ -1880,13 +1880,13 @@ export interface ScatterTraceMarker {
    */
   cmid?: number;
   /**
-   * Show a colorbar for this colorscale (drawn by the colorbar component, plan E5.3).
+   * Show a colorbar for this colorscale (drawn by the colorbar component).
    *
    * @defaultValue `false`
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: Colorbar;
   /**

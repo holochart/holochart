@@ -324,6 +324,43 @@ describe('match group attribute sync', () => {
     }
   });
 
+  it('drops what only the template of a linked axis gives, when the root has none', () => {
+    // Nightly regression (seed 1253733794): the value stayed on the linked axis alone, and the
+    // full output fed back in, where it reads as set by the user, gave it to the whole group.
+    const range = runIdempotent({
+      template: { layout: { yaxis2: { range: [1, 2] } } },
+      yaxis2: { matches: 'x' },
+    });
+    for (const key of ['xaxis', 'yaxis2']) {
+      expect(ax(range, key)).not.toHaveProperty('range');
+      expect(ax(range, key).autorange).toBe(true);
+    }
+    const categories = runIdempotent({
+      template: { layout: { xaxis2: { categoryarray: ['b', 'a'] } } },
+      xaxis: { type: 'category' },
+      xaxis2: { type: 'category', matches: 'x' },
+    });
+    for (const key of ['xaxis', 'xaxis2']) {
+      expect(ax(categories, key)).not.toHaveProperty('categoryarray');
+      expect(ax(categories, key).categoryorder).toBe('trace');
+    }
+    // The root's own template still gives the group its range, and the user's wins over both.
+    const root = runIdempotent({
+      template: { layout: { xaxis: { range: [1, 5] }, yaxis2: { range: [1, 2] } } },
+      yaxis2: { matches: 'x' },
+    });
+    const user = runIdempotent({
+      template: { layout: { xaxis: { range: [1, 5] } } },
+      yaxis2: { matches: 'x', range: [0, 9] },
+    });
+    for (const key of ['xaxis', 'yaxis2']) {
+      expect(ax(root, key).range).toEqual([1, 5]);
+      expect(ax(root, key).autorange).toBe(false);
+      expect(ax(user, key).range).toEqual([0, 9]);
+      expect(ax(user, key).autorange).toBe(false);
+    }
+  });
+
   it('leaves unlinked axes alone', () => {
     const fl = runIdempotent({ xaxis: { range: [0, 1] }, xaxis2: {}, yaxis: { scaleanchor: 'x' } });
     expect(ax(fl, 'xaxis2').range).toBeUndefined();

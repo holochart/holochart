@@ -139,7 +139,7 @@ export const legendAttributes = attr.subplotObject(
   {
     editType: LEGEND_EDIT,
     description:
-      "The legend (E5.2). `legend2`, `legend3`, … declare more, referenced from traces' `legend` (`'legend2'`).",
+      "The legend. `legend2`, `legend3`, … declare more, referenced from traces' `legend` (`'legend2'`).",
   },
 );
 

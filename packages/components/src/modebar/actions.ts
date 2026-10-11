@@ -14,7 +14,7 @@ export const MODEBAR_ZOOM_OUT_FACTOR = 2;
 export interface ModebarAxisLike {
   /** Layout key: `'xaxis'`, `'yaxis2'`, … */
   readonly name: string;
-  /** The defaulted axis (read for `fixedrange` and `showspikes` when the schema has them). */
+  /** The defaulted axis (read for `fixedrange` and `showspikes`). */
   readonly full?: unknown;
   readonly scale: {
     /** Range in use, linear coordinates (`range[0] > range[1]` when reversed). */
@@ -48,8 +48,8 @@ function fullField(axis: ModebarAxisLike, key: string): unknown {
 }
 
 /**
- * Whether the axis may not be zoomed. `fixedrange` is read defensively: the axis schema does not
- * define it yet (contract gap), so today this is always `false`.
+ * Whether the axis may not be zoomed (`fixedrange: true`). Read defensively: `full` is untyped
+ * here.
  * @internal
  */
 export function modebarAxisFixed(axis: ModebarAxisLike): boolean {
@@ -159,7 +159,7 @@ export function modebarResetUpdate(
 }
 
 /**
- * Whether any axis shows spike lines, and whether the axis schema has `showspikes` at all.
+ * Whether any axis shows spike lines, and whether any axis carries a defaulted `showspikes`.
  * @internal
  */
 export function modebarSpikelinesState(axes: Iterable<ModebarAxisLike>): {
@@ -178,8 +178,8 @@ export function modebarSpikelinesState(axes: Iterable<ModebarAxisLike>): {
 
 /**
  * The relayout update for "Toggle Spike Lines": `'<axis>.showspikes'` on every axis, flipped from
- * the current state. Empty when the axis schema has no `showspikes` (today: always — the button
- * is then a no-op until E6 adds spike lines).
+ * the current state. Every defaulted cartesian axis has `showspikes`, so the update is empty only
+ * when there are no cartesian axes (a pie-only chart) or the axes carry no defaulted attributes.
  * @internal
  */
 export function modebarSpikelinesUpdate(axes: Iterable<ModebarAxisLike>): ModebarLayoutUpdate {

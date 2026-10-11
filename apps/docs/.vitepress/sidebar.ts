@@ -180,7 +180,7 @@ export function buildSidebar(srcDir: string): DefaultTheme.Sidebar {
       items: [
         { text: 'Learning path', link: '/python/' },
         {
-          text: '1. Set up a development checkout',
+          text: '1. Install from source',
           link: '/getting-started/installation#python-and-jupyter-from-source',
         },
         { text: '2. Render your first chart', link: '/getting-started/python-jupyter' },
@@ -296,7 +296,7 @@ export const nav: DefaultTheme.NavItem[] = [
     text: 'More',
     items: [
       { text: 'Playground', link: '/playground/' },
-      { text: 'Roadmap · 0.x pre-alpha', link: '/roadmap' },
+      { text: 'Roadmap · 0.x alpha', link: '/roadmap' },
       { text: 'Changelog', link: '/changelog' },
       { text: 'Migration guides', link: '/migration' },
     ],

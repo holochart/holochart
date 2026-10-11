@@ -17,6 +17,24 @@ The official [figure reference](https://plotly.com/javascript/reference/index/) 
 current chart catalogue. These sources establish the comparison target; priorities and acceptance
 thresholds below are recommendations, not measurements of current parity.
 
+> **Status, 2026-10-11.** This review predates four things that have since landed, so read these
+> items against them:
+>
+> - `0.1.0-alpha.0` is on npm. The statement below that package versions are `0.0.0` is out of
+>   date.
+> - **PC21** (projected maps): `scattergeo`, `choropleth`, the geo subplot and a globe are built
+>   in `@mk7s/holochart-traces-geo`. Nine catalogue types are absent, not eleven. What is left
+>   of PC21 is in backlogv2 V2-E17.
+> - **PC07** (context budget): the shared renderer is built (ADR-023). What is left is in
+>   backlogv2 V2-C8.
+> - **PC14** (accessibility): keyboard navigation reaches every chart family, with gaps listed in
+>   backlogv2 V2-F5.
+> - **PC16** (first draws): the heatmap first draw went from 695 to 425 ms. The targets it still
+>   misses are in backlogv2 V2-C2.
+>
+> The remaining items are ordered, with everything else that is planned, in
+> [backlogv2.md](../backlogv2.md); its ID map says where each PC item went.
+
 This document orders **remaining work**. It complements [plan.md](../plan.md) and the existing
 [ship backlog](../backlog.md); their story IDs are reused below. Completed implementations should
 not be rebuilt because an older checkbox remains open. No implementation, release, or external

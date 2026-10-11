@@ -195,7 +195,7 @@ export const commonTraceAttributes = {
     // The runtime plans the stages of the attributes the rules set instead (`styleRulePaths`).
     editType: 'calc',
     description:
-      "Conditional per-point styling as JSON (plan E8.5): `[{ when: { y: { gt: 10 } }, set: { 'marker.color': 'gold' } }]`. `when` tests fields of the point (`'y'`, `'customdata[1]'`, `'pointNumber'`, …) with `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`, `nin`, `between`, `regex`, `and`, `or` and `not`; `set` gives per-point (`arrayOk`) attributes a value on the matching points. Later rules win; other points keep the trace's own value.",
+      "Conditional per-point styling as JSON: `[{ when: { y: { gt: 10 } }, set: { 'marker.color': 'gold' } }]`. `when` tests fields of the point (`'y'`, `'customdata[1]'`, `'pointNumber'`, …) with `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`, `nin`, `between`, `regex`, `and`, `or` and `not`; `set` gives per-point (`arrayOk`) attributes a value on the matching points. Later rules win; other points keep the trace's own value.",
   }) as AttrSpec<readonly StyleRule[], readonly StyleRule[] | undefined>,
 } as const;
 

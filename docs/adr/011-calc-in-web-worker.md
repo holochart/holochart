@@ -1,6 +1,7 @@
 # ADR-011: Calc can run in a Web Worker
 
-- **Status:** Proposed (P2)
+- **Status:** Proposed. Reviewed 2026-10-11 and left Proposed by the owner: the prototype this
+  ADR asks for before acceptance does not exist yet (backlogv2 V2-B2).
 - **Date:** 2026-09-23
 - **Related stories:** E1.9 (`config.worker`), E16.5, E16.7, E22.1; plan §3 principle 3, §4.2
 

@@ -10,12 +10,15 @@
  */
 import {
   attr,
+  colorscaleNames,
   colorscaleRegistryVersion,
   fontSchema,
   getColorscale,
   isArrayLike,
   isColorscaleName,
   layoutSchema,
+  suggest,
+  warnOnce,
   type AttrSpec,
   type ColorScale,
   toRGBA,
@@ -65,9 +68,19 @@ function toStops(css: CssColorscale): Colorscale {
   return css.map(([p, c]) => [p, toRGBA(c) ?? black] as const);
 }
 
+/** Say once per name that it is not a colorscale; the caller falls back as for no colorscale. */
+function warnUnknownColorscale(name: string): void {
+  const hint = suggest(name.trim(), colorscaleNames());
+  warnOnce(
+    `colorscale:${name.trim().toLowerCase()}`,
+    `[holochart] Unknown colorscale '${name.trim()}'${hint === undefined ? '.' : `; did you mean '${hint}'?`} It is ignored: use a registered name (\`colorscaleNames()\`), register it with \`registerColorscale\`, or give the colors themselves.`,
+  );
+}
+
 /**
  * A defaulted `colorscale` value (a name, or `[position, css color]` stops as core's coercion
- * stores them) → render-layer stops (sRGB 0–1). Unknown names give `undefined`.
+ * stores them) → render-layer stops (sRGB 0–1). Unknown names give `undefined`, with one console
+ * warning per name.
  * @internal
  */
 export function resolveColorscale(value: unknown): Colorscale | undefined {
@@ -83,7 +96,10 @@ export function resolveColorscale(value: unknown): Colorscale | undefined {
     let hit = namedCache.get(key);
     if (hit === undefined) {
       const css = getColorscale(value);
-      if (css === undefined) return undefined;
+      if (css === undefined) {
+        warnUnknownColorscale(value);
+        return undefined;
+      }
       hit = toStops(css);
       namedCache.set(key, hit);
     }
@@ -105,10 +121,16 @@ export function resolveColorscale(value: unknown): Colorscale | undefined {
   return stops;
 }
 
-/** Whether a colorscale input (name or stops) is valid, as Plotly's `isValidScale`. */
+/**
+ * Whether a colorscale input is a scale the `colorscale` attribute takes: a registered name or a
+ * list of stops (Plotly's `isValidScale`), or a plain list of colors, which core's coercion spreads
+ * evenly (the form plotly.py accepts; plotly.js itself only takes stops). A valid scale given by
+ * the user turns `autocolorscale` off.
+ */
 function isValidScale(value: unknown): boolean {
   if (typeof value === 'string') return isColorscaleName(value);
-  return Array.isArray(value) && value.length >= 2 && value.every((s) => Array.isArray(s));
+  if (!Array.isArray(value) || value.length < 2) return false;
+  return value.every((s) => Array.isArray(s)) || value.every((s) => typeof s === 'string');
 }
 
 // ---- Colorbars (E5.3) ---------------------------------------------------------------------------
@@ -247,7 +269,7 @@ export const colorbarAttributes = attr.object(
       { editType: COLORBAR_EDIT, description: 'Colorbar title.' },
     ),
   },
-  { editType: COLORBAR_EDIT, description: 'The colorbar of this colorscale (plan E5.3).' },
+  { editType: COLORBAR_EDIT, description: 'The colorbar of this colorscale.' },
 );
 
 /** Coerce every leaf of `node` at `prefix` (object nodes recurse), with per-path defaults. */
@@ -403,8 +425,7 @@ export function colorscaleAttributes<const O extends ColorscaleAttributeOptions>
   const showscale = attr.boolean({
     dflt: opts.showscaleDflt ?? false,
     editType: 'colorbars',
-    description:
-      'Show a colorbar for this colorscale (drawn by the colorbar component, plan E5.3).',
+    description: 'Show a colorbar for this colorscale (drawn by the colorbar component).',
   });
   const coloraxis = attr.subplotId({
     dflt: 'coloraxis',

@@ -1,8 +1,7 @@
 # Spike D: 9 scissored viewports vs 9 canvases
 
 - **Plan:** E0.7 spike D; informs ADR-004.
-- **Status:** **Not measured yet.** Deferred to the M7 benchmarking pass (with E16.1), by decision
-  on 2026-09-23. The page is ready.
+- **Status:** Measured on 2026-10-11 ([Results](#results-2026-10-11)).
 - **Page:** [`examples/_spikes/d-viewports.ts`](../../examples/_spikes/d-viewports.ts)
 
 > ⚠️ **Run this only in the isolated runner.** Its context-limit probe deliberately creates up to
@@ -30,8 +29,37 @@ node docs/spikes/scripts/run-spike.mjs --spike d-viewports --params 'scale=0.1&o
 node docs/spikes/scripts/run-spike.mjs --spike d-viewports --params 'only=limit&max=24' --out /tmp/spikes
 ```
 
-## What we know so far
+## Results (2026-10-11)
 
-The `viewports-grid` visual example renders 9 viewports (8 × 2D markers and one 3D panel) in one
-context correctly and deterministically. The design works; its cost relative to separate canvases is
-not measured yet.
+|         |                                                                                  |
+| ------- | -------------------------------------------------------------------------------- |
+| Machine | Apple M1 Max, macOS, **under load from other applications** (load average 18–30) |
+| Browser | Playwright Chromium (HeadlessChrome 153), ANGLE → Metal                          |
+| Runner  | [`scripts/run-spike.mjs`](scripts/run-spike.mjs), DPR 1, peak browser RSS 663 MB |
+
+Medians, in ms, for a 3×3 grid with 50k markers and a 5k-point line per panel (`scale=1`), and
+with a tenth of that (`scale=0.1`). Because the machine was busy, read the ratios, not the
+absolute numbers.
+
+| Measurement                              | One context, 9 viewports | 9 canvases | Ratio |
+| ---------------------------------------- | ------------------------ | ---------- | ----- |
+| Build and first frame                    | 56.5                     | 159.4      | 2.8×  |
+| Frame, all 9 panels panning              | 4.0                      | 16.4       | 4.1×  |
+| Frame, one panel changes                 | 4.0                      | 2.0        | 0.5×  |
+| Build and first frame, `scale=0.1`       | 26.3                     | 130.2      | 5.0×  |
+| Frame, all 9 panels panning, `scale=0.1` | 2.1                      | 8.2        | 3.9×  |
+| Frame, one panel changes, `scale=0.1`    | 2.1                      | 0.8        | 0.4×  |
+| Shader programs                          | 2                        | 18         | 9×    |
+| Geometries                               | 18                       | 18         | 1×    |
+
+**Context limit.** Creating 24 render roots, the browser dropped the oldest context when the 17th
+was created and one more for each after that, so the limit here is 16. Recreating 16 afterwards
+lost none.
+
+What it says for ADR-004:
+
+- **One context is three to four times cheaper** to build and to redraw when every panel moves,
+  and it compiles each program once, not once per panel.
+- **It is slower when a single panel changes** (4.0 against 2.0 ms), because the whole canvas is
+  redrawn. Both are well inside a frame. Redrawing only the changed viewport would close the gap.
+- **Nine canvases spend nine of a page's 16 contexts.** Two such figures would lose one.

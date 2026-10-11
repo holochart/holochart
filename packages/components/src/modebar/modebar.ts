@@ -375,7 +375,7 @@ export function createModebarView<Ctx extends ModebarViewContext>(
       case 'toggleSpikelines': {
         const update = modebarSpikelinesUpdate(axes());
         if (Object.keys(update).length === 0) {
-          warn('[holochart] toggleSpikelines: axes have no `showspikes` attribute yet; ignored.');
+          warn('[holochart] toggleSpikelines: the chart has no cartesian axes; ignored.');
         }
         relayout(update);
         return;

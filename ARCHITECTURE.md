@@ -1,10 +1,11 @@
 # Holochart Architecture
 
-This is a summary of the architecture. The full design, with every epic and story, lives in
+This is a summary of the architecture. The original design, with every epic and story, is in
 [plan.md](plan.md) (sections 3 to 6). Decisions and their reasoning are recorded as ADRs in
 [docs/adr/](docs/adr/); the index is at the end of this file.
 
-Holochart is pre-alpha (milestone M0). Much of what follows is design intent, not yet code.
+Holochart is in alpha: `0.1.0-alpha.0` is on npm. Everything below describes code that exists
+unless a row or sentence says "planned"; planned work is ordered in [backlogv2.md](backlogv2.md).
 
 ## Guiding principles
 
@@ -16,12 +17,14 @@ Summarized from [plan.md section 3](plan.md#3-guiding-principles):
 2. **Declarative first, imperative escape hatches always.** The JSON spec covers most needs;
    direct access to the three.js scene, materials, and render hooks covers the rest.
 3. **Pure data pipeline, thin render layer.** Defaults, calc, and layout are pure functions,
-   testable without a GPU and movable to a Web Worker.
-   ([ADR-011](docs/adr/011-calc-in-web-worker.md))
+   testable without a GPU. They are written so that they can move to a Web Worker; today they
+   run on the main thread ([ADR-011](docs/adr/011-calc-in-web-worker.md)).
 4. **Minimal recompute.** Every attribute declares an `editType`, so updates re-run only the
    stages they affect.
 5. **One renderer, many viewports.** One WebGL context per figure; subplots are scissored
-   viewports. ([ADR-004](docs/adr/004-one-webgl-context-per-figure.md))
+   viewports ([ADR-004](docs/adr/004-one-webgl-context-per-figure.md)). On a page with many
+   figures, later ones share one context
+   ([ADR-023](docs/adr/023-shared-renderer-context-budget.md)).
 6. **GPU-native primitives.** Markers, lines, bars, and cells are instanced geometry with custom
    shaders, never one `Mesh` per data point (enforced by the `holochart/no-per-point-objects`
    lint rule).
@@ -48,33 +51,37 @@ See [plan.md section 4.1](plan.md#41-monorepo-layout). pnpm workspaces plus Turb
 names are `@mk7s/holochart` and `@mk7s/holochart-*`
 ([ADR-017](docs/adr/017-mk7s-npm-scope.md)).
 
-| Path                      | Purpose                                                             | Status  |
-| ------------------------- | ------------------------------------------------------------------- | ------- |
-| `packages/core`           | Figure model, schema, validation, defaults, calc, scales, layout    | Exists  |
-| `packages/render`         | three.js renderer, viewports, cameras, primitives, picking, loop    | Exists  |
-| `packages/components`     | Axes, legend, colorbar, annotations, shapes, hover labels, modebar  | Exists  |
-| `packages/traces-basic`   | scatter, bar, pie, table                                            | Exists  |
-| `packages/themes`         | Templates, palettes, colorscales, font presets                      | Exists  |
-| `packages/holochart`      | Full bundle (re-exports and registers everything)                   | Exists  |
-| `apps/sandbox`            | Vite dev sandbox with example picker and GPU stats                  | Exists  |
-| `examples/`               | Canonical examples (sandbox, docs, gallery, visual tests)           | Exists  |
-| `tools/schema-gen`        | Schema to TS types, JSON Schema, attribute reference docs           | Exists  |
-| `packages/traces-stats`   | histogram(2d), box, violin, splom, parcoords, parcats               | Exists  |
-| `packages/traces-sci`     | heatmap, contour, image, polar, ternary, quiver, streamline, carpet | Exists  |
-| `packages/traces-finance` | ohlc, candlestick, waterfall, funnel, funnelarea, indicator         | Exists  |
-| `packages/traces-hier`    | sunburst, treemap, icicle, sankey                                   | Exists  |
-| `packages/traces-3d`      | scatter3d, surface, mesh3d, cone, streamtube, volume, isosurface    | Exists  |
-| `packages/traces-geo`     | geo subplot, scattergeo; not in the full bundle (ADR-026)           | Exists  |
-| `packages/traces-graph`   | graph (network graphs); not in the full bundle (ADR-029)            | Exists  |
-| `packages/express`        | High-level API (`hx.scatter(df, ...)`), faceting, frames, marginals | Exists  |
-| `packages/locales`        | Locale modules (plotly.js's): UI strings, number and date formats   | Exists  |
-| `packages/compat-plotly`  | Plotly figure JSON importer and attribute mapper                    | Planned |
-| `packages/react` etc.     | Framework wrappers: React, Vue, Svelte, web component               | Planned |
-| `apps/docs`               | Documentation site (VitePress)                                      | Exists  |
-| `apps/playground`         | Live editor (Monaco + preview)                                      | Planned |
-| `apps/bench`              | Performance benchmark harness                                       | Planned |
-| `tools/gallery-gen`       | Playwright screenshot pipeline for thumbnails                       | Planned |
-| `tools/mock-runner`       | Runs the plotly.js mock corpus through `compat-plotly`              | Planned |
+| Path                      | Purpose                                                                               | Status  |
+| ------------------------- | ------------------------------------------------------------------------------------- | ------- |
+| `packages/core`           | Figure model, schema, validation, defaults, scales, update planning                   | Exists  |
+| `packages/render`         | three.js renderer, viewports, cameras, GPU primitives, text, picking                  | Exists  |
+| `packages/runtime`        | `Chart`, the pipeline, the update API, events, registry, plugin contracts             | Exists  |
+| `packages/components`     | Axes, legend, colorbar, annotations, shapes, modebar, sliders, menus                  | Exists  |
+| `packages/traces-basic`   | scatter, bar, pie, table                                                              | Exists  |
+| `packages/traces-stats`   | histogram, histogram2d(contour), box, violin, splom, parcoords, parcats               | Exists  |
+| `packages/traces-sci`     | heatmap, contour, image, the polar subplot, scatterpolar, barpolar                    | Exists  |
+| `packages/traces-finance` | ohlc, candlestick, waterfall, funnel, funnelarea, indicator                           | Exists  |
+| `packages/traces-hier`    | sunburst, treemap, icicle, sankey                                                     | Exists  |
+| `packages/traces-3d`      | The 3D scene, scatter3d, surface, mesh3d, cone, streamtube, volume, isosurface, bar3d | Exists  |
+| `packages/traces-geo`     | The geo subplot, scattergeo, choropleth, the globe; not in the full bundle (ADR-026)  | Exists  |
+| `packages/traces-graph`   | graph, graph3d, chord and their layouts; not in the full bundle (ADR-029)             | Exists  |
+| `packages/themes`         | Templates, palettes, colorscales, font presets                                        | Exists  |
+| `packages/express`        | High-level API (`hx.scatter(df, ...)`), faceting, frames, marginals                   | Exists  |
+| `packages/locales`        | Locale modules (plotly.js's): UI strings, number and date formats                     | Exists  |
+| `packages/holochart`      | Full bundle (registers and re-exports everything except geo and graph)                | Exists  |
+| `packages/holochart-py`   | Python notebook bridge: an anywidget and a Plotly renderer; not on PyPI               | Exists  |
+| `apps/sandbox`            | Vite dev sandbox with example picker and GPU stats                                    | Exists  |
+| `apps/docs`               | Documentation site (VitePress)                                                        | Exists  |
+| `examples/`               | Canonical examples (sandbox, docs, gallery, visual tests)                             | Exists  |
+| `tools/schema-gen`        | Schema to TS types, JSON Schema, attribute reference docs                             | Exists  |
+| `tools/gallery-gen`       | Playwright screenshot pipeline for thumbnails                                         | Exists  |
+| `tools/api-report`        | API Extractor reports in `api-reports/`, gated in CI                                  | Exists  |
+| `tools/bench`             | GPU benchmark, run by hand (`pnpm bench:gpu`); a CI harness is planned                | Exists  |
+| `tools/geo-data`          | Builds the basemap data from Natural Earth (ADR-024)                                  | Exists  |
+| Tile maps                 | `scattermap`, `choroplethmap`, `densitymap` over MapLibre (ADR-027)                   | Planned |
+| Plotly importer           | Plotly figure importer and a runner for the plotly.js mock corpus                     | Planned |
+| Framework wrappers        | React, Vue, Svelte, Angular and a web component                                       | Planned |
+| Playground                | Live editor with shareable links                                                      | Planned |
 
 `three` is a peer dependency of every package that touches it
 ([ADR-003](docs/adr/003-three-peer-dependency.md)).
@@ -90,27 +97,35 @@ flowchart LR
     C --> D[Calc<br/>bins, stacks, stats, hierarchy,<br/>contours → calcdata]
     D --> E[Layout<br/>subplot domains, autorange,<br/>ticks, automargin]
     E --> F[Scene Build / Diff<br/>trace renderers produce<br/>keyed three.js objects]
-    F --> G[Render<br/>on-demand loop, viewports,<br/>post-processing]
+    F --> G[Render<br/>on-demand loop,<br/>viewports]
     G --> H[Interaction<br/>picking, hover, zoom,<br/>select → events]
     H -- relayout/restyle --> I[Update Planner<br/>editType → minimal stages]
     I --> C
 ```
 
-| Stage             | Pure?                                               | Worker-able?         | Owner                               |
-| ----------------- | --------------------------------------------------- | -------------------- | ----------------------------------- |
-| Validate & coerce | Yes                                                 | Yes                  | `core/schema`                       |
-| Supply defaults   | Yes                                                 | Yes                  | `core/defaults` + each trace module |
-| Calc              | Yes                                                 | Yes                  | each trace module                   |
-| Layout            | Yes (text measurement uses a cached metrics oracle) | Yes                  | `core/layout`                       |
-| Scene build/diff  | No                                                  | No                   | `render` + each trace module        |
-| Render            | No                                                  | OffscreenCanvas (P3) | `render`                            |
+| Stage             | Pure?                                               | Owner                               |
+| ----------------- | --------------------------------------------------- | ----------------------------------- |
+| Validate & coerce | Yes                                                 | `core`                              |
+| Supply defaults   | Yes                                                 | `core` + each trace module          |
+| Calc              | Yes                                                 | each trace module, run by `runtime` |
+| Layout            | Yes (text measurement uses a cached metrics oracle) | `runtime` (`layout.ts`)             |
+| Scene build/diff  | No                                                  | `render` + each trace module        |
+| Render            | No                                                  | `render`                            |
+
+Every stage runs on the main thread. The pure stages are meant to move to a worker (ADR-011,
+not accepted yet); the only worker today lays out graphs
+([ADR-029](docs/adr/029-graph-traces.md)).
 
 Related decisions:
 
 - Frames render on demand, only when the scene is dirty; a continuous loop runs only during
   animation or interaction ([ADR-007](docs/adr/007-on-demand-rendering.md)).
 - One WebGL context per figure, subplots as scissored viewports
-  ([ADR-004](docs/adr/004-one-webgl-context-per-figure.md)).
+  ([ADR-004](docs/adr/004-one-webgl-context-per-figure.md)). The first four figures on a page
+  get a context each and later ones share one, as do image exports
+  ([ADR-023](docs/adr/023-shared-renderer-context-budget.md)).
+- WebGL 2 is required. There is no SVG, Canvas 2D or WebGPU path; without WebGL 2 a chart shows
+  a note and `newPlot` rejects with `WebGLUnavailableError`.
 - Text is SDF in WebGL (troika-three-text) with a hidden DOM mirror
   ([ADR-005](docs/adr/005-webgl-sdf-text-with-dom-mirror.md)). The text engine is loaded lazily on
   first text use; layout measures text synchronously without it.
@@ -118,8 +133,8 @@ Related decisions:
   them ([ADR-020](docs/adr/020-strip-schema-descriptions.md)).
 - 2D hover uses CPU spatial indexes; 3D uses GPU ID picking
   ([ADR-010](docs/adr/010-cpu-spatial-hover-gpu-picking-3d.md)).
-- Calc can move to a Web Worker for large data
-  ([ADR-011](docs/adr/011-calc-in-web-worker.md)).
+- Geo and graph traces live in packages the full bundle does not import
+  ([ADR-026](docs/adr/026-geo-packages-and-bundles.md), [ADR-029](docs/adr/029-graph-traces.md)).
 
 ## Coordinate systems
 
@@ -143,21 +158,25 @@ offsets. Any new primitive or trace must follow it.
 
 ## Trace module contract
 
-Every trace type is a module registered with the core (full spec in plan story E22.1; summary in
-[plan.md section 4.4](plan.md#44-trace-module-contract-summary-full-spec-in-e221)):
+Every trace type is a module registered with the runtime's registry
+([ADR-019](docs/adr/019-runtime-package.md)). `CoreTraceModule` in
+`packages/core/src/registry/types.ts` holds the renderer-free part and `TraceModule` in
+`packages/runtime/src/contracts.ts` adds the rest. Both are tagged `@experimental`: they can
+change in any release until the plugin API is frozen (backlogv2 V2-B8).
 
-| Member                                     | Role                                                          |
-| ------------------------------------------ | ------------------------------------------------------------- |
-| `type`, `categories`                       | Trace name (`'scatter'`) and capability flags (`'cartesian'`) |
-| `schema`                                   | Attribute schema: the single source of truth                  |
-| `supplyDefaults(input, full, layout, ctx)` | Fill `fullData` from input + template                         |
-| `calc(fullTrace, fullLayout, ctx)`         | Pure; produces calcdata                                       |
-| `crossTraceCalc?(calcdata[], fullLayout)`  | Stacking, grouping across traces                              |
-| `plot`                                     | `TraceRenderer`: create / update / dispose GPU objects        |
-| `hoverPoints?`, `selectPoints?`            | Hover and selection hit-testing                               |
-| `legendIcon?`, `colorbar?`                 | Legend glyph and colorbar spec                                |
-| `animatable?`                              | Attribute paths that support transitions                      |
-| `meta`                                     | Description, docs page, Plotly equivalent                     |
+| Member                                        | Role                                                          |
+| --------------------------------------------- | ------------------------------------------------------------- |
+| `type`, `categories`                          | Trace name (`'scatter'`) and capability flags (`'cartesian'`) |
+| `schema`, `layoutSchema?`                     | Attribute schema: the single source of truth                  |
+| `supplyDefaults`, `supplyLayoutDefaults?`     | Fill `fullData` and `fullLayout` from input and template      |
+| `calc?`, `extremes?`                          | Pure and synchronous; produce calcdata and autorange extremes |
+| `calcAppend?`, `extremesAppend?`              | Incremental versions for `extendTraces` (scatter only today)  |
+| `crossTraceCalc?`, `crossTraceLayout?`        | Stacking and grouping across traces; shared domain layout     |
+| `plot?`                                       | `TraceRenderer`: create, update and dispose GPU objects       |
+| `hoverPoints?`, `selectPoints?`, `eventData?` | Hover and selection hit-testing, event payloads               |
+| `keyboardPoints?`                             | Stops for keyboard navigation                                 |
+| `legendIcon?`, `colorbar?`                    | Legend glyph and colorbar spec                                |
+| `meta`                                        | Description, docs page, Plotly equivalent                     |
 
 ## Technology stack
 
@@ -175,7 +194,8 @@ See [plan.md section 5](plan.md#5-technology-stack).
 | Unit tests      | Vitest 5 + `fast-check`                                                                                                                                                                           |
 | Visual tests    | Playwright 1.63, Chromium + SwiftShader, `pixelmatch` ([ADR-018](docs/adr/018-visual-regression-harness.md))                                                                                      |
 | Lint and format | ESLint 10 flat config + Prettier 3                                                                                                                                                                |
-| Planned         | VitePress + TypeDoc docs, Changesets releases, `size-limit`, `tinybench` benchmarks                                                                                                               |
+| Docs            | VitePress, with the attribute reference from `tools/schema-gen` and the API reference from TypeDoc                                                                                                |
+| Releases        | Changesets (one fixed version group), `size-limit` budgets, API Extractor reports                                                                                                                 |
 
 ## ADR index
 
@@ -200,3 +220,14 @@ The canonical index is [docs/adr/README.md](docs/adr/README.md). Start new ADRs 
 - [ADR-016: pnpm minimum release age](docs/adr/016-pnpm-minimum-release-age.md)
 - [ADR-017: The `@mk7s` npm scope](docs/adr/017-mk7s-npm-scope.md)
 - [ADR-018: Visual regression harness](docs/adr/018-visual-regression-harness.md)
+- [ADR-019: A runtime package owns charts, the pipeline and the plugin contracts](docs/adr/019-runtime-package.md)
+- [ADR-020: Strip schema descriptions from production builds](docs/adr/020-strip-schema-descriptions.md)
+- [ADR-021: A dark, dense default look](docs/adr/021-default-look.md)
+- [ADR-022: Range breaks compress an axis' linear space](docs/adr/022-range-breaks-compressed-linear-space.md)
+- [ADR-023: A shared renderer and a context budget](docs/adr/023-shared-renderer-context-budget.md)
+- [ADR-024: Basemap data from Natural Earth](docs/adr/024-geo-basemap-data.md)
+- [ADR-025: Geo projects on the CPU through d3-geo](docs/adr/025-geo-projection-pipeline.md)
+- [ADR-026: Geo ships as add-on packages](docs/adr/026-geo-packages-and-bundles.md)
+- [ADR-027: Tile maps use MapLibre GL](docs/adr/027-map-renderer-integration.md)
+- [ADR-028: The 3D globe](docs/adr/028-geo-globe.md)
+- [ADR-029: Network graphs](docs/adr/029-graph-traces.md)

@@ -18,12 +18,13 @@ The chart steps take a few minutes after the one-time environment and browser bu
 
 ## 1. Set up the environment in a terminal
 
-Start from an **existing development checkout containing `packages/holochart-py`**; the public
-main clone does not currently include the bridge. You need Node.js 22+, pnpm 11.15.1, Python
-3.10+, a notebook widget manager and browser WebGL2. On macOS/Linux, run:
+`holochart-py` is **not on PyPI yet**, so install it from a clone of the repository. An ordinary
+clone contains the bridge (`packages/holochart-py`). You need Git, Node.js 22+, pnpm 11.15.1,
+Python 3.10+, a notebook widget manager and browser WebGL2. On macOS/Linux, run:
 
 ```sh
-cd /absolute/path/to/development-checkout
+git clone https://github.com/holochart/holochart.git
+cd holochart
 pnpm install
 pnpm build:packages
 python3 -m venv .venv-holochart

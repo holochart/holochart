@@ -12,7 +12,16 @@ export type ArtifactState = {
 );
 
 export const releaseState = {
-  npm: { packageName: '@mk7s/holochart', registry: 'npm', status: 'unpublished' },
+  // Smoke-tested 2026-10-11: a clean `npm install` of this version with three 0.186.0, built
+  // with Vite 8, drew a 2D chart, a 3D surface and a choropleth and exported a PNG in headless
+  // Chromium with no request outside the page's origin. The jsDelivr script-tag build drew too.
+  npm: {
+    packageName: '@mk7s/holochart',
+    registry: 'npm',
+    status: 'published',
+    version: '0.1.0-alpha.0',
+    smokeTested: true,
+  },
   pypi: { packageName: 'holochart-py', registry: 'PyPI', status: 'unpublished' },
 } as const satisfies Record<'npm' | 'pypi', ArtifactState>;
 
@@ -21,8 +30,9 @@ export type InstallEcosystem = 'javascript' | 'python';
 /** A registry release and a publicly cloneable source checkout are separate availability states. */
 export const sourceInstallState = {
   javascript: { publicRef: 'main', requiredPath: 'packages/holochart' },
-  // The bridge is currently local development work; do not invent a public checkout reference.
-  python: { publicRef: null, requiredPath: 'packages/holochart-py' },
+  // On public `main` since the first alpha; the "Python notebook bridge" workflow builds and
+  // runs it there on every change.
+  python: { publicRef: 'main', requiredPath: 'packages/holochart-py' },
 } as const;
 
 /** Tested peer from the repository catalog; update alongside npm release verification. */

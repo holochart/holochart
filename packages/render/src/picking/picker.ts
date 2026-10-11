@@ -137,7 +137,7 @@ export class Picker {
       else if (isMarkerPositionsLike(target)) source = markerPointSource(target);
       else {
         throw new TypeError(
-          '2D viewports pick through CPU point sources (ADR-010): pass a PointSource2D or a MarkerSet',
+          '2D viewports pick through CPU point sources: pass a PointSource2D or a MarkerSet',
         );
       }
       pickers.cpu ??= new PointPicker2D();

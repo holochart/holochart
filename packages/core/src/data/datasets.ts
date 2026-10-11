@@ -9,7 +9,9 @@
  * ```
  *
  * {@link resolveDataRefs} swaps each `'@column'` for the column itself, by reference, before
- * validation and coercion see the trace.
+ * validation and coercion see the trace. On the same attributes it decodes Plotly's JSON form of a
+ * typed array (`{ dtype, bdata, shape? }`, what plotly.py ≥ 6 writes), so trace defaults and calc
+ * only meet arrays; a column may be given in that form too.
  *
  * A string is a reference only where it could not mean anything else (see {@link isColumnRef}):
  * on an attribute that takes per-point arrays, and only when the string is not a valid value of
@@ -23,6 +25,7 @@ import { coerceValue, isArrayLike } from '../coerce/coerce.ts';
 import type { FigureInput } from '../defaults/types.ts';
 import { isAttr, isItemsNode, isObjectNode, resolveChild } from '../schema/walk.ts';
 import type { AttrSpec, ObjectNode } from '../schema/types.ts';
+import { isTypedArraySpec, typedArrayFromSpec } from '../serialize/typed-array.ts';
 import { isPlainObject } from '../util/objects.ts';
 import type { Issue } from '../validate/issues.ts';
 import { suggest } from '../validate/suggest.ts';
@@ -52,6 +55,11 @@ export function isColumnRef(v: unknown, spec: AttrSpec): v is `@${string}` {
   if (typeof v !== 'string' || v.charCodeAt(0) !== 64) return false;
   if (spec.valType === 'data_array') return true;
   return spec.arrayOk === true && !coerceValue(spec, v).ok;
+}
+
+/** Whether `spec` takes an array of values: a `data_array`, or a per-point (`arrayOk`) attribute. */
+function takesArray(spec: AttrSpec): boolean {
+  return spec.valType === 'data_array' || spec.arrayOk === true;
 }
 
 function childPath(base: string, key: string | number): string {
@@ -115,7 +123,8 @@ function resolveRef(v: `@${string}`, path: string, ctx: Ctx): unknown {
     });
     return undefined;
   }
-  const column = columns[name];
+  const given = columns[name];
+  const column = isTypedArraySpec(given) ? (typedArrayFromSpec(given) ?? given) : given;
   if (!isArrayLike(column)) {
     ctx.issues.push({
       path,
@@ -147,9 +156,13 @@ function resolveObject(
     const v = obj[key];
     let next: unknown = v;
     if (isAttr(child)) {
-      if (!isColumnRef(v, child)) continue;
-      const r = resolveRef(v, childPath(path, key), ctx);
-      next = r === undefined ? DROP : r;
+      if (isColumnRef(v, child)) {
+        const r = resolveRef(v, childPath(path, key), ctx);
+        next = r === undefined ? DROP : r;
+      } else if (takesArray(child) && isTypedArraySpec(v)) {
+        // A spec that cannot be decoded stays: validation reports it as an invalid value.
+        next = typedArrayFromSpec(v) ?? v;
+      } else continue;
     } else if (isObjectNode(child)) {
       if (!isPlainObject(v)) continue;
       next = resolveObject(v, child, childPath(path, key), ctx);

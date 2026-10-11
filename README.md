@@ -16,10 +16,8 @@ scientific, financial, hierarchical and 3D, plus an Express API for tabular data
   <img src="apps/docs/public/gallery/thumbs/view3d/interactive.webp" alt="Stacked bars extruded in a tilted 2.5D view" width="49%">
 </p>
 
-> **Status: alpha.** Holochart is not on npm yet; the first release, `0.1.0-alpha`, will be
-> published on the `alpha` dist-tag. APIs can change between 0.x releases (see the
-> [versioning policy](docs/release/versioning.md)). Until then, run it
-> [from source](#development).
+> **Status: alpha.** `0.1.0-alpha.0` is on npm. APIs can change between 0.x releases (see the
+> [versioning policy](docs/release/versioning.md)).
 
 ## Install
 

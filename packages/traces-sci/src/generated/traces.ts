@@ -161,13 +161,13 @@ export interface BarpolarTraceMarker {
    */
   cmid?: number;
   /**
-   * Show a colorbar for this colorscale (drawn by the colorbar component, plan E5.3).
+   * Show a colorbar for this colorscale (drawn by the colorbar component).
    *
    * @defaultValue `false`
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: Colorbar;
   /**
@@ -400,7 +400,7 @@ export type ContourTrace = Omit<CommonTraceAttributes, 'hovertext'> &
      */
     showscale?: boolean;
     /**
-     * The colorbar of this colorscale (plan E5.3).
+     * The colorbar of this colorscale.
      */
     colorbar?: Colorbar;
     /**
@@ -774,7 +774,7 @@ export type BaseHeatmapTrace = Omit<CommonTraceAttributes, 'hovertext'> &
      */
     showscale?: boolean;
     /**
-     * The colorbar of this colorscale (plan E5.3).
+     * The colorbar of this colorscale.
      */
     colorbar?: Colorbar;
     /**

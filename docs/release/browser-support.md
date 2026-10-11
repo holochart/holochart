@@ -12,15 +12,15 @@ it shares WebCore and the WebGL implementation, not the system text stack, the t
 iOS or Safari's settings. The version columns are what was run, not minimum versions: no minimum
 versions have been established.
 
-| Browser                          | Status                | How it is tested                                                                                     |
-| -------------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------- |
-| Chrome, Edge (Chromium), desktop | Supported, tested     | Every PR: unit, visual, interaction, bundle and package suites on headless Chromium with software GL |
-| Firefox, desktop                 | Supported, tested     | Nightly: interaction and bundle suites on Playwright's Firefox; [known issues](#known-issues) F1, F2 |
-| Safari, macOS                    | Supported, not tested | Nightly: interaction and bundle suites on Playwright's WebKit, known issue W1; real Safari by hand   |
-| Safari, iOS and iPadOS           | Supported, not tested | By hand only ([checklist](#manual-pass))                                                             |
-| Chrome, Android                  | Supported, not tested | By hand only; touch gestures are covered on desktop Chromium with injected touch events              |
-| Firefox, Android                 | Not tested            |                                                                                                      |
-| Any browser without WebGL2       | Not supported         | `tests/bundle/iife-no-webgl.spec.ts`: `newPlot` rejects with `WebGLUnavailableError`, fallback shown |
+| Browser                          | Status                | How it is tested                                                                                                                                                                               |
+| -------------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Chrome, Edge (Chromium), desktop | Supported, tested     | Every PR: unit, visual, interaction, bundle and package suites on headless Chromium with software GL                                                                                           |
+| Firefox, desktop                 | Supported, tested     | Run by hand on macOS: interaction and bundle suites on Playwright's Firefox; [known issues](#known-issues) F1, F2. The nightly run on Linux has not passed yet ([Nightly runs](#nightly-runs)) |
+| Safari, macOS                    | Supported, not tested | Nightly: interaction and bundle suites on Playwright's WebKit, with failures open ([Nightly runs](#nightly-runs)), known issue W1; real Safari by hand                                         |
+| Safari, iOS and iPadOS           | Supported, not tested | By hand only ([checklist](#manual-pass))                                                                                                                                                       |
+| Chrome, Android                  | Supported, not tested | By hand only; touch gestures are covered on desktop Chromium with injected touch events                                                                                                        |
+| Firefox, Android                 | Not tested            |                                                                                                                                                                                                |
+| Any browser without WebGL2       | Not supported         | `tests/bundle/iife-no-webgl.spec.ts`: `newPlot` rejects with `WebGLUnavailableError`, fallback shown                                                                                           |
 
 "Supported, not tested" is the project's claim (any browser with WebGL2), without a run on that
 browser to back it yet.
@@ -38,11 +38,26 @@ Counts are for the suites as they were that day, without `leak.spec.ts` (see
 | Firefox 155 (Playwright build 1543) | yes, on the GPU ("Apple M1")         | 239 pass, 10 skipped, 1 fixme | 16 pass, 2 fixme |
 | WebKit 26.6 (Playwright build 2359) | yes, on the GPU ("Apple GPU")        | 241 pass, 10 skipped, 1 fixme | 18 pass          |
 
-Not verified: the same suites on Linux, where the nightly workflow runs them
-(`mcr.microsoft.com/playwright:v1.63.0-noble`, no GPU). Headless Firefox needs
-`webgl.force-enabled` there, which `tests/browsers.ts` sets; whether Playwright's Linux WebKit
-gives a WebGL2 context without a GPU has not been checked. The first nightly run answers it. If
-WebKit has no WebGL2 there, move its legs to a `macos-latest` runner.
+### Nightly runs
+
+The nightly workflow runs the same suites on Linux
+(`mcr.microsoft.com/playwright:v1.63.0-noble`, no GPU). It has failed every night since it
+started on 2026-10-04. As of the run of 2026-10-11:
+
+- **Firefox has never been tested there.** Headless Firefox gave no WebGL context at all in the
+  container, with or without `webgl.force-enabled`, so every test that draws failed with
+  "WebGL2 is unavailable": 15 of 26 bundle tests and 48 of 49 leak tests, and the interaction
+  legs were cancelled. Under a virtual display (`xvfb-run`) the same Firefox gives a WebGL2
+  context on Mesa's llvmpipe; the workflow now runs its Firefox legs that way. That was checked
+  with a probe in the container, not yet by a nightly run, so what Firefox on Linux really
+  passes is not known.
+- **WebKit has WebGL2 there** and passes 518 of 525 interaction tests and 27 of 28 bundle tests.
+  Failing: four `geo.spec.ts` context-loss tests ("the map is drawn again after a restore"),
+  `graph3d.spec.ts` "hovering a node dims what is not its neighbourhood", `surface.spec.ts`
+  "highlight lines go through the hovered point", `export.spec.ts` "encodes JPEG and WebP", and
+  `tests/bundle/notebook.spec.ts`. None has been looked into yet.
+
+Nothing reports a failed nightly run: it shows only in the Actions tab.
 
 ### How to run them
 
@@ -123,8 +138,9 @@ outside the chart).
 covering every registered trace type), on a context of its own and on the shared renderer, and
 checks that GPU resources, WebGL contexts, DOM nodes, listeners, observers and (Chromium) live
 objects return to where they were. PR CI runs 10 rounds per family (`LEAK_CYCLES=10`); the nightly
-workflow runs 100 on all three browsers. All 45 tests pass on Chromium, Firefox and WebKit, with
-the same counts on each.
+workflow runs 100 on all three browsers. Run by hand on macOS on 2026-10-02, all 45 tests passed
+on Chromium, Firefox and WebKit, with the same counts on each. In the nightly workflow the
+Firefox leg has not passed yet ([Nightly runs](#nightly-runs)).
 
 Leaks it found that are still open are in the spec's `KNOWN_LEAKS`, as the exact growth per round
 the test expects until they are fixed:

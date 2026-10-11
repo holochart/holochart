@@ -1,8 +1,10 @@
 # ADR-029: Network graphs are one cartesian `graph` trace with our own layouts, in their own package
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-11, by the owner). Accepting the design does not settle the
+  experimental contract additions listed under Negative; the plugin API freeze still has to keep
+  or replace each one (backlogv2 V2-B8).
 - **Date:** 2026-10-06
-- **Deciders:** G1, with what G2–G10 found while building it; the owner accepts or rejects
+- **Deciders:** G1, with what G2–G10 found while building it; accepted by the owner
 - **Related stories:** backlog G1–G10; [ADR-006](006-d3-micro-libraries.md),
   [ADR-011](011-calc-in-web-worker.md), [ADR-019](019-runtime-package.md),
   [ADR-026](026-geo-packages-and-bundles.md)

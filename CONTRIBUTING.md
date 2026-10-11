@@ -1,8 +1,7 @@
 # Contributing to Holochart
 
-Thanks for helping build Holochart. The project is in alpha (all chart families through 3D are
-built; nothing is on npm yet, see the [roadmap](https://mk7s.dev/holochart/roadmap)), so
-tooling and conventions are still settling. When this document and the code disagree, the code
+Thanks for helping build Holochart. The project is in alpha (`0.1.0-alpha.0` is on npm; see the
+[roadmap](https://mk7s.dev/holochart/roadmap)), so tooling and conventions are still settling. When this document and the code disagree, the code
 wins; please fix the document in the same PR.
 
 Background reading: [README.md](README.md), [ARCHITECTURE.md](ARCHITECTURE.md),

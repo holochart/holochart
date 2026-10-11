@@ -7,6 +7,7 @@
  * arrays reach the GPU upload path without a copy.
  */
 import type { TypedArray } from '../schema/types.ts';
+import { isTypedArraySpec, typedArrayFromSpec } from '../serialize/typed-array.ts';
 import { isDateString, isValidDate, parseDate, type CalendarSystem } from './dates.ts';
 
 /**
@@ -21,6 +22,42 @@ export function isTypedArray(v: unknown): v is TypedArray {
     !(v instanceof BigInt64Array) &&
     !(v instanceof BigUint64Array)
   );
+}
+
+function isBigIntArray(v: unknown): v is BigInt64Array | BigUint64Array {
+  return v instanceof BigInt64Array || v instanceof BigUint64Array;
+}
+
+function bigIntsToDoubles(arr: BigInt64Array | BigUint64Array): Float64Array {
+  const out = new Float64Array(arr.length);
+  for (let i = 0; i < arr.length; i++) out[i] = Number(arr[i]);
+  return out;
+}
+
+/**
+ * The array behind the other forms a data array may be given in; any other value is returned
+ * as it is. Coercion calls this for every `data_array` and per-point (`arrayOk`) value, so the
+ * stages after it only meet plain arrays and {@link TypedArray}s.
+ *
+ * - Plotly's JSON encoding of a typed array, `{ dtype, bdata, shape? }` (what plotly.py ≥ 6 and
+ *   plotly.js write), is decoded: one typed array, or rows of them for a 2D `shape`. A spec that
+ *   cannot be decoded is returned unchanged, and coercion then rejects it like any other object.
+ * - `BigInt64Array` / `BigUint64Array` (and rows of them) become `Float64Array`s: charts deal in
+ *   doubles. Integers beyond ±2^53 are rounded to the nearest double, as `Number(big)` does (ids
+ *   and nanosecond timestamps of that size lose their last digits). The copy is made on every
+ *   call, so values changed in place are picked up.
+ * @internal
+ */
+export function inputDataArray(v: unknown): unknown {
+  if (typeof v !== 'object' || v === null) return v;
+  if (isBigIntArray(v)) return bigIntsToDoubles(v);
+  if (ArrayBuffer.isView(v)) return v;
+  if (Array.isArray(v)) {
+    // Rows of a 2D array. Only the first row is inspected: data arrays are not scanned here.
+    if (!isBigIntArray(v[0])) return v;
+    return v.map((row: unknown) => (isBigIntArray(row) ? bigIntsToDoubles(row) : row));
+  }
+  return isTypedArraySpec(v) ? (typedArrayFromSpec(v) ?? v) : v;
 }
 
 /**

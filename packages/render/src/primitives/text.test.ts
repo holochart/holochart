@@ -37,6 +37,8 @@ function freshState() {
     fontGate: null as Promise<void> | null,
     /** Make default font face loads fail. */
     fontFail: false,
+    /** `preloadFont` never calls back (a font troika cannot fetch). */
+    stuck: false,
   };
 }
 type MockState = ReturnType<typeof freshState>;
@@ -127,7 +129,9 @@ async function mockTroika(troika: MockState) {
     Text,
     BatchedText,
     configureTextBuilder: (config: object) => troika.log.push(`config ${JSON.stringify(config)}`),
-    preloadFont: (_options: object, callback: () => void) => callback(),
+    preloadFont: (_options: object, callback: () => void) => {
+      if (!troika.stuck) callback();
+    },
   };
 }
 
@@ -668,5 +672,97 @@ describe('TextPrimitive: rich text runs (E2.10)', () => {
     expect(two.position.y).toBeCloseTo(54.2);
     expect(two.fontSize).toBe(7);
     expect(a.anchorY).toBe('top-baseline');
+  });
+});
+
+/**
+ * troika never calls back when its worker is blocked (a CSP without `worker-src blob:`), when a
+ * font file cannot be fetched, or when a character the font lacks needs a fallback font from the
+ * CDN and there is no network. `ready` must settle anyway: charts wait for it.
+ */
+describe('TextPrimitive: typesetting that never finishes', () => {
+  /** Whether `promise` has resolved; read it after advancing the (fake) clock. */
+  function watch(promise: Promise<unknown>): { settled: boolean } {
+    const state = { settled: false };
+    void promise.then(() => (state.settled = true));
+    return state;
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('resolves `ready` after a limit and warns once', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    open();
+    const text = mod.createTextPrimitive(context(), { labels: labels('a') });
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(1));
+    const ready = watch(text.ready);
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(ready.settled).toBe(false);
+    expect(warn).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(ready.settled).toBe(true);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0]?.[0])).toMatch(/typeset/);
+
+    // Whatever blocked it most likely blocks the next one too: no second long wait, one warning.
+    text.update({ labels: labels('b') });
+    const again = watch(text.ready);
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(again.settled).toBe(true);
+    expect(warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('still draws text that arrives late, and then waits in full again', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    open();
+    const ctx = context();
+    const text = mod.createTextPrimitive(ctx, { labels: labels('a') });
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(1));
+    await vi.advanceTimersByTimeAsync(10_000);
+    await text.ready;
+    const drawn = ctx.invalidations;
+    finishSyncs();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(ctx.invalidations).toBeGreaterThan(drawn);
+
+    text.update({ labels: labels('b') });
+    expect(troika.syncs).toHaveLength(1);
+    const ready = watch(text.ready);
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(ready.settled).toBe(false);
+    finishSyncs();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(ready.settled).toBe(true);
+  });
+
+  it('stops waiting when the primitive is disposed', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    open();
+    const text = mod.createTextPrimitive(context(), { labels: labels('a') });
+    await vi.waitFor(() => expect(troika.syncs).toHaveLength(1));
+    const ready = watch(text.ready);
+    text.dispose();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(ready.settled).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('bounds preloadTextFont the same way', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    troika.stuck = true;
+    open();
+    const preloaded = watch(mod.preloadTextFont({ characters: '0123456789' }));
+    await vi.advanceTimersByTimeAsync(9_000);
+    expect(preloaded.settled).toBe(false);
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(preloaded.settled).toBe(true);
+    expect(warn).toHaveBeenCalledTimes(1);
   });
 });

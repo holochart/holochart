@@ -158,13 +158,13 @@ export interface Bar3dTraceMarker {
    */
   cmid?: number;
   /**
-   * Show a colorbar for this colorscale (drawn by the colorbar component, plan E5.3).
+   * Show a colorbar for this colorscale (drawn by the colorbar component).
    *
    * @defaultValue `false`
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: Colorbar;
   /**
@@ -529,13 +529,13 @@ export type ConeTrace = Omit<CommonTraceAttributes, 'hoverinfo'> & {
    */
   cmid?: number;
   /**
-   * Show a colorbar for this colorscale (drawn by the colorbar component, plan E5.3).
+   * Show a colorbar for this colorscale (drawn by the colorbar component).
    *
    * @defaultValue `true`
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: Colorbar;
   /**
@@ -773,13 +773,13 @@ export type IsosurfaceTrace = CommonTraceAttributes & {
    */
   cmid?: number;
   /**
-   * Show a colorbar for this colorscale (drawn by the colorbar component, plan E5.3).
+   * Show a colorbar for this colorscale (drawn by the colorbar component).
    *
    * @defaultValue `true`
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: Colorbar;
   /**
@@ -1264,13 +1264,13 @@ export type Mesh3dTrace = CommonTraceAttributes & {
    */
   cmid?: number;
   /**
-   * Show a colorbar for this colorscale (drawn by the colorbar component, plan E5.3).
+   * Show a colorbar for this colorscale (drawn by the colorbar component).
    *
    * @defaultValue `true`
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: Colorbar;
   /**
@@ -1618,13 +1618,13 @@ export interface Scatter3dTraceLine {
    */
   cmid?: number;
   /**
-   * Show a colorbar for this colorscale (drawn by the colorbar component, plan E5.3).
+   * Show a colorbar for this colorscale (drawn by the colorbar component).
    *
    * @defaultValue `false`
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: Colorbar;
   /**
@@ -1812,13 +1812,13 @@ export interface Scatter3dTraceMarker {
    */
   cmid?: number;
   /**
-   * Show a colorbar for this colorscale (drawn by the colorbar component, plan E5.3).
+   * Show a colorbar for this colorscale (drawn by the colorbar component).
    *
    * @defaultValue `false`
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: Colorbar;
   /**
@@ -2386,13 +2386,13 @@ export type StreamtubeTrace = Omit<CommonTraceAttributes, 'hoverinfo'> & {
    */
   cmid?: number;
   /**
-   * Show a colorbar for this colorscale (drawn by the colorbar component, plan E5.3).
+   * Show a colorbar for this colorscale (drawn by the colorbar component).
    *
    * @defaultValue `true`
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: Colorbar;
   /**
@@ -2646,13 +2646,13 @@ export type SurfaceTrace = Omit<CommonTraceAttributes, 'hovertext'> & {
    */
   cmid?: number;
   /**
-   * Show a colorbar for this colorscale (drawn by the colorbar component, plan E5.3).
+   * Show a colorbar for this colorscale (drawn by the colorbar component).
    *
    * @defaultValue `true`
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: Colorbar;
   /**
@@ -3202,13 +3202,13 @@ export type VolumeTrace = CommonTraceAttributes & {
    */
   cmid?: number;
   /**
-   * Show a colorbar for this colorscale (drawn by the colorbar component, plan E5.3).
+   * Show a colorbar for this colorscale (drawn by the colorbar component).
    *
    * @defaultValue `true`
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: Colorbar;
   /**

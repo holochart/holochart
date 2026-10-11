@@ -1,6 +1,6 @@
 # ADR-004: One WebGL context per figure, scissored subplot viewports
 
-- **Status:** Proposed (spike D not yet measured; deferred to the M7 benchmarking pass).
+- **Status:** Accepted (2026-10-11, by the owner), on the spike D measurements below.
 - **Date:** 2026-09-23
 - **Related stories:** E0.7 (spike D), E2.1, E2.3, E2.16, E4.\*; plan §3 principle 5, risk R5
 
@@ -8,8 +8,12 @@
 
 - The `viewports-grid` example renders 9 scissored viewports (8 × 2D, one 3D) in one context,
   correctly and deterministically ([spike E](../spikes/e-determinism.md)).
-- The cost comparison with separate canvases and the context-limit probe are not measured yet
-  ([spike D](../spikes/d-viewports.md)). Decide Accepted/Rejected from that data.
+- [Spike D](../spikes/d-viewports.md), measured 2026-10-11: against nine canvases, one context
+  with nine scissored viewports builds 2.8 times faster (56 against 159 ms), redraws 4.1 times
+  faster when every panel moves (4.0 against 16.4 ms) and compiles 2 shader programs where the
+  canvases compile 18. It is twice as slow when a single panel changes (4.0 against 2.0 ms),
+  because the whole canvas is redrawn. Chromium dropped the oldest context when the 17th was
+  created. The machine was under load, so the ratios are the evidence, not the milliseconds.
 
 ## Context
 
@@ -50,8 +54,8 @@ figure still has one canvas and scissored viewports, but its context may be shar
 
 ### Follow-ups
 
-- **Spike D (E0.7):** 9 subplots scissored in one context; measure draw overhead and correctness.
-  Its result moves this ADR to Accepted or Rejected.
+- **Spike D (E0.7):** done, see Evidence. Left open by it: redrawing only the viewport that
+  changed would close the one case where separate canvases are faster.
 - E2.16 shared renderer and docs guidance for large dashboards (risk R5): done in
   [ADR-023](023-shared-renderer-context-budget.md).
 

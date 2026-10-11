@@ -20,9 +20,9 @@ prospective notebook editors.
 
 ## Set up the notebook environment
 
-Follow the [Python/Jupyter development installation](/getting-started/installation#python-and-jupyter-from-source)
-first. It requires an existing development checkout containing `packages/holochart-py`; a fresh
-clone of public `main` does not currently include the bridge. In that checkout, install Node/pnpm
+Follow the [Python/Jupyter source installation](/getting-started/installation#python-and-jupyter-from-source)
+first. `holochart-py` is not on PyPI yet, so you install it from a clone of the repository; an
+ordinary clone contains the bridge (`packages/holochart-py`). In the clone, install Node/pnpm
 dependencies, build browser assets, create an isolated Python environment, install the bridge
 and JupyterLab, and register/select its kernel.
 The one-time source setup is separate from the few minutes needed to create a chart below.

@@ -1,5 +1,11 @@
-import { describe, expect, it } from 'vitest';
-import { registerColorscale, type FullLayout } from '@mk7s/holochart-core';
+import { describe, expect, it, vi } from 'vitest';
+import {
+  createRegistry,
+  registerColorscale,
+  supplyDefaults,
+  type FullLayout,
+} from '@mk7s/holochart-core';
+import { scatter } from '../scatter/index.ts';
 import {
   coloraxisLayoutSchema,
   colorDomain,
@@ -230,5 +236,92 @@ describe('E8.2: registry names, reversed names, layout colorscales and interpola
     expect(cs.sequentialminus.dflt).toBe('Blues');
     expect(cs.diverging.dflt).toBe('RdBu');
     expect(coloraxisLayoutSchema.colorscaleInterpolation.dflt).toBe('rgb');
+  });
+});
+
+describe('a plain color list as colorscale', () => {
+  const registry = createRegistry().register(scatter);
+  const marker = (input: Record<string, unknown>) => {
+    const { fullData, fullLayout } = supplyDefaults(
+      { data: [{ type: 'scatter', y: [1, 2, 3], marker: { color: [0, 5, 10], ...input } }] },
+      registry,
+      { onIssue: () => undefined },
+    );
+    return { marker: fullData[0]!['marker'] as Record<string, unknown>, fullLayout };
+  };
+
+  it('is an explicit colorscale: it wins over the automatic one', () => {
+    const s = marker({ colorscale: ['red', 'blue'] });
+    expect(s.marker['colorscale']).toEqual([
+      [0, 'rgb(255, 0, 0)'],
+      [1, 'rgb(0, 0, 255)'],
+    ]);
+    expect(s.marker['autocolorscale']).toBe(false);
+    const m = resolveColorMapping(s.marker, s.fullLayout)!;
+    expect(rgbaToCss(mapColor(0, m))).toBe('rgb(255, 0, 0)');
+    expect(rgbaToCss(mapColor(10, m))).toBe('rgb(0, 0, 255)');
+  });
+
+  it('still gives way to autocolorscale: true, and to the automatic scale when it is not valid', () => {
+    expect(marker({ colorscale: ['red', 'blue'], autocolorscale: true }).marker).toMatchObject({
+      autocolorscale: true,
+    });
+    // One color is not a scale; neither is a list mixing colors and stops.
+    expect(marker({ colorscale: ['red'] }).marker['autocolorscale']).toBe(true);
+    expect(marker({ colorscale: ['red', [1, 'blue']] }).marker['autocolorscale']).toBe(true);
+    const auto = marker({});
+    expect(auto.marker['autocolorscale']).toBe(true);
+    expect(resolveColorMapping(auto.marker, auto.fullLayout)!.colorscale).toBe(
+      resolveColorscale('Reds'),
+    );
+  });
+
+  it('turns the colorscale attributes on, like a list of stops', () => {
+    expect(hasColorscale({ colorscale: ['red', 'blue'] })).toBe(true);
+    expect(hasColorscale({ colorscale: ['red'] })).toBe(false);
+  });
+});
+
+describe('unknown colorscale names', () => {
+  it('warns once per name, with a suggestion, and still falls back', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      expect(resolveColorscale('Viridiss')).toBeUndefined();
+      expect(resolveColorscale(' viridiss')).toBeUndefined();
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]![0]).toMatch(
+        /^\[holochart\] Unknown colorscale 'Viridiss'; did you mean 'Viridis'\?/,
+      );
+      // Known names, reversed names and stops say nothing.
+      resolveColorscale('Viridis');
+      resolveColorscale('viridis_r');
+      resolveColorscale([
+        [0, 'red'],
+        [1, 'blue'],
+      ]);
+      expect(warn).toHaveBeenCalledTimes(1);
+      // The mapping falls back to the automatic colorscale, as before.
+      const m = resolveColorMapping(
+        { color: [1, 2], cauto: true, autocolorscale: false, colorscale: 'Zzyzx' },
+        undefined,
+      )!;
+      expect(m.colorscale).toBe(resolveColorscale('Reds'));
+      expect(warn).toHaveBeenCalledTimes(2);
+      expect(warn.mock.calls[1]![0]).toMatch(/^\[holochart\] Unknown colorscale 'Zzyzx'\./);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('says nothing once the name is registered', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const undo = registerColorscale('Lagoon', ['#001122', '#aabbcc']);
+    try {
+      expect(resolveColorscale('Lagoon')).toHaveLength(2);
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      undo();
+      warn.mockRestore();
+    }
   });
 });

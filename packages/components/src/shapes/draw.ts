@@ -391,6 +391,12 @@ export function setShapeEraser(chart: object, erase: (() => boolean) | undefined
  * Remove the active shape of `chart` (the `eraseshape` modebar button; plotly.js
  * `eraseActiveShape`): one GUI `relayout` of `shapes` without it. Returns whether a shape was
  * active. Click an `editable` shape (drawn shapes are) to make it active.
+ *
+ * @example
+ * ```ts
+ * // A "Delete" button of your own, next to the chart:
+ * button.addEventListener('click', () => eraseActiveShape(chart));
+ * ```
  */
 export function eraseActiveShape(chart: object): boolean {
   return erasers.get(chart)?.() ?? false;

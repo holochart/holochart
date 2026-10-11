@@ -23,6 +23,11 @@ export interface DiffRecord {
   exactPixels: number;
   /** Largest per-channel difference (0–255). */
   maxDelta: number;
+  /**
+   * `false` when the run did not gate this example: its baseline is another platform's rendering
+   * (`platform.ts`). Absent when gated, as every record is in CI.
+   */
+  gated?: false;
 }
 
 /** File for one example id (ids contain `/`, e.g. `scatter/basic`). */

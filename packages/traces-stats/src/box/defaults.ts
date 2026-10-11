@@ -18,6 +18,7 @@
 import {
   autoType,
   isArrayLike,
+  isTypedArraySpec,
   isDateString,
   isValidColor,
   toRGBA,
@@ -318,13 +319,22 @@ export function positionAxisId(trace: FullTrace): string {
   return typeof id === 'string' ? id : letter;
 }
 
+/**
+ * Whether the user gave position data: an array, or one of the forms core turns into an array
+ * (a `{ dtype, bdata }` spec, a `'@column'` reference). `_input` keeps those as given.
+ */
+function givenPositions(v: unknown): boolean {
+  // Positions are data arrays, where any '@…' string is a column reference.
+  return isArrayLike(v) || isTypedArraySpec(v) || (typeof v === 'string' && v.startsWith('@'));
+}
+
 /** A sample trace with neither a position array nor `x0` / `y0` (Plotly's `isBoxWithoutPositionCoords`). */
 function withoutPositions(trace: FullTrace): boolean {
   if (!isBoxLike(trace) || trace.visible !== true) return false;
   if (trace[TRACE_KEYS.precomputed] === true) return false;
   const letter = positionLetter(trace);
   const input = (trace._input ?? {}) as Record<string, unknown>;
-  return !isArrayLike(input[letter]) && trace[`${letter}0`] === undefined;
+  return !givenPositions(input[letter]) && trace[`${letter}0`] === undefined;
 }
 
 /** The data core types an axis from, for one trace (its `typingData`), or undefined. */
@@ -432,7 +442,7 @@ export function supplyGroupingDefaults(
     const letter = positionLetter(trace);
     if (trace[TRACE_KEYS.precomputed] === true || trace[TRACE_KEYS.implicit] === true) continue;
     const input = (trace._input ?? {}) as Record<string, unknown>;
-    if (isArrayLike(input[letter])) continue;
+    if (givenPositions(input[letter])) continue;
     const pos0 = trace[`${letter}0`];
     if (pos0 === undefined) continue;
     trace[letter] = [pos0];

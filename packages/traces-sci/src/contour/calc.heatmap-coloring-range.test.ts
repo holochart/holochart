@@ -88,6 +88,40 @@ describe("contour calc: color range of coloring 'heatmap' with manual levels", (
     expect(colorDomain(s)).toEqual([7.5, 8.5]);
     expect(colorbarRange(s)).toEqual([7.5, 8.5]);
   });
+
+  it('spans the same bands when start and end are given reversed (Plotly setContours swaps them)', () => {
+    const s = setup({
+      z: cone(),
+      contours: { coloring: 'heatmap', start: 9.5, end: 7.5, size: 0.5 },
+    });
+    expect(s.trace['autocontour']).toBe(false);
+    expect(s.calc.levels).toMatchObject({ start: 7.5, end: 9.5, levels: [7.5, 8, 8.5, 9, 9.5] });
+    // As for start 7.5, end 9.5: 5 bands of 0.5 from 7.5 − 0.25.
+    expect(colorDomain(s)).toEqual([7.25, 9.75]);
+    expect(colorbarRange(s)).toEqual([7.25, 9.75]);
+  });
+
+  it('uses the size the levels were given when contours.size is missing (Plotly setContours)', () => {
+    const s = setup({ z: cone(), contours: { coloring: 'heatmap', start: 7.5, end: 9.5 } });
+    expect(s.trace['autocontour']).toBe(false);
+    // The automatic step for 15 levels over 2 is 0.2: 11 levels from 7.5 to 9.5.
+    expect(s.calc.levels.size).toBe(0.2);
+    expect(s.calc.levels.levels).toHaveLength(11);
+    // 11 bands of 0.2 from 7.5 − 0.1.
+    const [lo, hi] = colorDomain(s);
+    expect(lo).toBeCloseTo(7.4, 12);
+    expect(hi).toBeCloseTo(9.6, 12);
+    expect(colorbarRange(s)).toEqual([lo, hi]);
+  });
+
+  it('uses the resolved size for a size that is not positive', () => {
+    const s = setup({ z: cone(), contours: { coloring: 'heatmap', start: 8, end: 9, size: 0 } });
+    // The automatic step for 15 levels over 1 is 0.1: 11 levels, 11 bands from 8 − 0.05.
+    expect(s.calc.levels.size).toBe(0.1);
+    const [lo, hi] = colorDomain(s);
+    expect(lo).toBeCloseTo(7.95, 12);
+    expect(hi).toBeCloseTo(9.05, 12);
+  });
 });
 
 describe('contour calc: color range otherwise', () => {

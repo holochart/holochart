@@ -22,8 +22,9 @@ pages have the attributes of each trace.
 
 <InstallStatus ecosystem="javascript" />
 
-Use these imports in the [built source workspace](/getting-started/installation#build-from-source-today).
-The workspace install already supplies the runtime, extension package and three.js.
+These imports work with the packages
+[installed from npm](/getting-started/installation#install-from-npm). No source checkout is
+needed.
 
 The three traces live in `@mk7s/holochart-traces-graph`. Like [maps](/fundamentals/maps), the
 package is not registered by the full bundle, so that apps without a network do not download

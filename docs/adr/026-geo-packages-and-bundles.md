@@ -1,8 +1,10 @@
 # ADR-026: Geo ships as two add-on packages outside the full bundle
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-11, by the owner). The `traces-geo` package is built. The
+  `traces-map` package and the geo script-tag build that this ADR also describes are not
+  (backlogv2 V2-E3, V2-G4).
 - **Date:** 2026-10-03
-- **Deciders:** GEO1; the owner accepts or rejects
+- **Deciders:** GEO1; accepted by the owner
 - **Related stories:** backlog GEO1, GEO2, GEO7, GEO9; plan E15, E21; risk R9
 
 ## Context

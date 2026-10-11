@@ -5,6 +5,12 @@ install, trust and build on. Written 2026-09-30, after M6 wave 2 (#30). `plan.md
 for feature stories; this file only orders the work that stands between today and a release, and
 points back to plan.md story IDs where one exists.
 
+> **Status, 2026-10-11.** `0.1.0-alpha.0` is on npm, so the paragraph below describes the
+> project as it was on 2026-09-30. Phases 1 and 2 are done apart from the boxes still open here.
+> What is open, phase 3, and everything recorded as "after 1.0" are ordered in
+> [backlogv2.md](backlogv2.md) (track A lists the open boxes of this file; its ID map says where
+> each item went). New work goes there, not here.
+
 **Where things stand.** All planned 2D and 3D chart types are built, with 514 examples, about 4,700
 unit tests and visual, interaction and bundle suites in CI. Nothing has been published to npm. The
 first thing a new user sees (the README, the install page, the types) still describes the M0
@@ -61,17 +67,22 @@ hit. It suits two waves of up to four agents.
 | S1.8 | Fail politely without WebGL2; robust mount and teardown       | M    | runtime |
 | S1.9 | Community files                                               | S    | repo    |
 
-### S1.1 Release plumbing `S`
+### S1.1 Release plumbing `S` · ✅ Done (`0.1.0-alpha.0` published)
 
-- [ ] `changeset pre enter alpha`. Squash the 59 changesets into one readable "initial release"
-      changeset, keeping only what a user of 0.1.0 needs to know.
-- [ ] Owner: npm token, `npm` GitHub environment and the `RELEASE_ENABLED=true` repo variable
+- [x] `changeset pre enter alpha`. Squash the 59 changesets into one readable "initial release"
+      changeset, keeping only what a user of 0.1.0 needs to know. — `.changeset/pre.json`,
+      `.changeset/pre/initial-release.md`.
+- [x] Owner: npm token, `npm` GitHub environment and the `RELEASE_ENABLED=true` repo variable
       (see `docs/release/releasing.md`). Better: npm trusted publishing (OIDC) so no long-lived
-      token exists (`releasing.md:100` already lists it as a follow-up).
-- [ ] Dry run: run the `version` and `pack` jobs on a branch and check the tarballs, tags
-      (`alpha`) and generated CHANGELOG before the first real publish.
-- [ ] Docs banner and CDN snippets move from "pre-alpha, clone the repo" to the published
-      version, with jsDelivr URLs pinned to `@0.1` rather than floating.
+      token exists (`releasing.md:100` already lists it as a follow-up). — The release ran. The
+      switch to trusted publishing is open: backlogv2 V2-A4.
+- [x] Dry run: run the `version` and `pack` jobs on a branch and check the tarballs, tags
+      (`alpha`) and generated CHANGELOG before the first real publish. — Moot after the first
+      publish; not known whether it was run.
+- [x] Docs banner and CDN snippets move from "pre-alpha, clone the repo" to the published
+      version, with jsDelivr URLs pinned to `@0.1` rather than floating. — Done 2026-10-11
+      (backlogv2 V2-A1), pinned to `@0.1.0-alpha.0`: a range such as `@0.1` does not match a
+      pre-release.
 
 ### S1.2 package.json and published output `M` · ✅ Done (wave R0)
 
@@ -86,7 +97,8 @@ Evidence: every `packages/*/package.json`; `packages/render/dist/index.d.ts`; `n
 - [x] Umbrella: `unpkg`/`jsdelivr` fields → `dist/holochart.iife.min.js`, so the bare CDN URL
       serves the script build. Ship a `global.d.ts` for `window.Holochart`. Say that locales are
       a separate install.
-- [x] Types: turn on `stripInternal`; two `@internal` members leak today
+- [x] Types: turn on `stripInternal` (turned off again in R3, see S2.13's "Left open by R3");
+      two `@internal` members leak today
       (`render/src/markers/matrix.ts:275, 362`). Either ship `src` or turn off `declarationMap`
       for publish builds, since the maps point at `../src/*.ts`, which isn't in `files`.
 - [x] Core ships `THIRD_PARTY_NOTICES.md` (it ports plotly.js color lists).
@@ -130,7 +142,7 @@ table lists 7 of 14 packages; 12 packages have no README, so their npm pages wou
 - [x] Add a "renders without console errors" page check (plan.md L1721), so broken embeds fail the
       docs build.
 
-### S1.6 Typed figures `L`
+### S1.6 Typed figures `L` · ✅ Done (wave R1, in `0.1.0-alpha.0`)
 
 Evidence: `FigureInput` in `packages/core/src/defaults/types.ts:12-16` is `data?: readonly
 unknown[]`, `layout?: unknown`, `config?: unknown`. The per-trace generator exists
@@ -139,17 +151,21 @@ unknown[]`, `layout?: unknown`, `config?: unknown`. The per-trace generator exis
 This should land before the first publish: going from `unknown` to real types afterwards breaks
 compiles for existing users.
 
-- [ ] Generate one interface per trace type with a `type` literal, and a `Data` union over every
+- [x] Generate one interface per trace type with a `type` literal, and a `Data` union over every
       registered trace (including the Holochart extensions and `bar3d`).
-- [ ] Type `FigureInput` as
+- [x] Type `FigureInput` as
       `{ data?: Data[]; layout?: Partial<Layout>; config?: Partial<Config>; frames?: Frame[]; datasets?: … }`,
       and export `Figure`, `Data`, `Layout` and `Config` from the umbrella.
-- [ ] Type the Plotly-style API (`newPlot`, `react`, `restyle`, `relayout`, `update`) and event
+- [x] Type the Plotly-style API (`newPlot`, `react`, `restyle`, `relayout`, `update`) and event
       payloads against them. `restyle`/`relayout` take attribute-path strings, so they need a
       typed path helper or a documented `Record<string, unknown>` escape hatch.
-- [ ] Type tests (`tsd` or `expectTypeOf`): autocompletion of `marker.color` on scatter, an error
+- [x] Type tests (`tsd` or `expectTypeOf`): autocompletion of `marker.color` on scatter, an error
       on `type: 'scater'`, and every example in `examples/` compiles against the public types
       (this makes the examples the type test corpus).
+
+Shipped: `packages/holochart/src/generated/figure.ts` (`Data`, one interface per trace type),
+`figure.test-d.ts` (type tests), changeset `r1-typed-figures`. Boxes ticked 2026-10-11 from the
+code; they had been left open.
 
 ### S1.7 User event listeners can't break the chart `S` · ✅ Done (wave R0)
 
@@ -319,7 +335,9 @@ Wave R2 notes (details in `docs/release/browser-support.md` and `tests/interacti
       switched the check off; it is now `96 / 1024` and the spec rejects values outside 0 to 1.
       The diff itself is a library bug, listed under "Found in wave R3" below (text measured
       before the font loads).
-- [ ] Regenerate the line baselines in the pinned container (L1802). Not done: it needs Docker.
+- [x] Regenerate the line baselines in the pinned container (L1802). — Done 2026-10-11 in the
+      image on arm64: three of the five changed (`viewports-grid`, `lines-3d`, `lines-3d-opaque`).
+      Before then: not done, it needs Docker.
       `pnpm test:visual:update` never rewrites a baseline whose diff is exact-only, so delete the
       PNGs first: `_dev/viewports-grid`, `_dev/lines-series`, `_dev/lines-joins-dashes`,
       `_dev/lines-3d`, `_dev/lines-3d-opaque`; then run the update in the container with

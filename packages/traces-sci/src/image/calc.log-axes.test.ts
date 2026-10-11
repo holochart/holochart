@@ -90,6 +90,38 @@ describe('image calc on log axes', () => {
     expect(Array.from(s.calc.pixels!.data).slice(0, 4)).toEqual([255, 0, 0, 255]);
   });
 
+  it('autoranges over the pixels above 0 when the picture starts at or below 0 (Plotly)', () => {
+    // Default x0 = 0, dx = 1: pixels start at −0.5, 0.5 and 1.5 and the picture ends at 2.5.
+    // Plotly adds every pixel's start on a log axis, and the axis keeps the positive ones.
+    const s = calcOf({ z: RGB }, LOG_X);
+    expect([s.extremes.x!.min[0]!.l, s.extremes.x!.max[0]!.l]).toEqual([
+      Math.log10(0.5),
+      Math.log10(2.5),
+    ]);
+    // Rows too: y0 = −100, dy = 150 → rows start at −175 and −25 and the picture ends at 125.
+    const rows = calcOf({ z: RGB, y0: -100, dy: 150 }, { yaxis: { type: 'log' } });
+    expect(rows.calc.yEdges[0]).toBeNaN();
+    expect([rows.extremes.y!.min[0]!.l, rows.extremes.y!.max[0]!.l]).toEqual([
+      Math.log10(125),
+      Math.log10(125),
+    ]);
+  });
+
+  it('autoranges over the positive pixels of a picture that runs down to 0 (negative dx)', () => {
+    // x0 = 25, dx = −10: pixels start at 30, 20 and 10, and the picture ends at 0.
+    const s = calcOf({ z: RGB, x0: 25, dx: -10 }, LOG_X);
+    expect(s.calc.xEdges).toEqual([Math.log10(30), NaN]);
+    expect([s.extremes.x!.min[0]!.l, s.extremes.x!.max[0]!.l]).toEqual([
+      Math.log10(10),
+      Math.log10(30),
+    ]);
+  });
+
+  it('adds nothing to a log autorange when no pixel edge is above 0', () => {
+    const s = calcOf({ z: RGB, x0: -10 }, LOG_X);
+    expect(s.extremes.x).toEqual({ min: [], max: [] });
+  });
+
   it('has no position for a non-numeric x0, which then adds nothing to the x autorange', () => {
     const s = calcOf({ z: RGB, x0: 'abc' }, LOG_X);
     expect(s.calc.x0).toBeNaN();

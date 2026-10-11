@@ -1,6 +1,7 @@
 # ADR-005: WebGL SDF text with a DOM mirror
 
-- **Status:** Proposed (spike C not yet measured; deferred to the M7 benchmarking pass).
+- **Status:** Accepted (2026-10-11, by the owner), on the spike C measurements below. The opt-in DOM text mode that the
+  proposal described was struck before acceptance: it was never built.
 - **Date:** 2026-09-23
 - **Related stories:** E0.7 (spike C), E2.9, E2.10, E8.3, E17.1, E18.1; plan §16 Q4, risk R2
 
@@ -8,8 +9,11 @@
 
 - `TextPrimitive` (troika `BatchedText`) renders labels in one draw call with a synchronous
   metrics oracle, and is stable run to run under SwiftShader ([spike E](../spikes/e-determinism.md)).
-- The 2,000-label comparison with a DOM overlay is not measured yet
-  ([spike C](../spikes/c-text.md)). Decide Accepted/Rejected from that data.
+- [Spike C](../spikes/c-text.md), measured 2026-10-11 with 2,000 labels: WebGL text pans in
+  3.5–4 ms a frame in one draw call, and a change to 100 labels is on screen in 13 ms. Its first
+  layout is the weak spot: about 90 ms warm and 180–300 ms cold, against 12–19 ms to create the
+  same labels in the DOM. The DOM overlay was cheaper on everything measured, which excludes
+  paint. The machine was under load, so the ratios are the evidence, not the milliseconds.
 
 ## Context
 
@@ -26,9 +30,10 @@ sync so only changed labels re-layout, a cached font-metrics oracle for layout, 
 3D. A **hidden DOM mirror** (E17.1) describes the chart and exposes text for assistive technology and
 selection.
 
-An opt-in DOM overlay mode, `config.textRenderer: 'dom'`, renders 2D text as positioned DOM elements
-instead, for apps that need native text selection, browser font rendering, or very large label counts
-where DOM is cheaper.
+There is one text path. The proposal also described an opt-in DOM overlay mode
+(`config.textRenderer: 'dom'`) for apps that want native text selection or browser font rendering.
+It was never built, and it is not part of this decision; a DOM text mode would need an ADR of its
+own.
 
 ## Consequences
 
@@ -44,13 +49,15 @@ where DOM is cheaper.
   bundle size (risk R9). Mitigated in M2 wave 0 (E21.5): troika and its dependencies (~44 kB gz)
   load with a dynamic `import()` the first time a chart draws text, and layout measures
   synchronously without it. Rich text (E2.10), RTL, and CJK need extra work.
-- Two text paths (WebGL and DOM) must be kept visually consistent and tested.
+- No native text selection or browser font rendering for chart text; the DOM mirror is the only
+  DOM text.
+- The first layout of a very dense figure is slow: thousands of labels cost about 100 ms.
 - The DOM mirror must be kept in sync with the rendered chart.
 
 ### Follow-ups
 
-- **Spike C (E0.7):** troika with 2,000 tick labels; measure update cost and memory. Spike C also
-  settles §16 Q4 (default text renderer) and moves this ADR to Accepted or Rejected.
+- **Spike C (E0.7):** done, see Evidence. It settles §16 Q4: WebGL is the text renderer.
+- Remove the `config.textRenderer` key from the schema. Nothing reads it (backlogv2 V2-B7).
 - Bundle fonts for visual tests ([ADR-018](018-visual-regression-harness.md)).
 
 ## Alternatives considered
@@ -60,7 +67,7 @@ where DOM is cheaper.
 Native text quality, selection, and accessibility with little code. Rejected as the default because
 DOM text is not in the WebGL framebuffer (export must re-composite it), does not depth-sort or work
 naturally in 3D, and thousands of absolutely positioned elements are slow to update during pan/zoom.
-Kept as the opt-in `textRenderer: 'dom'` mode and as the fallback if spike C fails.
+Spike C did not fail, so it is not needed as a fallback either.
 
 ## References
 

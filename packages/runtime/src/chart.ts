@@ -32,6 +32,14 @@
  * `TextPrimitive`s) has finished typesetting and been re-rendered, and passes that components
  * scheduled meanwhile (automargin after measuring labels) have run as well (up to 8 follow-ups).
  * Without pending text this is the same frame the update drew.
+ *
+ * ## Rejected updates
+ *
+ * An update method works out all of its edits before it applies any, so a call that throws (a
+ * trace index out of range, a malformed attribute path) changes nothing. In strict mode
+ * (`config.strict`) every edit is validated when the run starts, before the pipeline applies
+ * anything: a figure that fails rejects every call batched into that run, and the figure returns
+ * to what it was before them.
  */
 import {
   applyUirevision,
@@ -52,6 +60,7 @@ import {
   supplyDefaults,
   toRGBA,
   valueCategoryOrder,
+  ValidationError,
   type AxisExtremes,
   type AxisType,
   type CategorySamples,
@@ -74,6 +83,7 @@ import {
   createRenderRoot,
   reportUserError,
   subscribeFontChanges,
+  textMeasurementCount,
   IDENTITY_TRANSFORM,
   type FrameScheduler,
   type DataTransform,
@@ -257,6 +267,8 @@ export interface Plan {
   remount: boolean;
   /** Validate the input (react, new data). */
   validate: boolean;
+  /** An update edited traces or the layout: strict mode validates every edit, style-only too. */
+  edited: boolean;
   /** The container resized. */
   resize: boolean;
   /** Traces were added, removed or reordered since the last run. */
@@ -283,6 +295,8 @@ export interface Plan {
   layoutOther: boolean;
   /** Interaction-mode layout edits (`dragmode`, `hovermode`, …). */
   layoutQuiet: boolean;
+  /** Fonts changed: the trace stages that measured text run again (see `TraceSlot.textCalc`). */
+  fonts: boolean;
   /** `layout.selections` changed (E5.12): select the points inside them again. */
   selections: boolean;
   /** A GUI edit moved or resized an existing selection (`selected` follows the reselection). */
@@ -314,6 +328,31 @@ interface PendingAppend {
   valid: boolean;
 }
 
+/**
+ * The figure and the trace slots before a batch of updates: what a rejected batch returns to. The
+ * figure is copied one level deep (edits replace `data` entries and the other fields, they never
+ * write into them).
+ */
+interface Checkpoint {
+  figure: Figure;
+  traces: (TraceSlot | undefined)[];
+}
+
+/** Edits of one trace, applied to a copy and not committed yet (see `#prepareTraces`). */
+interface TraceEdit {
+  index: number;
+  paths: string[];
+  before: unknown;
+  trace: unknown;
+}
+
+/** Layout edits applied to a copy and not committed yet (see `#prepareLayout`). */
+interface LayoutEdit {
+  edits: Record<string, unknown>;
+  paths: string[];
+  layout: Record<string, unknown>;
+}
+
 interface Waiter {
   resolve(chart: Chart): void;
   reject(error: unknown): void;
@@ -336,6 +375,14 @@ interface TraceSlot {
   selection: readonly number[] | null | undefined;
   /** The selection comes from `layout.selections` (E5.12): cleared when they go away. */
   layoutSelected?: boolean;
+  /**
+   * The trace's calc (or its group's `crossTraceCalc`), extremes or view measured text when they
+   * last ran (render's `textMeasurementCount`). Text is measured with whatever font the browser
+   * has at the time, so these run again when fonts change (`Plan.fonts`); the others do not.
+   */
+  textCalc?: boolean;
+  textExtremes?: boolean;
+  textPlot?: boolean;
 }
 
 interface ComponentSlot {
@@ -437,6 +484,7 @@ function emptyPlan(): Plan {
     full: false,
     remount: false,
     validate: false,
+    edited: false,
     resize: false,
     structural: false,
     layout: new Set(),
@@ -448,6 +496,7 @@ function emptyPlan(): Plan {
     rangesAltered: new Set(),
     layoutOther: false,
     layoutQuiet: false,
+    fonts: false,
     selections: false,
     selectionsEdited: false,
     inputSelection: new Set(),
@@ -503,6 +552,15 @@ function a11yChangeOf(plan: Plan): A11yChange {
 
 /** Hosts of offscreen export charts (no a11y mirror): see {@link Chart.toImage}. */
 const OFFSCREEN = new WeakSet<HTMLElement>();
+
+/**
+ * The update a font change makes: layout again (tick labels, legend, automargin), and the trace
+ * stages that measured text (`Plan.fonts`).
+ */
+function fontsChanged(plan: Plan): void {
+  plan.layout.add('layout');
+  plan.fonts = true;
+}
 
 function addStages(plan: Plan, index: number, stages: Iterable<Stage>): void {
   let set = plan.traces.get(index);
@@ -608,6 +666,8 @@ export class Chart {
   #subplots = new Map<string, SubplotSlot>();
   #components = new Map<string, ComponentSlot>();
   #plan: Plan | null = null;
+  /** Where the chart was when `#plan` was opened (it goes with the plan, see `#restore`). */
+  #before: Checkpoint | undefined;
   #waiters: Waiter[] = [];
   #layer: HoverLayer | undefined;
   #fx: Interaction | undefined;
@@ -714,9 +774,7 @@ export class Chart {
 
   #fontsChanged(): void {
     if (this.#destroyed) return;
-    this.#schedule((plan) => {
-      plan.layout.add('layout');
-    }).catch(() => undefined);
+    this.#schedule(fontsChanged).catch(() => undefined);
   }
 
   // ---- state ----------------------------------------------------------------------------------
@@ -1133,8 +1191,12 @@ export class Chart {
     traces?: TraceIndices,
   ): Promise<Chart> {
     return this.#schedule((plan) => {
-      this.#restyleInto(plan, traceUpdate, traces);
-      this.#relayoutInto(plan, layoutUpdate);
+      // Both halves are worked out before either is applied: a bad path in one applies neither.
+      const indices = this.#indices(traces, 'restyle');
+      const traceEdits = this.#prepareTraces(distributeRestyle(traceUpdate, indices));
+      const layoutEdit = this.#prepareLayout(layoutUpdate);
+      this.#commitRestyle(plan, traceEdits, traceUpdate, indices);
+      this.#commitLayout(plan, layoutEdit);
     });
   }
 
@@ -1144,11 +1206,8 @@ export class Chart {
    */
   update(patch: FigurePatch, options: { traces?: TraceIndices } = {}): Promise<Chart> {
     return this.#schedule((plan) => {
-      if (patch.config !== undefined) {
-        this.#figure.config = deepMerge(this.#figure.config ?? {}, patch.config);
-        plan.full = plan.remount = true;
-      }
-      if (patch.layout) this.#relayoutInto(plan, flattenPatch(patch.layout));
+      // Check every index and work out every edit first: a patch that is rejected applies nothing.
+      const perTrace: [number, AttributeUpdate][] = [];
       if (patch.data) {
         const targets =
           options.traces === undefined
@@ -1158,9 +1217,17 @@ export class Chart {
           const index = targets[k];
           if (!tracePatch || index === undefined) return;
           this.#checkIndex(index, 'update');
-          this.#editTraceInto(plan, index, flattenPatch(tracePatch));
+          perTrace.push([index, flattenPatch(tracePatch)]);
         });
       }
+      const traceEdits = this.#prepareTraces(perTrace);
+      const layoutEdit = patch.layout ? this.#prepareLayout(flattenPatch(patch.layout)) : undefined;
+      if (patch.config !== undefined) {
+        this.#figure.config = deepMerge(this.#figure.config ?? {}, patch.config);
+        plan.full = plan.remount = true;
+      }
+      this.#commitLayout(plan, layoutEdit);
+      this.#commitTraces(plan, traceEdits);
     });
   }
 
@@ -1528,34 +1595,69 @@ export class Chart {
       : undefined;
   }
 
-  #editTraceInto(plan: Plan, index: number, edits: AttributeUpdate): void {
-    const paths = Object.keys(edits).filter((p) => edits[p] !== undefined);
-    if (paths.length === 0) return;
-    const before = this.#figure.data[index];
-    const trace = applyEdits(before, edits);
-    this.#figure.data[index] = trace;
-    if (paths.some((p) => p.startsWith('selectedpoints'))) this.#followInputSelection(plan, index);
-    const stages = planTraceEdit(
-      this.#rulePaths(paths, before, trace),
-      inputTraceType(trace),
-      index,
-      this.#registry.core,
-      this.#fullFor(plan),
-    );
-    addStages(plan, index, stages);
+  /**
+   * Per-trace edits applied to copies of their traces, nothing committed: a malformed path throws
+   * here, before the figure or the plan changed. Edits of one trace build on each other.
+   */
+  #prepareTraces(edits: Iterable<readonly [number, AttributeUpdate]>): TraceEdit[] {
+    const out: TraceEdit[] = [];
+    const latest = new Map<number, unknown>();
+    for (const [index, update] of edits) {
+      const paths = Object.keys(update).filter((p) => update[p] !== undefined);
+      if (paths.length === 0) continue;
+      const before = latest.has(index) ? latest.get(index) : this.#figure.data[index];
+      const trace = applyEdits(before, update);
+      latest.set(index, trace);
+      out.push({ index, paths, before, trace });
+    }
+    return out;
   }
 
-  #restyleInto(plan: Plan, update: AttributeUpdate, traces: TraceIndices | undefined): void {
-    const indices = this.#indices(traces, 'restyle');
-    const perTrace = distributeRestyle(update, indices);
-    for (const [i, edits] of perTrace) this.#editTraceInto(plan, i, edits);
+  #commitTraces(plan: Plan, edits: readonly TraceEdit[]): void {
+    for (const { index, paths, before, trace } of edits) {
+      this.#figure.data[index] = trace;
+      plan.edited = true;
+      if (paths.some((p) => p.startsWith('selectedpoints'))) {
+        this.#followInputSelection(plan, index);
+      }
+      const stages = planTraceEdit(
+        this.#rulePaths(paths, before, trace),
+        inputTraceType(trace),
+        index,
+        this.#registry.core,
+        this.#fullFor(plan),
+      );
+      addStages(plan, index, stages);
+    }
+  }
+
+  #editTraceInto(plan: Plan, index: number, edits: AttributeUpdate): void {
+    this.#commitTraces(plan, this.#prepareTraces([[index, edits]]));
+  }
+
+  #commitRestyle(
+    plan: Plan,
+    edits: readonly TraceEdit[],
+    update: AttributeUpdate,
+    indices: readonly number[],
+  ): void {
+    this.#commitTraces(plan, edits);
     if (Object.keys(update).length > 0) {
       plan.after.push(() => this.#events.emit('restyle', { update, traces: indices }));
     }
   }
 
-  /** `payload`: the `relayout` event's (default: the edits); `null`: no event. */
-  #relayoutInto(plan: Plan, update: AttributeUpdate, payload?: AttributeUpdate | null): void {
+  #restyleInto(plan: Plan, update: AttributeUpdate, traces: TraceIndices | undefined): void {
+    const indices = this.#indices(traces, 'restyle');
+    const edits = this.#prepareTraces(distributeRestyle(update, indices));
+    this.#commitRestyle(plan, edits, update, indices);
+  }
+
+  /**
+   * Layout edits (with what they imply for ranges, axis types and matched axes) applied to a copy
+   * of the layout, nothing committed; `undefined` when there is nothing to edit.
+   */
+  #prepareLayout(update: AttributeUpdate): LayoutEdit | undefined {
     const edits = withMatchedAxes(
       withRangeImplications(
         axisTypeChangeEdits(update, this.#figure.layout, this.#full?.fullLayout),
@@ -1565,11 +1667,23 @@ export class Chart {
       this.#full?.fullLayout,
     );
     const paths = Object.keys(edits).filter((p) => edits[p] !== undefined);
-    if (paths.length === 0) return;
-    this.#figure.layout = applyEdits(this.#figure.layout, edits);
+    if (paths.length === 0) return undefined;
+    return { edits, paths, layout: applyEdits(this.#figure.layout, edits) };
+  }
+
+  /** `payload`: the `relayout` event's (default: the edits); `null`: no event. */
+  #commitLayout(plan: Plan, edit: LayoutEdit | undefined, payload?: AttributeUpdate | null): void {
+    if (!edit) return;
+    const { edits, paths } = edit;
+    this.#figure.layout = edit.layout;
+    plan.edited = true;
     classifyLayoutPaths(plan, paths, edits);
     for (const s of planLayoutEdit(paths, this.#registry.core)) plan.layout.add(s);
     if (payload !== null) plan.after.push(() => this.#events.emit('relayout', payload ?? edits));
+  }
+
+  #relayoutInto(plan: Plan, update: AttributeUpdate, payload?: AttributeUpdate | null): void {
+    this.#commitLayout(plan, this.#prepareLayout(update), payload);
   }
 
   #recordLayoutGui(update: AttributeUpdate): void {
@@ -1637,10 +1751,24 @@ export class Chart {
 
   #schedule(mutate: (plan: Plan) => void): Promise<Chart> {
     if (this.#destroyed) return Promise.reject(destroyedError());
-    const plan = (this.#plan ??= emptyPlan());
+    let plan = this.#plan;
+    const opened = plan === null;
+    if (!plan) {
+      plan = this.#plan = emptyPlan();
+      this.#before = this.#checkpoint();
+    }
     try {
       mutate(plan);
     } catch (error) {
+      // The update methods work out their edits before they apply any, so a call that throws has
+      // changed nothing. When no other call is pending, make sure of it, and leave no plan behind
+      // (a pending plan without a scheduled run would keep `#settle` waiting for one).
+      if (opened) {
+        const before = this.#before;
+        this.#plan = null;
+        this.#before = undefined;
+        this.#restore(plan, before);
+      }
       return Promise.reject(error);
     }
     return new Promise<Chart>((resolve, reject) => {
@@ -1667,8 +1795,10 @@ export class Chart {
       return;
     }
     const plan = this.#plan;
+    const before = this.#before;
     const waiters = this.#waiters;
     this.#plan = null;
+    this.#before = undefined;
     this.#waiters = [];
     if (this.#destroyed || !plan) {
       for (const w of waiters) w.resolve(this);
@@ -1678,6 +1808,9 @@ export class Chart {
       this.#run(plan);
       this.#root?.flush();
     } catch (error) {
+      // Strict mode rejected the figure, which happens before the run applies anything (nothing
+      // else throws a `ValidationError`): the batch's edits are taken back.
+      if (error instanceof ValidationError) this.#restore(plan, before);
       for (const w of waiters) w.reject(error);
       return;
     }
@@ -1693,6 +1826,33 @@ export class Chart {
     } finally {
       this.#settle(waiters);
     }
+  }
+
+  #checkpoint(): Checkpoint {
+    return {
+      figure: { ...this.#figure, data: [...this.#figure.data] },
+      traces: [...this.#traces],
+    };
+  }
+
+  /**
+   * Return to `before`, where the chart was when the rejected `plan` was opened: the figure as it
+   * was, and the trace slots where they were. What the plan held besides its edits is done after
+   * all: traces it had removed lost their views when they were removed and are drawn again, and a
+   * resize or a font change batched with it still happens.
+   */
+  #restore(plan: Plan, before: Checkpoint | undefined): void {
+    if (!before) return;
+    this.#figure = before.figure;
+    this.#traces = before.traces;
+    const { structural, resize, fonts } = plan;
+    if (this.#destroyed || !(structural || resize || fonts)) return;
+    this.#schedule((next) => {
+      next.structural = structural;
+      next.resize = resize;
+      next.fonts = fonts;
+      next.layout.add('layout');
+    }).catch(() => undefined);
   }
 
   /**
@@ -1713,9 +1873,7 @@ export class Chart {
           for (const w of waiters) w.resolve(this);
           return;
         }
-        this.#schedule((plan) => {
-          plan.layout.add('layout');
-        }).catch(() => undefined);
+        this.#schedule(fontsChanged).catch(() => undefined);
         this.#waiters.push(...waiters);
       };
       fonts.ready.then(resume, resume);
@@ -1916,7 +2074,10 @@ export class Chart {
       plan.full ||
       plan.validate ||
       (!plan.tween &&
-        (plan.layout.has('calc') || [...plan.traces.values()].some((s) => s.has('calc'))));
+        (plan.layout.has('calc') ||
+          [...plan.traces.values()].some((s) => s.has('calc')) ||
+          // Strict mode checks every edit before it is applied (a config change runs in full).
+          (plan.edited && this.#full?.fullConfig.strict === true)));
     const full = this.#defaults(this.#figure, validate, plan);
     this.#full = full;
     const { fullData, fullLayout, fullConfig } = full;
@@ -1988,10 +2149,17 @@ export class Chart {
         cellsRescaled(slot.module, trace, rescaled);
       const stages = plan.traces.get(i) ?? EMPTY_STAGES;
       const pending = plan.appends.get(i);
-      const tp = tracePlan(stages, plan.layout, {
-        forceCalc: (fresh[i] as boolean) || onRescaled || pending !== undefined,
+      const planned = tracePlan(stages, plan.layout, {
+        forceCalc:
+          (fresh[i] as boolean) ||
+          onRescaled ||
+          pending !== undefined ||
+          (plan.fonts && slot.textCalc === true),
         layoutRan,
       });
+      // A view that laid text out with the old font reads its trace again.
+      const tp =
+        plan.fonts && slot.textPlot === true ? { ...planned, plot: true, style: true } : planned;
       if (trace.visible === false) {
         slot.hasCalc = false;
         slot.calc = undefined;
@@ -2000,6 +2168,7 @@ export class Chart {
       }
       if (tp.calc) {
         const ctx = this.#calcContext(trace, i);
+        const measured = textMeasurementCount();
         const streamable =
           pending?.valid === true &&
           slot.hasCalc &&
@@ -2016,10 +2185,13 @@ export class Chart {
           previousCalcs[i] = slot.calc;
           slot.calc = next;
           slot.hasCalc = true;
+          // The points kept were measured by an earlier calc.
+          slot.textCalc = slot.textCalc === true || textMeasurementCount() !== measured;
           return { ...tp, append: append as TraceAppend };
         }
         slot.calc = slot.module?.calc ? slot.module.calc(trace, ctx) : undefined;
         slot.hasCalc = true;
+        slot.textCalc = textMeasurementCount() !== measured;
       }
       return tp;
     });
@@ -2039,10 +2211,12 @@ export class Chart {
           return;
         }
         const slot = this.#traces[i] as TraceSlot;
+        const measured = textMeasurementCount();
         slot.calc = slot.module?.calc
           ? slot.module.calc(trace, this.#calcContext(trace, i))
           : undefined;
         slot.hasCalc = true;
+        slot.textCalc = textMeasurementCount() !== measured;
         previousCalcs[i] = undefined;
         const { append: _, ...tp } = plans[i] as TraceUpdatePlan;
         plans[i] = { ...tp, calc: true, plot: true, style: true };
@@ -2054,9 +2228,10 @@ export class Chart {
       const slot = this.#traces[i] as TraceSlot;
       const tp = plans[i] as TraceUpdatePlan;
       if (trace.visible !== true) slot.extremes = undefined;
-      else if (tp.plot && slot.module?.extremes) {
+      else if ((tp.plot || (plan.fonts && slot.textExtremes === true)) && slot.module?.extremes) {
         const ctx = this.#calcContext(trace, i);
         const previous = slot.extremes;
+        const measured = textMeasurementCount();
         const merged =
           tp.append && previous && slot.module.extremesAppend
             ? slot.module.extremesAppend(
@@ -2069,6 +2244,10 @@ export class Chart {
               )
             : undefined;
         slot.extremes = merged ?? slot.module.extremes(slot.calc, trace, ctx);
+        // Merged extremes still hold what an earlier run measured for the points kept.
+        slot.textExtremes =
+          (merged !== undefined && slot.textExtremes === true) ||
+          textMeasurementCount() !== measured;
       }
     });
 
@@ -2595,12 +2774,17 @@ export class Chart {
           calc: (this.#traces[i] as TraceSlot).calc,
         }));
       if (entries.length === 0) continue;
+      const measured = textMeasurementCount();
       const reported = group.module.crossTraceCalc(entries, {
         fullLayout,
         subplot,
         xaxis: subplot.xaxis,
         yaxis: subplot.yaxis,
       });
+      if (textMeasurementCount() !== measured) {
+        // It wrote into the members' calcs: a font change recalculates them, which reruns it.
+        for (const e of entries) (this.#traces[e.index] as TraceSlot).textCalc = true;
+      }
       const changed = reported ? new Set(reported) : undefined;
       for (const e of entries) {
         if (changed && !changed.has(e.index)) continue;
@@ -2694,11 +2878,15 @@ export class Chart {
     const viewport = subplot?.viewport ?? (this.#requireRoot().overlay as Viewport);
     if (slot.view && slot.viewport !== viewport) this.#disposeView(slot);
     const ctx = this.#plotContext(index, trace, slot, subplot, viewport);
+    const measured = textMeasurementCount();
     if (!slot.view) {
       slot.viewport = viewport;
       slot.view = renderer.create(ctx);
+      slot.textPlot = textMeasurementCount() !== measured;
     } else if (tp.calc || tp.plot || tp.style || tp.transform || tp.selection === true) {
       slot.view.update(ctx, tp);
+      // A view that only moved or restyled may have kept the text it laid out before.
+      slot.textPlot = (!tp.plot && slot.textPlot === true) || textMeasurementCount() !== measured;
     }
   }
 

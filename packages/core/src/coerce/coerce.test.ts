@@ -156,6 +156,55 @@ describe('coerceValue', () => {
     expect(bad(d, 'abc')).toBe(true);
   });
 
+  it('data_array and arrayOk: 64-bit integer arrays become doubles', () => {
+    const d = attr.dataArray();
+    const signed = ok(d, BigInt64Array.of(1n, -2n, 3n));
+    expect(signed).toBeInstanceOf(Float64Array);
+    expect(Array.from(signed as Float64Array)).toEqual([1, -2, 3]);
+    expect(ok(d, BigUint64Array.of(0n, 2n ** 40n))).toEqual(Float64Array.of(0, 2 ** 40));
+    expect(ok(attr.number({ arrayOk: true }), BigInt64Array.of(4n, 5n))).toEqual(
+      Float64Array.of(4, 5),
+    );
+    // Rows of a 2D array (a heatmap `z`); rows of other types are kept.
+    const row = Float32Array.of(7);
+    const rows = ok(d, [BigInt64Array.of(1n, 2n), row]) as unknown[];
+    expect(rows[0]).toEqual(Float64Array.of(1, 2));
+    expect(rows[1]).toBe(row);
+    // Past 2^53 the nearest double is used.
+    expect(ok(d, BigInt64Array.of(2n ** 53n + 1n))).toEqual(Float64Array.of(2 ** 53));
+    // A changed value is read on the next coercion.
+    const live = BigInt64Array.of(1n);
+    expect(ok(d, live)).toEqual(Float64Array.of(1));
+    live[0] = 9n;
+    expect(ok(d, live)).toEqual(Float64Array.of(9));
+    // Not an array attribute: still invalid.
+    expect(bad(attr.number(), BigInt64Array.of(1n))).toBe(true);
+  });
+
+  it("data_array and arrayOk: Plotly's { dtype, bdata, shape } encoding is decoded", () => {
+    const d = attr.dataArray();
+    const spec = { dtype: 'f8', bdata: 'AAAAAAAA8D8AAAAAAAAAQA==' };
+    const x = ok(d, spec);
+    expect(x).toEqual(Float64Array.of(1, 2));
+    // The same spec object gives the same array, so a figure passed again is not new data.
+    expect(ok(d, spec)).toBe(x);
+    expect(ok(attr.number({ arrayOk: true, min: 0 }), { dtype: 'i1', bdata: 'AQID' })).toEqual(
+      Int8Array.of(1, 2, 3),
+    );
+    expect(ok(attr.color({ arrayOk: true }), { dtype: 'u1', bdata: 'AQID' })).toEqual(
+      Uint8Array.of(1, 2, 3),
+    );
+    // 2D: rows of typed arrays, as plotly.js decodes a `shape`.
+    const z = ok(d, { dtype: 'i2', bdata: 'AQACAAMABAAFAAYA', shape: '2, 3' });
+    expect(z).toEqual([Int16Array.of(1, 2, 3), Int16Array.of(4, 5, 6)]);
+    // Malformed specs, and specs where no array is accepted, are invalid values.
+    expect(bad(d, { dtype: 'f8', bdata: 'AAAA' })).toBe(true);
+    expect(bad(d, { dtype: 'i2', bdata: 'AQACAAMABAAFAAYA', shape: '4, 4' })).toBe(true);
+    expect(bad(d, { dtype: 'i8', bdata: 'AAAAAAAAAAA=' })).toBe(true);
+    expect(bad(attr.number(), spec)).toBe(true);
+    expect(ok(attr.any(), spec)).toBe(spec);
+  });
+
   it('info_array: per-position items, fixed length, item defaults', () => {
     const domain = attr.infoArray({
       items: [attr.number({ min: 0, max: 1, dflt: 0 }), attr.number({ min: 0, max: 1, dflt: 1 })],

@@ -1,8 +1,8 @@
 # ADR-028: The 3D globe is the orthographic view, drawn by sphere meshes
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-11, by the owner)
 - **Date:** 2026-10-04
-- **Deciders:** GEO8; the owner accepts or rejects
+- **Deciders:** GEO8; accepted by the owner
 - **Related stories:** backlog GEO8; plan E15.4; follows
   [ADR-025](025-geo-projection-pipeline.md) ("GEO8 decides … whether the 2D orthographic
   projection is drawn by that mesh") and [ADR-026](026-geo-packages-and-bundles.md)

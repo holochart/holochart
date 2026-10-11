@@ -50,7 +50,7 @@ export const imageItemAttributes = {
 export const imagesAttributes = attr.items(imageItemAttributes, {
   itemName: 'image',
   editType: ['plot'],
-  description: 'Pictures placed on the figure: logos, backgrounds (plan E5.6).',
+  description: 'Pictures placed on the figure: logos, backgrounds.',
 });
 
 /** A defaulted layout image. @internal */

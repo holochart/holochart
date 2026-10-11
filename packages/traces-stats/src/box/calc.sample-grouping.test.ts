@@ -95,6 +95,23 @@ describe('box calc: horizontal boxes', () => {
     expect(c.valueRange).toEqual([1, 10]);
   });
 
+  it('reads positions given as a typed-array spec, like positions given as an array', () => {
+    // Float64 1, 1, 2 and 5, 7, 9 in Plotly's `{ dtype, bdata }` form.
+    const f8 = (values: number[]) => ({
+      dtype: 'f8',
+      bdata: btoa(String.fromCharCode(...new Uint8Array(new Float64Array(values).buffer))),
+    });
+    const { trace, calc: c } = calcOne(
+      { name: 'B', x: f8([1, 1, 2]), y: f8([5, 7, 9]) },
+      axis('x', 'linear'),
+      axis('y', 'linear'),
+    );
+    // Without the positions the three samples would make one box at the trace name.
+    expect(trace['orientation']).toBe('v');
+    expect([...c.pos]).toEqual([1, 2]);
+    expect([...c.stats.n]).toEqual([2, 1]);
+  });
+
   it('x samples alone make one horizontal box at the trace name', () => {
     const { trace, calc: c } = calcOne(
       { name: 'B', x: [4, 1, 3, 2] },

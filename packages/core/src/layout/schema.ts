@@ -320,7 +320,7 @@ function axisSchema<const L extends 'x' | 'y'>(letter: L) {
           itemName: 'rangebreak',
           editType: 'calc',
           description:
-            'Spans hidden from the axis (plan E3.8): the axis skips them, so a weekday-only stock chart has no gaps for weekends or nights. Date and linear axes; data inside a break is not drawn. Ticks never land in a break; hover, zoom and pan work across breaks.',
+            'Spans hidden from the axis: the axis skips them, so a weekday-only stock chart has no gaps for weekends or nights. Date and linear axes; data inside a break is not drawn. Ticks never land in a break; hover, zoom and pan work across breaks.',
         },
       ),
 
@@ -403,7 +403,7 @@ function axisSchema<const L extends 'x' | 'y'>(letter: L) {
         dflt: false,
         editType: rangeEdit,
         description:
-          'Grow the figure margins so tick labels and the title fit (E4.2). `true` allows every direction; flags restrict it.',
+          'Grow the figure margins so tick labels and the title fit. `true` allows every direction; flags restrict it.',
       }),
 
       // --- Tick values (E3.3) --------------------------------------------------------------------
@@ -796,7 +796,7 @@ function axisSchema<const L extends 'x' | 'y'>(letter: L) {
         {
           text: attr.string({
             dflt: '',
-            description: 'Axis title text (supports rich-text tags, E2.10).',
+            description: 'Axis title text (supports rich-text tags).',
           }),
           font: axisFontSchema(
             'Axis title font. Defaults to `layout.font` with 1.2× size.',
@@ -873,7 +873,7 @@ export const rangesliderSchema = attr.object(
   {
     editType: 'layout',
     description:
-      'Range slider (plan E5.9): an overview of all the data under the x axis, with a window over the range in view. Drag the window to pan, its ends to zoom, or click elsewhere to center the window there; the axis range changes with one `relayout` at the end of the drag. Y axes anchored to an axis with a range slider default to `fixedrange: true`, as in Plotly.',
+      'Range slider: an overview of all the data under the x axis, with a window over the range in view. Drag the window to pan, its ends to zoom, or click elsewhere to center the window there; the axis range changes with one `relayout` at the end of the drag. Y axes anchored to an axis with a range slider default to `fixedrange: true`, as in Plotly.',
   },
 );
 
@@ -944,7 +944,7 @@ export const rangeselectorSchema = attr.object(
   {
     editType: 'layout',
     description:
-      'Range selector (plan E5.9): buttons over the chart that set the x range to a preset span ending at the current range end (last 6 months, year to date, all). Date axes only. The button whose range is in view shows as active.',
+      'Range selector: buttons over the chart that set the x range to a preset span ending at the current range end (last 6 months, year to date, all). Date axes only. The button whose range is in view shows as active.',
   },
 );
 
@@ -1023,7 +1023,7 @@ export const selectionsSchema = attr.items(
     itemName: 'selection',
     editType: 'plot',
     description:
-      'Selections as layout objects (plan E5.12): each box or lasso drag in `select` / `lasso` mode adds one (shift keeps the others), and every selection on a subplot selects the points inside it (`selectedpoints` follows). Set them to restore a selection; drag one to move or resize it; a double-click clears them.',
+      'Selections as layout objects: each box or lasso drag in `select` / `lasso` mode adds one (shift keeps the others), and every selection on a subplot selects the points inside it (`selectedpoints` follows). Set them to restore a selection; drag one to move or resize it; a double-click clears them.',
   },
 );
 
@@ -1129,7 +1129,7 @@ export const layoutSchema = attr.object(
       {
         text: attr.string({
           dflt: '',
-          description: 'Title text (supports rich-text tags, E2.10).',
+          description: 'Title text (supports rich-text tags).',
         }),
         font: fontSchema('Title font. Defaults to `layout.font` with 1.4× size.'),
         x: attr.number({
@@ -1180,7 +1180,7 @@ export const layoutSchema = attr.object(
           values: [false, 'hide', 'show'],
           dflt: false,
           description:
-            'Uniform size for the text inside bars and pie slices, per trace type (E4.6): labels are drawn at the smallest fitted size; `hide` drops labels that would be smaller than `minsize`, `show` draws them at the uniform size. `false` lets every label scale on its own.',
+            'Uniform size for the text inside bars and pie slices, per trace type: labels are drawn at the smallest fitted size; `hide` drops labels that would be smaller than `minsize`, `show` draws them at the uniform size. `false` lets every label scale on its own.',
         }),
         minsize: attr.number({
           min: 0,
@@ -1189,7 +1189,7 @@ export const layoutSchema = attr.object(
             'Minimum text size in px for `uniformtext.mode`. Also raises trace fonts smaller than it.',
         }),
       },
-      { editType: 'plot', description: 'Uniform text sizing for bar and pie labels (E4.6).' },
+      { editType: 'plot', description: 'Uniform text sizing for bar and pie labels.' },
     ),
     hovermode: attr.enumerated({
       values: ['x', 'y', 'closest', false, 'x unified', 'y unified'],
@@ -1236,7 +1236,7 @@ export const layoutSchema = attr.object(
           description: 'Whether layout or trace changes animate first.',
         }),
       },
-      { editType: 'none', description: 'Default transition for animated updates (E7.3).' },
+      { editType: 'none', description: 'Default transition for animated updates.' },
     ),
     uirevision: attr.any({
       editType: 'none',

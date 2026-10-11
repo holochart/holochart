@@ -259,6 +259,22 @@ export const BUDGET_CHANGES: readonly BudgetChange[] = [
     cause:
       'Calibrate the first alpha against Linux CI: the same full ESM entry measures 538.05 kB locally and 540.009 kB on CI (run 37996311768), exceeding the old budget by 9 bytes. The graph-era Express helpers and shared runtime changes left less room than the estimated 0.3% CI difference; the observed difference is 0.36%. Geo and graph trace implementations remain separate optional entries and heavy rendering remains lazy. This 2 kB adjustment provides 0.37% headroom above the measured CI artifact without changing shipped code or the 560 kB hard ceiling; moving public synchronous Express helpers to async imports would change their API.',
   },
+  {
+    id: 'partial-core-scatter',
+    from: '157 kB',
+    to: '159 kB',
+    date: '2026-10-11',
+    cause:
+      "The bug fixes of backlogv2 V2-A3: 157.31 kB measured locally, 2.13 kB more than the commit before them (155.18 kB, 1e5e4cd). Measured by applying the fixes one package at a time: core 1.00 kB, render 0.36 kB, runtime 0.50 kB, traces-basic 0.27 kB. Core: a data array may now be given in Plotly's `{ dtype, bdata, shape }` form, so coercion reaches the typed-array decoder (base64, byte order, shape), which only `fromJSON` used until now and this entry did not carry; also the conversion of 64-bit integer arrays and the match-group fix. Render: text promises settle after a bounded wait when a font or the text worker cannot load. Runtime: strict mode validates every edit and a rejected update is rolled back; a font change re-reads the traces that measured text. Traces-basic: color lists as `colorscale` and the warning for an unknown name. CI measures about 0.3 % above a local build, which puts this entry near 157.8 kB against 157. None of it can load lazily: coercion, validation and the bookkeeping of fonts run synchronously on every figure, and a lazy decoder would make defaults asynchronous. The raise leaves about 0.7 % above the expected CI size.",
+  },
+  {
+    id: 'partial-basic',
+    from: '250 kB',
+    to: '252 kB',
+    date: '2026-10-11',
+    cause:
+      'The same fixes as the `partial-core-scatter` line of this date: 250.15 kB measured locally, 1.28 kB more than the commit before them (248.87 kB, 1e5e4cd). By package: render 0.36 kB, runtime 0.50 kB, traces-basic 0.27 kB and core 0.14 kB, since this entry already carried the typed-array decoder through `fromJSON`. CI measures about 0.3 % above a local build: about 250.9 kB against 250. Not lazy for the same reason: all of it runs synchronously in coercion, validation and the update pipeline. The raise leaves about 0.4 % above the expected CI size.',
+  },
 ];
 
 /** Fewest characters a cause can have and still say what grew. */

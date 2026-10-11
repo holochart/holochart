@@ -62,6 +62,15 @@
  * `Object3D` root that the `BatchedText` joins on load (it forwards `renderOrder` to the batch, so
  * sorting is unchanged). {@link TextPrimitive.ready} covers the load too. Once loaded, later
  * primitives attach synchronously. Layout does not wait: the metrics oracle is synchronous.
+ *
+ * ## Typesetting that never finishes
+ *
+ * troika does not call back when it cannot typeset: its worker is blocked (a Content Security
+ * Policy without `worker-src blob:`), a font file cannot be fetched, or a label has a character
+ * its font lacks and the fallback font troika then fetches from its CDN (`unicodeFontsURL`) is
+ * unreachable. The labels of that batch then stay undrawn, and nothing reports it. So
+ * {@link TextPrimitive.ready} waits for a typesetting only so long ({@link TYPESET_TIMEOUT}), then
+ * resolves and warns once; text that arrives later is still drawn.
  */
 import type { BatchedText, Text, TroikaTextBuilderConfig } from 'troika-three-text';
 import {
@@ -239,17 +248,17 @@ export function preloadTextFont(options: {
   };
   const characters = options.characters ?? ' ';
   const faces = loadDefaultFontFaces([request]) ?? Promise.resolve();
-  return Promise.all([loadTextEngine(), faces]).then(
-    ([engine]) =>
-      new Promise((resolve) => {
-        const font = resolveDrawnFontURL(request.family, request.weight, request.style) ?? null;
-        engine.preloadFont({ font, characters }, (info) => {
-          // Labels already drawn may be waiting for these glyphs (text-atlas.ts).
-          noteGlyphAtlas(info?.sdfTexture);
-          resolve();
-        });
-      }),
-  );
+  return Promise.all([loadTextEngine(), faces]).then(([engine]) => {
+    const preloaded = new Promise<void>((resolve) => {
+      const font = resolveDrawnFontURL(request.family, request.weight, request.style) ?? null;
+      engine.preloadFont({ font, characters }, (info) => {
+        // Labels already drawn may be waiting for these glyphs (text-atlas.ts).
+        noteGlyphAtlas(info?.sdfTexture);
+        resolve();
+      });
+    });
+    return boundTypesetting(preloaded).done;
+  });
 }
 
 interface Member {
@@ -260,6 +269,59 @@ interface Member {
 }
 
 const DEFAULT_POOL_SIZE = 256;
+
+/**
+ * How long {@link TextPrimitive.ready} waits for one typesetting, in ms (see "Typesetting that
+ * never finishes" in the module notes). Long enough for a first typesetting on a slow device:
+ * worker start, font parsing and glyph generation.
+ */
+const TYPESET_TIMEOUT = 10_000;
+/**
+ * The wait while the last typesetting to end ran out of time: whatever blocked it most likely
+ * blocks this one too, and an update must not take {@link TYPESET_TIMEOUT} each time.
+ */
+const TYPESET_STALLED_TIMEOUT = 250;
+
+/** The last typesetting to end ran out of time (cleared when one finishes). */
+let typesettingStalled = false;
+let stallReported = false;
+
+/**
+ * Wait for `typeset`, but not forever: `done` resolves when it does, after the time limit (with a
+ * warning, once per page), or when `cancel` is called, whichever is first. It never rejects.
+ */
+function boundTypesetting(typeset: Promise<unknown>): { done: Promise<void>; cancel: () => void } {
+  let cancel: () => void = () => undefined;
+  const done = new Promise<void>((resolve) => {
+    const limit = typesettingStalled ? TYPESET_STALLED_TIMEOUT : TYPESET_TIMEOUT;
+    const timer = setTimeout(() => {
+      typesettingStalled = true;
+      reportStalledTypesetting();
+      resolve();
+    }, limit);
+    cancel = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    void typeset.then(() => {
+      typesettingStalled = false;
+      cancel();
+    });
+  });
+  return { done, cancel };
+}
+
+function reportStalledTypesetting(): void {
+  if (stallReported) return;
+  stallReported = true;
+  console.warn(
+    `[holochart] text was not typeset within ${TYPESET_TIMEOUT / 1000} s and may be missing. ` +
+      'The text worker or a font could not be loaded: a Content Security Policy that blocks ' +
+      'blob: workers or fonts (see configureText({ useWorker, defaultFontFaces })), or a ' +
+      'character the font lacks whose fallback font is fetched from a CDN that cannot be ' +
+      'reached (see configureText({ unicodeFontsURL }) and registerFont).',
+  );
+}
 
 const tmpBase = new Vector3();
 const tmpView = new Vector3();
@@ -316,6 +378,8 @@ export class TextPrimitive implements Primitive<TextData> {
   private transform: DataTransform = { ...IDENTITY_TRANSFORM };
   private viewport: ViewportSize = { width: 0, height: 0, pixelRatio: 1 };
   private pending: Promise<void> = Promise.resolve();
+  /** Stops waiting for each typesetting still in flight (see {@link boundTypesetting}). */
+  private readonly waits = new Set<() => void>();
   private disposed = false;
 
   /** Placement must be recomputed on the next frame (per-frame modes). */
@@ -357,7 +421,8 @@ export class TextPrimitive implements Primitive<TextData> {
   /**
    * Resolves when all typesetting requested so far has completed and been packed, including
    * loading the text engine first if labels arrived before it had loaded, and the default font
-   * faces the labels are drawn with.
+   * faces the labels are drawn with. Never rejects, and never waits forever: a typesetting that
+   * does not finish in time is given up on with a warning (the module notes say when).
    */
   get ready(): Promise<void> {
     return this.pending;
@@ -433,6 +498,8 @@ export class TextPrimitive implements Primitive<TextData> {
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    // Nothing is left to draw: `ready` no longer waits for typesetting in flight.
+    for (const stop of [...this.waits]) stop();
     this.unwatchAtlas?.();
     this.unwatchAtlas = null;
     const batch = this.batch;
@@ -826,8 +893,8 @@ export class TextPrimitive implements Primitive<TextData> {
   }
 
   private startSync(batch: BatchedText): Promise<void> {
-    const done = new Promise<void>((resolve) => batch.sync(resolve));
-    void done.then(() => {
+    const typeset = new Promise<void>((resolve) => batch.sync(resolve));
+    void typeset.then(() => {
       // Before the disposed check: the glyphs this sync generated are in the shared atlas either
       // way, and other primitives' labels may be waiting for them.
       noteGlyphAtlas(batch.textRenderInfo?.sdfTexture);
@@ -838,6 +905,10 @@ export class TextPrimitive implements Primitive<TextData> {
       }
       this.context.invalidate();
     });
+    // troika may never call back (blocked worker, unreachable font): `ready` must still settle.
+    const { done, cancel } = boundTypesetting(typeset);
+    this.waits.add(cancel);
+    void done.then(() => this.waits.delete(cancel));
     this.pending = Promise.all([this.pending, done]).then(() => undefined);
     return done;
   }

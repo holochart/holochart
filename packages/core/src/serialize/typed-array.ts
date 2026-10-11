@@ -330,3 +330,36 @@ export function decodeTypedArray(
   }
   throw new Error(`typed array shape '${String(spec.shape)}' has more than 3 dimensions`);
 }
+
+/** What a spec object decoded to, with the fields it was decoded from. */
+interface DecodedSpec {
+  readonly dtype: string;
+  readonly bdata: string | ArrayBuffer;
+  readonly shape: TypedArraySpec['shape'];
+  readonly value: DecodedArray;
+}
+
+const decodedSpecs = new WeakMap<object, DecodedSpec>();
+
+/**
+ * {@link decodeTypedArray} for figure input (plotly.js decodes specs where it coerces data
+ * arrays). A spec object is decoded once: defaults run on every update, and a figure passed again
+ * must give the same arrays, since data arrays are compared by reference. The stored result is
+ * dropped when the spec's `dtype`, `bdata` or `shape` is replaced. A malformed spec gives
+ * `undefined` instead of throwing, so the caller can treat it as any other invalid value.
+ * @internal
+ */
+export function typedArrayFromSpec(spec: TypedArraySpec): DecodedArray | undefined {
+  const hit = decodedSpecs.get(spec);
+  if (hit && hit.dtype === spec.dtype && hit.bdata === spec.bdata && hit.shape === spec.shape) {
+    return hit.value;
+  }
+  let value: DecodedArray;
+  try {
+    value = decodeTypedArray(spec);
+  } catch {
+    return undefined;
+  }
+  decodedSpecs.set(spec, { dtype: spec.dtype, bdata: spec.bdata, shape: spec.shape, value });
+  return value;
+}

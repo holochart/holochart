@@ -21,11 +21,11 @@ Each gallery count includes cross-listed examples once within that family.
 
 Each chart type is drawn by one or more **trace types**. Some chart types are their own trace type
 (`bar`, `pie`). Others are a way of configuring an existing one: a line chart is a `scatter` trace
-with `mode: 'lines'`. The milestone column shows when each chart type is planned to land. See the
-[roadmap](/roadmap) for what each milestone contains.
+with `mode: 'lines'`. The milestone column shows the milestone a chart type belongs to. See the
+[roadmap](/roadmap) for what each milestone contains and for what is planned next.
 
-Linked charts have a page, or a section of a page until they get their own. Pages for other chart
-types are added as their traces land.
+Linked charts are built and have a page, or a section of a page until they get their own. Rows
+without a link are planned and not built yet.
 
 ## Basic
 
@@ -121,7 +121,7 @@ the differences from Plotly.
 Projected maps were built ahead of their milestone: the geo subplot, `scattergeo` and
 `choropleth` are available. They are in `@mk7s/holochart-traces-geo`, which the full bundle
 leaves out, so a page with a map adds `import '@mk7s/holochart/geo'`: see
-[Maps](/fundamentals/maps#adding-the-package). The 3D globe and tile maps are planned.
+[Maps](/fundamentals/maps#adding-the-package). The 3D globe is built too; tile maps are planned.
 
 | Chart                                                                   | Trace type(s)                         | Milestone |
 | ----------------------------------------------------------------------- | ------------------------------------- | --------- |
@@ -130,7 +130,7 @@ leaves out, so a page with a map adds `import '@mk7s/holochart/geo'`: see
 | [Bubble map](/charts/maps/scattergeo#bubble-map)                        | `scattergeo` (sized markers)          | M8        |
 | [Choropleth](/charts/maps/choropleth)                                   | `choropleth`                          | M8        |
 | [Projections & Geo Subplots](/fundamentals/maps)                        | `layout.geo`                          | M8        |
-| 3D Globe                                                                | `scattergeo`, `choropleth` on a globe | M8        |
+| [3D Globe](/fundamentals/maps#the-3d-globe)                             | `scattergeo`, `choropleth` on a globe | M8        |
 | Tile maps                                                               | `scattermap`, `choroplethmap`         | M8        |
 | Density map                                                             | `densitymap`                          | M8        |
 

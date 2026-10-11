@@ -250,6 +250,9 @@ importers:
       '@mk7s/holochart-render':
         specifier: workspace:*
         version: link:../packages/render
+      '@mk7s/hologpu':
+        specifier: link:../../research/hologpu/packages/hologpu
+        version: link:../../research/hologpu/packages/hologpu
       three:
         specifier: 'catalog:'
         version: 0.186.0
@@ -266,6 +269,12 @@ importers:
       '@types/topojson-client':
         specifier: 'catalog:'
         version: 3.1.5
+      '@types/topojson-specification':
+        specifier: 'catalog:'
+        version: 1.0.5
+      '@webgpu/types':
+        specifier: ^0.1.74
+        version: 0.1.74
       d3-geo:
         specifier: 'catalog:'
         version: 3.1.1
@@ -2148,6 +2157,9 @@ packages:
 
   '@vueuse/shared@12.8.2':
     resolution: {integrity: sha512-dznP38YzxZoNloI0qpEfpkms8knDtaoQ6Y/sfS0L7Yki4zh40LFHEhur0odJC6xTHG5dxWVPiUWBXn+wCG2s5w==}
+
+  '@webgpu/types@0.1.74':
+    resolution: {integrity: sha512-lgiI4hbuLcI9unnm2cL/tvCaQU45dp0xcLWJh5uB/9MBGvIA4F8XIk7nSiBeg+K4xWGYwgZKn80LmERI5CxoTA==}
 
   '@yuku-codegen/binding-android-arm64@0.10.2':
     resolution: {integrity: sha512-Oc2KInVkPfUjEB4PeV6X0NvIoyYTzDe/WmqFrTwBqKs6YKnz4A7XwWQvJTb7M0rLz9a6WgpUUiiS5QKaCi4O/g==}
@@ -4849,6 +4861,8 @@ snapshots:
       vue: 3.5.43(typescript@6.0.3)
     transitivePeerDependencies:
       - typescript
+
+  '@webgpu/types@0.1.74': {}
 
   '@yuku-codegen/binding-android-arm64@0.10.2':
     optional: true

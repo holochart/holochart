@@ -11,7 +11,7 @@ import NotebookLinks from '../../.vitepress/theme/components/NotebookLinks.vue';
 # Learning notebooks
 
 These fourteen notebooks use explicit sample data and have matching Python source and web cells.
-Start from the [development-checkout setup](/getting-started/python-jupyter), choose its kernel,
+Start from the [source setup](/getting-started/python-jupyter), choose its kernel,
 restart and run all cells. Dependencies below are in addition to a notebook host with a widget
 manager and WebGL2. See [tested environments and verification scope](/python/environments).
 The category starters use complete dictionary figures. The API introductions also cover Plotly,

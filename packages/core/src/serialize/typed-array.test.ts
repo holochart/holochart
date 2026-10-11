@@ -11,6 +11,7 @@ import {
   HOST_LITTLE_ENDIAN,
   isTypedArraySpec,
   littleEndianBytes,
+  typedArrayFromSpec,
 } from './typed-array.ts';
 
 /** Reference base64 via the platform's `btoa` (independent of the codec under test). */
@@ -237,6 +238,42 @@ describe('decoding Plotly-encoded specs', () => {
     expect(() => decodeTypedArray({ dtype: 'u1', bdata: 'AAAA', shape: '1,1,1,3' })).toThrow(
       /more than 3 dimensions/,
     );
+  });
+});
+
+describe('typedArrayFromSpec (figure input)', () => {
+  it('decodes a spec object once and returns the same array for it', () => {
+    const spec = { dtype: 'f8', bdata: 'AAAAAAAA8D8AAAAAAAAAQA==' };
+    const a = typedArrayFromSpec(spec);
+    sameTyped(a as TypedArray, Float64Array.of(1, 2));
+    expect(typedArrayFromSpec(spec)).toBe(a);
+    // Another object with the same content is another array.
+    expect(typedArrayFromSpec({ ...spec })).not.toBe(a);
+  });
+
+  it('decodes again when dtype, bdata or shape is replaced', () => {
+    const spec: { dtype: string; bdata: string; shape?: string } = {
+      dtype: 'u1',
+      bdata: 'AQIDBA==',
+    };
+    const first = typedArrayFromSpec(spec);
+    sameTyped(first as TypedArray, Uint8Array.of(1, 2, 3, 4));
+    spec.bdata = 'BAMCAQ==';
+    const second = typedArrayFromSpec(spec);
+    sameTyped(second as TypedArray, Uint8Array.of(4, 3, 2, 1));
+    spec.dtype = 'i1';
+    sameTyped(typedArrayFromSpec(spec) as TypedArray, Int8Array.of(4, 3, 2, 1));
+    spec.shape = '2,2';
+    const rows = typedArrayFromSpec(spec) as TypedArray[];
+    expect(rows).toHaveLength(2);
+    sameTyped(rows[1] as TypedArray, Int8Array.of(2, 1));
+    expect(typedArrayFromSpec(spec)).toBe(rows);
+  });
+
+  it('gives undefined for a spec that cannot be decoded', () => {
+    expect(typedArrayFromSpec({ dtype: 'f8', bdata: 'AAAA' })).toBeUndefined();
+    expect(typedArrayFromSpec({ dtype: 'u1', bdata: 'AAAA', shape: '2,2' })).toBeUndefined();
+    expect(typedArrayFromSpec({ dtype: 'u1', bdata: '!!' })).toBeUndefined();
   });
 });
 

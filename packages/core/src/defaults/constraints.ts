@@ -163,10 +163,13 @@ function copyValue(v: unknown): unknown {
  * without `matches` (its root) if the user set it there, else from the first axis of the group
  * where the user set it. When an explicit full `range` was synced and no axis sets `autorange`,
  * `autorange` becomes `false`. Otherwise the root's full value is used. The value is copied to
- * every axis of the group. An item array (`rangebreaks`) set on another axis than the root is
- * resolved again against the root's template, as if the user had set it on the root: the full
- * output fed back in sets it on the root, and template items only one axis' template names would
- * otherwise turn into dangling `templateitemname` references there (supply-defaults idempotence).
+ * every axis of the group; when the root has none either, no axis of the group keeps one: a
+ * `range` that only the template of a linked axis gives would stay on that axis alone, and the
+ * full output fed back in would set it for the whole group (supply-defaults idempotence). An item
+ * array (`rangebreaks`) set on another axis than the root is resolved again against the root's
+ * template, as if the user had set it on the root: the full output fed back in sets it on the
+ * root, and template items only one axis' template names would otherwise turn into dangling
+ * `templateitemname` references there (supply-defaults idempotence).
  *
  * @param ids - Every cartesian axis id, x axes first, then y axes, each by number.
  * @param templateLayout - The template's layout (`constraintoward`, and synced item arrays).
@@ -322,7 +325,12 @@ export function supplyAxisConstraints(
       }
       if (attr === 'autorange' && value === undefined && explicitRange) value = false;
       if (value === undefined && root) value = root[attr];
-      if (value === undefined) continue;
+      if (value === undefined) {
+        // Nobody set it and the root has none: the group has none. What is left is a value
+        // that only the template of a linked axis gives (a `range`, a `categoryarray`).
+        for (const id of members) delete (axis(id) as Record<string, unknown>)[attr];
+        continue;
+      }
       for (const id of members) (axis(id) as Record<string, unknown>)[attr] = copyValue(value);
     }
     // As for a single axis (`defaults/axes.ts`): `reversed` with a synced partial range only

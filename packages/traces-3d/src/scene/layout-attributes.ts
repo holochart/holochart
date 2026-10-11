@@ -127,8 +127,7 @@ export const sceneAxisAttributes = /* @__PURE__ */ (() =>
       showspikes: attr.boolean({
         dflt: true,
         editType: 'plot',
-        description:
-          "On hover, draw spikes from the hovered point to this axis' walls (3D hover, plan E14.1d).",
+        description: "On hover, draw spikes from the hovered point to this axis' walls.",
       }),
       spikesides: attr.boolean({
         dflt: true,

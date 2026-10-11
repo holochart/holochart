@@ -23,14 +23,17 @@ records.sort((a, b) => b.exactPixels - a.exactPixels || a.id.localeCompare(b.id)
 
 const pct = (x: number): string => `${(x * 100).toFixed(4)}%`;
 const exactMatch = records.filter((r) => r.exactPixels === 0).length;
-const failed = records.filter((r) => !r.pass).length;
+const failed = records.filter((r) => !r.pass && r.gated !== false).length;
+// Baselines of another platform (`platform.ts`): compared and listed, not failed. None in CI.
+const ungated = records.filter((r) => !r.pass && r.gated === false).length;
 
 const lines = [
   '### Visual diff (pixelmatch vs exact)',
   '',
   records.length
     ? `${records.length} examples compared: ${exactMatch} bit-exact, ` +
-      `${records.length - exactMatch - failed} within tolerance, ${failed} failed.`
+      `${records.length - exactMatch - failed - ungated} within tolerance, ${failed} failed` +
+      (ungated ? `, ${ungated} not gated on this platform.` : '.')
     : '_No diff records found (did `pnpm test:visual` run?)._',
   '',
 ];
@@ -42,7 +45,7 @@ if (drifted.length) {
     ...drifted.map(
       (r) =>
         `| \`${r.id}\` | ${r.diffPixels} | ${pct(r.ratio)} | ${pct(r.tolerance)} | ` +
-        `${r.tileDiffPixels} | ${r.exactPixels} | ${r.maxDelta} | ${r.pass ? '✅' : '❌'} |`,
+        `${r.tileDiffPixels} | ${r.exactPixels} | ${r.maxDelta} | ${r.pass ? '✅' : r.gated === false ? 'not gated' : '❌'} |`,
     ),
     '',
     'Exact counts are informational: tests gate on pixelmatch only (ADR-018), over the whole ' +

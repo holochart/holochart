@@ -1,8 +1,8 @@
 # ADR-025: Geo projects on the CPU through d3-geo, at 110m while the view rotates
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-11, by the owner)
 - **Date:** 2026-10-04
-- **Deciders:** GEO1; the owner accepts or rejects
+- **Deciders:** GEO1; accepted by the owner
 - **Related stories:** backlog GEO1, GEO2, GEO3, GEO4, GEO5, GEO8; plan E15.1; builds on
   [ADR-006](006-d3-micro-libraries.md) and [ADR-008](008-pixel-space-orthographic-2d-camera.md)
 

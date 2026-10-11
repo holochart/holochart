@@ -34,6 +34,22 @@ describe('traceRenderOrder (Plotly draw order)', () => {
     expect(drawOrder([trace('scatter', 2), trace('bar', 2), trace('bar')])).toEqual([2, 1, 0]);
   });
 
+  it('draws histograms in the bar layer, below scatter (Plotly: histogram plots in barlayer)', () => {
+    expect(drawOrder([trace('scatter'), trace('histogram')])).toEqual([1, 0]);
+    // Bars and histograms share one layer: trace order decides.
+    expect(drawOrder([trace('histogram'), trace('bar'), trace('histogram')])).toEqual([0, 1, 2]);
+    expect(traceRenderOrder(trace('histogram'), 0)).toBe(traceRenderOrder(trace('bar'), 0));
+    // Above heatmaps and contours, below boxes.
+    expect(drawOrder([trace('box'), trace('histogram'), trace('contour')])).toEqual([2, 1, 0]);
+  });
+
+  it('gives 2D histograms the layers of the traces they draw as', () => {
+    expect(traceRenderOrder(trace('histogram2d'), 0)).toBe(traceRenderOrder(trace('heatmap'), 0));
+    expect(traceRenderOrder(trace('histogram2dcontour'), 0)).toBe(
+      traceRenderOrder(trace('contour'), 0),
+    );
+  });
+
   it('draws unknown types in the top layer', () => {
     expect(drawOrder([trace('custom'), trace('bar')])).toEqual([1, 0]);
     expect(traceRenderOrder(trace('custom'), 0)).toBe(traceRenderOrder(trace('scatter'), 0));

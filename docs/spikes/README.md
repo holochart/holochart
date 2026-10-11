@@ -3,15 +3,16 @@
 Evidence for the M0 architecture decisions, measured against the real M0 implementations. See plan
 story E0.7 and the ADRs in [`docs/adr/`](../adr/README.md).
 
-| Spike                              | Question                                            | Status       | Verdict                                                                                                                                                                                     |
-| ---------------------------------- | --------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [A: markers](a-markers.md)         | Can instanced SDF markers hit the G5 targets?       | Measured     | ✅ 100k first render 23 ms, 1M restyle 7 ms. After the shader optimization, 1M markers pan at 119–160 fps at 3 px and 70–77 fps at 8 px (1.4–1.7× a trivial point shader; was 3.5×).        |
-| [B: lines](b-lines.md)             | Our `LinePrimitive` vs three's `Line2`              | Measured     | ✅ after fixing a critical setup trap (1×1 default resolution made every quad cover the canvas). 1M segments: 58 fps solid, 22 fps dashed (~5–10× `Line2`'s GPU time); better join quality. |
-| [C: text](c-text.md)               | 2,000 labels: WebGL SDF vs DOM overlay (ADR-005)    | Not measured | Deferred to M7 benchmarking                                                                                                                                                                 |
-| [D: viewports](d-viewports.md)     | 9 scissored viewports vs 9 canvases (ADR-004)       | Not measured | Deferred to M7 benchmarking (after the spike B fix)                                                                                                                                         |
-| [E: determinism](e-determinism.md) | Are CI screenshots reproducible? (ADR-018, risk R4) | Measured     | ✅ SwiftShader is bit-stable run to run and across macOS/Linux; keep it as the only blocking gate                                                                                           |
+| Spike                              | Question                                            | Status   | Verdict                                                                                                                                                                                                     |
+| ---------------------------------- | --------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [A: markers](a-markers.md)         | Can instanced SDF markers hit the G5 targets?       | Measured | ✅ 100k first render 23 ms, 1M restyle 7 ms. After the shader optimization, 1M markers pan at 119–160 fps at 3 px and 70–77 fps at 8 px (1.4–1.7× a trivial point shader; was 3.5×).                        |
+| [B: lines](b-lines.md)             | Our `LinePrimitive` vs three's `Line2`              | Measured | ✅ after fixing a critical setup trap (1×1 default resolution made every quad cover the canvas). 1M segments: 58 fps solid, 22 fps dashed (~5–10× `Line2`'s GPU time); better join quality.                 |
+| [C: text](c-text.md)               | 2,000 labels: WebGL SDF vs DOM overlay (ADR-005)    | Measured | ✅ WebGL text pans 2,000 labels in 3.5–4 ms a frame in one draw call. The first layout is the weak spot (about 90 ms warm, 180–300 ms cold). The DOM is cheaper on what was measured, which excludes paint. |
+| [D: viewports](d-viewports.md)     | 9 scissored viewports vs 9 canvases (ADR-004)       | Measured | ✅ One context builds 2.8× faster and redraws 4.1× faster when all panels move; it is 2× slower when one panel changes (4 against 2 ms). Chromium drops the oldest context at the 17th.                     |
+| [E: determinism](e-determinism.md) | Are CI screenshots reproducible? (ADR-018, risk R4) | Measured | ✅ SwiftShader is bit-stable run to run and across macOS/Linux; keep it as the only blocking gate                                                                                                           |
 
-Spikes C and D move to the M7 benchmarking pass (plan E16.1), by decision on 2026-09-23.
+Spikes C and D were measured on 2026-10-11 on a machine under load. Their ratios are sound; their
+absolute numbers want a rerun on a quiet machine (backlogv2 V2-C1).
 
 ## GEO1 spikes
 

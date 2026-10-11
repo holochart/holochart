@@ -2,6 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it, vi } from 'vitest';
 import { fixtureRegistry } from '../__fixtures__/modules.ts';
 import { DEFAULT_COLORWAY } from '../layout/schema.ts';
+import { createScale } from '../scales/scale.ts';
 import { stripInternal } from '../util/objects.ts';
 import { ValidationError } from '../validate/issues.ts';
 import { autoType } from './axes.ts';
@@ -293,6 +294,58 @@ describe('supplyDefaults: datasets (E1.6)', () => {
     });
     expect(issues.map((i) => i.path)).toEqual(['data[0].y']);
     expect(fullData[0]?.['y']).toBeUndefined();
+  });
+});
+
+describe('supplyDefaults: other forms of data arrays', () => {
+  const F8_1_2 = 'AAAAAAAA8D8AAAAAAAAAQA==';
+
+  it("decodes Plotly's { dtype, bdata } typed arrays in traces and in the layout", () => {
+    const input = {
+      x: { dtype: 'f8', bdata: F8_1_2 },
+      y: { dtype: 'i1', bdata: 'AwQ=' },
+      mode: 'markers',
+      marker: { size: { dtype: 'u1', bdata: 'BQY=' } },
+    };
+    const figure = {
+      data: [input],
+      layout: { xaxis: { tickvals: { dtype: 'f8', bdata: F8_1_2 }, ticktext: ['a', 'b'] } },
+    };
+    const first = run(figure);
+    expect(first.issues).toEqual([]);
+    const trace = first.fullData[0]!;
+    expect(trace.visible).toBe(true);
+    expect(trace['x']).toEqual(Float64Array.of(1, 2));
+    expect(trace['y']).toEqual(Int8Array.of(3, 4));
+    expect((trace['marker'] as Record<string, unknown>)['size']).toEqual(Uint8Array.of(5, 6));
+    expect((first.fullLayout['xaxis'] as Record<string, unknown>)['tickvals']).toEqual(
+      Float64Array.of(1, 2),
+    );
+    // The figure is not changed, and supplying it again gives the same arrays.
+    expect(trace._input).toBe(input);
+    expect(input.x).toEqual({ dtype: 'f8', bdata: F8_1_2 });
+    const second = run(figure);
+    expect(second.fullData[0]!['x']).toBe(trace['x']);
+    expect(second.fullData[0]!['y']).toBe(trace['y']);
+  });
+
+  it('reports a spec that cannot be decoded and leaves the attribute unset', () => {
+    const { issues, fullData } = run({ data: [{ x: { dtype: 'f8', bdata: 'AAAA' }, y: [1] }] });
+    expect(issues.map((i) => [i.path, i.code])).toEqual([['data[0].x', 'invalid-value']]);
+    expect(fullData[0]?.['x']).toBeUndefined();
+  });
+
+  it('gives 64-bit integer arrays to the scales as doubles', () => {
+    const { fullData, issues } = run({
+      data: [{ x: BigInt64Array.of(1n, 2n, 3n), y: BigUint64Array.of(4n, 5n, 6n) }],
+    });
+    expect(issues).toEqual([]);
+    const x = fullData[0]!['x'] as ArrayLike<unknown>;
+    expect(x).toEqual(Float64Array.of(1, 2, 3));
+    expect(fullData[0]!['y']).toEqual(Float64Array.of(4, 5, 6));
+    // This is where a BigInt64Array used to throw ("Cannot mix BigInt and other types").
+    const scale = createScale({ type: 'linear', range: [0, 4], length: 400 });
+    expect(Array.from(scale.d2lArray(x))).toEqual([1, 2, 3]);
   });
 });
 

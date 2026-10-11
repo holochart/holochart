@@ -8,38 +8,49 @@ status: complete
 
 Build one page with a line, bars and two controls. **Update visits** changes the line without
 recreating the chart; **Dispose chart** releases it. The chart steps take about five minutes
-after the one-time source setup.
+once the packages are installed.
 
 <InstallStatus ecosystem="javascript" />
 
-## 1. Build the source workspace
+## 1. Start a project and install from npm
 
-You need Git, Node.js 22+, pnpm 11.15.1 and a browser with WebGL2. Follow the
-[source installation](/getting-started/installation#build-from-source-today), including the
-clone, `pnpm install` and `pnpm build:packages`. Keep your terminal in that repository root.
-The existing Vite sandbox provides the bundler. Add the full package as an explicit local
-workspace dependency, since the sandbox's existing example loader otherwise resolves it through
-the examples package:
+You need Node.js with npm and a browser with WebGL2. In a terminal, create an empty project,
+then install Holochart, three.js and Vite:
 
 ```sh
-pnpm --filter @mk7s/holochart-sandbox add '@mk7s/holochart@workspace:*'
+mkdir holochart-quickstart
+cd holochart-quickstart
+npm init -y
+npm install @mk7s/holochart@0.1.0-alpha.0 three@0.186.0
+npm install --save-dev vite@8
 ```
 
-This links the package from your checkout; it does not install Holochart from a registry.
-These examples use public browser APIs and local built-in data.
+The Holochart version is exact because Holochart is in alpha. `three` is a
+[peer dependency](/getting-started/installation#why-three-is-a-peer-dependency), so it is
+installed beside Holochart. Vite is the development server and bundler for this tutorial. Keep
+the terminal in `holochart-quickstart/` for the steps below. These examples use public browser
+APIs and local built-in data.
+
+In an app that already has a bundler, run only the line that installs `@mk7s/holochart` and
+`three`, and add the two files below to that app. Contributors working in a clone of the
+repository use [the monorepo sandbox](/getting-started/installation#try-it-from-the-monorepo)
+instead.
 
 ## 2. Create the page
 
-Save this **new file** as `apps/sandbox/quickstart.html`. Its module points to the file in the
-next step. The explicit 400-pixel container height is required; width fills the page.
+Save this **new file** as `index.html` in the project directory. Its module points to the file
+in the next step. The explicit 400-pixel container height is required; width fills the page.
 
 <<< @/public/quickstarts/browser.html
 
+If the app already has an `index.html`, save this page as `quickstart.html` beside it.
+
 ## 3. Create and update the chart
 
-Save this **new file** as `apps/sandbox/src/quickstart.ts`. The source uses JavaScript-compatible
-syntax; `.ts` adds Holochart's TypeScript checking. To use `.js`, rename the file and change
-the script's URL in the HTML to `/src/quickstart.js`.
+Create a `src` directory and save this **new file** as `src/quickstart.ts`. The source uses
+JavaScript-compatible syntax; in `.ts`, an editor with TypeScript support checks the figure
+against Holochart's types. To use `.js`, rename the file and change the script's URL in the HTML
+to `/src/quickstart.js`.
 
 <<< @/public/quickstarts/browser.ts
 
@@ -50,14 +61,15 @@ listeners and calls `destroy()` on disposal or page exit.
 
 ## 4. Run and inspect
 
-In the repository-root terminal:
+In the project directory:
 
 ```sh
-pnpm dev
+npx vite
 ```
 
-Open the Vite URL printed in the terminal, then append **`/quickstart.html`**. The initial result
-matches this live chart:
+Open the local URL printed by Vite. If you saved the page as `quickstart.html`, append
+**`/quickstart.html`** to that URL. The status text reads **Chart ready. Click Update visits.**
+and the chart matches this live one:
 
 <Example id="line/with-bars" />
 
@@ -71,7 +83,7 @@ alone does not release GPU resources.
 
 ## Continue
 
-- [Plain HTML](/getting-started/html) uses the locally built script bundle without Vite.
+- [Plain HTML](/getting-started/html) loads the script-tag build from a CDN, without a bundler.
 - [Figures, layout and config](/getting-started/core-concepts) explain the figure model.
 - [Plotly migration](/getting-started/from-plotly) reuses supported JavaScript figure data.
 - [TypeScript Express](/express/) creates browser figures from tables; Python's

@@ -1444,7 +1444,7 @@ export type Histogram2dTrace = CommonTraceAttributes &
      */
     showscale?: boolean;
     /**
-     * The colorbar of this colorscale (plan E5.3).
+     * The colorbar of this colorscale.
      */
     colorbar?: Colorbar;
     /**
@@ -1719,7 +1719,7 @@ export type Histogram2dcontourTrace = CommonTraceAttributes &
      */
     showscale?: boolean;
     /**
-     * The colorbar of this colorscale (plan E5.3).
+     * The colorbar of this colorscale.
      */
     colorbar?: Colorbar;
     /**
@@ -2094,7 +2094,7 @@ export interface ParcatsTraceLine {
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: Colorbar;
   /**
@@ -2329,7 +2329,7 @@ export interface ParcoordsTraceLine {
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: Colorbar;
 }
@@ -2623,13 +2623,13 @@ export interface SplomTraceMarker {
    */
   cmid?: number;
   /**
-   * Show a colorbar for this colorscale (drawn by the colorbar component, plan E5.3).
+   * Show a colorbar for this colorscale (drawn by the colorbar component).
    *
    * @defaultValue `false`
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: Colorbar;
   /**

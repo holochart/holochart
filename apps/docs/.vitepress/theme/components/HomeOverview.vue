@@ -76,7 +76,7 @@ onBeforeUnmount(() => clearTimeout(copyTimer));
             >
             <p>
               {{ installStatus(releaseState.npm) }}.<br />
-              <a :href="withBase('/getting-started/installation#build-from-source-today')"
+              <a :href="withBase('/getting-started/installation#install-from-npm')"
                 >Setup details</a
               >
             </p>

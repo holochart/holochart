@@ -19,8 +19,9 @@ streets or imagery). They are planned.
 
 <InstallStatus ecosystem="javascript" />
 
-Use these imports in the [built source workspace](/getting-started/installation#build-from-source-today).
-The workspace install already supplies the runtime, extension package and three.js.
+These imports work with the packages
+[installed from npm](/getting-started/installation#install-from-npm). No source checkout is
+needed.
 
 Maps live in `@mk7s/holochart-traces-geo`. Like the graph package, it is not registered by the full bundle, so that apps without a map do not download map code.
 

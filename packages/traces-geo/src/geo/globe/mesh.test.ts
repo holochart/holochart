@@ -68,6 +68,20 @@ function feature(geometry: Polygon | MultiPolygon): Feature<Polygon | MultiPolyg
   return { type: 'Feature', properties: {}, geometry };
 }
 
+/**
+ * How far float32 positions can move an arc, in degrees. A coordinate of a point of the unit
+ * sphere is rounded by 2⁻²⁵ at most (half an ulp in [0.5, 1)): the point moves by √3 · 2⁻²⁵ at
+ * most, and an arc changes by no more than its two ends move. 5.9e-6°, whatever the arc's length.
+ */
+const FLOAT32_ARC = 2 * Math.sqrt(3) * 2 ** -25 * (180 / Math.PI);
+
+/**
+ * For the property over caps: a failing case can take fast-check many minutes to shrink (a cap
+ * of 85° is 60,000 triangles, built and measured anew for each of hundreds of candidates), inside
+ * one synchronous call that Vitest's timeout cannot stop. This stops it.
+ */
+const LIMITS = { interruptAfterTimeLimit: 20_000 } as const;
+
 /** What every mesh must be, whatever it was built from. */
 function expectSound(mesh: SphereMesh, maxEdge = 5): void {
   const { positions, indices, vertexCount, triangleCount } = mesh;
@@ -85,22 +99,30 @@ function expectSound(mesh: SphereMesh, maxEdge = 5): void {
   let highest = 0;
   for (let i = 0; i < indices.length; i++) highest = Math.max(highest, indices[i]!);
   expect(highest).toBeLessThan(vertexCount);
-  // Every triangle faces outwards, and none is longer than asked.
+  // Every triangle faces outwards, and none is longer than asked. The mesh holds its edges to
+  // `maxEdge` in float64, in the plane of their chart, where an edge is never shorter than its
+  // arc: an edge along a meridian is as long in both, and the float32 positions measured here
+  // can put it over by their rounding.
   const cover = coverage(mesh);
   expect(cover.inward).toBe(0);
-  expect(cover.longestEdge).toBeLessThanOrEqual(maxEdge + 1e-6);
+  expect(cover.longestEdge).toBeLessThanOrEqual(maxEdge + FLOAT32_ARC);
   // No T-junctions: an edge belongs to two triangles, or to one on the rim. The two run it in
   // opposite ways, but for the few slivers that were turned round.
   expect(mostSharedEdge(mesh)).toBeLessThanOrEqual(2);
+  // Counted, not one `expect` per edge and triangle: a mesh has tens of thousands of them, and
+  // the property over caps checks hundreds of meshes.
   if (mesh.overlap === 0) {
-    for (const count of directedEdges(mesh).values()) expect(count).toBe(1);
+    let repeated = 0;
+    for (const count of directedEdges(mesh).values()) if (count !== 1) repeated++;
+    expect(repeated).toBe(0);
   }
   // A triangle belongs to one feature.
+  let shared = 0;
   for (let i = 0; i < indices.length; i += 3) {
     const f = mesh.featureOf[indices[i]!];
-    expect(mesh.featureOf[indices[i + 1]!]).toBe(f);
-    expect(mesh.featureOf[indices[i + 2]!]).toBe(f);
+    if (mesh.featureOf[indices[i + 1]!] !== f || mesh.featureOf[indices[i + 2]!] !== f) shared++;
   }
+  expect(shared).toBe(0);
 }
 
 /** The mesh covers `expected` steradians: once, and twice more on the slivers it reports. */
@@ -428,8 +450,20 @@ describe('buildSphereMesh', () => {
           expectBoundary(mesh);
         },
       ),
-      { numRuns: 60 },
+      { numRuns: 60, ...LIMITS },
     );
+  });
+
+  it('keeps to maxEdge on a wide cap cut at the antimeridian, as far as float32 has it', () => {
+    // Found by the property above (seed -1405364806): the cut leaves edges up the meridians
+    // next to 180°, 5° long in the plane and on the sphere alike. Rounded to float32 the
+    // longest measured 5.0000014°, and the check allowed a millionth of a degree.
+    const polygon = cap([179.81744979082396, 0], 84.99998475611191, 5);
+    const mesh = globe.buildSphereMesh(polygon);
+    expect(coverage(mesh).longestEdge).toBeGreaterThan(5 - FLOAT32_ARC);
+    expectSound(mesh);
+    expectArea(mesh, geoArea(polygon));
+    expect(expectBoundary(mesh).seam).toBeGreaterThan(0);
   });
 
   it('meshes a region that holds both poles in the flat chart, fans about the poles and all', () => {

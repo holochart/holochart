@@ -18,7 +18,7 @@ export const annotationItemAttributes = /* @__PURE__ */ (() =>
     text: attr.string({
       dflt: '',
       description:
-        'Text. `<br>` breaks lines; `<b>`/`<i>` around the whole text, `<sup>`/`<sub>` digits and entities are rendered, other tags are dropped until rich text (E2.10).',
+        'Text (supports rich-text tags: `<br>`, `<b>`, `<i>`, `<u>`, `<s>`, `<sup>`, `<sub>`, `<span style>`, `<a href>` and entities).',
     }),
     textangle: attr.angle({ dflt: 0, description: 'Rotation of the text box, degrees clockwise.' }),
     font: fontSchema('Text font. Defaults to `layout.font`.'),

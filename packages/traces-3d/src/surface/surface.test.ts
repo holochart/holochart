@@ -181,6 +181,25 @@ describe('surface defaults', () => {
     expect(c['z']!['color']).toBeUndefined();
   });
 
+  it('keeps autocolorscale off for a colorscale given as a plain list of colors', () => {
+    const z = [
+      [1, 2],
+      [3, 4],
+    ];
+    const { trace, fullLayout } = full({ z, colorscale: ['red', 'blue'] });
+    expect(trace['colorscale']).toEqual([
+      [0, 'rgb(255, 0, 0)'],
+      [1, 'rgb(0, 0, 255)'],
+    ]);
+    expect(trace['autocolorscale']).toBe(false);
+    const stops = surfaceColorMapping(trace, fullLayout)!.colorscale;
+    expect(stops[0]![1].slice(0, 3)).toEqual([1, 0, 0]);
+    expect(stops[stops.length - 1]![1].slice(0, 3)).toEqual([0, 0, 1]);
+    // Stops and names behave as before; a list that is not a scale falls back to the automatic one.
+    expect(full({ z, colorscale: 'Viridis' }).trace['autocolorscale']).toBe(false);
+    expect(full({ z, colorscale: ['red'] }).trace['autocolorscale']).toBe(true);
+  });
+
   it('coerces the contour style only when shown, and the wireframe only when on', () => {
     const { trace } = full({
       z: [

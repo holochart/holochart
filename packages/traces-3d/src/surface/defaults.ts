@@ -29,9 +29,11 @@ function numeric(v: unknown): v is number {
   return typeof v === 'number' && Number.isFinite(v);
 }
 
+/** A registered name, a list of stops, or a plain list of colors (as traces-basic's colorscale). */
 function isValidScale(value: unknown): boolean {
   if (typeof value === 'string') return isColorscaleName(value);
-  return Array.isArray(value) && value.length >= 2 && value.every((s) => Array.isArray(s));
+  if (!Array.isArray(value) || value.length < 2) return false;
+  return value.every((s) => Array.isArray(s)) || value.every((s) => typeof s === 'string');
 }
 
 /** Plotly's `createWave(1, MIN)`: 32 stops, opaque at both ends, faded in the middle. */

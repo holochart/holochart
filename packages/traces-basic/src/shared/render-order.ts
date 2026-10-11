@@ -8,17 +8,22 @@
 import type { FullTrace } from '@mk7s/holochart-core';
 
 /**
- * Layer rank of each trace type, from plotly.js `traceLayerClasses` (image … scatter). Types not
- * listed draw with scatter, on top, as the layer Plotly gives other SVG cartesian traces.
+ * Layer rank of each trace type, from plotly.js `traceLayerClasses` (image … scatter). Histogram
+ * traces draw in the layer of the trace they are drawn as (the `layerName` of Plotly's modules:
+ * `histogram` with bars, `histogram2d` with heatmaps, `histogram2dcontour` with contours). Types
+ * not listed draw with scatter, on top, as the layer Plotly gives other SVG cartesian traces.
  */
 const LAYER_RANK: Readonly<Record<string, number>> = {
   image: 0,
   heatmap: 1,
+  histogram2d: 1,
   contourcarpet: 2,
   contour: 3,
+  histogram2dcontour: 3,
   funnel: 4,
   waterfall: 5,
   bar: 6,
+  histogram: 6,
   carpet: 7,
   violin: 8,
   box: 9,

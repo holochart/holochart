@@ -46,9 +46,9 @@ print(version("holochart-py"))
 ```
 
 Choose the `.venv-holochart` interpreter or **Python (Holochart)** kernel where you installed
-the bridge. If the distribution is missing, first ensure the development checkout contains
-`packages/holochart-py`, build the browser assets in a terminal, and use the selected kernel's
-`%pip` with the absolute package path shown in the installation guide. Restart after installing,
+the bridge. If the distribution is missing, work in a clone of the repository (the bridge is
+`packages/holochart-py`; it is not on PyPI yet), build the browser assets in a terminal, and use
+the selected kernel's `%pip` with the absolute package path shown in the installation guide. Restart after installing,
 then rerun imports and renderer registration.
 
 ## Text or empty output instead of a widget

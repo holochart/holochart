@@ -15,6 +15,7 @@
     "@mk7s/holochart-express": "workspace:*",
     "@mk7s/holochart-locales": "workspace:*",
     "@mk7s/holochart-render": "workspace:*",
+    "@mk7s/hologpu": "link:../../research/hologpu/packages/hologpu",
     "three": "catalog:"
   },
   "devDependencies": {
@@ -22,6 +23,8 @@
     "@types/geojson": "catalog:",
     "@types/three": "catalog:",
     "@types/topojson-client": "catalog:",
+    "@types/topojson-specification": "catalog:",
+    "@webgpu/types": "^0.1.74",
     "d3-geo": "catalog:",
     "d3-geo-projection": "catalog:",
     "maplibre-gl": "^6.11.2",

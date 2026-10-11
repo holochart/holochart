@@ -26,6 +26,7 @@ import {
   fillGaps,
   recordZExtent,
   type ContourCalc,
+  type ContourLevels,
 } from '@mk7s/holochart-traces-stats';
 import {
   alignedCoordinates,
@@ -96,29 +97,29 @@ function numeric(v: unknown): v is number {
 /**
  * The value extent the colorscale spans (Plotly `contour/calc.js`): the data, except for
  * `coloring: 'heatmap'` with manual levels and an automatic color domain, where it spans the
- * levels' bands (`start − size/2` to one band past the last level).
+ * levels' bands (`start − size/2` to one band past the last level). Plotly reads `start`, `end`
+ * and `size` after `setContours` has put them in order and filled in a missing size, so the
+ * resolved `levels` are used here, not the attributes as given.
  */
-function colorExtent(trace: FullTrace, data: readonly [number, number]): [number, number] {
+function colorExtent(
+  trace: FullTrace,
+  data: readonly [number, number],
+  levels: ContourLevels,
+): [number, number] {
   const contours = (trace['contours'] ?? {}) as Record<string, unknown>;
-  const start = contours['start'];
-  const end = contours['end'];
   if (
     contours['type'] !== 'constraint' &&
     contours['coloring'] === 'heatmap' &&
     trace['zauto'] !== false &&
     trace['autocontour'] === false &&
-    numeric(start) &&
-    numeric(end)
+    numeric(contours['start']) &&
+    numeric(contours['end'])
   ) {
-    let cs = numeric(contours['size']) && contours['size'] > 0 ? contours['size'] : 1;
-    const e = end + cs / 1e6;
-    let nc = Math.floor((e - start) / cs) + 1;
-    if (!Number.isFinite(cs)) {
-      cs = 1;
-      nc = 1;
-    }
-    const min0 = start - cs / 2;
-    return [min0, min0 + nc * cs];
+    // Resolved levels always have start ≤ end and a finite size > 0.
+    const { start, end, size } = levels;
+    const nc = Math.floor((end + size / 1e6 - start) / size) + 1;
+    const min0 = start - size / 2;
+    return [min0, min0 + nc * size];
   }
   return [data[0], data[1]];
 }
@@ -144,8 +145,8 @@ export function calcContour(trace: FullTrace, ctx: CalcContext): ContourTraceCal
   const zFilled = fillGaps(raw, nx, ny);
   const zExtent = extentOf(zFilled);
   if (!Number.isFinite(zExtent[0])) return emptyContourCalc();
-  recordZExtent(trace, colorExtent(trace, zExtent));
   const field = contourField({ z: zFilled, nx, ny, xc, yc, zExtent, presence }, trace);
+  recordZExtent(trace, colorExtent(trace, zExtent, field.levels));
   // Gaps drawn as holes stay gaps for hover and the heatmap coloring.
   const hover = field.mask ? raw : zFilled;
   return {

@@ -357,6 +357,27 @@ describe('regressions found by the E20.2 properties', () => {
     expect(linked).toEqual([expect.objectContaining({ text: 'T', templateitemname: '1' })]);
   });
 
+  it('a range that only the template of a linked axis gives is not kept (fixed point)', () => {
+    // Counterexample (nightly, seed 1253733794): the template's range stayed on yaxis2 alone,
+    // and fed back in, where it reads as set by the user, was given to the x axis it matches.
+    const fig = {
+      layout: {
+        template: { layout: { yaxis2: { range: [{}, {}] } } },
+        yaxis2: { matches: 'x' },
+      },
+    };
+    expect(validate(undefined, fig.layout, registry)).toEqual([]);
+    const first = supplyDefaults(fig, registry, quiet).fullLayout;
+    expect(first._axisMatchGroups).toEqual([{ y2: 1, x: 1 }]);
+    // A match group has the range of its root (x), which has none: the group autoranges.
+    for (const key of ['xaxis', 'yaxis2']) {
+      expect(first[key]).not.toHaveProperty('range');
+      expect(first[key]).toMatchObject({ autorange: true });
+    }
+    const again = supplyDefaults({ layout: stripInternal(first) }, registry, quiet).fullLayout;
+    expect(stripInternal(again)).toEqual(stripInternal(first));
+  });
+
   it("'@' strings on string attributes are literal text and a fixed point", () => {
     // Counterexample: '@@handle' was unescaped to '@handle', which fed back in was read as a
     // column reference ("column reference '@handle' needs a `dataset`"). Now '@…' strings are

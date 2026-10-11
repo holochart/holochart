@@ -26,9 +26,10 @@ Content-Security-Policy:
   style-src 'self' 'unsafe-inline'
 ```
 
-Add `img-src 'self' data:` if your figures use `data:` images, and
+Add `img-src 'self' data:` if your figures use `data:` images,
 `https://cdn.jsdelivr.net` to `connect-src` if your charts show text outside the Latin script
-(see [below](#text-in-other-scripts)).
+(see [below](#text-in-other-scripts)), and `'self'` to `worker-src` if a graph trace sets
+`worker` (see [Graph layouts in a worker](#graph-layouts-in-a-worker)).
 
 ::: info Tested
 The policy above and the [stricter one](#without-blob-urls) below were tested on a page served
@@ -36,19 +37,22 @@ with the policy as a `Content-Security-Policy` header, in Chromium and Firefox. 
 chart with a title, axes, a legend, text labels, an annotation, the modebar and a hover label
 with rich text, exported it as an image, and reported no violation. Each row of the table below
 was tested in Chromium by leaving that directive out; the `img-src` row with `layout.images`,
-and a 3D scene under the policy above. Safari was not tested.
+and a 3D scene under the policy above.
+
+Not tested: Safari, with either policy; and update menus, sliders and the range selector, which
+add their styles the same way the modebar does.
 :::
 
 ## What each directive is for
 
-| Directive                   | Why Holochart needs it                                                                                                                                    | If it is missing                                                                        |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `script-src blob:`          | The text engine typesets in a web worker. The worker is created from a `blob:` URL and loads its code with `importScripts` from `blob:` URLs.             | No text is drawn, and the promises of `newPlot` and `react` don't settle.               |
-| `worker-src blob:`          | The same worker. Browsers fall back to `script-src` when a policy has no `worker-src`, so this matters when your policy sets `worker-src` itself.         | The same.                                                                               |
-| `connect-src blob:`         | The built-in font is turned into a `blob:` URL, and the text engine fetches fonts with `XMLHttpRequest`.                                                  | The same.                                                                               |
-| `font-src blob:`            | The same font is registered as a CSS font face, which Holochart measures text with.                                                                       | Text is drawn, but measured with a system font, so labels can be placed a bit off.      |
-| `style-src 'unsafe-inline'` | The modebar, legend, sliders and range selector add `<style>` elements to the page; rich text in hover labels (`<span style="…">`) uses style attributes. | Charts draw, but these controls lose their styling: the modebar shows as plain buttons. |
-| `img-src data:`             | Only for `data:` URIs in `layout.images`, `marker.image` and the `image` trace's `source`.                                                                | Those images are not drawn; a warning is logged.                                        |
+| Directive                   | Why Holochart needs it                                                                                                                                                                               | If it is missing                                                                        |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `script-src blob:`          | The text engine typesets in a web worker. The worker is created from a `blob:` URL and loads its code with `importScripts` from `blob:` URLs.                                                        | No text is drawn, and the promises of `newPlot` and `react` don't settle.               |
+| `worker-src blob:`          | The same worker. Browsers fall back to `script-src` when a policy has no `worker-src`, so this matters when your policy sets `worker-src` itself.                                                    | The same.                                                                               |
+| `connect-src blob:`         | The built-in font is turned into a `blob:` URL, and the text engine fetches fonts with `XMLHttpRequest`.                                                                                             | The same.                                                                               |
+| `font-src blob:`            | The same font is registered as a CSS font face, which Holochart measures text with.                                                                                                                  | Text is drawn, but measured with a system font, so labels can be placed a bit off.      |
+| `style-src 'unsafe-inline'` | The modebar, update menus, sliders, range selector and the legend's keyboard buttons each add a `<style>` element to the page; rich text in hover labels (`<span style="…">`) uses style attributes. | Charts draw, but these controls lose their styling: the modebar shows as plain buttons. |
+| `img-src data:`             | Only for `data:` URIs in `layout.images`, `marker.image` and the `image` trace's `source`.                                                                                                           | Those images are not drawn; a warning is logged.                                        |
 
 Where the table says no text is drawn, the rest of the chart is: lines, markers, bars, grid
 lines and legend symbols appear, without titles, tick labels or legend names. Because
@@ -57,8 +61,9 @@ blocked worker and font in the console; requests blocked inside the worker (a mi
 `script-src blob:` or `connect-src blob:`) show up as `importScripts` or "Failure loading font"
 errors instead of CSP reports.
 
-`data:` is not needed for fonts. The built-in font ships as base64 inside the JavaScript bundle
-and is converted to a `blob:` URL in the page; nothing is loaded from a `data:` URL.
+`data:` is not needed for fonts, in `font-src` or in `connect-src`. The built-in font ships as
+base64 inside the JavaScript bundle and is converted to a `blob:` URL in the page; nothing is
+loaded from a `data:` URL.
 
 ## Without blob URLs
 

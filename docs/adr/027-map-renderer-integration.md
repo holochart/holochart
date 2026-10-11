@@ -1,8 +1,9 @@
 # ADR-027: Tile maps use MapLibre GL behind the figure's canvas
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-11, by the owner). Nothing of it is built yet; it is the
+  design for backlogv2 V2-E3.
 - **Date:** 2026-10-04
-- **Deciders:** GEO1; the owner accepts or rejects
+- **Deciders:** GEO1; accepted by the owner
 - **Related stories:** backlog GEO1, GEO9, GEO10; plan E15.5; amends
   [ADR-023](023-shared-renderer-context-budget.md)
 

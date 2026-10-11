@@ -174,21 +174,14 @@ trace lines, table captions) and a few control names; see
 
 <InstallStatus ecosystem="javascript" />
 
-First follow the [local browser bundle setup](/getting-started/installation#browser-bundles-from-source).
-After `pnpm build:packages`, also copy the locale scripts into that same preview directory.
-Run this in a terminal from the repository root:
-
-```sh
-cp -R packages/locales/dist/scripts preview/
-```
-
 The `<script>` build does not include locales. `@mk7s/holochart-locales` ships one script per
 locale in `dist/scripts/`, like plotly.js's `plotly-locale-de.js`: load it after
-`holochart.iife.min.js` and it registers itself.
+`holochart.iife.min.js` and it registers itself. Load both from the CDN, at the same exact
+version:
 
 ```html
-<script src="./holochart.iife.min.js"></script>
-<script src="./scripts/holochart-locale-de.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart@0.1.0-alpha.0/dist/holochart.iife.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mk7s/holochart-locales@0.1.0-alpha.0/dist/scripts/holochart-locale-de.js"></script>
 <script>
   Holochart.createChart(document.getElementById('chart'), {
     data: [{ y: [1.5, 2.25, 1.75] }],
@@ -201,6 +194,17 @@ File names are the lower-cased locale names (`holochart-locale-pt-br.js`), and
 `holochart-locales.js` registers every locale. A locale script loaded before Holochart queues its
 locale in `window.HolochartLocales`; register the queue with `Holochart.register(...HolochartLocales)`
 once Holochart has loaded.
+
+To serve the scripts from your own origin, first follow
+[Host the scripts yourself](/getting-started/installation#host-the-scripts-yourself). Then
+install the locales package and copy its scripts into the same `preview` directory:
+
+```sh
+npm install @mk7s/holochart-locales@0.1.0-alpha.0
+cp -R node_modules/@mk7s/holochart-locales/dist/scripts preview/
+```
+
+The script URLs are then `./holochart.iife.min.js` and `./scripts/holochart-locale-de.js`.
 
 ## Right-to-left scripts
 

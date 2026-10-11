@@ -1,8 +1,8 @@
 # ADR-024: Basemap data is built from Natural Earth and ships in the geo package
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-11, by the owner)
 - **Date:** 2026-10-03
-- **Deciders:** GEO1; the owner accepts or rejects
+- **Deciders:** GEO1; accepted by the owner
 - **Related stories:** backlog GEO1, GEO2, GEO4, GEO10; plan E15.1; risk R9
 
 ## Context

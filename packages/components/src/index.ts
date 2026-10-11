@@ -131,6 +131,7 @@ export {
 export type { Ring, ShapeAxis, ShapeDim, ShapeEnv, ShapeGeometry } from './shapes/geometry.ts';
 export { addHline, addHrect, addShape, addVline, addVrect } from './shapes/helpers.ts';
 export type { ShapeOptions } from './shapes/helpers.ts';
+export { eraseActiveShape } from './shapes/draw.ts';
 // Renamed: core exports `parsePath` / `PathSegment` for attribute paths.
 export {
   ellipsePoints,

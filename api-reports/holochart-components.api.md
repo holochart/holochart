@@ -615,6 +615,9 @@ export function ellipsePoints(cx: number, cy: number, rx: number, ry: number, sc
     y: number[];
 };
 
+// @public
+export function eraseActiveShape(chart: object): boolean;
+
 // @public (undocumented)
 interface FillAcc {
     // (undocumented)

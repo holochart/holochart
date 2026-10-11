@@ -25212,6 +25212,41 @@
       "renderingDimension": "2d"
     },
     {
+      "id": "shapes/draw",
+      "title": "Shapes: drawing and erasing",
+      "description": "A chart in the drawrect drag mode with the draw and erase buttons in its modebar, and one editable rectangle to move or erase.",
+      "tags": ["shapes", "layout", "drawing", "dragmode", "newshape", "modebar", "interaction"],
+      "category": "shapes",
+      "traceTypes": ["scatter"],
+      "size": { "width": 720, "height": 440 },
+      "threeD": false,
+      "thumbnail": "gallery/thumbs/shapes/draw.webp",
+      "thumbnailSize": { "width": 640, "height": 391 },
+      "primaryFamily": "relationships",
+      "secondaryFamilies": [],
+      "chartTypes": ["scatter"],
+      "contentKind": "layout",
+      "features": ["dragmode", "drawing", "interaction", "layout", "modebar", "newshape"],
+      "difficulty": "unassessed",
+      "curatedRank": null,
+      "docs": ["/charts/basic/scatter"],
+      "variants": [
+        {
+          "language": "typescript",
+          "source": "examples/shapes/draw.ts",
+          "dependencies": ["@mk7s/holochart"],
+          "environments": ["repository-sandbox"],
+          "verification": {
+            "state": "rendered",
+            "method": "gallery-thumbnail",
+            "artifact": "gallery/thumbs/shapes/draw.webp"
+          }
+        }
+      ],
+      "api": "figure",
+      "renderingDimension": "2d"
+    },
+    {
       "id": "shapes/layers",
       "title": "Shapes: below, between and above the traces",
       "description": "Three opaque bands crossing bars and a strong grid: below the grid, between grid and bars, and above the bars; plus a paper band below everything.",

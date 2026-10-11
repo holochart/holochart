@@ -313,7 +313,7 @@ export type Layout = {
    */
   showlegend?: boolean;
   /**
-   * Uniform text sizing for bar and pie labels (E4.6).
+   * Uniform text sizing for bar and pie labels.
    */
   uniformtext?: LayoutUniformtext;
   /**
@@ -341,7 +341,7 @@ export type Layout = {
     | 'turntable'
     | false;
   /**
-   * Default transition for animated updates (E7.3).
+   * Default transition for animated updates.
    */
   transition?: LayoutTransition;
   /**
@@ -445,7 +445,7 @@ export type Layout = {
    */
   [key: `yaxis${number}`]: unknown;
   /**
-   * Selections as layout objects (plan E5.12): each box or lasso drag in `select` / `lasso` mode adds one (shift keeps the others), and every selection on a subplot selects the points inside it (`selectedpoints` follows). Set them to restore a selection; drag one to move or resize it; a double-click clears them.
+   * Selections as layout objects: each box or lasso drag in `select` / `lasso` mode adds one (shift keeps the others), and every selection on a subplot selects the points inside it (`selectedpoints` follows). Set them to restore a selection; drag one to move or resize it; a double-click clears them.
    */
   selections?: readonly LayoutSelection[];
   /**
@@ -761,7 +761,7 @@ export type Layout = {
    */
   hoverdistance?: number;
   /**
-   * Maximum distance (px) for spikelines (E3.10). `-1` means no limit.
+   * Maximum distance (px) for spikelines. `-1` means no limit.
    *
    * Minimum: -1
    *
@@ -785,15 +785,15 @@ export type Layout = {
    */
   hoverlabel?: LayoutHoverlabel;
   /**
-   * Text annotations with optional arrows (plan E5.4).
+   * Text annotations with optional arrows.
    */
   annotations?: readonly LayoutAnnotation[];
   /**
-   * Pictures placed on the figure: logos, backgrounds (plan E5.6).
+   * Pictures placed on the figure: logos, backgrounds.
    */
   images?: readonly LayoutImage[];
   /**
-   * The legend (E5.2). `legend2`, `legend3`, … declare more, referenced from traces' `legend` (`'legend2'`).
+   * The legend. `legend2`, `legend3`, … declare more, referenced from traces' `legend` (`'legend2'`).
    */
   legend?: LayoutLegend;
   /**
@@ -837,7 +837,7 @@ export type Layout = {
    */
   modebar?: LayoutModebar;
   /**
-   * Lines, rectangles, ellipses and paths in data or paper coordinates (plan E5.5).
+   * Lines, rectangles, ellipses and paths in data or paper coordinates.
    */
   shapes?: readonly LayoutShape[];
   /**
@@ -849,11 +849,11 @@ export type Layout = {
    */
   activeshape?: LayoutActiveshape;
   /**
-   * Sliders that step through `restyle`, `relayout`, `update` or `animate` calls (plan E5.11).
+   * Sliders that step through `restyle`, `relayout`, `update` or `animate` calls.
    */
   sliders?: readonly LayoutSlider[];
   /**
-   * Buttons and dropdowns over the chart that call `restyle`, `relayout`, `update` or `animate` (plan E5.10).
+   * Buttons and dropdowns over the chart that call `restyle`, `relayout`, `update` or `animate`.
    */
   updatemenus?: readonly LayoutUpdatemenu[];
   /**
@@ -907,7 +907,7 @@ export type Layout = {
  */
 export interface LayoutTitle {
   /**
-   * Title text (supports rich-text tags, E2.10).
+   * Title text (supports rich-text tags).
    *
    * @defaultValue `""`
    */
@@ -1140,19 +1140,19 @@ export interface LayoutColoraxis {
    */
   cmid?: number;
   /**
-   * Show a colorbar for this colorscale (drawn by the colorbar component, plan E5.3).
+   * Show a colorbar for this colorscale (drawn by the colorbar component).
    *
    * @defaultValue `true`
    */
   showscale?: boolean;
   /**
-   * The colorbar of this colorscale (plan E5.3).
+   * The colorbar of this colorscale.
    */
   colorbar?: LayoutColoraxisColorbar;
 }
 
 /**
- * The colorbar of this colorscale (plan E5.3).
+ * The colorbar of this colorscale.
  */
 export interface LayoutColoraxisColorbar {
   /**
@@ -3007,7 +3007,7 @@ export interface LayoutAnnotation {
    */
   visible?: boolean;
   /**
-   * Text. `<br>` breaks lines; `<b>`/`<i>` around the whole text, `<sup>`/`<sub>` digits and entities are rendered, other tags are dropped until rich text (E2.10).
+   * Text (supports rich-text tags: `<br>`, `<b>`, `<i>`, `<u>`, `<s>`, `<sup>`, `<sub>`, `<span style>`, `<a href>` and entities).
    *
    * @defaultValue `""`
    */
@@ -3491,7 +3491,7 @@ export interface LayoutImage {
 }
 
 /**
- * The legend (E5.2). `legend2`, `legend3`, … declare more, referenced from traces' `legend` (`'legend2'`).
+ * The legend. `legend2`, `legend3`, … declare more, referenced from traces' `legend` (`'legend2'`).
  */
 export interface LayoutLegend {
   /**
@@ -4568,7 +4568,7 @@ export interface LayoutSliderStep {
    */
   visible?: boolean;
   /**
-   * Chart API method the step calls: `restyle`, `relayout`, `update` (Plotly's `update`), `animate` (frames, plan E7.4) or `skip` (only the events).
+   * Chart API method the step calls: `restyle`, `relayout`, `update` (Plotly's `update`), `animate` (frames) or `skip` (only the events).
    *
    * @defaultValue `"restyle"`
    */
@@ -4962,7 +4962,7 @@ export interface LayoutUpdatemenuButton {
    */
   visible?: boolean;
   /**
-   * Chart API method the item calls: `restyle`, `relayout`, `update` (Plotly's `update`, i.e. `chart.updateAttributes`), `animate` (frames, plan E7.4) or `skip` (only the event).
+   * Chart API method the item calls: `restyle`, `relayout`, `update` (Plotly's `update`, i.e. `chart.updateAttributes`), `animate` (frames) or `skip` (only the event).
    *
    * @defaultValue `"restyle"`
    */
@@ -5623,7 +5623,7 @@ export interface LayoutSceneXaxis {
    */
   showaxeslabels?: boolean;
   /**
-   * On hover, draw spikes from the hovered point to this axis' walls (3D hover, plan E14.1d).
+   * On hover, draw spikes from the hovered point to this axis' walls.
    *
    * @defaultValue `true`
    */
@@ -5865,7 +5865,7 @@ export interface LayoutSceneAnnotation {
    */
   visible?: boolean;
   /**
-   * Text. `<br>` breaks lines; `<b>`/`<i>` around the whole text, `<sup>`/`<sub>` digits and entities are rendered, other tags are dropped until rich text (E2.10).
+   * Text (supports rich-text tags: `<br>`, `<b>`, `<i>`, `<u>`, `<s>`, `<sup>`, `<sub>`, `<span style>`, `<a href>` and entities).
    *
    * @defaultValue `""`
    */

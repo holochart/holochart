@@ -20,7 +20,12 @@
  *   six coordinate products): hull walks and triangle orientation never see a wrong sign, so no
  *   triangle is folded or flat. The in-circle test is plain float64 (as Delaunator's); a flip is
  *   also refused unless both new triangles are properly oriented, so its rounding can at worst
- *   cost Delaunay-ness among nearly co-circular points.
+ *   cost Delaunay-ness, never validity. It gives the wrong answer only for four points whose
+ *   in-circle determinant is within rounding (a few 2^-53) of zero relative to its terms: points
+ *   that are nearly co-circular, or a triangle some 1e-8 of the data's size tested against a far
+ *   point. Wherever its arithmetic is exact (coordinates on a lattice less than 2^12 steps
+ *   across, at any power-of-two scale) the result is exactly Delaunay; elsewhere a wrong answer
+ *   leaves a sliver whose circumcircle is not empty.
  * - The sweep order uses double-double distances, and points the sweep still cannot place (float
  *   ties on very thin sets, a point on the seed triangle's edge — Delaunator drops these) are
  *   inserted afterwards by Lawson's algorithm (locate, split, flip).
@@ -38,15 +43,34 @@ const CCW_ERR_BOUND = (3 + 16 * 2 ** -53) * 2 ** -53;
 const SPLITTER = 134217729;
 
 /**
+ * How much work one triangulation did, for tests of its complexity (counts do not depend on how
+ * busy the machine is, unlike a wall-clock time). For 50k uniformly random points: about 11 edge
+ * checks, 4 flips and 4 hull steps per point, and no missed point.
+ */
+export interface DelaunayStats {
+  /** In-circle tests made while legalizing edges. */
+  edgeChecks: number;
+  /** Edges flipped. */
+  flips: number;
+  /** Hull vertices visited to find and walk the hull edges visible from each point. */
+  hullSteps: number;
+  /** Points the sweep could not place, inserted afterwards by point location. */
+  missed: number;
+  /** Triangles visited to locate the missed points. */
+  walkSteps: number;
+}
+
+/**
  * Delaunay triangles of the finite points (u[i], v[i]), i < count (default min length): a flat
  * Uint32Array of input indices, 3 per triangle, counter-clockwise. Non-finite points are skipped;
  * duplicate points are triangulated once (the first); fewer than 3 distinct points or all
- * collinear → empty.
+ * collinear → empty. `stats`, when given, receives the work counts of the run.
  */
 export function delaunayTriangles(
   u: ArrayLike<number>,
   v: ArrayLike<number>,
   count?: number,
+  stats?: DelaunayStats,
 ): Uint32Array {
   const len = Math.max(0, Math.min(count ?? Infinity, u.length, v.length));
 
@@ -83,7 +107,13 @@ export function delaunayTriangles(
     coords[2 * k + 1] = v[i]! * scale;
   }
 
-  const tri = triangulate(coords, n, (minU / 2 + maxU / 2) * scale, (minV / 2 + maxV / 2) * scale);
+  const tri = triangulate(
+    coords,
+    n,
+    (minU / 2 + maxU / 2) * scale,
+    (minV / 2 + maxV / 2) * scale,
+    stats,
+  );
   // Delaunator's triangles are clockwise with y up: swap two corners to make them CCW.
   const out = new Uint32Array(tri.length);
   for (let t = 0; t < tri.length; t += 3) {
@@ -99,7 +129,17 @@ export function delaunayTriangles(
  * (cx, cy) their bounding-box center): triangles as point indices, clockwise with y up
  * (`orient > 0`).
  */
-function triangulate(coords: Float64Array, n: number, cx: number, cy: number): Uint32Array {
+function triangulate(
+  coords: Float64Array,
+  n: number,
+  cx: number,
+  cy: number,
+  stats?: DelaunayStats,
+): Uint32Array {
+  let edgeChecks = 0;
+  let flips = 0;
+  let hullSteps = 0;
+  let walkSteps = 0;
   const maxTriangles = Math.max(2 * n - 5, 0);
   const triangles = new Uint32Array(maxTriangles * 3);
   const halfedges = new Int32Array(maxTriangles * 3);
@@ -249,11 +289,13 @@ function triangulate(coords: Float64Array, n: number, cx: number, cy: number): U
       const pr = triangles[a]!;
       const pl = triangles[al]!;
       const p1 = triangles[bl]!;
+      edgeChecks++;
       const illegal =
         inCircle(x(p0), y(p0), x(pr), y(pr), x(pl), y(pl), x(p1), y(p1)) &&
         orient(x(p1), y(p1), x(pl), y(pl), x(p0), y(p0)) > 0 &&
         orient(x(p0), y(p0), x(pr), y(pr), x(p1), y(p1)) > 0;
       if (illegal) {
+        flips++;
         triangles[a] = p1;
         triangles[b] = p0;
         const hbl = halfedges[bl]!;
@@ -315,6 +357,7 @@ function triangulate(coords: Float64Array, n: number, cx: number, cy: number): U
     // A hull edge visible from the point, starting from the hash.
     let start = 0;
     for (let j = 0, key = hashKey(px, py); j < hashSize; j++) {
+      hullSteps++;
       start = hullHash[(key + j) % hashSize]!;
       if (start !== -1 && start !== hullNext[start]) break;
     }
@@ -322,6 +365,7 @@ function triangulate(coords: Float64Array, n: number, cx: number, cy: number): U
     let e = start;
     let q = hullNext[e]!;
     while (orient(px, py, x(e), y(e), x(q), y(q)) >= 0) {
+      hullSteps++;
       e = q;
       if (e === start) {
         e = -1;
@@ -344,6 +388,7 @@ function triangulate(coords: Float64Array, n: number, cx: number, cy: number): U
     let next = hullNext[e]!;
     q = hullNext[next]!;
     while (orient(px, py, x(next), y(next), x(q), y(q)) < 0) {
+      hullSteps++;
       t = addTriangle(next, i, q, hullTri[i]!, -1, hullTri[next]!);
       hullTri[i] = legalize(t + 2);
       hullNext[next] = next; // removed from the hull
@@ -353,6 +398,7 @@ function triangulate(coords: Float64Array, n: number, cx: number, cy: number): U
     if (e === start) {
       q = hullPrev[e]!;
       while (orient(px, py, x(q), y(q), x(e), y(e)) < 0) {
+        hullSteps++;
         t = addTriangle(q, i, e, -1, hullTri[e]!, hullTri[q]!);
         legalize(t + 2);
         hullTri[q] = t;
@@ -388,6 +434,7 @@ function triangulate(coords: Float64Array, n: number, cx: number, cy: number): U
     let t = walkFrom;
     let steps = 0;
     walk: for (;;) {
+      walkSteps++;
       if (++steps > trianglesLen) {
         t = -1;
         for (let s = 0; s < trianglesLen && t < 0; s += 3) if (holds(s, px, py)) t = s;
@@ -482,6 +529,13 @@ function triangulate(coords: Float64Array, n: number, cx: number, cy: number): U
     legalize(t2 + 1);
   }
 
+  if (stats) {
+    stats.edgeChecks = edgeChecks;
+    stats.flips = flips;
+    stats.hullSteps = hullSteps;
+    stats.missed = missed.length;
+    stats.walkSteps = walkSteps;
+  }
   return triangles.subarray(0, trianglesLen);
 }
 

@@ -3046,6 +3046,9 @@ export interface TextLinkPointerEvent {
 }
 
 // @experimental
+export function textMeasurementCount(): number;
+
+// @experimental
 export interface TextMeasurer {
     readonly kind: string;
     vertical(face: TextFace): FontVerticalMetrics;
@@ -3447,7 +3450,7 @@ export function writeLineSentinel(c: LineCursor, out: LineStreamArrays | undefin
 
 // Warnings were encountered during analysis:
 //
-// dist/index.d.ts:4623:3 - (ae-forgotten-export) The symbol "customSymbolNames" needs to be exported by the entry point index.d.ts
+// dist/index.d.ts:4633:3 - (ae-forgotten-export) The symbol "customSymbolNames" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

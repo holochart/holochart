@@ -16,7 +16,7 @@ const paths = computed(() => {
       ecosystem: 'javascript',
       label: 'JavaScript / TypeScript',
       artifact: releaseState.npm,
-      href: '/getting-started/installation#try-it-from-the-monorepo',
+      href: '/getting-started/installation#install-from-npm',
       source: sourceInstallState.javascript,
     },
     {

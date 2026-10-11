@@ -1856,7 +1856,7 @@ export function valueFormatters(calc: BarCalc, xaxis: AxisInfo | undefined, yaxi
 
 // Warnings were encountered during analysis:
 //
-// dist/index.d.ts:461:3 - (ae-forgotten-export) The symbol "ColorscaleChildren" needs to be exported by the entry point index.d.ts
+// dist/index.d.ts:462:3 - (ae-forgotten-export) The symbol "ColorscaleChildren" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

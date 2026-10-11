@@ -244,6 +244,7 @@ import { encodeFigure } from '@mk7s/holochart-core';
 import { EncodeFigureOptions } from '@mk7s/holochart-core';
 import { encodeTypedArray } from '@mk7s/holochart-core';
 import { EnumeratedOptions } from '@mk7s/holochart-core';
+import { eraseActiveShape } from '@mk7s/holochart-components';
 import { evenStops } from '@mk7s/holochart-core';
 import * as express from '@mk7s/holochart-express';
 import { Extent } from '@mk7s/holochart-core';
@@ -1403,6 +1404,8 @@ export { EncodeFigureOptions }
 export { encodeTypedArray }
 
 export { EnumeratedOptions }
+
+export { eraseActiveShape }
 
 export { evenStops }
 

@@ -4,7 +4,8 @@ Locale modules for Holochart: UI strings (modebar titles, default trace names, h
 month and day names, number separators and date formats. They are plotly.js's locales, in the
 same shape, one module per locale so apps bundle only the ones they use.
 
-> **Status: pre-alpha.** Not published to npm yet; every API will change.
+> **Alpha.** Released as `0.1.0-alpha` on the npm `alpha` tag; APIs can change between 0.x
+> releases.
 
 ```ts
 import { createChart, register } from '@mk7s/holochart';

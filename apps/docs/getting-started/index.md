@@ -9,7 +9,8 @@ pageClass: hc-catalog
 # Get started
 
 Choose the environment where your chart will run. Holochart needs a browser with WebGL2;
-notebook outputs also need an ipywidgets manager. Source setup is the current installation path.
+notebook outputs also need an ipywidgets manager. The JavaScript packages are on npm and a CDN.
+The Python bridge is not on PyPI yet; install it from a clone of the repository.
 
 <InstallStatus />
 
@@ -19,11 +20,12 @@ notebook outputs also need an ipywidgets manager. Source setup is the current in
 ## Python & Jupyter
 
 Display a Plotly figure or a Python dictionary in an interactive notebook output. Start with
-Python 3.10+, a notebook kernel, Node.js and pnpm. A development checkout containing
-`packages/holochart-py` is currently required; the public main branch has no verified bridge ref.
-The expected result is a Plotly line widget, styling, and a replacement update in one output.
+Python 3.10+, a notebook kernel, Git, Node.js 22+ and pnpm 11.15.1. `holochart-py` is not on
+PyPI yet, so you install it from a clone of the repository; Node.js and pnpm build its browser
+assets. The expected result is a Plotly line widget, styling, and a replacement update in one
+output.
 
-[Set up Python from a development checkout](/getting-started/installation#python-and-jupyter-from-source) ·
+[Set up Python from a clone](/getting-started/installation#python-and-jupyter-from-source) ·
 [Complete Python quick start](/getting-started/python-jupyter) ·
 [Python learning path](/python/)
 
@@ -33,10 +35,10 @@ The expected result is a Plotly line widget, styling, and a replacement update i
 ## JavaScript & TypeScript
 
 Mount a chart into a browser application, update it, and dispose it when the view closes.
-Start with Node.js 22+, pnpm 11.15.1 and the source checkout. The expected result is a
-line/bar chart with working update and disposal buttons.
+Start with Node.js, npm and a bundler such as Vite, and install the packages from npm. The
+expected result is a line/bar chart with working update and disposal buttons.
 
-[Install from source](/getting-started/installation#build-from-source-today) ·
+[Install from npm](/getting-started/installation#install-from-npm) ·
 [Complete browser quick start](/getting-started/javascript) ·
 [Understand figures and traces](/getting-started/core-concepts)
 
@@ -45,11 +47,11 @@ line/bar chart with working update and disposal buttons.
 
 ## Plain HTML
 
-Use the built browser bundle in a page with a sized chart container. The 2D bundle is the starting
-point; add the matching 3D bundle only when your figure needs it. The expected result is the same
-line/bar chart, served locally with its default fonts.
+Load the script-tag build from a CDN in a page with a sized chart container. No install or build
+step is needed. The main script is 2D; add the 3D script of the same version only when your
+figure needs it. The expected result is the same line/bar chart, with its default fonts.
 
-[Build the browser bundles](/getting-started/installation#browser-bundles-from-source) ·
+[Use a script tag](/getting-started/installation#use-a-script-tag) ·
 [Complete HTML quick start](/getting-started/html)
 
 </section>

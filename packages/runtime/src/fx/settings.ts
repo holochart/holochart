@@ -74,7 +74,7 @@ export const fxLayoutAttributes = {
     min: -1,
     dflt: -1,
     editType: 'none',
-    description: 'Maximum distance (px) for spikelines (E3.10). `-1` means no limit.',
+    description: 'Maximum distance (px) for spikelines. `-1` means no limit.',
   }),
   clickmode: attr.flaglist({
     flags: ['event', 'select'],

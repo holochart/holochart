@@ -23,7 +23,7 @@ export { annotationItemAttributes };
 export const annotationsAttributes = attr.items(annotationItemAttributes, {
   itemName: 'annotation',
   editType: ANN_EDIT,
-  description: 'Text annotations with optional arrows (plan E5.4).',
+  description: 'Text annotations with optional arrows.',
 });
 
 /** A defaulted annotation. @internal */

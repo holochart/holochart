@@ -271,4 +271,14 @@ describe('eraseActiveShape', () => {
     expect(eraseActiveShape(chart)).toBe(false);
     expect(erased).toBe(1);
   });
+
+  it('is exported from the package entry, without the hook that feeds it', async () => {
+    const entry: Record<string, unknown> = await import('@mk7s/holochart-components');
+    expect(entry['eraseActiveShape']).toBe(eraseActiveShape);
+    // The same registry: an eraser set by the shapes view is reached through the entry.
+    const chart = {};
+    setShapeEraser(chart, () => true);
+    expect((entry['eraseActiveShape'] as typeof eraseActiveShape)(chart)).toBe(true);
+    expect(entry).not.toHaveProperty('setShapeEraser');
+  });
 });

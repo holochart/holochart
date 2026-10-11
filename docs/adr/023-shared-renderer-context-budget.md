@@ -1,8 +1,8 @@
 # ADR-023: A shared renderer keeps a page within a WebGL context budget
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-11, by the owner)
 - **Date:** 2026-10-02
-- **Deciders:** ship wave R2 (S2.1)
+- **Deciders:** ship wave R2 (S2.1); accepted by the owner
 - **Related stories:** E2.16, E2.1, E18.1; backlog S2.1; parity backlog PC07; risk R5; amends
   [ADR-004](004-one-webgl-context-per-figure.md)
 

@@ -21,7 +21,7 @@ export const sliderStepAttributes = {
     values: ['restyle', 'relayout', 'animate', 'update', 'skip'],
     dflt: 'restyle',
     description:
-      "Chart API method the step calls: `restyle`, `relayout`, `update` (Plotly's `update`), `animate` (frames, plan E7.4) or `skip` (only the events).",
+      "Chart API method the step calls: `restyle`, `relayout`, `update` (Plotly's `update`), `animate` (frames) or `skip` (only the events).",
   }),
   args: attr.infoArray({
     items: attr.any({ dflt: null, description: 'An argument (`null` allowed).' }),
@@ -162,8 +162,7 @@ export const slidersAttributes = attr.items(
   {
     itemName: 'slider',
     editType: LAYOUT,
-    description:
-      'Sliders that step through `restyle`, `relayout`, `update` or `animate` calls (plan E5.11).',
+    description: 'Sliders that step through `restyle`, `relayout`, `update` or `animate` calls.',
   },
 );
 
