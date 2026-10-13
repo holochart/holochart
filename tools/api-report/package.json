@@ -11,7 +11,7 @@
   "devDependencies": {
     "@microsoft/api-extractor": "~7.59.3",
     "@types/node": "^26.6.2",
-    "diff": "^8.0.4",
+    "diff": "^9.0.0",
     "typescript": "catalog:"
   }
 }
