@@ -493,7 +493,7 @@ jobs:
         run: pnpm --filter @mk7s/holochart-docs check:render foundation.spec.ts wave2.spec.ts wave3.spec.ts wave3-content.spec.ts wave4.spec.ts --workers=1 --retries=0
       - name: Upload production site failures
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: docs-production-report
           path: test-results/docs-render/
