@@ -27,9 +27,9 @@ jobs:
             plotly: 'plotly>=7,<8'
             anywidget: 'anywidget>=0.11,<1'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
       - run: pnpm exec turbo run build --filter=@mk7s/holochart
@@ -143,7 +143,7 @@ jobs:
           HOLOCHART_NOTEBOOK_ORIGIN=http://127.0.0.1:8908 node apps/docs/scripts/notebook-host-check.mjs notebooks "${notebook_slugs[@]}"
       - name: Upload fresh kernel and actual notebook-host evidence
         if: ${{ !cancelled() && matrix.python == '3.14' && env.HOLOCHART_NOTEBOOK_OUTPUT != '' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: python-notebook-hosts-${{ matrix.python }}
           path: ${{ env.HOLOCHART_NOTEBOOK_OUTPUT }}
