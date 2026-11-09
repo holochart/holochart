@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "devDependencies": {
-    "@microsoft/api-extractor": "~7.59.3",
+    "@microsoft/api-extractor": "~7.60.1",
     "@types/node": "^26.6.2",
     "diff": "^8.0.4",
     "typescript": "catalog:"
